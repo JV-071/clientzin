@@ -178,7 +178,7 @@ public:
     uint8_t getShaderId() const { return m_shaderId; }
     PainterShaderProgramPtr getShader() const;
 
-    bool hasShader() const { return m_shaderId > 0; }
+    bool hasShader() const { return getShader() != nullptr; }
 
     virtual void onPositionChange(const Position& /*newPos*/, const Position& /*oldPos*/) {}
     virtual void onAppear() {}

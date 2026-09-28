@@ -19,6 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <functional>
+#include <unordered_set>
+#include <cctype>
+#include <utility>
 #include "cssparser.h"
 #include "htmlnode.h"
 

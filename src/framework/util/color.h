@@ -22,6 +22,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string_view>
+#include <iosfwd>
+
 class Color
 {
 public:

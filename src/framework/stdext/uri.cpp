@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 
+#include <regex>
 #include "uri.h"
 
 ParsedURI parseURI(const std::string& url) {

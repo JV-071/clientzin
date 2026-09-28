@@ -48,13 +48,35 @@ void ShaderManager::terminate() { clear(); }
 void ShaderManager::clear() {
     m_shaders.clear();
     m_shadersVector.clear();
+    m_shaderIds.clear();
 }
 
 void ShaderManager::putShader(std::string name, const PainterShaderProgramPtr& shader) {
-    if (m_shaders.try_emplace(std::move(name), shader).second) {
-        m_shadersVector.emplace_back(shader);
-        shader->m_id = m_shadersVector.size();
+    if (m_shaders.contains(name))
+        return;
+    auto slot = m_shaderIds.find(name);
+    if (slot == m_shaderIds.end()) {
+        if (m_shadersVector.size() >= std::numeric_limits<uint8_t>::max()) {
+            g_logger.error("Shader limit reached while registering '{}'", name);
+            return;
+        }
+        const auto id = static_cast<uint8_t>(m_shadersVector.size() + 1);
+        slot = m_shaderIds.emplace(name, id).first;
+        m_shadersVector.push_back(nullptr);
     }
+    shader->m_id = slot->second;
+    m_shadersVector[slot->second - 1] = shader;
+    m_shaders.emplace(std::move(name), shader);
+}
+
+void ShaderManager::removeShader(const std::string_view name) {
+    // Run in creation order on the graphics dispatcher. Names retain their IDs
+    // so recreating forge effects cannot exhaust or reassign live shader IDs.
+    g_mainDispatcher.addEvent([this, name = std::string(name)] {
+        if (const auto slot = m_shaderIds.find(name); slot != m_shaderIds.end())
+            m_shadersVector[slot->second - 1].reset();
+        m_shaders.erase(name);
+    });
 }
 
 // Pure Vulkan mode has no GL context: compiling GLSL painter shaders is impossible and

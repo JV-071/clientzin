@@ -20,6 +20,10 @@
  * THE SOFTWARE.
  */
 
+#include <algorithm>
+#include <ranges>
+#include <ctime>
+#include <cctype>
 #include "string.h"
 #include "exception.h"
 #include "types.h"

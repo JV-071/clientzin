@@ -21,6 +21,13 @@
  *   Software.
  */
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <sstream>
+#include <utility>
 #include "qrcodegen.h"
 
 using std::int8_t;

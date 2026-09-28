@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "../const.h"
 
 namespace Fw

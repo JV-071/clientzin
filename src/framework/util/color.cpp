@@ -20,6 +20,14 @@
  * THE SOFTWARE.
  */
 
+#include <algorithm>
+#include <cmath>
+#include <cctype>
+#include <cstdlib>
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <iterator>
 #include "color.h"
 
 #include "framework/stdext/string.h"

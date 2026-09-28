@@ -92,6 +92,7 @@ private:
 
     struct CursorState {
          std::vector<HCURSOR> cursors;
+         std::vector<HCURSOR> largeCursors;
          std::vector<int> delays;
     };
     std::vector<CursorState> m_cursors;

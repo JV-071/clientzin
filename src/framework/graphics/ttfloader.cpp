@@ -24,6 +24,7 @@
 #include "bitmapfont.h"
 #include "image.h"
 #include "texturemanager.h"
+#include "texture.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>

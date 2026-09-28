@@ -23,6 +23,11 @@
 
 #pragma once
 
+#include <cstdint>
+#include <vector>
+#include <string>
+#include <stdexcept>
+
 namespace qrcodegen {
     /*
      * A segment of character/binary/control data in a QR Code symbol.

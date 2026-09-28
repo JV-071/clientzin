@@ -45,6 +45,7 @@ public:
     void init();
     void terminate();
     void clear();
+    void removeShader(std::string_view name);
 
     // TODO: Move these setup methods to a ClientShaderManager
     void setupMapShader(std::string_view name);
@@ -69,6 +70,7 @@ private:
 
     stdext::map<std::string, PainterShaderProgramPtr> m_shaders;
     std::vector<PainterShaderProgramPtr> m_shadersVector;
+    stdext::map<std::string, uint8_t> m_shaderIds;
 };
 
 extern ShaderManager g_shaders;

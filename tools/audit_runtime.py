@@ -27,7 +27,7 @@ def audit():
     class_bindings = collections.defaultdict(set)
     for content in sources.values():
         bindings.update(".".join(m) for m in re.findall(
-            r'bindSingletonFunction\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"', content))
+            r'(?:bindSingletonFunction|bindClassStaticFunction)\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"', content))
         for cls, method in re.findall(
                 r'bindClass(?:Member|Static)Function\s*<\s*(\w+)\s*>\s*\(\s*"([^"]+)"', content):
             class_bindings[cls].add(method)

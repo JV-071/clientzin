@@ -25,11 +25,13 @@
 #include "win32window.h"
 #ifdef CLIENTZIN_ANGLE
 #include <EGL/eglext.h>
+#include <EGL/eglext_angle.h>
 #endif
 #include <framework/core/configmanager.h>
 #include <framework/core/eventdispatcher.h>
 #include <framework/util/stats.h>
 #include <framework/graphics/image.h>
+#include <framework/input/mouse.h>
 
 #include <timeapi.h>
 
@@ -273,6 +275,8 @@ void WIN32Window::terminate()
     for (const auto& cursorState : m_cursors) {
         for (const HCURSOR& cursor : cursorState.cursors)
             DestroyCursor(cursor);
+        for (const HCURSOR& cursor : cursorState.largeCursors)
+            DestroyCursor(cursor);
     }
     m_cursors.clear();
 
@@ -481,7 +485,7 @@ void WIN32Window::internalRestoreGLContext() const
 
 #ifdef OPENGL_ES
     if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext))
-        g_logger.fatal("Unable to make current EGL context");
+        g_logger.fatal("[graphics] Unable to make EGL context current: error 0x{:04X}", eglGetError());
 #else
     if (!wglMakeCurrent(m_deviceContext, m_wglContext))
         g_logger.fatal("Unable to make current WGL context");
@@ -491,7 +495,21 @@ void WIN32Window::internalRestoreGLContext() const
 bool WIN32Window::isExtensionSupported(const char* ext)
 {
 #ifdef OPENGL_ES
-    //TODO
+    if (!ext || !*ext || std::strchr(ext, ' '))
+        return false;
+    const char* extensions = eglQueryString(m_eglDisplay, EGL_EXTENSIONS);
+    if (!extensions)
+        return false;
+    const std::string_view list(extensions);
+    const std::string_view requested(ext);
+    size_t start = 0;
+    while (start < list.size()) {
+        const auto end = list.find(' ', start);
+        if (list.substr(start, end == std::string_view::npos ? end : end - start) == requested)
+            return true;
+        if (end == std::string_view::npos) break;
+        start = end + 1;
+    }
     return false;
 #else
     const auto wglGetExtensionsString = static_cast<const char* (__stdcall*)()>(getExtensionProcAddress("wglGetExtensionsStringEXT"));
@@ -509,8 +527,7 @@ bool WIN32Window::isExtensionSupported(const char* ext)
 void* WIN32Window::getExtensionProcAddress(const char* ext)
 {
 #ifdef OPENGL_ES
-    //TODO
-    return NULL;
+    return reinterpret_cast<void*>(eglGetProcAddress(ext));
 #else
     return (void*)wglGetProcAddress(ext);
 #endif
@@ -596,7 +613,7 @@ void WIN32Window::updateCursor()
     if (m_cursorTimer.ticksElapsed() >= delay) {
         m_cursorTimer.restart();
         m_cursorFrame = (m_cursorFrame + 1) % state.cursors.size();
-        m_cursor = state.cursors[m_cursorFrame];
+        m_cursor = g_mouse.getCursorDisplayScale() == 2 ? state.largeCursors[m_cursorFrame] : state.cursors[m_cursorFrame];
         SetCursor(m_cursor);
     }
 }
@@ -918,7 +935,8 @@ void WIN32Window::swapBuffers()
         return;
 
 #ifdef OPENGL_ES
-    eglSwapBuffers(m_eglDisplay, m_eglSurface);
+    if (!eglSwapBuffers(m_eglDisplay, m_eglSurface))
+        g_logger.fatal("[graphics] ANGLE failed to present the frame: EGL error 0x{:04X}", eglGetError());
 #else
     SwapBuffers(m_deviceContext);
 #endif
@@ -950,45 +968,50 @@ int WIN32Window::internalLoadMouseCursor(const ImagePtr& image, const Point& hot
         frames.push_back({ image, 0 });
     }
 
-    for (const auto& frame : frames) {
-        const auto& img = frame.image;
-        const int width = img->getWidth();
-        const int height = img->getHeight();
-        const int n = width * height;
+    for (int scale : {1, 2}) {
+        for (const auto& frame : frames) {
+            const auto& img = frame.image;
+            const int width = img->getWidth() * scale;
+            const int height = img->getHeight() * scale;
+            const int n = width * height;
 
-        std::vector<uint32_t> iconData(n);
-        for (int i = 0; i < n; ++i) {
-            auto* const pixel = (uint8_t*)&iconData[i];
-            pixel[2] = *(img->getPixelData() + (i * 4) + 0); // R
-            pixel[1] = *(img->getPixelData() + (i * 4) + 1); // G
-            pixel[0] = *(img->getPixelData() + (i * 4) + 2); // B
-            pixel[3] = *(img->getPixelData() + (i * 4) + 3); // A
+            std::vector<uint32_t> iconData(n);
+            for (int i = 0; i < n; ++i) {
+                const int source = ((i / width / scale) * img->getWidth() + (i % width / scale)) * 4;
+                auto* const pixel = (uint8_t*)&iconData[i];
+                pixel[2] = *(img->getPixelData() + source + 0); // R
+                pixel[1] = *(img->getPixelData() + source + 1); // G
+                pixel[0] = *(img->getPixelData() + source + 2); // B
+                pixel[3] = *(img->getPixelData() + source + 3); // A
+            }
+
+            const HBITMAP hbmColor = CreateBitmap(width, height, 1, 32, &iconData[0]);
+            const HBITMAP hbmMask = CreateBitmap(width, height, 1, 1, nullptr);
+
+            ICONINFO ii;
+            ii.fIcon = FALSE;
+            ii.xHotspot = hotSpot.x * scale;
+            ii.yHotspot = hotSpot.y * scale;
+            ii.hbmMask = hbmMask;
+            ii.hbmColor = hbmColor;
+
+            const HCURSOR cursor = static_cast<HCURSOR>(CreateIconIndirect(&ii));
+            DeleteObject(hbmMask);
+            DeleteObject(hbmColor);
+
+            if (!cursor) {
+                g_logger.error("Failed to create colored cursor");
+                for (auto old : cursorState.cursors) DestroyCursor(old);
+                for (auto old : cursorState.largeCursors) DestroyCursor(old);
+                return -1;
+            }
+
+            (scale == 1 ? cursorState.cursors : cursorState.largeCursors).push_back(cursor);
+            if (scale == 1) cursorState.delays.push_back(frame.delay);
         }
 
-        const HBITMAP hbmColor = CreateBitmap(width, height, 1, 32, &iconData[0]);
-        const HBITMAP hbmMask = CreateBitmap(width, height, 1, 1, nullptr);
-
-        ICONINFO ii;
-        ii.fIcon = FALSE;
-        ii.xHotspot = hotSpot.x;
-        ii.yHotspot = hotSpot.y;
-        ii.hbmMask = hbmMask;
-        ii.hbmColor = hbmColor;
-
-        const HCURSOR cursor = static_cast<HCURSOR>(CreateIconIndirect(&ii));
-        DeleteObject(hbmMask);
-        DeleteObject(hbmColor);
-
-        if (!cursor) {
-            g_logger.error("Failed to create colored cursor");
-            return -1;
-        }
-
-        cursorState.cursors.push_back(cursor);
-        cursorState.delays.push_back(frame.delay);
     }
-
-    m_cursors.push_back(cursorState);
+    m_cursors.push_back(std::move(cursorState));
     return m_cursors.size() - 1;
 }
 
@@ -998,9 +1021,13 @@ void WIN32Window::setMouseCursor(int cursorId)
         if (cursorId >= static_cast<int>(m_cursors.size()) || cursorId < 0)
             return;
 
+        if (g_mouse.isUsingNativeCursor()) {
+            setSystemCursor(g_mouse.getCursorName(cursorId));
+            return;
+        }
         m_currentCursorId = cursorId;
         m_cursorFrame = 0;
-        m_cursor = m_cursors[cursorId].cursors[0];
+        m_cursor = g_mouse.getCursorDisplayScale() == 2 ? m_cursors[cursorId].largeCursors[0] : m_cursors[cursorId].cursors[0];
         
         if (m_cursors[cursorId].cursors.size() > 1) {
             m_cursorTimer.restart();
@@ -1014,6 +1041,7 @@ void WIN32Window::setMouseCursor(int cursorId)
 void WIN32Window::restoreMouseCursor()
 {
     g_mainDispatcher.addEvent([this] {
+        m_currentCursorId = -1;
         if (m_cursor) {
             m_cursor = nullptr;
             SetCursor(m_defaultCursor);
@@ -1025,6 +1053,7 @@ void WIN32Window::restoreMouseCursor()
 void WIN32Window::setSystemCursor(const std::string& cursorName)
 {
     g_mainDispatcher.addEvent([this, cursorName] {
+        m_currentCursorId = -1;
         LPCTSTR cursorId = IDC_ARROW;
         
         if (cursorName == "arrow" || cursorName == "default") {
@@ -1121,7 +1150,8 @@ void WIN32Window::setVerticalSync(bool enable)
             return;
 
 #ifdef OPENGL_ES
-        eglSwapInterval(m_eglDisplay, enable);
+        if (!eglSwapInterval(m_eglDisplay, enable))
+            g_logger.warning("[graphics] Unable to change ANGLE vertical sync: EGL error 0x{:04X}", eglGetError());
 #else
         if (!isExtensionSupported("WGL_EXT_swap_control"))
             return;

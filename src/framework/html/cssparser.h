@@ -21,6 +21,11 @@
  */
 
 #pragma once
+
+#include <string>
+#include <vector>
+#include <tuple>
+#include <unordered_map>
 #include "declarations.h"
 
 namespace css {

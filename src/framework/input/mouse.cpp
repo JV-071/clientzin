@@ -138,3 +138,28 @@ void Mouse::checkStackSize()
         m_cursorStack.pop_front();
     }
 }
+void Mouse::refreshCursor()
+{
+    const auto id = m_cursorStack.empty() ? getCursorId("default") : m_cursorStack.back();
+    if (id >= 0) g_window.setMouseCursor(id);
+    else g_window.restoreMouseCursor();
+}
+
+void Mouse::setUseNativeCursor(bool useNative)
+{
+    m_useNativeCursor = useNative;
+    refreshCursor();
+}
+
+void Mouse::setCursorDisplayScale(int scale)
+{
+    m_cursorDisplayScale = scale >= 2 ? 2 : 1;
+    refreshCursor();
+}
+
+std::string Mouse::getCursorName(int id) const
+{
+    for (const auto& [name, cursorId] : m_cursors)
+        if (cursorId == id) return name;
+    return "default";
+}

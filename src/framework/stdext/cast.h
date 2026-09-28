@@ -22,6 +22,10 @@
 
 #pragma once
 
+#include <sstream>
+#include <iostream>
+#include <cstring>
+
 #include "demangle.h"
 #include "exception.h"
 

@@ -534,7 +534,7 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_client", "setShowPvPFrames", &Client::setShowPvPFrames, &g_client);
     g_lua.bindSingletonFunction("g_client", "setShowMeleeAttackAnimation", &Client::setShowMeleeAttackAnimation, &g_client);
     g_lua.bindSingletonFunction("g_client", "setMarkTargetVisually", &Client::setMarkTargetVisually, &g_client);
-    g_lua.bindSingletonFunction("g_client", "setInputLockWidget", [](const UIWidgetPtr& widget) {
+    g_lua.bindClassStaticFunction("g_client", "setInputLockWidget", [](const UIWidgetPtr& widget) {
         if (widget && !widget->isDestroyed()) {
             g_ui.setMouseReceiver(widget);
             g_ui.setKeyboardReceiver(widget);
@@ -543,28 +543,28 @@ void Client::registerLuaFunctions()
             g_ui.resetKeyboardReceiver();
         }
     });
-    g_lua.bindSingletonFunction("g_client", "setOwnSpellEffectOpacity", [](float value) { g_client.setOwnSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
-    g_lua.bindSingletonFunction("g_client", "setOthersPlayersEffectOpacity", [](float value) { g_client.setOtherPlayerSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
-    g_lua.bindSingletonFunction("g_client", "setCreatureSpellEffectsOpacity", [](float value) { g_client.setCreatureSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
-    g_lua.bindSingletonFunction("g_client", "setBossAreaCreatureSpellEffectOpacity", [](float value) { g_client.setBossAreaCreatureEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
+    g_lua.bindClassStaticFunction("g_client", "setOwnSpellEffectOpacity", [](float value) { g_client.setOwnSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
+    g_lua.bindClassStaticFunction("g_client", "setOthersPlayersEffectOpacity", [](float value) { g_client.setOtherPlayerSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
+    g_lua.bindClassStaticFunction("g_client", "setCreatureSpellEffectsOpacity", [](float value) { g_client.setCreatureSpellEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
+    g_lua.bindClassStaticFunction("g_client", "setBossAreaCreatureSpellEffectOpacity", [](float value) { g_client.setBossAreaCreatureEffectAlpha(std::clamp(value, 0.f, 100.f) / 100.f); });
 
 
     // Task Board modules use zero-based server difficulty and slot indices.
-    g_lua.bindSingletonFunction("g_game", "sendClaimReward", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CLAIM_REWARD); });
-    g_lua.bindSingletonFunction("g_game", "sendSelectTask", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_SELECT_TASK, value); });
-    g_lua.bindSingletonFunction("g_game", "sendSelectTaskDifficulty", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CHANGE_DIFFICULTY, value); });
-    g_lua.bindSingletonFunction("g_game", "sendPreferredListClearUnwanted", [](uint16_t slot) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_UNWANTED_CLEAR, slot); });
-    g_lua.bindSingletonFunction("g_game", "sendPreferredListClearPreferred", [](uint16_t slot) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_CLEAR, slot); });
-    g_lua.bindSingletonFunction("g_game", "sendPreferredListUnwanted", [](uint16_t slot, uint16_t race) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_UNWANTED_ASSIGN, slot, race); });
-    g_lua.bindSingletonFunction("g_game", "sendPreferredListPreferred", [](uint16_t slot, uint16_t race) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_ASSIGN, slot, race); });
-    g_lua.bindSingletonFunction("g_game", "sendPreferredListUnlockSlots", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_UNLOCK); });
-    g_lua.bindSingletonFunction("g_game", "sendRerollTasks", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_REROLL); });
-    g_lua.bindSingletonFunction("g_game", "sendClaimDaily", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CLAIM_DAILY); });
-    g_lua.bindSingletonFunction("g_game", "sendUpgradeTalisman", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_TALISMAN_UPGRADE, value); });
-    g_lua.bindSingletonFunction("g_game", "sendOnBuyHuntingTaskShop", [](uint16_t offer) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_HUNTING_SHOP_BUY_OFFER, offer, 0); });
-    g_lua.bindSingletonFunction("g_game", "sendDeliveryTask", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_WEEKLY_DELIVER, value); });
-    g_lua.bindSingletonFunction("g_game", "sendSelectDifficultyWeeklyTasks", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_WEEKLY_SELECT_DIFFICULTY, value); });
-    g_lua.bindSingletonFunction("g_game", "sendOpenMenuTaskBoardAction", [](uint8_t menu) {
+    g_lua.bindClassStaticFunction("g_game", "sendClaimReward", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CLAIM_REWARD); });
+    g_lua.bindClassStaticFunction("g_game", "sendSelectTask", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_SELECT_TASK, value); });
+    g_lua.bindClassStaticFunction("g_game", "sendSelectTaskDifficulty", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CHANGE_DIFFICULTY, value); });
+    g_lua.bindClassStaticFunction("g_game", "sendPreferredListClearUnwanted", [](uint16_t slot) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_UNWANTED_CLEAR, slot); });
+    g_lua.bindClassStaticFunction("g_game", "sendPreferredListClearPreferred", [](uint16_t slot) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_CLEAR, slot); });
+    g_lua.bindClassStaticFunction("g_game", "sendPreferredListUnwanted", [](uint16_t slot, uint16_t race) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_UNWANTED_ASSIGN, slot, race); });
+    g_lua.bindClassStaticFunction("g_game", "sendPreferredListPreferred", [](uint16_t slot, uint16_t race) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_ASSIGN, slot, race); });
+    g_lua.bindClassStaticFunction("g_game", "sendPreferredListUnlockSlots", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_PREFERRED_UNLOCK); });
+    g_lua.bindClassStaticFunction("g_game", "sendRerollTasks", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_REROLL); });
+    g_lua.bindClassStaticFunction("g_game", "sendClaimDaily", []() { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_CLAIM_DAILY); });
+    g_lua.bindClassStaticFunction("g_game", "sendUpgradeTalisman", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_BOUNTY_TALISMAN_UPGRADE, value); });
+    g_lua.bindClassStaticFunction("g_game", "sendOnBuyHuntingTaskShop", [](uint16_t offer) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_HUNTING_SHOP_BUY_OFFER, offer, 0); });
+    g_lua.bindClassStaticFunction("g_game", "sendDeliveryTask", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_WEEKLY_DELIVER, value); });
+    g_lua.bindClassStaticFunction("g_game", "sendSelectDifficultyWeeklyTasks", [](uint16_t value) { g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_WEEKLY_SELECT_DIFFICULTY, value); });
+    g_lua.bindClassStaticFunction("g_game", "sendOpenMenuTaskBoardAction", [](uint8_t menu) {
         if (menu == 0) g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_OPEN_BOUNTY);
         else if (menu == 1) g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_OPEN_WEEKLY);
         else if (menu == 2) g_game.sendTaskBoardAction(Otc::TASK_BOARD_OPTION_OPEN_HUNTING_SHOP);
@@ -572,28 +572,28 @@ void Client::registerLuaFunctions()
     });
     g_lua.bindSingletonFunction("g_game", "sendSoulSealSelectCreature", &Game::soulsealFightAction, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendSelectVocation", &Game::sendTutorialChangeVocation, &g_game);
-    g_lua.bindSingletonFunction("g_game", "sendBossDifficultySelect", [](uint32_t, uint16_t difficulty) { g_game.sendBossDifficultyAction(2, difficulty); });
-    g_lua.bindSingletonFunction("g_game", "sendBossDifficultyStartFight", [](uint32_t, uint16_t difficulty) { g_game.sendBossDifficultyAction(0, difficulty); });
-    g_lua.bindSingletonFunction("g_game", "sendBossDifficultyCancel", [](uint32_t) { g_game.sendBossDifficultyAction(1, 0); });
+    g_lua.bindClassStaticFunction("g_game", "sendBossDifficultySelect", [](uint32_t, uint16_t difficulty) { g_game.sendBossDifficultyAction(2, difficulty); });
+    g_lua.bindClassStaticFunction("g_game", "sendBossDifficultyStartFight", [](uint32_t, uint16_t difficulty) { g_game.sendBossDifficultyAction(0, difficulty); });
+    g_lua.bindClassStaticFunction("g_game", "sendBossDifficultyCancel", [](uint32_t) { g_game.sendBossDifficultyAction(1, 0); });
 
-    g_lua.bindSingletonFunction("g_game", "getTibiaCoins", [] {
+    g_lua.bindClassStaticFunction("g_game", "getTibiaCoins", [] {
         const auto player = g_game.getLocalPlayer();
         return player ? player->getResourceBalance(Otc::RESOURE_COIN_NORMAL) : 0;
     });
-    g_lua.bindSingletonFunction("g_game", "getTransferableTibiaCoins", [] {
+    g_lua.bindClassStaticFunction("g_game", "getTransferableTibiaCoins", [] {
         const auto player = g_game.getLocalPlayer();
         return player ? player->getResourceBalance(Otc::RESOURE_COIN_TRANSFERRABLE) : 0;
     });
-    g_lua.bindSingletonFunction("g_game", "setTibiaCoins", [](uint32_t coins, uint32_t transferable) {
+    g_lua.bindClassStaticFunction("g_game", "setTibiaCoins", [](uint32_t coins, uint32_t transferable) {
         if (const auto player = g_game.getLocalPlayer()) {
             player->setResourceBalance(Otc::RESOURE_COIN_NORMAL, coins);
             player->setResourceBalance(Otc::RESOURE_COIN_TRANSFERRABLE, transferable);
         }
     });
-    g_lua.bindSingletonFunction("g_game", "requestBestiaryOverviewSearch", [](const std::vector<uint16_t>& races) {
+    g_lua.bindClassStaticFunction("g_game", "requestBestiaryOverviewSearch", [](const std::vector<uint16_t>& races) {
         g_game.requestBestiaryOverview("", true, races);
     });
-    g_lua.bindSingletonFunction("g_game", "closeContainerByItemId", [](uint16_t itemId) {
+    g_lua.bindClassStaticFunction("g_game", "closeContainerByItemId", [](uint16_t itemId) {
         for (const auto& [id, container] : g_game.getContainers()) {
             if (container && container->getContainerItem() && container->getContainerItem()->getId() == itemId)
                 g_game.close(container);
@@ -608,13 +608,18 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "clearHoveredCreature", &Game::clearHoveredCreature, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendMarketAction", &Game::browseMarket, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendForgeAction", &Game::forgeRequest, &g_game);
-    g_lua.bindSingletonFunction("g_game", "sendPartyLootType", [](uint8_t) { g_game.sendPartyAnalyzerPriceType(); });
-    g_lua.bindSingletonFunction("g_game", "sendPartyLootPrice", [](const std::vector<std::tuple<uint16_t, uint64_t>>& items) {
+    g_lua.bindClassStaticFunction("g_game", "sendPartyLootType", [](uint8_t) { g_game.sendPartyAnalyzerPriceType(); });
+    g_lua.bindClassStaticFunction("g_game", "sendPartyLootPrice", [](const std::vector<std::tuple<uint16_t, uint64_t>>& items) {
         g_game.sendPartyAnalyzerAction(Otc::PARTYANALYZERACTION_PRICEVALUE, items);
     });
-    g_lua.bindSingletonFunction("g_game", "isSupplyStashMenuAvailable", [] {
+    g_lua.bindClassStaticFunction("g_game", "isSupplyStashMenuAvailable", [] {
         const auto player = g_game.getLocalPlayer();
         return player && player->isSupplyStashAvailable();
+    });
+
+    g_lua.bindClassStaticFunction("g_game", "isZoomEnabled", [] {
+        const auto map = g_client.getMapWidget();
+        return map && map->getMaxZoomOut() > map->getMaxZoomIn();
     });
 
     g_lua.registerClass<Container>();

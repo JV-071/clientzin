@@ -23,6 +23,10 @@
  *
  */
 
+#include <zlib.h>
+#include <cstring>
+#include <cstdlib>
+#include <algorithm>
 #include "apngloader.h"
 
 #if defined(_MSC_VER) && _MSC_VER >= 1300

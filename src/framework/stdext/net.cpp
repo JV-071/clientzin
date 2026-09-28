@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  */
 
+#include <asio/ip/address_v4.hpp>
+#include <asio/detail/socket_ops.hpp>
 #include "net.h"
 
 namespace stdext

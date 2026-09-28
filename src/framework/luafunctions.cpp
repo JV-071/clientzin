@@ -438,6 +438,8 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_mouse", "popCursor", &Mouse::popCursor, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "isCursorChanged", &Mouse::isCursorChanged, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "setUseNativeCursor", &Mouse::setUseNativeCursor, &g_mouse);
+    g_lua.bindSingletonFunction("g_mouse", "setUseNativeSystemCursor", &Mouse::setUseNativeCursor, &g_mouse);
+    g_lua.bindSingletonFunction("g_mouse", "setCursorDisplayScale", &Mouse::setCursorDisplayScale, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "isUsingNativeCursor", &Mouse::isUsingNativeCursor, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "isPressed", &Mouse::isPressed, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "getCursorId", &Mouse::getCursorId, &g_mouse);
@@ -504,6 +506,7 @@ void Application::registerLuaFunctions()
     // ShaderManager
     g_lua.registerSingletonClass("g_shaders");
     g_lua.bindSingletonFunction("g_shaders", "clear", &ShaderManager::clear, &g_shaders);
+    g_lua.bindSingletonFunction("g_shaders", "removeShader", &ShaderManager::removeShader, &g_shaders);
     g_lua.bindSingletonFunction("g_shaders", "createShader", &ShaderManager::createShader, &g_shaders);
     g_lua.bindSingletonFunction("g_shaders", "createFragmentShader", &ShaderManager::createFragmentShader, &g_shaders);
     g_lua.bindSingletonFunction("g_shaders", "createFragmentShaderFromCode", &ShaderManager::createFragmentShaderFromCode, &g_shaders);

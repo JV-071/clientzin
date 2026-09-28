@@ -87,6 +87,9 @@ jobs:
         with:
           path: D:/clientzin-cache/sccache
           key: ${{ steps.dependency-objects.outputs.cache-primary-key }}
+      - name: Summarize failures and cache reuse
+        if: always()
+        run: python tools/summarize_build.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -184,6 +187,9 @@ jobs:
         with:
           path: D:/clientzin-cache/sccache
           key: ${{ steps.objects.outputs.cache-primary-key }}
+      - name: Summarize failures and cache reuse
+        if: always()
+        run: python tools/summarize_build.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
