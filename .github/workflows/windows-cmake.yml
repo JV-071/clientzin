@@ -74,6 +74,8 @@ jobs:
         run: |
           sccache --show-stats 2>&1 | Tee-Object diagnostics/dependency-cache.txt
           sccache --stop-server
+          if ($LASTEXITCODE -ne 0) { Write-Warning "Cache server was already stopped or unavailable; see cache statistics above." }
+          exit 0
       - name: Save completed work even on failure
         if: always() && steps.cache.outputs.cache-primary-key != ''
         uses: actions/cache/save@v4
@@ -174,6 +176,8 @@ jobs:
         run: |
           sccache --show-stats 2>&1 | Tee-Object diagnostics/compiler-cache.txt
           sccache --stop-server
+          if ($LASTEXITCODE -ne 0) { Write-Warning "Cache server was already stopped or unavailable; see cache statistics above." }
+          exit 0
       - name: Save compiler results even on failure
         if: always() && steps.objects.outputs.cache-primary-key != ''
         uses: actions/cache/save@v4
