@@ -1,0 +1,22 @@
+* text=auto
+*.lua text eol=lf
+*.txt text eol=lf
+*.otui text eol=lf
+*.otmod text eol=lf
+*.otml text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.cmake text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.py text eol=lf
+*.bat text eol=crlf
+*.otmm binary
+*.otbm binary
+*.otb binary
+*.dat binary
+*.spr binary
+*.png binary
+*.jpg binary
+*.ogg binary
+*.lzma binary

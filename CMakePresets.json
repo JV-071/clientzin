@@ -1,0 +1,236 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "linux-release",
+      "displayName": "Linux - Release",
+      "description": "Sets Ninja generator, compilers, build and install directory and set build type as release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+          "type": "FILEPATH"
+        },
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "OPTIONS_ENABLE_CCACHE": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "inherits": "linux-release",
+      "displayName": "Linux - Debug Build",
+      "description": "Build Debug Mode",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "DEBUG_LOG": "ON",
+        "ASAN_ENABLED": "OFF",
+        "TOGGLE_PRE_COMPILED_HEADER": "OFF",
+        "SPEED_UP_BUILD_UNITY": "OFF"
+      }
+    },
+    {
+      "name": "macos-release",
+      "displayName": "macOS - Release",
+      "description": "Sets Ninja generator, compilers, build and install directory and set build type as release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+          "type": "FILEPATH"
+        },
+        "BUILD_STATIC_LIBRARY": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "OPTIONS_ENABLE_SCCACHE": "ON",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O1 -DNDEBUG"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "macos-release",
+      "displayName": "macOS - Debug",
+      "description": "Build Debug Mode",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "DEBUG_LOG": "ON",
+        "ASAN_ENABLED": "ON",
+        "BUILD_STATIC_LIBRARY": "OFF"
+      }
+    },
+    {
+      "name": "windows-cmake-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "BUILD_STATIC_LIBRARY": "OFF",
+        "TOGGLE_BIN_FOLDER": "ON",
+        "OPTIONS_ENABLE_SCCACHE": "ON",
+        "TOGGLE_PRE_COMPILED_HEADER": "OFF",
+        "SPEED_UP_BUILD_UNITY": "OFF",
+        "OTCLIENT_BUILD_TESTS": "ON",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-cmake-debug",
+      "inherits": "windows-cmake-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CLIENTZIN_RENDERER": "d3d11",
+        "OPTIONS_ENABLE_IPO": "OFF"
+      }
+    },
+    {
+      "name": "windows-cmake-debug-d3d9",
+      "inherits": "windows-cmake-debug",
+      "cacheVariables": {
+        "CLIENTZIN_RENDERER": "d3d9"
+      }
+    },
+    {
+      "name": "windows-cmake-debug-d3d11",
+      "inherits": "windows-cmake-debug",
+      "cacheVariables": {
+        "CLIENTZIN_RENDERER": "d3d11"
+      }
+    },
+    {
+      "name": "windows-cmake-release",
+      "inherits": "windows-cmake-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CLIENTZIN_RENDERER": "d3d11",
+        "OPTIONS_ENABLE_IPO": "ON"
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d9",
+      "inherits": "windows-cmake-release",
+      "cacheVariables": {
+        "CLIENTZIN_RENDERER": "d3d9"
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d11",
+      "inherits": "windows-cmake-release",
+      "cacheVariables": {
+        "CLIENTZIN_RENDERER": "d3d11"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    },
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release"
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug"
+    },
+    {
+      "name": "windows-cmake-debug",
+      "configurePreset": "windows-cmake-debug"
+    },
+    {
+      "name": "windows-cmake-debug-d3d9",
+      "configurePreset": "windows-cmake-debug-d3d9"
+    },
+    {
+      "name": "windows-cmake-debug-d3d11",
+      "configurePreset": "windows-cmake-debug-d3d11"
+    },
+    {
+      "name": "windows-cmake-release",
+      "configurePreset": "windows-cmake-release"
+    },
+    {
+      "name": "windows-cmake-release-d3d9",
+      "configurePreset": "windows-cmake-release-d3d9"
+    },
+    {
+      "name": "windows-cmake-release-d3d11",
+      "configurePreset": "windows-cmake-release-d3d11"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-cmake-debug",
+      "configurePreset": "windows-cmake-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-debug-d3d9",
+      "configurePreset": "windows-cmake-debug-d3d9",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-debug-d3d11",
+      "configurePreset": "windows-cmake-debug-d3d11",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-release",
+      "configurePreset": "windows-cmake-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d9",
+      "configurePreset": "windows-cmake-release-d3d9",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d11",
+      "configurePreset": "windows-cmake-release-d3d11",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

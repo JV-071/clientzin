@@ -1,0 +1,192 @@
+name: Windows CMake
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-cmake-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VCPKG_BINARY_SOURCES: clear;files,D:/clientzin-cache/vcpkg,readwrite
+  VCPKG_DEFAULT_TRIPLET: x64-windows
+  SCCACHE_DIR: D:/clientzin-cache/sccache
+  SCCACHE_CACHE_SIZE: 2G
+  SCCACHE_BASEDIRS: ${{ github.workspace }}
+  CMAKE_C_COMPILER_LAUNCHER: sccache
+  CMAKE_CXX_COMPILER_LAUNCHER: sccache
+
+jobs:
+  dependencies:
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - name: Inspect runtime contract
+        run: python tools/audit_runtime.py
+      - name: Set cache identity
+        id: identity
+        shell: pwsh
+        run: |
+          $compiler = (Get-Item (Get-Command cl.exe).Source).VersionInfo.FileVersion
+          "compiler=$compiler" >> $env:GITHUB_OUTPUT
+          New-Item -ItemType Directory -Force D:/clientzin-cache/vcpkg | Out-Null
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: D:/clientzin-cache/vcpkg
+          key: deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+      - uses: actions/cache/restore@v4
+        id: dependency-objects
+        with:
+          path: D:/clientzin-cache/sccache
+          key: dep-objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            dep-objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+      - name: Checkout pinned vcpkg
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: 9e593bb18ea69cc5095e012465dcd675a822ed0d
+          path: .ci/vcpkg
+      - name: Install dependencies once for all four builds
+        shell: pwsh
+        run: |
+          & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
+          exit $LASTEXITCODE
+      - name: Stop cache server and report statistics
+        if: always()
+        shell: pwsh
+        run: |
+          sccache --show-stats 2>&1 | Tee-Object diagnostics/dependency-cache.txt
+          sccache --stop-server
+      - name: Save completed work even on failure
+        if: always() && steps.cache.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v4
+        with:
+          path: D:/clientzin-cache/vcpkg
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/cache/save@v4
+        if: always() && steps.dependency-objects.outputs.cache-primary-key != ''
+        with:
+          path: D:/clientzin-cache/sccache
+          key: ${{ steps.dependency-objects.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-diagnostics
+          path: |
+            diagnostics/
+            .ci/vcpkg/buildtrees/**/*.log
+          retention-days: 14
+
+  build:
+    needs: dependencies
+    name: windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }}
+    runs-on: windows-2022
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [debug, release]
+        renderer: [d3d9, d3d11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - name: Prepare diagnostics and cache identity
+        id: identity
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force diagnostics | Out-Null
+          $compiler = (Get-Item (Get-Command cl.exe).Source).VersionInfo.FileVersion
+          "compiler=$compiler" >> $env:GITHUB_OUTPUT
+          "VCPKG_ROOT=$env:GITHUB_WORKSPACE/.ci/vcpkg" >> $env:GITHUB_ENV
+          "Compiler: $compiler" | Tee-Object diagnostics/environment.txt
+          cmake --version | Tee-Object -Append diagnostics/environment.txt
+          sccache --version | Tee-Object -Append diagnostics/environment.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: D:/clientzin-cache/vcpkg
+          key: deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        id: objects
+        with:
+          path: D:/clientzin-cache/sccache
+          key: objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-
+      - uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          ref: 9e593bb18ea69cc5095e012465dcd675a822ed0d
+          path: .ci/vcpkg
+      - name: Configure
+        shell: pwsh
+        run: |
+          & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} 2>&1 | Tee-Object diagnostics/configure.log
+          exit $LASTEXITCODE
+      - name: Compile
+        shell: pwsh
+        run: |
+          cmake --build --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --parallel 4 2>&1 | Tee-Object diagnostics/build.log
+          exit $LASTEXITCODE
+      - name: Run unit tests
+        shell: pwsh
+        run: |
+          ctest --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} 2>&1 | Tee-Object diagnostics/tests.log
+          exit $LASTEXITCODE
+      - name: Package client without local game data
+        shell: pwsh
+        run: |
+          python tools/package_client.py --build build/windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --output package
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Clientzin-${{ matrix.configuration }}-${{ matrix.renderer }}
+          path: package/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Capture cache statistics
+        if: always()
+        shell: pwsh
+        run: |
+          sccache --show-stats 2>&1 | Tee-Object diagnostics/compiler-cache.txt
+          sccache --stop-server
+      - name: Save compiler results even on failure
+        if: always() && steps.objects.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v4
+        with:
+          path: D:/clientzin-cache/sccache
+          key: ${{ steps.objects.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostics-${{ matrix.configuration }}-${{ matrix.renderer }}
+          path: |
+            diagnostics/
+            build/**/CMakeCache.txt
+            build/**/CMakeConfigureLog.yaml
+            build/**/Testing/Temporary/*.log
+          retention-days: 14
