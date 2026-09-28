@@ -23,6 +23,9 @@
 #pragma once
 
 #include "staticdata.h"
+#include <nlohmann/json.hpp>
+
+int push_luavalue(const AchievementType& achievement);
 
  // outfit
 int push_luavalue(const Outfit& outfit);
@@ -130,3 +133,6 @@ int push_luavalue(const PartyMemberName& data);
 // whell gem atelier  
 int push_luavalue(const GemData& gem);  
 bool luavalue_cast(int index, GemData& gem);
+// Named protocol event tables with mixed scalar and nested array fields.
+struct RuntimeEventTable { nlohmann::json fields; };
+int push_luavalue(const RuntimeEventTable& event);

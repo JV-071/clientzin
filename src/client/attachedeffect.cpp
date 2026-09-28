@@ -21,6 +21,7 @@
  */
 
 #include "attachedeffect.h"
+#include "client.h"
 
 #include "animator.h"
 #include "gameconfig.h"
@@ -78,6 +79,8 @@ int getBounce(const Bounce& bounce) {
 }
 
 void AttachedEffect::draw(const Point& dest, const bool isOnTop, LightView* lightView, const bool drawThing) {
+    if (m_permanent && m_thingCategory == ThingCategoryEffect && m_thingId == 252 && !g_client.getShowLootHighlight())
+        return;
     if (m_transform)
         return;
 

@@ -2168,3 +2168,38 @@ bool luavalue_cast(int index, GemData& gem)
 
     return true;
 }
+namespace {
+void pushEventValue(const nlohmann::json& value)
+{
+    if (value.is_object()) {
+        g_lua.createTable(0, static_cast<int>(value.size()));
+        for (const auto& [key, child] : value.items()) {
+            pushEventValue(child);
+            g_lua.setField(key);
+        }
+    } else if (value.is_array()) {
+        g_lua.createTable(static_cast<int>(value.size()), 0);
+        int index = 1;
+        for (const auto& child : value) {
+            g_lua.pushInteger(index++);
+            pushEventValue(child);
+            g_lua.setTable();
+        }
+    } else if (value.is_boolean()) g_lua.pushBoolean(value.get<bool>());
+    else if (value.is_number()) g_lua.pushNumber(value.get<double>());
+    else if (value.is_string()) g_lua.pushString(value.get_ref<const std::string&>());
+    else g_lua.pushNil();
+}
+}
+
+int push_luavalue(const RuntimeEventTable& event)
+{
+    pushEventValue(event.fields);
+    return 1;
+}
+
+int push_luavalue(const AchievementType& achievement)
+{
+    return push_luavalue(RuntimeEventTable{{{"id", achievement.id}, {"name", achievement.name},
+        {"description", achievement.description}, {"grade", achievement.grade}}});
+}

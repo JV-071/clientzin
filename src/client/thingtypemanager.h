@@ -70,6 +70,10 @@ public:
     std::string getCyclopediaItemName(uint16_t id);
     std::string getProficienciesFile();
 
+    const RaceList& getMonsterList() const { return m_monsterRaces; }
+    const std::vector<AchievementType>& getAchievementList() const { return m_achievements; }
+    size_t getRegularAchievementCount() const { return m_achievements.size(); }
+    AchievementType getAchievementData(uint32_t id) const;
     const RaceType& getRaceData(uint32_t raceId);
     RaceList getRacesByName(const std::string& searchString);
     const HouseList& getHouseList() { return m_houses; }
@@ -103,6 +107,7 @@ private:
 
     ThingTypeList m_thingTypes[ThingLastCategory];
     RaceList m_monsterRaces;
+    std::vector<AchievementType> m_achievements;
     HouseList m_houses;
 
     ThingTypePtr m_nullThingType;

@@ -21,6 +21,7 @@
  */
 
 #include "creature.h"
+#include "client.h"
 
 #include "animator.h"
 #include "attachedeffect.h"
@@ -81,11 +82,14 @@ void Creature::draw(const Point& dest, const bool drawThings, LightView* /*light
         return;
 
     if (drawThings) {
-        if (m_showTimedSquare) {
+        const bool showFrames = g_client.getShowCombatFrames() && (!isPlayer() || g_client.getShowPvPFrames());
+        const bool attackTarget = g_game.getAttackingCreature().get() == this;
+        const auto markMode = g_client.getMarkTargetVisually();
+        if (m_showTimedSquare && showFrames) {
             g_drawPool.addBoundingRect(Rect(dest + (m_walkOffset - getDisplacement() + 2) * g_drawPool.getScaleFactor(), Size(28 * g_drawPool.getScaleFactor())), m_timedSquareColor, std::max<int>(static_cast<int>(2 * g_drawPool.getScaleFactor()), 1));
         }
 
-        if (m_showStaticSquare) {
+        if (m_showStaticSquare && showFrames && (!attackTarget || markMode == 0 || markMode == 1)) {
             g_drawPool.addBoundingRect(Rect(dest + (m_walkOffset - getDisplacement()) * g_drawPool.getScaleFactor(), Size(g_gameConfig.getSpriteSize() * g_drawPool.getScaleFactor())), m_staticSquareColor, std::max<int>(static_cast<int>(2 * g_drawPool.getScaleFactor()), 1));
         }
 
@@ -101,7 +105,11 @@ void Creature::draw(const Point& dest, const bool drawThings, LightView* /*light
 
         internalDraw(_dest);
 
-        if (isMarked())
+        if (attackTarget && (markMode == 0 || markMode == 2))
+            internalDraw(_dest, Color::red);
+        else if (g_game.getHoveredCreature().get() == this)
+            internalDraw(_dest, Color::yellow);
+        else if (isMarked())
             internalDraw(_dest, getMarkedColor());
         else if (isHighlighted())
             internalDraw(_dest, getHighlightColor());

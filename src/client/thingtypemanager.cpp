@@ -343,6 +343,10 @@ bool ThingTypeManager::loadStaticData(const std::string& file)
         }
 
         // if reload, start again
+        m_achievements.clear();
+        m_achievements.reserve(staticDataLib.achievements_size());
+        for (const auto& entry : staticDataLib.achievements())
+            m_achievements.push_back({entry.id(), entry.name(), entry.description(), entry.grade()});
         m_monsterRaces.clear();
         m_houses.clear();
 
@@ -793,3 +797,9 @@ void ThingTypeManager::loadXml(const std::string& file)
 #endif
 
 /* vim: set ts=4 sw=4 et: */
+AchievementType ThingTypeManager::getAchievementData(uint32_t id) const
+{
+    for (const auto& entry : m_achievements)
+        if (entry.id == id) return entry;
+    return {};
+}

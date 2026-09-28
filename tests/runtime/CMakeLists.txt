@@ -1,0 +1,1 @@
+otclient_add_gtest(runtime_event_tests runtime_event_test.cpp)

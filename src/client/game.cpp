@@ -70,6 +70,7 @@ void Game::resetGameStates()
     m_pvpMode = Otc::WhiteDove;
     m_safeFight = true;
     m_followingCreature = nullptr;
+    m_hoveredCreature = nullptr;
     m_attackingCreature = nullptr;
     m_localPlayer = nullptr;
     m_pingSent = 0;
@@ -1875,6 +1876,18 @@ namespace
     }
 }
 
+void Game::sendTaskBoardAction(const uint8_t option, const uint16_t value, const uint16_t extraValue)
+{
+    if (!canPerformGameAction())
+        return;
+    if ((option == Otc::TASK_BOARD_OPTION_BOUNTY_CHANGE_DIFFICULTY ||
+         option == Otc::TASK_BOARD_OPTION_WEEKLY_SELECT_DIFFICULTY) && value > 3) {
+        g_logger.warning("[protocol] Invalid task difficulty {}", value);
+        return;
+    }
+    m_protocolGame->sendTaskBoardAction(option, value, extraValue);
+}
+
 void Game::bountyTaskAction(const uint8_t actionType, const uint16_t value)
 {
     if (!canPerformGameAction())
@@ -2456,4 +2469,11 @@ void Game::sendApplyWheelPoints(const std::vector<uint16_t>& slotPoints,uint16_t
     if (!canPerformGameAction())
         return;
     m_protocolGame->sendApplyWheelPoints(slotPoints, greenGem, redGem, acquaGem, purpleGem);
+}
+
+void Game::setHoveredCreature(const CreaturePtr& creature)
+{
+    if (m_hoveredCreature == creature) return;
+    m_hoveredCreature = creature;
+    g_lua.callGlobalField("g_game", "onHoveredCreatureChange", creature);
 }

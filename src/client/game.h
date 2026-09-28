@@ -365,6 +365,11 @@ public:
     ContainerPtr getContainer(const int index) { return m_containers[index]; }
     stdext::map<int, ContainerPtr> getContainers() { return m_containers; }
     stdext::map<int, Vip> getVips() { return m_vips; }
+    CreaturePtr getHoveredCreature() const { return m_hoveredCreature; }
+    void setHoveredCreature(const CreaturePtr& creature);
+    void clearHoveredCreature(const CreaturePtr& creature) {
+        if (m_hoveredCreature == creature) setHoveredCreature(nullptr);
+    }
     CreaturePtr getAttackingCreature() { return m_attackingCreature; }
     CreaturePtr getFollowingCreature() { return m_followingCreature; }
     void setServerBeat(const int beat) { m_serverBeat = beat; }
@@ -398,6 +403,7 @@ public:
     void preyRequest();
 
     // Task Board / SoulSeals / Offline Training related
+    void sendTaskBoardAction(uint8_t option, uint16_t value = 0, uint16_t extraValue = 0);
     void bountyTaskAction(uint8_t actionType, uint16_t value = 0);
     void weeklyTaskAction(uint8_t actionType, uint16_t value = 0);
     void taskHuntingShopRequest();
@@ -512,6 +518,7 @@ private:
     void setFollowingCreature(const CreaturePtr& creature);
 
     LocalPlayerPtr m_localPlayer;
+    CreaturePtr m_hoveredCreature;
     CreaturePtr m_attackingCreature;
     CreaturePtr m_followingCreature;
     ProtocolGamePtr m_protocolGame;

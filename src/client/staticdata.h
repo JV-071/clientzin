@@ -76,6 +76,14 @@ private:
     friend class MapView;
 };
 
+struct AchievementType
+{
+    uint32_t id{0};
+    std::string name;
+    std::string description;
+    uint32_t grade{0};
+};
+
 struct RaceType
 {
     uint32_t raceId;

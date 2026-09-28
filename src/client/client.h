@@ -41,6 +41,17 @@ public:
     void onLoadingAsyncTextureChanged(bool loadingAsync) override;
     void doMapScreenshot(std::string fileName) override;
 
+    void setShowLootHighlight(bool value) { m_showLootHighlight = value; }
+    bool getShowLootHighlight() const { return m_showLootHighlight; }
+    void setShowCombatFrames(bool value) { m_showCombatFrames = value; }
+    bool getShowCombatFrames() const { return m_showCombatFrames; }
+    void setShowPvPFrames(bool value) { m_showPvPFrames = value; }
+    bool getShowPvPFrames() const { return m_showPvPFrames; }
+    void setShowMeleeAttackAnimation(bool value) { m_showMeleeAttackAnimation = value; }
+    bool getShowMeleeAttackAnimation() const { return m_showMeleeAttackAnimation; }
+    void setMarkTargetVisually(uint8_t mode) { m_targetMarkMode = mode <= 3 ? mode : 0; }
+    uint8_t getMarkTargetVisually() const { return m_targetMarkMode; }
+
     UIMapPtr getMapWidget() { return m_mapWidget; }
 
     float getEffectAlpha() const { return getEffectAlpha(Otc::ME_SOURCE_OWN); }
@@ -68,6 +79,11 @@ public:
     void setMissileAlpha(const float v) { m_missileAlpha = v; }
 
 private:
+    bool m_showLootHighlight{true};
+    bool m_showCombatFrames{true};
+    bool m_showPvPFrames{true};
+    bool m_showMeleeAttackAnimation{true};
+    uint8_t m_targetMarkMode{0};
     UIMapPtr m_mapWidget;
     std::array<float, Otc::ME_SOURCE_LAST + 1> m_effectAlphas{ 1.f, 1.f, 1.f, 1.f, 1.f };
     float m_missileAlpha{ 1.f };

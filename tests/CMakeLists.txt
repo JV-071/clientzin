@@ -6,7 +6,7 @@ function(otclient_add_gtest TARGET_NAME)
     add_executable(${TARGET_NAME} ${ARGN})
 
     set_target_properties(${TARGET_NAME} PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
     )
 
@@ -53,3 +53,5 @@ endfunction()
 add_subdirectory(map)
 add_subdirectory(stdext)
 add_subdirectory(otml)
+
+add_subdirectory(runtime)
