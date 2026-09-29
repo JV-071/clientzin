@@ -84,6 +84,9 @@ def audit():
     required = ["assets/setup.otml",
                 "init.lua", "config.ini"]
     missing_files = [p for p in required if not (ROOT / p).is_file()]
+    # Bootstrap requirements must match the supplied module manifests.
+    bootstrap_modules = re.findall(r'''g_modules\.ensureModuleLoaded\(['"]([^'"]+)['"]\)''', text(ROOT / "init.lua"))
+    missing_modules = sorted(set(bootstrap_modules) - modules.keys())
     # Validate catalog references without decoding large binary sprite resources.
     missing_catalog = []
     for folder in (ROOT / "assets/things/assets", ROOT / "assets/sounds"):
@@ -97,6 +100,7 @@ def audit():
     return {"module_count": len(modules), "singleton_calls": len(calls),
             "unresolved_candidates": unresolved, "modules": modules,
             "missing_scripts": missing_scripts, "missing_runtime_files": missing_files,
+            "missing_bootstrap_modules": missing_modules,
             "missing_catalog_files": missing_catalog}
 
 
@@ -110,7 +114,7 @@ def main():
     print(f"Modules: {result['module_count']}; singleton calls: {result['singleton_calls']}")
     print(f"Unresolved binding candidates: {len(result['unresolved_candidates'])}")
     print(f"Report: {args.output}")
-    missing = result["missing_scripts"] + result["missing_runtime_files"] + result["missing_catalog_files"]
+    missing = result["missing_scripts"] + result["missing_runtime_files"] + result["missing_catalog_files"] + result["missing_bootstrap_modules"]
     for path in missing:
         print(f"ERROR: missing runtime resource: {path}")
     return 1 if missing else 0

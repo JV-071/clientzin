@@ -66,6 +66,7 @@ jobs:
       - name: Install dependencies once for all four builds
         shell: pwsh
         run: |
+          $env:VCPKG_ROOT = Join-Path $env:GITHUB_WORKSPACE '.ci/vcpkg'
           & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log

@@ -143,7 +143,6 @@ local function loadModules()
     -- client modules 100-499
     g_modules.autoLoadModules(499)
     g_modules.ensureModuleLoaded('client')
-    g_modules.ensureModuleLoaded('client_terminal')
 
     -- game modules 500-999
     g_modules.autoLoadModules(999)
