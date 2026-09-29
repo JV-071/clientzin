@@ -29,6 +29,7 @@
 #include "textureatlas.h"
 #include "texturemanager.h"
 #include "framework/otml/otmlnode.h"
+#include <algorithm>
 
 static thread_local std::vector<Point> s_glyphsPositions(1);
 static thread_local std::vector<int>   s_lineWidths(1);
@@ -45,12 +46,18 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     m_firstGlyph = fontNode->valueAt("first-glyph", 32);
     m_glyphSpacing = fontNode->valueAt("spacing", Size(0));
 
+    if (glyphSize.width() <= 0 || glyphSize.height() <= 0 || m_glyphHeight <= 0 ||
+        m_firstGlyph < 0 || m_firstGlyph >= 256)
+        throw Exception("font '{}' has invalid glyph geometry", m_name);
+
     m_texture = g_textures.getTexture(textureFile, false);
     if (!m_texture)
         return;
     m_texture->create();
 
     const Size textureSize = m_texture->getSize();
+    if (textureSize.width() < glyphSize.width())
+        throw Exception("font '{}' atlas is narrower than one glyph", m_name);
 
     if (const auto& node = fontNode->get("fixed-glyph-width")) {
         for (int glyph = m_firstGlyph; glyph < 256; ++glyph)
@@ -64,15 +71,26 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     m_glyphsSize[static_cast<uint8_t>('\n')] = { 1, m_glyphHeight };
 
     const int numHorizontalGlyphs = textureSize.width() / glyphSize.width();
+    int clippedGlyphs = 0;
     for (int glyph = m_firstGlyph; glyph < 256; ++glyph) {
+        const int y = ((glyph - m_firstGlyph) / numHorizontalGlyphs) * glyphSize.height();
+        const int height = std::clamp(textureSize.height() - y, 0, m_glyphHeight);
+        if (height < m_glyphHeight)
+            ++clippedGlyphs;
+        m_glyphsSize[glyph].setHeight(height);
+        if (height == 0)
+            m_glyphsSize[glyph].setWidth(0);
         m_glyphsTextureCoords[glyph].setRect(((glyph - m_firstGlyph) % numHorizontalGlyphs) * glyphSize.width(),
-                                             ((glyph - m_firstGlyph) / numHorizontalGlyphs) * glyphSize.height(),
+                                             y,
                                              m_glyphsSize[glyph].width(),
-                                             m_glyphHeight);
+                                             height);
 
         m_glyphsOffset[glyph] = Point(0, 0);
         m_glyphsAdvance[glyph] = m_glyphsSize[glyph].width();
     }
+    if (clippedGlyphs > 0)
+        g_logger.warning("Font '{}' ({}): atlas {}x{} clips {} glyphs; missing pixels are treated as transparent",
+                         m_name, textureFile, textureSize.width(), textureSize.height(), clippedGlyphs);
     
     for (int glyph = 0; glyph < m_firstGlyph; ++glyph) {
         m_glyphsOffset[glyph] = Point(0, 0);
@@ -396,6 +414,12 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
 
     const auto& imageSize = image->getSize();
     const auto& texturePixels = image->getPixels();
+    const int channels = image->getBpp();
+    if (glyphSize.width() <= 0 || glyphSize.height() <= 0 || m_glyphHeight <= 0 ||
+        m_firstGlyph < 0 || m_firstGlyph >= 256 || imageSize.width() < glyphSize.width() ||
+        channels < 1 || channels > 4 ||
+        texturePixels.size() != static_cast<size_t>(imageSize.width()) * imageSize.height() * channels)
+        throw Exception("font '{}' has invalid atlas data or glyph geometry", m_name);
     const int numHorizontalGlyphs = imageSize.width() / glyphSize.width();
 
     for (int glyph = m_firstGlyph; glyph < 256; ++glyph) {
@@ -404,12 +428,18 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
                          glyphSize.width(),
                          m_glyphHeight);
 
+        const int height = std::clamp(imageSize.height() - glyphCoords.top(), 0, m_glyphHeight);
+        if (height == 0) {
+            m_glyphsSize[glyph].resize(0, 0);
+            continue;
+        }
         int width = glyphSize.width();
         for (int x = glyphCoords.left(); x <= glyphCoords.right(); ++x) {
             bool anyFilled = false;
-            const int base = x * 4;
-            for (int y = glyphCoords.top(); y <= glyphCoords.bottom(); ++y) {
-                if (texturePixels[(y * imageSize.width() * 4) + base + 3] != 0) {
+            for (int y = glyphCoords.top(); y < glyphCoords.top() + height; ++y) {
+                const size_t pixel = (static_cast<size_t>(y) * imageSize.width() + x) * channels;
+                // RGB/grayscale images are opaque; RGBA/grayscale-alpha carry alpha last.
+                if ((channels != 2 && channels != 4) || texturePixels[pixel + channels - 1] != 0) {
                     anyFilled = true;
                     break;
                 }
@@ -417,7 +447,7 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
             if (anyFilled)
                 width = x - glyphCoords.left() + 1;
         }
-        m_glyphsSize[glyph].resize(width, m_glyphHeight);
+        m_glyphsSize[glyph].resize(width, height);
     }
 }
 

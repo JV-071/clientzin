@@ -1258,7 +1258,9 @@ void WIN32Window::setTitleBarColor(const Color& color)
             sizeof(dwmColor)
         );
 
-        if (FAILED(hr)) {
+        if (hr == E_INVALIDARG) {
+            g_logger.debug("Custom title bar color is unsupported by this Windows version; keeping the system color");
+        } else if (FAILED(hr)) {
             // DWM might not be available or the feature might not be supported
             // This is normal on older Windows versions
             g_logger.debug("Failed to set title bar color: HRESULT = 0x{:08X}", static_cast<uint32_t>(hr));

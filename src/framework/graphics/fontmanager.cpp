@@ -59,6 +59,7 @@ bool FontManager::importFont(const std::string& file, int fontSize)
     }
 
     const auto& path = g_resources.guessFilePath(file, "otfont");
+    g_logger.debug("Loading font '{}'", path);
     try {
         const auto& doc = OTMLDocument::parse(path);
         const auto& fontNode = doc->at("Font");

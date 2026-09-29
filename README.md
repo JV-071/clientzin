@@ -20,14 +20,20 @@ validation on real Windows hardware.
 
 Builds and unit tests run on GitHub, not on the development PC. Download the
 Clientzin artifact for the desired configuration from this repository's Actions
-tab. Diagnostics are uploaded separately, including after failed builds.
+tab. Each of the four Clientzin artifacts contains exactly the executable and
+its matching PDB (including optimized Release symbols). These are binary update
+packages: keep the compatible runtime DLLs and assets/modules/mods from your
+existing installation. Debug and Release dependency DLLs are not interchangeable;
+use separate installation directories for those configurations. Diagnostics are
+uploaded separately, including after failed builds.
 
 ## Local game data
 
 **assets/things/assets is intentionally excluded from Git and public packages.**
 Copy your existing local game data into that directory before running the client.
 No external download endpoint is configured. Other assets, modules and mods are
-included. The default login endpoint is http://127.0.0.1/login.php.
+tracked in the repository, but are not copied into binary update artifacts.
+The default login endpoint is http://127.0.0.1/login.php.
 
 ## Integration diagnostics
 

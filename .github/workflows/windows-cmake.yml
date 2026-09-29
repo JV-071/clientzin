@@ -34,6 +34,8 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.9
       - name: Inspect runtime contract
         run: python tools/audit_runtime.py
+      - name: Verify binary package allowlist
+        run: python tools/test_package_client.py
       - name: Set cache identity
         id: identity
         shell: pwsh
@@ -162,7 +164,7 @@ jobs:
         run: |
           ctest --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} 2>&1 | Tee-Object diagnostics/tests.log
           exit $LASTEXITCODE
-      - name: Package client without local game data
+      - name: Package executable and matching PDB only
         shell: pwsh
         run: |
           python tools/package_client.py --build build/windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --output package

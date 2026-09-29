@@ -33,6 +33,7 @@ class BitmapFont
 {
 	
     friend class TTFLoader;
+    friend class BitmapFontTest;
 
 	
 public:

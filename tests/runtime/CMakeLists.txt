@@ -1,1 +1,2 @@
-otclient_add_gtest(runtime_event_tests runtime_event_test.cpp)
+otclient_add_gtest(runtime_event_tests runtime_event_test.cpp bitmapfont_test.cpp)
+target_compile_definitions(runtime_event_tests PRIVATE CLIENTZIN_SOURCE_DIR="${CMAKE_SOURCE_DIR}")

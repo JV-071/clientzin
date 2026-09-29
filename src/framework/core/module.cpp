@@ -38,6 +38,7 @@ bool Module::load()
         return true;
 
     const ticks_t startTime = stdext::millis();
+    g_logger.debug("Loading module '{}'", m_name);
 
     g_modules.m_currentModule = static_self_cast<Module>();
     try {
