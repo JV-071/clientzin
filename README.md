@@ -31,6 +31,10 @@ uploaded separately, including after failed builds.
 ## Local game data
 
 **assets/things/assets is intentionally excluded from Git and public packages.**
+If `assets.json.sha256` is absent, the client derives its login asset identifier
+from the SHA-256 of `catalog-content.json`. This identifies the local catalog;
+it is not the official launcher's hash or a verification of every asset file.
+The supplied crystalserver records this identifier without enforcing its value.
 Copy your existing local game data into that directory before running the client.
 No external download endpoint is configured. Other assets, modules and mods are
 tracked in the repository, but are not copied into binary update artifacts.

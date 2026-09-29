@@ -24,6 +24,7 @@
 
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <stdexcept>
 
 #include "game.h"
 #include "spriteappearances.h"
@@ -32,6 +33,7 @@
 #include "framework/core/garbagecollection.h"
 #include "framework/core/resourcemanager.h"
 #include "framework/otml/otmldocument.h"
+#include "framework/util/crypt.h"
 #ifdef FRAMEWORK_PROTOBUF
 #include <staticdata.pb.h>
 #endif
@@ -170,11 +172,18 @@ bool ThingTypeManager::loadAppearances(const std::string& file)
 {
 #ifdef FRAMEWORK_PROTOBUF
     try {
-        try {
-            m_assetIdentifier = g_resources.readFileContents(g_resources.resolvePath(g_resources.guessFilePath(file + "assets", "json.sha256")));
-        } catch (const std::exception& e) {
-            m_assetIdentifier = "appearancesHash";
-            g_logger.warning("Cannot load asset hash identifier from assets.json.sha256: {}", e.what());
+        const auto identifierPath = g_resources.resolvePath(g_resources.guessFilePath(file + "assets", "json.sha256"));
+        if (g_resources.fileExists(identifierPath)) {
+            m_assetIdentifier = g_resources.readFileContents(identifierPath);
+            stdext::trim(m_assetIdentifier);
+            if (m_assetIdentifier.empty())
+                throw std::runtime_error("Asset hash identifier file is empty: " + identifierPath);
+        } else {
+            // Local asset sets need not include the official launcher's assets.json.
+            // Crystalserver accepts this identifier without comparing an official hash.
+            const auto catalogPath = g_resources.resolvePath(g_resources.guessFilePath(file + "catalog-content", "json"));
+            m_assetIdentifier = g_crypt.sha256(g_resources.readFileContents(catalogPath));
+            g_logger.debug("Asset identifier derived from catalog-content.json (SHA-256): {}", m_assetIdentifier);
         }
 
         if (!g_game.getFeature(Otc::GameLoadSprInsteadProtobuf)) {

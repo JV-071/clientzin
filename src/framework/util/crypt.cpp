@@ -22,6 +22,8 @@
 
 #include "crypt.h"
 #include <cppcodec/base64_rfc4648.hpp>
+#include <openssl/evp.h>
+#include <stdexcept>
 
 #include "framework/core/graphicalapplication.h"
 #include "framework/core/resourcemanager.h"
@@ -36,6 +38,22 @@
 constexpr std::size_t CHECKSUM_BYTES = sizeof(uint32_t);
 
 Crypt g_crypt;
+
+std::string Crypt::sha256(const std::string& data)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int size = 0;
+    if (EVP_Digest(data.data(), data.size(), digest, &size, EVP_sha256(), nullptr) != 1)
+        throw std::runtime_error("Unable to calculate asset catalog SHA-256");
+    constexpr char hex[] = "0123456789abcdef";
+    std::string result;
+    result.reserve(size * 2);
+    for (unsigned int i = 0; i < size; ++i) {
+        result.push_back(hex[digest[i] >> 4]);
+        result.push_back(hex[digest[i] & 15]);
+    }
+    return result;
+}
 
 Crypt::Crypt()
 {

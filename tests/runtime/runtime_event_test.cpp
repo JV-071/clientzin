@@ -1,6 +1,14 @@
 #include <gtest/gtest.h>
 #include "client/luavaluecasts_client.h"
 #include "framework/luaengine/luainterface.h"
+#include "framework/util/crypt.h"
+
+TEST(AssetIdentifier, Sha256MatchesKnownVectors)
+{
+    EXPECT_EQ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", g_crypt.sha256(""));
+    EXPECT_EQ("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", g_crypt.sha256("abc"));
+    EXPECT_NE(g_crypt.sha256("catalog v1"), g_crypt.sha256("catalog v2"));
+}
 
 class RuntimeEventTest : public ::testing::Test {
 protected:
