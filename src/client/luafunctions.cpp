@@ -609,8 +609,9 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "sendMarketAction", &Game::browseMarket, &g_game);
     g_lua.bindSingletonFunction("g_game", "sendForgeAction", &Game::forgeRequest, &g_game);
     g_lua.bindClassStaticFunction("g_game", "sendPartyLootType", [](uint8_t) { g_game.sendPartyAnalyzerPriceType(); });
-    g_lua.bindClassStaticFunction("g_game", "sendPartyLootPrice", [](const std::vector<std::tuple<uint16_t, uint64_t>>& items) {
-        g_game.sendPartyAnalyzerAction(Otc::PARTYANALYZERACTION_PRICEVALUE, items);
+    g_lua.bindClassStaticFunction("g_game", "sendPartyLootPrice", [](const std::vector<std::pair<uint16_t, uint64_t>>& items) {
+        const std::vector<std::tuple<uint16_t, uint64_t>> prices(items.begin(), items.end());
+        g_game.sendPartyAnalyzerAction(Otc::PARTYANALYZERACTION_PRICEVALUE, prices);
     });
     g_lua.bindClassStaticFunction("g_game", "isSupplyStashMenuAvailable", [] {
         const auto player = g_game.getLocalPlayer();

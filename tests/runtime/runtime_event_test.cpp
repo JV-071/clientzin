@@ -34,3 +34,20 @@ TEST_F(RuntimeEventTest, EmptyArrayRemainsATable)
     EXPECT_EQ(1, push_luavalue(RuntimeEventTable{nlohmann::json::array()}));
     EXPECT_TRUE(g_lua.isTable());
 }
+
+TEST_F(RuntimeEventTest, ReadsPartyPricesWithoutChangingTheStack)
+{
+    using Price = std::pair<uint16_t, uint64_t>;
+    const std::vector<Price> expected{{3031, 4294967296ULL}, {3035, 100}};
+    push_luavalue(expected);
+    std::vector<Price> actual;
+    ASSERT_TRUE(luavalue_cast(-1, actual));
+    EXPECT_EQ(expected, actual);
+    EXPECT_EQ(1, g_lua.getTop());
+
+    g_lua.rawGeti(1, 1);
+    Price first{};
+    ASSERT_TRUE(luavalue_cast(2, first));
+    EXPECT_EQ(expected.front(), first);
+    EXPECT_EQ(2, g_lua.getTop());
+}

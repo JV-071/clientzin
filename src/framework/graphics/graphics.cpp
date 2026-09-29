@@ -93,6 +93,8 @@ void Graphics::init()
 
     // blending is always enabled
     glEnable(GL_BLEND);
+    // Images use tightly packed rows, including one-channel glyph atlases.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // determine max texture size
     int maxTextureSize = 0;

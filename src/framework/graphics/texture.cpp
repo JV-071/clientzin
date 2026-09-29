@@ -396,7 +396,8 @@ void Texture::setupPixels(const int level, const Size& size, const uint8_t* pixe
     }
 
 #ifdef OPENGL_ES
-    //TODO
+    // GLES 2 requires matching unsized internal and external formats.
+    internalFormat = format;
 #else
     if (compress)
         internalFormat = GL_COMPRESSED_RGBA;
