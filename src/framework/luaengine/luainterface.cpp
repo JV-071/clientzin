@@ -41,6 +41,12 @@ void LuaInterface::init()
     m_globalEnv = ref();
     pop();
 
+    // Modules may shadow the debug library in their sandbox.
+    getGlobal("debug");
+    getField("traceback");
+    m_tracebackRef = ref();
+    pop();
+
     // check if demangle_class is working as expected
     assert(stdext::demangle_class<LuaObject>() == "LuaObject");
 
@@ -388,15 +394,15 @@ void LuaInterface::evaluateExpression(const std::string_view expression, const s
 
 std::string LuaInterface::traceback(const std::string_view errorMessage, const int level)
 {
-    // gets debug.traceback
-    getGlobal("debug");
-    getField("traceback");
-    remove(-2); // remove debug
+    getRef(m_tracebackRef);
 
     // calls debug.traceback(errorMessage, level)
     pushString(errorMessage);
     pushInteger(level);
-    call(2, 1);
+    if (lua_pcall(L, 2, 1, 0) != 0) {
+        pop();
+        return std::string(errorMessage);
+    }
 
     // returns the traceback message
     return popString();

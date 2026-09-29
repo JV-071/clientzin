@@ -66,14 +66,16 @@ namespace {
         return stripQuotes(value);
     }
 
-    bool isAliasTag(const std::string_view tag)
+    bool isAliasNode(const OTMLNodePtr& node)
     {
-        return !tag.empty() && tag.front() == '&';
+        const auto& tag = node->tag();
+        // Scalar $ declarations are palette variables; $hover/$pressed nodes are states.
+        return !tag.empty() && (tag.front() == '&' || (tag.front() == '$' && node->hasValue()));
     }
 
     std::string normalizeAliasName(std::string alias)
     {
-        if (!alias.empty() && alias.front() == '&') {
+        if (!alias.empty() && (alias.front() == '&' || alias.front() == '$')) {
             alias.erase(alias.begin());
         }
         stdext::trim(alias);
@@ -163,7 +165,7 @@ namespace {
         aliasNodes.reserve(node->children().size());
 
         for (const auto& child : node->children()) {
-            if (isAliasTag(child->tag())) {
+            if (isAliasNode(child)) {
                 aliasNodes.emplace_back(child);
             }
         }
@@ -230,7 +232,7 @@ namespace {
         // Resolve $variable references in child values and recurse down the tree
         const auto children = node->children();
         for (const auto& child : children) {
-            if (!isAliasTag(child->tag())) {
+            if (!isAliasNode(child)) {
                 const auto result = resolveAliasValue(child->rawValue(), getAliases());
                 if (result.aliasReferenced) {
                     if (result.resolvedValue) {

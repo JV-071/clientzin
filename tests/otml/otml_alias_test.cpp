@@ -19,6 +19,20 @@ OTMLNodePtr findStyleByTag(const OTMLDocumentPtr& doc, std::string_view tag)
 
 } // namespace
 
+TEST(OTMLAlias, DollarPalettePersistsAcrossDocumentsWithoutReplacingStates)
+{
+    std::istringstream palette("$test-palette-font: Verdana Bold-11px\n");
+    OTMLDocument::parse(palette, "palette");
+    std::istringstream styles("TestStyle < UIWidget\n  font: $test-palette-font\n  $hover:\n    font: $test-palette-font\n");
+    const auto doc = OTMLDocument::parse(styles, "styles");
+    const auto style = findStyleByTag(doc, "TestStyle < UIWidget");
+    ASSERT_NE(nullptr, style);
+    EXPECT_EQ("Verdana Bold-11px", style->valueAt("font"));
+    const auto hover = style->get("$hover");
+    ASSERT_NE(nullptr, hover);
+    EXPECT_EQ("Verdana Bold-11px", hover->valueAt("font"));
+}
+
 TEST(OTMLAlias, ResolvesRootAliases)
 {
     const std::string document = R"(

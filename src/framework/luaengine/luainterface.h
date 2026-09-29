@@ -426,6 +426,7 @@ private:
     int m_totalObjRefs{ 0 };
     int m_totalFuncRefs{ 0 };
     int m_globalEnv{ 0 };
+    int m_tracebackRef{ 0 };
 };
 
 extern LuaInterface g_lua;

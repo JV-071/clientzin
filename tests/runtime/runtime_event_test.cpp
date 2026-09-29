@@ -8,6 +8,20 @@ protected:
     void TearDown() override { g_lua.clearStack(); g_lua.terminate(); }
 };
 
+TEST_F(RuntimeEventTest, TracebackSurvivesModuleShadowingDebugLibrary)
+{
+    const int sandbox = g_lua.newSandboxEnv();
+    g_lua.setGlobalEnvironment(sandbox);
+    g_lua.loadBuffer("function debug() end", "@shadow-debug-test");
+    g_lua.safeCall(0, 0);
+    const auto message = g_lua.traceback("original Lua error", 0);
+    EXPECT_NE(std::string::npos, message.find("original Lua error"));
+    EXPECT_NE(std::string::npos, message.find("stack traceback"));
+    EXPECT_EQ(0, g_lua.getTop());
+    g_lua.resetGlobalEnvironment();
+    g_lua.unref(sandbox);
+}
+
 TEST_F(RuntimeEventTest, PreservesNestedFieldsAndLuaArrayIndices)
 {
     RuntimeEventTable event{{

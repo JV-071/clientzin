@@ -441,7 +441,7 @@ bool UIManager::importStyle(const std::string& fl, const bool checkDeviceStyles)
 
         for (const auto& styleNode : doc->children()) {
             const std::string tag = styleNode->tag();
-            if (!tag.empty() && tag.front() == '&')
+            if (!tag.empty() && (tag.front() == '&' || (tag.front() == '$' && styleNode->hasValue())))
                 continue;
             if (tag.find('<') == std::string::npos)
                 continue;
@@ -573,7 +573,7 @@ OTMLNodePtr UIManager::findMainWidgetNode(const OTMLDocumentPtr& doc)
     for (const auto& node : doc->children()) {
         std::string tag = node->tag();
 
-        if (!tag.empty() && tag.front() == '&')
+        if (!tag.empty() && (tag.front() == '&' || (tag.front() == '$' && node->hasValue())))
             continue;
 
         if (tag.find('<') == std::string::npos) {
@@ -622,7 +622,7 @@ UIWidgetPtr UIManager::loadUI(const std::string& file, const UIWidgetPtr& parent
         for (const auto& node : doc->children()) {
             std::string tag = node->tag();
 
-            if (!tag.empty() && tag.front() == '&')
+            if (!tag.empty() && (tag.front() == '&' || (tag.front() == '$' && node->hasValue())))
                 continue;
 
             // import styles in these files too
@@ -676,7 +676,7 @@ UIWidgetPtr UIManager::loadUIFromString(const std::string& data, const UIWidgetP
         for (const OTMLNodePtr& node : doc->children()) {
             std::string tag = node->tag();
 
-            if (!tag.empty() && tag.front() == '&')
+            if (!tag.empty() && (tag.front() == '&' || (tag.front() == '$' && node->hasValue())))
                 continue;
 
             // import styles in these files too

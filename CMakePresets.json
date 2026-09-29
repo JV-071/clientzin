@@ -84,8 +84,9 @@
       },
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows",
-        "BUILD_STATIC_LIBRARY": "OFF",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "BUILD_STATIC_LIBRARY": "ON",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
         "TOGGLE_BIN_FOLDER": "ON",
         "OPTIONS_ENABLE_SCCACHE": "ON",
         "TOGGLE_PRE_COMPILED_HEADER": "OFF",

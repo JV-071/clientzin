@@ -15,7 +15,7 @@ concurrency:
 
 env:
   VCPKG_BINARY_SOURCES: clear;files,D:/clientzin-cache/vcpkg,readwrite
-  VCPKG_DEFAULT_TRIPLET: x64-windows
+  VCPKG_DEFAULT_TRIPLET: x64-windows-static
   SCCACHE_DIR: D:/clientzin-cache/sccache
   SCCACHE_CACHE_SIZE: 2G
   SCCACHE_BASEDIRS: ${{ github.workspace }}
@@ -47,16 +47,16 @@ jobs:
         id: cache
         with:
           path: D:/clientzin-cache/vcpkg
-          key: deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: deps-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+            deps-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
       - uses: actions/cache/restore@v4
         id: dependency-objects
         with:
           path: D:/clientzin-cache/sccache
-          key: dep-objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: dep-objects-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            dep-objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+            dep-objects-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
       - name: Checkout pinned vcpkg
         uses: actions/checkout@v4
         with:
@@ -68,7 +68,7 @@ jobs:
         run: |
           & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
+          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
           exit $LASTEXITCODE
       - name: Stop cache server and report statistics
         if: always()
@@ -131,17 +131,17 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: D:/clientzin-cache/vcpkg
-          key: deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: deps-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            deps-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
+            deps-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         id: objects
         with:
           path: D:/clientzin-cache/sccache
-          key: objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: objects-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            objects-v1-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-
+            objects-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ matrix.configuration }}-${{ matrix.renderer }}-${{ hashFiles('vcpkg.json') }}-
       - uses: actions/checkout@v4
         with:
           repository: microsoft/vcpkg
@@ -169,6 +169,16 @@ jobs:
         run: |
           python tools/package_client.py --build build/windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --output package
           exit $LASTEXITCODE
+      - name: Inspect executable DLL dependencies
+        shell: pwsh
+        run: |
+          $exe = (Get-ChildItem package/Clientzin-*.exe).FullName
+          dumpbin /DEPENDENTS $exe 2>&1 | Tee-Object diagnostics/executable-dependencies.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $imports = Get-Content diagnostics/executable-dependencies.txt -Raw
+          if ($imports -match '(?i)(libEGL|libGLESv2|lua51|OpenAL32|zlib1|MSVCP[0-9]+D?|VCRUNTIME[0-9]+(?:_1)?D?|ucrtbased)\.dll') {
+            throw 'Unexpected dynamic dependency in the static client; see executable-dependencies.txt'
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: Clientzin-${{ matrix.configuration }}-${{ matrix.renderer }}

@@ -22,9 +22,10 @@ Builds and unit tests run on GitHub, not on the development PC. Download the
 Clientzin artifact for the desired configuration from this repository's Actions
 tab. Each of the four Clientzin artifacts contains exactly the executable and
 its matching PDB (including optimized Release symbols). These are binary update
-packages: keep the compatible runtime DLLs and assets/modules/mods from your
-existing installation. Debug and Release dependency DLLs are not interchangeable;
-use separate installation directories for those configurations. Diagnostics are
+packages: keep assets/modules/mods from your existing installation. Windows builds
+use static dependencies and a static MSVC runtime, including ANGLE, so third-party
+runtime DLLs do not need to be distributed. Windows and graphics-driver system
+libraries remain required. Diagnostics are
 uploaded separately, including after failed builds.
 
 ## Local game data
