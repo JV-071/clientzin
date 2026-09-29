@@ -34,11 +34,21 @@
 static thread_local std::vector<Point> s_glyphsPositions(1);
 static thread_local std::vector<int>   s_lineWidths(1);
 
+Size BitmapFont::resolveGlyphCell(const Size& textureSize, const Size& declaredCell) const
+{
+    // Bundled legacy atlases: 14 rows of 11px, declared as 12px cells.
+    // Correct only the texture stride, preserving the declared line height.
+    if ((m_name == "Verdana-8px-outline" || m_name == "verdana-8px-rounded") &&
+        m_firstGlyph == 32 && textureSize == Size(192, 154) && declaredCell == Size(12, 12))
+        return Size(12, 11);
+    return declaredCell;
+}
+
 void BitmapFont::load(const OTMLNodePtr& fontNode)
 {
     const auto& textureNode = fontNode->at("texture");
     const auto& textureFile = stdext::resolve_path(textureNode->value(), textureNode->source());
-    const auto& glyphSize = fontNode->valueAt<Size>("glyph-size");
+    auto glyphSize = fontNode->valueAt<Size>("glyph-size");
     const int spaceWidth = fontNode->valueAt("space-width", glyphSize.width());
 
     m_glyphHeight = fontNode->valueAt<int>("height");
@@ -56,6 +66,7 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     m_texture->create();
 
     const Size textureSize = m_texture->getSize();
+    glyphSize = resolveGlyphCell(textureSize, glyphSize);
     if (textureSize.width() < glyphSize.width())
         throw Exception("font '{}' atlas is narrower than one glyph", m_name);
 
@@ -74,8 +85,9 @@ void BitmapFont::load(const OTMLNodePtr& fontNode)
     int clippedGlyphs = 0;
     for (int glyph = m_firstGlyph; glyph < 256; ++glyph) {
         const int y = ((glyph - m_firstGlyph) / numHorizontalGlyphs) * glyphSize.height();
-        const int height = std::clamp(textureSize.height() - y, 0, m_glyphHeight);
-        if (height < m_glyphHeight)
+        const int cellHeight = std::min(m_glyphHeight, glyphSize.height());
+        const int height = std::clamp(textureSize.height() - y, 0, cellHeight);
+        if (height < cellHeight)
             ++clippedGlyphs;
         m_glyphsSize[glyph].setHeight(height);
         if (height == 0)
@@ -407,12 +419,13 @@ Size BitmapFont::calculateTextRectSize(const std::string_view text)
     return size;
 }
 
-void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const Size& glyphSize)
+void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const Size& declaredCell)
 {
     if (!image)
         return;
 
     const auto& imageSize = image->getSize();
+    const auto glyphSize = resolveGlyphCell(imageSize, declaredCell);
     const auto& texturePixels = image->getPixels();
     const int channels = image->getBpp();
     if (glyphSize.width() <= 0 || glyphSize.height() <= 0 || m_glyphHeight <= 0 ||
@@ -428,7 +441,7 @@ void BitmapFont::calculateGlyphsWidthsAutomatically(const ImagePtr& image, const
                          glyphSize.width(),
                          m_glyphHeight);
 
-        const int height = std::clamp(imageSize.height() - glyphCoords.top(), 0, m_glyphHeight);
+        const int height = std::clamp(imageSize.height() - glyphCoords.top(), 0, std::min(m_glyphHeight, glyphSize.height()));
         if (height == 0) {
             m_glyphsSize[glyph].resize(0, 0);
             continue;

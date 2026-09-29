@@ -88,6 +88,7 @@ public:
 private:
     /// Calculates each font character by inspecting font bitmap
     void calculateGlyphsWidthsAutomatically(const ImagePtr& image, const Size& glyphSize);
+    Size resolveGlyphCell(const Size& textureSize, const Size& declaredCell) const;
     bool clipAndTranslateGlyph(Rect& glyphScreenCoords, Rect& glyphTextureCoords, const Rect& screenCoords) const noexcept;
     void updateColors(std::vector<std::pair<int, Color>>* colors, int pos, int newTextLen) noexcept;
 
