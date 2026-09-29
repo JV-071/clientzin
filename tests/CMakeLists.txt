@@ -47,7 +47,11 @@ function(otclient_add_gtest TARGET_NAME)
         endif()
     endif()
 
-    gtest_discover_tests(${TARGET_NAME})
+    # Discover after all link/app-local DLL steps finish, outside parallel builds.
+    gtest_discover_tests(${TARGET_NAME}
+        DISCOVERY_MODE PRE_TEST
+        DISCOVERY_TIMEOUT 60
+    )
 endfunction()
 
 add_subdirectory(map)
