@@ -3,6 +3,7 @@
 #include "framework/luaengine/luainterface.h"
 #include "framework/util/crypt.h"
 #include "framework/otml/otmldocument.h"
+#include "framework/graphics/coordsbuffer.h"
 #include <sstream>
 
 TEST(AssetIdentifier, Sha256MatchesKnownVectors)
@@ -10,6 +11,21 @@ TEST(AssetIdentifier, Sha256MatchesKnownVectors)
     EXPECT_EQ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", g_crypt.sha256(""));
     EXPECT_EQ("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", g_crypt.sha256("abc"));
     EXPECT_NE(g_crypt.sha256("catalog v1"), g_crypt.sha256("catalog v2"));
+}
+
+TEST(RepeatedImage, BottomAlignmentClipsTheTopOfTheFirstTile)
+{
+    CoordsBuffer coords;
+    coords.addRepeatedRects(Rect(0, 0, 4, 6), Rect(10, 20, 4, 4), true);
+    ASSERT_GT(coords.getVertexCount(), 0);
+    float minY = 1000.f;
+    float minTextureY = 1000.f;
+    for (int i = 0; i < 6; ++i) {
+        minY = std::min(minY, coords.getVertexArray()[2 * i + 1]);
+        minTextureY = std::min(minTextureY, coords.getTextureCoordArray()[2 * i + 1]);
+    }
+    EXPECT_EQ(0.f, minY);
+    EXPECT_EQ(22.f, minTextureY);
 }
 
 class RuntimeEventTest : public ::testing::Test {

@@ -4463,13 +4463,13 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
             const uint8_t containerType = msg->getU8(); // container type
             switch (containerType) {
                 case 1: // Loot Container
-                    msg->getU32(); // loot category flags
+                    item->setQuickLootFlags(msg->getU32());
                     break;
                 case 2: // Content Counter
                     msg->getU32(); // ammo total
                     break;
                 case 3: // Manager Unknown
-                    msg->getU32(); // loot flags
+                    item->setQuickLootFlags(msg->getU32());
                     msg->getU32(); // obtain flags
                     break;
                 case 4: // Loot Highlight
@@ -4487,13 +4487,13 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
                     msg->getU32(); // obtain flags
                     break;
                 case 9: // Manager
-                    msg->getU32(); // loot flags
+                    item->setQuickLootFlags(msg->getU32());
                     if (g_game.getClientVersion() >= 1332) {
                         msg->getU32(); // obtain flags
                     }
                     break;
                 case 11: // Quiver Loot
-                    msg->getU32(); // loot flags
+                    item->setQuickLootFlags(msg->getU32());
                     msg->getU32(); // ammo total
                     if (g_game.getClientVersion() >= 1332) {
                         msg->getU32(); // obtain flags
@@ -4506,7 +4506,7 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
             if (g_game.getFeature(Otc::GameThingQuickLoot)) {
                 const bool hasQuickLootFlags = static_cast<bool>(msg->getU8());
                 if (hasQuickLootFlags) {
-                    msg->getU32(); // quick loot flags
+                    item->setQuickLootFlags(msg->getU32());
                 }
             }
 
@@ -7279,8 +7279,10 @@ void ProtocolGame::parseHighscores(const InputMessagePtr& msg)
         return;
     }
 
-    msg->getU8(); // skip (0x01)
-    const auto& serverName = msg->getString();
+    const auto worldCount = msg->getU8();
+    std::vector<std::string> worlds;
+    for (uint8_t i = 0; i < worldCount; ++i)
+        worlds.push_back(msg->getString());
     const auto& world = msg->getString();
     const uint8_t worldType = msg->getU8();
     const uint8_t battlEye = msg->getU8();
@@ -7288,16 +7290,13 @@ void ProtocolGame::parseHighscores(const InputMessagePtr& msg)
     const uint8_t sizeVocation = msg->getU8();
     std::vector<std::tuple<uint32_t, std::string>> vocations;
 
-    msg->getU32(); // skip 0xFFFFFFFF
-    msg->getString(); // skip "All vocations"
-
-    for (auto i = 0; i < sizeVocation - 1; ++i) {
+    for (auto i = 0; i < sizeVocation; ++i) {
         const uint32_t vocationID = msg->getU32();
         const auto& vocationName = msg->getString();
         vocations.emplace_back(vocationID, vocationName);
     }
 
-    msg->getU32(); // skip params.vocation
+    const auto selectedVocation = msg->getU32();
 
     const uint8_t sizeCategories = msg->getU8();
     std::vector<std::tuple<uint8_t, std::string>> categories;
@@ -7308,7 +7307,7 @@ void ProtocolGame::parseHighscores(const InputMessagePtr& msg)
         categories.emplace_back(id, categoryName);
     }
 
-    msg->getU8(); // skip params.category
+    const auto selectedCategory = msg->getU8();
     const uint16_t page = msg->getU16();
     const uint16_t totalPages = msg->getU16();
 
@@ -7332,7 +7331,8 @@ void ProtocolGame::parseHighscores(const InputMessagePtr& msg)
     msg->getU8(); // skip HIGHSCORES_CATEGORIES[params.category].type or 0x00
     const uint32_t entriesTs = msg->getU32(); // last update
 
-    g_game.processHighscore(serverName, world, worldType, battlEye, vocations, categories, page, totalPages, highscores, entriesTs);
+    g_lua.callGlobalField("g_game", "onProcessHighscores", worlds, world, worldType, battlEye,
+        vocations, categories, selectedVocation, selectedCategory, page, totalPages, highscores, entriesTs);
 }
 
 void ProtocolGame::parseWeaponProficiencyInfo(const InputMessagePtr& msg)

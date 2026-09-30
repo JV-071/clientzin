@@ -804,6 +804,7 @@ void Application::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIWidget>("setImageColor", &UIWidget::setImageColor);
     g_lua.bindClassMemberFunction<UIWidget>("setImageFixedRatio", &UIWidget::setImageFixedRatio);
     g_lua.bindClassMemberFunction<UIWidget>("setImageRepeated", &UIWidget::setImageRepeated);
+    g_lua.bindClassMemberFunction<UIWidget>("setImageRepeatedFromBottom", &UIWidget::setImageRepeatedFromBottom);
     g_lua.bindClassMemberFunction<UIWidget>("setImageSmooth", &UIWidget::setImageSmooth);
     g_lua.bindClassMemberFunction<UIWidget>("setImageAutoResize", &UIWidget::setImageAutoResize);
     g_lua.bindClassMemberFunction<UIWidget>("setImageBorderTop", &UIWidget::setImageBorderTop);

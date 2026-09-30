@@ -26,6 +26,7 @@
 #include <windows.h>
 
 #ifdef _MSC_VER
+#include <crtdbg.h>
 
 #pragma warning (push)
 #pragma warning (disable:4091) // warning C4091: 'typedef ': ignored on left of '' when no variable is declared
@@ -196,9 +197,50 @@ LONG CALLBACK ExceptionHandler(const LPEXCEPTION_POINTERS e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+#if defined(_MSC_VER) && defined(_DEBUG)
+static int __cdecl reportRuntimeAssertion(int reportType, wchar_t* message, int*)
+{
+    if (reportType != _CRT_ASSERT && reportType != _CRT_ERROR)
+        return FALSE;
+    static thread_local bool reporting = false;
+    if (reporting)
+        return FALSE;
+    reporting = true;
+    try {
+        CONTEXT context{};
+        RtlCaptureContext(&context);
+        EXCEPTION_RECORD record{};
+        EXCEPTION_POINTERS pointers{&record, &context};
+        std::stringstream trace;
+        trace << "\nMicrosoft runtime assertion/error (before the Retry dialog)\n";
+        if (message) {
+            const auto bytes = WideCharToMultiByte(CP_UTF8, 0, message, -1, nullptr, 0, nullptr, nullptr);
+            if (bytes > 0) {
+                std::string text(bytes, '\0');
+                WideCharToMultiByte(CP_UTF8, 0, message, -1, text.data(), bytes, nullptr, nullptr);
+                trace << text.c_str() << '\n';
+            }
+        }
+        const bool symbols = SymInitialize(GetCurrentProcess(), nullptr, TRUE) != FALSE;
+        Stacktrace(&pointers, trace);
+        if (symbols)
+            SymCleanup(GetCurrentProcess());
+        std::ofstream report("crashreport.log", std::ios::app);
+        report << trace.str() << std::flush;
+    } catch (...) {
+        // Preserve the CRT's original assertion handling even if reporting fails.
+    }
+    reporting = false;
+    return FALSE;
+}
+#endif
+
 void installCrashHandler()
 {
     SetUnhandledExceptionFilter(ExceptionHandler);
+#if defined(_MSC_VER) && defined(_DEBUG)
+    _CrtSetReportHookW2(_CRT_RPTH_INSTALL, reportRuntimeAssertion);
+#endif
 }
 
 #endif

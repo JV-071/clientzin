@@ -38,16 +38,21 @@ void CoordsBuffer::addBoudingRect(const Rect& dest, const int innerLineWidth)
     addRect(Rect(left, top + w, w, height - w)); // left
 }
 
-void CoordsBuffer::addRepeatedRects(const Rect& dest, const Rect& src)
+void CoordsBuffer::addRepeatedRects(const Rect& dest, const Rect& src, const bool fromBottom)
 {
     if (dest.isEmpty() || src.isEmpty())
         return;
 
     const Rect virtualDest(0, 0, dest.size());
-    for (int y = 0; y <= virtualDest.height(); y += src.height()) {
+    const int startY = fromBottom ? -((src.height() - dest.height() % src.height()) % src.height()) : 0;
+    for (int y = startY; y < virtualDest.height(); y += src.height()) {
         for (int x = 0; x <= virtualDest.width(); x += src.width()) {
             Rect partialDest(x, y, src.size());
             Rect partialSrc(src);
+            if (partialDest.top() < 0) {
+                partialSrc.setTop(partialSrc.top() - partialDest.top());
+                partialDest.setTop(0);
+            }
 
             // partialCoords to screenCoords bottomRight
             if (partialDest.bottom() > virtualDest.bottom()) {

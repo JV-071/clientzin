@@ -89,6 +89,8 @@ public:
     void setDurationTime(uint32_t duration);
     void setDecaying(bool decaying);
     void setCharges(const uint32_t charges) { m_charges = charges; }
+    void setQuickLootFlags(uint32_t flags) { m_quickLootFlags = flags; }
+    uint32_t getQuickLootFlags() const { return m_quickLootFlags; }
     void setTier(const uint8_t tier) { m_tier = tier; }
 
     int getCountOrSubType() { return m_countOrSubType; }
@@ -177,6 +179,7 @@ private:
     void internalDraw(int animationPhase, const Point& dest, const Color& color, bool drawThings, bool replaceColorShader, LightView* lightView = nullptr);
 
     uint16_t m_countOrSubType{ 0 };
+    uint32_t m_quickLootFlags{ 0 };
     uint32_t m_duration{ 0 };
     int64_t m_durationEnd{ 0 };
     bool m_decaying{ false };

@@ -699,6 +699,8 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Thing>("isTranslucent", &Thing::isTranslucent);
     g_lua.bindClassMemberFunction<Thing>("isFullGround", &Thing::isFullGround);
     g_lua.bindClassMemberFunction<Thing>("isMarketable", &Thing::isMarketable);
+    // The module builds its Cyclopedia item index from market appearances.
+    g_lua.bindClassMemberFunction<Thing>("isCyclopediaItem", &Thing::isMarketable);
     g_lua.bindClassMemberFunction<Thing>("isUsable", &Thing::isUsable);
     g_lua.bindClassMemberFunction<Thing>("isWrapable", &Thing::isWrapable);
     g_lua.bindClassMemberFunction<Thing>("isUnwrapable", &Thing::isUnwrapable);
@@ -967,6 +969,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("getCount", &Item::getCount);
     g_lua.bindClassMemberFunction<Item>("getSubType", &Item::getSubType);
     g_lua.bindClassMemberFunction<Item>("getCountOrSubType", &Item::getCountOrSubType);
+    g_lua.bindClassMemberFunction<Item>("getQuickLootFlags", &Item::getQuickLootFlags);
     g_lua.bindClassMemberFunction<Item>("getId", &Item::getId);
     g_lua.bindClassMemberFunction<Item>("getTooltip", &Item::getTooltip);
     g_lua.bindClassMemberFunction<Item>("getDurationTime", &Item::getDurationTime);

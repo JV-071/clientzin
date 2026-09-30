@@ -930,6 +930,7 @@ protected:
     Rect m_imageClipRect;
     Rect m_imageRect;
     Color m_imageColor{ Color::white };
+    bool m_imageRepeatedFromBottom{ false };
     Point m_iconOffset;
     Timer m_imageAnimatorTimer;
     uint32_t m_currentFrame{ 0 };
@@ -949,6 +950,7 @@ public:
     void setImageColor(const Color& color) { m_imageColor = color; updateImageCache(); }
     void setImageFixedRatio(const bool fixedRatio) { setProp(PropImageFixedRatio, fixedRatio); updateImageCache(); }
     void setImageRepeated(const bool repeated) { setProp(PropImageRepeated, repeated); updateImageCache(); }
+    void setImageRepeatedFromBottom(bool value) { m_imageRepeatedFromBottom = value; updateImageCache(); }
     void setImageSmooth(const bool smooth) { setProp(PropImageSmooth, smooth); }
     void setImageAutoResize(const bool autoResize) { setProp(PropImageAutoResize, autoResize); }
     void setImageIndividualAnimation(const bool v) { setProp(PropImageIndividualAnimation, v); }

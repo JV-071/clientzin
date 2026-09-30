@@ -92,12 +92,12 @@ void UIWidget::parseImageStyle(const OTMLNodePtr& styleNode)
     }
 }
 
-void addImageRect(const AtlasRegion* region, const CoordsBufferPtr& coords, bool useRepeated, const Rect& dest, Rect src) {
+void addImageRect(const AtlasRegion* region, const CoordsBufferPtr& coords, bool useRepeated, const Rect& dest, Rect src, bool fromBottom = false) {
     if (region)
         src.translate(region->x, region->y);
 
     if (useRepeated)
-        coords->addRepeatedRects(dest, src);
+        coords->addRepeatedRects(dest, src, fromBottom);
     else
         coords->addRect(dest, src);
 };
@@ -149,7 +149,7 @@ void UIWidget::drawImage(const Rect& screenCoords)
             // first the center
             if (centerSize.area() > 0) {
                 rectCoords = Rect(drawRect.left() + leftBorder.width(), drawRect.top() + topBorder.height(), centerSize);
-                addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, center);
+                addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, center, m_imageRepeatedFromBottom);
             }
             // top left corner
             rectCoords = Rect(drawRect.topLeft(), topLeftCorner.size());
@@ -162,10 +162,10 @@ void UIWidget::drawImage(const Rect& screenCoords)
             addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, topRightCorner);
             // left
             rectCoords = Rect(drawRect.left(), drawRect.top() + topLeftCorner.height(), leftBorder.width(), centerSize.height());
-            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, leftBorder);
+            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, leftBorder, m_imageRepeatedFromBottom);
             // right
             rectCoords = Rect(drawRect.left() + leftBorder.width() + centerSize.width(), drawRect.top() + topRightCorner.height(), rightBorder.width(), centerSize.height());
-            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, rightBorder);
+            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, rightBorder, m_imageRepeatedFromBottom);
             // bottom left corner
             rectCoords = Rect(drawRect.left(), drawRect.top() + topLeftCorner.height() + centerSize.height(), bottomLeftCorner.size());
             addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, rectCoords, bottomLeftCorner);
@@ -191,7 +191,7 @@ void UIWidget::drawImage(const Rect& screenCoords)
                 clipRect = Rect(texCoordsOffset, textureClipSize);
             }
 
-            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, drawRect, clipRect);
+            addImageRect(m_atlasRegion, m_imageCoordsCache, useRepeated, drawRect, clipRect, m_imageRepeatedFromBottom);
         }
     }
 

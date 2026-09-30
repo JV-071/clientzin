@@ -87,7 +87,7 @@ public:
     }
 
     void addBoudingRect(const Rect& dest, int innerLineWidth);
-    void addRepeatedRects(const Rect& dest, const Rect& src);
+    void addRepeatedRects(const Rect& dest, const Rect& src, bool fromBottom = false);
 
     void append(const CoordsBuffer* buffer)
     {
