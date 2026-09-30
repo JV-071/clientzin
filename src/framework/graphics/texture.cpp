@@ -306,6 +306,11 @@ void Texture::createTexture()
 
 bool Texture::setupSize(const Size& size)
 {
+    if (size.isEmpty()) {
+        g_logger.error("Texture::setupSize rejected invalid dimensions {}x{} (source '{}')",
+                       size.width(), size.height(), m_source);
+        return false;
+    }
     if (m_size == size)
         return true;
 
@@ -376,6 +381,11 @@ void Texture::setupPixels(const int level, const Size& size, const uint8_t* pixe
 #endif
 ) const
 {
+    if (size.isEmpty() || level < 0) {
+        g_logger.error("Texture::setupPixels rejected {}x{} at mip level {} (source '{}')",
+                       size.width(), size.height(), level, m_source);
+        return;
+    }
     GLenum format = 0;
     GLenum internalFormat = GL_R8;
     switch (channels) {

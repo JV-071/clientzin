@@ -727,6 +727,7 @@ StoreWindow
 
     UIButton
       id: prevImagen
+      enabled: false
       anchors.verticalCenter: prev.verticalCenter
       anchors.left: prev.left
       size: 16 29
@@ -741,6 +742,7 @@ StoreWindow
 
     UIButton
       id: nextImagen
+      enabled: false
       anchors.verticalCenter: prev.verticalCenter
       anchors.right: HomeImagenFrame.right
       size: 16 29

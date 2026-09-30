@@ -44,7 +44,7 @@
 #include "framework/graphics/texturemanager.h"
 #include <framework/platform/platformwindow.h>
 
-MapView::MapView() : m_lightView(std::make_unique<LightView>(Size())), m_pool(g_drawPool.get(DrawPoolType::MAP))
+MapView::MapView() : m_lightView(std::make_unique<LightView>(Size(1, 1))), m_pool(g_drawPool.get(DrawPoolType::MAP))
 {
     m_floors.resize(g_gameConfig.getMapMaxZ() + 1);
     m_floorThreads.resize(g_asyncDispatcher.get_thread_count());

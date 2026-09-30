@@ -3209,6 +3209,18 @@ function onParseStoreCreateHome(offer)
 	end
 
 	bannersHome = table.copy(offer.banners or {})
+	currentIndex = 1
+
+	for _, id in ipairs({"prevImagen", "nextImagen"}) do
+		local button = controllerShop.ui.HomePanel:getChildById(id)
+		if button then
+			button:setEnabled(#bannersHome > 1)
+		end
+	end
+	local bannerWidget = getHomeBannerWidget()
+	if bannerWidget then
+		bannerWidget:setVisible(#bannersHome > 0)
+	end
 
 	if #bannersHome > 0 then
 		currentIndex = math.random(1, #bannersHome)
@@ -4042,6 +4054,10 @@ function chooseHome(self, focusedChild)
 end
 
 function changeImagenHome(direction)
+	if #bannersHome == 0 then
+		return
+	end
+
 	if direction == "nextImagen" then
 		currentIndex = currentIndex + 1
 

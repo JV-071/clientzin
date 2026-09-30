@@ -239,7 +239,7 @@ void installCrashHandler()
 {
     SetUnhandledExceptionFilter(ExceptionHandler);
 #if defined(_MSC_VER) && defined(_DEBUG)
-    _CrtSetReportHookW2(_CRT_RPTH_INSTALL, reportRuntimeAssertion);
+    _CrtSetReportHookW2(_CRT_RPTHOOK_INSTALL, reportRuntimeAssertion);
 #endif
 }
 
