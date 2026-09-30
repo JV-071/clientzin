@@ -2270,6 +2270,8 @@ std::vector<UIWidgetPtr> UIWidget::querySelectorAll(const std::string& selector)
 }
 
 UIWidgetPtr UIWidget::querySelector(const std::string& selector) {
+    if (!m_htmlNode)
+        return nullptr;
     const auto& node = m_htmlNode->querySelector(selector);
     if (node) {
         if (const auto& widget = node->getWidget())

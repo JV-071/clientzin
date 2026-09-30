@@ -329,6 +329,7 @@ protected:
     UIWidgetPtr m_parent;
     UIWidgetList m_children;
     HtmlNodePtr m_htmlNode;
+    bool m_luaHtml{ false };
     OTMLNodePtr m_style;
 
     std::string m_source;
@@ -514,7 +515,8 @@ public:
 
     auto getPositionType() { return m_positionType; }
 
-    bool isOnHtml() { return m_htmlNode != nullptr; }
+    void setOnHtml(bool value) { m_luaHtml = value; }
+    bool isOnHtml() { return m_luaHtml || m_htmlNode != nullptr; }
     bool isInFlexLayout() const { return m_inFlexLayout; }
     const auto& getHtmlNode() const { return m_htmlNode; }
     auto& getWidthHtml() { return m_width; }
