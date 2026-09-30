@@ -446,7 +446,9 @@ void Client::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_game", "inspectCharacter", &Game::inspectCharacter, &g_game);
     g_lua.bindSingletonFunction("g_game", "inspectPlayer", &Game::inspectPlayer, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestBestiary", &Game::requestBestiary, &g_game);
-    g_lua.bindSingletonFunction("g_game", "requestBestiaryOverview", &Game::requestBestiaryOverview, &g_game);
+    g_lua.bindClassStaticFunction("g_game", "requestBestiaryOverview", [](const std::string& category) {
+        g_game.requestBestiaryOverview(category, false, {});
+    });
     g_lua.bindSingletonFunction("g_game", "requestBestiarySearch", &Game::requestBestiarySearch, &g_game);
     g_lua.bindSingletonFunction("g_game", "BuyCharmRune", &Game::requestSendBuyCharmRune, &g_game);
     g_lua.bindSingletonFunction("g_game", "requestSetCharacterTitle", &Game::requestSetCharacterTitle, &g_game);
@@ -679,6 +681,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Thing>("isMissile", &Thing::isMissile);
     g_lua.bindClassMemberFunction<Thing>("isPlayer", &Thing::isPlayer);
     g_lua.bindClassMemberFunction<Thing>("isPodium", &Thing::isPodium);
+    g_lua.bindClassMemberFunction<Thing>("isDecoKit", &Thing::isDecoKit);
     g_lua.bindClassMemberFunction<Thing>("isLocalPlayer", &Thing::isLocalPlayer);
     g_lua.bindClassMemberFunction<Thing>("isGround", &Thing::isGround);
     g_lua.bindClassMemberFunction<Thing>("isGroundBorder", &Thing::isGroundBorder);
@@ -1170,6 +1173,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<LocalPlayer>("getInventoryCount", &LocalPlayer::getInventoryCount);
     g_lua.bindClassMemberFunction<LocalPlayer>("getVocation", &LocalPlayer::getVocation);
     g_lua.bindClassMemberFunction<LocalPlayer>("getBlessings", &LocalPlayer::getBlessings);
+    g_lua.bindClassMemberFunction<LocalPlayer>("getBlessingsIconColor", &LocalPlayer::getBlessingsIconColor);
     g_lua.bindClassMemberFunction<LocalPlayer>("isPremium", &LocalPlayer::isPremium);
     g_lua.bindClassMemberFunction<LocalPlayer>("isKnown", &LocalPlayer::isKnown);
     g_lua.bindClassMemberFunction<LocalPlayer>("preWalk", &LocalPlayer::preWalk);

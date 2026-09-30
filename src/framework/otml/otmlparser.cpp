@@ -251,6 +251,12 @@ namespace {
     }
 } // namespace
 
+std::string OTMLDocument::resolveGlobalValue(const std::string& value)
+{
+    const auto result = resolveAliasValue(value, sharedGlobalAliases());
+    return result.resolvedValue.value_or(value);
+}
+
 OTMLParser::OTMLParser(const OTMLDocumentPtr& doc, std::istream& in) :
     currentDepth(0), currentLine(0),
     doc(doc), currentParent(doc), previousNode(nullptr),

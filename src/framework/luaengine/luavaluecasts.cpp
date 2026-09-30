@@ -22,6 +22,7 @@
 
 #include "luainterface.h"
 #include <framework/otml/otmlnode.h>
+#include <framework/otml/otmldocument.h>
 
  // bool
 int push_luavalue(const bool b)
@@ -114,10 +115,10 @@ bool luavalue_cast(const int index, Color& color)
         color.setAlpha(static_cast<int>(g_lua.popInteger()));
         return true;
     }
-    if (g_lua.isString()) {
-        return stdext::cast(g_lua.toString(index), color);
+    if (g_lua.isString(index)) {
+        return stdext::cast(OTMLDocument::resolveGlobalValue(g_lua.toString(index)), color);
     }
-    if (g_lua.isNil()) {
+    if (g_lua.isNil(index)) {
         color = Color::white;
         return true;
     }

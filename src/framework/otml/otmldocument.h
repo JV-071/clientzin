@@ -28,6 +28,7 @@ class OTMLDocument final : public OTMLNode
 public:
     /// Create a new OTML document for filling it with nodes
     static OTMLDocumentPtr create();
+    static std::string resolveGlobalValue(const std::string& value);
 
     /// Parse OTML from a file
     static OTMLDocumentPtr parse(const std::string& fileName);

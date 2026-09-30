@@ -591,7 +591,7 @@ void LocalPlayer::setBlessings(const uint16_t blessings, const uint8_t blessVisu
     m_blessings = blessings;
     m_blessVisualState = blessVisualState;
 
-    callLuaField("onBlessingsChange", blessings, oldBlessings, blessVisualState);
+    callLuaField("onBlessingsChange", blessings, blessVisualState, oldBlessings);
 }
 
 void LocalPlayer::takeScreenshot(const uint8_t type)

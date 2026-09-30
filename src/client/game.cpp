@@ -453,7 +453,15 @@ void Game::processOpenNpcTrade(const std::vector<std::tuple<ItemPtr, std::string
 
 void Game::processPlayerGoods(const uint64_t money, const std::vector<std::tuple<ItemPtr, uint16_t>>& goods)
 {
-    g_lua.callGlobalField("g_game", "onPlayerGoods", money, goods);
+    std::vector<std::pair<uint16_t, uint16_t>> items;
+    items.reserve(goods.size());
+    for (const auto& [item, amount] : goods) {
+        if (item)
+            items.emplace_back(item->getId(), amount);
+    }
+    // This server supplies a single inventory list, with no separate loot pouch.
+    const std::vector<std::pair<uint16_t, uint16_t>> lootPouch;
+    g_lua.callGlobalField("g_game", "onPlayerGoods", money, items, lootPouch);
 }
 
 void Game::processCloseNpcTrade()
@@ -505,7 +513,8 @@ void Game::processModalDialog(const uint32_t id, const std::string_view title, c
 
 void Game::processItemDetail(const ItemInspectionData& data)
 {
-    g_lua.callGlobalField("g_game", "onParseItemDetail", data);
+    if (data.item)
+        g_lua.callGlobalField("g_game", "onParseItemDetail", data.item->getId(), data.descriptions);
 }
 
 void Game::processCyclopediaCharacterGeneralStats(const CyclopediaCharacterGeneralStats& stats, const std::vector<std::vector<uint16_t>>& skills,
@@ -1708,6 +1717,14 @@ void Game::setClientVersion(const uint16_t version)
     m_clientVersion = version;
 
     g_lua.callGlobalField("g_game", "onClientVersionChange", version);
+
+    // Modern tile-add packets always include the stack position. The module's
+    // feature table predates this engine-specific feature identifier.
+    if (version >= 1281)
+        enableFeature(Otc::GameTileAddThingWithStackpos);
+    // The 15.30 server no longer includes tournament fields in login packets.
+    if (version >= 1530)
+        disableFeature(Otc::GameTournamentPackets);
 }
 
 void Game::setAttackingCreature(const CreaturePtr& creature)

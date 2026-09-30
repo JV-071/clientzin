@@ -2,6 +2,8 @@
 #include "client/luavaluecasts_client.h"
 #include "framework/luaengine/luainterface.h"
 #include "framework/util/crypt.h"
+#include "framework/otml/otmldocument.h"
+#include <sstream>
 
 TEST(AssetIdentifier, Sha256MatchesKnownVectors)
 {
@@ -15,6 +17,18 @@ protected:
     void SetUp() override { g_lua.init(); }
     void TearDown() override { g_lua.clearStack(); g_lua.terminate(); }
 };
+
+TEST_F(RuntimeEventTest, ColorUsesGlobalPaletteAtRequestedStackIndex)
+{
+    std::istringstream palette("$var-runtime-test-color: #123456\n");
+    OTMLDocument::parse(palette, "runtime-test-palette");
+    g_lua.pushString("$var-runtime-test-color");
+    g_lua.pushBoolean(false);
+    Color color;
+    ASSERT_TRUE(luavalue_cast(1, color));
+    EXPECT_EQ(Color(0x12, 0x34, 0x56), color);
+    EXPECT_EQ(2, g_lua.getTop());
+}
 
 TEST_F(RuntimeEventTest, TracebackSurvivesModuleShadowingDebugLibrary)
 {

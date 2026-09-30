@@ -1859,7 +1859,7 @@ void ProtocolGame::parsePlayerGoods(const InputMessagePtr& msg) const
             money = msg->getU32();
     }
 
-    const uint8_t itemsListSize = g_game.getClientVersion() >= 1334 ? msg->getU16() : msg->getU8();
+    const uint16_t itemsListSize = g_game.getClientVersion() >= 1334 ? msg->getU16() : msg->getU8();
     std::vector<std::tuple<ItemPtr, uint16_t>> goods;
 
     for (auto i = 0; i < itemsListSize; ++i) {
@@ -5716,7 +5716,11 @@ void ProtocolGame::parseCyclopediaCharacterInfo(const InputMessagePtr& msg)
                 permanents.push_back(msg->getU8());
                 unlockeds.push_back(msg->getU8());
             }
-            g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterTitles", currentTitle, ids, names, descriptions, permanents, unlockeds);
+            std::vector<std::tuple<int, std::string, std::string, int, int>> titles;
+            titles.reserve(count);
+            for (size_t i = 0; i < count; ++i)
+                titles.emplace_back(ids[i], names[i], descriptions[i], permanents[i], unlockeds[i]);
+            g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterTitles", currentTitle, titles);
             break;
         }
         case Otc::CYCLOPEDIA_CHARACTERINFO_ACHIEVEMENTS:
@@ -5745,7 +5749,15 @@ void ProtocolGame::parseCyclopediaCharacterInfo(const InputMessagePtr& msg)
                     grades.push_back(0);
                 }
             }
-            g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterAchievements", points, secretsUnlocked, ids, timestamps, secrets, names, descriptions, grades);
+            auto achievements = nlohmann::json::array();
+            for (size_t i = 0; i < count; ++i) {
+                achievements.push_back({{"id", ids[i]}, {"timestamp", timestamps[i]},
+                    {"isSecret", secrets[i]}, {"name", names[i]},
+                    {"description", descriptions[i]}, {"grade", grades[i]}});
+            }
+            g_lua.callGlobalField("g_game", "onParseCyclopediaCharacterAchievements",
+                RuntimeEventTable{{{"achievementPoints", points}, {"secretsUnlocked", secretsUnlocked},
+                                   {"achievements", std::move(achievements)}}});
             break;
         }
         case Otc::CYCLOPEDIA_CHARACTERINFO_ITEMSUMMARY:

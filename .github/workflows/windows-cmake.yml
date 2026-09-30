@@ -72,12 +72,17 @@ jobs:
           & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
           exit $LASTEXITCODE
       - name: Stop cache server and report statistics
+        id: dependency-cache-state
         if: always()
         shell: pwsh
         run: |
           sccache --show-stats 2>&1 | Tee-Object diagnostics/dependency-cache.txt
           sccache --stop-server
           if ($LASTEXITCODE -ne 0) { Write-Warning "Cache server was already stopped or unavailable; see cache statistics above." }
+          $hasObjects = (Test-Path -LiteralPath $env:SCCACHE_DIR -PathType Container) -and
+            ($null -ne (Get-ChildItem -LiteralPath $env:SCCACHE_DIR -File -Recurse | Select-Object -First 1))
+          "has-objects=$($hasObjects.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if (-not $hasObjects) { Write-Output "No compiler objects to save; dependencies may have been restored from the binary cache." }
           exit 0
       - name: Save completed work even on failure
         if: always() && steps.cache.outputs.cache-primary-key != ''
@@ -86,7 +91,7 @@ jobs:
           path: D:/clientzin-cache/vcpkg
           key: ${{ steps.cache.outputs.cache-primary-key }}
       - uses: actions/cache/save@v4
-        if: always() && steps.dependency-objects.outputs.cache-primary-key != ''
+        if: always() && steps.dependency-objects.outputs.cache-primary-key != '' && steps.dependency-cache-state.outputs.has-objects == 'true'
         with:
           path: D:/clientzin-cache/sccache
           key: ${{ steps.dependency-objects.outputs.cache-primary-key }}

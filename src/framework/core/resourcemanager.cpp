@@ -358,7 +358,7 @@ bool ResourceManager::writeFileBuffer(const std::string& fileName, const uint8_t
         const auto& path = std::filesystem::path(fileName);
         const auto& dirPath = path.parent_path().string();
 
-        if (!PHYSFS_isDirectory(dirPath.c_str())) {
+        if (!dirPath.empty()) {
             if (!PHYSFS_mkdir(dirPath.c_str())) {
                 g_logger.error(
                     "Unable to create write directory '{}': {}",
@@ -372,13 +372,22 @@ bool ResourceManager::writeFileBuffer(const std::string& fileName, const uint8_t
 
     PHYSFS_file* file = PHYSFS_openWrite(fileName.c_str());
     if (!file) {
-        g_logger.error(PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        g_logger.error("Unable to open '{}' for writing: {}", fileName,
+                       PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         return false;
     }
 
-    PHYSFS_writeBytes(file, data, size);
-    PHYSFS_close(file);
-    return true;
+    const auto written = PHYSFS_writeBytes(file, data, size);
+    if (written != size) {
+        g_logger.error("Unable to write all {} bytes to '{}': {}", size, fileName,
+                       PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+    }
+    const bool closed = PHYSFS_close(file) != 0;
+    if (!closed) {
+        g_logger.error("Unable to close '{}' after writing: {}", fileName,
+                       PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+    }
+    return written == size && closed;
 }
 
 bool ResourceManager::writeFileStream(const std::string& fileName, std::iostream& in)
@@ -396,7 +405,7 @@ bool ResourceManager::writeFileStream(const std::string& fileName, std::iostream
 
 bool ResourceManager::writeFileContents(const std::string& fileName, const std::string& data)
 {
-    return writeFileBuffer(fileName, (const uint8_t*)data.c_str(), data.size());
+    return writeFileBuffer(fileName, (const uint8_t*)data.c_str(), data.size(), true);
 }
 
 FileStreamPtr ResourceManager::openFile(const std::string& fileName)
