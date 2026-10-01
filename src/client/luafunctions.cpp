@@ -970,6 +970,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Item>("getSubType", &Item::getSubType);
     g_lua.bindClassMemberFunction<Item>("getCountOrSubType", &Item::getCountOrSubType);
     g_lua.bindClassMemberFunction<Item>("getQuickLootFlags", &Item::getQuickLootFlags);
+    g_lua.bindClassMemberFunction<Item>("getObtainLootFlags", &Item::getObtainLootFlags);
     g_lua.bindClassMemberFunction<Item>("getId", &Item::getId);
     g_lua.bindClassMemberFunction<Item>("getTooltip", &Item::getTooltip);
     g_lua.bindClassMemberFunction<Item>("getDurationTime", &Item::getDurationTime);
@@ -1325,6 +1326,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UICreature>("getDirection", &UICreature::getDirection);
     g_lua.bindClassMemberFunction<UICreature>("setDirection", &UICreature::setDirection);
     g_lua.bindClassMemberFunction<UICreature>("setCenter", &UICreature::setCenter);
+    g_lua.bindClassMemberFunction<UICreature>("setCenterByBoundingBox", &UICreature::setCenterByBoundingBox);
     g_lua.bindClassMemberFunction<UICreature>("isCentered", &UICreature::isCentered);
 
     g_lua.registerClass<UISpellPreview, UIWidget>();

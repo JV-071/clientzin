@@ -40,6 +40,7 @@ public:
 
     void setCenter(const bool v) { m_center = v; }
     bool isCentered() { return m_center; }
+    void setCenterByBoundingBox(bool value) { m_centerByBoundingBox = value; repaint(); }
 
     // Opt-in (battle list miniatures): size the preview canvas to the creature so it
     // fills the widget; everywhere else the legacy 2x2-tile canvas stays untouched.
@@ -63,5 +64,6 @@ protected:
     Otc::Direction m_direction{ Otc::South };
     Outfit m_outfit;
     bool m_center{ true };
+    bool m_centerByBoundingBox{ false };
     bool m_autoFit{ false };
 };

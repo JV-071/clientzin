@@ -48,7 +48,8 @@ void UICreature::drawSelf(const DrawPoolType drawPane)
         if ((outfit.isCreature() ? outfit.getId() : outfit.getAuxId()) != 0
             && outfit.getCategory() < ThingInvalidCategory) {
             m_creature->setMarked(m_imageColor);
-            m_creature->draw(getPaddingRect(), m_creatureSize, m_center, m_autoFit);
+            m_creature->draw(getPaddingRect(), m_creatureSize,
+                m_center || m_centerByBoundingBox, m_autoFit || m_centerByBoundingBox);
         }
     }
 }

@@ -5,7 +5,11 @@
 #include "framework/otml/otmldocument.h"
 #include "framework/graphics/coordsbuffer.h"
 #include "framework/graphics/texture.h"
+#include "framework/net/inputmessage.h"
 #include <sstream>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 TEST(AssetIdentifier, Sha256MatchesKnownVectors)
 {
@@ -13,6 +17,34 @@ TEST(AssetIdentifier, Sha256MatchesKnownVectors)
     EXPECT_EQ("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", g_crypt.sha256("abc"));
     EXPECT_NE(g_crypt.sha256("catalog v1"), g_crypt.sha256("catalog v2"));
 }
+
+TEST(InputMessageBounds, PreviewDoesNotTruncateAt256BytesAndEndIncludesHeader)
+{
+    InputMessage message;
+    const int bodyStart = message.getReadPos();
+    message.setBuffer(std::string(300, 'x'));
+    message.setReadPos(bodyStart);
+    EXPECT_EQ(300u, message.peekBytes(400).size());
+    EXPECT_EQ(256u, message.peekBytes(256).size());
+    EXPECT_TRUE(message.peekBytes(-1).empty());
+    EXPECT_EQ(bodyStart, message.getReadPos());
+    message.skipBytes(message.getUnreadSize());
+    EXPECT_TRUE(message.eof());
+    EXPECT_EQ(0, message.getUnreadSize());
+}
+
+#ifdef _WIN32
+extern void Stacktrace(LPEXCEPTION_POINTERS, std::stringstream&);
+TEST(WindowsCrashReport, WalkingTheStackDoesNotFreeStackMemory)
+{
+    CONTEXT context{};
+    RtlCaptureContext(&context);
+    EXCEPTION_RECORD record{};
+    EXCEPTION_POINTERS pointers{&record, &context};
+    std::stringstream output;
+    EXPECT_NO_THROW(Stacktrace(&pointers, output));
+}
+#endif
 
 TEST(TextureDimensions, RejectsUnsetAndEmptyDimensionsBeforeGraphicsCalls)
 {

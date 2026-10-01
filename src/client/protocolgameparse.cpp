@@ -50,10 +50,14 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
 {
     int opcode = -1;
     int prevOpcode = -1;
+    std::string packetTrace;
 
     try {
         while (!msg->eof()) {
             opcode = msg->getU8();
+            packetTrace += fmt::format("0x{:02X}@{} ", opcode, msg->getReadPos() - 1);
+            if (packetTrace.size() > 1024)
+                packetTrace.erase(0, packetTrace.find(' ') + 1);
             AUTO_STAT(STATS_PACKETS, fmt::format("{} (0x{:02X})", opcode, opcode));
 
             // must be > so extended will be enabled before GameStart.
@@ -67,6 +71,7 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
             // try to parse in lua first
             const int readPos = msg->getReadPos();
             if (callLuaField<bool>("onOpcode", opcode, msg)) {
+                prevOpcode = opcode;
                 continue;
             }
             msg->setReadPos(readPos);
@@ -688,8 +693,14 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                     g_logger.warning(
                         "[{}] Unhandled opcode 0x{:02X} ({}) with {} unread bytes; previous opcode: 0x{:02X} ({}); next bytes: {}",
                         g_game.getClientVersion(), opcode, opcode, unreadSize, prevOpcode, prevOpcode, hexDump.str());
-                    msg->setReadPos(msg->getMessageSize());
-                    break;
+                    std::ofstream packet("packet.log", std::ios::app);
+                    packet << fmt::format("[UNKNOWN OPCODE] version={} position={} history={}\nPacket: ",
+                        g_game.getClientVersion(), msg->getReadPos() - 1, packetTrace);
+                    for (const unsigned char byte : msg->getBuffer())
+                        packet << fmt::format("{:02X} ", byte);
+                    packet << '\n';
+                    msg->skipBytes(msg->getUnreadSize());
+                    return;
                 }
             }
             prevOpcode = opcode;
@@ -4470,7 +4481,7 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
                     break;
                 case 3: // Manager Unknown
                     item->setQuickLootFlags(msg->getU32());
-                    msg->getU32(); // obtain flags
+                    item->setObtainLootFlags(msg->getU32());
                     break;
                 case 4: // Loot Highlight
                 {
@@ -4484,19 +4495,19 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
                     break;
                 }
                 case 8: // Obtain
-                    msg->getU32(); // obtain flags
+                    item->setObtainLootFlags(msg->getU32());
                     break;
                 case 9: // Manager
                     item->setQuickLootFlags(msg->getU32());
                     if (g_game.getClientVersion() >= 1332) {
-                        msg->getU32(); // obtain flags
+                        item->setObtainLootFlags(msg->getU32());
                     }
                     break;
                 case 11: // Quiver Loot
                     item->setQuickLootFlags(msg->getU32());
                     msg->getU32(); // ammo total
                     if (g_game.getClientVersion() >= 1332) {
-                        msg->getU32(); // obtain flags
+                        item->setObtainLootFlags(msg->getU32());
                     }
                     break;
                 default:

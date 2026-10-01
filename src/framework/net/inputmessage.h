@@ -89,10 +89,10 @@ public:
     std::vector<uint8_t> peekBytes(int bytes) const
     {
         const int available = m_messageSize - (m_readPos - m_headerPos);
-        if (available <= 0)
+        if (available <= 0 || bytes <= 0)
             return {};
 
-        bytes = std::min<uint8_t>(bytes, available);
+        bytes = std::min<int>(bytes, available);
         std::vector<uint8_t> data(bytes);
         std::memcpy(data.data(), m_buffer + m_readPos, bytes);
         return data;
