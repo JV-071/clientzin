@@ -203,6 +203,7 @@ protected:
     void onSend() override;
 
     friend class Game;
+    friend class RuntimeEventTest;
 
 public:
     void addPosition(const OutputMessagePtr& msg, const Position& position);

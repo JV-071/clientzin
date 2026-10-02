@@ -2758,7 +2758,9 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg) const
         m_localPlayer->setBaseSkill(static_cast<Otc::Skill>(skill), baseLevel);
     }
 
-    if (g_game.getFeature(Otc::GameAdditionalSkills)) {
+    // CharacterSkillStats carries leech, critical and forge bonuses in the
+    // extended block below, replacing the older pairs of skill levels.
+    if (g_game.getFeature(Otc::GameAdditionalSkills) && !g_game.getFeature(Otc::GameCharacterSkillStats)) {
         // Critical, Life Leech, Mana Leech
         for (int_fast32_t skill = Otc::CriticalChance; skill <= Otc::ManaLeechAmount; ++skill) {
             if (!g_game.getFeature(Otc::GameLeechAmount)) {

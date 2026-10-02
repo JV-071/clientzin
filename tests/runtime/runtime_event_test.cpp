@@ -6,6 +6,11 @@
 #include "framework/graphics/coordsbuffer.h"
 #include "framework/graphics/texture.h"
 #include "framework/net/inputmessage.h"
+#include "framework/ui/uiwidget.h"
+#include "client/protocolgame.h"
+#include "client/game.h"
+#include "client/gameconfig.h"
+#include "client/localplayer.h"
 #include <sstream>
 #ifdef _WIN32
 #include <windows.h>
@@ -75,7 +80,49 @@ class RuntimeEventTest : public ::testing::Test {
 protected:
     void SetUp() override { g_lua.init(); }
     void TearDown() override { g_lua.clearStack(); g_lua.terminate(); }
+    void parseSkills(const InputMessagePtr& message)
+    {
+        ProtocolGame protocol;
+        protocol.m_localPlayer = std::make_shared<LocalPlayer>();
+        protocol.parsePlayerSkills(message);
+    }
 };
+
+TEST_F(RuntimeEventTest, LuaHtmlWhitespaceDoesNotRequireNativeNode)
+{
+    auto widget = std::make_shared<UIWidget>();
+    widget->setOnHtml(true);
+    ASSERT_TRUE(widget->isOnHtml());
+    ASSERT_EQ(nullptr, widget->getHtmlNode());
+    EXPECT_NO_THROW(widget->applyWhiteSpace());
+    widget->destroy();
+}
+
+TEST_F(RuntimeEventTest, ModernSkillsDoNotConsumeLegacyAdditionalSkillPairs)
+{
+    g_lua.loadBuffer("g_game = {}", "@skills-packet-test");
+    g_lua.safeCall(0, 0);
+    const auto previousSupportedVersion = g_gameConfig.getLastSupportedVersion();
+    g_gameConfig.setLastSupportedVersion(1530);
+    g_game.setClientVersion(1530);
+    for (auto feature : {Otc::GameDoubleSkills, Otc::GameSkillsBase,
+                         Otc::GameBaseSkillU16, Otc::GameAdditionalSkills,
+                         Otc::GameConcotions, Otc::GameCharacterSkillStats})
+        g_game.enableFeature(feature);
+
+    // Server 15.30: magic + seven skills (64), list count (1), capacities
+    // (8), attack/conversion (11), imbuements (25), defense (18), absorb
+    // count (1), forge doubles (15). The following opcode must remain unread.
+    auto message = std::make_shared<InputMessage>();
+    const int start = message->getReadPos();
+    message->setBuffer(std::string(143, '\0') + static_cast<char>(0x9c));
+    message->setReadPos(start);
+    EXPECT_NO_THROW(parseSkills(message));
+    EXPECT_EQ(1, message->getUnreadSize());
+    EXPECT_EQ(0x9c, message->getU8());
+    g_game.setClientVersion(0);
+    g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
+}
 
 TEST_F(RuntimeEventTest, ColorUsesGlobalPaletteAtRequestedStackIndex)
 {

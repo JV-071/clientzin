@@ -380,7 +380,8 @@ void UIWidget::setText(const std::string_view text, const bool dontFireLuaCall)
     const std::string oldText = m_text;
     m_text = _text;
 
-    if (isOnHtml() && !isTextEdit()) {
+    // Lua HTML widgets manage whitespace and layout in modulelib themselves.
+    if (m_htmlNode && !isTextEdit()) {
         applyWhiteSpace();
         scheduleHtmlTask(PropUpdateSize);
         refreshHtml(true);
@@ -639,6 +640,8 @@ const WrapOptions& UIWidget::getTextWrapOptions() {
 }
 
 void UIWidget::applyWhiteSpace() {
+    if (!m_htmlNode)
+        return;
     auto whiteSpace = m_htmlNode->getStyle("white-space");
     if (whiteSpace.empty())
         whiteSpace = "normal";
