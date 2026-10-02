@@ -6,6 +6,8 @@
 #include "framework/graphics/coordsbuffer.h"
 #include "framework/graphics/texture.h"
 #include "framework/net/inputmessage.h"
+#include "framework/core/resourcemanager.h"
+#include "framework/graphics/texturemanager.h"
 #include "framework/ui/uiwidget.h"
 #include "client/protocolgame.h"
 #include "client/game.h"
@@ -78,14 +80,31 @@ TEST(RepeatedImage, BottomAlignmentClipsTheTopOfTheFirstTile)
 
 class RuntimeEventTest : public ::testing::Test {
 protected:
-    void SetUp() override { g_lua.init(); }
-    void TearDown() override { g_lua.clearStack(); g_lua.terminate(); }
+    void SetUp() override
+    {
+        g_lua.init();
+        // Creature construction resolves its typing icon through PhysicsFS,
+        // just as in the map tests; Lua alone is not a complete environment.
+        g_resources.init(".");
+        g_resources.addSearchPath(".");
+        g_textures.init();
+    }
+    void TearDown() override
+    {
+        g_lua.clearStack();
+        g_lua.terminate();
+        g_textures.terminate();
+        g_resources.terminate();
+    }
     void parseSkills(const InputMessagePtr& message)
     {
         g_lua.registerClass<LocalPlayer>();
+        std::cout << "[skills test] Creating protocol and local player" << std::endl;
         ProtocolGame protocol;
         protocol.m_localPlayer = std::make_shared<LocalPlayer>();
+        std::cout << "[skills test] Parsing skills packet" << std::endl;
         protocol.parsePlayerSkills(message);
+        std::cout << "[skills test] Skills packet parsed" << std::endl;
     }
 };
 
