@@ -90,7 +90,11 @@ protected:
 
 TEST_F(RuntimeEventTest, LuaHtmlWhitespaceDoesNotRequireNativeNode)
 {
-    auto widget = std::make_shared<UIWidget>();
+    class TestWidget : public UIWidget {
+    public:
+        using UIWidget::applyWhiteSpace;
+    };
+    auto widget = std::make_shared<TestWidget>();
     widget->setOnHtml(true);
     ASSERT_TRUE(widget->isOnHtml());
     ASSERT_EQ(nullptr, widget->getHtmlNode());
