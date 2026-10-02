@@ -82,6 +82,7 @@ protected:
     void TearDown() override { g_lua.clearStack(); g_lua.terminate(); }
     void parseSkills(const InputMessagePtr& message)
     {
+        g_lua.registerClass<LocalPlayer>();
         ProtocolGame protocol;
         protocol.m_localPlayer = std::make_shared<LocalPlayer>();
         protocol.parsePlayerSkills(message);
@@ -94,6 +95,7 @@ TEST_F(RuntimeEventTest, LuaHtmlWhitespaceDoesNotRequireNativeNode)
     public:
         using UIWidget::applyWhiteSpace;
     };
+    g_lua.registerClass<TestWidget>();
     auto widget = std::make_shared<TestWidget>();
     widget->setOnHtml(true);
     ASSERT_TRUE(widget->isOnHtml());
