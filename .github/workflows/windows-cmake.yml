@@ -2,7 +2,7 @@ name: Windows CMake
 
 on:
   push:
-    branches: [main]
+    branches: [main, restore-first-login]
   pull_request:
   workflow_dispatch:
 
@@ -16,6 +16,7 @@ concurrency:
 env:
   VCPKG_BINARY_SOURCES: clear;files,D:/clientzin-cache/vcpkg,readwrite
   VCPKG_DEFAULT_TRIPLET: x64-windows-static
+  VCPKG_DOWNLOADS: D:/clientzin-cache/downloads
   SCCACHE_DIR: D:/clientzin-cache/sccache
   SCCACHE_CACHE_SIZE: 2G
   SCCACHE_BASEDIRS: ${{ github.workspace }}
@@ -43,6 +44,15 @@ jobs:
           $compiler = (Get-Item (Get-Command cl.exe).Source).VersionInfo.FileVersion
           "compiler=$compiler" >> $env:GITHUB_OUTPUT
           New-Item -ItemType Directory -Force D:/clientzin-cache/vcpkg | Out-Null
+          New-Item -ItemType Directory -Force $env:VCPKG_DOWNLOADS | Out-Null
+      - name: Restore downloaded dependency tools and sources
+        uses: actions/cache/restore@v4
+        id: downloads
+        with:
+          path: D:/clientzin-cache/downloads
+          key: downloads-v1-windows-9e593bb-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            downloads-v1-windows-9e593bb-
       - uses: actions/cache/restore@v4
         id: cache
         with:
@@ -69,15 +79,29 @@ jobs:
           $env:VCPKG_ROOT = Join-Path $env:GITHUB_WORKSPACE '.ci/vcpkg'
           & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
-          exit $LASTEXITCODE
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            $attemptLog = "diagnostics/vcpkg-attempt-$attempt.log"
+            & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object $attemptLog
+            $installExit = $LASTEXITCODE
+            Copy-Item -LiteralPath $attemptLog -Destination diagnostics/vcpkg.log
+            if ($installExit -eq 0) { exit 0 }
+            $downloadFailed = (Get-Content -LiteralPath $attemptLog -Raw) -match 'curl operation failed|Failed to download|SSL connect error'
+            if (-not $downloadFailed -or $attempt -eq 3) { exit $installExit }
+            Write-Warning "Dependency download failed on attempt $attempt; retrying with completed work retained."
+            Start-Sleep -Seconds 15
+          }
       - name: Stop cache server and report statistics
+        id: dependency-cache-state
         if: always()
         shell: pwsh
         run: |
           sccache --show-stats 2>&1 | Tee-Object diagnostics/dependency-cache.txt
           sccache --stop-server
           if ($LASTEXITCODE -ne 0) { Write-Warning "Cache server was already stopped or unavailable; see cache statistics above." }
+          $hasObjects = (Test-Path -LiteralPath $env:SCCACHE_DIR -PathType Container) -and
+            ($null -ne (Get-ChildItem -LiteralPath $env:SCCACHE_DIR -File -Recurse | Select-Object -First 1))
+          "has-objects=$($hasObjects.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if (-not $hasObjects) { Write-Output "No compiler objects to save; dependencies may have been restored from the binary cache." }
           exit 0
       - name: Save completed work even on failure
         if: always() && steps.cache.outputs.cache-primary-key != ''
@@ -85,8 +109,14 @@ jobs:
         with:
           path: D:/clientzin-cache/vcpkg
           key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Save downloaded dependency tools and sources even on failure
+        if: always() && steps.downloads.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v4
+        with:
+          path: D:/clientzin-cache/downloads
+          key: ${{ steps.downloads.outputs.cache-primary-key }}
       - uses: actions/cache/save@v4
-        if: always() && steps.dependency-objects.outputs.cache-primary-key != ''
+        if: always() && steps.dependency-objects.outputs.cache-primary-key != '' && steps.dependency-cache-state.outputs.has-objects == 'true'
         with:
           path: D:/clientzin-cache/sccache
           key: ${{ steps.dependency-objects.outputs.cache-primary-key }}
@@ -129,6 +159,13 @@ jobs:
           "Compiler: $compiler" | Tee-Object diagnostics/environment.txt
           cmake --version | Tee-Object -Append diagnostics/environment.txt
           sccache --version | Tee-Object -Append diagnostics/environment.txt
+      - name: Restore downloaded dependency tools and sources
+        uses: actions/cache/restore@v4
+        with:
+          path: D:/clientzin-cache/downloads
+          key: downloads-v1-windows-9e593bb-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            downloads-v1-windows-9e593bb-
       - uses: actions/cache/restore@v4
         with:
           path: D:/clientzin-cache/vcpkg
@@ -163,7 +200,7 @@ jobs:
       - name: Run unit tests
         shell: pwsh
         run: |
-          ctest --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} 2>&1 | Tee-Object diagnostics/tests.log
+          ctest --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --verbose --timeout 60 2>&1 | Tee-Object diagnostics/tests.log
           exit $LASTEXITCODE
       - name: Package executable and matching PDB only
         shell: pwsh

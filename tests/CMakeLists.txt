@@ -51,6 +51,7 @@ function(otclient_add_gtest TARGET_NAME)
     gtest_discover_tests(${TARGET_NAME}
         DISCOVERY_MODE PRE_TEST
         DISCOVERY_TIMEOUT 60
+        PROPERTIES TIMEOUT 60
     )
 endfunction()
 
