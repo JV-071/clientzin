@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <stdexcept>
+
 #include <framework/core/inputevent.h>
 #include <framework/core/timer.h>
 #include <framework/global.h>
@@ -129,7 +131,12 @@ public:
     Point getMousePosition() { return m_inputEvent.mousePos; }
     int getKeyboardModifiers() { return m_inputEvent.keyboardModifiers; }
 
-    bool isKeyPressed(const Fw::Key keyCode) { return m_keyInfo[keyCode].state; }
+    bool isKeyPressed(const Fw::Key keyCode)
+    {
+        if (static_cast<size_t>(keyCode) >= m_keyInfo.size())
+            throw std::out_of_range("isKeyPressed: invalid key code " + std::to_string(static_cast<int>(keyCode)));
+        return m_keyInfo[keyCode].state;
+    }
     bool isMouseButtonPressed(const Fw::MouseButton mouseButton)
     { if (mouseButton == Fw::MouseNoButton) return m_mouseButtonStates != 0; return (m_mouseButtonStates & (1u << mouseButton)) == (1u << mouseButton); }
     bool isVisible() { return m_visible; }
@@ -145,7 +152,7 @@ public:
 
     void addKeyListener(std::function<void(const InputEvent&)> listener) { m_keyListeners.push_back(listener); }
 
-    void setKeyDelay(const Fw::Key key, const uint8_t delay) { if (key < Fw::KeyLast) m_keyInfo[key].delay = delay; }
+    void setKeyDelay(const Fw::Key key, const uint8_t delay) { if (static_cast<size_t>(key) < m_keyInfo.size()) m_keyInfo[key].delay = delay; }
 
 protected:
 

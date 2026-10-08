@@ -173,6 +173,23 @@ namespace Fw
         KeyNumpad7 = 148,
         KeyNumpad8 = 149,
         KeyNumpad9 = 150,
+        KeyNumpadEnter = 151,
+        KeyNumpadPlus = 152,
+        KeyNumpadInsert = 153,
+        KeyNumpadEnd = 154,
+        KeyNumpadDown = 155,
+        KeyNumpadPgDown = 156,
+        KeyNumpadLeft = 157,
+        KeyNumpadClear = 158,
+        KeyNumpadRight = 159,
+        KeyNumpadHome = 160,
+        KeyNumpadUp = 161,
+        KeyNumpadPgUp = 162,
+        KeyNumpadPeriod = 163,
+        KeyNumpadDelete = 164,
+        KeyNumpadMinus = 165,
+        KeyNumpadMultiply = 166,
+        KeyNumpadDivide = 167,
         KeyLast
     };
 

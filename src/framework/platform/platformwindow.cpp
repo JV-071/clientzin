@@ -83,7 +83,7 @@ void PlatformWindow::updateUnmaximizedCoords()
 
 void PlatformWindow::processKeyDown(Fw::Key keyCode)
 {
-    if (keyCode == Fw::KeyUnknown)
+    if (keyCode == Fw::KeyUnknown || static_cast<size_t>(keyCode) >= m_keyInfo.size())
         return;
 
     if (keyCode == Fw::KeyCtrl) {
@@ -128,7 +128,7 @@ void PlatformWindow::processKeyDown(Fw::Key keyCode)
 
 void PlatformWindow::processKeyUp(Fw::Key keyCode)
 {
-    if (keyCode == Fw::KeyUnknown)
+    if (keyCode == Fw::KeyUnknown || static_cast<size_t>(keyCode) >= m_keyInfo.size())
         return;
 
     if (keyCode == Fw::KeyCtrl) {
