@@ -17,11 +17,11 @@ protected:
     }
 };
 
-TEST_F(BitmapFontTest, SuppliedAtlasesUseElevenPixelRowsAndPreserveLineHeight)
+TEST_F(BitmapFontTest, LegacyAtlasFixturesUseElevenPixelRowsAndPreserveLineHeight)
 {
     for (const auto* name : {"verdana-8px-outline.png", "verdana-8px-rounded.png"}) {
         SCOPED_TRACE(name);
-        std::ifstream file(std::string(CLIENTZIN_SOURCE_DIR) + "/assets/fonts/" + name, std::ios::binary);
+        std::ifstream file(std::string(CLIENTZIN_SOURCE_DIR) + "/tests/fixtures/fonts/" + name, std::ios::binary);
         ASSERT_TRUE(file.good());
         const std::string bytes{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
         const auto image = Image::loadPNG(bytes.data(), bytes.size());
@@ -34,6 +34,22 @@ TEST_F(BitmapFontTest, SuppliedAtlasesUseElevenPixelRowsAndPreserveLineHeight)
             EXPECT_EQ(11, font.getGlyphsSize()[glyph].height());
         EXPECT_GT(font.getGlyphsSize()[255].width(), 0);
     }
+}
+
+TEST_F(BitmapFontTest, CurrentRoundedAtlasUsesDeclaredGeometry)
+{
+    std::ifstream file(std::string(CLIENTZIN_SOURCE_DIR) + "/assets/fonts/verdana-11px-rounded_cp1250.png", std::ios::binary);
+    ASSERT_TRUE(file.good());
+    const std::string bytes{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+    const auto image = Image::loadPNG(bytes.data(), bytes.size());
+    ASSERT_NE(nullptr, image);
+    ASSERT_EQ(Size(256, 224), image->getSize());
+    name("verdana-11px-rounded");
+    scan(image, Size(16, 16), 13);
+    EXPECT_EQ(13, font.getGlyphHeight());
+    for (int glyph = 32; glyph < 256; ++glyph)
+        EXPECT_EQ(13, font.getGlyphsSize()[glyph].height());
+    EXPECT_GT(font.getGlyphsSize()[255].width(), 0);
 }
 
 TEST_F(BitmapFontTest, RespectsPixelChannelsAndAlpha)
