@@ -1,4 +1,4 @@
-﻿tutorialHintWindow = nil
+tutorialHintWindow = nil
 tutorialVocationWindow = nil
 tutorialMainlandWindow = nil
 tutorialStartWindow = nil

@@ -291,10 +291,12 @@ TEST_F(RuntimeEventTest, NativeExceptionRetainsCauseAndLuaCallsiteAndAllowsFollo
     g_lua.pushCppFunction([&](LuaInterface* lua) -> int {
         if (fail) {
             fail = false;
-            std::runtime_error nativeError("reconnect diagnostic sentinel");
-            EXPECT_STREQ("reconnect diagnostic sentinel", nativeError.what());
+            {
+                std::runtime_error nativeError("reconnect diagnostic sentinel");
+                EXPECT_STREQ("reconnect diagnostic sentinel", nativeError.what());
+            }
             try {
-                throw nativeError;
+                throw std::runtime_error("reconnect diagnostic sentinel");
             } catch (const std::exception& error) {
                 EXPECT_STREQ("reconnect diagnostic sentinel", error.what());
                 throw;

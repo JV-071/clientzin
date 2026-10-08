@@ -1,4 +1,4 @@
-﻿HelperConditions = HelperConditions or {}
+HelperConditions = HelperConditions or {}
 
 local ctx
 local conditionsUiLanguage = "en"
@@ -465,18 +465,18 @@ local function var_0_45(arg_26_0)
 	return false
 end
 
-local function var_0_46(unusedArgument, arg_27_1)
-	if not arg_27_1 then
+local function var_0_46(unusedArgument, spellData)
+	if not spellData then
 		return false
 	end
 
-	local var_27_0 = (arg_27_1.words or ""):lower()
+	local words = (spellData.words or ""):lower()
 
-	if not var_0_25[var_27_0] then
+	if not var_0_25[words] then
 		return false
 	end
 
-	return isHelperHasteSpell(arg_27_1.vocations)
+	return isHelperHasteSpell(spellData.vocations)
 end
 
 local function isHelperManaTrainingSpell(unusedArgument, spellData)

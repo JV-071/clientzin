@@ -1,4 +1,4 @@
-﻿TaskBoard.WeeklyTask = {}
+TaskBoard.WeeklyTask = {}
 
 local WeeklyTask = TaskBoard.WeeklyTask
 
@@ -513,9 +513,9 @@ local function var_0_21(weeklyTasks)
 		return
 	end
 
-	local var_24_1 = weeklyTasks.killEntries or {}
+	local killEntries = weeklyTasks.killEntries or {}
 
-	if #var_24_1 == 0 then
+	if #killEntries == 0 then
 		deliverySlotsList:updateLayout()
 
 		return
@@ -523,40 +523,40 @@ local function var_0_21(weeklyTasks)
 
 	deliverySlotsList:destroyChildren()
 
-	local var_24_2, var_24_3 = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+	local ok, anyPanel = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
 
-	if not var_24_2 then
-		print("[WeeklyTask] erro criando KillSlots (Any Creature):", tostring(var_24_3))
+	if not ok then
+		print("[WeeklyTask] erro criando KillSlots (Any Creature):", tostring(anyPanel))
 
 		return
 	end
 
-	fillKillSlot(var_24_3, "Any Creature", weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, nil)
+	fillKillSlot(anyPanel, "Any Creature", weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, nil)
 
 	local unlockKillButton = deliverySlotsList:getParent():getChildById("unlockKillButton")
 
 	if unlockKillButton then
-		if #var_24_1 > 5 then
+		if #killEntries > 5 then
 			unlockKillButton:setVisible(false)
 		else
 			unlockKillButton:setVisible(true)
 		end
 	end
 
-	for unusedValue, entry in ipairs(var_24_1) do
-		local var_24_5, var_24_6 = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+	for unusedValue, entry in ipairs(killEntries) do
+		local ok2, panel = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
 
-		if not var_24_5 then
-			print("[WeeklyTask] erro criando KillSlots:", tostring(var_24_6))
+		if not ok2 then
+			print("[WeeklyTask] erro criando KillSlots:", tostring(panel))
 
 			break
 		end
 
 		local numericValue = tonumber(entry.raceId) or 0
 		local raceData = g_things.getRaceData(numericValue)
-		local var_24_9 = raceData and raceData.raceId ~= 0 and raceData.name or "?"
+		local raceName = raceData and raceData.raceId ~= 0 and raceData.name or "?"
 
-		fillKillSlot(var_24_6, var_24_9, entry.totalMonsterKilleds, entry.totalKills, raceData)
+		fillKillSlot(panel, raceName, entry.totalMonsterKilleds, entry.totalKills, raceData)
 	end
 
 	deliverySlotsList:updateLayout()

@@ -1,4 +1,4 @@
-﻿local dragPreviewItem
+local dragPreviewItem
 local dragPreviewIsActionSlot = false
 local dragPreviewStyleName
 local hoveredActionTargetSlot
@@ -565,9 +565,9 @@ function UIItem.onHoverChange(self, hovered)
 
 	if draggingWidget and self ~= draggingWidget then
 		local className = draggingWidget:getClassName() == "UIGameMap"
-		local var_21_5 = draggingWidget:getClassName() == "UIItem" and not draggingWidget:isVirtual()
+		local gotItem = draggingWidget:getClassName() == "UIItem" and not draggingWidget:isVirtual()
 
-		if hovered and (var_21_5 or className) then
+		if hovered and (gotItem or className) then
 			self:setBorderWidth(1)
 
 			draggingWidget.hoveredWho = self

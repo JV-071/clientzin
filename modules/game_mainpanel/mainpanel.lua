@@ -862,43 +862,43 @@ local function isShortcutButtonConfiguredVisible(id, button)
 end
 
 function getShortcutOrder()
-	local var_42_0 = {}
-	local var_42_1 = {}
+	local order = {}
+	local seen = {}
 	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
 
 	if not optionsPanel then
-		return var_42_0
+		return order
 	end
 
-	local function var_42_3(id)
+	local function isShortcutVisible(id)
 		return isShortcutButtonConfiguredVisible(id, optionsPanel:getChildById(id))
 	end
 
 	for unusedValue, entry in ipairs(buttonOrder) do
-		if type(entry) == "string" and entry ~= "" and not var_42_1[entry] and var_42_3(entry) then
-			table.insert(var_42_0, entry)
+		if type(entry) == "string" and entry ~= "" and not seen[entry] and isShortcutVisible(entry) then
+			table.insert(order, entry)
 
-			var_42_1[entry] = true
+			seen[entry] = true
 		end
 	end
 
 	for unusedValue, child in ipairs(optionsPanel:getChildren()) do
 		local id = child:getId()
 
-		if id and id ~= "" and not var_42_1[id] and var_42_3(id) then
-			table.insert(var_42_0, id)
+		if id and id ~= "" and not seen[id] and isShortcutVisible(id) then
+			table.insert(order, id)
 
-			var_42_1[id] = true
+			seen[id] = true
 		end
 	end
 
-	return var_42_0
+	return order
 end
 
 function applyShortcutOrder(order)
-	local var_44_0 = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
+	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
 
-	if not var_44_0 then
+	if not optionsPanel then
 		return
 	end
 
@@ -910,7 +910,7 @@ function applyShortcutOrder(order)
 		byId[ch] = true
 	end
 
-	for unusedValue, child in ipairs(var_44_0:getChildren()) do
+	for unusedValue, child in ipairs(optionsPanel:getChildren()) do
 		local id = child:getId()
 
 		if id and id ~= "" then

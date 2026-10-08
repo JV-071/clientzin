@@ -1,4 +1,4 @@
-﻿SidebarWidgetsPersistence = {}
+SidebarWidgetsPersistence = {}
 
 local SECTION_WIDGETS_MANAGER = "sidebarWidgetsMangerOptions"
 local HORIZONTAL_PARENT_IDS = {
@@ -296,8 +296,8 @@ local function var_0_14(arg_13_0)
 	g_modules.ensureModuleLoaded(var_13_0)
 end
 
-local function var_0_15(arg_14_0, arg_14_1)
-	if arg_14_1 == "battlePassInbox" or arg_14_0 == "BattlePassInboxWindow" then
+local function var_0_15(widgetId, arg_14_1)
+	if arg_14_1 == "battlePassInbox" or widgetId == "BattlePassInboxWindow" then
 		local var_14_0 = SidebarWidgetOptions and SidebarWidgetOptions.findBattlePassInboxWindow and SidebarWidgetOptions.findBattlePassInboxWindow()
 
 		if var_14_0 and not var_14_0:isDestroyed() then
@@ -306,45 +306,45 @@ local function var_0_15(arg_14_0, arg_14_1)
 	end
 
 	local rootWidget = g_ui.getRootWidget()
-	local var_14_2 = rootWidget and rootWidget:recursiveGetChildById(arg_14_0)
+	local widget = rootWidget and rootWidget:recursiveGetChildById(widgetId)
 
-	if var_14_2 and not var_14_2:isDestroyed() then
-		return var_14_2
+	if widget and not widget:isDestroyed() then
+		return widget
 	end
 
-	local var_14_3 = g_ui.loadedWidgetsById and g_ui.loadedWidgetsById[arg_14_0]
+	local registryWidget = g_ui.loadedWidgetsById and g_ui.loadedWidgetsById[widgetId]
 
-	if var_14_3 and not var_14_3:isDestroyed() then
-		return var_14_3
+	if registryWidget and not registryWidget:isDestroyed() then
+		return registryWidget
 	end
 
-	local var_14_4 = var_0_9[arg_14_1]
+	local moduleName = var_0_9[arg_14_1]
 
-	if var_14_4 then
-		local var_14_5 = modules[var_14_4]
+	if moduleName then
+		local module = modules[moduleName]
 
-		if var_14_5 and var_14_5[arg_14_0] and not var_14_5[arg_14_0]:isDestroyed() then
-			return var_14_5[arg_14_0]
+		if module and module[widgetId] and not module[widgetId]:isDestroyed() then
+			return module[widgetId]
 		end
 	end
 
 	return nil
 end
 
-local function var_0_16(arg_15_0, arg_15_1)
-	if type(arg_15_0) ~= "table" or not arg_15_1 then
+local function addWidgetsToPlacementMap(widgetList, parentId)
+	if type(widgetList) ~= "table" or not parentId then
 		return
 	end
 
-	for index, entry in ipairs(arg_15_0) do
+	for index, entry in ipairs(widgetList) do
 		if type(entry) == "table" and type(entry.type) == "string" then
 			var_0_14(entry.type)
 
-			local var_15_0 = resolveWidgetId(entry.type, entry.instance)
+			local widgetId = resolveWidgetId(entry.type, entry.instance)
 
-			if var_15_0 and not placementByWidgetId[var_15_0] then
-				placementByWidgetId[var_15_0] = {
-					parentId = arg_15_1,
+			if widgetId and not placementByWidgetId[widgetId] then
+				placementByWidgetId[widgetId] = {
+					parentId = parentId,
 					index = index,
 					type = entry.type
 				}
@@ -352,7 +352,7 @@ local function var_0_16(arg_15_0, arg_15_1)
 
 			if entry.type == "battlePassInbox" and not placementByWidgetId.BattlePassInboxWindow then
 				placementByWidgetId.BattlePassInboxWindow = {
-					parentId = arg_15_1,
+					parentId = parentId,
 					index = index,
 					type = entry.type
 				}
@@ -370,23 +370,23 @@ function SidebarWidgetsPersistence.buildPlacementMap(section)
 
 	if type(section.openWidgetsOrderPerSidebar) == "table" then
 		for index, entry in ipairs(section.openWidgetsOrderPerSidebar) do
-			var_0_16(entry, getParentIdForVerticalSlot(index, section))
+			addWidgetsToPlacementMap(entry, getParentIdForVerticalSlot(index, section))
 		end
 	end
 
 	if type(section.openWidgetsOrderPerHorizontalSidebar) == "table" then
-		local var_16_0 = 0
+		local slotIndex = 0
 
 		if section.rightHorizontalSidebar == true then
-			var_16_0 = var_16_0 + 1
+			slotIndex = slotIndex + 1
 
-			var_0_16(section.openWidgetsOrderPerHorizontalSidebar[var_16_0], HORIZONTAL_PARENT_IDS[1])
+			addWidgetsToPlacementMap(section.openWidgetsOrderPerHorizontalSidebar[slotIndex], HORIZONTAL_PARENT_IDS[1])
 		end
 
 		if section.leftHorizontalSidebar == true then
-			local var_16_1 = var_16_0 + 1
+			local var_16_1 = slotIndex + 1
 
-			var_0_16(section.openWidgetsOrderPerHorizontalSidebar[var_16_1], HORIZONTAL_PARENT_IDS[2])
+			addWidgetsToPlacementMap(section.openWidgetsOrderPerHorizontalSidebar[var_16_1], HORIZONTAL_PARENT_IDS[2])
 		end
 	end
 
@@ -412,7 +412,7 @@ function SidebarWidgetsPersistence.seedRegistryFromPlacement()
 	end
 end
 
-local function var_0_17(parentId)
+local function ensureSidebarForParentId(parentId)
 	if not parentId or not modules.client_options then
 		return
 	end
@@ -444,7 +444,7 @@ local function var_0_17(parentId)
 	end
 end
 
-local function var_0_18(parentId)
+local function resolveParentPanel(parentId)
 	if not parentId or not modules.game_interface then
 		return nil
 	end
@@ -504,43 +504,43 @@ local function var_0_18(parentId)
 	return rootWidget:recursiveGetChildById(parentId)
 end
 
-local function var_0_19(arg_20_0, arg_20_1, arg_20_2)
-	if not arg_20_0 or arg_20_0:isDestroyed() then
+local function var_0_19(widget, parentId, index)
+	if not widget or widget:isDestroyed() then
 		return false
 	end
 
-	var_0_17(arg_20_1)
+	ensureSidebarForParentId(parentId)
 
-	local parent = var_0_18(arg_20_1)
+	local parent = resolveParentPanel(parentId)
 
 	if not parent or parent:isDestroyed() then
 		return false
 	end
 
 	local id = modules.game_interface and modules.game_interface.isGameSidePanelId and modules.game_interface.isGameSidePanelId(parent:getId())
-	local var_20_2 = arg_20_1 == "gameLeftTopPanel" or arg_20_1 == "gameRightTopPanel"
+	local var_20_2 = parentId == "gameLeftTopPanel" or parentId == "gameRightTopPanel"
 
 	if not (parent:isVisible() or id and parent:isOn() or var_20_2 and parent:isOn()) then
 		return false
 	end
 
-	local var_20_3 = arg_20_0:getParent()
+	local currentParent = widget:getParent()
 
-	if var_20_3 and not var_20_3:isDestroyed() and var_20_3 ~= parent then
-		var_20_3:removeChild(arg_20_0)
+	if currentParent and not currentParent:isDestroyed() and currentParent ~= parent then
+		currentParent:removeChild(widget)
 	end
 
-	arg_20_0.miniLoaded = false
-	arg_20_0.miniIndex = nil
+	widget.miniLoaded = false
+	widget.miniIndex = nil
 
-	if parent:getClassName() == "UIMiniWindowContainer" and arg_20_2 and type(parent.scheduleInsert) == "function" then
-		local numericValue = tonumber(arg_20_2)
+	if parent:getClassName() == "UIMiniWindowContainer" and index and type(parent.scheduleInsert) == "function" then
+		local numericValue = tonumber(index)
 
-		arg_20_0.miniIndex = numericValue or arg_20_2
+		widget.miniIndex = numericValue or index
 
-		parent:scheduleInsert(arg_20_0, numericValue or arg_20_2)
-	elseif arg_20_0:getParent() ~= parent then
-		parent:addChild(arg_20_0)
+		parent:scheduleInsert(widget, numericValue or index)
+	elseif widget:getParent() ~= parent then
+		parent:addChild(widget)
 	end
 
 	if parent:getClassName() == "UIMiniWindowContainer" then
@@ -551,7 +551,7 @@ local function var_0_19(arg_20_0, arg_20_1, arg_20_2)
 		end)
 	end
 
-	SidebarWidgetsPersistence.noteWidgetPlacement(arg_20_0)
+	SidebarWidgetsPersistence.noteWidgetPlacement(widget)
 
 	return true
 end
@@ -607,15 +607,15 @@ function SidebarWidgetsPersistence.applySidebarLayout(section)
 	end
 
 	local numericValue = tonumber(section.leftSidebarCount) or 0
-	local var_23_1 = math.max(0, numericValue - 1)
-	local var_23_2 = getRightExtraCountFromSection(section)
+	local leftExtraCount = math.max(0, numericValue - 1)
+	local rightExtraCount = getRightExtraCountFromSection(section)
 
 	if modules.client_options then
 		modules.client_options.setOption("showLeftPanel", numericValue > 0, true)
 	end
 
 	if modules.game_interface and modules.game_interface.restoreSidebarColumnCounts then
-		modules.game_interface.restoreSidebarColumnCounts(var_23_1, var_23_2)
+		modules.game_interface.restoreSidebarColumnCounts(leftExtraCount, rightExtraCount)
 	end
 end
 
@@ -716,8 +716,8 @@ function SidebarWidgetsPersistence.enforceLayoutClosedState()
 	end
 end
 
-local function var_0_20(arg_26_0, arg_26_1)
-	if not arg_26_0 or type(arg_26_1) ~= "table" or #arg_26_1 == 0 then
+local function applyFullOrderToPanel(parentId, widgetList)
+	if not parentId or type(widgetList) ~= "table" or #widgetList == 0 then
 		return
 	end
 
@@ -727,7 +727,7 @@ local function var_0_20(arg_26_0, arg_26_1)
 		return
 	end
 
-	local parent = var_0_18(arg_26_0)
+	local parent = resolveParentPanel(parentId)
 
 	if not parent or parent:isDestroyed() then
 		return
@@ -737,42 +737,42 @@ local function var_0_20(arg_26_0, arg_26_1)
 		return
 	end
 
-	local var_26_2 = {}
+	local orderedWidgets = {}
 
-	for unusedValue, entry in ipairs(arg_26_1) do
-		local var_26_3 = resolveWidgetId(entry.type, entry.instance)
+	for unusedValue, entry in ipairs(widgetList) do
+		local widgetId = resolveWidgetId(entry.type, entry.instance)
 
-		if var_26_3 then
-			local var_26_4 = rootWidget:recursiveGetChildById(var_26_3)
+		if widgetId then
+			local widget = rootWidget:recursiveGetChildById(widgetId)
 
-			if var_26_4 and not var_26_4:isDestroyed() and var_26_4:getParent() == parent then
-				var_26_2[#var_26_2 + 1] = var_26_4
+			if widget and not widget:isDestroyed() and widget:getParent() == parent then
+				orderedWidgets[#orderedWidgets + 1] = widget
 			end
 		end
 	end
 
-	if #var_26_2 == 0 then
+	if #orderedWidgets == 0 then
 		return
 	end
 
-	for iter_26_2, targetWidget in ipairs(var_26_2) do
+	for saveIdx, targetWidget in ipairs(orderedWidgets) do
 		local children = parent:getChildren()
-		local var_26_6 = 0
-		local var_26_7
+		local saveCount = 0
+		local slotRawIdx
 
-		for iter_26_4 = 1, #children do
-			if children[iter_26_4] and children[iter_26_4].save then
-				var_26_6 = var_26_6 + 1
+		for i = 1, #children do
+			if children[i] and children[i].save then
+				saveCount = saveCount + 1
 
-				if var_26_6 == iter_26_2 then
-					var_26_7 = iter_26_4
+				if saveCount == saveIdx then
+					slotRawIdx = i
 
 					break
 				end
 			end
 		end
 
-		local targetRawIdx = var_26_7 or parent:getChildCount()
+		local targetRawIdx = slotRawIdx or parent:getChildCount()
 
 		if parent:getChildIndex(targetWidget) ~= targetRawIdx then
 			pcall(function()
@@ -790,34 +790,34 @@ local function applyAllPanelsOrder(section)
 	if type(section.openWidgetsOrderPerSidebar) == "table" then
 		for index, entry in ipairs(section.openWidgetsOrderPerSidebar) do
 			if type(entry) == "table" and #entry > 0 then
-				local var_28_0 = getParentIdForVerticalSlot(index, section)
+				local parentId = getParentIdForVerticalSlot(index, section)
 
-				if var_28_0 then
-					var_0_20(var_28_0, entry)
+				if parentId then
+					applyFullOrderToPanel(parentId, entry)
 				end
 			end
 		end
 	end
 
 	if type(section.openWidgetsOrderPerHorizontalSidebar) == "table" then
-		local var_28_1 = 0
+		local slotIndex = 0
 
 		if section.rightHorizontalSidebar == true then
-			var_28_1 = var_28_1 + 1
+			slotIndex = slotIndex + 1
 
-			local var_28_2 = section.openWidgetsOrderPerHorizontalSidebar[var_28_1]
+			local widgetList = section.openWidgetsOrderPerHorizontalSidebar[slotIndex]
 
-			if type(var_28_2) == "table" and #var_28_2 > 0 then
-				var_0_20(HORIZONTAL_PARENT_IDS[1], var_28_2)
+			if type(widgetList) == "table" and #widgetList > 0 then
+				applyFullOrderToPanel(HORIZONTAL_PARENT_IDS[1], widgetList)
 			end
 		end
 
 		if section.leftHorizontalSidebar == true then
-			local var_28_3 = var_28_1 + 1
-			local var_28_4 = section.openWidgetsOrderPerHorizontalSidebar[var_28_3]
+			local slotIndex = slotIndex + 1
+			local widgetList = section.openWidgetsOrderPerHorizontalSidebar[slotIndex]
 
-			if type(var_28_4) == "table" and #var_28_4 > 0 then
-				var_0_20(HORIZONTAL_PARENT_IDS[2], var_28_4)
+			if type(widgetList) == "table" and #widgetList > 0 then
+				applyFullOrderToPanel(HORIZONTAL_PARENT_IDS[2], widgetList)
 			end
 		end
 	end
@@ -977,25 +977,25 @@ connect(g_game, {
 
 		WIDGET_TYPE_TO_ID = true
 
-		local var_42_0 = {}
+		local panels = {}
 
 		if modules.game_interface then
 			if modules.game_interface.getRightPanel then
-				var_42_0[#var_42_0 + 1] = modules.game_interface.getRightPanel()
+				panels[#panels + 1] = modules.game_interface.getRightPanel()
 			end
 
 			if modules.game_interface.getMiniWindowSidebarPanelsInOrder then
 				for unusedValue, entry in ipairs(modules.game_interface.getMiniWindowSidebarPanelsInOrder()) do
-					var_42_0[#var_42_0 + 1] = entry
+					panels[#panels + 1] = entry
 				end
 			end
 		end
 
-		local var_42_1 = {}
+		local seen = {}
 
-		for unusedValue, entry in ipairs(var_42_0) do
-			if entry and not entry:isDestroyed() and not var_42_1[entry] then
-				var_42_1[entry] = true
+		for unusedValue, entry in ipairs(panels) do
+			if entry and not entry:isDestroyed() and not seen[entry] then
+				seen[entry] = true
 
 				for unusedValue, child in ipairs(entry:getChildren()) do
 					if child and child.save then

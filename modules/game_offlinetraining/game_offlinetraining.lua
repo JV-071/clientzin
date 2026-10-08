@@ -17,13 +17,13 @@ local function setSkillValue(total, base)
 		return
 	end
 
-	local var_4_0 = offlineTrainingWindow:recursiveGetChildById(total)
+	local skill = offlineTrainingWindow:recursiveGetChildById(total)
 
-	if not var_4_0 then
+	if not skill then
 		return
 	end
 
-	local value = var_4_0:getChildById("value")
+	local value = skill:getChildById("value")
 
 	if value then
 		value:setText(base)
@@ -35,13 +35,13 @@ local function setSkillPercent(id, arg_5_1, tooltip, color)
 		return
 	end
 
-	local var_5_0 = offlineTrainingWindow:recursiveGetChildById(id)
+	local skill = offlineTrainingWindow:recursiveGetChildById(id)
 
-	if not var_5_0 then
+	if not skill then
 		return
 	end
 
-	local percent = var_5_0:getChildById("percent")
+	local percent = skill:getChildById("percent")
 
 	if not percent then
 		return

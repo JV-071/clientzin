@@ -1,4 +1,4 @@
-﻿g_modalManager = g_modalManager or {}
+g_modalManager = g_modalManager or {}
 
 local DEFAULT_OVERLAY_COLOR = "#00000080"
 local TRANSPARENT_COLOR = "#00000000"

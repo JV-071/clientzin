@@ -1,4 +1,4 @@
-﻿if not InputAnalyser then
+if not InputAnalyser then
 	InputAnalyser = {
 		monsterName = "",
 		maxDPS = 0,
@@ -237,10 +237,10 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	contentsPanel.rcvDmg:setText(formatMoney(InputAnalyser.total, ","))
 	contentsPanel.maxDps:setText(formatMoney(numericValue, ","))
 
-	local var_9_2 = 1
+	local count = 1
 	local widgets = {}
 
-	for monsterName, iter_9_1 in pairs(InputAnalyser.damageEffect) do
+	for monsterName, damage in pairs(InputAnalyser.damageEffect) do
 		local widget = contentsPanel.dmgTypes:recursiveGetChildById(tostring(monsterName))
 
 		if not widget then
@@ -249,14 +249,14 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 			applyDamageTypesAnchors(widget, "types")
 		end
 
-		local percent = iter_9_1 * 100 / InputAnalyser.total
+		local percent = damage * 100 / InputAnalyser.total
 
 		widget:setId(monsterName)
 		widget.icon:setImageSource(string.format(imageDir, effectsFiles[monsterName]))
 		widget.icon:setTooltip(getCombatName(monsterName))
-		widget.desc:setText(formatMoney(iter_9_1, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
+		widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
 
-		var_9_2 = var_9_2 + 1
+		count = count + 1
 
 		table.insert(widgets, {
 			widget = widget,
@@ -273,12 +273,12 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	end
 
 	if next(InputAnalyser.damageEffect) ~= nil then
-		contentsPanel.dmgTypes:setHeight(15 * var_9_2)
+		contentsPanel.dmgTypes:setHeight(15 * count)
 	else
 		contentsPanel.dmgTypes:setHeight(1)
 	end
 
-	if var_9_2 > 1 then
+	if count > 1 then
 		local nodata = contentsPanel.dmgTypes:recursiveGetChildById("nodata")
 
 		if nodata then

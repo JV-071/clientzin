@@ -252,14 +252,14 @@ function ImpactAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	contentsPanel.dmg:setText(formatMoney(ImpactAnalyser.damageTotal, ","))
 	contentsPanel.allTimeHigh:setText(formatMoney(ImpactAnalyser.allTimeHightDps, ","))
 
-	local var_14_1 = ImpactAnalyser.gaugeDps or 0
-	local var_14_2 = math.max(tonumber(ImpactAnalyser.maxDPS) or 0, var_14_1)
+	local sessionDps = ImpactAnalyser.gaugeDps or 0
+	local maxDps = math.max(tonumber(ImpactAnalyser.maxDPS) or 0, sessionDps)
 
-	contentsPanel.maxDps:setText(formatMoney(var_14_2, ","))
-	contentsPanel.dps:setText(formatMoney(var_14_1, ","))
+	contentsPanel.maxDps:setText(formatMoney(maxDps, ","))
+	contentsPanel.dps:setText(formatMoney(sessionDps, ","))
 	contentsPanel.targetDps:setText(formatMoney(ImpactAnalyser.targetDPS or 0, ","))
-	updateImpactTargetArrow(contentsPanel.dpsBG and contentsPanel.dpsBG.dpsArrow, var_14_1, ImpactAnalyser.targetDPS)
-	contentsPanel.dpsBG:setTooltip(string.format("Current: %d\nTarget: %d", var_14_1, ImpactAnalyser.targetDPS or 0))
+	updateImpactTargetArrow(contentsPanel.dpsBG and contentsPanel.dpsBG.dpsArrow, sessionDps, ImpactAnalyser.targetDPS)
+	contentsPanel.dpsBG:setTooltip(string.format("Current: %d\nTarget: %d", sessionDps, ImpactAnalyser.targetDPS or 0))
 
 	local noData = contentsPanel.dmgTypes:getChildById("noData")
 	local var_14_4 = not table.empty(ImpactAnalyser.damageEffect)
