@@ -664,39 +664,35 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
 
     int numRets = 0;
     bool failed = false;
-
-    // do the call
-    try {
-        ++g_lua.m_cppCallbackDepth;
-        numRets = (*(funcPtr->get()))(&g_lua);
-        --g_lua.m_cppCallbackDepth;
-        assert(numRets == g_lua.stackSize());
-    } catch (stdext::exception& e) {
-        --g_lua.m_cppCallbackDepth;
-        // cleanup stack
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(fmt::format("C++ call failed: {}", g_lua.traceback(e.what())));
-        failed = true;
-    } catch (const std::exception& e) {
-        --g_lua.m_cppCallbackDepth;
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(fmt::format("C++ std::exception: {}", g_lua.traceback(e.what())));
-        failed = true;
-    } catch (...) {
-        --g_lua.m_cppCallbackDepth;
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(g_lua.traceback("Unknown C++ exception"));
-        failed = true;
+    {
+        std::string exceptionMessage;
+        try {
+            ++g_lua.m_cppCallbackDepth;
+            numRets = (*(funcPtr->get()))(&g_lua);
+            --g_lua.m_cppCallbackDepth;
+            assert(numRets == g_lua.stackSize());
+        } catch (const stdext::exception& e) {
+            --g_lua.m_cppCallbackDepth;
+            exceptionMessage = fmt::format("C++ call failed: {}", e.what());
+            failed = true;
+        } catch (const std::exception& e) {
+            --g_lua.m_cppCallbackDepth;
+            exceptionMessage = fmt::format("C++ std::exception: {}", e.what());
+            failed = true;
+        } catch (...) {
+            --g_lua.m_cppCallbackDepth;
+            exceptionMessage = "Unknown C++ exception";
+            failed = true;
+        }
+        // Own the exception text and leave its handler before reentering Lua.
+        if (failed) {
+            while (g_lua.stackSize() > 0)
+                g_lua.pop();
+            numRets = 0;
+            g_lua.pushString(g_lua.traceback(exceptionMessage));
+        }
     }
-
-    // Leave the C++ exception handler before raising the Lua error. LuaJIT's
-    // Windows unwinder must not see an active foreign exception here.
+    // Destroy the owned message before lua_error, which may unwind nonlocally.
     if (failed) {
         scopedState.restore();
         return lua_error(L);
