@@ -1,11 +1,11 @@
-﻿local var_0_0 = UIWidget.setColoredText
+local nativeSetColoredText = UIWidget.setColoredText
 
-function UIWidget.setColoredText(arg_1_0, arg_1_1, arg_1_2)
-	if type(arg_1_1) == "table" then
-		arg_1_1 = tableToColoredText(arg_1_1)
+function UIWidget.setColoredText(self, coloredText, dontFireLuaCall)
+	if type(coloredText) == "table" then
+		coloredText = tableToColoredText(coloredText)
 	end
 
-	var_0_0(arg_1_0, arg_1_1, arg_1_2)
+	nativeSetColoredText(self, coloredText, dontFireLuaCall)
 end
 
 function UIWidget.setMargin(self, ...)

@@ -1,4 +1,4 @@
-﻿HTTP = {
+HTTP = {
 	agent = "Mozilla/5.0",
 	websocketTimeout = 15,
 	timeout = 60,
@@ -8,16 +8,16 @@
 	operations = {}
 }
 
-local function var_0_0(arg_1_0)
-	if type(arg_1_0) ~= "string" then
+local function isUsableHttpUrl(candidateUrl)
+	if type(candidateUrl) ~= "string" then
 		return false
 	end
 
-	if arg_1_0 == "" or arg_1_0 == "0" then
+	if candidateUrl == "" or candidateUrl == "0" then
 		return false
 	end
 
-	if not arg_1_0:find("://", 1, true) and arg_1_0:match("^%d+$") then
+	if not candidateUrl:find("://", 1, true) and candidateUrl:match("^%d+$") then
 		return false
 	end
 
@@ -29,7 +29,7 @@ function HTTP.get(url, callback)
 		return error("HTTP.get is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.get ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -51,7 +51,7 @@ function HTTP.getJSON(url, callback)
 		return error("HTTP.getJSON is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.getJSON ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -74,7 +74,7 @@ function HTTP.post(url, data, callback, checkContentLength)
 		return error("HTTP.post is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.post ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -107,7 +107,7 @@ function HTTP.postJSON(url, data, callback)
 		return error("HTTP.postJSON is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.postJSON ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -134,7 +134,7 @@ function HTTP.download(url, file, callback, progressCallback)
 		return error("HTTP.download is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.download ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -158,7 +158,7 @@ function HTTP.downloadImage(url, callback)
 		return error("HTTP.downloadImage is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.downloadImage ignored invalid url: %s", tostring(url)))
 
 		return nil
@@ -193,7 +193,7 @@ function HTTP.webSocket(url, callbacks, timeout, jsonWebsocket)
 		return error("WebSocket is not supported")
 	end
 
-	if not var_0_0(url) then
+	if not isUsableHttpUrl(url) then
 		g_logger.warning(string.format("HTTP.webSocket ignored invalid url: %s", tostring(url)))
 
 		return nil

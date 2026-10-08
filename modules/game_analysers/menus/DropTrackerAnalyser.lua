@@ -1,4 +1,4 @@
-﻿if not DropTrackerAnalyser then
+if not DropTrackerAnalyser then
 	DropTrackerAnalyser = {
 		autoTrackAboveValue = 0,
 		session = 0,
@@ -184,7 +184,7 @@ function DropTrackerAnalyser.updateWindow(unusedArgument, ignoreVisible)
 
 			bindItemPanelContextMenu(widget, itemId)
 
-			local var_9_3 = {}
+			local expiredDropIndices = {}
 
 			for id, monsterDrop in ipairs(config.monsterDrop) do
 				local monsterWidget = monsterDrop.widget
@@ -200,18 +200,18 @@ function DropTrackerAnalyser.updateWindow(unusedArgument, ignoreVisible)
 						monsterDrop.widget = monsterWidget
 					end
 				elseif os.time() - monsterDrop.time > 45 then
-					table.insert(var_9_3, id)
+					table.insert(expiredDropIndices, id)
 				else
 					monsterWidget.toBeRemoved = nil
 				end
 			end
 
-			if #var_9_3 == 0 then
+			if #expiredDropIndices == 0 then
 				widget:updateItemPanelSize()
 			end
 
-			for _ = #var_9_3, 1, -1 do
-				table.remove(config.monsterDrop, var_9_3[_])
+			for _ = #expiredDropIndices, 1, -1 do
+				table.remove(config.monsterDrop, expiredDropIndices[_])
 			end
 		end
 	end

@@ -1,4 +1,4 @@
-﻿local UI
+local UI
 local TypeCharmRadioGroup
 
 Cyclopedia.Charms = {}
@@ -628,8 +628,8 @@ local function resolveCharmDescriptionForTier(charmData, charmDefinition)
 	end
 
 	local tier = charmData and charmData.tier or 0
-	local var_11_3 = chanceByTier[math.max(1, math.min(3, tier))] or chanceByTier[1]
-	local formattedChance = formatCharmChanceValue(var_11_3)
+	local tierChance = chanceByTier[math.max(1, math.min(3, tier))] or chanceByTier[1]
+	local formattedChance = formatCharmChanceValue(tierChance)
 
 	return template:gsub("%%s", formattedChance):gsub("%%%%", "%%")
 end

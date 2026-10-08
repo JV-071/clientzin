@@ -1,4 +1,4 @@
-﻿local binaryTree = {}
+local binaryTree = {}
 local battleButtons = {}
 local battleWindow
 local battleButton
@@ -181,7 +181,7 @@ local function getBattleListScrollbarMarginTopWithFilters(filterPanel)
 end
 
 local BATTLE_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP = 0
-local var_0_23 = 15
+local BATTLE_SCROLLBAR_MARGIN_TOP = 15
 local onBattleButtonHoverChange
 local onBattleButtonMousePress
 local onBattleButtonMouseRelease
@@ -968,14 +968,14 @@ function BattleListInstance.showContextMenu(self, widget, mousePos, mouseButton)
 	local buttonSize = widget:getSize()
 	local width = menu:getWidth()
 	local buttonCenterX = buttonPos.x + buttonSize.width / 2
-	local var_63_7, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
+	local buttonCenterY, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
 
 	if mousePos and mousePos.x and mousePos.y then
 		menu:display(mousePos)
 	else
 		menu:display({
 			x = menuX,
-			y = var_63_7
+			y = buttonCenterY
 		})
 	end
 
@@ -1085,7 +1085,7 @@ function BattleListInstance.hideFilterPanel(self)
 	local miniwindowScrollBar = self.window:getChildById("miniwindowScrollBar")
 
 	if miniwindowScrollBar then
-		miniwindowScrollBar:setMarginTop(var_0_23)
+		miniwindowScrollBar:setMarginTop(BATTLE_SCROLLBAR_MARGIN_TOP)
 	end
 
 	if self.window.onResize then

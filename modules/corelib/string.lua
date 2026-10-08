@@ -1,4 +1,4 @@
-﻿function string.split(self, delim)
+function string.split(self, delim)
 	local start = 1
 	local results = {}
 
@@ -198,16 +198,16 @@ function setStringColor(t, text, color)
 	table.insert(t, color)
 end
 
-function tableToColoredText(arg_16_0)
-	if type(arg_16_0) ~= "table" then
-		return arg_16_0 or ""
+function tableToColoredText(textColorPairs)
+	if type(textColorPairs) ~= "table" then
+		return textColorPairs or ""
 	end
 
-	local var_16_0 = ""
+	local coloredText = ""
 
-	for iter_16_0 = 1, #arg_16_0, 2 do
-		var_16_0 = var_16_0 .. "{" .. (arg_16_0[iter_16_0] or "") .. ", " .. (arg_16_0[iter_16_0 + 1] or "#ffffff") .. "}"
+	for textIndex = 1, #textColorPairs, 2 do
+		coloredText = coloredText .. "{" .. (textColorPairs[textIndex] or "") .. ", " .. (textColorPairs[textIndex + 1] or "#ffffff") .. "}"
 	end
 
-	return var_16_0
+	return coloredText
 end

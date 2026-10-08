@@ -1,4 +1,4 @@
-﻿local UI
+local UI
 local currentSpell
 local allSpells = {}
 local filteredSpells = {}
@@ -1404,10 +1404,10 @@ function updateSpellListUI()
 	end
 end
 
-local var_0_83 = false
+local spellsDataLoadAttempted = false
 
 local function loadSpellsData()
-	if var_0_83 then
+	if spellsDataLoadAttempted then
 		applyAllFilters()
 
 		return
@@ -1417,7 +1417,7 @@ local function loadSpellsData()
 
 	local spells = readJsonFile(SPELLS_FILE)
 
-	var_0_83 = true
+	spellsDataLoadAttempted = true
 
 	if type(spells) ~= "table" then
 		applyAllFilters()

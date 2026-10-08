@@ -302,6 +302,7 @@ TEST_F(RuntimeEventTest, NativeExceptionRetainsCauseAndLuaCallsiteAndAllowsFollo
     ASSERT_EQ(3, g_lua.safeCall());
     EXPECT_EQ(7, g_lua.popInteger());
     const auto error = g_lua.popString();
+    SCOPED_TRACE(error);
     EXPECT_NE(std::string::npos, error.find("reconnect diagnostic sentinel"));
     EXPECT_NE(std::string::npos, error.find("reconnect_exception_probe.lua"));
     EXPECT_FALSE(g_lua.popBoolean());
@@ -321,6 +322,7 @@ TEST_F(RuntimeEventTest, UnknownNativeExceptionRetainsLuaCallsiteAndAllowsFollow
     ASSERT_EQ(3, g_lua.safeCall());
     EXPECT_EQ(9, g_lua.popInteger());
     const auto error = g_lua.popString();
+    SCOPED_TRACE(error);
     EXPECT_NE(std::string::npos, error.find("Unknown C++ exception"));
     EXPECT_NE(std::string::npos, error.find("unknown_reconnect_exception_probe.lua"));
     EXPECT_FALSE(g_lua.popBoolean());

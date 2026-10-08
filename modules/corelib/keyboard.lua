@@ -1,4 +1,4 @@
-﻿g_keyboard = {}
+g_keyboard = {}
 
 function translateKeyCombo(keyCombo)
 	if not keyCombo then
@@ -167,7 +167,7 @@ function g_keyboard.splitKeyComboDesc(keyComboDesc)
 	return splitKeyComboDesc(keyComboDesc)
 end
 
-local function var_0_8(combo)
+local function normalizeHotkeyText(combo)
 	if combo == nil or combo == "" then
 		return ""
 	end
@@ -214,7 +214,7 @@ local function var_0_8(combo)
 end
 
 function g_keyboard.formatHotkeyDisplayText(combo)
-	local text = var_0_8(combo)
+	local text = normalizeHotkeyText(combo)
 
 	if text == "" then
 		return ""
@@ -231,13 +231,13 @@ function g_keyboard.formatHotkeyDisplayText(combo)
 end
 
 function g_keyboard.formatHotkeyTooltipText(combo)
-	local var_9_0 = var_0_8(combo)
+	local normalizedCombo = normalizeHotkeyText(combo)
 
-	if var_9_0 == "" then
+	if normalizedCombo == "" then
 		return ""
 	end
 
-	local parts = splitKeyComboDesc(var_9_0)
+	local parts = splitKeyComboDesc(normalizedCombo)
 	local out = {}
 
 	for _, part in ipairs(parts) do

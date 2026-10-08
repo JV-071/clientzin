@@ -1,4 +1,4 @@
-﻿bossDifficultyWindow = nil
+bossDifficultyWindow = nil
 
 local cachedWidgets = {}
 local currentData
@@ -68,10 +68,10 @@ local function updateModifierList(listWidget, itemStyle, modifiers)
 	listWidget:destroyChildren()
 
 	for _, text in ipairs(modifiers or {}) do
-		local var_5_0 = g_ui.createWidget(itemStyle, listWidget):getChildById("text")
+		local modifierTextWidget = g_ui.createWidget(itemStyle, listWidget):getChildById("text")
 
-		if var_5_0 then
-			var_5_0:setText(text)
+		if modifierTextWidget then
+			modifierTextWidget:setText(text)
 		end
 	end
 end

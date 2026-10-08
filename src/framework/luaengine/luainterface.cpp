@@ -663,6 +663,7 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
     assert(funcPtr);
 
     int numRets = 0;
+    bool failed = false;
 
     // do the call
     try {
@@ -677,26 +678,29 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
             g_lua.pop();
         numRets = 0;
         g_lua.pushString(fmt::format("C++ call failed: {}", g_lua.traceback(e.what())));
-        scopedState.restore();
-        return lua_error(L);
+        failed = true;
     } catch (const std::exception& e) {
         --g_lua.m_cppCallbackDepth;
         while (g_lua.stackSize() > 0)
             g_lua.pop();
         numRets = 0;
         g_lua.pushString(fmt::format("C++ std::exception: {}", g_lua.traceback(e.what())));
-        scopedState.restore();
-        return lua_error(L);
+        failed = true;
     } catch (...) {
         --g_lua.m_cppCallbackDepth;
         while (g_lua.stackSize() > 0)
             g_lua.pop();
         numRets = 0;
         g_lua.pushString(g_lua.traceback("Unknown C++ exception"));
+        failed = true;
+    }
+
+    // Leave the C++ exception handler before raising the Lua error. LuaJIT's
+    // Windows unwinder must not see an active foreign exception here.
+    if (failed) {
         scopedState.restore();
         return lua_error(L);
     }
-
     return numRets;
 }
 

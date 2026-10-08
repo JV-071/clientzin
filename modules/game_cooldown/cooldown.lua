@@ -1,4 +1,4 @@
-﻿local ProgressCallback = {
+local ProgressCallback = {
 	finish = 2,
 	update = 1
 }
@@ -49,7 +49,7 @@ local function releaseProgressRect(progressRect)
 	progressRect.icon = nil
 end
 
-local function var_0_6(progressRect)
+local function releaseChildrenAndHideCooldown(progressRect)
 	if not progressRect or progressRect:isDestroyed() then
 		return
 	end
@@ -303,7 +303,7 @@ function offline()
 
 	if cooldownPanel then
 		for _, icon in ipairs(cooldownPanel:getChildren()) do
-			var_0_6(icon)
+			releaseChildrenAndHideCooldown(icon)
 		end
 	end
 
@@ -333,7 +333,7 @@ function removeCooldown(progressRect)
 	local icon = progressRect.icon
 
 	releaseProgressRect(progressRect)
-	var_0_6(icon)
+	releaseChildrenAndHideCooldown(icon)
 end
 
 function turnOffCooldown(progressRect)
@@ -512,7 +512,7 @@ function onSpellCooldown(iconId, duration)
 	end
 
 	local function finishFunc()
-		var_0_6(icon)
+		releaseChildrenAndHideCooldown(icon)
 
 		cooldown[iconId] = false
 	end
