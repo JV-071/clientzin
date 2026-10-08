@@ -25,6 +25,15 @@
 #include <framework/util/stats.h>
 
 thread_local DispatcherContext EventDispatcher::dispacherContext;
+thread_local std::string EventDispatcher::nextEventSource;
+thread_local std::string EventDispatcher::activeEventSource;
+
+std::string EventDispatcher::takeEventSource(const char* fallback)
+{
+    std::string source;
+    source.swap(nextEventSource);
+    return source.empty() ? std::string(fallback) : source;
+}
 
 EventDispatcher g_dispatcher, g_textDispatcher, g_mainDispatcher;
 int16_t g_mainThreadId = stdext::getThreadId();
@@ -61,7 +70,7 @@ void EventDispatcher::poll()
 
 ScheduledEventPtr EventDispatcher::scheduleEvent(const std::function<void()>& callback, int delay)
 {
-    return scheduleEventEx("ScheduledEvent", callback, delay);
+    return scheduleEventEx(takeEventSource("ScheduledEvent"), callback, delay);
 }
 
 ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
@@ -78,7 +87,7 @@ ScheduledEventPtr EventDispatcher::scheduleEventEx(const std::string& function, 
 
 ScheduledEventPtr EventDispatcher::cycleEvent(const std::function<void()>& callback, int delay)
 {
-    return cycleEventEx("CycleEvent", callback, delay);
+    return cycleEventEx(takeEventSource("CycleEvent"), callback, delay);
 }
 
 ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, const std::function<void()>& callback, int delay)
@@ -95,7 +104,7 @@ ScheduledEventPtr EventDispatcher::cycleEventEx(const std::string& function, con
 
 EventPtr EventDispatcher::addEvent(const std::function<void()>& callback)
 {
-    return addEventEx("Event", callback);
+    return addEventEx(takeEventSource("Event"), callback);
 }
 
 EventPtr EventDispatcher::addEventEx(const std::string& function, const std::function<void()>& callback)
@@ -114,7 +123,7 @@ EventPtr EventDispatcher::addEventEx(const std::string& function, const std::fun
 }
 
 void EventDispatcher::deferEvent(const std::function<void()>& callback) {
-    deferEventEx("DeferEvent", callback);
+    deferEventEx(takeEventSource("DeferEvent"), callback);
 }
 
 void EventDispatcher::deferEventEx(const std::string& function, const std::function<void()>& callback) {

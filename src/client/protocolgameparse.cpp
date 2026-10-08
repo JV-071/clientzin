@@ -2857,16 +2857,17 @@ void ProtocolGame::parsePlayerSkills(const InputMessagePtr& msg) const
 void ProtocolGame::parsePlayerState(const InputMessagePtr& msg) const
 {
     uint64_t states;
+    uint8_t bakragoreIcon = 0;
     if (g_game.getClientVersion() >= 1281) {
         states = g_game.getClientVersion() >= 1405 ? msg->getU64() : msg->getU32();
         if (g_game.getFeature(Otc::GamePlayerStateCounter)) {
-            msg->getU8(); // icons counter
+            bakragoreIcon = msg->getU8(); // Bakragore icon appended to modern state flags
         }
     } else {
         states = g_game.getFeature(Otc::GamePlayerStateU16) ? msg->getU16() : msg->getU8();
     }
 
-    m_localPlayer->setStates(states);
+    m_localPlayer->setStates(states, bakragoreIcon);
 }
 
 void ProtocolGame::parsePlayerCancelAttack(const InputMessagePtr& msg)

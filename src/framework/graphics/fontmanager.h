@@ -47,6 +47,7 @@ public:
 
 private:
     std::vector<BitmapFontPtr> m_fonts;
+    bool m_legacyRoundedFontWarning{false};
     BitmapFontPtr m_defaultFont;
     BitmapFontPtr m_defaultWidgetFont;
 };

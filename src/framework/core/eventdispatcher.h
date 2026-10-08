@@ -82,6 +82,10 @@ public:
     void init();
     void shutdown();
     void poll();
+    void setNextEventSource(const std::string& source) { nextEventSource = source; }
+    bool hasNextEventSource() const { return !nextEventSource.empty(); }
+    void setActiveEventSource(const std::string& source) { activeEventSource = source; }
+    const std::string& getActiveEventSource() const { return activeEventSource; }
 
     EventPtr addEvent(const std::function<void()>& callback);
     EventPtr addEventEx(const std::string& function, const std::function<void()>& callback);
@@ -97,6 +101,9 @@ public:
     }
 
 private:
+    std::string takeEventSource(const char* fallback);
+    thread_local static std::string nextEventSource;
+    thread_local static std::string activeEventSource;
     thread_local static DispatcherContext dispacherContext;
 
     enum class ThreadTaskEventState

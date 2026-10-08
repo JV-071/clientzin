@@ -39,6 +39,8 @@ public:
     int getCursorId(const std::string& name);
     
     void setUseNativeCursor(bool useNative);
+    void setShowAnimatedMouseCursor(bool enabled) { m_showAnimatedMouseCursor = enabled; }
+    bool isAnimatedMouseCursorEnabled() const { return m_showAnimatedMouseCursor; }
     void setCursorDisplayScale(int scale);
     int getCursorDisplayScale() const { return m_cursorDisplayScale; }
     std::string getCursorName(int id) const;
@@ -51,6 +53,7 @@ private:
     stdext::map<std::string, int> m_cursors;
     std::deque<int> m_cursorStack;
     bool m_useNativeCursor{ false };
+    bool m_showAnimatedMouseCursor{ true };
     int m_cursorDisplayScale{1};
 };
 

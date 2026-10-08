@@ -609,6 +609,13 @@ void WIN32Window::updateCursor()
     if (state.cursors.size() <= 1)
         return;
 
+    if (!g_mouse.isAnimatedMouseCursorEnabled()) {
+        m_cursorFrame = 0;
+        m_cursorTimer.restart();
+        m_cursor = g_mouse.getCursorDisplayScale() == 2 ? state.largeCursors[0] : state.cursors[0];
+        SetCursor(m_cursor);
+        return;
+    }
     const int delay = state.delays[m_cursorFrame];
     if (m_cursorTimer.ticksElapsed() >= delay) {
         m_cursorTimer.restart();

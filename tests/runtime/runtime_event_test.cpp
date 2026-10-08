@@ -239,3 +239,48 @@ TEST(PlatformWindowKeyBounds, RejectsOutOfRangeQueriesWithoutIndexing)
     EXPECT_NO_THROW(g_window.setKeyDelay(static_cast<Fw::Key>(-1), 30));
     EXPECT_NO_THROW(g_window.setKeyDelay(Fw::KeyLast, 30));
 }
+
+#ifdef FRAMEWORK_PROTOBUF
+#include "client/appearancecatalog.h"
+TEST(AppearanceCatalog, LoadsBaseAndSupplementInCatalogOrder)
+{
+    using otclient::protobuf::appearances::Appearances;
+    Appearances base, supplement;
+    auto* item = base.add_object();
+    item->set_id(3349);
+    item->mutable_flags()->mutable_upgradeclassification()->set_upgrade_classification(1);
+    supplement.add_object()->set_id(60000);
+    supplement.add_object()->set_id(3349);
+    std::vector<std::string> reads;
+    const auto merged = AppearanceCatalog::load({"base.dat", "custom.dat"}, [&](const std::string& name) {
+        reads.push_back(name);
+        return name == "base.dat" ? base.SerializeAsString() : supplement.SerializeAsString();
+    });
+    EXPECT_EQ((std::vector<std::string>{"base.dat", "custom.dat"}), reads);
+    ASSERT_EQ(3, merged.object_size());
+    EXPECT_EQ(3349u, merged.object(0).id());
+    EXPECT_EQ(1u, merged.object(0).flags().upgradeclassification().upgrade_classification());
+    EXPECT_EQ(60000u, merged.object(1).id());
+    EXPECT_EQ(3349u, merged.object(2).id()); // supplement definitions override last
+}
+TEST(AppearanceCatalog, RejectsMissingAndMalformedLibraries)
+{
+    const auto invalid = [](const std::string&) { return std::string(1, '\xff'); };
+    EXPECT_THROW(AppearanceCatalog::load({}, invalid), std::runtime_error);
+    EXPECT_THROW(AppearanceCatalog::load({"broken.dat"}, invalid), std::runtime_error);
+}
+#endif
+#include "framework/core/eventdispatcher.h"
+TEST(EventSourceDiagnostics, SourceIsConsumedOnceAndDoesNotLeakToFollowingEvents)
+{
+    EventDispatcher dispatcher;
+    dispatcher.shutdown();
+    dispatcher.setNextEventSource("hitch:helper_target.lua:2587");
+    EXPECT_TRUE(dispatcher.hasNextEventSource());
+    EXPECT_EQ("hitch:helper_target.lua:2587", dispatcher.scheduleEvent([] {}, 1)->getFunction());
+    EXPECT_FALSE(dispatcher.hasNextEventSource());
+    EXPECT_EQ("ScheduledEvent", dispatcher.scheduleEvent([] {}, 1)->getFunction());
+    dispatcher.setActiveEventSource("active callback");
+    EXPECT_EQ("active callback", dispatcher.getActiveEventSource());
+    dispatcher.setActiveEventSource("");
+}

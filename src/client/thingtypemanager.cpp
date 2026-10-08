@@ -36,6 +36,7 @@
 #include "framework/util/crypt.h"
 #ifdef FRAMEWORK_PROTOBUF
 #include <staticdata.pb.h>
+#include "appearancecatalog.h"
 #endif
 
 #ifdef FRAMEWORK_EDITOR
@@ -189,12 +190,12 @@ bool ThingTypeManager::loadAppearances(const std::string& file)
         if (!g_game.getFeature(Otc::GameLoadSprInsteadProtobuf)) {
             g_spriteAppearances.unload();
             int spritesCount = 0;
-            std::string appearancesFile;
+            std::vector<std::string> appearancesFiles;
             const auto& document = getCatalogContent(file);
             for (const auto& obj : document) {
                 const auto& type = obj["type"];
                 if (type == "appearances") {
-                    appearancesFile = obj["file"];
+                    appearancesFiles.push_back(obj["file"].get<std::string>());
                 } else if (type == "sprite") {
                     int lastSpriteId = obj["lastspriteid"].get<int>();
                     const auto& sheet = std::make_shared<SpriteSheet>(obj["firstspriteid"].get<int>(), lastSpriteId, static_cast<SpriteLayout>(obj["spritetype"].get<int>()), obj["file"].get<std::string>());
@@ -217,16 +218,10 @@ bool ThingTypeManager::loadAppearances(const std::string& file)
             // and ParseFromArray makes one copy and parses from contiguous memory - a noticeably faster start.
             GarbageCollection::logBootStage("appearances: before reading the file");
 
-            std::string appearancesData =
-                g_resources.readFileContents(g_resources.resolvePath(fmt::format("{}{}", file, appearancesFile)));
-            auto appearancesLib = appearances::Appearances();
-            if (!appearancesLib.ParseFromArray(appearancesData.data(), static_cast<int>(appearancesData.size()))) {
-                throw stdext::exception("Couldn't parse appearances lib.");
-            }
-
-            // The file buffer (5 MB) is no longer needed after parsing - we free it right away,
-            // instead of keeping it through the whole loop building 45 thousand ThingTypes.
-            std::string().swap(appearancesData);
+            auto appearancesLib = AppearanceCatalog::load(appearancesFiles, [&](const std::string& name) {
+                return g_resources.readFileContents(g_resources.resolvePath(fmt::format("{}{}", file, name)));
+            });
+            g_logger.info("Loaded {} appearance libraries from the catalog", appearancesFiles.size());
 
             GarbageCollection::logBootStage("appearances: after parsing (protobuf alive)");
             for (int category = ThingCategoryItem; category < ThingLastCategory; ++category) {

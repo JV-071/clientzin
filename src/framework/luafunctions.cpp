@@ -238,6 +238,10 @@ void Application::registerLuaFunctions()
 
     // EventDispatcher
     g_lua.registerSingletonClass("g_dispatcher");
+    g_lua.bindSingletonFunction("g_dispatcher", "setNextEventSource", &EventDispatcher::setNextEventSource, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "hasNextEventSource", &EventDispatcher::hasNextEventSource, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "setActiveEventSource", &EventDispatcher::setActiveEventSource, &g_dispatcher);
+    g_lua.bindSingletonFunction("g_dispatcher", "getActiveEventSource", &EventDispatcher::getActiveEventSource, &g_dispatcher);
     g_lua.bindSingletonFunction("g_dispatcher", "addEvent", &EventDispatcher::addEvent, &g_dispatcher);
     g_lua.bindSingletonFunction("g_dispatcher", "addEventEx", &EventDispatcher::addEventEx, &g_dispatcher);
     g_lua.bindSingletonFunction("g_dispatcher", "scheduleEvent", &EventDispatcher::scheduleEvent, &g_dispatcher);
@@ -438,6 +442,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_mouse", "popCursor", &Mouse::popCursor, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "isCursorChanged", &Mouse::isCursorChanged, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "setUseNativeCursor", &Mouse::setUseNativeCursor, &g_mouse);
+    g_lua.bindSingletonFunction("g_mouse", "setShowAnimatedMouseCursor", &Mouse::setShowAnimatedMouseCursor, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "setUseNativeSystemCursor", &Mouse::setUseNativeCursor, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "setCursorDisplayScale", &Mouse::setCursorDisplayScale, &g_mouse);
     g_lua.bindSingletonFunction("g_mouse", "isUsingNativeCursor", &Mouse::isUsingNativeCursor, &g_mouse);

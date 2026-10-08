@@ -252,13 +252,14 @@ void LocalPlayer::onPositionChange(const Position& newPos, const Position& oldPo
     m_serverWalk = false;
 }
 
-void LocalPlayer::setStates(const uint64_t states)
+void LocalPlayer::setStates(const uint64_t states, const uint8_t bakragoreIcon)
 {
-    if (m_states == states)
+    if (m_states == states && m_bakragoreIcon == bakragoreIcon)
         return;
 
     const uint64_t oldStates = m_states;
     m_states = states;
+    m_bakragoreIcon = bakragoreIcon;
 
     if (isParalyzed() && isWalking() && m_serverWalk)
         updateWalk();

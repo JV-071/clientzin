@@ -137,6 +137,19 @@ BitmapFontPtr FontManager::getFont(const std::string_view fontName)
             return font;
     }
 
+    // Older public configurations request an atlas absent from the current resources.
+    // Keep exact matches above authoritative; use the available rounded atlas explicitly.
+    if (fontName == "verdana-10px-rounded") {
+        for (const auto& font : m_fonts) {
+            if (font->getName() == "verdana-11px-rounded") {
+                if (!m_legacyRoundedFontWarning) {
+                    g_logger.warning("Font '{}' is absent; using '{}' with its declared metrics", fontName, font->getName());
+                    m_legacyRoundedFontWarning = true;
+                }
+                return font;
+            }
+        }
+    }
     // when not found, fallback to default font
     g_logger.error("font '{}' not found", fontName);
     return m_defaultFont;
