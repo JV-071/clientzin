@@ -1,4 +1,4 @@
-﻿CustomHotkeyManager = {
+CustomHotkeyManager = {
 	presets = {},
 	presetToIndex = {},
 	chatMode = CHAT_MODE.ON,
@@ -991,19 +991,19 @@ function CustomHotkeyManager.hotkeyCallback(hotkeyId, chatMode, preset, isPress)
 	if action == HOTKEY_ACTION.USE_YOURSELF then
 		g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
 	elseif action == HOTKEY_ACTION.USE_CROSSHAIR then
-		local var_56_3 = Item.create(data.itemId)
+		local crosshairItem = Item.create(data.itemId)
 
-		if var_56_3 then
-			modules.game_interface.startUseWith(var_56_3, data.subType or -1)
+		if crosshairItem then
+			modules.game_interface.startUseWith(crosshairItem, data.subType or -1)
 		end
 	elseif action == HOTKEY_ACTION.USE_TARGET then
 		local attackingCreature = g_game.getAttackingCreature()
 
 		if not attackingCreature then
-			local var_56_5 = Item.create(data.itemId)
+			local targetSelectionItem = Item.create(data.itemId)
 
-			if var_56_5 then
-				modules.game_interface.startUseWith(var_56_5, data.subType or -1)
+			if targetSelectionItem then
+				modules.game_interface.startUseWith(targetSelectionItem, data.subType or -1)
 			end
 
 			return

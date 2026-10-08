@@ -1,4 +1,4 @@
-﻿SpeakTypesSettings = {
+SpeakTypesSettings = {
 	none = {},
 	say = {
 		color = "#F0F000",
@@ -167,11 +167,11 @@ local function updateSayModeButtonVisibility(tab)
 	end
 end
 
-local function var_0_2(arg_3_0, arg_3_1)
-	arg_3_0.isOnRedMessage = arg_3_1
+local function var_0_2(arg_3_0, isOnRedMessage)
+	arg_3_0.isOnRedMessage = isOnRedMessage
 
 	if consoleTabBar then
-		consoleTabBar:setTabNavigationHighlight(arg_3_0, arg_3_1)
+		consoleTabBar:setTabNavigationHighlight(arg_3_0, isOnRedMessage)
 	end
 end
 

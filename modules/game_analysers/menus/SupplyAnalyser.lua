@@ -1,4 +1,4 @@
-﻿if not SupplyAnalyser then
+if not SupplyAnalyser then
 	SupplyAnalyser = {
 		graphVisible = true,
 		gaugeVisible = true,
@@ -27,12 +27,12 @@ end
 
 local function var_0_4(arg_2_0, arg_2_1)
 	local supplyEvents = SupplyAnalyser.supplyEvents
-	local var_2_1 = g_clock.millis()
+	local tick = g_clock.millis()
 	local var_2_2 = supplyEvents.entries[supplyEvents.last]
 
-	if var_2_2 and var_2_2.itemId == arg_2_0 and var_2_2.value == arg_2_1 and math.floor(var_2_2.tick / 1000) == math.floor(var_2_1 / 1000) then
+	if var_2_2 and var_2_2.itemId == arg_2_0 and var_2_2.value == arg_2_1 and math.floor(var_2_2.tick / 1000) == math.floor(tick / 1000) then
 		var_2_2.count = (var_2_2.count or 1) + 1
-		var_2_2.tick = var_2_1
+		var_2_2.tick = tick
 
 		return
 	end
@@ -42,7 +42,7 @@ local function var_0_4(arg_2_0, arg_2_1)
 		count = 1,
 		itemId = arg_2_0,
 		value = arg_2_1,
-		tick = var_2_1
+		tick = tick
 	}
 end
 
@@ -86,14 +86,14 @@ local function var_0_5()
 	if supplyEvents.first > supplyEvents.last then
 		SupplyAnalyser.supplyEvents = var_0_3()
 	elseif supplyEvents.first > var_0_2 and supplyEvents.first > math.floor(supplyEvents.last / 2) then
-		local var_3_7 = var_0_3()
+		local compactedSupplyEvents = var_0_3()
 
 		for iter_3_0 = supplyEvents.first, supplyEvents.last do
-			var_3_7.last = var_3_7.last + 1
-			var_3_7.entries[var_3_7.last] = supplyEvents.entries[iter_3_0]
+			compactedSupplyEvents.last = compactedSupplyEvents.last + 1
+			compactedSupplyEvents.entries[compactedSupplyEvents.last] = supplyEvents.entries[iter_3_0]
 		end
 
-		SupplyAnalyser.supplyEvents = var_3_7
+		SupplyAnalyser.supplyEvents = compactedSupplyEvents
 	end
 
 	if var_3_2 then

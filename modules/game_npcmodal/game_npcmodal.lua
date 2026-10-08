@@ -1,4 +1,4 @@
-﻿mainNpcModal = nil
+mainNpcModal = nil
 BuyNpcTradeItems = {}
 SellNpcTradeItems = {}
 playerItems = {}
@@ -2321,17 +2321,17 @@ local function var_0_114(arg_117_0)
 	var_0_56 = arg_117_0
 end
 
-local function var_0_115(arg_118_0, arg_118_1, arg_118_2, arg_118_3, arg_118_4, arg_118_5)
-	if not arg_118_0 or not arg_118_1 then
+local function var_0_115(arg_118_0, sellAllItemId, sellAllAmount, sellAllPanelKind, arg_118_4, arg_118_5)
+	if not arg_118_0 or not sellAllItemId then
 		return
 	end
 
-	local var_118_0 = arg_118_3 == "sell" and "SellAllItemRow" or "SellAllIgnoredRow"
+	local var_118_0 = sellAllPanelKind == "sell" and "SellAllItemRow" or "SellAllIgnoredRow"
 	local var_118_1 = g_ui.createWidget(var_118_0, arg_118_0)
 
-	var_118_1.sellAllItemId = arg_118_1
-	var_118_1.sellAllAmount = arg_118_2
-	var_118_1.sellAllPanelKind = arg_118_3
+	var_118_1.sellAllItemId = sellAllItemId
+	var_118_1.sellAllAmount = sellAllAmount
+	var_118_1.sellAllPanelKind = sellAllPanelKind
 
 	local rowBackground = var_118_1:recursiveGetChildById("rowBackground")
 
@@ -2361,8 +2361,8 @@ local function var_0_115(arg_118_0, arg_118_1, arg_118_2, arg_118_3, arg_118_4, 
 		return
 	end
 
-	itemsell:setItemId(arg_118_1)
-	itemsell:setItemCount(math.max(1, math.floor(tonumber(arg_118_2) or 1)))
+	itemsell:setItemId(sellAllItemId)
+	itemsell:setItemCount(math.max(1, math.floor(tonumber(sellAllAmount) or 1)))
 	itemsell:setShowCount(false)
 
 	local itemName = var_118_1:recursiveGetChildById("itemName")
@@ -2374,8 +2374,8 @@ local function var_0_115(arg_118_0, arg_118_1, arg_118_2, arg_118_3, arg_118_4, 
 	local itemDetails = var_118_1:recursiveGetChildById("itemDetails")
 	local var_118_9
 
-	if arg_118_3 == "sell" then
-		local var_118_10 = math.max(0, math.floor(tonumber(arg_118_2) or 0))
+	if sellAllPanelKind == "sell" then
+		local var_118_10 = math.max(0, math.floor(tonumber(sellAllAmount) or 0))
 		local var_118_11 = math.max(0, math.floor(tonumber(arg_118_5) or 0))
 		local var_118_12 = var_118_10 * var_118_11
 
@@ -2405,7 +2405,7 @@ local function var_0_115(arg_118_0, arg_118_1, arg_118_2, arg_118_3, arg_118_4, 
 
 		var_118_1.onDoubleClick = handleDoubleClick
 		itemsell.onDoubleClick = handleDoubleClick
-	elseif arg_118_3 == "ignore" then
+	elseif sellAllPanelKind == "ignore" then
 		if itemDetails then
 			itemDetails:setText(tr("Double-click to restore"))
 		end

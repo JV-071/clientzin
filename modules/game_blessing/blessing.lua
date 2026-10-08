@@ -1,4 +1,4 @@
-﻿blessingWindow = nil
+blessingWindow = nil
 historyWindow = nil
 
 local openedFromCyclopedia = false
@@ -14,7 +14,7 @@ local blessingIcons = {
 	["16"] = 2,
 	["8"] = 5
 }
-local var_0_4 = {
+local storeOfferByBlessingBit = {
 	[8] = 5,
 	[4] = 4,
 	[16] = 6,
@@ -204,11 +204,11 @@ function closeBlessing(restoreCyclopedia)
 	restoreCyclopediaIfNeeded()
 end
 
-function openStoreFromBlessings(arg_18_0)
+function openStoreFromBlessings(offerId)
 	closeBlessing(false)
 
-	if arg_18_0 and modules.game_store and modules.game_store.openUsefulThings then
-		modules.game_store.openUsefulThings(arg_18_0)
+	if offerId and modules.game_store and modules.game_store.openUsefulThings then
+		modules.game_store.openUsefulThings(offerId)
 
 		return
 	end
@@ -287,10 +287,10 @@ function onBlessingDialog(data)
 
 		widget.containerCount:setText(string.format("%d (%d)", bless.playerBlessCount, bless.store))
 
-		local var_23_3 = var_0_4[bless.blessBitwise]
+		local blessingOfferId = storeOfferByBlessingBit[bless.blessBitwise]
 
 		function widget.storeButton.onClick()
-			openStoreFromBlessings(var_23_3)
+			openStoreFromBlessings(blessingOfferId)
 		end
 
 		if bless.playerBlessCount < 1 then

@@ -1,4 +1,4 @@
-﻿HelperCavebotAutoRoute = HelperCavebotAutoRoute or {}
+HelperCavebotAutoRoute = HelperCavebotAutoRoute or {}
 
 local var_0_0 = HelperCavebotAutoRoute
 local var_0_1 = {
@@ -203,8 +203,8 @@ local function var_0_16(arg_17_0, arg_17_1, arg_17_2)
 
 	local unusedValue
 
-	local function var_17_3()
-		if var_0_1.animationCallback ~= var_17_3 then
+	local function animationCallback()
+		if var_0_1.animationCallback ~= animationCallback then
 			return
 		end
 
@@ -216,17 +216,17 @@ local function var_0_16(arg_17_0, arg_17_1, arg_17_2)
 		end
 	end
 
-	var_0_1.animationCallback = var_17_3
+	var_0_1.animationCallback = animationCallback
 
 	local var_17_4, var_17_5 = pcall(function()
-		return var_17_1(var_0_1.map, var_17_3)
+		return var_17_1(var_0_1.map, animationCallback)
 	end)
 
 	if var_17_4 and var_17_5 then
 		return
 	end
 
-	if var_0_1.animationCallback == var_17_3 then
+	if var_0_1.animationCallback == animationCallback then
 		var_0_1.animationCallback = nil
 	end
 
@@ -310,14 +310,14 @@ local function var_0_20()
 	end
 end
 
-local function var_0_21(arg_24_0)
+local function var_0_21(plan)
 	var_0_1.generating = false
-	var_0_1.plan = arg_24_0
+	var_0_1.plan = plan
 
 	var_0_6(var_0_4("Automatic route ready for review", "Rota automatica pronta para revisao"))
 
 	local function var_24_0()
-		if not var_0_1.active or var_0_1.plan ~= arg_24_0 then
+		if not var_0_1.active or var_0_1.plan ~= plan then
 			return
 		end
 
@@ -341,7 +341,7 @@ local function var_0_21(arg_24_0)
 		return
 	end
 
-	var_0_1.confirmBox = displayGeneralBox(var_0_4("Automatic Cavebot Route", "Rota Automatica do Cavebot"), var_0_19(arg_24_0), {
+	var_0_1.confirmBox = displayGeneralBox(var_0_4("Automatic Cavebot Route", "Rota Automatica do Cavebot"), var_0_19(plan), {
 		{
 			text = var_0_4("Cancel", "Cancelar"),
 			callback = var_24_1
@@ -370,19 +370,19 @@ local function var_0_22(arg_27_0, arg_27_1)
 	end
 end
 
-local function var_0_23(arg_28_0)
-	var_0_1.plan = arg_28_0
+local function var_0_23(plan)
+	var_0_1.plan = plan
 
 	var_0_6(var_0_4("Propagating circular scan waves through the hunt...", "Propagando ondas circulares de escaneamento pela hunt..."))
-	var_0_17(arg_28_0, function()
-		if not var_0_1.active or var_0_1.plan ~= arg_28_0 then
+	var_0_17(plan, function()
+		if not var_0_1.active or var_0_1.plan ~= plan then
 			return
 		end
 
 		var_0_6(var_0_4("Drawing the optimized route...", "Desenhando a rota otimizada..."))
-		var_0_18(arg_28_0, function()
-			if var_0_1.active and var_0_1.plan == arg_28_0 then
-				var_0_21(arg_28_0)
+		var_0_18(plan, function()
+			if var_0_1.active and var_0_1.plan == plan then
+				var_0_21(plan)
 			end
 		end)
 	end)
@@ -494,12 +494,12 @@ local function var_0_25(arg_34_0)
 	end
 end
 
-function var_0_0.start(arg_39_0)
-	local var_39_0 = var_0_5("cavebotMapPreview")
+function var_0_0.start(destination)
+	local map = var_0_5("cavebotMapPreview")
 	local localPlayer = g_game and g_game.getLocalPlayer and g_game.getLocalPlayer()
 	local position = var_0_3(localPlayer and localPlayer.getPosition and localPlayer:getPosition())
 
-	if not var_39_0 or var_39_0:isDestroyed() or not position then
+	if not map or map:isDestroyed() or not position then
 		var_0_6(var_0_4("Open the game before generating a route.", "Entre no jogo antes de gerar uma rota."))
 
 		return false
@@ -513,18 +513,18 @@ function var_0_0.start(arg_39_0)
 		var_0_1.ctx.prepare()
 	end
 
-	var_0_1.map = var_39_0
+	var_0_1.map = map
 	var_0_1.active = true
 	var_0_1.generating = true
 	var_0_1.scanOrigin = var_0_3(position)
 	var_0_1.plan = nil
-	var_0_1.destination = arg_39_0
+	var_0_1.destination = destination
 
 	if var_0_1.ctx and var_0_1.ctx.hideMarkers then
 		var_0_1.ctx.hideMarkers()
 	end
 
-	var_0_25(var_39_0)
+	var_0_25(map)
 	var_0_12(false)
 	var_0_0.refreshButton()
 	var_0_11()
@@ -545,12 +545,12 @@ function var_0_0.isActive()
 	return var_0_1.active == true
 end
 
-function var_0_0.init(arg_42_0)
+function var_0_0.init(ctx)
 	if var_0_1.active or var_0_1.map then
 		var_0_14(false)
 	end
 
-	var_0_1.ctx = arg_42_0
+	var_0_1.ctx = ctx
 
 	var_0_0.refreshButton()
 end

@@ -1,4 +1,4 @@
-﻿if not AnalyserSession then
+if not AnalyserSession then
 	AnalyserSession = {
 		startUnix = 0,
 		startMs = 0
@@ -14,17 +14,17 @@ local function var_0_2(arg_1_0)
 		return
 	end
 
-	local var_1_0 = {}
-	local var_1_1 = 0
+	local buckets = {}
+	local last = 0
 
 	for iter_1_0 = arg_1_0.first, arg_1_0.last do
-		var_1_1 = var_1_1 + 1
-		var_1_0[var_1_1] = arg_1_0.buckets[iter_1_0]
+		last = last + 1
+		buckets[last] = arg_1_0.buckets[iter_1_0]
 	end
 
-	arg_1_0.buckets = var_1_0
+	arg_1_0.buckets = buckets
 	arg_1_0.first = 1
-	arg_1_0.last = var_1_1
+	arg_1_0.last = last
 end
 
 function AnalyserSession.reset(self)
@@ -141,28 +141,28 @@ function AnalyserSession.pruneRollingWindow(unusedArgument, arg_9_1, numericValu
 	return var_9_1
 end
 
-function AnalyserSession.addRollingValue(arg_10_0, arg_10_1, numericValue, arg_10_3)
+function AnalyserSession.addRollingValue(arg_10_0, arg_10_1, numericValue, tick)
 	numericValue = tonumber(numericValue) or 0
 
 	if not arg_10_1 or numericValue == 0 or numericValue < 0 and not arg_10_1.allowNegative then
 		return
 	end
 
-	arg_10_3 = tonumber(arg_10_3) or g_clock.millis()
+	tick = tonumber(tick) or g_clock.millis()
 
-	arg_10_0:pruneRollingWindow(arg_10_1, arg_10_3)
+	arg_10_0:pruneRollingWindow(arg_10_1, tick)
 
-	local var_10_0 = math.floor(arg_10_3 / SESSION_STABILIZE_TIME)
+	local var_10_0 = math.floor(tick / SESSION_STABILIZE_TIME)
 	local var_10_1 = arg_10_1.buckets[arg_10_1.last]
 
 	if var_10_1 and var_10_1.slot == var_10_0 then
 		var_10_1.amount = var_10_1.amount + numericValue
-		var_10_1.tick = arg_10_3
+		var_10_1.tick = tick
 	else
 		arg_10_1.last = arg_10_1.last + 1
 		arg_10_1.buckets[arg_10_1.last] = {
 			amount = numericValue,
-			tick = arg_10_3,
+			tick = tick,
 			slot = var_10_0
 		}
 	end

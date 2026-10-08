@@ -1,4 +1,4 @@
-﻿UIProgressBarSD = extends(UIWidget, "UIProgressBarSD")
+UIProgressBarSD = extends(UIWidget, "UIProgressBarSD")
 
 function UIProgressBarSD.create()
 	local progressbar = UIProgressBarSD.internalCreate()
@@ -83,18 +83,18 @@ function UIProgressBarSD.updateBackground(self)
 
 			self:setImageColor("white")
 
-			local var_9_3 = math.round(math.max(progress * maxW, 1))
+			local fillHeight = math.round(math.max(progress * maxW, 1))
 			local bgBorderTop = self.bgBorderTop
 
 			if not self.fillFromTop then
-				bgBorderTop = self:getHeight() - self.bgBorderBottom - var_9_3
+				bgBorderTop = self:getHeight() - self.bgBorderBottom - fillHeight
 			end
 
 			local rect = {
 				x = self.bgBorderLeft,
 				y = bgBorderTop,
 				width = width,
-				height = var_9_3
+				height = fillHeight
 			}
 
 			self:setImageRect(rect)
@@ -113,15 +113,15 @@ function UIProgressBarSD.updateBackground(self)
 
 		self:setImageColor("white")
 
-		local var_9_8 = math.round(math.max(progress * width, 1))
-		local var_9_9 = {
+		local fillWidth = math.round(math.max(progress * width, 1))
+		local fillRect = {
 			x = self.bgBorderLeft,
 			y = self.bgBorderTop,
-			width = var_9_8,
+			width = fillWidth,
 			height = height
 		}
 
-		self:setImageRect(var_9_9)
+		self:setImageRect(fillRect)
 	end
 end
 

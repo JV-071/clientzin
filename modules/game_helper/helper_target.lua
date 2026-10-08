@@ -1,4 +1,4 @@
-﻿HelperTarget = HelperTarget or {}
+HelperTarget = HelperTarget or {}
 
 local ctx
 local targetAssignWindow
@@ -241,13 +241,13 @@ local function isFamiliar(creature)
 	end
 
 	local name = creature:getName()
-	local var_12_3 = name and name ~= "" and name:lower() or nil
+	local nameLower = name and name ~= "" and name:lower() or nil
 
 	if var_12_1 then
-		var_12_1.nameLower = var_12_3
+		var_12_1.nameLower = nameLower
 	end
 
-	return var_12_3
+	return nameLower
 end
 
 local function var_0_54(arg_13_0)
@@ -2055,11 +2055,11 @@ local function refreshPriorityListUI()
 	for index, entry in ipairs(priorityList) do
 		local var_118_1 = entry
 		local targetPriorityListRowWidget = g_ui.createWidget("TargetPriorityListRow", var_118_0)
-		local var_118_3 = index % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
+		local zebraColor = index % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
 
-		targetPriorityListRowWidget.zebraColor = var_118_3
+		targetPriorityListRowWidget.zebraColor = zebraColor
 
-		targetPriorityListRowWidget:setBackgroundColor(var_118_3)
+		targetPriorityListRowWidget:setBackgroundColor(zebraColor)
 
 		targetPriorityListRowWidget.priorityListIndex = index
 		targetPriorityListRowWidget.isAllCreaturesRow = var_118_1.allCreatures == true
@@ -2075,11 +2075,11 @@ local function refreshPriorityListUI()
 		local targetRowEnabled = targetPriorityListRowWidget:recursiveGetChildById("targetRowEnabled")
 
 		if targetRowEnabled then
-			function targetRowEnabled.onCheckChange(unusedArgument, arg_119_1)
-				var_118_1.enabled = arg_119_1
+			function targetRowEnabled.onCheckChange(unusedArgument, enabled)
+				var_118_1.enabled = enabled
 
 				if var_118_1.allCreatures then
-					allCreaturesEnabled = arg_119_1 == true
+					allCreaturesEnabled = enabled == true
 
 					var_0_122()
 					scheduleTargetActionButtonsSync()

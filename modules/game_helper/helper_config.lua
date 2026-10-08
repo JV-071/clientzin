@@ -1,4 +1,4 @@
-﻿HelperConfigTab = HelperConfigTab or {}
+HelperConfigTab = HelperConfigTab or {}
 HelperConfigTab.DEFAULT_PROFILE_NAME = "Default"
 
 local ctx
@@ -553,11 +553,11 @@ function HelperConfigTab.saveProfile(explicitName)
 		return false
 	end
 
-	local var_37_0 = explicitName ~= nil and trimProfileName(explicitName) or resolveProfileName(true)
+	local activeProfile = explicitName ~= nil and trimProfileName(explicitName) or resolveProfileName(true)
 
-	if not var_37_0 or var_37_0 == "" then
+	if not activeProfile or activeProfile == "" then
 		if ctx.log then
-			ctx.log("info", "[PROFILE] Save aborted (empty name): " .. tostring(var_37_0))
+			ctx.log("info", "[PROFILE] Save aborted (empty name): " .. tostring(activeProfile))
 		end
 
 		if ctx.showMessage then
@@ -568,7 +568,7 @@ function HelperConfigTab.saveProfile(explicitName)
 	end
 
 	if ctx.log then
-		ctx.log("info", "[PROFILE] Saving: " .. tostring(var_37_0))
+		ctx.log("info", "[PROFILE] Saving: " .. tostring(activeProfile))
 	end
 
 	if ctx.cancelAutoSave then
@@ -579,12 +579,12 @@ function HelperConfigTab.saveProfile(explicitName)
 
 	config.profiles = config.profiles or {}
 
-	local var_37_2 = config.profiles[var_37_0] ~= nil
+	local var_37_2 = config.profiles[activeProfile] ~= nil
 	local var_37_3 = ctx.collectConfig()
 
-	config.profiles[var_37_0] = ctx.copyConfig(var_37_3)
+	config.profiles[activeProfile] = ctx.copyConfig(var_37_3)
 	config.current = ctx.copyConfig(var_37_3)
-	config.activeProfile = var_37_0
+	config.activeProfile = activeProfile
 
 	if ctx.isAutoSaveEnabled then
 		config.autoSaveEnabled = ctx.isAutoSaveEnabled()
@@ -596,7 +596,7 @@ function HelperConfigTab.saveProfile(explicitName)
 		end
 
 		if ctx.log then
-			ctx.log("error", "Save profile failed for \"" .. tostring(var_37_0) .. "\".")
+			ctx.log("error", "Save profile failed for \"" .. tostring(activeProfile) .. "\".")
 		end
 
 		return false
@@ -606,19 +606,19 @@ function HelperConfigTab.saveProfile(explicitName)
 		ctx.applyConfigSnapshot(var_37_3)
 	end
 
-	HelperConfigTab.setSelectedProfileName(var_37_0)
+	HelperConfigTab.setSelectedProfileName(activeProfile)
 	HelperConfigTab.refreshProfileList()
-	HelperConfigTab.syncProfileNameEdit(var_37_0)
+	HelperConfigTab.syncProfileNameEdit(activeProfile)
 
 	if ctx.log then
-		ctx.log("info", "Profile saved: \"" .. tostring(var_37_0) .. "\".")
+		ctx.log("info", "Profile saved: \"" .. tostring(activeProfile) .. "\".")
 	end
 
 	if ctx.showMessage then
 		if var_37_2 then
-			ctx.showMessage(false, profileTr("Profile \"%s\" updated.", var_37_0))
+			ctx.showMessage(false, profileTr("Profile \"%s\" updated.", activeProfile))
 		else
-			ctx.showMessage(false, profileTr("Profile \"%s\" created.", var_37_0))
+			ctx.showMessage(false, profileTr("Profile \"%s\" created.", activeProfile))
 		end
 	end
 
@@ -863,13 +863,13 @@ function HelperConfigTab.createBlankProfile(arg_40_0)
 	end
 end
 
-function HelperConfigTab.renameProfile(arg_41_0, arg_41_1)
+function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 	if not ctx or not ctx.getWidget then
 		return
 	end
 
 	arg_41_0 = trimProfileName(arg_41_0)
-	arg_41_1 = trimProfileName(arg_41_1)
+	activeProfile = trimProfileName(activeProfile)
 
 	if arg_41_0 == "" then
 		if ctx.showMessage then
@@ -879,7 +879,7 @@ function HelperConfigTab.renameProfile(arg_41_0, arg_41_1)
 		return
 	end
 
-	if arg_41_1 == "" then
+	if activeProfile == "" then
 		if ctx.showMessage then
 			ctx.showMessage(true, tr("Profile name cannot be empty."))
 		end
@@ -887,7 +887,7 @@ function HelperConfigTab.renameProfile(arg_41_0, arg_41_1)
 		return
 	end
 
-	if arg_41_1 == arg_41_0 then
+	if activeProfile == arg_41_0 then
 		return
 	end
 
@@ -911,21 +911,21 @@ function HelperConfigTab.renameProfile(arg_41_0, arg_41_1)
 		return
 	end
 
-	if var_41_0.profiles[arg_41_1] ~= nil then
+	if var_41_0.profiles[activeProfile] ~= nil then
 		if ctx.showMessage then
-			ctx.showMessage(true, string.format(configText("nameTaken"), arg_41_1))
+			ctx.showMessage(true, string.format(configText("nameTaken"), activeProfile))
 		end
 
 		return
 	end
 
-	var_41_0.profiles[arg_41_1] = var_41_0.profiles[arg_41_0]
+	var_41_0.profiles[activeProfile] = var_41_0.profiles[arg_41_0]
 	var_41_0.profiles[arg_41_0] = nil
 
 	local var_41_1 = var_41_0.activeProfile == arg_41_0
 
 	if var_41_1 then
-		var_41_0.activeProfile = arg_41_1
+		var_41_0.activeProfile = activeProfile
 	end
 
 	if not ctx.writeHelperJSON(var_41_0) then
@@ -943,18 +943,18 @@ function HelperConfigTab.renameProfile(arg_41_0, arg_41_1)
 	end
 
 	if var_41_1 or selectedProfileName == arg_41_0 then
-		HelperConfigTab.setSelectedProfileName(arg_41_1)
-		HelperConfigTab.syncProfileNameEdit(arg_41_1)
+		HelperConfigTab.setSelectedProfileName(activeProfile)
+		HelperConfigTab.syncProfileNameEdit(activeProfile)
 	end
 
 	HelperConfigTab.refreshProfileList()
 
 	if ctx.log then
-		ctx.log("info", "Profile renamed: \"" .. arg_41_0 .. "\" -> \"" .. arg_41_1 .. "\".")
+		ctx.log("info", "Profile renamed: \"" .. arg_41_0 .. "\" -> \"" .. activeProfile .. "\".")
 	end
 
 	if ctx.showMessage then
-		ctx.showMessage(false, string.format(configText("renamed"), arg_41_0, arg_41_1))
+		ctx.showMessage(false, string.format(configText("renamed"), arg_41_0, activeProfile))
 	end
 end
 

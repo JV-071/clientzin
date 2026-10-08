@@ -1,4 +1,4 @@
-﻿Forge = {}
+Forge = {}
 
 function Forge.getForgeContainerHighlightTarget(container)
 	local slot = container:getChildById("forgeItem")
@@ -99,8 +99,8 @@ function Forge.anchorContentPanel(arg_10_0)
 	arg_10_0:addAnchor(AnchorBottom, "parent", AnchorBottom)
 end
 
-function Forge.setActiveTabButton(arg_11_0)
-	if Forge.currentButton and Forge.currentButton ~= arg_11_0 then
+function Forge.setActiveTabButton(currentButton)
+	if Forge.currentButton and Forge.currentButton ~= currentButton then
 		if Forge.currentButton.setOn then
 			Forge.currentButton:setOn(false)
 		end
@@ -112,21 +112,21 @@ function Forge.setActiveTabButton(arg_11_0)
 		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
 	end
 
-	Forge.currentButton = arg_11_0
+	Forge.currentButton = currentButton
 
-	if not arg_11_0 then
+	if not currentButton then
 		return
 	end
 
-	if arg_11_0.setOn then
-		arg_11_0:setOn(true)
+	if currentButton.setOn then
+		currentButton:setOn(true)
 	end
 
-	if arg_11_0.setChecked then
-		arg_11_0:setChecked(true)
+	if currentButton.setChecked then
+		currentButton:setChecked(true)
 	end
 
-	local parent = arg_11_0.getParent and arg_11_0:getParent()
+	local parent = currentButton.getParent and currentButton:getParent()
 
 	Forge.onTabButtonEnabled(nil, parent, false)
 end

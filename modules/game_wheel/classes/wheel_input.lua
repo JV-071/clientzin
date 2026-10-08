@@ -1,4 +1,4 @@
-﻿function WheelOfDestiny.getPassiveDomain(arg_1_0)
+function WheelOfDestiny.getPassiveDomain(arg_1_0)
 	for iter_1_0 = 1, 4 do
 		local selectPassive = wheelPanel:recursiveGetChildById("selectPassive" .. iter_1_0) or wheelPanel:recursiveGetChildById("focusPassive" .. iter_1_0)
 
@@ -607,17 +607,17 @@ function WheelOfDestiny.onAddMax(arg_23_0)
 
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
-	local var_23_5 = 0
+	local usedPoints = 0
 
 	for key, entry in pairs(WheelOfDestiny.pointInvested) do
-		var_23_5 = var_23_5 + entry
+		usedPoints = usedPoints + entry
 
 		local var_23_6 = WheelBonus[key - 1]
 
 		WheelOfDestiny.passivePoints[var_23_6.domain] = WheelOfDestiny.passivePoints[var_23_6.domain] + entry
 	end
 
-	WheelOfDestiny.usedPoints = var_23_5
+	WheelOfDestiny.usedPoints = usedPoints
 
 	wheelOfDestinyWindow.selection.points:setText(comma_value(var_23_2 - WheelOfDestiny.usedPoints) .. " / " .. comma_value(var_23_2))
 	WheelOfDestiny.checkManagerPointsButtons(arg_23_0)
@@ -676,17 +676,17 @@ function onAddOne(arg_24_0)
 
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
-	local var_24_2 = 0
+	local usedPoints = 0
 
 	for key, entry in pairs(WheelOfDestiny.pointInvested) do
-		var_24_2 = var_24_2 + entry
+		usedPoints = usedPoints + entry
 
 		local var_24_3 = WheelBonus[key - 1]
 
 		WheelOfDestiny.passivePoints[var_24_3.domain] = WheelOfDestiny.passivePoints[var_24_3.domain] + entry
 	end
 
-	WheelOfDestiny.usedPoints = var_24_2
+	WheelOfDestiny.usedPoints = usedPoints
 
 	local var_24_4 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
@@ -749,17 +749,17 @@ function onAddCustom(arg_25_0, arg_25_1)
 
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
-	local var_25_3 = 0
+	local usedPoints = 0
 
 	for key, entry in pairs(WheelOfDestiny.pointInvested) do
-		var_25_3 = var_25_3 + entry
+		usedPoints = usedPoints + entry
 
 		local var_25_4 = WheelBonus[key - 1]
 
 		WheelOfDestiny.passivePoints[var_25_4.domain] = WheelOfDestiny.passivePoints[var_25_4.domain] + entry
 	end
 
-	WheelOfDestiny.usedPoints = var_25_3
+	WheelOfDestiny.usedPoints = usedPoints
 
 	local var_25_5 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
@@ -823,17 +823,17 @@ function onRmvMax(arg_26_0)
 
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
-	local var_26_1 = 0
+	local usedPoints = 0
 
 	for key, entry in pairs(WheelOfDestiny.pointInvested) do
-		var_26_1 = var_26_1 + entry
+		usedPoints = usedPoints + entry
 
 		local var_26_2 = WheelBonus[key - 1]
 
 		WheelOfDestiny.passivePoints[var_26_2.domain] = WheelOfDestiny.passivePoints[var_26_2.domain] + entry
 	end
 
-	WheelOfDestiny.usedPoints = var_26_1
+	WheelOfDestiny.usedPoints = usedPoints
 
 	local var_26_3 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
@@ -895,17 +895,17 @@ function onRmvOne(arg_27_0)
 
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
-	local var_27_2 = 0
+	local usedPoints = 0
 
 	for key, entry in pairs(WheelOfDestiny.pointInvested) do
-		var_27_2 = var_27_2 + entry
+		usedPoints = usedPoints + entry
 
 		local var_27_3 = WheelBonus[key - 1]
 
 		WheelOfDestiny.passivePoints[var_27_3.domain] = WheelOfDestiny.passivePoints[var_27_3.domain] + entry
 	end
 
-	WheelOfDestiny.usedPoints = var_27_2
+	WheelOfDestiny.usedPoints = usedPoints
 
 	local var_27_4 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 

@@ -1,8 +1,8 @@
-﻿local musicFilename = "sounds/startup"
+local musicFilename = "sounds/startup"
 local musicChannel
 local startupLoadBox
-local var_0_3 = 100
-local var_0_4 = 1500
+local MIN_STARTUP_VISIBLE_MILLIS = 100
+local STARTUP_PRELOAD_TIMEOUT_MILLIS = 1500
 
 if g_sounds then
 	musicChannel = g_sounds.getChannel(SoundChannels.Music)
@@ -71,7 +71,7 @@ local function destroyStartupLoadingBox()
 	end
 end
 
-local function var_0_8(arg_4_0)
+local function setStartupLoadingText(loadingText)
 	if not startupLoadBox or startupLoadBox:isDestroyed() then
 		return
 	end
@@ -79,11 +79,11 @@ local function var_0_8(arg_4_0)
 	local content = startupLoadBox:getChildById("content")
 
 	if content then
-		content:setText(arg_4_0)
+		content:setText(loadingText)
 	end
 end
 
-local function var_0_9()
+local function isItemIndexPreloading()
 	return Cyclopedia and Cyclopedia.ItemsIndexPreloading and not Cyclopedia.ItemsIndexBuilt
 end
 
@@ -151,26 +151,26 @@ function startup()
 
 	startupLoadBox = showStartupLoadingBox()
 
-	var_0_8(tr("Loading interface"))
+	setStartupLoadingText(tr("Loading interface"))
 
-	local var_7_5 = g_clock.realMillis()
+	local startupStartedAtMillis = g_clock.realMillis()
 
-	local function var_7_6()
-		local var_12_0 = g_clock.realMillis() - var_7_5
+	local function waitForStartupPreload()
+		local startupElapsedMillis = g_clock.realMillis() - startupStartedAtMillis
 
-		if var_12_0 < var_0_3 then
-			scheduleEvent(var_7_6, var_0_3 - var_12_0)
+		if startupElapsedMillis < MIN_STARTUP_VISIBLE_MILLIS then
+			scheduleEvent(waitForStartupPreload, MIN_STARTUP_VISIBLE_MILLIS - startupElapsedMillis)
 
 			return
 		end
 
-		if not var_0_9() or var_12_0 >= var_0_4 then
+		if not isItemIndexPreloading() or startupElapsedMillis >= STARTUP_PRELOAD_TIMEOUT_MILLIS then
 			finishStartup()
 
 			return
 		end
 
-		scheduleEvent(var_7_6, 50)
+		scheduleEvent(waitForStartupPreload, 50)
 	end
 
 	scheduleEvent(function()
@@ -178,60 +178,60 @@ function startup()
 			Cyclopedia.ensureStylesLoaded()
 		end
 
-		local var_13_0 = {
+		local preloadTasks = {
 			function()
-				var_0_8(tr("Loading items"))
+				setStartupLoadingText(tr("Loading items"))
 
 				if Cyclopedia and Cyclopedia.startItemsIndexPreload then
 					Cyclopedia.startItemsIndexPreload(true)
 				end
 			end,
 			function()
-				var_0_8(tr("Loading spells"))
+				setStartupLoadingText(tr("Loading spells"))
 
 				if Cyclopedia and Cyclopedia.preloadMagicalArchivesSpells then
 					Cyclopedia.preloadMagicalArchivesSpells()
 				end
 			end,
 			function()
-				var_0_8(tr("Loading map"))
+				setStartupLoadingText(tr("Loading map"))
 
 				if modules.game_minimap and modules.game_minimap.loadPersistentMinimapData then
 					modules.game_minimap.loadPersistentMinimapData()
 				end
 			end
 		}
-		local var_13_1 = 1
+		local nextPreloadTaskIndex = 1
 
-		local function var_13_2()
-			if var_13_1 > #var_13_0 or g_clock.realMillis() - var_7_5 >= var_0_4 then
-				if var_13_1 <= #var_13_0 then
-					local var_17_0 = {}
+		local function runNextPreloadTask()
+			if nextPreloadTaskIndex > #preloadTasks or g_clock.realMillis() - startupStartedAtMillis >= STARTUP_PRELOAD_TIMEOUT_MILLIS then
+				if nextPreloadTaskIndex <= #preloadTasks then
+					local deferredPreloadTasks = {}
 
-					for iter_17_0 = var_13_1, #var_13_0 do
-						var_17_0[#var_17_0 + 1] = var_13_0[iter_17_0]
+					for remainingTaskIndex = nextPreloadTaskIndex, #preloadTasks do
+						deferredPreloadTasks[#deferredPreloadTasks + 1] = preloadTasks[remainingTaskIndex]
 					end
 
 					addEvent(function()
-						for iter_18_0 = 1, #var_17_0 do
-							var_17_0[iter_18_0]()
+						for deferredTaskIndex = 1, #deferredPreloadTasks do
+							deferredPreloadTasks[deferredTaskIndex]()
 						end
 					end)
 				end
 
-				var_7_6()
+				waitForStartupPreload()
 
 				return
 			end
 
-			var_13_0[var_13_1]()
+			preloadTasks[nextPreloadTaskIndex]()
 
-			var_13_1 = var_13_1 + 1
+			nextPreloadTaskIndex = nextPreloadTaskIndex + 1
 
-			scheduleEvent(var_13_2, 0)
+			scheduleEvent(runNextPreloadTask, 0)
 		end
 
-		var_13_2()
+		runNextPreloadTask()
 	end, 0)
 
 	if g_sounds then

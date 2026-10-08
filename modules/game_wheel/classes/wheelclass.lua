@@ -1,4 +1,4 @@
-﻿WheelOfDestiny = {}
+WheelOfDestiny = {}
 WheelOfDestiny.__index = WheelOfDestiny
 WheelOfDestiny.pointInvested = {}
 WheelOfDestiny.clickIndex = 0
@@ -31,7 +31,7 @@ WheelOfDestiny.revealedGems = {}
 
 local var_0_0 = false
 local var_0_1 = {}
-local var_0_2
+local focusSelectedWheel
 local t = {}
 local var_0_4 = 1
 local var_0_5 = 0.29
@@ -135,7 +135,7 @@ local function var_0_10(arg_3_0, arg_3_1, arg_3_2, arg_3_3, arg_3_4)
 		sliceFillColor = WheelButtons.getSliceFillColor(arg_3_1)
 	end
 
-	local var_3_2 = var_0_8(sliceFillColor)
+	local fillColor = var_0_8(sliceFillColor)
 	local var_3_3 = t[arg_3_0]
 
 	if not var_3_3 then
@@ -167,10 +167,10 @@ local function var_0_10(arg_3_0, arg_3_1, arg_3_2, arg_3_3, arg_3_4)
 		var_3_3.radialInset = sliceArcParams.radialInset
 	end
 
-	if var_3_3.fillColor ~= var_3_2 then
-		arg_3_0:setFillColor(var_3_2)
+	if var_3_3.fillColor ~= fillColor then
+		arg_3_0:setFillColor(fillColor)
 
-		var_3_3.fillColor = var_3_2
+		var_3_3.fillColor = fillColor
 	end
 
 	if var_3_3.percent ~= 100 then
@@ -218,33 +218,33 @@ function WheelOfDestiny.initSliceFills()
 		end
 	end
 
-	var_0_2 = wheelPanel:getChildById("focusSelectedWheel") or wheelPanel.focusSelectedWheel
+	focusSelectedWheel = wheelPanel:getChildById("focusSelectedWheel") or wheelPanel.focusSelectedWheel
 
-	if not var_0_2 then
-		var_0_2 = g_ui.createWidget("WheelSliceFill", wheelPanel)
+	if not focusSelectedWheel then
+		focusSelectedWheel = g_ui.createWidget("WheelSliceFill", wheelPanel)
 
-		var_0_2:setId("focusSelectedWheel")
-		var_0_2:setSize(tosize("522 522"))
-		var_0_2:addAnchor(AnchorTop, "parent", AnchorTop)
-		var_0_2:addAnchor(AnchorLeft, "parent", AnchorLeft)
-		var_0_2:setVisible(false)
+		focusSelectedWheel:setId("focusSelectedWheel")
+		focusSelectedWheel:setSize(tosize("522 522"))
+		focusSelectedWheel:addAnchor(AnchorTop, "parent", AnchorTop)
+		focusSelectedWheel:addAnchor(AnchorLeft, "parent", AnchorLeft)
+		focusSelectedWheel:setVisible(false)
 
-		if var_0_2.setCompositionModeName then
-			var_0_2:setCompositionModeName("additive")
+		if focusSelectedWheel.setCompositionModeName then
+			focusSelectedWheel:setCompositionModeName("additive")
 		end
 	end
 
 	local wheelBackground = wheelPanel:getChildById("wheelBackground")
 
-	if wheelBackground and var_0_2 then
+	if wheelBackground and focusSelectedWheel then
 		local childIndex = wheelPanel:getChildIndex(wheelBackground) + 1
 
-		if wheelPanel:getChildIndex(var_0_2) ~= childIndex then
-			wheelPanel:removeChild(var_0_2)
-			wheelPanel:insertChild(childIndex, var_0_2)
+		if wheelPanel:getChildIndex(focusSelectedWheel) ~= childIndex then
+			wheelPanel:removeChild(focusSelectedWheel)
+			wheelPanel:insertChild(childIndex, focusSelectedWheel)
 		end
 
-		wheelPanel.focusSelectedWheel = var_0_2
+		wheelPanel.focusSelectedWheel = focusSelectedWheel
 	end
 
 	local var_4_4 = {
@@ -387,7 +387,7 @@ function WheelOfDestiny.showUnlockedPreview(arg_9_0)
 end
 
 function WheelOfDestiny.applySliceFocus(arg_10_0)
-	local focusSelectedWheel = var_0_2 or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
+	local focusSelectedWheel = focusSelectedWheel or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
 
 	if not focusSelectedWheel then
 		return
@@ -399,7 +399,7 @@ function WheelOfDestiny.applySliceFocus(arg_10_0)
 end
 
 function WheelOfDestiny.hideSliceFocus()
-	local focusSelectedWheel = var_0_2 or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
+	local focusSelectedWheel = focusSelectedWheel or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
 
 	if focusSelectedWheel then
 		focusSelectedWheel:setVisible(false)

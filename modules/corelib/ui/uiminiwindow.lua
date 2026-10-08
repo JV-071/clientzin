@@ -1,4 +1,4 @@
-﻿UIMiniWindow = extends(UIWindow, "UIMiniWindow")
+UIMiniWindow = extends(UIWindow, "UIMiniWindow")
 
 local OPEN_HIGHLIGHT_COLOR = "#FFFFFF"
 local OPEN_HIGHLIGHT_WIDTH = 2
@@ -548,7 +548,7 @@ local function destroyDropHighlightOverlay(widget)
 	end
 end
 
-local function var_0_19(widget)
+local function raiseBottomStatsBar(widget)
 	if modules.game_interface and modules.game_interface.raiseBottomCustomisableStatsBar then
 		modules.game_interface.raiseBottomCustomisableStatsBar(widget)
 	end
@@ -588,7 +588,7 @@ local function applyDropHighlight(widget, container)
 	overlay:raise()
 
 	if widget:getParent() == parent and not widget:isDestroyed() then
-		var_0_19(widget)
+		raiseBottomStatsBar(widget)
 		overlay:raise()
 		widget:raise()
 	end
@@ -680,14 +680,14 @@ local function appendToDefaultSidebar(widget)
 	return true
 end
 
-local function var_0_25(arg_36_0)
-	local miniwindowTopBar = arg_36_0:getChildById("miniwindowTopBar")
+local function wasLastClickOnTopBar(miniwindow)
+	local miniwindowTopBar = miniwindow:getChildById("miniwindowTopBar")
 
 	if not miniwindowTopBar or miniwindowTopBar:isDestroyed() or miniwindowTopBar:getWidth() <= 0 or miniwindowTopBar:getHeight() <= 0 then
 		return true
 	end
 
-	return miniwindowTopBar:containsPoint(arg_36_0:getLastClickPosition())
+	return miniwindowTopBar:containsPoint(miniwindow:getLastClickPosition())
 end
 
 function UIMiniWindow.onDragEnter(self, mousePos)
@@ -697,7 +697,7 @@ function UIMiniWindow.onDragEnter(self, mousePos)
 		return false
 	end
 
-	if not var_0_25(self) then
+	if not wasLastClickOnTopBar(self) then
 		return false
 	end
 
@@ -736,7 +736,7 @@ function UIMiniWindow.onDragEnter(self, mousePos)
 		end
 
 		containerParent:addChild(self)
-		var_0_19(self)
+		raiseBottomStatsBar(self)
 		parent:saveChildren()
 
 		if parent.isHorizontalPanel and type(parent.redistributeChildrenWidths) == "function" then
@@ -1376,21 +1376,21 @@ function UIMiniWindow.closeAndForgetLayout(self)
 end
 
 function UIMiniWindow.saveParentPosition(self, parentId, position)
-	local var_58_0 = {
+	local parentPositionSettings = {
 		parentId = parentId,
 		position = pointtostring(position)
 	}
 
-	self:setSettings(var_58_0)
+	self:setSettings(parentPositionSettings)
 end
 
 function UIMiniWindow.saveParentIndex(self, parentId, index)
-	local var_59_0 = {
+	local parentIndexSettings = {
 		parentId = parentId,
 		index = tonumber(index) or index
 	}
 
-	self:setSettings(var_59_0)
+	self:setSettings(parentIndexSettings)
 
 	self.miniIndex = tonumber(index) or index
 

@@ -1,4 +1,4 @@
-﻿stashWindow = nil
+stashWindow = nil
 itemsPanel = nil
 stashSelectAmount = nil
 searchEdit = nil
@@ -12,7 +12,7 @@ local stashRenderEvent
 local stashRenderGeneration = 0
 local stashPendingSearchFocus = false
 local stashOverlayReturn = false
-local var_0_4 = false
+local stashHiddenForOverlay = false
 local stashOverlayCyclopediaHide
 local stashOverlayMarketHooked = false
 local clearStashOverlayHooks
@@ -675,7 +675,7 @@ function terminate()
 		onPositionChange = onPositionChange
 	})
 
-	var_0_4 = false
+	stashHiddenForOverlay = false
 
 	clearStashOverlayHooks()
 	cancelStashRender()
@@ -689,7 +689,7 @@ end
 function onPositionChange(creature, newPos, oldPos)
 	if creature == g_game.getLocalPlayer() then
 		stashOverlayReturn = false
-		var_0_4 = false
+		stashHiddenForOverlay = false
 
 		clearStashOverlayHooks()
 		g_modalManager.hide(stashWindow)
@@ -780,11 +780,11 @@ local function resetStashFilters()
 end
 
 function openStash(items)
-	local var_55_0 = not stashOverlayReturn
+	local resetFiltersOnOpen = not stashOverlayReturn
 
 	stashOverlayReturn = true
 
-	if var_55_0 then
+	if resetFiltersOnOpen then
 		resetStashFilters()
 	end
 
@@ -797,7 +797,7 @@ function openStash(items)
 		stashItems[itemId] = amount
 	end
 
-	if var_55_0 then
+	if resetFiltersOnOpen then
 		rebuildFilterCategoryMap()
 
 		local filterOptions = {}
@@ -907,7 +907,7 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 
 	local typedNumber = ""
 	local typingEvent
-	local var_59_5 = false
+	local settingValueFromTypedNumber = false
 
 	local function resetTypedNumber()
 		typedNumber = ""
@@ -928,11 +928,11 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 					val = itemAmount
 				end
 
-				var_59_5 = true
+				settingValueFromTypedNumber = true
 
 				scrollbar:setValue(val)
 
-				var_59_5 = false
+				settingValueFromTypedNumber = false
 			end
 
 			if typingEvent then
@@ -956,7 +956,7 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 	end
 
 	function scrollbar.onValueChange(unusedArgument, value)
-		if not var_59_5 then
+		if not settingValueFromTypedNumber then
 			resetTypedNumber()
 		end
 
@@ -1020,13 +1020,13 @@ function clearStashOverlayHooks()
 end
 
 local function restoreStashFromOverlay()
-	if not var_0_4 then
+	if not stashHiddenForOverlay then
 		clearStashOverlayHooks()
 
 		return
 	end
 
-	var_0_4 = false
+	stashHiddenForOverlay = false
 
 	clearStashOverlayHooks()
 
@@ -1050,7 +1050,7 @@ local function restoreStashFromOverlay()
 end
 
 function onStashOverlayMarketLeave()
-	if var_0_4 then
+	if stashHiddenForOverlay then
 		addEvent(restoreStashFromOverlay)
 	end
 end
@@ -1061,7 +1061,7 @@ local function hideStashForOverlay(target)
 		stashWindow:hide()
 	end
 
-	var_0_4 = true
+	stashHiddenForOverlay = true
 
 	clearStashOverlayHooks()
 
@@ -1074,7 +1074,7 @@ local function hideStashForOverlay(target)
 			function cyc.hide(...)
 				stashOverlayCyclopediaHide(...)
 
-				if var_0_4 then
+				if stashHiddenForOverlay then
 					addEvent(restoreStashFromOverlay)
 				end
 			end
@@ -1353,7 +1353,7 @@ function onSupplyStashClose()
 	stashOverlayReturn = false
 	stashItems = {}
 	stashPendingSearchFocus = false
-	var_0_4 = false
+	stashHiddenForOverlay = false
 
 	clearStashOverlayHooks()
 	resetStashFilters()

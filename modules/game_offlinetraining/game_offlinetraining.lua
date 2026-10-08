@@ -1,4 +1,4 @@
-﻿local offlineTrainingWindow
+local offlineTrainingWindow
 
 local function skillPercentForBar(rawPercent)
 	return math.floor((rawPercent or 0) / 100)
@@ -166,7 +166,7 @@ local function handleGameEnd()
 	end)
 end
 
-local function var_0_10()
+local function hide()
 	if offlineTrainingWindow and not offlineTrainingWindow:isDestroyed() then
 		g_modalManager.hide(offlineTrainingWindow)
 		offlineTrainingWindow:hide()
@@ -181,7 +181,7 @@ local function handleEscape()
 	handleGameEnd()
 end
 
-local function var_0_12(arg_14_0)
+local function sendOfflineTraining(arg_14_0)
 	g_game.sendOfflineTraining(arg_14_0)
 	handleGameEnd()
 end
@@ -244,9 +244,9 @@ function init()
 		onModalOfflineTraining = handleModalOfflineTraining
 	})
 
-	modules.game_offlinetraining.hide = var_0_10
+	modules.game_offlinetraining.hide = hide
 	modules.game_offlinetraining.cancel = handleEscape
-	modules.game_offlinetraining.sendOfflineTraining = var_0_12
+	modules.game_offlinetraining.sendOfflineTraining = sendOfflineTraining
 end
 
 function terminate()

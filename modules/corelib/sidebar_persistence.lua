@@ -1,4 +1,4 @@
-﻿SidebarPersistence = {
+SidebarPersistence = {
 	active = false,
 	FILE_NAME = "sidebars.json",
 	lastSessionActive = false,
@@ -171,10 +171,10 @@ function SidebarPersistence.saveNow()
 	for sectionKey, provider in pairs(SidebarPersistence.providers) do
 		if type(provider.collect) == "function" then
 			local section = copySection(document[sectionKey])
-			local var_12_2, var_12_3 = pcall(provider.collect, section)
+			local collectionSucceeded, collectionError = pcall(provider.collect, section)
 
-			if not var_12_2 then
-				g_logger.error("[SidebarPersistence] collect failed for " .. tostring(sectionKey) .. ": " .. tostring(var_12_3))
+			if not collectionSucceeded then
+				g_logger.error("[SidebarPersistence] collect failed for " .. tostring(sectionKey) .. ": " .. tostring(collectionError))
 			elseif type(section) == "table" and (not table.empty(section) or provider.alwaysInclude) then
 				document[sectionKey] = section
 			end

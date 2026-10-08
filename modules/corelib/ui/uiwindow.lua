@@ -1,6 +1,6 @@
-﻿UIWindow = extends(UIWidget, "UIWindow")
+UIWindow = extends(UIWidget, "UIWindow")
 
-local var_0_0 = 16
+local dragMoveInterval = 16
 
 local function var_0_1(arg_1_0)
 	removeEvent(arg_1_0._windowDragMoveEvent)
@@ -23,7 +23,7 @@ function UIWindow.create()
 	window:setDraggable(true)
 	window:setAutoFocusPolicy(AutoFocusFirst)
 
-	window.dragMoveInterval = var_0_0
+	window.dragMoveInterval = dragMoveInterval
 	window.hotkeyBlock = false
 
 	return window
@@ -84,14 +84,14 @@ function UIWindow.onDragMove(self, mousePos, unusedArgument)
 		return false
 	end
 
-	local var_8_0 = {
+	local _windowDragPendingPosition = {
 		x = mousePos.x - self.movingReference.x,
 		y = mousePos.y - self.movingReference.y
 	}
-	local var_8_1 = self.dragMoveInterval or var_0_0
+	local var_8_1 = self.dragMoveInterval or dragMoveInterval
 
 	if var_8_1 <= 0 then
-		var_0_2(self, var_8_0)
+		var_0_2(self, _windowDragPendingPosition)
 
 		return true
 	end
@@ -102,12 +102,12 @@ function UIWindow.onDragMove(self, mousePos, unusedArgument)
 	if var_8_1 <= var_8_3 and not self._windowDragMoveEvent then
 		self._windowDragPendingPosition = nil
 
-		var_0_2(self, var_8_0)
+		var_0_2(self, _windowDragPendingPosition)
 
 		return true
 	end
 
-	self._windowDragPendingPosition = var_8_0
+	self._windowDragPendingPosition = _windowDragPendingPosition
 
 	if not self._windowDragMoveEvent then
 		self._windowDragMoveEvent = scheduleEvent(function()

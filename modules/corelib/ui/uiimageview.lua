@@ -1,4 +1,4 @@
-﻿UIImageView = extends(UIWidget, "UIImageView")
+UIImageView = extends(UIWidget, "UIImageView")
 
 function UIImageView.create()
 	local imageView = UIImageView.internalCreate()
@@ -125,11 +125,11 @@ function UIImageView.move(self, x, y, centerX, centerY)
 
 	local offsetX = centerX - x * self.zoom
 	local offsetY = centerY - y * self.zoom
-	local var_10_4, var_10_5 = self:clampImageOffset(offsetX, offsetY)
+	local clampedOffsetX, clampedOffsetY = self:clampImageOffset(offsetX, offsetY)
 
 	self:setImageOffset({
-		x = var_10_4,
-		y = var_10_5
+		x = clampedOffsetX,
+		y = clampedOffsetY
 	})
 end
 

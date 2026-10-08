@@ -1,4 +1,4 @@
-﻿analyserMiniWindow = nil
+analyserMiniWindow = nil
 
 if not configPopupWindow then
 	configPopupWindow = {}
@@ -286,7 +286,7 @@ local analyserWindows = {
 	supplyButton = "menus/SupplyAnalyser",
 	lootButton = "menus/LootAnalyser"
 }
-local var_0_8 = {
+local analyserWindowKeybinds = {
 	{
 		action = "Show/hide XP analyser",
 		buttonId = "xpButton"
@@ -334,10 +334,10 @@ local var_0_8 = {
 
 function formatMoney(n)
 	local s = string.format("%.0f", n)
-	local var_17_1 = ""
+	local negativeSign = ""
 
 	if s:sub(1, 1) == "-" then
-		var_17_1 = "-"
+		negativeSign = "-"
 		s = s:sub(2)
 	end
 
@@ -353,7 +353,7 @@ function formatMoney(n)
 		t = t .. "," .. s:sub(i, i + 2)
 	end
 
-	return var_17_1 .. t
+	return negativeSign .. t
 end
 
 function getItemServerName(itemId)
@@ -519,21 +519,21 @@ local function attachAnalyserToSidebarPanel(widget, panel)
 		end)
 	end
 
-	local var_26_1 = false
+	local widgetInserted = false
 
 	if panel.scheduleInsert then
-		var_26_1 = pcall(function()
+		widgetInserted = pcall(function()
 			panel:scheduleInsert(widget, panel:getChildCount() + 1)
 		end) and widget:getParent() == panel
 	end
 
-	var_26_1 = var_26_1 or pcall(function()
+	widgetInserted = widgetInserted or pcall(function()
 		if not panel:hasChild(widget) then
 			panel:addChild(widget)
 		end
 	end) and widget:getParent() == panel
 
-	if not var_26_1 then
+	if not widgetInserted then
 		return false
 	end
 
@@ -928,7 +928,7 @@ function init()
 		ControllerAnalyser:startEvent()
 	end
 
-	for unusedValue, entry in ipairs(var_0_8) do
+	for unusedValue, entry in ipairs(analyserWindowKeybinds) do
 		local buttonId = entry.buttonId
 
 		Keybind.new("Windows", entry.action, "", "")
@@ -954,7 +954,7 @@ function init()
 end
 
 function terminate()
-	for unusedValue, entry in ipairs(var_0_8) do
+	for unusedValue, entry in ipairs(analyserWindowKeybinds) do
 		Keybind.delete("Windows", entry.action)
 	end
 

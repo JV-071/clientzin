@@ -1,4 +1,4 @@
-﻿SidebarWidgetOptions = {}
+SidebarWidgetOptions = {}
 SidebarLayoutState = {
 	widgets = {}
 }
@@ -664,30 +664,30 @@ function SidebarWidgetOptions.applyBaseOptions(window, opts)
 	end
 end
 
-local var_0_8 = 11698
+local BATTLE_PASS_INBOX_ITEM_ID = 11698
 
-function SidebarWidgetOptions.isBattlePassInboxContainer(arg_23_0)
-	if not arg_23_0 then
+function SidebarWidgetOptions.isBattlePassInboxContainer(container)
+	if not container then
 		return false
 	end
 
-	local containerItem = arg_23_0.getContainerItem and arg_23_0:getContainerItem()
+	local containerItem = container.getContainerItem and container:getContainerItem()
 
-	if containerItem and containerItem:getId() == var_0_8 then
+	if containerItem and containerItem:getId() == BATTLE_PASS_INBOX_ITEM_ID then
 		return true
 	end
 
-	local name = arg_23_0.getName and arg_23_0:getName()
+	local name = container.getName and container:getName()
 
 	return type(name) == "string" and name:lower():find("battle pass", 1, true) ~= nil
 end
 
-function SidebarWidgetOptions.isBattlePassInboxContainerId(arg_24_0)
+function SidebarWidgetOptions.isBattlePassInboxContainerId(containerId)
 	if not g_game or not g_game.getContainer then
 		return false
 	end
 
-	return SidebarWidgetOptions.isBattlePassInboxContainer(g_game.getContainer(tonumber(arg_24_0)))
+	return SidebarWidgetOptions.isBattlePassInboxContainer(g_game.getContainer(tonumber(containerId)))
 end
 
 function SidebarWidgetOptions.findBattlePassInboxWindow()
@@ -757,17 +757,17 @@ function SidebarWidgetOptions.resolveWindow(widgetType, numericValue)
 		return rootWidget:recursiveGetChildById("helperStatsWindow")
 	end
 
-	local var_26_1 = WIDGET_TYPE_TO_ID[widgetType]
+	local sidebarWidgetId = WIDGET_TYPE_TO_ID[widgetType]
 
-	if var_26_1 then
-		return rootWidget:recursiveGetChildById(var_26_1)
+	if sidebarWidgetId then
+		return rootWidget:recursiveGetChildById(sidebarWidgetId)
 	end
 
 	if CipImportMappings and CipImportMappings.resolveSidebarWidgetId then
-		local var_26_2 = CipImportMappings.resolveSidebarWidgetId(widgetType, numericValue)
+		local importedSidebarWidgetId = CipImportMappings.resolveSidebarWidgetId(widgetType, numericValue)
 
-		if var_26_2 then
-			return rootWidget:recursiveGetChildById(var_26_2)
+		if importedSidebarWidgetId then
+			return rootWidget:recursiveGetChildById(importedSidebarWidgetId)
 		end
 	end
 

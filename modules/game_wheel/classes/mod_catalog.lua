@@ -1,4 +1,4 @@
-﻿ModCatalog = {}
+ModCatalog = {}
 
 local var_0_0 = {}
 
@@ -35,13 +35,13 @@ function ModCatalog.createFragments()
 
 	var_0_0 = {}
 
-	for iter_4_0 = 0, #FlatSupremeMods do
-		local var_4_2 = FlatSupremeMods[iter_4_0]
+	for modID = 0, #FlatSupremeMods do
+		local var_4_2 = FlatSupremeMods[modID]
 
-		if not var_4_2 or iter_4_0 == 4 and vocation > 6 then
+		if not var_4_2 or modID == 4 and vocation > 6 then
 			-- block empty
 		else
-			var_4_2.modID = iter_4_0
+			var_4_2.modID = modID
 			var_4_2.supreme = true
 
 			table.insert(var_0_0, var_4_2)
@@ -73,11 +73,11 @@ function ModCatalog.createFragments()
 	})[vocation]
 
 	if var_4_4 then
-		for iter_4_1 = var_4_4.fromID, var_4_4.toID do
-			local var_4_5 = var_4_3[iter_4_1]
+		for modID = var_4_4.fromID, var_4_4.toID do
+			local var_4_5 = var_4_3[modID]
 
 			if var_4_5 then
-				var_4_5.modID = iter_4_1
+				var_4_5.modID = modID
 				var_4_5.supreme = true
 
 				table.insert(var_0_0, var_4_5)
@@ -85,11 +85,11 @@ function ModCatalog.createFragments()
 		end
 	end
 
-	for iter_4_2 = 0, #BasicMods do
-		local var_4_6 = BasicMods[iter_4_2]
+	for modID = 0, #BasicMods do
+		local var_4_6 = BasicMods[modID]
 
 		if var_4_6 then
-			var_4_6.modID = iter_4_2
+			var_4_6.modID = modID
 			var_4_6.supreme = false
 
 			table.insert(var_0_0, var_4_6)

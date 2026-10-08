@@ -1,4 +1,4 @@
-﻿json = {
+json = {
 	_version = "0.1.2"
 }
 
@@ -327,7 +327,7 @@ local function parse_literal(str, i)
 end
 
 local function parse_array(str, i)
-	local var_17_0 = {}
+	local arrayValues = {}
 	local n = 1
 
 	i = i + 1
@@ -343,7 +343,7 @@ local function parse_array(str, i)
 			break
 		end
 
-		var_17_0[n], i = parse(str, i)
+		arrayValues[n], i = parse(str, i)
 		n = n + 1
 		i = next_char(str, i, space_chars, true)
 
@@ -360,11 +360,11 @@ local function parse_array(str, i)
 		end
 	end
 
-	return var_17_0, i
+	return arrayValues, i
 end
 
 local function parse_object(str, i)
-	local var_18_0 = {}
+	local objectFields = {}
 
 	i = i + 1
 
@@ -394,7 +394,7 @@ local function parse_object(str, i)
 		end
 
 		i = next_char(str, i + 1, space_chars, true)
-		var_18_0[key], i = parse(str, i)
+		objectFields[key], i = parse(str, i)
 		i = next_char(str, i, space_chars, true)
 
 		local chr = str:sub(i, i)
@@ -410,7 +410,7 @@ local function parse_object(str, i)
 		end
 	end
 
-	return var_18_0, i
+	return objectFields, i
 end
 
 local char_func_map = {

@@ -1,4 +1,4 @@
-﻿if not BossCooldown then
+if not BossCooldown then
 	BossCooldown = {
 		search = "",
 		lastUiSecond = 0,
@@ -43,27 +43,27 @@ local function sortBossEntries(entries)
 		return
 	end
 
-	local var_5_0 = os.time()
+	local nowSeconds = os.time()
 
-	table.sort(entries, function(arg_6_0, arg_6_1)
-		arg_6_0 = arg_6_0 or {}
-		arg_6_1 = arg_6_1 or {}
+	table.sort(entries, function(leftEntry, rightEntry)
+		leftEntry = leftEntry or {}
+		rightEntry = rightEntry or {}
 
-		local var_6_0 = entryHasCooldown(arg_6_0, var_5_0) and 0 or 1
-		local var_6_1 = entryHasCooldown(arg_6_1, var_5_0) and 0 or 1
+		local leftCooldownOrder = entryHasCooldown(leftEntry, nowSeconds) and 0 or 1
+		local rightCooldownOrder = entryHasCooldown(rightEntry, nowSeconds) and 0 or 1
 
-		if var_6_0 ~= var_6_1 then
-			return var_6_0 < var_6_1
+		if leftCooldownOrder ~= rightCooldownOrder then
+			return leftCooldownOrder < rightCooldownOrder
 		end
 
-		local var_6_2 = string.lower(tostring(arg_6_0.name or ""))
-		local var_6_3 = string.lower(tostring(arg_6_1.name or ""))
+		local leftNameLower = string.lower(tostring(leftEntry.name or ""))
+		local rightNameLower = string.lower(tostring(rightEntry.name or ""))
 
-		if var_6_2 ~= var_6_3 then
-			return var_6_2 < var_6_3
+		if leftNameLower ~= rightNameLower then
+			return leftNameLower < rightNameLower
 		end
 
-		return (tonumber(arg_6_0.bossId) or 0) < (tonumber(arg_6_1.bossId) or 0)
+		return (tonumber(leftEntry.bossId) or 0) < (tonumber(rightEntry.bossId) or 0)
 	end)
 end
 
@@ -224,13 +224,13 @@ function BossCooldown.rebuild(self)
 
 		function w.onClick()
 			local B = modules.game_cyclopedia
-			local var_15_1 = B and B.Cyclopedia
+			local cyclopediaState = B and B.Cyclopedia
 
-			if not var_15_1 or not B.show then
+			if not cyclopediaState or not B.show then
 				return false
 			end
 
-			var_15_1._pendingBosstiaryRaceId = e.bossId
+			cyclopediaState._pendingBosstiaryRaceId = e.bossId
 
 			B.show("bosstiary")
 

@@ -1,4 +1,4 @@
-﻿local UI
+local UI
 local STAGES = {
 	SEARCH = 4,
 	CREATURES = 2,
@@ -918,10 +918,10 @@ local function findCreaturePage(raceId, target)
 	return 1
 end
 
-local function var_0_44(arg_51_0, arg_51_1)
-	arg_51_0 = normalizeRaceId(arg_51_0)
+local function var_0_44(raceId, category)
+	raceId = normalizeRaceId(raceId)
 
-	if not arg_51_0 then
+	if not raceId then
 		return
 	end
 
@@ -929,11 +929,11 @@ local function var_0_44(arg_51_0, arg_51_1)
 
 	local target = Cyclopedia.Bestiary.ReturnTarget
 
-	if arg_51_1 and arg_51_1 ~= "" then
-		target.raceId = arg_51_0
-		target.category = arg_51_1
-		target.creaturePage = findCreaturePage(arg_51_0, arg_51_1)
-		target.categoryPage = var_0_41(arg_51_1)
+	if category and category ~= "" then
+		target.raceId = raceId
+		target.category = category
+		target.creaturePage = findCreaturePage(raceId, category)
+		target.categoryPage = var_0_41(category)
 	end
 end
 
@@ -2541,7 +2541,7 @@ local function var_0_76(arg_122_0)
 end
 
 local function var_0_77(arg_123_0)
-	local var_123_0 = {}
+	local bosstiaryCooldownByRace = {}
 
 	if type(arg_123_0) == "table" then
 		for unusedValue, entry in pairs(arg_123_0) do
@@ -2549,13 +2549,13 @@ local function var_0_77(arg_123_0)
 				local numericValue = tonumber(entry[1])
 
 				if numericValue then
-					var_123_0[numericValue] = var_0_75(entry[2])
+					bosstiaryCooldownByRace[numericValue] = var_0_75(entry[2])
 				end
 			end
 		end
 	end
 
-	Cyclopedia.bosstiaryCooldownByRace = var_123_0
+	Cyclopedia.bosstiaryCooldownByRace = bosstiaryCooldownByRace
 end
 
 function Cyclopedia.syncBosstiaryCooldownCache()
@@ -2617,24 +2617,24 @@ local function var_0_79(arg_127_0)
 	end
 
 	local var_127_3 = var_127_2 - os.time()
-	local var_127_4 = var_127_3 > 0 and "running" or "finished"
+	local cooldownState = var_127_3 > 0 and "running" or "finished"
 
-	if arg_127_0.cooldownState ~= var_127_4 then
+	if arg_127_0.cooldownState ~= cooldownState then
 		cooldownIcon:setVisible(true)
-		cooldownIcon:setImageSource(var_127_4 == "running" and var_0_67 or var_0_68)
+		cooldownIcon:setImageSource(cooldownState == "running" and var_0_67 or var_0_68)
 
 		if arg_127_0.label then
 			arg_127_0.label:setMarginRight(var_0_70)
 		end
 
-		arg_127_0.cooldownState = var_127_4
+		arg_127_0.cooldownState = cooldownState
 
-		if var_127_4 == "finished" then
+		if cooldownState == "finished" then
 			cooldownIcon:setTooltip(var_0_72)
 		end
 	end
 
-	if var_127_4 == "running" then
+	if cooldownState == "running" then
 		cooldownIcon:setTooltip(var_0_76(var_127_3))
 
 		var_0_74 = true
@@ -2823,44 +2823,44 @@ local function var_0_90(arg_143_0)
 	return arg_143_0 and not arg_143_0:isDestroyed()
 end
 
-local function var_0_91(arg_144_0, arg_144_1, arg_144_2, arg_144_3, arg_144_4)
-	if arg_144_0.trackerKills == arg_144_1 and arg_144_0.trackerUno == arg_144_2 and arg_144_0.trackerDos == arg_144_3 and arg_144_0.trackerMaxKills == arg_144_4 then
+local function var_0_91(arg_144_0, trackerKills, trackerUno, trackerDos, trackerMaxKills)
+	if arg_144_0.trackerKills == trackerKills and arg_144_0.trackerUno == trackerUno and arg_144_0.trackerDos == trackerDos and arg_144_0.trackerMaxKills == trackerMaxKills then
 		return
 	end
 
-	arg_144_0.trackerKills = arg_144_1
-	arg_144_0.trackerUno = arg_144_2
-	arg_144_0.trackerDos = arg_144_3
-	arg_144_0.trackerMaxKills = arg_144_4
+	arg_144_0.trackerKills = trackerKills
+	arg_144_0.trackerUno = trackerUno
+	arg_144_0.trackerDos = trackerDos
+	arg_144_0.trackerMaxKills = trackerMaxKills
 
-	local textValue = tostring(arg_144_1)
+	local textValue = tostring(trackerKills)
 
 	if arg_144_0.kills:getText() ~= textValue then
 		arg_144_0.kills:setText(textValue)
 	end
 
-	Cyclopedia.SetBestiaryProgress(50, arg_144_0.killsBar2, arg_144_0.ProgressBack33, arg_144_0.ProgressBack55, arg_144_1, arg_144_2, arg_144_3, arg_144_4, 49, 12)
+	Cyclopedia.SetBestiaryProgress(50, arg_144_0.killsBar2, arg_144_0.ProgressBack33, arg_144_0.ProgressBack55, trackerKills, trackerUno, trackerDos, trackerMaxKills, 49, 12)
 
 	if arg_144_0.ProgressBorder1 then
-		arg_144_0.ProgressBorder1:setTooltip(string.format("%d / %d", arg_144_1, arg_144_2))
+		arg_144_0.ProgressBorder1:setTooltip(string.format("%d / %d", trackerKills, trackerUno))
 	end
 
 	if arg_144_0.ProgressBorder2 then
-		arg_144_0.ProgressBorder2:setTooltip(string.format("%d / %d", arg_144_1, arg_144_3))
+		arg_144_0.ProgressBorder2:setTooltip(string.format("%d / %d", trackerKills, trackerDos))
 	end
 
 	if arg_144_0.ProgressBorder3 then
-		arg_144_0.ProgressBorder3:setTooltip(string.format("%d / %d", arg_144_1, arg_144_4))
+		arg_144_0.ProgressBorder3:setTooltip(string.format("%d / %d", trackerKills, trackerMaxKills))
 	end
 end
 
-local function var_0_92(arg_145_0, arg_145_1, arg_145_2, arg_145_3, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
+local function var_0_92(arg_145_0, trackerIsBoss, trackerRaceId, arg_145_3, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
 	local trackerButtonWidget = g_ui.createWidget("TrackerButton", arg_145_0)
 
-	trackerButtonWidget:setId(arg_145_2)
+	trackerButtonWidget:setId(trackerRaceId)
 
-	trackerButtonWidget.trackerIsBoss = arg_145_1
-	trackerButtonWidget.trackerRaceId = arg_145_2
+	trackerButtonWidget.trackerIsBoss = trackerIsBoss
+	trackerButtonWidget.trackerRaceId = trackerRaceId
 
 	trackerButtonWidget.creature:setOutfit(arg_145_3.outfit)
 	var_0_23(trackerButtonWidget.creature)
@@ -2877,7 +2877,7 @@ local function var_0_92(arg_145_0, arg_145_1, arg_145_2, arg_145_3, arg_145_4, a
 	trackerButtonWidget.kills:raise()
 	var_0_91(trackerButtonWidget, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
 
-	if arg_145_1 then
+	if trackerIsBoss then
 		var_0_79(trackerButtonWidget)
 	end
 

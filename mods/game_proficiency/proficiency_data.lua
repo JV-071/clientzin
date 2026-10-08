@@ -1,4 +1,4 @@
-﻿if not ProficiencyData then
+if not ProficiencyData then
 	ProficiencyData = {}
 	ProficiencyData.__index = ProficiencyData
 	ProficiencyData.content = {}
@@ -776,16 +776,16 @@ function ProficiencyData.getWeaponProfessionType(unusedArgument, displayItem)
 		return _proficiencyVocation
 	end
 
-	local var_31_1 = "regular"
+	local _proficiencyVocation = "regular"
 	local marketData = displayItem.getMarketData and displayItem:getMarketData()
 
 	if marketData and marketData.restrictVocation == 1 then
-		var_31_1 = "knight"
+		_proficiencyVocation = "knight"
 	elseif displayItem.getWeaponType and displayItem:getWeaponType() == WEAPON_CROSSBOW then
-		var_31_1 = "crossbow"
+		_proficiencyVocation = "crossbow"
 	end
 
-	displayItem._proficiencyVocation = var_31_1
+	displayItem._proficiencyVocation = _proficiencyVocation
 
-	return var_31_1
+	return _proficiencyVocation
 end

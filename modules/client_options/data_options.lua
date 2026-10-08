@@ -1,4 +1,4 @@
-﻿local WALK_DELAY_DEFAULT_MS = 100
+local WALK_DELAY_DEFAULT_MS = 100
 
 local function syncAllowInspectSetting(enabled)
 	if not g_game.isOnline() or not g_game.inspectionPlayer then
@@ -432,10 +432,10 @@ return {
 	},
 	showMessages = {
 		value = true,
-		action = function(arg_41_0, unusedArgument, unusedArgument, panels, unusedArgument)
-			modules.client_options.updateGameWindowMessageOptionsAvailability(panels, arg_41_0)
+		action = function(showMessages, unusedArgument, unusedArgument, panels, unusedArgument)
+			modules.client_options.updateGameWindowMessageOptionsAvailability(panels, showMessages)
 
-			if not arg_41_0 and modules.game_textmessage and modules.game_textmessage.clearMessages then
+			if not showMessages and modules.game_textmessage and modules.game_textmessage.clearMessages then
 				modules.game_textmessage.clearMessages()
 			end
 		end
@@ -546,16 +546,16 @@ return {
 				modules.client_options.updateLootSideVisibility(panels, value)
 			end
 
-			local var_48_1 = value
+			local mouseControlMode = value
 
-			if var_48_1 == true then
-				var_48_1 = "classic"
-			elseif var_48_1 ~= "classic" and var_48_1 ~= "regular" and var_48_1 ~= "leftSmart" then
-				var_48_1 = "regular"
+			if mouseControlMode == true then
+				mouseControlMode = "classic"
+			elseif mouseControlMode ~= "classic" and mouseControlMode ~= "regular" and mouseControlMode ~= "leftSmart" then
+				mouseControlMode = "regular"
 			end
 
 			if panels.gameMapPanel and panels.gameMapPanel.setMouseControlMode then
-				panels.gameMapPanel:setMouseControlMode(var_48_1)
+				panels.gameMapPanel:setMouseControlMode(mouseControlMode)
 			elseif panels.gameMapPanel and panels.gameMapPanel.setHighlightObjectsWithoutShift then
 				panels.gameMapPanel:setHighlightObjectsWithoutShift(value == "leftSmart")
 			end
@@ -1395,8 +1395,8 @@ return {
 	showAnimatedMouseCursor = {
 		deferAction = true,
 		value = true,
-		action = function(arg_99_0, options, controller, panels, extraWidgets)
-			g_mouse.setShowAnimatedMouseCursor(arg_99_0)
+		action = function(showAnimatedCursor, options, controller, panels, extraWidgets)
+			g_mouse.setShowAnimatedMouseCursor(showAnimatedCursor)
 		end
 	},
 	showBigMouseCursor = {

@@ -1,4 +1,4 @@
-﻿local statesOutft = {
+local statesOutft = {
 	store = 1,
 	available = 0
 }
@@ -731,7 +731,7 @@ function handleCheckChange.apply()
 		return
 	end
 
-	local var_33_1 = items.onChildFocusChange
+	local onChildFocusChange = items.onChildFocusChange
 
 	items.onChildFocusChange = nil
 
@@ -768,7 +768,7 @@ function handleCheckChange.apply()
 		end
 	end
 
-	items.onChildFocusChange = var_33_1
+	items.onChildFocusChange = onChildFocusChange
 
 	scheduleSelectionListHydration("filterSelectionList")
 end
@@ -1591,7 +1591,7 @@ local function onMountNameMouseRelease(widget)
 end
 
 local handleMouseRelease = onMountNameMouseRelease(onMountNameClick)
-local var_0_141 = onMountNameMouseRelease(onOutfitNameClick)
+local onMouseRelease = onMountNameMouseRelease(onOutfitNameClick)
 
 local function updateMountAppearanceNameVisual(mountId)
 	if not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings or not outfitwindowWidget.appearance.settings.mount or not outfitwindowWidget.appearance.settings.mount.name then
@@ -1647,7 +1647,7 @@ local function var_0_143(arg_85_0)
 		name:setFocusable(true)
 
 		name.onMousePress = onMountNameMousePress
-		name.onMouseRelease = var_0_141
+		name.onMouseRelease = onMouseRelease
 
 		layoutStoreAppearanceNameRowCentered(name)
 		scheduleLayoutStoreAppearanceNameRow(name)
@@ -1862,12 +1862,12 @@ local function var_0_152()
 			local __selectionOutfitPayload = child.__selectionOutfitPayload
 
 			if __selectionOutfitPayload then
-				local var_95_4, var_95_5, var_95_6, var_95_7 = headBodyForListThumbnail(id, var_95_1)
+				local head, body, legs, feet = headBodyForListThumbnail(id, var_95_1)
 
-				__selectionOutfitPayload.head = var_95_4
-				__selectionOutfitPayload.body = var_95_5
-				__selectionOutfitPayload.legs = var_95_6
-				__selectionOutfitPayload.feet = var_95_7
+				__selectionOutfitPayload.head = head
+				__selectionOutfitPayload.body = body
+				__selectionOutfitPayload.legs = legs
+				__selectionOutfitPayload.feet = feet
 
 				if child.__selectionOutfitHydrated and child.outfit then
 					child.outfit:setOutfit(__selectionOutfitPayload)
@@ -3011,18 +3011,18 @@ function onAuraList(arg_132_0, arg_132_1)
 	if type(arg_132_1) == "table" then
 		for unusedValue, entry in pairs(arg_132_1) do
 			local numericValue = tonumber(entry.id) or 0
-			local var_132_1 = tonumber(entry.clientId) or 0
+			local selectedAuraClientId = tonumber(entry.clientId) or 0
 			local var_132_2 = entry.name or ""
 
 			table.insert(ServerData.auras, {
 				numericValue,
 				var_132_2,
-				var_132_1
+				selectedAuraClientId
 			})
 
-			if var_132_1 > 0 and var_132_1 == ServerData.currentAuraClientId then
+			if selectedAuraClientId > 0 and selectedAuraClientId == ServerData.currentAuraClientId then
 				ServerData.selectedAuraId = numericValue
-				ServerData.selectedAuraClientId = var_132_1
+				ServerData.selectedAuraClientId = selectedAuraClientId
 			end
 		end
 
@@ -3079,13 +3079,13 @@ function applyHirelingWindowMode()
 	settings.movement = false
 
 	if movementCheck then
-		local var_136_0 = movementCheck.onCheckChange
+		local onCheckChange = movementCheck.onCheckChange
 
 		movementCheck.onCheckChange = nil
 
 		movementCheck:setChecked(false)
 
-		movementCheck.onCheckChange = var_136_0
+		movementCheck.onCheckChange = onCheckChange
 	end
 
 	syncPreviewWalkingState()
@@ -4883,13 +4883,13 @@ function showAuras()
 		selectionButtonWidget.auraClientId = arg_194_0[3] or 0
 
 		if selectionButtonWidget.auraClientId > 0 then
-			local var_194_1 = {
+			local selectionOutfitData = {
 				type = selectionButtonWidget.auraClientId
 			}
 
-			selectionButtonWidget.selectionOutfitData = var_194_1
+			selectionButtonWidget.selectionOutfitData = selectionOutfitData
 
-			markSelectionButtonDeferred(selectionButtonWidget, var_194_1)
+			markSelectionButtonDeferred(selectionButtonWidget, selectionOutfitData)
 			makeThumbnailStatic(selectionButtonWidget.outfit)
 		end
 

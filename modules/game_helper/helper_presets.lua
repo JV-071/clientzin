@@ -1,4 +1,4 @@
-﻿HelperPresets = HelperPresets or {}
+HelperPresets = HelperPresets or {}
 
 local var_0_0
 local var_0_1 = {
@@ -1228,9 +1228,9 @@ function HelperPresets.generate(arg_24_0)
 	end
 
 	local level = tonumber(var_24_0:getLevel()) or 1
-	local var_24_4 = var_0_27(var_24_2, var_24_1, level, arg_24_0)
+	local priorityList = var_0_27(var_24_2, var_24_1, level, arg_24_0)
 
-	if #var_24_4 == 0 then
+	if #priorityList == 0 then
 		return false, var_0_19("empty")
 	end
 
@@ -1239,24 +1239,24 @@ function HelperPresets.generate(arg_24_0)
 	var_24_5.shooter = var_24_5.shooter or {}
 	var_24_5.shooter.shooterProfiles = var_24_5.shooter.shooterProfiles or {}
 
-	local var_24_6 = var_24_5.shooter.selectedShooterProfile or "Default"
+	local selectedShooterProfile = var_24_5.shooter.selectedShooterProfile or "Default"
 
-	var_24_5.shooter.selectedShooterProfile = var_24_6
+	var_24_5.shooter.selectedShooterProfile = selectedShooterProfile
 
-	local var_24_7 = var_24_5.shooter.shooterProfiles[var_24_6]
+	local var_24_7 = var_24_5.shooter.shooterProfiles[selectedShooterProfile]
 
 	if type(var_24_7) ~= "table" then
 		var_24_7 = {}
-		var_24_5.shooter.shooterProfiles[var_24_6] = var_24_7
+		var_24_5.shooter.shooterProfiles[selectedShooterProfile] = var_24_7
 	end
 
-	var_24_7.priorityList = var_24_4
+	var_24_7.priorityList = priorityList
 	var_24_7.spells = nil
 	var_24_7.runes = nil
 
-	local var_24_8 = var_0_31(var_24_2, var_24_1, level)
+	local healingEntries = var_0_31(var_24_2, var_24_1, level)
 
-	var_24_5.healingEntries = var_24_8
+	var_24_5.healingEntries = healingEntries
 	var_24_5.healingSlots = nil
 
 	var_0_32(var_24_5, var_24_2)
@@ -1264,7 +1264,7 @@ function HelperPresets.generate(arg_24_0)
 	var_0_0.applyConfig(var_24_5)
 	var_0_34(var_24_2, arg_24_0)
 
-	return true, string.format(var_0_19("generated"), var_0_4[var_24_2] or var_24_2, level, HelperPresets.getProfileName(arg_24_0) or "Auto", #var_24_4, #var_24_8)
+	return true, string.format(var_0_19("generated"), var_0_4[var_24_2] or var_24_2, level, HelperPresets.getProfileName(arg_24_0) or "Auto", #priorityList, #healingEntries)
 end
 
 function HelperPresets.init(arg_25_0)

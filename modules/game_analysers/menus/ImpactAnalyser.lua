@@ -1,4 +1,4 @@
-﻿if not ImpactAnalyser then
+if not ImpactAnalyser then
 	ImpactAnalyser = {
 		dps = 0,
 		maxHPS = 0,
@@ -179,7 +179,7 @@ function ImpactAnalyser.create(unusedArgument)
 		end
 	end
 
-	local function var_4_2(widget, mousePosition, mouseButton)
+	local function onMousePress(widget, mousePosition, mouseButton)
 		if mouseButton == MouseLeftButton then
 			ImpactAnalyser:openTargetConfig(false)
 
@@ -189,8 +189,8 @@ function ImpactAnalyser.create(unusedArgument)
 
 	contentsPanel.targetDpsLabel.onMousePress = handleMousePress
 	contentsPanel.targetDps.onMousePress = handleMousePress
-	contentsPanel.targetHpsLabel.onMousePress = var_4_2
-	contentsPanel.targetHps.onMousePress = var_4_2
+	contentsPanel.targetHpsLabel.onMousePress = onMousePress
+	contentsPanel.targetHps.onMousePress = onMousePress
 end
 
 function ImpactAnalyser.reset(unusedArgument, allTimeDps, allTimeHps)

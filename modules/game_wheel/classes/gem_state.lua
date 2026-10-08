@@ -1,4 +1,4 @@
-﻿WheelGemState = {}
+WheelGemState = {}
 
 function WheelGemState.getAtelierGems()
 	return WheelOfDestiny.atelierGems or {}
@@ -12,11 +12,11 @@ function WheelGemState.getAtelierGemCount()
 	return #WheelGemState.getAtelierGems()
 end
 
-function WheelGemState.setEquipedGems(arg_4_0)
-	WheelOfDestiny.equipedGems = arg_4_0
+function WheelGemState.setEquipedGems(equipedGems)
+	WheelOfDestiny.equipedGems = equipedGems
 
 	if WheelOfDestiny.currentPreset then
-		WheelOfDestiny.currentPreset.equipedGems = arg_4_0
+		WheelOfDestiny.currentPreset.equipedGems = equipedGems
 	end
 end
 

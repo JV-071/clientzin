@@ -1,4 +1,4 @@
-﻿UICreatureButton = extends(UIWidget, "UICreatureButton")
+UICreatureButton = extends(UIWidget, "UICreatureButton")
 
 local CreatureButtonColors = {
 	onIdle = {
@@ -271,10 +271,10 @@ function UICreatureButton.updateOutfitPreview(self, outfit)
 	creature:setCreatureSmooth(false)
 end
 
-function UICreatureButton.setup(self, arg_14_1, onlyOutfit)
-	self.creature = arg_14_1
+function UICreatureButton.setup(self, targetCreature, onlyOutfit)
+	self.creature = targetCreature
 	self.isHovered = nil
-	self.creatureHovered = g_game.getHoveredCreature() == arg_14_1
+	self.creatureHovered = g_game.getHoveredCreature() == targetCreature
 
 	local creature = self:getChildById("creature")
 	local label = self:getChildById("label")
@@ -294,23 +294,23 @@ function UICreatureButton.setup(self, arg_14_1, onlyOutfit)
 	self:updateNameLabel()
 
 	if onlyOutfit == true then
-		self:updateOutfitPreview(arg_14_1:getOutfit())
+		self:updateOutfitPreview(targetCreature:getOutfit())
 	else
-		creature:setCreature(arg_14_1)
+		creature:setCreature(targetCreature)
 	end
 
-	self:setId("CreatureButton_" .. arg_14_1:getName():gsub("%s", "_"))
-	self:setLifeBarPercent(arg_14_1:getHealthPercent())
-	self:updateSkull(arg_14_1:getSkull())
-	self:updateEmblem(arg_14_1:getEmblem())
-	self:updateIcons(arg_14_1:getIcons())
+	self:setId("CreatureButton_" .. targetCreature:getName():gsub("%s", "_"))
+	self:setLifeBarPercent(targetCreature:getHealthPercent())
+	self:updateSkull(targetCreature:getSkull())
+	self:updateEmblem(targetCreature:getEmblem())
+	self:updateIcons(targetCreature:getIcons())
 
 	if self:getChildById("manaBar") then
-		self:setManaBarPercent(arg_14_1:getManaPercent())
+		self:setManaBarPercent(targetCreature:getManaPercent())
 	end
 
 	if self.updatePartyShield then
-		self:updatePartyShield(arg_14_1:getShield())
+		self:updatePartyShield(targetCreature:getShield())
 	end
 
 	if self.isBattleButton then

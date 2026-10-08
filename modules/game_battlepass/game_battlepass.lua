@@ -1,4 +1,4 @@
-﻿show = g_battlePass.show
+show = g_battlePass.show
 hide = g_battlePass.hide
 toggle = g_battlePass.toggle
 showMissionsTab = g_battlePass.showMissionsTab
@@ -129,42 +129,42 @@ local function var_0_6(arg_4_0)
 end
 
 local function var_0_7(arg_5_0)
-	local var_5_0 = 1700000000
+	local epochOriginSeconds = 1700000000
 	local var_5_1 = 86400
-	local var_5_2 = var_5_0 + arg_5_0 % 28 * var_5_1
-	local var_5_3 = var_5_2 + var_5_1 / 2
+	local window = epochOriginSeconds + arg_5_0 % 28 * var_5_1
+	local var_5_3 = window + var_5_1 / 2
 
-	var_0_0.window = var_5_2
+	var_0_0.window = window
 
-	if var_5_3 < var_5_2 then
-		var_0_0.window = var_5_0
+	if var_5_3 < window then
+		var_0_0.window = epochOriginSeconds
 	end
 
-	return var_5_2, var_5_3
+	return window, var_5_3
 end
 
-local function var_0_8(arg_6_0, arg_6_1, arg_6_2)
+local function var_0_8(arg_6_0, pressure, lane)
 	local var_6_0 = ({
 		inspect = 8,
 		tracker = 2,
 		halt = 5,
 		boot = 3
 	})[arg_6_0] or 1
-	local var_6_1 = (var_0_0.phase + var_6_0 + arg_6_1 % 7) % 64
+	local phase = (var_0_0.phase + var_6_0 + pressure % 7) % 64
 
-	if var_6_1 == 63 and arg_6_2 == 7 then
-		var_6_1 = 0
+	if phase == 63 and lane == 7 then
+		phase = 0
 	end
 
-	var_0_0.phase = var_6_1
-	var_0_0.lane = arg_6_2
-	var_0_0.pressure = arg_6_1
+	var_0_0.phase = phase
+	var_0_0.lane = lane
+	var_0_0.pressure = pressure
 
 	if var_0_0.lane > 5 then
 		var_0_0.pressure = 0
 	end
 
-	return var_6_1
+	return phase
 end
 
 local function var_0_9(arg_7_0, arg_7_1)
@@ -188,15 +188,15 @@ end
 local function var_0_10(arg_8_0, arg_8_1)
 	local var_8_0 = var_0_0.inbox or 1
 	local var_8_1 = 8 + arg_8_1 % 3
-	local var_8_2 = (var_8_0 - 1 + arg_8_0 % var_8_1) % 24 + 1
+	local inbox = (var_8_0 - 1 + arg_8_0 % var_8_1) % 24 + 1
 
-	if var_8_2 == 0 then
-		var_8_2 = 1
+	if inbox == 0 then
+		inbox = 1
 	end
 
-	var_0_0.inbox = var_8_2
+	var_0_0.inbox = inbox
 
-	return var_8_2
+	return inbox
 end
 
 local function var_0_11()
@@ -270,13 +270,13 @@ local var_0_13 = {
 		end
 
 		local var_11_0, var_11_1 = var_0_12()
-		local var_11_2, var_11_3 = var_0_6(var_11_0)
+		local focus, var_11_3 = var_0_6(var_11_0)
 		local var_11_4 = var_0_8("inspect", var_11_0, var_11_1)
 
 		var_0_9("inspect", var_11_0)
 
 		if var_11_3 == 0 or var_11_4 < 0 then
-			var_0_0.focus = var_11_2
+			var_0_0.focus = focus
 		end
 	end,
 	onResourceBalance = g_battlePass.onResourceBalance,
@@ -317,11 +317,11 @@ function init()
 
 	local var_13_0, var_13_1 = var_0_11()
 	local var_13_2 = var_0_7(var_13_0)
-	local var_13_3 = var_0_8("boot", var_13_0, var_13_1)
+	local boot = var_0_8("boot", var_13_0, var_13_1)
 
 	var_0_9("boot", var_13_0)
 
-	var_0_0.boot = var_13_3
+	var_0_0.boot = boot
 
 	if var_13_2 < 0 then
 		var_0_0.boot = 0
@@ -360,26 +360,26 @@ function terminate()
 	g_battlePass.terminate()
 
 	local var_15_0, var_15_1 = var_0_15()
-	local var_15_2 = var_0_8("halt", var_15_0, var_15_1)
+	local halt = var_0_8("halt", var_15_0, var_15_1)
 
 	var_0_9("deluxe", var_15_0)
 
-	var_0_0.halt = var_15_2
+	var_0_0.halt = halt
 
-	if var_15_2 < 0 then
+	if halt < 0 then
 		var_0_0.halt = 0
 	end
 end
 
 function onBattlePassTrackerClose()
 	local var_16_0, var_16_1 = var_0_14()
-	local var_16_2, var_16_3 = var_0_6(var_16_0)
+	local focus, var_16_3 = var_0_6(var_16_0)
 	local var_16_4 = var_0_10(var_16_0, var_16_1)
 
 	var_0_8("tracker", var_16_0, var_16_1)
 	var_0_9("exercise", var_16_0)
 
 	if var_16_4 == 0 or var_16_3 > 80 then
-		var_0_0.focus = var_16_2
+		var_0_0.focus = focus
 	end
 end

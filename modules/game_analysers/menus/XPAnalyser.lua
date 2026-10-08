@@ -1,4 +1,4 @@
-﻿if not XPAnalyser then
+if not XPAnalyser then
 	XPAnalyser = {
 		xpGain = 0,
 		rawXPGain = 0,
@@ -379,7 +379,7 @@ function onXPExtra(mousePosition, mode)
 end
 
 function XPAnalyser.checkAnchos(unusedArgument)
-	local var_34_0 = 218
+	local maximizedHeight = 218
 
 	if XPAnalyser.window.contentsPanel.rawXpLabel:isExplicitlyVisible() then
 		XPAnalyser.window.contentsPanel.xpLabel:addAnchor(AnchorTop, "rawXpLabel", AnchorBottom)
@@ -387,7 +387,7 @@ function XPAnalyser.checkAnchos(unusedArgument)
 		XPAnalyser.window.contentsPanel.xpLabel:setMarginTop(4)
 		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(0)
 
-		var_34_0 = 254
+		maximizedHeight = 254
 	else
 		XPAnalyser.window.contentsPanel.xpLabel:setMarginTop(-2)
 		XPAnalyser.window.contentsPanel.xpLabel:addAnchor(AnchorTop, "topParent", AnchorBottom)
@@ -395,12 +395,12 @@ function XPAnalyser.checkAnchos(unusedArgument)
 		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(0)
 	end
 
-	XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(var_34_0)
+	XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(maximizedHeight)
 
-	XPAnalyser.window.maximizedHeight = var_34_0
+	XPAnalyser.window.maximizedHeight = maximizedHeight
 
 	if not XPAnalyser.window:isOn() then
-		XPAnalyser.window:setHeight(var_34_0)
+		XPAnalyser.window:setHeight(maximizedHeight)
 	end
 
 	if XPAnalyser.window.contentsPanel.rawXpHourLabel:isExplicitlyVisible() then

@@ -1,4 +1,4 @@
-﻿if not LootAnalyser then
+if not LootAnalyser then
 	LootAnalyser = {
 		listDirty = false,
 		graphVisible = true,
@@ -27,12 +27,12 @@ end
 
 local function var_0_4(arg_2_0, arg_2_1)
 	local lootEvents = LootAnalyser.lootEvents
-	local var_2_1 = g_clock.millis()
+	local tick = g_clock.millis()
 	local var_2_2 = lootEvents.entries[lootEvents.last]
 
-	if var_2_2 and var_2_2.itemId == arg_2_0 and math.floor(var_2_2.tick / 1000) == math.floor(var_2_1 / 1000) then
+	if var_2_2 and var_2_2.itemId == arg_2_0 and math.floor(var_2_2.tick / 1000) == math.floor(tick / 1000) then
 		var_2_2.count = var_2_2.count + arg_2_1
-		var_2_2.tick = var_2_1
+		var_2_2.tick = tick
 
 		return
 	end
@@ -41,7 +41,7 @@ local function var_0_4(arg_2_0, arg_2_1)
 	lootEvents.entries[lootEvents.last] = {
 		itemId = arg_2_0,
 		count = arg_2_1,
-		tick = var_2_1
+		tick = tick
 	}
 end
 
@@ -84,14 +84,14 @@ local function var_0_5()
 	if lootEvents.first > lootEvents.last then
 		LootAnalyser.lootEvents = var_0_3()
 	elseif lootEvents.first > var_0_2 and lootEvents.first > math.floor(lootEvents.last / 2) then
-		local var_3_6 = var_0_3()
+		local compactedLootEvents = var_0_3()
 
 		for iter_3_0 = lootEvents.first, lootEvents.last do
-			var_3_6.last = var_3_6.last + 1
-			var_3_6.entries[var_3_6.last] = lootEvents.entries[iter_3_0]
+			compactedLootEvents.last = compactedLootEvents.last + 1
+			compactedLootEvents.entries[compactedLootEvents.last] = lootEvents.entries[iter_3_0]
 		end
 
-		LootAnalyser.lootEvents = var_3_6
+		LootAnalyser.lootEvents = compactedLootEvents
 	end
 
 	if var_3_2 then
@@ -418,13 +418,13 @@ function LootAnalyser.addLootedItems(unusedArgument, item, name)
 	end
 
 	local count = item:getCount()
-	local var_24_3 = getLootPrice(itemId)
+	local basePrice = getLootPrice(itemId)
 
-	if itemInfo.basePrice ~= var_24_3 and not LootAnalyser.forceUpdateBalance then
-		LootAnalyser.goldValue = math.max(0, LootAnalyser.goldValue + (var_24_3 - itemInfo.basePrice) * itemInfo.count)
+	if itemInfo.basePrice ~= basePrice and not LootAnalyser.forceUpdateBalance then
+		LootAnalyser.goldValue = math.max(0, LootAnalyser.goldValue + (basePrice - itemInfo.basePrice) * itemInfo.count)
 	end
 
-	itemInfo.basePrice = var_24_3
+	itemInfo.basePrice = basePrice
 	itemInfo.count = itemInfo.count + count
 
 	var_0_4(itemId, count)

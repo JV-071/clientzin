@@ -1,4 +1,4 @@
-﻿MessageSettings = {
+MessageSettings = {
 	none = {},
 	consoleRed = {
 		consoleTab = "Local Chat",
@@ -115,7 +115,7 @@ local lastClearOldestMs = -1
 local CLEAR_OLDEST_HOTKEY = "Alt+W"
 local MAX_GAME_MESSAGE_QUEUE = 4096
 local GAME_MESSAGE_QUEUE_TRIM_TO = 2048
-local var_0_6 = 2000
+local LOOT_MESSAGE_VISIBLE_MILLIS = 2000
 
 local function getScreenMessageOption(key)
 	if not modules.client_options or not modules.client_options.getOption then
@@ -175,8 +175,8 @@ function registerStaticTextMessage(staticText, position)
 	if #gameMessageQueue >= MAX_GAME_MESSAGE_QUEUE then
 		local compactedQueue = {}
 
-		for iter_6_0 = #gameMessageQueue - GAME_MESSAGE_QUEUE_TRIM_TO + 1, #gameMessageQueue do
-			compactedQueue[#compactedQueue + 1] = gameMessageQueue[iter_6_0]
+		for retainedMessageIndex = #gameMessageQueue - GAME_MESSAGE_QUEUE_TRIM_TO + 1, #gameMessageQueue do
+			compactedQueue[#compactedQueue + 1] = gameMessageQueue[retainedMessageIndex]
 		end
 
 		gameMessageQueue = compactedQueue
@@ -486,14 +486,14 @@ function displayMessage(mode, text, channelId)
 			seq = labelMessageSequence
 		})
 
-		local var_22_6 = msgtype == MessageSettings.loot and var_0_6 or calculateVisibleTime(text)
+		local visibleTimeMillis = msgtype == MessageSettings.loot and LOOT_MESSAGE_VISIBLE_MILLIS or calculateVisibleTime(text)
 
 		label.hideEvent = scheduleEvent(function()
 			label:setVisible(false)
 			unregisterLabelMessage(label)
 
 			label.hideEvent = nil
-		end, var_22_6)
+		end, visibleTimeMillis)
 	end
 end
 

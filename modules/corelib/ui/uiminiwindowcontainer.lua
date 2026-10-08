@@ -1,4 +1,4 @@
-﻿UIMiniWindowContainer = extends(UIWidget, "UIMiniWindowContainer")
+UIMiniWindowContainer = extends(UIWidget, "UIMiniWindowContainer")
 
 local SIDEBAR_FREE_SPACE_IMAGE = "/images/ui/2pixel-up-frame-borderimage"
 local SIDEBAR_FREE_SPACE_BORDER = 2
@@ -37,7 +37,7 @@ local function shouldManageSidebarFreeSpace(container)
 	return isSidebarSystemWidget(container) or container and container.moveOnlyToMain
 end
 
-local function var_0_6(container)
+local function canFillSidebarFreeSpace(container)
 	if not container or container:isDestroyed() or not container:isVisible() then
 		return false
 	end
@@ -103,7 +103,7 @@ function UIMiniWindowContainer.refreshSidebarFreeSpace(self)
 
 	local filler = self._sidebarFreeSpaceWidget
 
-	if not var_0_6(self) then
+	if not canFillSidebarFreeSpace(self) then
 		if filler and not filler:isDestroyed() then
 			filler:destroy()
 		end
@@ -567,28 +567,28 @@ function UIMiniWindowContainer.order(self)
 		end
 	end
 
-	local var_23_0 = {}
+	local savedMiniwindows = {}
 
 	for unusedValue, child in ipairs(self:getChildren()) do
 		if child and child.save and child.miniIndex then
-			var_23_0[#var_23_0 + 1] = child
+			savedMiniwindows[#savedMiniwindows + 1] = child
 		end
 	end
 
-	table.sort(var_23_0, function(arg_24_0, arg_24_1)
-		return arg_24_0.miniIndex < arg_24_1.miniIndex
+	table.sort(savedMiniwindows, function(leftWindow, rightWindow)
+		return leftWindow.miniIndex < rightWindow.miniIndex
 	end)
 
-	for unusedValue, entry in ipairs(var_23_0) do
+	for unusedValue, entry in ipairs(savedMiniwindows) do
 		local children = self:getChildren()
-		local var_23_2 = 0
+		local savedWindowIndex = 0
 		local childCount = self:getChildCount()
 
-		for index, iter_23_7 in ipairs(children) do
-			if iter_23_7 and iter_23_7.save then
-				var_23_2 = var_23_2 + 1
+		for index, childWindow in ipairs(children) do
+			if childWindow and childWindow.save then
+				savedWindowIndex = savedWindowIndex + 1
 
-				if var_23_2 == entry.miniIndex then
+				if savedWindowIndex == entry.miniIndex then
 					childCount = index
 
 					break

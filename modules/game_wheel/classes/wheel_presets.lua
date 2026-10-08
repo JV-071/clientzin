@@ -1,4 +1,4 @@
-﻿local var_0_0 = {
+local var_0_0 = {
 	[0] = "",
 	"K0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 	"P0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -536,25 +536,25 @@ function WheelOfDestiny.onConfirmCreatePreset()
 	showWheelWindow()
 	newPresetWindow:hide()
 
-	local var_16_7 = table.copy(WheelOfDestiny.equipedGems)
+	local equipedGems = table.copy(WheelOfDestiny.equipedGems)
 	local atelierGems = WheelOfDestiny.atelierGems
 	local basicModsUpgrade = WheelOfDestiny.basicModsUpgrade
 	local supremeModsUpgrade = WheelOfDestiny.supremeModsUpgrade
 
 	if selectedWidget == newPresetWindow.contentPanel.import then
-		var_16_2.equipedGems = var_16_7
+		var_16_2.equipedGems = equipedGems
 	end
 
 	WheelOfDestiny.createPreset(text, var_16_2)
 	WheelOfDestiny.saveWheelPresets()
 
-	local var_16_11 = table.copy(var_16_2.pointInvested)
-	local var_16_12 = table.copy(var_16_2.equipedGems)
+	local pointInvested = table.copy(var_16_2.pointInvested)
+	local equipedGems = table.copy(var_16_2.equipedGems)
 
 	WheelOfDestiny.resetWheel(true)
 
-	WheelOfDestiny.currentPreset.pointInvested = var_16_11
-	WheelOfDestiny.currentPreset.equipedGems = var_16_12
+	WheelOfDestiny.currentPreset.pointInvested = pointInvested
+	WheelOfDestiny.currentPreset.equipedGems = equipedGems
 
 	local var_16_13 = WheelOfDestiny.levelPoints or WheelOfDestiny.points or 0
 	local unusedValue = var_16_2.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
@@ -604,16 +604,16 @@ function WheelOfDestiny.onConfirmCreatePreset()
 	end, 100)
 end
 
-function WheelOfDestiny.createPreset(unusedArgument, arg_19_1)
-	WheelOfDestiny.currentPreset = arg_19_1
+function WheelOfDestiny.createPreset(unusedArgument, currentPreset)
+	WheelOfDestiny.currentPreset = currentPreset
 
-	table.insert(WheelOfDestiny.internalPreset, arg_19_1)
+	table.insert(WheelOfDestiny.internalPreset, currentPreset)
 end
 
-function WheelOfDestiny.changePresetName(arg_20_0)
+function WheelOfDestiny.changePresetName(presetName)
 	for unusedValue, entry in pairs(WheelOfDestiny.internalPreset) do
 		if entry.presetName == WheelOfDestiny.currentPreset.presetName then
-			entry.presetName = arg_20_0
+			entry.presetName = presetName
 		end
 	end
 end
@@ -927,13 +927,13 @@ function WheelOfDestiny.onPresetClick(arg_36_0, arg_36_1, arg_36_2)
 	manage.renamePreset:setEnabled(true)
 	wheelWindow:recursiveGetChildById("deletePreset"):setEnabled(#WheelOfDestiny.internalPreset > 1)
 
-	local var_36_5 = table.copy(WheelOfDestiny.currentPreset.pointInvested)
-	local var_36_6 = table.copy(WheelOfDestiny.currentPreset.equipedGems)
+	local pointInvested = table.copy(WheelOfDestiny.currentPreset.pointInvested)
+	local equipedGems = table.copy(WheelOfDestiny.currentPreset.equipedGems)
 
 	WheelOfDestiny.resetWheel(true)
 
-	WheelOfDestiny.currentPreset.pointInvested = var_36_5
-	WheelOfDestiny.currentPreset.equipedGems = var_36_6
+	WheelOfDestiny.currentPreset.pointInvested = pointInvested
+	WheelOfDestiny.currentPreset.equipedGems = equipedGems
 
 	local var_36_7 = presetData.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
@@ -989,11 +989,11 @@ function WheelOfDestiny.updateCurrentPreset()
 	WheelOfDestiny.currentPreset.usedPoints = WheelOfDestiny.usedPoints or 0
 
 	local var_40_0 = WheelOfDestiny.points or 0
-	local var_40_1 = WheelOfDestiny.extraGemPoints or 0
-	local var_40_2 = var_40_0 + (var_40_1 + (WheelOfDestiny.scrollPoints or 0))
+	local extraGemPoints = WheelOfDestiny.extraGemPoints or 0
+	local availablePoints = var_40_0 + (extraGemPoints + (WheelOfDestiny.scrollPoints or 0))
 
-	WheelOfDestiny.currentPreset.availablePoints = var_40_2
-	WheelOfDestiny.currentPreset.extraGemPoints = var_40_1
+	WheelOfDestiny.currentPreset.availablePoints = availablePoints
+	WheelOfDestiny.currentPreset.extraGemPoints = extraGemPoints
 	WheelOfDestiny.currentPreset.presetName = WheelOfDestiny.currentPreset.presetName or "Default-Preset"
 
 	for key, entry in pairs(WheelOfDestiny.internalPreset) do
@@ -1037,7 +1037,7 @@ function WheelOfDestiny.loadWheelPresets()
 	end
 
 	local vocation = translateWheelVocation(localPlayer:getVocation())
-	local var_42_2 = {
+	local externalPreset = {
 		presets = {
 			{
 				name = "Default-Preset",
@@ -1048,25 +1048,25 @@ function WheelOfDestiny.loadWheelPresets()
 	local id = "/characterdata/" .. localPlayer:getId() .. "/wheelOfDestiny.json"
 
 	if g_resources.fileExists(id) then
-		local var_42_4, var_42_5 = pcall(function()
+		local var_42_4, savedExternalPreset = pcall(function()
 			return json.decode(g_resources.readFileContents(id))
 		end)
 
 		if not var_42_4 then
-			WheelOfDestiny.externalPreset = var_42_2
+			WheelOfDestiny.externalPreset = externalPreset
 
 			WheelOfDestiny.generateInternalPreset()
 
 			return false
 		end
 
-		if var_42_5.presets == nil or #var_42_5.presets == 0 then
-			WheelOfDestiny.externalPreset = var_42_2
+		if savedExternalPreset.presets == nil or #savedExternalPreset.presets == 0 then
+			WheelOfDestiny.externalPreset = externalPreset
 		else
-			WheelOfDestiny.externalPreset = var_42_5
+			WheelOfDestiny.externalPreset = savedExternalPreset
 		end
 	else
-		WheelOfDestiny.externalPreset = var_42_2
+		WheelOfDestiny.externalPreset = externalPreset
 	end
 
 	WheelOfDestiny.generateInternalPreset()

@@ -1,4 +1,4 @@
-﻿local var_0_0
+local var_0_0
 local var_0_1
 
 local function var_0_2()
@@ -82,29 +82,29 @@ function WheelOfDestiny.captureActiveState(arg_8_0)
 	}
 end
 
-function WheelOfDestiny.setPreviewMode(arg_9_0)
-	WheelOfDestiny.isPreview = arg_9_0
+function WheelOfDestiny.setPreviewMode(isPreview)
+	WheelOfDestiny.isPreview = isPreview
 
 	if not wheelWindow then
 		return
 	end
 
-	if arg_9_0 then
+	if isPreview then
 		wheelWindow:setText(tr("Wheel of Destiny - Preview"))
 	else
 		wheelWindow:setText(tr("Wheel Of Destiny"))
 	end
 
 	if wheelWindow.reset then
-		wheelWindow.reset:setVisible(not arg_9_0)
+		wheelWindow.reset:setVisible(not isPreview)
 	end
 
 	if wheelWindow.apply then
-		wheelWindow.apply:setVisible(not arg_9_0)
+		wheelWindow.apply:setVisible(not isPreview)
 	end
 
 	if wheelWindow.ok then
-		wheelWindow.ok:setVisible(not arg_9_0)
+		wheelWindow.ok:setVisible(not isPreview)
 	end
 
 	if wheelWindow.close then
@@ -570,21 +570,21 @@ function WheelOfDestiny.onDestinyWheel(arg_17_0, arg_17_1, arg_17_2, vocation, a
 	end
 end
 
-function WheelOfDestiny.create(arg_21_0, arg_21_1, arg_21_2, arg_21_3, arg_21_4, arg_21_5, arg_21_6, arg_21_7, arg_21_8, arg_21_9, arg_21_10, arg_21_11, arg_21_12)
-	WheelOfDestiny.playerId = arg_21_0
-	WheelOfDestiny.canView = arg_21_1
-	WheelOfDestiny.changeState = arg_21_2
-	WheelOfDestiny.vocationId = arg_21_3
+function WheelOfDestiny.create(playerId, canView, changeState, vocationId, arg_21_4, scrollPoints, arg_21_6, usedPromotionScrolls, arg_21_8, atelierGems, basicModsUpgrade, supremeModsUpgrade, fromAchievementType)
+	WheelOfDestiny.playerId = playerId
+	WheelOfDestiny.canView = canView
+	WheelOfDestiny.changeState = changeState
+	WheelOfDestiny.vocationId = vocationId
 	WheelOfDestiny.points = arg_21_4
 	WheelOfDestiny.levelPoints = arg_21_4
-	WheelOfDestiny.scrollPoints = arg_21_5
-	WheelOfDestiny.usedPromotionScrolls = arg_21_7
+	WheelOfDestiny.scrollPoints = scrollPoints
+	WheelOfDestiny.usedPromotionScrolls = usedPromotionScrolls
 	WheelOfDestiny.equipedGems = var_0_4(arg_21_8)
-	WheelOfDestiny.atelierGems = arg_21_9
-	WheelOfDestiny.basicModsUpgrade = arg_21_10
-	WheelOfDestiny.supremeModsUpgrade = arg_21_11
+	WheelOfDestiny.atelierGems = atelierGems
+	WheelOfDestiny.basicModsUpgrade = basicModsUpgrade
+	WheelOfDestiny.supremeModsUpgrade = supremeModsUpgrade
 	WheelOfDestiny.extraGemPoints = 0
-	WheelOfDestiny.fromAchievementType = arg_21_12
+	WheelOfDestiny.fromAchievementType = fromAchievementType
 	WheelOfDestiny.passivePoints = table.reserve(4, 0)
 
 	if WheelOfDestiny.vocationId == 0 then
@@ -734,7 +734,7 @@ function WheelOfDestiny.create(arg_21_0, arg_21_1, arg_21_2, arg_21_3, arg_21_4,
 		WheelOfDestiny.onWheelPassiveClick(4)
 	end
 
-	WheelOfDestiny.onCreate(arg_21_3)
+	WheelOfDestiny.onCreate(vocationId)
 end
 
 function WheelOfDestiny.resetWheel(arg_28_0)

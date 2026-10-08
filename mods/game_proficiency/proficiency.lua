@@ -1,4 +1,4 @@
-﻿if not WeaponProficiency then
+if not WeaponProficiency then
 	WeaponProficiency = {}
 	WeaponProficiency.__index = WeaponProficiency
 	WeaponProficiency.window = nil
@@ -913,34 +913,34 @@ local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, 
 	end
 
 	local var_43_0 = getModifiedPerkData(perkData, previewWidget.grade, previewWidget.slot)
-	local var_43_1 = var_43_0 or previewWidget.originalPerkData or previewWidget.perkData
+	local effectivePerkData = var_43_0 or previewWidget.originalPerkData or previewWidget.perkData
 
-	if not var_43_1 then
+	if not effectivePerkData then
 		return
 	end
 
-	previewWidget.perkData = var_43_1
+	previewWidget.perkData = effectivePerkData
 
 	local icon = previewWidget:getChildById("icon")
 
 	if icon then
-		local var_43_3, var_43_4 = ProficiencyData:getImageSourceAndClip(var_43_1)
+		local var_43_3, var_43_4 = ProficiencyData:getImageSourceAndClip(effectivePerkData)
 
 		icon:setImageSource(var_43_3)
 		icon:setImageClip(string.format("%s 32 32", var_43_4))
 	end
 
-	local var_43_5, var_43_6 = ProficiencyData:getBonusNameAndTooltip(var_43_1)
+	local var_43_5, var_43_6 = ProficiencyData:getBonusNameAndTooltip(effectivePerkData)
 
 	previewWidget:setTooltip(string.format("%s\n\n%s", var_43_5, var_43_6))
-	setupPerkIconOverlay(var_43_1, previewWidget:getChildById("iconPerks"))
+	setupPerkIconOverlay(effectivePerkData, previewWidget:getChildById("iconPerks"))
 
 	local var_43_7 = getModifierEntry(perkData, previewWidget.grade, previewWidget.slot)
 
 	updateManipulateRankWidget(previewWidget, var_43_7, previewWidget.active)
 
 	if modifierEntry and arg_43_3 then
-		enableBonusIcon(previewWidget, previewWidget:getChildById("highlight"), previewWidget:getChildById("border"), arg_43_3:recursiveGetChildById("bonusName"), var_43_6, var_43_1, var_43_0 ~= nil)
+		enableBonusIcon(previewWidget, previewWidget:getChildById("highlight"), previewWidget:getChildById("border"), arg_43_3:recursiveGetChildById("bonusName"), var_43_6, effectivePerkData, var_43_0 ~= nil)
 	end
 end
 

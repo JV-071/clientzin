@@ -1,4 +1,4 @@
-﻿if not MiscAnalyser then
+if not MiscAnalyser then
 	MiscAnalyser = {
 		transcendence = 0,
 		momentum = 0,
@@ -236,7 +236,7 @@ local var_0_13 = {
 	end
 }
 
-local function var_0_14(arg_19_0)
+local function build(arg_19_0)
 	local var_19_0 = tr("%s charm: %s", arg_19_0.name, var_0_10(arg_19_0.count))
 
 	if arg_19_0.damage > 0 then
@@ -253,17 +253,17 @@ local function var_0_14(arg_19_0)
 end
 
 local function var_0_15(arg_20_0, arg_20_1)
-	local var_20_0 = arg_20_1 ~= nil
+	local hasDetail = arg_20_1 ~= nil
 
-	if arg_20_0.hasDetail ~= var_20_0 then
-		arg_20_0.hasDetail = var_20_0
+	if arg_20_0.hasDetail ~= hasDetail then
+		arg_20_0.hasDetail = hasDetail
 
-		arg_20_0.detailName:setVisible(var_20_0)
-		arg_20_0.detailValue:setVisible(var_20_0)
-		arg_20_0:setHeight(var_20_0 and var_0_6 or var_0_5)
+		arg_20_0.detailName:setVisible(hasDetail)
+		arg_20_0.detailValue:setVisible(hasDetail)
+		arg_20_0:setHeight(hasDetail and var_0_6 or var_0_5)
 	end
 
-	if var_20_0 then
+	if hasDetail then
 		arg_20_0.detailValue:setText(arg_20_1)
 	end
 end
@@ -519,7 +519,7 @@ function MiscAnalyser.registerMessageModes(unusedArgument)
 		[MessageModes.Attention] = var_0_25
 	}
 
-	local var_33_0 = {
+	local registered = {
 		modes = {},
 		callback = var_0_27
 	}
@@ -527,10 +527,10 @@ function MiscAnalyser.registerMessageModes(unusedArgument)
 	for key, unusedValue in pairs(var_0_26) do
 		registerMessageMode(key, var_0_27)
 
-		var_33_0.modes[#var_33_0.modes + 1] = key
+		registered.modes[#registered.modes + 1] = key
 	end
 
-	MiscAnalyser.registered = var_33_0
+	MiscAnalyser.registered = registered
 end
 
 function MiscAnalyser.unregisterMessageModes(unusedArgument)
@@ -557,7 +557,7 @@ local function var_0_28(arg_36_0, arg_36_1)
 
 	miscAnalyserRowWidget.name:setText(var_0_4[arg_36_1.key] or arg_36_1.name)
 
-	miscAnalyserRowWidget.build = var_0_14
+	miscAnalyserRowWidget.build = build
 
 	local var_36_1 = var_0_2[arg_36_1.key]
 
@@ -580,10 +580,10 @@ function MiscAnalyser.updateWindow(unusedArgument, arg_37_1)
 
 	local var_37_1 = MiscAnalyser
 	local contentsPanel = window.contentsPanel
-	local var_37_3 = AnalyserSession:isActive() and math.floor(math.max(1, AnalyserSession:durationSeconds()) / 60) or -1
+	local shownMinutes = AnalyserSession:isActive() and math.floor(math.max(1, AnalyserSession:durationSeconds()) / 60) or -1
 
-	if contentsPanel.session.shownMinutes ~= var_37_3 then
-		contentsPanel.session.shownMinutes = var_37_3
+	if contentsPanel.session.shownMinutes ~= shownMinutes then
+		contentsPanel.session.shownMinutes = shownMinutes
 
 		contentsPanel.session:setText(var_0_12())
 	end

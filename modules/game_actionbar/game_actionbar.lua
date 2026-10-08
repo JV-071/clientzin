@@ -1,15 +1,15 @@
 -- Root locals stored in a lexical table to fit the LuaJIT 200-local limit.
-local ptc_root_locals = {}
+local actionbarState = {}
 HOTKEY_USE = nil
 HOTKEY_USEONSELF = 1
 HOTKEY_USEONTARGET = 2
 HOTKEY_USEWITH = 3
 
- ptc_root_locals.maxSlots = 50
- ptc_root_locals.SIDE_BAR_TOTAL_SLOTS = 36
- ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS = 18
- ptc_root_locals[3] = 36
- ptc_root_locals[4] = 22 + (ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS * 34 + (ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS - 1) * 3) + 22
+ actionbarState.maxSlots = 50
+ actionbarState.SIDE_BAR_TOTAL_SLOTS = 36
+ actionbarState.SIDE_BAR_VISIBLE_SLOTS = 18
+ actionbarState[3] = 36
+ actionbarState[4] = 22 + (actionbarState.SIDE_BAR_VISIBLE_SLOTS * 34 + (actionbarState.SIDE_BAR_VISIBLE_SLOTS - 1) * 3) + 22
 
 SIDE_BAR_WIDTH = 36
 SIDE_BAR_SPACING = 0
@@ -42,7 +42,7 @@ spellAssignWindow = nil
 spellsPanel = nil
 spellAssignPreferredSpellOverride = nil
 
- ptc_root_locals.spellAssignFocusParameterOnOpen = false
+ actionbarState.spellAssignFocusParameterOnOpen = false
 
 externalAssignSlot = nil
 externalAssignSlotId = nil
@@ -56,19 +56,19 @@ textAssignWindow = nil
 equipmentAssignWindow = nil
 equipmentAssignIconWindow = nil
 
- ptc_root_locals.equipmentAssignDraft = nil
- ptc_root_locals.equipmentAssignPickInvSlot = nil
- ptc_root_locals.equipmentAssignHiddenForPick = false
- ptc_root_locals.equipmentAssignHiddenForIconPicker = false
- ptc_root_locals.equipmentAssignIconIndex = 0
- ptc_root_locals.equipmentAssignDescription = ""
- ptc_root_locals.equipmentAssignIconPickerRevertIndex = 0
- ptc_root_locals.equipmentAssignIconPickerRevertDescription = ""
- ptc_root_locals.equipmentAssignTypeIndex = 0
- ptc_root_locals.equipmentAssignTypePickerRevertIndex = 0
- ptc_root_locals.equipmentAssignTypeRadioGroup = nil
- ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE = "/game_cyclopedia/images/bestiary/icons/monster-icon-"
- ptc_root_locals.EQUIPMENT_TYPE_OPTIONS = {
+ actionbarState.equipmentAssignDraft = nil
+ actionbarState.equipmentAssignPickInvSlot = nil
+ actionbarState.equipmentAssignHiddenForPick = false
+ actionbarState.equipmentAssignHiddenForIconPicker = false
+ actionbarState.equipmentAssignIconIndex = 0
+ actionbarState.equipmentAssignDescription = ""
+ actionbarState.equipmentAssignIconPickerRevertIndex = 0
+ actionbarState.equipmentAssignIconPickerRevertDescription = ""
+ actionbarState.equipmentAssignTypeIndex = 0
+ actionbarState.equipmentAssignTypePickerRevertIndex = 0
+ actionbarState.equipmentAssignTypeRadioGroup = nil
+ actionbarState.EQUIPMENT_TYPE_ICON_BASE = "/game_cyclopedia/images/bestiary/icons/monster-icon-"
+ actionbarState.EQUIPMENT_TYPE_OPTIONS = {
 	"energy-resist",
 	"earth-resist",
 	"fire-resist",
@@ -85,28 +85,28 @@ equipmentAssignIconWindow = nil
 	"speed",
 	"noattack"
 }
- ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX = #ptc_root_locals.EQUIPMENT_TYPE_OPTIONS
- ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE = {
+ actionbarState.EQUIPMENT_TYPE_MAX_INDEX = #actionbarState.EQUIPMENT_TYPE_OPTIONS
+ actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE = {
 	width = 9,
 	height = 9
 }
- ptc_root_locals.EQUIPMENT_ICONS_SHEET = "/images/game/spells/equipment-icons"
- ptc_root_locals.EQUIPMENT_ICON_SIZE = 32
- ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX = 0
- ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT = 6
- ptc_root_locals.EQUIPMENT_ICON_MAX_INDEX = ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT
- ptc_root_locals[26] = nil
- ptc_root_locals[27] = nil
- ptc_root_locals.resolvePickItemAtMouse = nil
- ptc_root_locals[29] = nil
- ptc_root_locals.isEquippableActionBarItem = nil
- ptc_root_locals[31] = nil
- ptc_root_locals[32] = nil
- ptc_root_locals.normalizeEquipmentsFromSetting = nil
- ptc_root_locals.startEquipmentSetActionCooldownVisual = nil
- ptc_root_locals.refreshAllSmartModeSlots = nil
- ptc_root_locals[36] = nil
- ptc_root_locals.updateSmartModeAssignCheckboxState = nil
+ actionbarState.EQUIPMENT_ICONS_SHEET = "/images/game/spells/equipment-icons"
+ actionbarState.EQUIPMENT_ICON_SIZE = 32
+ actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX = 0
+ actionbarState.EQUIPMENT_ICON_PICKER_COUNT = 6
+ actionbarState.EQUIPMENT_ICON_MAX_INDEX = actionbarState.EQUIPMENT_ICON_PICKER_COUNT
+ actionbarState[26] = nil
+ actionbarState[27] = nil
+ actionbarState.resolvePickItemAtMouse = nil
+ actionbarState[29] = nil
+ actionbarState.isEquippableActionBarItem = nil
+ actionbarState[31] = nil
+ actionbarState[32] = nil
+ actionbarState.normalizeEquipmentsFromSetting = nil
+ actionbarState.startEquipmentSetActionCooldownVisual = nil
+ actionbarState.refreshAllSmartModeSlots = nil
+ actionbarState[36] = nil
+ actionbarState.updateSmartModeAssignCheckboxState = nil
 
 objectAssignWindow = nil
 objectAssignHiddenForPick = false
@@ -130,13 +130,13 @@ PASSIVE_COOLDOWN_PROGRESS_ID = "progressPassive" .. GIFT_OF_LIFE_PASSIVE_ID
 passiveCooldownData = nil
 virtuesYellowBorderSpellIds = {}
 
- ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
- ptc_root_locals.managedVirtueYellowBorderSelection = {}
+ actionbarState.managedVirtueYellowBorderSpellIds = {}
+ actionbarState.managedVirtueYellowBorderSelection = {}
 
 VIRTUE_YELLOW_BORDER_IMAGE = "/assets/images/game/actionbar/border_activespell"
 
- ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY = "itemShared"
- ptc_root_locals.slotGrayRefreshEvent = nil
+ actionbarState.ACTIONBAR_ITEM_MULTI_CD_KEY = "itemShared"
+ actionbarState.slotGrayRefreshEvent = nil
 
 slotGrayFullRefreshPending = false
 slotGrayStatsPendingSlots = {}
@@ -147,14 +147,14 @@ function isVirtueYellowBorderActive(spellId)
 		return false
 	end
 
-	if ptc_root_locals.managedVirtueYellowBorderSpellIds[spellId] then
-		return ptc_root_locals.managedVirtueYellowBorderSelection[spellId] == true
+	if actionbarState.managedVirtueYellowBorderSpellIds[spellId] then
+		return actionbarState.managedVirtueYellowBorderSelection[spellId] == true
 	end
 
 	return virtuesYellowBorderSpellIds[spellId] == true
 end
 
-  ptc_root_locals.resolveBorderSpellId = function(incomingId)
+  actionbarState.resolveBorderSpellId = function(incomingId)
 	if not incomingId or incomingId <= 0 then
 		return nil
 	end
@@ -168,8 +168,8 @@ end
 	return incomingId
 end
 
-  ptc_root_locals.registerVirtueBorderSpellId = function(arg_3_0)
-	local var_3_0 = ptc_root_locals.resolveBorderSpellId(arg_3_0)
+  actionbarState.registerVirtueBorderSpellId = function(arg_3_0)
+	local var_3_0 = actionbarState.resolveBorderSpellId(arg_3_0)
 
 	if var_3_0 then
 		virtuesYellowBorderSpellIds[var_3_0] = true
@@ -235,10 +235,10 @@ function onVirtuesYellowBorder(spellIds)
 	if spellIds then
 		if type(spellIds) == "table" then
 			for unusedValue, entry in ipairs(spellIds) do
-				ptc_root_locals.registerVirtueBorderSpellId(entry)
+				actionbarState.registerVirtueBorderSpellId(entry)
 			end
 		elseif type(spellIds) == "number" then
-			ptc_root_locals.registerVirtueBorderSpellId(spellIds)
+			actionbarState.registerVirtueBorderSpellId(spellIds)
 		end
 	end
 
@@ -252,25 +252,25 @@ function onVirtuesYellowBorder(spellIds)
 end
 
 function setManagedVirtueYellowBorderSpellIds(selectedSpellIds, managedSpellIds)
-	ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
-	ptc_root_locals.managedVirtueYellowBorderSelection = {}
+	actionbarState.managedVirtueYellowBorderSpellIds = {}
+	actionbarState.managedVirtueYellowBorderSelection = {}
 
 	if type(managedSpellIds) == "table" then
 		for unusedValue, entry in ipairs(managedSpellIds) do
-			local var_8_0 = ptc_root_locals.resolveBorderSpellId(entry)
+			local var_8_0 = actionbarState.resolveBorderSpellId(entry)
 
 			if var_8_0 then
-				ptc_root_locals.managedVirtueYellowBorderSpellIds[var_8_0] = true
+				actionbarState.managedVirtueYellowBorderSpellIds[var_8_0] = true
 			end
 		end
 	end
 
 	if type(selectedSpellIds) == "table" then
 		for unusedValue, entry in ipairs(selectedSpellIds) do
-			local var_8_1 = ptc_root_locals.resolveBorderSpellId(entry)
+			local var_8_1 = actionbarState.resolveBorderSpellId(entry)
 
-			if var_8_1 and ptc_root_locals.managedVirtueYellowBorderSpellIds[var_8_1] then
-				ptc_root_locals.managedVirtueYellowBorderSelection[var_8_1] = true
+			if var_8_1 and actionbarState.managedVirtueYellowBorderSpellIds[var_8_1] then
+				actionbarState.managedVirtueYellowBorderSelection[var_8_1] = true
 			end
 		end
 	end
@@ -290,9 +290,9 @@ modules.game_actionbar.isVirtueYellowBorderActive = isVirtueYellowBorderActive
 modules.game_actionbar.refreshAllVirtueYellowBorders = refreshAllVirtueYellowBorders
 modules.game_actionbar.setManagedVirtueYellowBorderSpellIds = setManagedVirtueYellowBorderSpellIds
 
- ptc_root_locals.syncSlotHotkeyMirror = nil
+ actionbarState.syncSlotHotkeyMirror = nil
 
-  ptc_root_locals.actionSlotItemTier = function(slot)
+  actionbarState.actionSlotItemTier = function(slot)
 	if g_game.getFeature(GameThingUpgradeClassification) then
 		local stored = slot.getTier
 
@@ -304,7 +304,7 @@ modules.game_actionbar.setManagedVirtueYellowBorderSpellIds = setManagedVirtueYe
 	return 0
 end
 
-  ptc_root_locals.playerHasActionBarItem = function(arg_10_0)
+  actionbarState.playerHasActionBarItem = function(arg_10_0)
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
@@ -315,44 +315,44 @@ end
 		return true
 	end
 
-	return getActionBarInventoryDisplayCount(arg_10_0.itemId, ptc_root_locals.actionSlotItemTier(arg_10_0), localPlayer) > 0
+	return getActionBarInventoryDisplayCount(arg_10_0.itemId, actionbarState.actionSlotItemTier(arg_10_0), localPlayer) > 0
 end
 
- ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT = InventorySlotBack
+ actionbarState.EQUIPMENT_ASSIGN_BACKPACK_SLOT = InventorySlotBack
 
-  ptc_root_locals.isEquipmentAssignVisualBackpackSlot = function(arg_11_0)
-	return arg_11_0 == ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT
+  actionbarState.isEquipmentAssignVisualBackpackSlot = function(arg_11_0)
+	return arg_11_0 == actionbarState.EQUIPMENT_ASSIGN_BACKPACK_SLOT
 end
 
-  ptc_root_locals.isActionSlotEquip = function(slot)
+  actionbarState.isActionSlotEquip = function(slot)
 	return slot and slot.useType == "equip"
 end
 
-  ptc_root_locals.normalizeEquipmentIconIndex = function(arg_13_0)
+  actionbarState.normalizeEquipmentIconIndex = function(arg_13_0)
 	if type(arg_13_0) ~= "number" then
-		return ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
+		return actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX
 	end
 
-	return math.max(ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX, math.min(ptc_root_locals.EQUIPMENT_ICON_MAX_INDEX, math.floor(arg_13_0)))
+	return math.max(actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX, math.min(actionbarState.EQUIPMENT_ICON_MAX_INDEX, math.floor(arg_13_0)))
 end
 
-  ptc_root_locals.isEquipmentIconDeterminedOnSlot = function(arg_14_0)
-	return type(arg_14_0.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_14_0.equipmentIconIndex) > ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
+  actionbarState.isEquipmentIconDeterminedOnSlot = function(arg_14_0)
+	return type(arg_14_0.equipmentIconIndex) == "number" and actionbarState.normalizeEquipmentIconIndex(arg_14_0.equipmentIconIndex) > actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX
 end
 
-  ptc_root_locals[52] = function(entry)
-	if not ptc_root_locals.isActionSlotEquip(entry) then
+  actionbarState[52] = function(entry)
+	if not actionbarState.isActionSlotEquip(entry) then
 		return false
 	end
 
-	if entry.equipments ~= nil or ptc_root_locals.isEquipmentIconDeterminedOnSlot(entry) then
+	if entry.equipments ~= nil or actionbarState.isEquipmentIconDeterminedOnSlot(entry) then
 		return true
 	end
 
 	return entry.itemId and entry.itemId > 0
 end
 
-  ptc_root_locals.equipmentEntryFromItem = function(item)
+  actionbarState.equipmentEntryFromItem = function(item)
 	if not item then
 		return nil
 	end
@@ -372,7 +372,7 @@ end
 	return entry
 end
 
-  ptc_root_locals.equipmentEntryToItem = function(entry)
+  actionbarState.equipmentEntryToItem = function(entry)
 	if not entry or not entry.itemId or entry.itemId <= 0 then
 		return nil
 	end
@@ -394,7 +394,7 @@ end
 	return item
 end
 
-  ptc_root_locals.equipmentAssignDisplayEntry = function(panel)
+  actionbarState.equipmentAssignDisplayEntry = function(panel)
 	if not panel then
 		return nil
 	end
@@ -428,16 +428,16 @@ end
 	return nil
 end
 
-  ptc_root_locals.copyEquipmentAssignDraft = function(panel)
-	ptc_root_locals.equipmentAssignDraft = {}
+  actionbarState.copyEquipmentAssignDraft = function(panel)
+	actionbarState.equipmentAssignDraft = {}
 
 	if not panel then
 		return
 	end
 
 	for _, slot in pairs(panel) do
-		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
-			ptc_root_locals.equipmentAssignDraft[_] = {
+		if not actionbarState.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
+			actionbarState.equipmentAssignDraft[_] = {
 				itemId = slot.itemId,
 				getTier = slot.getTier,
 				subType = slot.subType
@@ -446,8 +446,8 @@ end
 	end
 end
 
-  ptc_root_locals.isActionSlotEquipmentPreset = function(arg_20_0)
-	if not ptc_root_locals.isActionSlotEquip(arg_20_0) then
+  actionbarState.isActionSlotEquipmentPreset = function(arg_20_0)
+	if not actionbarState.isActionSlotEquip(arg_20_0) then
 		return false
 	end
 
@@ -455,32 +455,32 @@ end
 		return true
 	end
 
-	return ptc_root_locals.isEquipmentIconDeterminedOnSlot(arg_20_0)
+	return actionbarState.isEquipmentIconDeterminedOnSlot(arg_20_0)
 end
 
-  ptc_root_locals.isEquipmentAssignIconDetermined = function()
-	return ptc_root_locals.normalizeEquipmentIconIndex(ptc_root_locals.equipmentAssignIconIndex) > ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
+  actionbarState.isEquipmentAssignIconDetermined = function()
+	return actionbarState.normalizeEquipmentIconIndex(actionbarState.equipmentAssignIconIndex) > actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX
 end
 
-  ptc_root_locals.normalizeEquipmentTypeIndex = function(arg_22_0)
+  actionbarState.normalizeEquipmentTypeIndex = function(arg_22_0)
 	if type(arg_22_0) ~= "number" then
 		return 0
 	end
 
-	return math.max(0, math.min(ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX, math.floor(arg_22_0)))
+	return math.max(0, math.min(actionbarState.EQUIPMENT_TYPE_MAX_INDEX, math.floor(arg_22_0)))
 end
 
-  ptc_root_locals.destroyEquipmentAssignTypeRadioGroup = function()
-	if ptc_root_locals.equipmentAssignTypeRadioGroup then
-		ptc_root_locals.equipmentAssignTypeRadioGroup:destroy()
+  actionbarState.destroyEquipmentAssignTypeRadioGroup = function()
+	if actionbarState.equipmentAssignTypeRadioGroup then
+		actionbarState.equipmentAssignTypeRadioGroup:destroy()
 
-		ptc_root_locals.equipmentAssignTypeRadioGroup = nil
+		actionbarState.equipmentAssignTypeRadioGroup = nil
 	end
 end
 
- ptc_root_locals.refreshAssignActionSlotPreview = nil
+ actionbarState.refreshAssignActionSlotPreview = nil
 
-  ptc_root_locals.setupEquipmentAssignTypePicker = function()
+  actionbarState.setupEquipmentAssignTypePicker = function()
 	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
@@ -491,85 +491,85 @@ end
 		return
 	end
 
-	ptc_root_locals.destroyEquipmentAssignTypeRadioGroup()
+	actionbarState.destroyEquipmentAssignTypeRadioGroup()
 	typeButtonsPanel:destroyChildren()
 
-	ptc_root_locals.equipmentAssignTypeRadioGroup = UIRadioGroup.create()
+	actionbarState.equipmentAssignTypeRadioGroup = UIRadioGroup.create()
 
 	local var_24_1
 
-	for iter_24_0 = 0, ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX do
+	for typeIndex = 0, actionbarState.EQUIPMENT_TYPE_MAX_INDEX do
 		local equipmentTypeButtonWidget = g_ui.createWidget("EquipmentTypeButton", typeButtonsPanel)
 
-		equipmentTypeButtonWidget.typeIndex = iter_24_0
+		equipmentTypeButtonWidget.typeIndex = typeIndex
 
-		if iter_24_0 > 0 then
-			local var_24_3 = ptc_root_locals.EQUIPMENT_TYPE_OPTIONS[iter_24_0]
+		if typeIndex > 0 then
+			local var_24_3 = actionbarState.EQUIPMENT_TYPE_OPTIONS[typeIndex]
 
 			if var_24_3 then
 				local typeIcon = equipmentTypeButtonWidget:getChildById("typeIcon")
 
-				typeIcon:setImageSource(ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE .. var_24_3)
+				typeIcon:setImageSource(actionbarState.EQUIPMENT_TYPE_ICON_BASE .. var_24_3)
 				typeIcon:show()
 			end
 		end
 
-		ptc_root_locals.equipmentAssignTypeRadioGroup:addWidget(equipmentTypeButtonWidget)
+		actionbarState.equipmentAssignTypeRadioGroup:addWidget(equipmentTypeButtonWidget)
 
-		if iter_24_0 == ptc_root_locals.equipmentAssignTypeIndex then
+		if typeIndex == actionbarState.equipmentAssignTypeIndex then
 			var_24_1 = equipmentTypeButtonWidget
 		end
 	end
 
 	if var_24_1 then
-		ptc_root_locals.equipmentAssignTypeRadioGroup:selectWidget(var_24_1, true)
+		actionbarState.equipmentAssignTypeRadioGroup:selectWidget(var_24_1, true)
 	end
 
-	 ptc_root_locals.equipmentAssignTypeRadioGroup.onSelectionChange = function(unusedArgument, arg_25_1)
+	 actionbarState.equipmentAssignTypeRadioGroup.onSelectionChange = function(unusedArgument, arg_25_1)
 		if arg_25_1 and arg_25_1.typeIndex ~= nil then
-			ptc_root_locals.equipmentAssignTypeIndex = arg_25_1.typeIndex
+			actionbarState.equipmentAssignTypeIndex = arg_25_1.typeIndex
 		else
-			ptc_root_locals.equipmentAssignTypeIndex = 0
+			actionbarState.equipmentAssignTypeIndex = 0
 		end
 
-		ptc_root_locals.refreshAssignActionSlotPreview()
+		actionbarState.refreshAssignActionSlotPreview()
 	end
 end
 
-  ptc_root_locals.equipmentIconClip = function(arg_26_0)
-	local var_26_0 = ptc_root_locals.normalizeEquipmentIconIndex(arg_26_0)
+  actionbarState.equipmentIconClip = function(arg_26_0)
+	local var_26_0 = actionbarState.normalizeEquipmentIconIndex(arg_26_0)
 
-	return string.format("%d 0 %d %d", var_26_0 * ptc_root_locals.EQUIPMENT_ICON_SIZE, ptc_root_locals.EQUIPMENT_ICON_SIZE, ptc_root_locals.EQUIPMENT_ICON_SIZE)
+	return string.format("%d 0 %d %d", var_26_0 * actionbarState.EQUIPMENT_ICON_SIZE, actionbarState.EQUIPMENT_ICON_SIZE, actionbarState.EQUIPMENT_ICON_SIZE)
 end
 
-  ptc_root_locals.applyEquipmentIconToWidget = function(arg_27_0, arg_27_1)
+  actionbarState.applyEquipmentIconToWidget = function(arg_27_0, arg_27_1)
 	if not arg_27_0 or arg_27_0:isDestroyed() then
 		return
 	end
 
-	arg_27_0:setImageSource(ptc_root_locals.EQUIPMENT_ICONS_SHEET)
+	arg_27_0:setImageSource(actionbarState.EQUIPMENT_ICONS_SHEET)
 	arg_27_0:setImageSize(tosize("32 32"))
-	arg_27_0:setImageClip(ptc_root_locals.equipmentIconClip(arg_27_1))
+	arg_27_0:setImageClip(actionbarState.equipmentIconClip(arg_27_1))
 	arg_27_0:show()
 end
 
-  ptc_root_locals.equipmentTypeIconSource = function(arg_28_0)
-	arg_28_0 = ptc_root_locals.normalizeEquipmentTypeIndex(arg_28_0)
+  actionbarState.equipmentTypeIconSource = function(arg_28_0)
+	arg_28_0 = actionbarState.normalizeEquipmentTypeIndex(arg_28_0)
 
 	if arg_28_0 <= 0 then
 		return nil
 	end
 
-	local var_28_0 = ptc_root_locals.EQUIPMENT_TYPE_OPTIONS[arg_28_0]
+	local var_28_0 = actionbarState.EQUIPMENT_TYPE_OPTIONS[arg_28_0]
 
 	if not var_28_0 then
 		return nil
 	end
 
-	return ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE .. var_28_0
+	return actionbarState.EQUIPMENT_TYPE_ICON_BASE .. var_28_0
 end
 
-  ptc_root_locals.ensureEquipmentTypeIconWidget = function(arg_29_0)
+  actionbarState.ensureEquipmentTypeIconWidget = function(arg_29_0)
 	if not arg_29_0 or arg_29_0:isDestroyed() then
 		return nil
 	end
@@ -583,7 +583,7 @@ end
 	local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_29_0)
 
 	uIWidgetWidget:setId("equipmentTypeIcon")
-	uIWidgetWidget:setSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+	uIWidgetWidget:setSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
 	uIWidgetWidget:addAnchor(AnchorBottom, "parent", AnchorBottom)
 	uIWidgetWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
 	uIWidgetWidget:setMarginLeft(1)
@@ -600,19 +600,19 @@ function refreshActionSlotEquipmentTypeIcon(slot)
 		return
 	end
 
-	local var_30_0 = ptc_root_locals.ensureEquipmentTypeIconWidget(slot)
+	local var_30_0 = actionbarState.ensureEquipmentTypeIconWidget(slot)
 
 	if not var_30_0 then
 		return
 	end
 
-	if not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+	if not actionbarState.isActionSlotEquipmentPreset(slot) then
 		var_30_0:setVisible(false)
 
 		return
 	end
 
-	local var_30_1 = ptc_root_locals.equipmentTypeIconSource(slot.equipmentTypeIndex)
+	local var_30_1 = actionbarState.equipmentTypeIconSource(slot.equipmentTypeIndex)
 
 	if not var_30_1 then
 		var_30_0:setVisible(false)
@@ -621,7 +621,7 @@ function refreshActionSlotEquipmentTypeIcon(slot)
 	end
 
 	var_30_0:setImageSource(var_30_1)
-	var_30_0:setImageSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+	var_30_0:setImageSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
 
 	local multiIcon = slot:getChildById("multiIcon")
 
@@ -638,7 +638,7 @@ function refreshActionSlotEquipmentTypeIcon(slot)
 	end
 end
 
-  ptc_root_locals.refreshActionSlotEquipmentDecorations = function(slot)
+  actionbarState.refreshActionSlotEquipmentDecorations = function(slot)
 	refreshActionSlotEquipmentTypeIcon(slot)
 end
 
@@ -650,8 +650,8 @@ function loadEquipmentSetDisplay(slot)
 	local spellIcon = slot:getChildById("spellIcon")
 
 	if spellIcon then
-		if ptc_root_locals.isEquipmentIconDeterminedOnSlot(slot) then
-			ptc_root_locals.applyEquipmentIconToWidget(spellIcon, slot.equipmentIconIndex)
+		if actionbarState.isEquipmentIconDeterminedOnSlot(slot) then
+			actionbarState.applyEquipmentIconToWidget(spellIcon, slot.equipmentIconIndex)
 		else
 			spellIcon:hide()
 			spellIcon:setImageSource("")
@@ -667,7 +667,7 @@ function loadEquipmentSetDisplay(slot)
 	end
 
 	slot:setBorderWidth(0)
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	refreshActionSlotTooltip(slot)
 	updateSlotGray(slot)
 	refreshActionSlotInventoryQuantity(slot)
@@ -739,25 +739,25 @@ function clearSlotActionContent(slot)
 	end
 
 	refreshActionSlotVirtueBorder(slot)
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	refreshActionSlotTooltip(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
 end
 
-  ptc_root_locals.copyEquipmentAssignMetaFromSlot = function(arg_34_0)
+  actionbarState.copyEquipmentAssignMetaFromSlot = function(arg_34_0)
 	if arg_34_0 then
-		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.normalizeEquipmentIconIndex(arg_34_0.equipmentIconIndex)
-		ptc_root_locals.equipmentAssignDescription = arg_34_0.equipmentDescription or ""
-		ptc_root_locals.equipmentAssignTypeIndex = ptc_root_locals.normalizeEquipmentTypeIndex(arg_34_0.equipmentTypeIndex)
+		actionbarState.equipmentAssignIconIndex = actionbarState.normalizeEquipmentIconIndex(arg_34_0.equipmentIconIndex)
+		actionbarState.equipmentAssignDescription = arg_34_0.equipmentDescription or ""
+		actionbarState.equipmentAssignTypeIndex = actionbarState.normalizeEquipmentTypeIndex(arg_34_0.equipmentTypeIndex)
 	else
-		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
-		ptc_root_locals.equipmentAssignDescription = ""
-		ptc_root_locals.equipmentAssignTypeIndex = 0
+		actionbarState.equipmentAssignIconIndex = actionbarState.EQUIPMENT_ICON_UNDETERMINED_INDEX
+		actionbarState.equipmentAssignDescription = ""
+		actionbarState.equipmentAssignTypeIndex = 0
 	end
 end
 
- ptc_root_locals.refreshAssignActionSlotPreview = function()
+ actionbarState.refreshAssignActionSlotPreview = function()
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
@@ -770,16 +770,16 @@ end
 
 	local equipmentSlotIcon = assignActionSlot:recursiveGetChildById("equipmentSlotIcon")
 
-	ptc_root_locals.applyEquipmentIconToWidget(equipmentSlotIcon, ptc_root_locals.equipmentAssignIconIndex)
+	actionbarState.applyEquipmentIconToWidget(equipmentSlotIcon, actionbarState.equipmentAssignIconIndex)
 
 	local equipmentTypeIcon = assignActionSlot:recursiveGetChildById("equipmentTypeIcon")
 
 	if equipmentTypeIcon then
-		local var_35_3 = ptc_root_locals.equipmentTypeIconSource(ptc_root_locals.equipmentAssignTypeIndex)
+		local var_35_3 = actionbarState.equipmentTypeIconSource(actionbarState.equipmentAssignTypeIndex)
 
 		if var_35_3 then
 			equipmentTypeIcon:setImageSource(var_35_3)
-			equipmentTypeIcon:setImageSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+			equipmentTypeIcon:setImageSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
 			equipmentTypeIcon:show()
 		else
 			equipmentTypeIcon:setVisible(false)
@@ -787,7 +787,7 @@ end
 	end
 end
 
-  ptc_root_locals.refreshEquipmentAssignIconPickerSelection = function()
+  actionbarState.refreshEquipmentAssignIconPickerSelection = function()
 	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
@@ -803,7 +803,7 @@ end
 			child:setImageSource("/images/game/actionbar/slot-actionbar-filled")
 			child:setImageSize(tosize("34 34"))
 
-			if child.iconIndex == ptc_root_locals.equipmentAssignIconIndex then
+			if child.iconIndex == actionbarState.equipmentAssignIconIndex then
 				child:setImageClip("0 34 34 34")
 			else
 				child:setImageClip("0 0 34 34")
@@ -812,7 +812,7 @@ end
 	end
 end
 
-  ptc_root_locals.setupEquipmentAssignIconPicker = function()
+  actionbarState.setupEquipmentAssignIconPicker = function()
 	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
@@ -825,47 +825,47 @@ end
 
 	iconScrollPanel:destroyChildren()
 
-	for iter_37_0 = 1, ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT do
+	for iter_37_0 = 1, actionbarState.EQUIPMENT_ICON_PICKER_COUNT do
 		local equipmentIconPickerOptionWidget = g_ui.createWidget("EquipmentIconPickerOption", iconScrollPanel)
 
 		equipmentIconPickerOptionWidget.iconIndex = iter_37_0
 
 		local icon = equipmentIconPickerOptionWidget:getChildById("icon")
 
-		ptc_root_locals.applyEquipmentIconToWidget(icon, iter_37_0)
+		actionbarState.applyEquipmentIconToWidget(icon, iter_37_0)
 
 		function equipmentIconPickerOptionWidget.onClick()
-			ptc_root_locals.equipmentAssignIconIndex = iter_37_0
+			actionbarState.equipmentAssignIconIndex = iter_37_0
 
-			ptc_root_locals.refreshEquipmentAssignIconPickerSelection()
-			ptc_root_locals.refreshAssignActionSlotPreview()
+			actionbarState.refreshEquipmentAssignIconPickerSelection()
+			actionbarState.refreshAssignActionSlotPreview()
 			equipmentAssignUpdateButtons()
 		end
 	end
 
-	ptc_root_locals.refreshEquipmentAssignIconPickerSelection()
+	actionbarState.refreshEquipmentAssignIconPickerSelection()
 end
 
-  ptc_root_locals.commitEquipmentAssignIconPicker = function()
+  actionbarState.commitEquipmentAssignIconPicker = function()
 	local descriptionTextEdit = equipmentAssignIconWindow and equipmentAssignIconWindow:recursiveGetChildById("descriptionTextEdit")
 
 	if descriptionTextEdit then
-		ptc_root_locals.equipmentAssignDescription = descriptionTextEdit:getText() or ""
+		actionbarState.equipmentAssignDescription = descriptionTextEdit:getText() or ""
 	end
 
-	if ptc_root_locals.equipmentAssignTypeRadioGroup then
-		local selectedWidget = ptc_root_locals.equipmentAssignTypeRadioGroup:getSelectedWidget()
+	if actionbarState.equipmentAssignTypeRadioGroup then
+		local selectedWidget = actionbarState.equipmentAssignTypeRadioGroup:getSelectedWidget()
 
 		if selectedWidget and selectedWidget.typeIndex ~= nil then
-			ptc_root_locals.equipmentAssignTypeIndex = selectedWidget.typeIndex
+			actionbarState.equipmentAssignTypeIndex = selectedWidget.typeIndex
 		end
 	end
 
-	ptc_root_locals.refreshAssignActionSlotPreview()
+	actionbarState.refreshAssignActionSlotPreview()
 	equipmentAssignUpdateButtons()
 end
 
-  ptc_root_locals.forEachEquipmentAssignSlot = function(callback)
+  actionbarState.forEachEquipmentAssignSlot = function(callback)
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
@@ -885,7 +885,7 @@ end
 	end
 end
 
-  ptc_root_locals.equipmentAssignItemHasRarityFrame = function(item)
+  actionbarState.equipmentAssignItemHasRarityFrame = function(item)
 	if not item or not g_game.getFeature(GameColorizedLootValue) then
 		return false
 	end
@@ -897,27 +897,27 @@ end
 	return (item:getMeanPrice() or 0) >= 50
 end
 
-  ptc_root_locals.clearEquipmentAssignItemFrame = function(itemWidget)
+  actionbarState.clearEquipmentAssignItemFrame = function(itemWidget)
 	itemWidget:setImageSource("")
 	itemWidget:setImageClip("0 0 0 0")
 end
 
-  ptc_root_locals.applyEquipmentAssignItemRarity = function(arg_43_0, arg_43_1)
-	if ptc_root_locals.equipmentAssignItemHasRarityFrame(arg_43_1) then
+  actionbarState.applyEquipmentAssignItemRarity = function(arg_43_0, arg_43_1)
+	if actionbarState.equipmentAssignItemHasRarityFrame(arg_43_1) then
 		ItemsDatabase.setRarityItem(arg_43_0, arg_43_1)
 
 		return
 	end
 
 	ItemsDatabase.setRarityItem(arg_43_0, nil)
-	ptc_root_locals.clearEquipmentAssignItemFrame(arg_43_0)
+	actionbarState.clearEquipmentAssignItemFrame(arg_43_0)
 end
 
-  ptc_root_locals.clearEquipmentAssignSlotItemWidget = function(arg_44_0)
+  actionbarState.clearEquipmentAssignSlotItemWidget = function(arg_44_0)
 	arg_44_0:setItem(nil)
 	ItemsDatabase.setTier(arg_44_0, 0)
 	ItemsDatabase.setBigTier(arg_44_0, 0)
-	ptc_root_locals.applyEquipmentAssignItemRarity(arg_44_0, nil)
+	actionbarState.applyEquipmentAssignItemRarity(arg_44_0, nil)
 end
 
 EAssign = {}
@@ -1034,9 +1034,9 @@ function EAssign.blocksShieldSlot(item)
 end
 
 function EAssign.draftLeftHandItem()
-	local var_53_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[InventorySlotLeft]
+	local var_53_0 = actionbarState.equipmentAssignDraft and actionbarState.equipmentAssignDraft[InventorySlotLeft]
 
-	return var_53_0 and ptc_root_locals.equipmentEntryToItem(var_53_0) or nil
+	return var_53_0 and actionbarState.equipmentEntryToItem(var_53_0) or nil
 end
 
 function EAssign.resolveRightSlotEntry(slot)
@@ -1047,44 +1047,44 @@ function EAssign.resolveRightSlotEntry(slot)
 	local var_54_0 = EAssign.draftLeftHandItem()
 
 	if var_54_0 and EAssign.isDualWielding(var_54_0) then
-		return ptc_root_locals.equipmentAssignDraft[InventorySlotLeft], true
+		return actionbarState.equipmentAssignDraft[InventorySlotLeft], true
 	end
 
 	return nil, false
 end
 
 function EAssign.reconcileHandSlots()
-	if not ptc_root_locals.equipmentAssignDraft then
+	if not actionbarState.equipmentAssignDraft then
 		return
 	end
 
 	local var_55_0 = EAssign.draftLeftHandItem()
-	local var_55_1 = ptc_root_locals.equipmentAssignDraft[InventorySlotRight]
+	local var_55_1 = actionbarState.equipmentAssignDraft[InventorySlotRight]
 
 	if not var_55_1 then
 		return
 	end
 
-	local var_55_2 = ptc_root_locals.equipmentEntryToItem(var_55_1)
+	local var_55_2 = actionbarState.equipmentEntryToItem(var_55_1)
 
 	if var_55_0 and EAssign.isDualWielding(var_55_0) then
-		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
+		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 
 		return
 	end
 
 	if var_55_0 and EAssign.blocksShieldSlot(var_55_0) then
-		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
+		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 
 		return
 	end
 
 	if var_55_2 and var_55_0 and EAssign.isBowOrCrossbow(var_55_0) and EAssign.isShield(var_55_2) then
-		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
+		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 	end
 end
 
-  ptc_root_locals.refreshEquipmentAssignSlotWidget = function(arg_56_0, arg_56_1)
+  actionbarState.refreshEquipmentAssignSlotWidget = function(arg_56_0, arg_56_1)
 	local equippedItem = arg_56_0:getChildById("equippedItem")
 	local slotIcon = arg_56_0:getChildById("slotIcon")
 
@@ -1099,7 +1099,7 @@ end
 		arg_56_1, var_56_3 = EAssign.resolveRightSlotEntry(arg_56_1)
 	end
 
-	local var_56_4 = ptc_root_locals.equipmentEntryToItem(arg_56_1)
+	local var_56_4 = actionbarState.equipmentEntryToItem(arg_56_1)
 
 	if var_56_4 then
 		if var_56_3 then
@@ -1124,12 +1124,12 @@ end
 			end
 		end
 
-		ptc_root_locals.applyEquipmentAssignItemRarity(equippedItem, var_56_4)
+		actionbarState.applyEquipmentAssignItemRarity(equippedItem, var_56_4)
 		ItemsDatabase.setTier(equippedItem, 0)
 		ItemsDatabase.setBigTier(equippedItem, var_56_4)
 
-		if not ptc_root_locals.equipmentAssignItemHasRarityFrame(var_56_4) then
-			ptc_root_locals.clearEquipmentAssignItemFrame(equippedItem)
+		if not actionbarState.equipmentAssignItemHasRarityFrame(var_56_4) then
+			actionbarState.clearEquipmentAssignItemFrame(equippedItem)
 		end
 
 		local quickloot = equippedItem:recursiveGetChildById("quickloot")
@@ -1149,7 +1149,7 @@ end
 			equippedItem:setOpacity(1)
 		end
 
-		ptc_root_locals.clearEquipmentAssignSlotItemWidget(equippedItem)
+		actionbarState.clearEquipmentAssignSlotItemWidget(equippedItem)
 
 		if slotIcon then
 			slotIcon:setVisible(true)
@@ -1159,16 +1159,16 @@ end
 end
 
 function EAssign.refreshHandSlotWidgets()
-	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_58_0, arg_58_1)
+	actionbarState.forEachEquipmentAssignSlot(function(arg_58_0, arg_58_1)
 		if arg_58_1 == InventorySlotLeft or arg_58_1 == InventorySlotRight then
-			local var_58_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_58_1]
+			local var_58_0 = actionbarState.equipmentAssignDraft and actionbarState.equipmentAssignDraft[arg_58_1]
 
-			ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_58_0, var_58_0)
+			actionbarState.refreshEquipmentAssignSlotWidget(arg_58_0, var_58_0)
 		end
 	end)
 end
 
-  ptc_root_locals.refreshEquipmentAssignBackpackSlot = function()
+  actionbarState.refreshEquipmentAssignBackpackSlot = function()
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
@@ -1180,23 +1180,23 @@ end
 	end
 
 	local localPlayer = g_game.getLocalPlayer()
-	local inventoryItem = localPlayer and ptc_root_locals.equipmentEntryFromItem(localPlayer:getInventoryItem(ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT))
+	local inventoryItem = localPlayer and actionbarState.equipmentEntryFromItem(localPlayer:getInventoryItem(actionbarState.EQUIPMENT_ASSIGN_BACKPACK_SLOT))
 
-	ptc_root_locals.refreshEquipmentAssignSlotWidget(backSlot, inventoryItem)
+	actionbarState.refreshEquipmentAssignSlotWidget(backSlot, inventoryItem)
 end
 
-  ptc_root_locals.refreshAllEquipmentAssignSlots = function()
+  actionbarState.refreshAllEquipmentAssignSlots = function()
 	EAssign.reconcileHandSlots()
-	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_61_0, arg_61_1)
-		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_61_1) then
+	actionbarState.forEachEquipmentAssignSlot(function(arg_61_0, arg_61_1)
+		if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_61_1) then
 			return
 		end
 
-		local var_61_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_61_1] or nil
+		local var_61_0 = actionbarState.equipmentAssignDraft and actionbarState.equipmentAssignDraft[arg_61_1] or nil
 
-		ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_61_0, var_61_0)
+		actionbarState.refreshEquipmentAssignSlotWidget(arg_61_0, var_61_0)
 	end)
-	ptc_root_locals.refreshEquipmentAssignBackpackSlot()
+	actionbarState.refreshEquipmentAssignBackpackSlot()
 end
 
 function equipmentAssignUpdateButtons()
@@ -1206,7 +1206,7 @@ function equipmentAssignUpdateButtons()
 
 	local okButton = equipmentAssignWindow:getChildById("okButton")
 	local applyButton = equipmentAssignWindow:getChildById("applyButton")
-	local var_62_2 = ptc_root_locals.isEquipmentAssignIconDetermined()
+	local var_62_2 = actionbarState.isEquipmentAssignIconDetermined()
 
 	if okButton then
 		okButton:setEnabled(var_62_2)
@@ -1224,29 +1224,29 @@ function equipmentAssignCopyCurrentSet()
 		return
 	end
 
-	ptc_root_locals.equipmentAssignDraft = {}
+	actionbarState.equipmentAssignDraft = {}
 
-	ptc_root_locals.forEachEquipmentAssignSlot(function(unusedArgument, arg_64_1)
-		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_64_1) then
+	actionbarState.forEachEquipmentAssignSlot(function(unusedArgument, arg_64_1)
+		if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_64_1) then
 			return
 		end
 
-		local inventoryItem = ptc_root_locals.equipmentEntryFromItem(localPlayer:getInventoryItem(arg_64_1))
+		local inventoryItem = actionbarState.equipmentEntryFromItem(localPlayer:getInventoryItem(arg_64_1))
 
 		if inventoryItem then
-			ptc_root_locals.equipmentAssignDraft[arg_64_1] = inventoryItem
+			actionbarState.equipmentAssignDraft[arg_64_1] = inventoryItem
 		end
 	end)
-	ptc_root_locals.refreshAllEquipmentAssignSlots()
+	actionbarState.refreshAllEquipmentAssignSlots()
 	equipmentAssignUpdateButtons()
 end
 
-  ptc_root_locals.itemFitsEquipmentAssignSlot = function(arg_65_0, arg_65_1)
-	if not arg_65_0 or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_65_1) then
+  actionbarState.itemFitsEquipmentAssignSlot = function(arg_65_0, arg_65_1)
+	if not arg_65_0 or actionbarState.isEquipmentAssignVisualBackpackSlot(arg_65_1) then
 		return false
 	end
 
-	if not ptc_root_locals.isEquippableActionBarItem(arg_65_0) then
+	if not actionbarState.isEquippableActionBarItem(arg_65_0) then
 		return false
 	end
 
@@ -1321,7 +1321,7 @@ end
 	return false
 end
 
-  ptc_root_locals.equipmentAssignDraggedItem = function(draggingWidget)
+  actionbarState.equipmentAssignDraggedItem = function(draggingWidget)
 	if not draggingWidget or draggingWidget:getClassName() ~= "UIItem" or draggingWidget:isVirtual() then
 		return nil
 	end
@@ -1335,12 +1335,12 @@ end
 	return nil
 end
 
-  ptc_root_locals.equipmentAssignSetSlotItem = function(arg_67_0, arg_67_1, arg_67_2)
-	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_67_0) or not arg_67_1 then
+  actionbarState.equipmentAssignSetSlotItem = function(arg_67_0, arg_67_1, arg_67_2)
+	if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_67_0) or not arg_67_1 then
 		return false
 	end
 
-	if not ptc_root_locals.itemFitsEquipmentAssignSlot(arg_67_1, arg_67_0) then
+	if not actionbarState.itemFitsEquipmentAssignSlot(arg_67_1, arg_67_0) then
 		if arg_67_0 == InventorySlotRight and EAssign.isQuiver(arg_67_1) and EAssign.draftLeftHandItem() and EAssign.blocksShieldSlot(EAssign.draftLeftHandItem()) then
 			modules.game_textmessage.displayFailureMessage(tr("You cannot use a quiver while wielding a two-handed weapon."))
 		elseif arg_67_0 == InventorySlotRight and EAssign.isShield(arg_67_1) and EAssign.draftLeftHandItem() and EAssign.isBowOrCrossbow(EAssign.draftLeftHandItem()) then
@@ -1354,19 +1354,19 @@ end
 		return false
 	end
 
-	ptc_root_locals.equipmentAssignDraft = ptc_root_locals.equipmentAssignDraft or {}
-	ptc_root_locals.equipmentAssignDraft[arg_67_0] = ptc_root_locals.equipmentEntryFromItem(arg_67_1)
+	actionbarState.equipmentAssignDraft = actionbarState.equipmentAssignDraft or {}
+	actionbarState.equipmentAssignDraft[arg_67_0] = actionbarState.equipmentEntryFromItem(arg_67_1)
 
 	EAssign.reconcileHandSlots()
 
 	if arg_67_0 == InventorySlotLeft or arg_67_0 == InventorySlotRight then
 		EAssign.refreshHandSlotWidgets()
 	elseif arg_67_2 then
-		ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_67_2, ptc_root_locals.equipmentAssignDraft[arg_67_0])
+		actionbarState.refreshEquipmentAssignSlotWidget(arg_67_2, actionbarState.equipmentAssignDraft[arg_67_0])
 	else
-		ptc_root_locals.forEachEquipmentAssignSlot(function(arg_68_0, arg_68_1)
+		actionbarState.forEachEquipmentAssignSlot(function(arg_68_0, arg_68_1)
 			if arg_68_1 == arg_67_0 then
-				ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_68_0, ptc_root_locals.equipmentAssignDraft[arg_67_0])
+				actionbarState.refreshEquipmentAssignSlotWidget(arg_68_0, actionbarState.equipmentAssignDraft[arg_67_0])
 			end
 		end)
 	end
@@ -1376,18 +1376,18 @@ end
 	return true
 end
 
-  ptc_root_locals[83] = function(arg_69_0, arg_69_1, unusedArgument, arg_69_3)
-	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_69_3) then
+  actionbarState[83] = function(arg_69_0, arg_69_1, unusedArgument, arg_69_3)
+	if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_69_3) then
 		return false
 	end
 
-	local var_69_0 = ptc_root_locals.equipmentAssignDraggedItem(arg_69_1)
+	local var_69_0 = actionbarState.equipmentAssignDraggedItem(arg_69_1)
 
 	if not var_69_0 then
 		return false
 	end
 
-	if ptc_root_locals.equipmentAssignSetSlotItem(arg_69_3, var_69_0, arg_69_0) then
+	if actionbarState.equipmentAssignSetSlotItem(arg_69_3, var_69_0, arg_69_0) then
 		arg_69_0:setBorderWidth(0)
 
 		if arg_69_1 then
@@ -1400,19 +1400,19 @@ end
 	return false
 end
 
-  ptc_root_locals.onEquipmentAssignSlotHoverChange = function(arg_70_0, arg_70_1, arg_70_2)
+  actionbarState.onEquipmentAssignSlotHoverChange = function(arg_70_0, arg_70_1, arg_70_2)
 	if UIWidget.onHoverChange then
 		UIWidget.onHoverChange(arg_70_0, arg_70_1)
 	end
 
-	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_70_2) then
+	if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_70_2) then
 		return
 	end
 
 	local draggingWidget = g_ui.getDraggingWidget()
-	local var_70_1 = ptc_root_locals.equipmentAssignDraggedItem(draggingWidget)
+	local var_70_1 = actionbarState.equipmentAssignDraggedItem(draggingWidget)
 
-	if arg_70_1 and var_70_1 and ptc_root_locals.itemFitsEquipmentAssignSlot(var_70_1, arg_70_2) then
+	if arg_70_1 and var_70_1 and actionbarState.itemFitsEquipmentAssignSlot(var_70_1, arg_70_2) then
 		arg_70_0:setBorderWidth(1)
 		arg_70_0:setBorderColor("#ffffff")
 	else
@@ -1420,12 +1420,12 @@ end
 	end
 end
 
-  ptc_root_locals.restoreEquipmentAssignWindowAfterPick = function()
-	if not ptc_root_locals.equipmentAssignHiddenForPick then
+  actionbarState.restoreEquipmentAssignWindowAfterPick = function()
+	if not actionbarState.equipmentAssignHiddenForPick then
 		return
 	end
 
-	ptc_root_locals.equipmentAssignHiddenForPick = false
+	actionbarState.equipmentAssignHiddenForPick = false
 
 	if equipmentAssignWindow and not equipmentAssignWindow:isDestroyed() then
 		equipmentAssignWindow:show()
@@ -1434,32 +1434,32 @@ end
 	end
 end
 
-  ptc_root_locals.startEquipmentAssignChooseItem = function(arg_72_0)
-	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_72_0) or g_ui.isMouseGrabbed() then
+  actionbarState.startEquipmentAssignChooseItem = function(equipmentAssignPickInvSlot)
+	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() or actionbarState.isEquipmentAssignVisualBackpackSlot(equipmentAssignPickInvSlot) or g_ui.isMouseGrabbed() then
 		return
 	end
 
-	ptc_root_locals.equipmentAssignPickInvSlot = arg_72_0
+	actionbarState.equipmentAssignPickInvSlot = equipmentAssignPickInvSlot
 
 	equipmentAssignWindow:hide()
 
-	ptc_root_locals.equipmentAssignHiddenForPick = true
+	actionbarState.equipmentAssignHiddenForPick = true
 
 	mouseGrabberWidget:grabMouse()
 	g_mouse.pushCursor("target")
 end
 
-  ptc_root_locals.onEquipmentAssignChooseItemMouseRelease = function(arg_73_0, arg_73_1, arg_73_2)
-	local equipmentAssignPickInvSlot = ptc_root_locals.equipmentAssignPickInvSlot
+  actionbarState.onEquipmentAssignChooseItemMouseRelease = function(arg_73_0, arg_73_1, arg_73_2)
+	local equipmentAssignPickInvSlot = actionbarState.equipmentAssignPickInvSlot
 
-	ptc_root_locals.equipmentAssignPickInvSlot = nil
+	actionbarState.equipmentAssignPickInvSlot = nil
 
 	local var_73_1
 
 	if arg_73_2 == MouseLeftButton then
-		var_73_1 = ptc_root_locals.resolvePickItemAtMouse(arg_73_1)
+		var_73_1 = actionbarState.resolvePickItemAtMouse(arg_73_1)
 
-		if var_73_1 and not ptc_root_locals.itemFitsEquipmentAssignSlot(var_73_1, equipmentAssignPickInvSlot) then
+		if var_73_1 and not actionbarState.itemFitsEquipmentAssignSlot(var_73_1, equipmentAssignPickInvSlot) then
 			modules.game_textmessage.displayFailureMessage(tr("This item is not suitable for this equipment slot."))
 
 			var_73_1 = nil
@@ -1467,33 +1467,33 @@ end
 	end
 
 	if var_73_1 then
-		ptc_root_locals.equipmentAssignSetSlotItem(equipmentAssignPickInvSlot, var_73_1, nil)
+		actionbarState.equipmentAssignSetSlotItem(equipmentAssignPickInvSlot, var_73_1, nil)
 	end
 
-	ptc_root_locals.restoreEquipmentAssignWindowAfterPick()
+	actionbarState.restoreEquipmentAssignWindowAfterPick()
 	g_mouse.popCursor("target")
 	arg_73_0:ungrabMouse()
 
 	return true
 end
 
-  ptc_root_locals.equipmentAssignRemoveSlot = function(arg_74_0)
-	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_74_0) then
+  actionbarState.equipmentAssignRemoveSlot = function(arg_74_0)
+	if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_74_0) then
 		return
 	end
 
-	if not ptc_root_locals.equipmentAssignDraft then
-		ptc_root_locals.equipmentAssignDraft = {}
+	if not actionbarState.equipmentAssignDraft then
+		actionbarState.equipmentAssignDraft = {}
 	end
 
-	ptc_root_locals.equipmentAssignDraft[arg_74_0] = nil
+	actionbarState.equipmentAssignDraft[arg_74_0] = nil
 
 	if arg_74_0 == InventorySlotLeft or arg_74_0 == InventorySlotRight then
 		EAssign.refreshHandSlotWidgets()
 	else
-		ptc_root_locals.forEachEquipmentAssignSlot(function(arg_75_0, arg_75_1)
+		actionbarState.forEachEquipmentAssignSlot(function(arg_75_0, arg_75_1)
 			if arg_75_1 == arg_74_0 then
-				ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_75_0, nil)
+				actionbarState.refreshEquipmentAssignSlotWidget(arg_75_0, nil)
 			end
 		end)
 	end
@@ -1501,22 +1501,22 @@ end
 	equipmentAssignUpdateButtons()
 end
 
-  ptc_root_locals.onEquipmentAssignSlotMouseRelease = function(unusedArgument, arg_76_1, arg_76_2, arg_76_3)
-	if arg_76_2 ~= MouseRightButton or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_76_3) then
+  actionbarState.onEquipmentAssignSlotMouseRelease = function(unusedArgument, arg_76_1, arg_76_2, arg_76_3)
+	if arg_76_2 ~= MouseRightButton or actionbarState.isEquipmentAssignVisualBackpackSlot(arg_76_3) then
 		return false
 	end
 
 	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
 	gamePopupMenuWidget:addOption(tr("Select Equipment"), function()
-		ptc_root_locals.startEquipmentAssignChooseItem(arg_76_3)
+		actionbarState.startEquipmentAssignChooseItem(arg_76_3)
 	end)
 
-	local slot = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_76_3]
+	local slot = actionbarState.equipmentAssignDraft and actionbarState.equipmentAssignDraft[arg_76_3]
 
 	if slot and slot.itemId and slot.itemId > 0 then
 		gamePopupMenuWidget:addOption(tr("Remove Equipment"), function()
-			ptc_root_locals.equipmentAssignRemoveSlot(arg_76_3)
+			actionbarState.equipmentAssignRemoveSlot(arg_76_3)
 		end)
 	end
 
@@ -1525,9 +1525,9 @@ end
 	return true
 end
 
-  ptc_root_locals.setupEquipmentAssignSlotHandlers = function()
-	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_80_0, arg_80_1)
-		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_80_1) then
+  actionbarState.setupEquipmentAssignSlotHandlers = function()
+	actionbarState.forEachEquipmentAssignSlot(function(arg_80_0, arg_80_1)
+		if actionbarState.isEquipmentAssignVisualBackpackSlot(arg_80_1) then
 			arg_80_0.onMouseRelease = nil
 			arg_80_0.onDrop = nil
 			arg_80_0.onHoverChange = nil
@@ -1536,32 +1536,32 @@ end
 		end
 
 		function arg_80_0.onMouseRelease(arg_81_0, arg_81_1, arg_81_2)
-			return ptc_root_locals.onEquipmentAssignSlotMouseRelease(arg_81_0, arg_81_1, arg_81_2, arg_80_1)
+			return actionbarState.onEquipmentAssignSlotMouseRelease(arg_81_0, arg_81_1, arg_81_2, arg_80_1)
 		end
 
 		function arg_80_0.onDrop(unusedArgument, arg_82_1, arg_82_2)
-			return ptc_root_locals[83](arg_80_0, arg_82_1, arg_82_2, arg_80_1)
+			return actionbarState[83](arg_80_0, arg_82_1, arg_82_2, arg_80_1)
 		end
 
 		function arg_80_0.onHoverChange(unusedArgument, arg_83_1)
-			ptc_root_locals.onEquipmentAssignSlotHoverChange(arg_80_0, arg_83_1, arg_80_1)
+			actionbarState.onEquipmentAssignSlotHoverChange(arg_80_0, arg_83_1, arg_80_1)
 		end
 
 		local equippedItem = arg_80_0:recursiveGetChildById("equippedItem")
 
 		if equippedItem then
 			function equippedItem.onDrop(unusedArgument, draggedWidget, mousePos)
-				return ptc_root_locals[83](arg_80_0, draggedWidget, mousePos, arg_80_1)
+				return actionbarState[83](arg_80_0, draggedWidget, mousePos, arg_80_1)
 			end
 
 			function equippedItem.onHoverChange(unusedArgument, hovered)
-				ptc_root_locals.onEquipmentAssignSlotHoverChange(arg_80_0, hovered, arg_80_1)
+				actionbarState.onEquipmentAssignSlotHoverChange(arg_80_0, hovered, arg_80_1)
 			end
 		end
 	end)
 end
 
-  ptc_root_locals.actionSlotEquippedItemMatches = function(arg_86_0, arg_86_1, arg_86_2)
+  actionbarState.actionSlotEquippedItemMatches = function(arg_86_0, arg_86_1, arg_86_2)
 	local var_86_0 = type(arg_86_0)
 
 	if var_86_0 ~= "userdata" and var_86_0 ~= "table" or arg_86_0:getId() ~= arg_86_1 then
@@ -1575,13 +1575,13 @@ end
 	return true
 end
 
-  ptc_root_locals[92] = function(panel)
+  actionbarState[92] = function(panel)
 	if not panel or not panel.equipments then
 		return false
 	end
 
 	for _, slot in pairs(panel.equipments) do
-		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
+		if not actionbarState.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
 			return true
 		end
 	end
@@ -1589,7 +1589,7 @@ end
 	return false
 end
 
- ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER = {
+ actionbarState.EQUIPMENT_SET_EQUIP_ORDER = {
 	InventorySlotHead,
 	InventorySlotNeck,
 	InventorySlotBody,
@@ -1600,16 +1600,16 @@ end
 	InventorySlotFinger,
 	InventorySlotAmmo
 }
- ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS = 1000
- ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID = "progressEquipmentSet"
- ptc_root_locals[96] = "equipmentSetShared"
- ptc_root_locals.equipmentSetSharedCooldownUntil = nil
+ actionbarState.EQUIPMENT_SET_COOLDOWN_MS = 1000
+ actionbarState.EQUIPMENT_SET_CD_PROGRESS_ID = "progressEquipmentSet"
+ actionbarState[96] = "equipmentSetShared"
+ actionbarState.equipmentSetSharedCooldownUntil = nil
 
-  ptc_root_locals.equipmentSetCooldownGroupId = function()
-	return ptc_root_locals[96]
+  actionbarState.equipmentSetCooldownGroupId = function()
+	return actionbarState[96]
 end
 
-  ptc_root_locals.forEachEquipmentSetActionSlot = function(arg_89_0)
+  actionbarState.forEachEquipmentSetActionSlot = function(arg_89_0)
 	if not arg_89_0 then
 		return
 	end
@@ -1619,7 +1619,7 @@ end
 
 		if var_89_0 then
 			for unusedValue, child in pairs(var_89_0:getChildren()) do
-				if ptc_root_locals.isActionSlotEquipmentPreset(child) then
+				if actionbarState.isActionSlotEquipmentPreset(child) then
 					arg_89_0(child)
 				end
 			end
@@ -1627,35 +1627,35 @@ end
 	end
 end
 
-  ptc_root_locals.isEquipmentSetActionOnCooldown = function(arg_90_0)
-	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_90_0) then
+  actionbarState.isEquipmentSetActionOnCooldown = function(arg_90_0)
+	if not actionbarState.isActionSlotEquipmentPreset(arg_90_0) then
 		return false
 	end
 
-	return ptc_root_locals.equipmentSetSharedCooldownUntil and g_clock.millis() < ptc_root_locals.equipmentSetSharedCooldownUntil
+	return actionbarState.equipmentSetSharedCooldownUntil and g_clock.millis() < actionbarState.equipmentSetSharedCooldownUntil
 end
 
-  ptc_root_locals.startEquipmentSetActionCooldown = function()
-	ptc_root_locals.equipmentSetSharedCooldownUntil = g_clock.millis() + ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS
+  actionbarState.startEquipmentSetActionCooldown = function()
+	actionbarState.equipmentSetSharedCooldownUntil = g_clock.millis() + actionbarState.EQUIPMENT_SET_COOLDOWN_MS
 
-	ptc_root_locals.forEachEquipmentSetActionSlot(function(arg_92_0)
-		arg_92_0._equipmentSetCooldownUntil = ptc_root_locals.equipmentSetSharedCooldownUntil
+	actionbarState.forEachEquipmentSetActionSlot(function(arg_92_0)
+		arg_92_0._equipmentSetCooldownUntil = actionbarState.equipmentSetSharedCooldownUntil
 
-		if ptc_root_locals.startEquipmentSetActionCooldownVisual then
-			ptc_root_locals.startEquipmentSetActionCooldownVisual(arg_92_0)
+		if actionbarState.startEquipmentSetActionCooldownVisual then
+			actionbarState.startEquipmentSetActionCooldownVisual(arg_92_0)
 		end
 	end)
 end
 
-  ptc_root_locals.actionSlotPresetEntryMatchesEquipped = function(arg_93_0, arg_93_1, arg_93_2)
+  actionbarState.actionSlotPresetEntryMatchesEquipped = function(arg_93_0, arg_93_1, arg_93_2)
 	if not arg_93_0 or not arg_93_2 or not arg_93_2.itemId or arg_93_2.itemId <= 0 then
 		return true
 	end
 
-	return ptc_root_locals.actionSlotEquippedItemMatches(arg_93_0:getInventoryItem(arg_93_1), arg_93_2.itemId, arg_93_2.getTier or 0)
+	return actionbarState.actionSlotEquippedItemMatches(arg_93_0:getInventoryItem(arg_93_1), arg_93_2.itemId, arg_93_2.getTier or 0)
 end
 
-  ptc_root_locals.actionSlotPresetEntryForSlot = function(slot, invSlot)
+  actionbarState.actionSlotPresetEntryForSlot = function(slot, invSlot)
 	if not slot or not slot.equipments then
 		return nil
 	end
@@ -1669,8 +1669,8 @@ end
 	return nil
 end
 
-  ptc_root_locals[104] = function(arg_95_0)
-	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_95_0) then
+  actionbarState[104] = function(arg_95_0)
+	if not actionbarState.isActionSlotEquipmentPreset(arg_95_0) then
 		return false
 	end
 
@@ -1680,10 +1680,10 @@ end
 		return false
 	end
 
-	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
-		local var_95_1 = ptc_root_locals.actionSlotPresetEntryForSlot(arg_95_0, ptc_root_local)
+	for unusedValue, ptc_root_local in ipairs(actionbarState.EQUIPMENT_SET_EQUIP_ORDER) do
+		local var_95_1 = actionbarState.actionSlotPresetEntryForSlot(arg_95_0, ptc_root_local)
 
-		if var_95_1 and not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_95_1) then
+		if var_95_1 and not actionbarState.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_95_1) then
 			return true
 		end
 
@@ -1695,8 +1695,8 @@ end
 	return false
 end
 
-  ptc_root_locals.isActionSlotEquipSetActive = function(arg_96_0)
-	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_96_0) then
+  actionbarState.isActionSlotEquipSetActive = function(arg_96_0)
+	if not actionbarState.isActionSlotEquipmentPreset(arg_96_0) then
 		return false
 	end
 
@@ -1706,11 +1706,11 @@ end
 		return false
 	end
 
-	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
-		local var_96_1 = ptc_root_locals.actionSlotPresetEntryForSlot(arg_96_0, ptc_root_local)
+	for unusedValue, ptc_root_local in ipairs(actionbarState.EQUIPMENT_SET_EQUIP_ORDER) do
+		local var_96_1 = actionbarState.actionSlotPresetEntryForSlot(arg_96_0, ptc_root_local)
 
 		if var_96_1 then
-			if not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_96_1) then
+			if not actionbarState.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_96_1) then
 				return false
 			end
 		elseif localPlayer:getInventoryItem(ptc_root_local) then
@@ -1721,13 +1721,13 @@ end
 	return true
 end
 
-  ptc_root_locals.isActionSlotEquipEquipped = function(arg_97_0)
-	if not ptc_root_locals.isActionSlotEquip(arg_97_0) then
+  actionbarState.isActionSlotEquipEquipped = function(arg_97_0)
+	if not actionbarState.isActionSlotEquip(arg_97_0) then
 		return false
 	end
 
-	if ptc_root_locals.isActionSlotEquipmentPreset(arg_97_0) then
-		return ptc_root_locals.isActionSlotEquipSetActive(arg_97_0)
+	if actionbarState.isActionSlotEquipmentPreset(arg_97_0) then
+		return actionbarState.isActionSlotEquipSetActive(arg_97_0)
 	end
 
 	if not arg_97_0.itemId or arg_97_0.itemId <= 0 then
@@ -1741,12 +1741,12 @@ end
 	end
 
 	local itemId = arg_97_0.itemId
-	local var_97_2 = ptc_root_locals.actionSlotItemTier(arg_97_0)
+	local var_97_2 = actionbarState.actionSlotItemTier(arg_97_0)
 	local var_97_3 = InventorySlotFirst or 1
 	local var_97_4 = InventorySlotLast or 10
 
 	for iter_97_0 = var_97_3, var_97_4 do
-		if ptc_root_locals.actionSlotEquippedItemMatches(localPlayer:getInventoryItem(iter_97_0), itemId, var_97_2) then
+		if actionbarState.actionSlotEquippedItemMatches(localPlayer:getInventoryItem(iter_97_0), itemId, var_97_2) then
 			return true
 		end
 	end
@@ -1754,7 +1754,7 @@ end
 	return false
 end
 
-  ptc_root_locals.refreshSpellAssignPreviewIfOpen = function()
+  actionbarState.refreshSpellAssignPreviewIfOpen = function()
 	if not spellAssignWindow or not spellsPanel then
 		return
 	end
@@ -1766,17 +1766,17 @@ end
 	end
 end
 
-  ptc_root_locals.scheduleSlotGrayRefresh = function(arg_99_0)
+  actionbarState.scheduleSlotGrayRefresh = function(arg_99_0)
 	slotGrayFullRefreshPending = slotGrayFullRefreshPending or arg_99_0 == true
 
-	if ptc_root_locals.slotGrayRefreshEvent then
+	if actionbarState.slotGrayRefreshEvent then
 		return
 	end
 
 	tagHitchEventSource("game_actionbar.scheduleSlotGrayRefresh")
 
-	ptc_root_locals.slotGrayRefreshEvent = scheduleEvent(function()
-		ptc_root_locals.slotGrayRefreshEvent = nil
+	actionbarState.slotGrayRefreshEvent = scheduleEvent(function()
+		actionbarState.slotGrayRefreshEvent = nil
 
 		local var_100_0 = slotGrayFullRefreshPending
 		local var_100_1 = slotGrayInventoryRefreshPending
@@ -1790,12 +1790,12 @@ end
 
 			updateSlotsVocation()
 
-			if ptc_root_locals.refreshAllSmartModeSlots then
-				ptc_root_locals.refreshAllSmartModeSlots()
+			if actionbarState.refreshAllSmartModeSlots then
+				actionbarState.refreshAllSmartModeSlots()
 			end
 
-			ptc_root_locals.refreshSpellAssignPreviewIfOpen()
-			ptc_root_locals.refreshAllEquipmentAssignSlots()
+			actionbarState.refreshSpellAssignPreviewIfOpen()
+			actionbarState.refreshAllEquipmentAssignSlots()
 		else
 			if var_100_1 and updateInventoryDependentActionSlots then
 				updateInventoryDependentActionSlots()
@@ -1813,16 +1813,16 @@ end
 end
 
 function scheduleFullSlotGrayRefresh()
-	ptc_root_locals.scheduleSlotGrayRefresh(true)
+	actionbarState.scheduleSlotGrayRefresh(true)
 end
 
 function scheduleInventorySlotGrayRefresh()
 	slotGrayInventoryRefreshPending = true
 
-	ptc_root_locals.scheduleSlotGrayRefresh(false)
+	actionbarState.scheduleSlotGrayRefresh(false)
 end
 
-  ptc_root_locals.onLocalPlayerManaChange = function(unusedArgument, arg_103_1, unusedArgument, arg_103_3, unusedArgument)
+  actionbarState.onLocalPlayerManaChange = function(unusedArgument, arg_103_1, unusedArgument, arg_103_3, unusedArgument)
 	local numericValue = tonumber(arg_103_1)
 	local var_103_1 = tonumber(arg_103_3)
 
@@ -1848,11 +1848,11 @@ end
 	end
 
 	if var_103_2 then
-		ptc_root_locals.scheduleSlotGrayRefresh(false)
+		actionbarState.scheduleSlotGrayRefresh(false)
 	end
 end
 
-  ptc_root_locals.playerMeetsSpellLevelForAssign = function(spell)
+  actionbarState.playerMeetsSpellLevelForAssign = function(spell)
 	if not spell then
 		return false
 	end
@@ -1870,17 +1870,17 @@ end
 	return true
 end
 
-  ptc_root_locals.spellPassesAssignLearntFilter = function(arg_105_0)
+  actionbarState.spellPassesAssignLearntFilter = function(arg_105_0)
 	if not arg_105_0 then
 		return false
 	end
 
-	return canUseSpell(arg_105_0) and ptc_root_locals.playerMeetsSpellLevelForAssign(arg_105_0)
+	return canUseSpell(arg_105_0) and actionbarState.playerMeetsSpellLevelForAssign(arg_105_0)
 end
 
- ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX = 34
+ actionbarState.SPELL_PARAM_MAX_WIDTH_PX = 34
 
-  ptc_root_locals.ellipsizeSpellParameterLabelText = function(arg_106_0, arg_106_1)
+  actionbarState.ellipsizeSpellParameterLabelText = function(arg_106_0, arg_106_1)
 	if not arg_106_0 or not arg_106_1 or arg_106_1 == "" then
 		return ""
 	end
@@ -1889,7 +1889,7 @@ end
 
 	local textSize = arg_106_0:getTextSize()
 
-	if not textSize or textSize.width <= ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX then
+	if not textSize or textSize.width <= actionbarState.SPELL_PARAM_MAX_WIDTH_PX then
 		return arg_106_1
 	end
 
@@ -1898,8 +1898,8 @@ end
 	arg_106_0:setText(var_106_1)
 
 	local textSize = arg_106_0:getTextSize()
-	local var_106_3 = textSize and textSize.width or ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX
-	local var_106_4 = ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX - var_106_3
+	local var_106_3 = textSize and textSize.width or actionbarState.SPELL_PARAM_MAX_WIDTH_PX
+	local var_106_4 = actionbarState.SPELL_PARAM_MAX_WIDTH_PX - var_106_3
 
 	if var_106_4 <= 0 then
 		return var_106_1
@@ -1933,7 +1933,7 @@ end
 
 	local var_106_11 = 0
 
-	while var_106_7 ~= "" and arg_106_0:getTextSize().width > ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX and var_106_11 < 64 do
+	while var_106_7 ~= "" and arg_106_0:getTextSize().width > actionbarState.SPELL_PARAM_MAX_WIDTH_PX and var_106_11 < 64 do
 		var_106_7 = string.sub(var_106_7, 1, #var_106_7 - 1)
 		var_106_10 = var_106_7 ~= "" and var_106_7 .. var_106_1 or var_106_1
 
@@ -1945,7 +1945,7 @@ end
 	return var_106_10
 end
 
-  ptc_root_locals.refreshActionSlotSpellParameter = function(arg_107_0)
+  actionbarState.refreshActionSlotSpellParameter = function(arg_107_0)
 	if not arg_107_0 or arg_107_0:isDestroyed() then
 		return
 	end
@@ -1965,7 +1965,7 @@ end
 
 			if var_107_3 ~= "" then
 				spellParameter:setVisible(true)
-				spellParameter:setText(ptc_root_locals.ellipsizeSpellParameterLabelText(spellParameter, var_107_3))
+				spellParameter:setText(actionbarState.ellipsizeSpellParameterLabelText(spellParameter, var_107_3))
 
 				return
 			end
@@ -1992,28 +1992,28 @@ function refreshActionSlotInventoryQuantity(slot)
 
 	if slot.text or slot.passiveId or isHelperActionSlot(slot) or isMultiHelperSlot(slot) then
 		var_108_1()
-		ptc_root_locals.refreshActionSlotSpellParameter(slot)
+		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if slot.words and slot.words ~= "" then
 		var_108_1()
-		ptc_root_locals.refreshActionSlotSpellParameter(slot)
+		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
-	if ptc_root_locals.isActionSlotEquip(slot) and ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+	if actionbarState.isActionSlotEquip(slot) and actionbarState.isActionSlotEquipmentPreset(slot) then
 		var_108_1()
-		ptc_root_locals.refreshActionSlotSpellParameter(slot)
+		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if not slot.itemId or slot.itemId <= 0 then
 		var_108_1()
-		ptc_root_locals.refreshActionSlotSpellParameter(slot)
+		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
@@ -2022,7 +2022,7 @@ function refreshActionSlotInventoryQuantity(slot)
 	local var_108_3 = 0
 
 	if localPlayer then
-		var_108_3 = getActionBarInventoryDisplayCount(slot.itemId, ptc_root_locals.actionSlotItemTier(slot), localPlayer)
+		var_108_3 = getActionBarInventoryDisplayCount(slot.itemId, actionbarState.actionSlotItemTier(slot), localPlayer)
 	end
 
 	if not lbl then
@@ -2039,28 +2039,28 @@ function refreshActionSlotInventoryQuantity(slot)
 		lbl:setText("")
 	end
 
-	ptc_root_locals.refreshActionSlotSpellParameter(slot)
+	actionbarState.refreshActionSlotSpellParameter(slot)
 end
 
- ptc_root_locals[115] = {
+ actionbarState[115] = {
 	update = 1,
 	finish = 2
 }
 
-  ptc_root_locals.isBottomBar = function(barId)
+  actionbarState.isBottomBar = function(barId)
 	return barId and barId >= BAR_BOTTOM_1 and barId <= BAR_BOTTOM_3
 end
 
-  ptc_root_locals.isLeftBar = function(barId)
+  actionbarState.isLeftBar = function(barId)
 	return barId and barId >= BAR_LEFT_1 and barId <= BAR_LEFT_3
 end
 
-  ptc_root_locals.isRightBar = function(barId)
+  actionbarState.isRightBar = function(barId)
 	return barId and barId >= BAR_RIGHT_1 and barId <= BAR_RIGHT_3
 end
 
-  ptc_root_locals.isSideBar = function(arg_113_0)
-	return ptc_root_locals.isLeftBar(arg_113_0) or ptc_root_locals.isRightBar(arg_113_0)
+  actionbarState.isSideBar = function(arg_113_0)
+	return actionbarState.isLeftBar(arg_113_0) or actionbarState.isRightBar(arg_113_0)
 end
 
 function normalizeSideBarChildOrder(side)
@@ -2092,9 +2092,9 @@ function normalizeSideBarChildOrder(side)
 end
 
 function actionBarLockGroupForBar(barId)
-	if ptc_root_locals.isLeftBar(barId) then
+	if actionbarState.isLeftBar(barId) then
 		return "left"
-	elseif ptc_root_locals.isRightBar(barId) then
+	elseif actionbarState.isRightBar(barId) then
 		return "right"
 	end
 
@@ -2117,8 +2117,8 @@ function isActionBarLocked(barId)
 	return isActionBarGroupLocked(actionBarLockGroupForBar(barId))
 end
 
-  ptc_root_locals[120] = function(arg_118_0)
-	return ptc_root_locals.isSideBar(arg_118_0) and ptc_root_locals.SIDE_BAR_TOTAL_SLOTS or ptc_root_locals.maxSlots
+  actionbarState[120] = function(arg_118_0)
+	return actionbarState.isSideBar(arg_118_0) and actionbarState.SIDE_BAR_TOTAL_SLOTS or actionbarState.maxSlots
 end
 
 function barWidgetChild(bar, id)
@@ -2133,11 +2133,11 @@ function barWidgetChild(bar, id)
 	return bar:getChildById(id)
 end
 
- ptc_root_locals.SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
- ptc_root_locals.SLOT_IMG_FILLED = "/images/game/actionbar/slot-actionbar-filled"
- ptc_root_locals.SLOT_CLIP_EMPTY = "0 0 0 0"
- ptc_root_locals.SLOT_CLIP_FILLED_NORMAL = "0 0 34 34"
- ptc_root_locals[125] = "0 34 34 34"
+ actionbarState.SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
+ actionbarState.SLOT_IMG_FILLED = "/images/game/actionbar/slot-actionbar-filled"
+ actionbarState.SLOT_CLIP_EMPTY = "0 0 0 0"
+ actionbarState.SLOT_CLIP_FILLED_NORMAL = "0 0 34 34"
+ actionbarState[125] = "0 34 34 34"
 
 HelperAction = {
 	MAX_MULTI = 3,
@@ -2601,8 +2601,8 @@ function HelperAction.paintSubSlot(arg_140_0, arg_140_1)
 		end
 
 		arg_140_0:setTooltip(tr("Action: None"))
-		arg_140_0:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
-		arg_140_0:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
+		arg_140_0:setImageSource(actionbarState.SLOT_IMG_EMPTY)
+		arg_140_0:setImageClip(actionbarState.SLOT_CLIP_EMPTY)
 
 		return
 	end
@@ -2612,10 +2612,10 @@ function HelperAction.paintSubSlot(arg_140_0, arg_140_1)
 	end
 
 	arg_140_0:setTooltip(tr(item.label))
-	arg_140_0:setImageSource(ptc_root_locals.SLOT_IMG_FILLED)
+	arg_140_0:setImageSource(actionbarState.SLOT_IMG_FILLED)
 
-	if ptc_root_locals.SLOT_CLIP_FILLED_NORMAL then
-		arg_140_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
+	if actionbarState.SLOT_CLIP_FILLED_NORMAL then
+		arg_140_0:setImageClip(actionbarState.SLOT_CLIP_FILLED_NORMAL)
 	end
 
 	if helperBorder then
@@ -2823,9 +2823,9 @@ function HelperAction.handleDropOnSubSlot(arg_147_0, arg_147_1)
 			end
 		end
 
-		local var_147_7 = var_147_6[arg_147_1]
+		local replacementHelperId = var_147_6[arg_147_1]
 
-		if var_147_7 == helperId then
+		if replacementHelperId == helperId then
 			return
 		end
 
@@ -2834,10 +2834,10 @@ function HelperAction.handleDropOnSubSlot(arg_147_0, arg_147_1)
 
 		loadMultiHelper(arg_147_0)
 
-		if var_147_7 and HelperAction.getItem(var_147_7) then
+		if replacementHelperId and HelperAction.getItem(replacementHelperId) then
 			clearSlotActionContent(pressedWidget)
 
-			pressedWidget.helperId = var_147_7
+			pressedWidget.helperId = replacementHelperId
 			pressedWidget.itemId = 469
 
 			if pressedWidget.setItemId then
@@ -2888,9 +2888,9 @@ function HelperAction.handleDropFromSubSlotOntoSlot(arg_148_0, arg_148_1)
 		return
 	end
 
-	local var_148_3 = parentSlot.multiHelper and parentSlot.multiHelper[multiHelperIndex] or nil
+	local helperId = parentSlot.multiHelper and parentSlot.multiHelper[multiHelperIndex] or nil
 
-	if not var_148_3 or not HelperAction.getItem(var_148_3) then
+	if not helperId or not HelperAction.getItem(helperId) then
 		return
 	end
 
@@ -2928,7 +2928,7 @@ function HelperAction.handleDropFromSubSlotOntoSlot(arg_148_0, arg_148_1)
 		clearSlotMultiActions(var_148_2)
 	end
 
-	var_148_2.helperId = var_148_3
+	var_148_2.helperId = helperId
 	var_148_2.itemId = 469
 
 	if var_148_2.setItemId then
@@ -2981,8 +2981,8 @@ function HelperAction.applyToIndex(arg_149_0, arg_149_1, arg_149_2)
 	saveActionBar()
 end
 
-function HelperAction.openPanel(arg_150_0)
-	if not arg_150_0 or arg_150_0:isDestroyed() then
+function HelperAction.openPanel(parentSlot)
+	if not parentSlot or parentSlot:isDestroyed() then
 		return
 	end
 
@@ -2990,57 +2990,57 @@ function HelperAction.openPanel(arg_150_0)
 		closeCurrentMultiActionPanel()
 	end
 
-	local barId = HelperAction.getBarId(arg_150_0)
+	local barId = HelperAction.getBarId(parentSlot)
 
-	arg_150_0._actionBarId = barId
+	parentSlot._actionBarId = barId
 
 	local panelLayout = HelperAction.getPanelLayout(barId)
 
-	if HelperAction.panel and HelperAction.panel.parentSlot == arg_150_0 then
+	if HelperAction.panel and HelperAction.panel.parentSlot == parentSlot then
 		HelperAction.closePanel()
 
 		return
 	end
 
 	HelperAction.closePanel()
-	HelperAction.prepareSlot(arg_150_0)
+	HelperAction.prepareSlot(parentSlot)
 
 	local rootPanel = modules.game_interface.getRootPanel()
-	local var_150_3 = g_ui.createWidget(panelLayout, rootPanel)
+	local panel = g_ui.createWidget(panelLayout, rootPanel)
 
-	if not var_150_3 then
+	if not panel then
 		return
 	end
 
-	HelperAction.panel = var_150_3
-	var_150_3.parentSlot = arg_150_0
+	HelperAction.panel = panel
+	panel.parentSlot = parentSlot
 
-	var_150_3:breakAnchors()
-	var_150_3:setPosition(HelperAction.getPanelPosition(arg_150_0))
+	panel:breakAnchors()
+	panel:setPosition(HelperAction.getPanelPosition(parentSlot))
 
-	arg_150_0._multiHelperPanelOpen = true
+	parentSlot._multiHelperPanelOpen = true
 
-	function arg_150_0.onVisibilityChange()
-		if not arg_150_0:isVisible() then
+	function parentSlot.onVisibilityChange()
+		if not parentSlot:isVisible() then
 			HelperAction.closePanel()
 		end
 	end
 
-	for iter_150_0 = 1, HelperAction.MAX_MULTI do
-		local actionButton = var_150_3:recursiveGetChildById("actionButton" .. iter_150_0)
+	for multiHelperIndex = 1, HelperAction.MAX_MULTI do
+		local actionButton = panel:recursiveGetChildById("actionButton" .. multiHelperIndex)
 
 		if actionButton then
-			actionButton.multiHelperIndex = iter_150_0
-			actionButton.parentSlot = arg_150_0
+			actionButton.multiHelperIndex = multiHelperIndex
+			actionButton.parentSlot = parentSlot
 
 			g_mouse.bindPress(actionButton, function()
 				return
 			end, MouseLeftButton)
 			g_mouse.bindPress(actionButton, function()
-				HelperAction.openSubSlotMenu(arg_150_0, iter_150_0, g_window.getMousePosition())
+				HelperAction.openSubSlotMenu(parentSlot, multiHelperIndex, g_window.getMousePosition())
 			end, MouseRightButton)
 			g_mouse.bindOnDrop(actionButton, function()
-				HelperAction.handleDropOnSubSlot(arg_150_0, iter_150_0)
+				HelperAction.handleDropOnSubSlot(parentSlot, multiHelperIndex)
 			end)
 		end
 	end
@@ -3054,14 +3054,14 @@ function HelperAction.openPanel(arg_150_0)
 			return
 		end
 
-		if not arg_150_0 or arg_150_0:isDestroyed() or not arg_150_0:isVisible() then
+		if not parentSlot or parentSlot:isDestroyed() or not parentSlot:isVisible() then
 			HelperAction.closePanel()
 
 			return
 		end
 
 		HelperAction.panel:breakAnchors()
-		HelperAction.panel:setPosition(HelperAction.getPanelPosition(arg_150_0))
+		HelperAction.panel:setPosition(HelperAction.getPanelPosition(parentSlot))
 		HelperAction.panel:raise()
 		tagHitchEventSource("game_actionbar.HelperAction.panelTick")
 
@@ -3192,19 +3192,19 @@ function refreshHelperActionBarSlots()
 	HelperAction.refreshPanel()
 end
 
-  ptc_root_locals[126] = function(arg_162_0)
+  actionbarState[126] = function(arg_162_0)
 	if not arg_162_0 or arg_162_0:isDestroyed() or not arg_162_0._actionBarFilledFrame then
 		return
 	end
 
 	if arg_162_0.passiveId ~= nil then
-		arg_162_0:setImageClip(ptc_root_locals[125])
+		arg_162_0:setImageClip(actionbarState[125])
 	elseif arg_162_0._helperAssignPreview then
-		arg_162_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
-	elseif arg_162_0:isPressed() or not ptc_root_locals.isActionSlotEquipmentPreset(arg_162_0) and ptc_root_locals.isActionSlotEquipEquipped(arg_162_0) then
-		arg_162_0:setImageClip(ptc_root_locals[125])
+		arg_162_0:setImageClip(actionbarState.SLOT_CLIP_FILLED_NORMAL)
+	elseif arg_162_0:isPressed() or not actionbarState.isActionSlotEquipmentPreset(arg_162_0) and actionbarState.isActionSlotEquipEquipped(arg_162_0) then
+		arg_162_0:setImageClip(actionbarState[125])
 	else
-		arg_162_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
+		arg_162_0:setImageClip(actionbarState.SLOT_CLIP_FILLED_NORMAL)
 	end
 end
 
@@ -3218,23 +3218,23 @@ function applyActionSlotFrame(slot)
 	local var_163_2 = slot.words ~= nil and slot.words ~= ""
 	local var_163_3 = slot.passiveId ~= nil
 	local var_163_4 = isHelperActionSlot(slot) or isMultiHelperSlot(slot)
-	local var_163_5 = ptc_root_locals.isActionSlotEquipmentPreset(slot)
+	local var_163_5 = actionbarState.isActionSlotEquipmentPreset(slot)
 
 	if var_163_0 or item or var_163_2 or var_163_3 or var_163_4 or var_163_5 then
-		slot:setImageSource(ptc_root_locals.SLOT_IMG_FILLED)
+		slot:setImageSource(actionbarState.SLOT_IMG_FILLED)
 
 		slot._actionBarFilledFrame = true
 
-		ptc_root_locals[126](slot)
+		actionbarState[126](slot)
 	else
-		slot:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
-		slot:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
+		slot:setImageSource(actionbarState.SLOT_IMG_EMPTY)
+		slot:setImageClip(actionbarState.SLOT_CLIP_EMPTY)
 
 		slot._actionBarFilledFrame = false
 	end
 
 	refreshHelperSlotBorder(slot)
-	ptc_root_locals.syncSlotHotkeyMirror(slot)
+	actionbarState.syncSlotHotkeyMirror(slot)
 end
 
 function refreshActionSlotFrameClip(slot)
@@ -3242,10 +3242,10 @@ function refreshActionSlotFrameClip(slot)
 		return
 	end
 
-	ptc_root_locals[126](slot)
+	actionbarState[126](slot)
 end
 
-  ptc_root_locals.anchorGroupCooldownBelowBottomStack = function()
+  actionbarState.anchorGroupCooldownBelowBottomStack = function()
 	local cd = modules.game_cooldown and modules.game_cooldown.cooldownWindow
 
 	if not cd or cd:isDestroyed() then
@@ -3292,7 +3292,7 @@ end
 end
 
 function refreshBottomCooldownDock()
-	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
+	actionbarState.anchorGroupCooldownBelowBottomStack()
 end
 
 function slotIdFor(barId, i)
@@ -3303,7 +3303,7 @@ function slotIdFor(barId, i)
 	return "bar" .. barId .. "_slot" .. i
 end
 
-  ptc_root_locals.clearExternalSpellAssignContext = function()
+  actionbarState.clearExternalSpellAssignContext = function()
 	externalAssignSlot = nil
 	externalAssignSlotId = nil
 	spellAssignListFilter = nil
@@ -3360,7 +3360,7 @@ function findSlotById(slotId)
 	return nil, nil
 end
 
-  ptc_root_locals.slotBarAndIndexFromSlotId = function(slotId)
+  actionbarState.slotBarAndIndexFromSlotId = function(slotId)
 	if not slotId then
 		return nil, nil
 	end
@@ -3381,10 +3381,10 @@ end
 end
 
 function getSlotBarId(slotId)
-	return (ptc_root_locals.slotBarAndIndexFromSlotId(slotId))
+	return (actionbarState.slotBarAndIndexFromSlotId(slotId))
 end
 
-  ptc_root_locals.actionBarRegionTitle = function(barId)
+  actionbarState.actionBarRegionTitle = function(barId)
 	if not barId then
 		return tr("Action Bar")
 	end
@@ -3404,7 +3404,7 @@ end
 	return tr("Action Bar")
 end
 
-  ptc_root_locals[131] = function(barId)
+  actionbarState[131] = function(barId)
 	if barId >= BAR_BOTTOM_1 and barId <= BAR_BOTTOM_3 then
 		return barId
 	end
@@ -3436,21 +3436,21 @@ end
 	return barId
 end
 
-  ptc_root_locals.actionBarDisplayNumber = function(arg_175_0)
-	return ptc_root_locals[131](arg_175_0)
+  actionbarState.actionBarDisplayNumber = function(arg_175_0)
+	return actionbarState[131](arg_175_0)
 end
 
-  ptc_root_locals.setObjectAssignWindowTitle = function()
+  actionbarState.setObjectAssignWindowTitle = function()
 	if not objectAssignWindow then
 		return
 	end
 
 	local var_176_0 = slotToEdit and findSlotById(slotToEdit) or nil
 	local var_176_1 = var_176_0 and var_176_0.itemId and var_176_0.itemId > 0
-	local var_176_2, var_176_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
+	local var_176_2, var_176_3 = actionbarState.slotBarAndIndexFromSlotId(slotToEdit)
 
 	if var_176_2 and var_176_3 then
-		local var_176_4 = ptc_root_locals.actionBarDisplayNumber(var_176_2)
+		local var_176_4 = actionbarState.actionBarDisplayNumber(var_176_2)
 
 		if var_176_1 then
 			objectAssignWindow:setText(tr("Edit Object to Action Button %d.%02d", var_176_4, var_176_3))
@@ -3462,17 +3462,17 @@ end
 	end
 end
 
-  ptc_root_locals.setTextAssignWindowTitle = function()
+  actionbarState.setTextAssignWindowTitle = function()
 	if not textAssignWindow then
 		return
 	end
 
 	local var_177_0 = slotToEdit and findSlotById(slotToEdit) or nil
 	local var_177_1 = var_177_0 and var_177_0.text and var_177_0.text ~= ""
-	local var_177_2, var_177_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
+	local var_177_2, var_177_3 = actionbarState.slotBarAndIndexFromSlotId(slotToEdit)
 
 	if var_177_2 and var_177_3 then
-		local var_177_4 = ptc_root_locals.actionBarDisplayNumber(var_177_2)
+		local var_177_4 = actionbarState.actionBarDisplayNumber(var_177_2)
 
 		if var_177_1 then
 			textAssignWindow:setText(tr("Edit Text to Action Button %d.%02d", var_177_4, var_177_3))
@@ -3484,17 +3484,17 @@ end
 	end
 end
 
-  ptc_root_locals.setSpellAssignWindowTitle = function()
+  actionbarState.setSpellAssignWindowTitle = function()
 	if not spellAssignWindow then
 		return
 	end
 
 	local var_178_0 = slotToEdit and findSlotById(slotToEdit) or nil
 	local var_178_1 = var_178_0 and var_178_0.words and var_178_0.words ~= ""
-	local var_178_2, var_178_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
+	local var_178_2, var_178_3 = actionbarState.slotBarAndIndexFromSlotId(slotToEdit)
 
 	if var_178_2 and var_178_3 then
-		local var_178_4 = ptc_root_locals.actionBarDisplayNumber(var_178_2)
+		local var_178_4 = actionbarState.actionBarDisplayNumber(var_178_2)
 
 		if var_178_1 then
 			spellAssignWindow:setText(tr("Edit Spell to Action Button %d.%02d", var_178_4, var_178_3))
@@ -3586,7 +3586,7 @@ function getSlotHotkeyForChatMode(slot, chatOn)
 	return hotkeyFieldToString(var_181_0)
 end
 
- ptc_root_locals[136] = {
+ actionbarState[136] = {
 	useAtCursor = "Use this object at Cursor Position",
 	useOnSelf = "Use this object on Yourself",
 	equip = "Equip this object",
@@ -3595,7 +3595,7 @@ end
 	useOnTarget = "Use this object on Target"
 }
 
-  ptc_root_locals[137] = function(ms)
+  actionbarState[137] = function(ms)
 	if type(ms) ~= "number" or ms <= 0 then
 		return "0s"
 	end
@@ -3613,7 +3613,7 @@ end
 	return string.format("%ds", sec)
 end
 
-  ptc_root_locals[138] = function(slot)
+  actionbarState[138] = function(slot)
 	local hk = getSlotHotkeyForChatMode(slot)
 
 	if hk == nil or hk == "" then
@@ -3629,7 +3629,7 @@ end
 	return shown
 end
 
-  ptc_root_locals[139] = function(arg_184_0)
+  actionbarState[139] = function(arg_184_0)
 	if not arg_184_0 then
 		return false
 	end
@@ -3650,7 +3650,7 @@ end
 		return true
 	end
 
-	if ptc_root_locals.isActionSlotEquipmentPreset(arg_184_0) then
+	if actionbarState.isActionSlotEquipmentPreset(arg_184_0) then
 		return true
 	end
 
@@ -3665,21 +3665,21 @@ end
 	return false
 end
 
-  ptc_root_locals[140] = function(arg_185_0)
+  actionbarState[140] = function(arg_185_0)
 	if not arg_185_0 then
 		return ""
 	end
 
-	local var_185_0, var_185_1 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_185_0:getId())
+	local var_185_0, var_185_1 = actionbarState.slotBarAndIndexFromSlotId(arg_185_0:getId())
 	local formattedText = "Action Button"
 
 	if var_185_0 and var_185_1 then
-		formattedText = string.format("Action Button %d.%d", ptc_root_locals.actionBarDisplayNumber(var_185_0), var_185_1)
+		formattedText = string.format("Action Button %d.%d", actionbarState.actionBarDisplayNumber(var_185_0), var_185_1)
 	end
 
-	local var_185_3 = "Hotkeys: " .. ptc_root_locals[138](arg_185_0)
+	local var_185_3 = "Hotkeys: " .. actionbarState[138](arg_185_0)
 
-	if not ptc_root_locals[139](arg_185_0) then
+	if not actionbarState[139](arg_185_0) then
 		return formattedText .. "\n\nAction: None\n" .. var_185_3
 	end
 
@@ -3724,7 +3724,7 @@ end
 		}
 
 		if var_185_11 and var_185_11.exhaustion then
-			table.insert(var_185_15, "Cooldown: " .. ptc_root_locals[137](var_185_11.exhaustion))
+			table.insert(var_185_15, "Cooldown: " .. actionbarState[137](var_185_11.exhaustion))
 		end
 
 		if var_185_11 and var_185_11.mana then
@@ -3740,7 +3740,7 @@ end
 		return formattedText .. "\n\nAction: Say \"" .. arg_185_0.text .. "\"\nAuto sent: " .. (arg_185_0.autoSend and "Yes" or "No") .. "\n" .. var_185_3
 	end
 
-	if ptc_root_locals.isActionSlotEquipmentPreset(arg_185_0) then
+	if actionbarState.isActionSlotEquipmentPreset(arg_185_0) then
 		local equipmentDescription = "Equip equipment set"
 
 		if arg_185_0.equipmentDescription and arg_185_0.equipmentDescription ~= "" then
@@ -3755,12 +3755,12 @@ end
 	end
 
 	if arg_185_0.itemId and arg_185_0.itemId > 0 and arg_185_0.useType then
-		local var_185_17 = ptc_root_locals[136][arg_185_0.useType] or "Use this object"
+		local var_185_17 = actionbarState[136][arg_185_0.useType] or "Use this object"
 		local inventoryCount = 0
 		local localPlayer = g_game.getLocalPlayer()
 
 		if localPlayer then
-			inventoryCount = localPlayer:getInventoryCount(arg_185_0.itemId, ptc_root_locals.actionSlotItemTier(arg_185_0))
+			inventoryCount = localPlayer:getInventoryCount(arg_185_0.itemId, actionbarState.actionSlotItemTier(arg_185_0))
 		end
 
 		return formattedText .. "\n\nAction: " .. var_185_17 .. "\nAmount: " .. tostring(inventoryCount) .. "\n" .. var_185_3
@@ -3780,10 +3780,10 @@ function refreshActionSlotTooltip(slot)
 		return
 	end
 
-	slot:setTooltip(ptc_root_locals[140](slot))
+	slot:setTooltip(actionbarState[140](slot))
 end
 
-  ptc_root_locals[141] = function(slot, combo)
+  actionbarState[141] = function(slot, combo)
 	local key = slot:getChildById("key")
 
 	if key then
@@ -3791,28 +3791,28 @@ end
 	end
 end
 
- ptc_root_locals.syncSlotHotkeyMirror = function(arg_188_0)
-	local var_188_0 = getSlotHotkeyForChatMode(arg_188_0)
+ actionbarState.syncSlotHotkeyMirror = function(arg_188_0)
+	local hotkey = getSlotHotkeyForChatMode(arg_188_0)
 
-	arg_188_0.hotkey = var_188_0
+	arg_188_0.hotkey = hotkey
 
-	ptc_root_locals[141](arg_188_0, var_188_0)
+	actionbarState[141](arg_188_0, hotkey)
 	refreshActionSlotTooltip(arg_188_0)
 end
 
-  ptc_root_locals.refreshAllSlotsHotkeyMirror = function()
+  actionbarState.refreshAllSlotsHotkeyMirror = function()
 	for iter_189_0 = 1, NUM_BARS do
 		local var_189_0 = actionBarPanels[iter_189_0]
 
 		if var_189_0 then
 			for unusedValue, child in pairs(var_189_0:getChildren()) do
-				ptc_root_locals.syncSlotHotkeyMirror(child)
+				actionbarState.syncSlotHotkeyMirror(child)
 			end
 		end
 	end
 end
 
-  ptc_root_locals[143] = function(arg_190_0, arg_190_1)
+  actionbarState[143] = function(arg_190_0, arg_190_1)
 	local var_190_0 = arg_190_0
 
 	if var_190_0 == nil then
@@ -3822,7 +3822,7 @@ end
 	return hotkeyFieldToString(var_190_0)
 end
 
-  ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot = function(arg_191_0, arg_191_1)
+  actionbarState.initDefaultHotkeysFirstBottomBarSlot = function(arg_191_0, arg_191_1)
 	if arg_191_1 >= 1 and arg_191_1 <= 12 then
 		local var_191_0 = "F" .. tostring(arg_191_1)
 
@@ -3833,10 +3833,10 @@ end
 		arg_191_0.hotkeyChatOff = ""
 	end
 
-	ptc_root_locals.syncSlotHotkeyMirror(arg_191_0)
+	actionbarState.syncSlotHotkeyMirror(arg_191_0)
 end
 
-  ptc_root_locals[145] = function(arg_192_0, arg_192_1)
+  actionbarState[145] = function(arg_192_0, arg_192_1)
 	local hotkey = arg_192_1.hotkey
 
 	if arg_192_1.hotkeyChatOn ~= nil or arg_192_1.hotkeyChatOff ~= nil or hotkey ~= nil then
@@ -3858,8 +3858,8 @@ end
 			actionBarCorruptHotkeySeen = true
 		end
 
-		arg_192_0.hotkeyChatOn = ptc_root_locals[143](arg_192_1.hotkeyChatOn, hotkey)
-		arg_192_0.hotkeyChatOff = ptc_root_locals[143](arg_192_1.hotkeyChatOff, hotkey)
+		arg_192_0.hotkeyChatOn = actionbarState[143](arg_192_1.hotkeyChatOn, hotkey)
+		arg_192_0.hotkeyChatOff = actionbarState[143](arg_192_1.hotkeyChatOff, hotkey)
 
 		local var_192_3 = false
 
@@ -3870,25 +3870,25 @@ end
 		end
 
 		if var_192_3 and arg_192_0.hotkeyChatOn == "" and arg_192_0.hotkeyChatOff == "" then
-			local var_192_4, var_192_5 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_192_0:getId())
+			local var_192_4, var_192_5 = actionbarState.slotBarAndIndexFromSlotId(arg_192_0:getId())
 
 			if var_192_4 == BAR_BOTTOM_1 then
-				ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(arg_192_0, var_192_5)
+				actionbarState.initDefaultHotkeysFirstBottomBarSlot(arg_192_0, var_192_5)
 
 				return
 			end
 		end
 	end
 
-	ptc_root_locals.syncSlotHotkeyMirror(arg_192_0)
+	actionbarState.syncSlotHotkeyMirror(arg_192_0)
 end
 
-  ptc_root_locals[146] = function(arg_193_0, arg_193_1)
+  actionbarState[146] = function(arg_193_0, arg_193_1)
 	if not arg_193_0 or not arg_193_1 then
 		return
 	end
 
-	ptc_root_locals[145](arg_193_0, arg_193_1)
+	actionbarState[145](arg_193_0, arg_193_1)
 
 	if arg_193_1.multiActions and not table.empty(arg_193_1.multiActions) and loadSlotMultiActions then
 		loadSlotMultiActions(arg_193_0, arg_193_1.multiActions)
@@ -3918,12 +3918,12 @@ end
 	arg_193_0.passiveId = arg_193_1.passiveId
 	arg_193_0.helperId = type(arg_193_1.helperId) == "string" and arg_193_1.helperId ~= "" and arg_193_1.helperId or nil
 	arg_193_0.multiHelper = HelperAction.normalizeList(arg_193_1.multiHelper)
-	arg_193_0.equipmentIconIndex = type(arg_193_1.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_193_1.equipmentIconIndex) or nil
+	arg_193_0.equipmentIconIndex = type(arg_193_1.equipmentIconIndex) == "number" and actionbarState.normalizeEquipmentIconIndex(arg_193_1.equipmentIconIndex) or nil
 	arg_193_0.equipmentDescription = arg_193_1.equipmentDescription or ""
-	arg_193_0.equipmentTypeIndex = type(arg_193_1.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(arg_193_1.equipmentTypeIndex) or 0
+	arg_193_0.equipmentTypeIndex = type(arg_193_1.equipmentTypeIndex) == "number" and actionbarState.normalizeEquipmentTypeIndex(arg_193_1.equipmentTypeIndex) or 0
 	arg_193_0.smartMode = arg_193_1.smartMode == true and true or nil
 	arg_193_0.smartBaseItemId = type(arg_193_1.smartBaseItemId) == "number" and arg_193_1.smartBaseItemId or nil
-	arg_193_0.equipments = ptc_root_locals.normalizeEquipmentsFromSetting(arg_193_1.equipments)
+	arg_193_0.equipments = actionbarState.normalizeEquipmentsFromSetting(arg_193_1.equipments)
 
 	ItemsDatabase.setTier(arg_193_0, arg_193_0.getTier)
 
@@ -3938,10 +3938,10 @@ end
 	elseif arg_193_0.helperId then
 		loadHelper(arg_193_0)
 	elseif arg_193_0.useType == "equip" then
-		if ptc_root_locals.isEquipmentIconDeterminedOnSlot(arg_193_0) or arg_193_0.equipments ~= nil then
+		if actionbarState.isEquipmentIconDeterminedOnSlot(arg_193_0) or arg_193_0.equipments ~= nil then
 			arg_193_0.equipments = arg_193_0.equipments or {}
 
-			local var_193_1 = ptc_root_locals.equipmentAssignDisplayEntry(arg_193_0.equipments)
+			local var_193_1 = actionbarState.equipmentAssignDisplayEntry(arg_193_0.equipments)
 
 			if var_193_1 then
 				arg_193_0.itemId = var_193_1.itemId
@@ -3973,7 +3973,7 @@ function maybeSetupHotkeysAfterSlotLoad()
 	end
 end
 
-  ptc_root_locals.applyPresetSlotsToActionBar = function(arg_195_0)
+  actionbarState.applyPresetSlotsToActionBar = function(arg_195_0)
 	if not arg_195_0 then
 		return
 	end
@@ -3982,12 +3982,12 @@ end
 		local var_195_0 = findSlotById(key)
 
 		if var_195_0 then
-			ptc_root_locals[146](var_195_0, entry)
+			actionbarState[146](var_195_0, entry)
 		end
 	end
 end
 
-  ptc_root_locals[148] = function(value)
+  actionbarState[148] = function(value)
 	local t = type(value)
 
 	if t == "number" or t == "string" or t == "boolean" then
@@ -3997,7 +3997,7 @@ end
 	return nil
 end
 
-  ptc_root_locals.serializeEquipmentsForJson = function(arg_197_0)
+  actionbarState.serializeEquipmentsForJson = function(arg_197_0)
 	if not arg_197_0 then
 		return nil
 	end
@@ -4005,7 +4005,7 @@ end
 	local var_197_0 = {}
 
 	for key, entry in pairs(arg_197_0) do
-		if type(key) == "number" and entry and entry.itemId and entry.itemId > 0 and not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(key) then
+		if type(key) == "number" and entry and entry.itemId and entry.itemId > 0 and not actionbarState.isEquipmentAssignVisualBackpackSlot(key) then
 			var_197_0[tostring(key)] = {
 				itemId = entry.itemId,
 				getTier = type(entry.getTier) == "number" and entry.getTier or nil,
@@ -4017,7 +4017,7 @@ end
 	return var_197_0
 end
 
- ptc_root_locals.normalizeEquipmentsFromSetting = function(arg_198_0)
+ actionbarState.normalizeEquipmentsFromSetting = function(arg_198_0)
 	if arg_198_0 == nil then
 		return nil
 	end
@@ -4032,7 +4032,7 @@ end
 		if type(entry) == "table" and type(entry.itemId) == "number" and entry.itemId > 0 then
 			local var_198_1 = type(key) == "number" and key or tonumber(key)
 
-			if var_198_1 and not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(var_198_1) then
+			if var_198_1 and not actionbarState.isEquipmentAssignVisualBackpackSlot(var_198_1) then
 				var_198_0[var_198_1] = {
 					itemId = entry.itemId,
 					getTier = type(entry.getTier) == "number" and entry.getTier or nil,
@@ -4045,7 +4045,7 @@ end
 	return var_198_0
 end
 
-  ptc_root_locals[150] = function(arg_199_0)
+  actionbarState[150] = function(arg_199_0)
 	local getTier = arg_199_0.getTier
 
 	if type(getTier) ~= "number" then
@@ -4061,26 +4061,26 @@ end
 		autoSend = arg_199_0.autoSend == true and true or (arg_199_0.autoSend ~= false or true) and nil,
 		itemId = type(arg_199_0.itemId) == "number" and arg_199_0.itemId or nil,
 		subType = type(arg_199_0.subType) == "number" and arg_199_0.subType or nil,
-		useType = ptc_root_locals[148](arg_199_0.useType),
-		text = ptc_root_locals[148](arg_199_0.text),
-		words = ptc_root_locals[148](arg_199_0.words),
-		parameter = ptc_root_locals[148](arg_199_0.parameter),
+		useType = actionbarState[148](arg_199_0.useType),
+		text = actionbarState[148](arg_199_0.text),
+		words = actionbarState[148](arg_199_0.words),
+		parameter = actionbarState[148](arg_199_0.parameter),
 		crossHairMode = type(arg_199_0.crossHairMode) == "string" and arg_199_0.crossHairMode or nil,
 		getTier = getTier,
 		passiveId = type(arg_199_0.passiveId) == "number" and arg_199_0.passiveId or nil,
-		helperId = ptc_root_locals[148](arg_199_0.helperId),
+		helperId = actionbarState[148](arg_199_0.helperId),
 		multiHelper = HelperAction.normalizeList(arg_199_0.multiHelper),
 		multiActions = serializeSlotMultiActions and serializeSlotMultiActions(arg_199_0) or nil,
-		equipments = arg_199_0.equipments ~= nil and ptc_root_locals.serializeEquipmentsForJson(arg_199_0.equipments) or nil,
-		equipmentIconIndex = type(arg_199_0.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_199_0.equipmentIconIndex) or nil,
-		equipmentDescription = ptc_root_locals[148](arg_199_0.equipmentDescription),
-		equipmentTypeIndex = type(arg_199_0.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(arg_199_0.equipmentTypeIndex) or nil,
+		equipments = arg_199_0.equipments ~= nil and actionbarState.serializeEquipmentsForJson(arg_199_0.equipments) or nil,
+		equipmentIconIndex = type(arg_199_0.equipmentIconIndex) == "number" and actionbarState.normalizeEquipmentIconIndex(arg_199_0.equipmentIconIndex) or nil,
+		equipmentDescription = actionbarState[148](arg_199_0.equipmentDescription),
+		equipmentTypeIndex = type(arg_199_0.equipmentTypeIndex) == "number" and actionbarState.normalizeEquipmentTypeIndex(arg_199_0.equipmentTypeIndex) or nil,
 		smartMode = arg_199_0.smartMode == true and true or nil,
 		smartBaseItemId = type(arg_199_0.smartBaseItemId) == "number" and arg_199_0.smartBaseItemId or nil
 	}
 end
 
-  ptc_root_locals.collectCharacterActionBarSlots = function()
+  actionbarState.collectCharacterActionBarSlots = function()
 	local var_200_0 = {}
 
 	for iter_200_0 = 1, NUM_BARS do
@@ -4088,7 +4088,7 @@ end
 
 		if var_200_1 then
 			for unusedValue, child in ipairs(var_200_1:getChildren()) do
-				var_200_0[child:getId()] = ptc_root_locals[150](child)
+				var_200_0[child:getId()] = actionbarState[150](child)
 			end
 		end
 	end
@@ -4096,7 +4096,7 @@ end
 	return var_200_0
 end
 
-  ptc_root_locals.loadActionBarSettingsForCurrentPreset = function()
+  actionbarState.loadActionBarSettingsForCurrentPreset = function()
 	local var_201_0 = getActionBarDefaultPresetName()
 	local var_201_1, var_201_2 = getActionBarSlotsForPreset(var_201_0)
 
@@ -4107,7 +4107,7 @@ function getCurrentSlot()
 	return (findSlotById(slotToEdit))
 end
 
-  ptc_root_locals.updateSideContainerWidths = function()
+  actionbarState.updateSideContainerWidths = function()
 	local leftContainer = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
 	local rightContainer = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
 
@@ -4193,7 +4193,7 @@ end
 	end
 end
 
-  ptc_root_locals[154] = function(arg_205_0)
+  actionbarState[154] = function(arg_205_0)
 	local game_interface = modules.game_interface
 
 	if not game_interface or not game_interface[arg_205_0] then
@@ -4205,12 +4205,12 @@ end
 	return var_205_1 and not var_205_1:isDestroyed() and var_205_1:isVisible() and (tonumber(var_205_1:getWidth()) or 0) > 0
 end
 
-  ptc_root_locals[155] = function(arg_206_0)
-	if ptc_root_locals.isLeftBar(arg_206_0) and ptc_root_locals[154]("getGameLeftStatsBar") then
+  actionbarState[155] = function(arg_206_0)
+	if actionbarState.isLeftBar(arg_206_0) and actionbarState[154]("getGameLeftStatsBar") then
 		return 0
 	end
 
-	if ptc_root_locals.isRightBar(arg_206_0) and ptc_root_locals[154]("getGameRightStatsBar") then
+	if actionbarState.isRightBar(arg_206_0) and actionbarState[154]("getGameRightStatsBar") then
 		return 0
 	end
 
@@ -4244,7 +4244,7 @@ function refreshSideActionBarOffsets()
 			local var_207_1 = barWidgetChild(var_207_0, "prevButton")
 
 			if var_207_1 then
-				var_207_1:setMarginTop(ptc_root_locals[155](iter_207_1))
+				var_207_1:setMarginTop(actionbarState[155](iter_207_1))
 			end
 		end
 	end
@@ -4256,7 +4256,7 @@ function clipSideBarPanelToWholeSlots(arg_208_0)
 	end
 
 	local height = arg_208_0:getHeight()
-	local var_208_1 = math.max(height - height % ptc_root_locals[3], 1)
+	local var_208_1 = math.max(height - height % actionbarState[3], 1)
 	local var_208_2 = math.max(height - var_208_1, 0)
 
 	if arg_208_0:getPaddingBottom() ~= var_208_2 then
@@ -4273,7 +4273,7 @@ function clipSideBarPanelToWholeSlots(arg_208_0)
 	end
 end
 
-  ptc_root_locals[156] = function(barId)
+  actionbarState[156] = function(barId)
 	if barId <= BAR_BOTTOM_1 then
 		return "parent", AnchorTop
 	end
@@ -4289,7 +4289,7 @@ end
 	return "parent", AnchorTop
 end
 
-  ptc_root_locals.applyBottomAnchors = function()
+  actionbarState.applyBottomAnchors = function()
 	for unusedValue, iter_210_1 in ipairs({
 		BAR_BOTTOM_1,
 		BAR_BOTTOM_2,
@@ -4302,27 +4302,27 @@ end
 			var_210_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
 			var_210_0:addAnchor(AnchorRight, "parent", AnchorRight)
 
-			local var_210_1, var_210_2 = ptc_root_locals[156](iter_210_1)
+			local var_210_1, var_210_2 = actionbarState[156](iter_210_1)
 
 			var_210_0:addAnchor(AnchorTop, var_210_1, var_210_2)
 		end
 	end
 
 	layoutBottomLockButton()
-	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
+	actionbarState.anchorGroupCooldownBelowBottomStack()
 end
 
-  ptc_root_locals[158] = function(arg_211_0, arg_211_1)
-	local var_211_0 = ptc_root_locals.isSideBar(arg_211_0) and "ActionSlotV" or "ActionSlot"
-	local var_211_1 = ptc_root_locals[120](arg_211_0)
+  actionbarState[158] = function(_actionBarId, arg_211_1)
+	local var_211_0 = actionbarState.isSideBar(_actionBarId) and "ActionSlotV" or "ActionSlot"
+	local var_211_1 = actionbarState[120](_actionBarId)
 
 	for iter_211_0 = 1, var_211_1 do
-		local sid = slotIdFor(arg_211_0, iter_211_0)
+		local sid = slotIdFor(_actionBarId, iter_211_0)
 		local var_211_3 = g_ui.createWidget(var_211_0, arg_211_1)
 
 		var_211_3:setId(sid)
 
-		var_211_3._actionBarId = arg_211_0
+		var_211_3._actionBarId = _actionBarId
 
 		if initMultiActionSlot then
 			initMultiActionSlot(var_211_3)
@@ -4339,14 +4339,14 @@ end
 		var_211_3.helperId = nil
 		var_211_3.multiHelper = nil
 
-		if arg_211_0 == BAR_BOTTOM_1 then
-			ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(var_211_3, iter_211_0)
+		if _actionBarId == BAR_BOTTOM_1 then
+			actionbarState.initDefaultHotkeysFirstBottomBarSlot(var_211_3, iter_211_0)
 		else
 			var_211_3.hotkeyChatOn = ""
 			var_211_3.hotkeyChatOff = ""
 			var_211_3.hotkey = ""
 
-			ptc_root_locals.syncSlotHotkeyMirror(var_211_3)
+			actionbarState.syncSlotHotkeyMirror(var_211_3)
 		end
 
 		g_mouse.bindPress(var_211_3, function()
@@ -4356,7 +4356,7 @@ end
 			createMenu(sid)
 		end, MouseRightButton)
 
-		if not isActionBarLocked(arg_211_0) then
+		if not isActionBarLocked(_actionBarId) then
 			g_mouse.bindOnDrop(var_211_3, function()
 				local pressedWidget = g_ui.getPressedWidget()
 
@@ -4383,7 +4383,7 @@ end
 		if iter_211_0 == 1 then
 			var_211_3:breakAnchors()
 
-			if ptc_root_locals.isSideBar(arg_211_0) then
+			if actionbarState.isSideBar(_actionBarId) then
 				var_211_3:addAnchor(AnchorTop, "parent", AnchorTop)
 				var_211_3:addAnchor(AnchorLeft, "parent", AnchorLeft)
 				var_211_3:setMarginTop(2)
@@ -4401,7 +4401,7 @@ function actionBarPanelHasExpectedSlots(barId, panel)
 		return false
 	end
 
-	local var_215_0 = ptc_root_locals[120](barId)
+	local var_215_0 = actionbarState[120](barId)
 
 	if #panel:getChildren() ~= var_215_0 then
 		return false
@@ -4422,17 +4422,17 @@ function ensureActionBarPanelSlots(barId, panel)
 	end
 
 	panel:destroyChildren()
-	ptc_root_locals[158](barId, panel)
+	actionbarState[158](barId, panel)
 
 	return true
 end
 
-  ptc_root_locals.loadSavedSlotsForBar = function(arg_217_0)
+  actionbarState.loadSavedSlotsForBar = function(arg_217_0)
 	if not actionBarPanels[arg_217_0] then
 		return
 	end
 
-	local var_217_0 = ptc_root_locals.loadActionBarSettingsForCurrentPreset()
+	local var_217_0 = actionbarState.loadActionBarSettingsForCurrentPreset()
 
 	if not var_217_0 then
 		return
@@ -4442,12 +4442,12 @@ end
 		local childById = actionBarPanels[arg_217_0]:getChildById(key)
 
 		if childById then
-			ptc_root_locals[146](childById, entry)
+			actionbarState[146](childById, entry)
 		end
 	end
 end
 
-  ptc_root_locals.ensureBarLoaded = function(barId)
+  actionbarState.ensureBarLoaded = function(barId)
 	if actionBars[barId] then
 		return actionBars[barId]
 	end
@@ -4459,10 +4459,10 @@ end
 	local var_218_0
 	local bar
 
-	if ptc_root_locals.isSideBar(barId) then
+	if actionbarState.isSideBar(barId) then
 		local var_218_2
 
-		if ptc_root_locals.isLeftBar(barId) then
+		if actionbarState.isLeftBar(barId) then
 			var_218_2 = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
 		else
 			var_218_2 = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
@@ -4484,7 +4484,7 @@ end
 	bar:setId("actionBar" .. barId)
 	bar:setVisible(false)
 
-	if ptc_root_locals.isSideBar(barId) then
+	if actionbarState.isSideBar(barId) then
 		bar:setWidth(0)
 		bar:setImageSource("/images/ui/background")
 		bar:setImageRepeated(true)
@@ -4502,7 +4502,7 @@ end
 		end
 	end
 
-	if ptc_root_locals.isSideBar(barId) then
+	if actionbarState.isSideBar(barId) then
 		local var_218_3 = barWidgetChild(bar, "verticalScroll")
 
 		if var_218_3 then
@@ -4520,15 +4520,15 @@ end
 		end
 	end
 
-	if ptc_root_locals.isBottomBar(barId) then
-		ptc_root_locals.applyBottomAnchors()
+	if actionbarState.isBottomBar(barId) then
+		actionbarState.applyBottomAnchors()
 	end
 
-	if ptc_root_locals.isSideBar(barId) then
-		local var_218_5 = ptc_root_locals[155](barId)
-		local var_218_6 = ptc_root_locals.isRightBar(barId) and 2 or 0
-		local var_218_7 = ptc_root_locals.isRightBar(barId) and 2 or 0
-		local var_218_8 = ptc_root_locals.isLeftBar(barId) and 2 or 0
+	if actionbarState.isSideBar(barId) then
+		local var_218_5 = actionbarState[155](barId)
+		local var_218_6 = actionbarState.isRightBar(barId) and 2 or 0
+		local var_218_7 = actionbarState.isRightBar(barId) and 2 or 0
+		local var_218_8 = actionbarState.isLeftBar(barId) and 2 or 0
 		local var_218_9 = barWidgetChild(bar, "prevButton")
 
 		if var_218_9 then
@@ -4572,9 +4572,9 @@ end
 		end
 	end
 
-	if ptc_root_locals.isLeftBar(barId) then
+	if actionbarState.isLeftBar(barId) then
 		normalizeSideBarChildOrder("left")
-	elseif ptc_root_locals.isRightBar(barId) then
+	elseif actionbarState.isRightBar(barId) then
 		normalizeSideBarChildOrder("right")
 	end
 
@@ -4582,7 +4582,7 @@ end
 		ensureActionBarPanelSlots(barId, actionBarPanels[barId])
 
 		if g_game.isOnline() then
-			ptc_root_locals.loadSavedSlotsForBar(barId)
+			actionbarState.loadSavedSlotsForBar(barId)
 			setupHotkeys()
 		end
 	end
@@ -4705,7 +4705,7 @@ function init()
 	connect(LocalPlayer, {
 		onInventoryChange = scheduleFullSlotGrayRefresh,
 		onInventoryCountChange = scheduleInventorySlotGrayRefresh,
-		onManaChange = ptc_root_locals.onLocalPlayerManaChange,
+		onManaChange = actionbarState.onLocalPlayerManaChange,
 		onLevelChange = scheduleFullSlotGrayRefresh
 	})
 	connect(Container, {
@@ -4792,10 +4792,10 @@ function terminate()
 		bottomLockPressDeferredEvent = nil
 	end
 
-	if ptc_root_locals.slotGrayRefreshEvent then
-		removeEvent(ptc_root_locals.slotGrayRefreshEvent)
+	if actionbarState.slotGrayRefreshEvent then
+		removeEvent(actionbarState.slotGrayRefreshEvent)
 
-		ptc_root_locals.slotGrayRefreshEvent = nil
+		actionbarState.slotGrayRefreshEvent = nil
 	end
 
 	slotGrayFullRefreshPending = false
@@ -4805,7 +4805,7 @@ function terminate()
 	disconnect(LocalPlayer, {
 		onInventoryChange = scheduleFullSlotGrayRefresh,
 		onInventoryCountChange = scheduleInventorySlotGrayRefresh,
-		onManaChange = ptc_root_locals.onLocalPlayerManaChange,
+		onManaChange = actionbarState.onLocalPlayerManaChange,
 		onLevelChange = scheduleFullSlotGrayRefresh
 	})
 	disconnect(Container, {
@@ -4877,7 +4877,7 @@ end
 
 function online()
 	invalidateActionBarSettingsCache()
-	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
+	actionbarState.anchorGroupCooldownBelowBottomStack()
 
 	slotToEdit = nil
 	slotReassign = nil
@@ -4926,8 +4926,8 @@ function offline()
 	end
 
 	virtuesYellowBorderSpellIds = {}
-	ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
-	ptc_root_locals.managedVirtueYellowBorderSelection = {}
+	actionbarState.managedVirtueYellowBorderSpellIds = {}
+	actionbarState.managedVirtueYellowBorderSelection = {}
 
 	if not g_settings or not g_settings.getBoolean("cip_import_skip_session_save") then
 		saveActionBar()
@@ -4937,7 +4937,7 @@ function offline()
 	invalidateActionBarSettingsCache()
 end
 
- ptc_root_locals.DRAG_PREVIEW_CHILD_IDS = {
+ actionbarState.DRAG_PREVIEW_CHILD_IDS = {
 	"count",
 	"tier",
 	"spellIcon",
@@ -4950,7 +4950,7 @@ end
 	"activeSpell"
 }
 
-  ptc_root_locals.copyDragPreviewChild = function(srcChild, dstChild)
+  actionbarState.copyDragPreviewChild = function(srcChild, dstChild)
 	if not srcChild or not dstChild then
 		return
 	end
@@ -5013,8 +5013,8 @@ function applyDragPreviewFromSlot(sourceSlot, previewSlot)
 
 	local sourceImage = sourceSlot:getImageSource()
 
-	if sourceSlot._actionBarFilledFrame or sourceImage == ptc_root_locals.SLOT_IMG_FILLED then
-		previewSlot:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
+	if sourceSlot._actionBarFilledFrame or sourceImage == actionbarState.SLOT_IMG_FILLED then
+		previewSlot:setImageClip(actionbarState.SLOT_CLIP_FILLED_NORMAL)
 	else
 		local frameClip = sourceSlot:getImageClip()
 
@@ -5031,8 +5031,8 @@ function applyDragPreviewFromSlot(sourceSlot, previewSlot)
 		previewSlot:setItem(nil)
 	end
 
-	for _, id in ipairs(ptc_root_locals.DRAG_PREVIEW_CHILD_IDS) do
-		ptc_root_locals.copyDragPreviewChild(sourceSlot:getChildById(id), previewSlot:getChildById(id))
+	for _, id in ipairs(actionbarState.DRAG_PREVIEW_CHILD_IDS) do
+		actionbarState.copyDragPreviewChild(sourceSlot:getChildById(id), previewSlot:getChildById(id))
 	end
 
 	previewSlot.words = sourceSlot.words
@@ -5095,12 +5095,12 @@ function hideSourceSlotForDrag(sourceSlot)
 	overlay:setDraggable(false)
 	overlay:setSize(sourceSlot:getSize())
 	overlay:setPosition(sourceSlot:getPosition())
-	overlay:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
+	overlay:setImageSource(actionbarState.SLOT_IMG_EMPTY)
 	overlay:setImageSize({
 		width = 34,
 		height = 34
 	})
-	overlay:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
+	overlay:setImageClip(actionbarState.SLOT_CLIP_EMPTY)
 	overlay:setBackgroundColor("#1a1a1aff")
 	overlay:setBorderWidth(1)
 	overlay:setBorderColor("#ffffff")
@@ -5159,7 +5159,7 @@ function clearDragPreviewSlot(previewSlot)
 
 	previewSlot:setItem(nil)
 
-	for _, id in ipairs(ptc_root_locals.DRAG_PREVIEW_CHILD_IDS) do
+	for _, id in ipairs(actionbarState.DRAG_PREVIEW_CHILD_IDS) do
 		local child = previewSlot:getChildById(id)
 
 		if child and not child:isDestroyed() then
@@ -5190,7 +5190,7 @@ function clearDragPreviewSlot(previewSlot)
 	previewSlot.multiActions = nil
 end
 
-  ptc_root_locals.clearCopiedSlotMultiActions = function(slot)
+  actionbarState.clearCopiedSlotMultiActions = function(slot)
 	if detachMultiActionFromSlot then
 		detachMultiActionFromSlot(slot)
 
@@ -5206,7 +5206,7 @@ end
 	end
 end
 
-  ptc_root_locals.copySlotMultiActions = function(arg_241_0, arg_241_1)
+  actionbarState.copySlotMultiActions = function(arg_241_0, arg_241_1)
 	if not arg_241_1 then
 		return
 	end
@@ -5221,15 +5221,15 @@ end
 		end
 	end
 
-	ptc_root_locals.clearCopiedSlotMultiActions(arg_241_1)
+	actionbarState.clearCopiedSlotMultiActions(arg_241_1)
 end
 
-  ptc_root_locals.copySlotEquipmentPreset = function(fromSlot, toSlot)
+  actionbarState.copySlotEquipmentPreset = function(fromSlot, toSlot)
 	if not toSlot then
 		return
 	end
 
-	if not ptc_root_locals.isActionSlotEquipmentPreset(fromSlot) then
+	if not actionbarState.isActionSlotEquipmentPreset(fromSlot) then
 		toSlot.equipments = nil
 		toSlot.equipmentIconIndex = nil
 		toSlot.equipmentDescription = nil
@@ -5238,8 +5238,8 @@ end
 		return
 	end
 
-	if ptc_root_locals.serializeEquipmentsForJson and ptc_root_locals.normalizeEquipmentsFromSetting then
-		toSlot.equipments = ptc_root_locals.normalizeEquipmentsFromSetting(ptc_root_locals.serializeEquipmentsForJson(fromSlot.equipments))
+	if actionbarState.serializeEquipmentsForJson and actionbarState.normalizeEquipmentsFromSetting then
+		toSlot.equipments = actionbarState.normalizeEquipmentsFromSetting(actionbarState.serializeEquipmentsForJson(fromSlot.equipments))
 	else
 		toSlot.equipments = nil
 	end
@@ -5248,9 +5248,9 @@ end
 		toSlot.equipments = {}
 	end
 
-	toSlot.equipmentIconIndex = type(fromSlot.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(fromSlot.equipmentIconIndex) or nil
+	toSlot.equipmentIconIndex = type(fromSlot.equipmentIconIndex) == "number" and actionbarState.normalizeEquipmentIconIndex(fromSlot.equipmentIconIndex) or nil
 	toSlot.equipmentDescription = fromSlot.equipmentDescription or ""
-	toSlot.equipmentTypeIndex = type(fromSlot.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(fromSlot.equipmentTypeIndex) or 0
+	toSlot.equipmentTypeIndex = type(fromSlot.equipmentTypeIndex) == "number" and actionbarState.normalizeEquipmentTypeIndex(fromSlot.equipmentTypeIndex) or 0
 end
 
 function copySlot(fromSlotId, toSlotId, visible)
@@ -5272,7 +5272,7 @@ function copySlot(fromSlotId, toSlotId, visible)
 
 	if not tmpslot then
 		local panel = actionBarPanels[fromBar]
-		local template = ptc_root_locals.isSideBar(fromBar) and "ActionSlotV" or "ActionSlot"
+		local template = actionbarState.isSideBar(fromBar) and "ActionSlotV" or "ActionSlot"
 
 		tmpslot = g_ui.createWidget(template, panel)
 
@@ -5310,7 +5310,7 @@ function copySlot(fromSlotId, toSlotId, visible)
 	tmpslot.smartMode = fromSlot.smartMode
 	tmpslot.smartBaseItemId = fromSlot.smartBaseItemId
 
-	ptc_root_locals.copySlotEquipmentPreset(fromSlot, tmpslot)
+	actionbarState.copySlotEquipmentPreset(fromSlot, tmpslot)
 
 	if destAlreadyExisted then
 		tmpslot.hotkeyChatOn = savedHotkeyOn
@@ -5320,7 +5320,7 @@ function copySlot(fromSlotId, toSlotId, visible)
 		tmpslot.hotkeyChatOff = fromSlot.hotkeyChatOff or ""
 	end
 
-	ptc_root_locals.syncSlotHotkeyMirror(tmpslot)
+	actionbarState.syncSlotHotkeyMirror(tmpslot)
 	tmpslot:getChildById("text"):setText(fromSlot:getChildById("text"):getText())
 	tmpslot:setTooltip(fromSlot:getTooltip())
 
@@ -5355,9 +5355,9 @@ function copySlot(fromSlotId, toSlotId, visible)
 		loadHelper(tmpslot)
 	end
 
-	ptc_root_locals.copySlotMultiActions(fromSlot, tmpslot)
+	actionbarState.copySlotMultiActions(fromSlot, tmpslot)
 
-	if ptc_root_locals.isActionSlotEquipmentPreset(tmpslot) then
+	if actionbarState.isActionSlotEquipmentPreset(tmpslot) then
 		loadEquipmentSetDisplay(tmpslot)
 	end
 
@@ -5379,7 +5379,7 @@ function onDropFunc(slotId)
 		local toSlot = findSlotById(toSlotId)
 
 		if fromSlot and toSlot then
-			local tmpslotid = "slot" .. ptc_root_locals.maxSlots + 1
+			local tmpslotid = "slot" .. actionbarState.maxSlots + 1
 
 			copySlot(fromSlotId, tmpslotid, false)
 			copySlot(toSlotId, fromSlotId, true)
@@ -5453,7 +5453,7 @@ function setupActionBar()
 	end
 end
 
-  ptc_root_locals.assignOrEditMenuLabel = function(assignLabel, editLabel, hasAssigned)
+  actionbarState.assignOrEditMenuLabel = function(assignLabel, editLabel, hasAssigned)
 	return hasAssigned and editLabel or assignLabel
 end
 
@@ -5466,7 +5466,7 @@ function createMenu(slotId)
 
 	local slotForMenu = findSlotById(slotId)
 	local slotHasSpell = slotForMenu and slotForMenu.words and slotForMenu.words ~= ""
-	local slotIsEquipPreset = slotForMenu and ptc_root_locals.isActionSlotEquipmentPreset(slotForMenu)
+	local slotIsEquipPreset = slotForMenu and actionbarState.isActionSlotEquipmentPreset(slotForMenu)
 	local slotHasObject = slotForMenu and not slotIsEquipPreset and slotForMenu.useType and slotForMenu.itemId and slotForMenu.itemId > 0
 	local slotHasText = slotForMenu and slotForMenu.text and slotForMenu.text ~= ""
 	local slotHasPassive = slotForMenu and slotForMenu.passiveId ~= nil
@@ -5476,20 +5476,20 @@ function createMenu(slotId)
 	local slotHasMulti = slotForMenu and slotHasMultiActions and slotHasMultiActions(slotForMenu)
 	local slotMultiPanelOpen = slotForMenu and slotForMenu._multiPanelOpen
 	local spellMenuLabel = slotForMenu and slotForMenu._multiHelperPanelOpen
-	local var_247_13 = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Spell", "Edit Spell", slotHasSpell) or "Assign Spell"
-	local objectMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Object", "Edit Object", slotHasObject) or "Assign Object"
-	local textMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Text", "Edit Text", slotHasText) or "Assign Text"
-	local passiveMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Passive Ability", "Edit Passive Ability", slotHasPassive) or "Assign Passive Ability"
-	local hotkeyMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Helper", "Edit Helper", slotHasHotkey) or "Assign Helper"
+	local var_247_13 = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Spell", "Edit Spell", slotHasSpell) or "Assign Spell"
+	local objectMenuLabel = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Object", "Edit Object", slotHasObject) or "Assign Object"
+	local textMenuLabel = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Text", "Edit Text", slotHasText) or "Assign Text"
+	local passiveMenuLabel = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Passive Ability", "Edit Passive Ability", slotHasPassive) or "Assign Passive Ability"
+	local hotkeyMenuLabel = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Helper", "Edit Helper", slotHasHotkey) or "Assign Helper"
 	local var_247_18
 
 	if spellMenuLabel then
 		var_247_18 = tr("Close Multi-Helper")
 	else
-		var_247_18 = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Multi-Helper", "Edit Multi-Helper", var_247_8) or "Assign Multi-Helper"
+		var_247_18 = not slotHasMulti and actionbarState.assignOrEditMenuLabel("Assign Multi-Helper", "Edit Multi-Helper", var_247_8) or "Assign Multi-Helper"
 	end
 
-	local var_247_19 = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Hotkey"), tr("Edit Hotkey"), var_247_9)
+	local var_247_19 = actionbarState.assignOrEditMenuLabel(tr("Assign Hotkey"), tr("Edit Hotkey"), var_247_9)
 
 	menu:addOption(var_247_13, function()
 		openSpellAssignWindow()
@@ -5506,7 +5506,7 @@ function createMenu(slotId)
 
 				local item = slot.subType and Item.create(slot.itemId, slot.subType) or Item.create(slot.itemId)
 
-				populateObjectAssignWindowFromItem(item, slot.useType, ptc_root_locals.actionSlotItemTier(slot), {
+				populateObjectAssignWindowFromItem(item, slot.useType, actionbarState.actionSlotItemTier(slot), {
 					smartMode = slot.smartMode,
 					smartBaseItemId = slot.smartBaseItemId
 				})
@@ -5545,7 +5545,7 @@ function createMenu(slotId)
 	if slotMultiPanelOpen then
 		multiMenuLabel = tr("Close Multi-Action")
 	else
-		multiMenuLabel = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Multi-Action"), tr("Edit Multi-Action"), slotHasMulti)
+		multiMenuLabel = actionbarState.assignOrEditMenuLabel(tr("Assign Multi-Action"), tr("Edit Multi-Action"), slotHasMulti)
 	end
 
 	if not var_247_20 or slotMultiPanelOpen then
@@ -5563,7 +5563,7 @@ function createMenu(slotId)
 	if slotHasMulti then
 		equipmentMenuLabel = tr("Assign Equipments")
 	else
-		equipmentMenuLabel = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Equipments"), tr("Edit Equipments"), slotIsEquipPreset)
+		equipmentMenuLabel = actionbarState.assignOrEditMenuLabel(tr("Assign Equipments"), tr("Edit Equipments"), slotIsEquipPreset)
 	end
 
 	menu:addOption(equipmentMenuLabel, function()
@@ -5574,7 +5574,7 @@ function createMenu(slotId)
 	end)
 
 	local actionSlot = findSlotById(slotToEdit)
-	local slotHasEquipPreset = actionSlot and ptc_root_locals.isActionSlotEquipmentPreset(actionSlot)
+	local slotHasEquipPreset = actionSlot and actionbarState.isActionSlotEquipmentPreset(actionSlot)
 
 	if actionSlot and (actionSlot.itemId or actionSlot.words or actionSlot.text or actionSlot.useType or var_247_9 or actionSlot.passiveId or actionSlot.helperId or var_247_8 or slotHasMulti or slotHasEquipPreset) then
 		menu:addSeparator()
@@ -5614,7 +5614,7 @@ CastMode = {
 	}
 }
 
-  ptc_root_locals.normalizeCrossHairMode = function(mode)
+  actionbarState.normalizeCrossHairMode = function(mode)
 	if type(mode) == "string" and CastMode.validModes[mode] then
 		return mode
 	end
@@ -5645,7 +5645,7 @@ function CastMode.setSelection(mode)
 		return
 	end
 
-	local selectedRadioId = CastMode.toRadio[ptc_root_locals.normalizeCrossHairMode(mode)] or CastMode.toRadio.crosshair
+	local selectedRadioId = CastMode.toRadio[actionbarState.normalizeCrossHairMode(mode)] or CastMode.toRadio.crosshair
 
 	CastMode._radioUpdating = true
 
@@ -5671,7 +5671,7 @@ function CastMode.getSelected()
 		local radio = panel:getChildById(radioId)
 
 		if radio and not radio:isDestroyed() and radio:isChecked() then
-			return ptc_root_locals.normalizeCrossHairMode(CastMode.byRadio[radioId])
+			return actionbarState.normalizeCrossHairMode(CastMode.byRadio[radioId])
 		end
 	end
 
@@ -5755,7 +5755,7 @@ function openSpellAssignWindow()
 
 	spellAssignWindow = g_ui.loadUI(uiFile, g_ui.getRootWidget())
 
-	ptc_root_locals.setSpellAssignWindowTitle()
+	actionbarState.setSpellAssignWindowTitle()
 
 	spellsPanel = spellAssignWindow:recursiveGetChildById("spellsPanel")
 	CastMode._spellsListBaseHeight = nil
@@ -5770,7 +5770,7 @@ function openSpellAssignWindow()
 	spellAssignWindow:raise()
 	spellAssignWindow:focus()
 
-	if not ptc_root_locals.spellAssignFocusParameterOnOpen then
+	if not actionbarState.spellAssignFocusParameterOnOpen then
 		spellAssignWindow:recursiveGetChildById("filterTextEdit"):focus()
 	end
 
@@ -5792,17 +5792,17 @@ function openSpellAssignWindowForDraggedSpell(slotId, words, multiIndex)
 	slotToEdit = slotId
 	multiActionEditIndex = multiIndex or nil
 	spellAssignPreferredSpellOverride = Spells.getSpellNameByWords(normalizedWords)
-	ptc_root_locals.spellAssignFocusParameterOnOpen = true
+	actionbarState.spellAssignFocusParameterOnOpen = true
 
 	openSpellAssignWindow()
 end
 
 function closeSpellAssignWindow()
 	spellAssignPreferredSpellOverride = nil
-	ptc_root_locals.spellAssignFocusParameterOnOpen = false
+	actionbarState.spellAssignFocusParameterOnOpen = false
 	multiActionEditIndex = nil
 
-	ptc_root_locals.clearExternalSpellAssignContext()
+	actionbarState.clearExternalSpellAssignContext()
 
 	CastMode._spellsListBaseHeight = nil
 	CastMode._previewSpellKey = nil
@@ -5815,7 +5815,7 @@ function closeSpellAssignWindow()
 	spellsPanel = nil
 end
 
-  ptc_root_locals.getSpellAssignPreferredSpellName = function()
+  actionbarState.getSpellAssignPreferredSpellName = function()
 	if spellAssignPreferredSpellOverride then
 		return spellAssignPreferredSpellOverride
 	end
@@ -5829,7 +5829,7 @@ end
 	return Spells.getSpellNameByWords(slot.words:lower():trim())
 end
 
-  ptc_root_locals.syncSpellAssignParameterFieldFromSlot = function(focusedChild)
+  actionbarState.syncSpellAssignParameterFieldFromSlot = function(focusedChild)
 	if not spellAssignWindow or not focusedChild then
 		return
 	end
@@ -5840,7 +5840,7 @@ end
 		return
 	end
 
-	local preferred = ptc_root_locals.getSpellAssignPreferredSpellName()
+	local preferred = actionbarState.getSpellAssignPreferredSpellName()
 	local slot = slotToEdit and findSlotById(slotToEdit)
 
 	if preferred and focusedChild:getId() == preferred and slot then
@@ -5850,12 +5850,12 @@ end
 	end
 end
 
-  ptc_root_locals.pickSpellAssignListFocusWidget = function()
+  actionbarState.pickSpellAssignListFocusWidget = function()
 	if not spellsPanel then
 		return nil
 	end
 
-	local preferredName = ptc_root_locals.getSpellAssignPreferredSpellName()
+	local preferredName = actionbarState.getSpellAssignPreferredSpellName()
 
 	if preferredName then
 		for _, child in ipairs(spellsPanel:getChildren()) do
@@ -5950,7 +5950,7 @@ function initializeSpelllist()
 				local spellIconGray = tmpLabel:getChildById("spellIconGray")
 
 				if spellIconGray then
-					spellIconGray:setVisible(not ptc_root_locals.spellPassesAssignLearntFilter(info))
+					spellIconGray:setVisible(not actionbarState.spellPassesAssignLearntFilter(info))
 				end
 
 				connect(tmpLabel, {
@@ -5978,7 +5978,7 @@ function initializeSpelllist()
 			end
 
 			updatePreviewSpell(focusedChild)
-			ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focusedChild)
+			actionbarState.syncSpellAssignParameterFieldFromSlot(focusedChild)
 		end
 	})
 
@@ -5996,7 +5996,7 @@ function initializeSpelllist()
 
 	filterSpells("")
 
-	local toFocus = ptc_root_locals.pickSpellAssignListFocusWidget()
+	local toFocus = actionbarState.pickSpellAssignListFocusWidget()
 
 	if toFocus then
 		spellsPanel:focusChild(toFocus, KeyboardFocusReason)
@@ -6015,8 +6015,8 @@ function initializeSpelllist()
 		end
 	end
 
-	if ptc_root_locals.spellAssignFocusParameterOnOpen then
-		ptc_root_locals.spellAssignFocusParameterOnOpen = false
+	if actionbarState.spellAssignFocusParameterOnOpen then
+		actionbarState.spellAssignFocusParameterOnOpen = false
 		spellAssignPreferredSpellOverride = nil
 
 		local paramEdit = spellAssignWindow:getChildById("parameterTextEdit")
@@ -6033,7 +6033,7 @@ function initializeSpelllist()
 	end
 end
 
-  ptc_root_locals.updateSpellAssignParameterField = function(spell)
+  actionbarState.updateSpellAssignParameterField = function(spell)
 	if not spellAssignWindow then
 		return
 	end
@@ -6078,7 +6078,7 @@ end
 			CastMode._previewSpellKey = spellKey
 
 			local slot = slotToEdit and findSlotById(slotToEdit) or nil
-			local savedMode = ptc_root_locals.normalizeCrossHairMode(slot and slot.crossHairMode or "crosshair")
+			local savedMode = actionbarState.normalizeCrossHairMode(slot and slot.crossHairMode or "crosshair")
 
 			CastMode.setSelection(savedMode)
 		end
@@ -6136,7 +6136,7 @@ function spellAssignPreviewNoSpellSelected()
 		previewItemIcon:setVisible(false)
 	end
 
-	ptc_root_locals.updateSpellAssignParameterField(nil)
+	actionbarState.updateSpellAssignParameterField(nil)
 end
 
 function updatePreviewSpell(focusedChild)
@@ -6179,7 +6179,7 @@ function updatePreviewSpell(focusedChild)
 		local previewGray = previewPanel:getChildById("previewSpellGray")
 
 		if previewGray then
-			previewGray:setVisible(spell ~= nil and not ptc_root_locals.spellPassesAssignLearntFilter(spell))
+			previewGray:setVisible(spell ~= nil and not actionbarState.spellPassesAssignLearntFilter(spell))
 		end
 
 		local previewItemBg = previewPanel:getChildById("previewItemBackground")
@@ -6195,7 +6195,7 @@ function updatePreviewSpell(focusedChild)
 		end
 	end
 
-	ptc_root_locals.updateSpellAssignParameterField(spell)
+	actionbarState.updateSpellAssignParameterField(spell)
 end
 
 function spellAssignApply(closeAfter)
@@ -6258,7 +6258,7 @@ function spellAssignApply(closeAfter)
 	end
 
 	if Spells.hasCrossHairTarget(spell) then
-		slot.crossHairMode = ptc_root_locals.normalizeCrossHairMode(CastMode.getSelected())
+		slot.crossHairMode = actionbarState.normalizeCrossHairMode(CastMode.getSelected())
 	else
 		slot.crossHairMode = nil
 	end
@@ -6422,7 +6422,7 @@ function clearSlotById(slotId)
 	slot.hotkeyChatOn = ""
 	slot.hotkeyChatOff = ""
 
-	ptc_root_locals.syncSlotHotkeyMirror(slot)
+	actionbarState.syncSlotHotkeyMirror(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
 end
@@ -6437,7 +6437,7 @@ function clearHotkey()
 	slot.hotkeyChatOn = ""
 	slot.hotkeyChatOff = ""
 
-	ptc_root_locals.syncSlotHotkeyMirror(slot)
+	actionbarState.syncSlotHotkeyMirror(slot)
 	setupHotkeys()
 	saveActionBar()
 end
@@ -6465,11 +6465,11 @@ function openEquipmentAssignWindow()
 
 	local actionSlot = findSlotById(slotToEdit)
 
-	ptc_root_locals.copyEquipmentAssignDraft(actionSlot and actionSlot.equipments or nil)
-	ptc_root_locals.copyEquipmentAssignMetaFromSlot(actionSlot)
-	ptc_root_locals.refreshAllEquipmentAssignSlots()
-	ptc_root_locals.setupEquipmentAssignSlotHandlers()
-	ptc_root_locals.refreshAssignActionSlotPreview()
+	actionbarState.copyEquipmentAssignDraft(actionSlot and actionSlot.equipments or nil)
+	actionbarState.copyEquipmentAssignMetaFromSlot(actionSlot)
+	actionbarState.refreshAllEquipmentAssignSlots()
+	actionbarState.setupEquipmentAssignSlotHandlers()
+	actionbarState.refreshAssignActionSlotPreview()
 	equipmentAssignUpdateButtons()
 end
 
@@ -6482,17 +6482,17 @@ function openEquipmentAssignIconWindow()
 		closeEquipmentAssignIconWindow(false)
 	end
 
-	ptc_root_locals.equipmentAssignIconPickerRevertIndex = ptc_root_locals.equipmentAssignIconIndex
-	ptc_root_locals.equipmentAssignIconPickerRevertDescription = ptc_root_locals.equipmentAssignDescription
-	ptc_root_locals.equipmentAssignTypePickerRevertIndex = ptc_root_locals.equipmentAssignTypeIndex
+	actionbarState.equipmentAssignIconPickerRevertIndex = actionbarState.equipmentAssignIconIndex
+	actionbarState.equipmentAssignIconPickerRevertDescription = actionbarState.equipmentAssignDescription
+	actionbarState.equipmentAssignTypePickerRevertIndex = actionbarState.equipmentAssignTypeIndex
 
 	equipmentAssignWindow:hide()
 
-	ptc_root_locals.equipmentAssignHiddenForIconPicker = true
+	actionbarState.equipmentAssignHiddenForIconPicker = true
 	equipmentAssignIconWindow = g_ui.loadUI("assign_equipment_icon", g_ui.getRootWidget())
 
 	if not equipmentAssignIconWindow then
-		ptc_root_locals.equipmentAssignHiddenForIconPicker = false
+		actionbarState.equipmentAssignHiddenForIconPicker = false
 
 		equipmentAssignWindow:show()
 
@@ -6507,11 +6507,11 @@ function openEquipmentAssignIconWindow()
 	local edit = equipmentAssignIconWindow:recursiveGetChildById("descriptionTextEdit")
 
 	if edit then
-		edit:setText(ptc_root_locals.equipmentAssignDescription or "")
+		edit:setText(actionbarState.equipmentAssignDescription or "")
 	end
 
-	ptc_root_locals.setupEquipmentAssignIconPicker()
-	ptc_root_locals.setupEquipmentAssignTypePicker()
+	actionbarState.setupEquipmentAssignIconPicker()
+	actionbarState.setupEquipmentAssignTypePicker()
 end
 
 function closeEquipmentAssignIconWindow(revert)
@@ -6520,21 +6520,21 @@ function closeEquipmentAssignIconWindow(revert)
 	end
 
 	if revert then
-		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.equipmentAssignIconPickerRevertIndex
-		ptc_root_locals.equipmentAssignDescription = ptc_root_locals.equipmentAssignIconPickerRevertDescription
-		ptc_root_locals.equipmentAssignTypeIndex = ptc_root_locals.equipmentAssignTypePickerRevertIndex
+		actionbarState.equipmentAssignIconIndex = actionbarState.equipmentAssignIconPickerRevertIndex
+		actionbarState.equipmentAssignDescription = actionbarState.equipmentAssignIconPickerRevertDescription
+		actionbarState.equipmentAssignTypeIndex = actionbarState.equipmentAssignTypePickerRevertIndex
 
-		ptc_root_locals.refreshAssignActionSlotPreview()
+		actionbarState.refreshAssignActionSlotPreview()
 		equipmentAssignUpdateButtons()
 	end
 
-	ptc_root_locals.destroyEquipmentAssignTypeRadioGroup()
+	actionbarState.destroyEquipmentAssignTypeRadioGroup()
 	equipmentAssignIconWindow:destroy()
 
 	equipmentAssignIconWindow = nil
 
-	if ptc_root_locals.equipmentAssignHiddenForIconPicker then
-		ptc_root_locals.equipmentAssignHiddenForIconPicker = false
+	if actionbarState.equipmentAssignHiddenForIconPicker then
+		actionbarState.equipmentAssignHiddenForIconPicker = false
 
 		if equipmentAssignWindow and not equipmentAssignWindow:isDestroyed() then
 			equipmentAssignWindow:show()
@@ -6549,7 +6549,7 @@ function equipmentAssignIconApply()
 		return
 	end
 
-	ptc_root_locals.commitEquipmentAssignIconPicker()
+	actionbarState.commitEquipmentAssignIconPicker()
 end
 
 function equipmentAssignIconOk()
@@ -6564,8 +6564,8 @@ function closeEquipmentAssignWindow()
 
 	closeEquipmentAssignIconWindow(false)
 
-	if ptc_root_locals.equipmentAssignPickInvSlot ~= nil then
-		ptc_root_locals.equipmentAssignPickInvSlot = nil
+	if actionbarState.equipmentAssignPickInvSlot ~= nil then
+		actionbarState.equipmentAssignPickInvSlot = nil
 
 		if mouseGrabberWidget and not mouseGrabberWidget:isDestroyed() then
 			mouseGrabberWidget:ungrabMouse()
@@ -6574,13 +6574,13 @@ function closeEquipmentAssignWindow()
 		g_mouse.popCursor("target")
 	end
 
-	ptc_root_locals.equipmentAssignHiddenForPick = false
-	ptc_root_locals.equipmentAssignHiddenForIconPicker = false
+	actionbarState.equipmentAssignHiddenForPick = false
+	actionbarState.equipmentAssignHiddenForIconPicker = false
 
 	equipmentAssignWindow:destroy()
 
 	equipmentAssignWindow = nil
-	ptc_root_locals.equipmentAssignDraft = nil
+	actionbarState.equipmentAssignDraft = nil
 end
 
 function equipmentAssignApply()
@@ -6602,7 +6602,7 @@ function applyEquipmentAssign(closeAfter)
 		return
 	end
 
-	if not ptc_root_locals.isEquipmentAssignIconDetermined() then
+	if not actionbarState.isEquipmentAssignIconDetermined() then
 		return
 	end
 
@@ -6629,8 +6629,8 @@ function applyEquipmentAssign(closeAfter)
 	slot.parameter = nil
 	slot.equipments = {}
 
-	for invSlot, entry in pairs(ptc_root_locals.equipmentAssignDraft or {}) do
-		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
+	for invSlot, entry in pairs(actionbarState.equipmentAssignDraft or {}) do
+		if not actionbarState.isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
 			slot.equipments[invSlot] = {
 				itemId = entry.itemId,
 				getTier = entry.getTier,
@@ -6641,7 +6641,7 @@ function applyEquipmentAssign(closeAfter)
 
 	slot.useType = "equip"
 
-	local display = ptc_root_locals.equipmentAssignDisplayEntry(ptc_root_locals.equipmentAssignDraft)
+	local display = actionbarState.equipmentAssignDisplayEntry(actionbarState.equipmentAssignDraft)
 
 	if display then
 		slot.itemId = display.itemId
@@ -6653,9 +6653,9 @@ function applyEquipmentAssign(closeAfter)
 		slot.subType = nil
 	end
 
-	slot.equipmentIconIndex = ptc_root_locals.normalizeEquipmentIconIndex(ptc_root_locals.equipmentAssignIconIndex)
-	slot.equipmentDescription = ptc_root_locals.equipmentAssignDescription or ""
-	slot.equipmentTypeIndex = ptc_root_locals.normalizeEquipmentTypeIndex(ptc_root_locals.equipmentAssignTypeIndex)
+	slot.equipmentIconIndex = actionbarState.normalizeEquipmentIconIndex(actionbarState.equipmentAssignIconIndex)
+	slot.equipmentDescription = actionbarState.equipmentAssignDescription or ""
+	slot.equipmentTypeIndex = actionbarState.normalizeEquipmentTypeIndex(actionbarState.equipmentAssignTypeIndex)
 
 	loadEquipmentSetDisplay(slot)
 	setupHotkeys()
@@ -6701,7 +6701,7 @@ function openTextAssignWindow()
 		end
 	end
 
-	ptc_root_locals.setTextAssignWindowTitle()
+	actionbarState.setTextAssignWindowTitle()
 	textAssignWindow:raise()
 	textAssignWindow:focus()
 
@@ -6749,10 +6749,10 @@ function assignPassive(slotId)
 
 	local slotForTitle = findSlotById(slotId)
 	local isEditPassive = slotForTitle and slotForTitle.passiveId ~= nil
-	local barId, slotIdx = ptc_root_locals.slotBarAndIndexFromSlotId(slotId)
+	local barId, slotIdx = actionbarState.slotBarAndIndexFromSlotId(slotId)
 
 	if barId and slotIdx then
-		local barNum = ptc_root_locals.actionBarDisplayNumber(barId)
+		local barNum = actionbarState.actionBarDisplayNumber(barId)
 
 		if isEditPassive then
 			window:setText(tr("Edit Passive to Action Button %d.%02d", barNum, slotIdx))
@@ -6914,10 +6914,10 @@ function assignHelper(arg_313_0, arg_313_1)
 
 		rootWidget:setText(tr(item and "Edit Helper %d" or "Assign Helper %d", arg_313_1))
 	else
-		local var_313_4, var_313_5 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_313_0)
+		local var_313_4, var_313_5 = actionbarState.slotBarAndIndexFromSlotId(arg_313_0)
 
 		if var_313_4 and var_313_5 then
-			local var_313_6 = ptc_root_locals.actionBarDisplayNumber(var_313_4)
+			local var_313_6 = actionbarState.actionBarDisplayNumber(var_313_4)
 
 			if item then
 				rootWidget:setText(tr("Edit Helper to Action Button %d.%02d", var_313_6, var_313_5))
@@ -7263,12 +7263,12 @@ function openObjectAssignWindow()
 		local item = previewItem and previewItem:getItem()
 
 		if item then
-			ptc_root_locals.updateSmartModeAssignCheckboxState(item, objectAssignWindow._smartModeAssignContext)
+			actionbarState.updateSmartModeAssignCheckboxState(item, objectAssignWindow._smartModeAssignContext)
 		end
 	end
 
 	objectAssignWindow:setVisible(false)
-	ptc_root_locals.setObjectAssignWindowTitle()
+	actionbarState.setObjectAssignWindowTitle()
 end
 
 function closeObjectAssignWindow()
@@ -7282,10 +7282,10 @@ function closeObjectAssignWindow()
 	actionRadioGroup = nil
 end
 
- ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED = "#c0c0c0"
- ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED = "#707070"
+ actionbarState.ASSIGN_OBJECT_CB_ENABLED = "#c0c0c0"
+ actionbarState.ASSIGN_OBJECT_CB_DISABLED = "#707070"
 
-  ptc_root_locals[174] = function(item)
+  actionbarState[174] = function(item)
 	if not item then
 		return false
 	end
@@ -7293,7 +7293,7 @@ end
 	return item:hasClockExpire() or item:hasExpire() or item:hasExpireStop()
 end
 
-  ptc_root_locals.itemIdHasDurationDecay = function(itemId)
+  actionbarState.itemIdHasDurationDecay = function(itemId)
 	if not itemId or itemId <= 0 then
 		return false
 	end
@@ -7307,7 +7307,7 @@ end
 	return tt:hasClockExpire() or tt:hasExpire() or tt:hasExpireStop()
 end
 
-  ptc_root_locals.getClothSlotForItemId = function(itemId)
+  actionbarState.getClothSlotForItemId = function(itemId)
 	if not itemId or itemId <= 0 then
 		return 0
 	end
@@ -7317,7 +7317,7 @@ end
 	return item and item:getClothSlot() or 0
 end
 
-  ptc_root_locals.smartModeItemMatchesBase = function(baseId, itemId)
+  actionbarState.smartModeItemMatchesBase = function(baseId, itemId)
 	if not baseId or not itemId or baseId <= 0 or itemId <= 0 then
 		return false
 	end
@@ -7369,7 +7369,7 @@ function getActionBarInventoryDisplayCount(itemId, tier, player)
 
 	local marketData = itemType.getMarketData and itemType:getMarketData()
 
-	if not (itemType:getClothSlot() == InventorySlotFinger or MarketCategory and marketData and marketData.category == MarketCategory.Rings) or not ptc_root_locals.smartModeItemMatchesBase(itemId, equipped:getId()) then
+	if not (itemType:getClothSlot() == InventorySlotFinger or MarketCategory and marketData and marketData.category == MarketCategory.Rings) or not actionbarState.smartModeItemMatchesBase(itemId, equipped:getId()) then
 		return count
 	end
 
@@ -7380,21 +7380,21 @@ function getActionBarInventoryDisplayCount(itemId, tier, player)
 	return count + 1
 end
 
-  ptc_root_locals.smartModeItemMatchesEntry = function(entry, itemId)
+  actionbarState.smartModeItemMatchesEntry = function(entry, itemId)
 	local baseId = entry.smartBaseItemId or entry.itemId
 
-	if ptc_root_locals.smartModeItemMatchesBase(baseId, itemId) then
+	if actionbarState.smartModeItemMatchesBase(baseId, itemId) then
 		return true
 	end
 
 	if entry.itemId and entry.itemId ~= baseId then
-		return ptc_root_locals.smartModeItemMatchesBase(entry.itemId, itemId)
+		return actionbarState.smartModeItemMatchesBase(entry.itemId, itemId)
 	end
 
 	return false
 end
 
-  ptc_root_locals.updateSmartModeAssignLayout = function(smartVisible)
+  actionbarState.updateSmartModeAssignLayout = function(smartVisible)
 	if not objectAssignWindow then
 		return
 	end
@@ -7420,7 +7420,7 @@ end
 	objectAssignWindow:updateLayout()
 end
 
- ptc_root_locals.updateSmartModeAssignCheckboxState = function(item, assignContext)
+ actionbarState.updateSmartModeAssignCheckboxState = function(item, assignContext)
 	if not objectAssignWindow or not item then
 		return
 	end
@@ -7433,14 +7433,14 @@ end
 	end
 
 	local baseItemId = assignContext and type(assignContext.smartBaseItemId) == "number" and assignContext.smartBaseItemId or item:getId()
-	local showSmart = ptc_root_locals.isEquippableActionBarItem(item) and ptc_root_locals.itemIdHasDurationDecay(baseItemId)
+	local showSmart = actionbarState.isEquippableActionBarItem(item) and actionbarState.itemIdHasDurationDecay(baseItemId)
 
 	smartCb:setVisible(showSmart)
 
 	if not showSmart then
 		smartCb:setChecked(false)
 		smartCb:setEnabled(false)
-		ptc_root_locals.updateSmartModeAssignLayout(false)
+		actionbarState.updateSmartModeAssignLayout(false)
 
 		return
 	end
@@ -7448,7 +7448,7 @@ end
 	local equipSelected = equipCb:isChecked()
 
 	smartCb:setEnabled(equipSelected)
-	smartCb:setColor(equipSelected and ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED or ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED)
+	smartCb:setColor(equipSelected and actionbarState.ASSIGN_OBJECT_CB_ENABLED or actionbarState.ASSIGN_OBJECT_CB_DISABLED)
 
 	if assignContext and assignContext.smartMode == true then
 		smartCb:setChecked(true)
@@ -7456,17 +7456,17 @@ end
 		smartCb:setChecked(false)
 	end
 
-	ptc_root_locals.updateSmartModeAssignLayout(true)
+	actionbarState.updateSmartModeAssignLayout(true)
 end
 
-  ptc_root_locals.readSmartModeFromAssignWindow = function(item, useType, assignContext)
+  actionbarState.readSmartModeFromAssignWindow = function(item, useType, assignContext)
 	if useType ~= "equip" or not item then
 		return false, nil
 	end
 
 	local baseItemId = assignContext and type(assignContext.smartBaseItemId) == "number" and assignContext.smartBaseItemId or item:getId()
 
-	if not ptc_root_locals.itemIdHasDurationDecay(baseItemId) then
+	if not actionbarState.itemIdHasDurationDecay(baseItemId) then
 		return false, nil
 	end
 
@@ -7479,7 +7479,7 @@ end
 	return true, baseItemId
 end
 
-  ptc_root_locals.refreshSmartModeEntry = function(entry, player)
+  actionbarState.refreshSmartModeEntry = function(entry, player)
 	if not entry or not player or not entry.smartMode or entry.useType ~= "equip" then
 		return false
 	end
@@ -7489,7 +7489,7 @@ end
 	end
 
 	local baseId = entry.smartBaseItemId or entry.itemId
-	local clothSlot = ptc_root_locals.getClothSlotForItemId(baseId)
+	local clothSlot = actionbarState.getClothSlotForItemId(baseId)
 
 	if not clothSlot or clothSlot <= 0 then
 		return false
@@ -7501,7 +7501,7 @@ end
 	if equipped then
 		local eqId = equipped:getId()
 
-		if ptc_root_locals.smartModeItemMatchesEntry(entry, eqId) then
+		if actionbarState.smartModeItemMatchesEntry(entry, eqId) then
 			if eqId ~= entry.itemId then
 				if not entry.smartBaseItemId then
 					entry.smartBaseItemId = baseId
@@ -7525,7 +7525,7 @@ end
 	return changed
 end
 
-  ptc_root_locals.refreshSmartModeSlot = function(slot)
+  actionbarState.refreshSmartModeSlot = function(slot)
 	if not slot then
 		return false
 	end
@@ -7536,7 +7536,7 @@ end
 		return false
 	end
 
-	if ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+	if actionbarState.isActionSlotEquipmentPreset(slot) then
 		return false
 	end
 
@@ -7546,7 +7546,7 @@ end
 		for i = 1, 3 do
 			local entry = slot.multiActions[i]
 
-			if entry and ptc_root_locals.refreshSmartModeEntry(entry, player) then
+			if entry and actionbarState.refreshSmartModeEntry(entry, player) then
 				changed = true
 			end
 		end
@@ -7554,7 +7554,7 @@ end
 		if changed and syncMultiActionSlot then
 			syncMultiActionSlot(slot)
 		end
-	elseif slot.smartMode and ptc_root_locals.refreshSmartModeEntry(slot, player) then
+	elseif slot.smartMode and actionbarState.refreshSmartModeEntry(slot, player) then
 		loadObject(slot)
 		applyActionSlotFrame(slot)
 
@@ -7564,7 +7564,7 @@ end
 	return changed
 end
 
- ptc_root_locals.refreshAllSmartModeSlots = function()
+ actionbarState.refreshAllSmartModeSlots = function()
 	if not g_game.getLocalPlayer() then
 		return
 	end
@@ -7576,7 +7576,7 @@ end
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				if ptc_root_locals.refreshSmartModeSlot(slot) then
+				if actionbarState.refreshSmartModeSlot(slot) then
 					anyChanged = true
 				end
 			end
@@ -7588,7 +7588,7 @@ end
 	end
 end
 
-  ptc_root_locals.styleAssignObjectCheckbox = function(id, enabled)
+  actionbarState.styleAssignObjectCheckbox = function(id, enabled)
 	local cb = objectAssignWindow:getChildById(id)
 
 	if not cb then
@@ -7596,10 +7596,10 @@ end
 	end
 
 	cb:setEnabled(enabled)
-	cb:setColor(enabled and ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED or ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED)
+	cb:setColor(enabled and actionbarState.ASSIGN_OBJECT_CB_ENABLED or actionbarState.ASSIGN_OBJECT_CB_DISABLED)
 end
 
- ptc_root_locals.isEquippableActionBarItem = function(item)
+ actionbarState.isEquippableActionBarItem = function(item)
 	if not item then
 		return false
 	end
@@ -7637,7 +7637,7 @@ end
 	return false
 end
 
-  ptc_root_locals.isValidActionBarObjectItem = function(arg_346_0, arg_346_1)
+  actionbarState.isValidActionBarObjectItem = function(arg_346_0, arg_346_1)
 	if not arg_346_0 or not arg_346_0.getId then
 		return false
 	end
@@ -7674,7 +7674,7 @@ end
 		return true
 	end
 
-	if ptc_root_locals.isEquippableActionBarItem(arg_346_0) then
+	if actionbarState.isEquippableActionBarItem(arg_346_0) then
 		return true
 	end
 
@@ -7704,7 +7704,7 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 
 	objectAssignWindow._smartModeAssignContext = assignContext
 
-	ptc_root_locals.setObjectAssignWindowTitle()
+	actionbarState.setObjectAssignWindowTitle()
 
 	local previewItem = objectAssignWindow:recursiveGetChildById("previewItem")
 
@@ -7720,43 +7720,43 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 	previewItem:setItemCount(1)
 
 	local var_347_2
-	local var_347_3 = ptc_root_locals.isEquippableActionBarItem(item)
+	local var_347_3 = actionbarState.isEquippableActionBarItem(item)
 	local var_347_4 = item:isMultiUse()
 
 	if var_347_3 and var_347_4 then
-		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("equipCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useCheckbox", false)
 
 		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
 	elseif var_347_3 then
-		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("equipCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
 		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
 	elseif var_347_4 then
-		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("equipCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useCheckbox", false)
 
 		var_347_2 = objectAssignWindow:getChildById("useOnYourselfCheckbox")
 	else
-		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", true)
-		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
-		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useCheckbox", true)
+		actionbarState.styleAssignObjectCheckbox("equipCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
+		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
 		var_347_2 = objectAssignWindow:getChildById("useCheckbox")
 	end
@@ -7787,7 +7787,7 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		actionRadioGroup:selectWidget(var_347_6)
 	end
 
-	ptc_root_locals.updateSmartModeAssignCheckboxState(item, assignContext)
+	actionbarState.updateSmartModeAssignCheckboxState(item, assignContext)
 
 	if not objectAssignWindow:isVisible() then
 		objectAssignWindow:show()
@@ -7795,12 +7795,12 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 
 	local smartModeCheckbox = objectAssignWindow:getChildById("smartModeCheckbox")
 
-	ptc_root_locals.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
+	actionbarState.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
 	objectAssignWindow:raise()
 	objectAssignWindow:focus()
 end
 
-  ptc_root_locals.findGameMapWidgetAtClick = function(clickedWidget)
+  actionbarState.findGameMapWidgetAtClick = function(clickedWidget)
 	if not clickedWidget then
 		return nil
 	end
@@ -7822,7 +7822,7 @@ end
 	return nil
 end
 
- ptc_root_locals.resolvePickItemAtMouse = function(arg_349_0)
+ actionbarState.resolvePickItemAtMouse = function(arg_349_0)
 	local rootPanel = modules.game_interface.getRootPanel()
 
 	if not rootPanel then
@@ -7838,14 +7838,14 @@ end
 	if var_349_1:getClassName() == "UIItem" and not var_349_1:isVirtual() then
 		local item = var_349_1:getItem()
 
-		if ptc_root_locals.isValidActionBarObjectItem(item, false) then
+		if actionbarState.isValidActionBarObjectItem(item, false) then
 			return item
 		end
 
 		return nil
 	end
 
-	local var_349_3 = ptc_root_locals.findGameMapWidgetAtClick(var_349_1)
+	local var_349_3 = actionbarState.findGameMapWidgetAtClick(var_349_1)
 
 	if var_349_3 and var_349_3.getTile then
 		local tile = var_349_3:getTile(arg_349_0)
@@ -7853,7 +7853,7 @@ end
 		if tile then
 			local topMoveThing = tile:getTopMoveThing()
 
-			if topMoveThing and topMoveThing.isItem and topMoveThing:isItem() and ptc_root_locals.isValidActionBarObjectItem(topMoveThing, true) then
+			if topMoveThing and topMoveThing.isItem and topMoveThing:isItem() and actionbarState.isValidActionBarObjectItem(topMoveThing, true) then
 				return topMoveThing
 			end
 		end
@@ -7862,7 +7862,7 @@ end
 	return nil
 end
 
-  ptc_root_locals.restoreObjectAssignWindowAfterPick = function()
+  actionbarState.restoreObjectAssignWindowAfterPick = function()
 	if not objectAssignHiddenForPick then
 		return
 	end
@@ -7874,7 +7874,7 @@ end
 
 		local smartModeCheckbox = objectAssignWindow:getChildById("smartModeCheckbox")
 
-		ptc_root_locals.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
+		actionbarState.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
 		objectAssignWindow:raise()
 		objectAssignWindow:focus()
 	end
@@ -7895,7 +7895,7 @@ function startChooseItem()
 	g_mouse.pushCursor("target")
 end
 
-  ptc_root_locals.applyObjectAssign = function(closeAfter)
+  actionbarState.applyObjectAssign = function(closeAfter)
 	local item = objectAssignWindow:recursiveGetChildById("previewItem"):getItem()
 
 	if not item then
@@ -7926,7 +7926,7 @@ end
 		useType = "useAtCursor"
 	end
 
-	local smartMode, smartBaseItemId = ptc_root_locals.readSmartModeFromAssignWindow(item, useType, objectAssignWindow and objectAssignWindow._smartModeAssignContext)
+	local smartMode, smartBaseItemId = actionbarState.readSmartModeFromAssignWindow(item, useType, objectAssignWindow and objectAssignWindow._smartModeAssignContext)
 
 	if externalAssignSlotId and slotToEdit == externalAssignSlotId then
 		slot.itemId = item:getId()
@@ -7965,7 +7965,7 @@ end
 			smartMode = smartMode and true or nil,
 			smartBaseItemId = smartBaseItemId
 		})
-		ptc_root_locals.refreshSmartModeSlot(slot)
+		actionbarState.refreshSmartModeSlot(slot)
 
 		if closeAfter then
 			multiActionEditIndex = nil
@@ -7996,7 +7996,7 @@ end
 	updateSlotGray(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
-	ptc_root_locals.refreshSmartModeSlot(slot)
+	actionbarState.refreshSmartModeSlot(slot)
 	setupHotkeys()
 
 	if closeAfter then
@@ -8005,11 +8005,11 @@ end
 end
 
 function objectAssignApply()
-	ptc_root_locals.applyObjectAssign(false)
+	actionbarState.applyObjectAssign(false)
 end
 
 function objectAssignOk()
-	ptc_root_locals.applyObjectAssign(true)
+	actionbarState.applyObjectAssign(true)
 end
 
 function objectAssignAccept()
@@ -8025,8 +8025,8 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 		return onCyclopediaSpellAssignMouseRelease(self, mousePosition, mouseButton)
 	end
 
-	if ptc_root_locals.equipmentAssignPickInvSlot ~= nil then
-		return ptc_root_locals.onEquipmentAssignChooseItemMouseRelease(self, mousePosition, mouseButton)
+	if actionbarState.equipmentAssignPickInvSlot ~= nil then
+		return actionbarState.onEquipmentAssignChooseItemMouseRelease(self, mousePosition, mouseButton)
 	end
 
 	local item
@@ -8036,11 +8036,11 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 		local root = modules.game_interface.getRootPanel()
 		local clickedWidget = root and root:recursiveGetChildByPos(mousePosition, false)
 
-		if clickedWidget and ptc_root_locals.findGameMapWidgetAtClick(clickedWidget) then
+		if clickedWidget and actionbarState.findGameMapWidgetAtClick(clickedWidget) then
 			hadMapClick = true
 		end
 
-		item = ptc_root_locals.resolvePickItemAtMouse(mousePosition)
+		item = actionbarState.resolvePickItemAtMouse(mousePosition)
 
 		if hadMapClick and not item and objectAssignHiddenForPick then
 			modules.game_textmessage.displayFailureMessage(tr("Sorry, not possible."))
@@ -8052,7 +8052,7 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 
 		populateObjectAssignWindowFromItem(item)
 	else
-		ptc_root_locals.restoreObjectAssignWindowAfterPick()
+		actionbarState.restoreObjectAssignWindowAfterPick()
 	end
 
 	g_mouse.popCursor("target")
@@ -8111,11 +8111,11 @@ function openEditHotkeyWindow()
 	end
 
 	local instrLabel = editHotkeyWindow:recursiveGetChildById("hotkeyInstructionLabel")
-	local barId, slotIdx = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
+	local barId, slotIdx = actionbarState.slotBarAndIndexFromSlotId(slotToEdit)
 
 	if barId and slotIdx then
-		local region = ptc_root_locals.actionBarRegionTitle(barId)
-		local barNum = ptc_root_locals.actionBarDisplayNumber(barId)
+		local region = actionbarState.actionBarRegionTitle(barId)
+		local barNum = actionbarState.actionBarDisplayNumber(barId)
 
 		editHotkeyWindow:setText(tr("Edit Hotkey for \"%s: Action Button %d.%d\"", region, barNum, slotIdx))
 
@@ -8221,7 +8221,7 @@ function unbindHotkeys()
 	end
 end
 
-  ptc_root_locals.actionBarResolveSourceItem = function(slot)
+  actionbarState.actionBarResolveSourceItem = function(slot)
 	local tier = slot.getTier or 0
 
 	if slot.subType then
@@ -8231,12 +8231,12 @@ end
 	return nil
 end
 
-  ptc_root_locals.actionBarPerformInventoryUseWith = function(slot, toThing, arg_367_2)
+  actionbarState.actionBarPerformInventoryUseWith = function(slot, toThing, arg_367_2)
 	if not toThing then
 		return
 	end
 
-	local invItem = ptc_root_locals.actionBarResolveSourceItem(slot)
+	local invItem = actionbarState.actionBarResolveSourceItem(slot)
 
 	if not slot.subType then
 		CrosshairCast.prioritizeManualHotkey(arg_367_2)
@@ -8264,7 +8264,7 @@ end
 	end
 end
 
-  ptc_root_locals.actionBarPickTileTargetForUseWith = function(tile, logicItem)
+  actionbarState.actionBarPickTileTargetForUseWith = function(tile, logicItem)
 	if not tile or not logicItem then
 		return nil
 	end
@@ -8282,7 +8282,7 @@ end
 	return target
 end
 
-  ptc_root_locals.actionBarUseItemAtCursor = function(slot, arg_369_1)
+  actionbarState.actionBarUseItemAtCursor = function(slot, arg_369_1)
 	if not slot or not slot.itemId then
 		return
 	end
@@ -8301,7 +8301,7 @@ end
 		mapWidget = mapWidget:getParent()
 	end
 
-	local logicItem = ptc_root_locals.actionBarResolveSourceItem(slot)
+	local logicItem = actionbarState.actionBarResolveSourceItem(slot)
 
 	if not logicItem then
 		logicItem = Item.create(slot.itemId)
@@ -8326,10 +8326,10 @@ end
 			return
 		end
 
-		local var_369_6 = ptc_root_locals.actionBarPickTileTargetForUseWith(tile, logicItem)
+		local var_369_6 = actionbarState.actionBarPickTileTargetForUseWith(tile, logicItem)
 
 		if var_369_6 then
-			ptc_root_locals.actionBarPerformInventoryUseWith(slot, var_369_6, arg_369_1)
+			actionbarState.actionBarPerformInventoryUseWith(slot, var_369_6, arg_369_1)
 		end
 
 		return
@@ -8342,7 +8342,7 @@ end
 			local item = leaf:getItem()
 
 			if item then
-				ptc_root_locals.actionBarPerformInventoryUseWith(slot, item, arg_369_1)
+				actionbarState.actionBarPerformInventoryUseWith(slot, item, arg_369_1)
 			end
 
 			return
@@ -8352,13 +8352,13 @@ end
 			local creature = leaf:getCreature()
 
 			if creature then
-				ptc_root_locals.actionBarPerformInventoryUseWith(slot, creature, arg_369_1)
+				actionbarState.actionBarPerformInventoryUseWith(slot, creature, arg_369_1)
 			end
 		end
 	end
 end
 
-  ptc_root_locals.actionSlotSpellStillOnCooldown = function(slot)
+  actionbarState.actionSlotSpellStillOnCooldown = function(slot)
 	if not slot then
 		return false
 	end
@@ -8498,7 +8498,7 @@ function CrosshairCast.castWithMode(words, arg_376_1, arg_376_2)
 		return
 	end
 
-	arg_376_1 = ptc_root_locals.normalizeCrossHairMode(arg_376_1)
+	arg_376_1 = actionbarState.normalizeCrossHairMode(arg_376_1)
 
 	if arg_376_1 == "cursor" then
 		local mapTilePositionAt = CrosshairCast.getMapTilePositionAt(g_window.getMousePosition())
@@ -8597,8 +8597,8 @@ function executeActionSlot(slot, fromKeyboard)
 		elseif slot.useType == "useOnSelf" then
 			HotkeyUtils.executeHotkeyItem(HOTKEY_USEONSELF, slot.itemId, slot.subType, fromKeyboard and CrosshairCast.prioritizeManualHotkey or nil)
 		elseif slot.useType == "equip" then
-			if ptc_root_locals.isActionSlotEquipmentPreset(slot) then
-				if ptc_root_locals[104](slot) then
+			if actionbarState.isActionSlotEquipmentPreset(slot) then
+				if actionbarState[104](slot) then
 					local player = g_game.getLocalPlayer()
 
 					if player then
@@ -8608,8 +8608,8 @@ function executeActionSlot(slot, fromKeyboard)
 							pcall(game_helper.beginManualEquipmentAction)
 						end
 
-						for _, invSlot in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
-							if not ptc_root_locals.actionSlotPresetEntryForSlot(slot, invSlot) then
+						for _, invSlot in ipairs(actionbarState.EQUIPMENT_SET_EQUIP_ORDER) do
+							if not actionbarState.actionSlotPresetEntryForSlot(slot, invSlot) then
 								local equipped = player:getInventoryItem(invSlot)
 
 								if equipped then
@@ -8620,24 +8620,24 @@ function executeActionSlot(slot, fromKeyboard)
 							end
 						end
 
-						for _, invSlot in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
-							local entry = ptc_root_locals.actionSlotPresetEntryForSlot(slot, invSlot)
+						for _, invSlot in ipairs(actionbarState.EQUIPMENT_SET_EQUIP_ORDER) do
+							local entry = actionbarState.actionSlotPresetEntryForSlot(slot, invSlot)
 
-							if entry and not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
+							if entry and not actionbarState.actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
 								g_game.equipItemId(entry.itemId, entry.getTier or 0)
 							end
 						end
 					end
 				end
 
-				ptc_root_locals.startEquipmentSetActionCooldown()
+				actionbarState.startEquipmentSetActionCooldown()
 			elseif slot.itemId and slot.itemId > 0 then
 				local player = g_game.getLocalPlayer()
 
 				if player then
-					local tier = ptc_root_locals.actionSlotItemTier(slot)
+					local tier = actionbarState.actionSlotItemTier(slot)
 
-					if player:getInventoryCount(slot.itemId, tier) > 0 or ptc_root_locals.isActionSlotEquipEquipped(slot) then
+					if player:getInventoryCount(slot.itemId, tier) > 0 or actionbarState.isActionSlotEquipEquipped(slot) then
 						local game_helper = modules.game_helper
 
 						if game_helper and game_helper.beginManualEquipmentAction then
@@ -8661,14 +8661,14 @@ function executeActionSlot(slot, fromKeyboard)
 				end
 			end
 		elseif slot.useType == "useAtCursor" then
-			ptc_root_locals.actionBarUseItemAtCursor(slot, fromKeyboard)
+			actionbarState.actionBarUseItemAtCursor(slot, fromKeyboard)
 		end
 	elseif slot.words and slot.words ~= "" then
 		local words = slot.parameter and slot.parameter ~= "" and slot.words .. " \"" .. slot.parameter or slot.words
 		local spell = Spells.getSpellByWords and Spells.getSpellByWords(slot.words) or nil
 
 		if spell and Spells.hasCrossHairTarget(spell) then
-			CrosshairCast.castWithMode(words, ptc_root_locals.normalizeCrossHairMode(slot.crossHairMode), fromKeyboard)
+			CrosshairCast.castWithMode(words, actionbarState.normalizeCrossHairMode(slot.crossHairMode), fromKeyboard)
 		else
 			CrosshairCast.prioritizeManualHotkey(fromKeyboard)
 			g_game.talk(words)
@@ -8694,14 +8694,14 @@ function executeActionSlot(slot, fromKeyboard)
 	end
 end
 
-  ptc_root_locals.tryExecuteActionSlot = function(slot, fromKeyboard)
+  actionbarState.tryExecuteActionSlot = function(slot, fromKeyboard)
 	if not slot then
 		return
 	end
 
-	local isEquip = ptc_root_locals.isActionSlotEquip(slot)
+	local isEquip = actionbarState.isActionSlotEquip(slot)
 
-	if isEquip and ptc_root_locals.isActionSlotEquipmentPreset(slot) and ptc_root_locals.isEquipmentSetActionOnCooldown(slot) then
+	if isEquip and actionbarState.isActionSlotEquipmentPreset(slot) and actionbarState.isEquipmentSetActionOnCooldown(slot) then
 		return
 	end
 
@@ -8713,7 +8713,7 @@ end
 		return
 	end
 
-	if slot.words and slot.words ~= "" and ptc_root_locals.actionSlotSpellStillOnCooldown(slot) then
+	if slot.words and slot.words ~= "" and actionbarState.actionSlotSpellStillOnCooldown(slot) then
 		executeActionSlot(slot, fromKeyboard)
 
 		return
@@ -8726,9 +8726,9 @@ end
 	end
 end
 
-  ptc_root_locals.bindSlotHotkey = function(slot)
+  actionbarState.bindSlotHotkey = function(slot)
 	function slot.onMouseRelease()
-		ptc_root_locals.tryExecuteActionSlot(slot, false)
+		actionbarState.tryExecuteActionSlot(slot, false)
 	end
 
 	if slot.hotkey and slot.hotkey ~= "" then
@@ -8741,7 +8741,7 @@ end
 				return
 			end
 
-			ptc_root_locals.tryExecuteActionSlot(slot, true)
+			actionbarState.tryExecuteActionSlot(slot, true)
 		end, modules.game_interface and modules.game_interface.getRootPanel())
 	end
 end
@@ -8749,7 +8749,7 @@ end
 function setupHotkeys()
 	updateScrollButtons()
 	unbindHotkeys()
-	ptc_root_locals.refreshAllSlotsHotkeyMirror()
+	actionbarState.refreshAllSlotsHotkeyMirror()
 
 	if hotkeyPauseDepth > 0 then
 		return
@@ -8760,7 +8760,7 @@ function setupHotkeys()
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				ptc_root_locals.bindSlotHotkey(slot)
+				actionbarState.bindSlotHotkey(slot)
 			end
 		end
 	end
@@ -8847,7 +8847,7 @@ function clearActionBarHotkeyConflicts(keyCombo, chatOn)
 						slot.hotkeyChatOff = ""
 					end
 
-					ptc_root_locals.syncSlotHotkeyMirror(slot)
+					actionbarState.syncSlotHotkeyMirror(slot)
 
 					cleared = true
 				end
@@ -8932,7 +8932,7 @@ function hotkeyClear(assignWindow)
 			slot.hotkeyChatOff = ""
 		end
 
-		ptc_root_locals.syncSlotHotkeyMirror(slot)
+		actionbarState.syncSlotHotkeyMirror(slot)
 		setupHotkeys()
 		saveActionBar()
 	end
@@ -8997,7 +8997,7 @@ function hotkeyCaptureOk(assignWindow)
 							k.hotkeyChatOff = ""
 						end
 
-						ptc_root_locals.syncSlotHotkeyMirror(k)
+						actionbarState.syncSlotHotkeyMirror(k)
 					end
 				end
 			end
@@ -9025,7 +9025,7 @@ function hotkeyCaptureOk(assignWindow)
 		slot.hotkeyChatOff = keyCombo or ""
 	end
 
-	ptc_root_locals.syncSlotHotkeyMirror(slot)
+	actionbarState.syncSlotHotkeyMirror(slot)
 	setupHotkeys()
 	saveActionBar()
 
@@ -9049,7 +9049,7 @@ function saveActionBar()
 		return
 	end
 
-	saveActionBarSlotsForPreset(preset, ptc_root_locals.collectCharacterActionBarSlots())
+	saveActionBarSlotsForPreset(preset, actionbarState.collectCharacterActionBarSlots())
 end
 
 function canUseSpell(spell)
@@ -9068,7 +9068,7 @@ function canUseSpell(spell)
 	return table.contains(spell.vocations, vocation)
 end
 
-  ptc_root_locals.playerMeetsSpellLevelAndMana = function(spell)
+  actionbarState.playerMeetsSpellLevelAndMana = function(spell)
 	if not spell then
 		return false
 	end
@@ -9101,7 +9101,7 @@ function refreshAssignSpellListGrayOverlays()
 		local gray = row:getChildById("spellIconGray")
 
 		if gray then
-			gray:setVisible(spell ~= nil and not ptc_root_locals.spellPassesAssignLearntFilter(spell))
+			gray:setVisible(spell ~= nil and not actionbarState.spellPassesAssignLearntFilter(spell))
 		end
 	end
 end
@@ -9124,7 +9124,7 @@ function updateSlotGray(slot)
 		slot.grayManaCost = manaCost and manaCost > 0 and manaCost or nil
 
 		local vocOk = canUseSpell(spell)
-		local statsOk = ptc_root_locals.playerMeetsSpellLevelAndMana(spell)
+		local statsOk = actionbarState.playerMeetsSpellLevelAndMana(spell)
 
 		show = not vocOk or not statsOk
 	elseif slot.passiveId then
@@ -9133,10 +9133,10 @@ function updateSlotGray(slot)
 		show = false
 	elseif slot.text then
 		show = false
-	elseif ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+	elseif actionbarState.isActionSlotEquipmentPreset(slot) then
 		show = false
 	elseif slot.itemId and slot.itemId > 0 then
-		show = not ptc_root_locals.playerHasActionBarItem(slot)
+		show = not actionbarState.playerHasActionBarItem(slot)
 	end
 
 	grayPanel:setVisible(show)
@@ -9150,7 +9150,7 @@ function updateSlotsVocation()
 			for _, slot in pairs(panel:getChildren()) do
 				updateSlotGray(slot)
 				refreshActionSlotInventoryQuantity(slot)
-				ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+				actionbarState.refreshActionSlotEquipmentDecorations(slot)
 				refreshActionSlotFrameClip(slot)
 			end
 		end
@@ -9173,11 +9173,11 @@ function updateInventoryDependentActionSlots()
 			for _, slot in pairs(panel:getChildren()) do
 				local hasMultiActions = slotHasMultiActions and slotHasMultiActions(slot)
 
-				if (slot.smartMode or hasMultiActions) and ptc_root_locals.refreshSmartModeSlot(slot) then
+				if (slot.smartMode or hasMultiActions) and actionbarState.refreshSmartModeSlot(slot) then
 					smartModeChanged = true
 				end
 
-				if slot.itemId and slot.itemId > 0 and not slot.words and not slot.text and not slot.passiveId and not isHelperActionSlot(slot) and not isMultiHelperSlot(slot) and not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+				if slot.itemId and slot.itemId > 0 and not slot.words and not slot.text and not slot.passiveId and not isHelperActionSlot(slot) and not isMultiHelperSlot(slot) and not actionbarState.isActionSlotEquipmentPreset(slot) then
 					updateSlotGray(slot)
 					refreshActionSlotInventoryQuantity(slot)
 				end
@@ -9227,7 +9227,7 @@ function loadSpell(slot)
 
 	slot:getChildById("text"):setText("")
 	slot:setBorderWidth(0)
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	updateSlotGray(slot)
 	applyActionSlotFrame(slot)
 	maybeSetupHotkeysAfterSlotLoad()
@@ -9244,7 +9244,7 @@ function loadObject(slot)
 		icon:setImageSource("")
 	end
 
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	slot:setItemId(slot.itemId)
 	slot:getChildById("text"):setText("")
 	slot:setBorderWidth(0)
@@ -9270,7 +9270,7 @@ function loadPassive(slot)
 
 		slot:getChildById("text"):setText("")
 		slot:setBorderWidth(0)
-		ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+		actionbarState.refreshActionSlotEquipmentDecorations(slot)
 		updateSlotGray(slot)
 		applyActionSlotFrame(slot)
 
@@ -9309,7 +9309,7 @@ function loadHelper(slot)
 	end
 
 	slot:setBorderWidth(0)
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	updateSlotGray(slot)
 	applyActionSlotFrame(slot)
 	refreshHelperSlotBorder(slot)
@@ -9371,7 +9371,7 @@ function loadMultiHelper(arg_408_0)
 	end
 
 	arg_408_0:setBorderWidth(0)
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(arg_408_0)
+	actionbarState.refreshActionSlotEquipmentDecorations(arg_408_0)
 	updateSlotGray(arg_408_0)
 	applyActionSlotFrame(arg_408_0)
 	refreshMultiHelperSlotBorder(arg_408_0)
@@ -9388,7 +9388,7 @@ function loadText(slot)
 		spellIcon:setImageSource("")
 	end
 
-	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	actionbarState.refreshActionSlotEquipmentDecorations(slot)
 	slot:getChildById("text"):setText(slot.text)
 
 	while slot:getChildById("text"):getTextSize().height > 30 do
@@ -9408,10 +9408,10 @@ function loadActionBar()
 
 	actionBarCorruptHotkeySeen = false
 
-	local var_410_0, var_410_1, var_410_2 = ptc_root_locals.loadActionBarSettingsForCurrentPreset()
+	local var_410_0, var_410_1, var_410_2 = actionbarState.loadActionBarSettingsForCurrentPreset()
 
 	beginActionBarBatch()
-	ptc_root_locals.applyPresetSlotsToActionBar(var_410_0)
+	actionbarState.applyPresetSlotsToActionBar(var_410_0)
 	endActionBarBatch()
 
 	actionBarPreparedPreset = var_410_2
@@ -9426,8 +9426,8 @@ function loadActionBar()
 	applyClientOptionsToActionBar()
 	refreshAllVirtueYellowBorders()
 
-	if ptc_root_locals.refreshAllSmartModeSlots then
-		ptc_root_locals.refreshAllSmartModeSlots()
+	if actionbarState.refreshAllSmartModeSlots then
+		actionbarState.refreshAllSmartModeSlots()
 	end
 end
 
@@ -9439,7 +9439,7 @@ function setBarVisible(barId, visible)
 			return
 		end
 
-		local ok, result = pcall(ptc_root_locals.ensureBarLoaded, barId)
+		local ok, result = pcall(actionbarState.ensureBarLoaded, barId)
 
 		if not ok or not result then
 			return
@@ -9456,11 +9456,11 @@ function setBarVisible(barId, visible)
 	end
 
 	if visible then
-		if ptc_root_locals.isSideBar(barId) then
+		if actionbarState.isSideBar(barId) then
 			bar:setWidth(SIDE_BAR_WIDTH)
-			ptc_root_locals.updateSideContainerWidths()
+			actionbarState.updateSideContainerWidths()
 			bar:show()
-			layoutSideLockButton(ptc_root_locals.isLeftBar(barId) and "left" or "right")
+			layoutSideLockButton(actionbarState.isLeftBar(barId) and "left" or "right")
 		else
 			bar:setHeight(37)
 			bar:show()
@@ -9468,7 +9468,7 @@ function setBarVisible(barId, visible)
 
 		updateScrollButtonsForBar(bar)
 	else
-		if ptc_root_locals.isSideBar(barId) then
+		if actionbarState.isSideBar(barId) then
 			bar:setWidth(0)
 		else
 			bar:setHeight(0)
@@ -9476,14 +9476,14 @@ function setBarVisible(barId, visible)
 
 		bar:hide()
 
-		if ptc_root_locals.isSideBar(barId) then
-			ptc_root_locals.updateSideContainerWidths()
-			layoutSideLockButton(ptc_root_locals.isLeftBar(barId) and "left" or "right")
+		if actionbarState.isSideBar(barId) then
+			actionbarState.updateSideContainerWidths()
+			layoutSideLockButton(actionbarState.isLeftBar(barId) and "left" or "right")
 		end
 	end
 
-	if ptc_root_locals.isBottomBar(barId) then
-		ptc_root_locals.applyBottomAnchors()
+	if actionbarState.isBottomBar(barId) then
+		actionbarState.applyBottomAnchors()
 		refreshBottomCooldownDock()
 
 		if modules.game_interface and modules.game_interface.refreshStatsBarDockLayout then
@@ -9612,7 +9612,7 @@ function configureActionBar(id, enabled)
 	end
 end
 
-  ptc_root_locals.shouldShowGraphicalCooldown = function()
+  actionbarState.shouldShowGraphicalCooldown = function()
 	if not modules or not modules.client_options then
 		return true
 	end
@@ -9620,7 +9620,7 @@ end
 	return modules.client_options.getOption("graphicalCooldown") ~= false
 end
 
-  ptc_root_locals.shouldShowCooldownSeconds = function()
+  actionbarState.shouldShowCooldownSeconds = function()
 	if not modules or not modules.client_options then
 		return true
 	end
@@ -9649,11 +9649,11 @@ function clearCooldownVisuals()
 
 	cooldown = {}
 	groupCooldown = {}
-	ptc_root_locals.equipmentSetSharedCooldownUntil = nil
+	actionbarState.equipmentSetSharedCooldownUntil = nil
 end
 
 function toggleCooldownOption()
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		clearCooldownVisuals()
 	elseif refreshAllPassiveCooldownSlots then
 		refreshAllPassiveCooldownSlots()
@@ -9712,7 +9712,7 @@ function reapplyAllSlotDisplayOpts()
 		mab.reapplyMultiSubSlotDisplayOpts()
 	end
 
-	ptc_root_locals.refreshAllSlotsHotkeyMirror()
+	actionbarState.refreshAllSlotsHotkeyMirror()
 end
 
 function applyClientOptionsToActionBar()
@@ -9755,7 +9755,7 @@ function applyClientOptionsToActionBar()
 	normalizeSideBarChildOrder("right")
 	reapplyAllSlotDisplayOpts()
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		clearCooldownVisuals()
 	end
 end
@@ -9809,7 +9809,7 @@ end
 
 multiActionCooldownSyncLock = false
 
-  ptc_root_locals[198] = function(widget)
+  actionbarState[198] = function(widget)
 	if multiActionCooldownSyncLock or not widget or widget:isDestroyed() or not syncMultiActionSlot then
 		return
 	end
@@ -9879,7 +9879,7 @@ function updateCooldown(progressRect, duration, spellId, count)
 
 	progressRect:setPercent(var_431_4)
 
-	if ptc_root_locals.shouldShowCooldownSeconds() and var_431_3 > 0 then
+	if actionbarState.shouldShowCooldownSeconds() and var_431_3 > 0 then
 		progressRect:setText(formatActionBarCooldownTime(var_431_3))
 		progressRect:setTextOffset("-1 0")
 	else
@@ -9930,7 +9930,7 @@ function updateCooldown(progressRect, duration, spellId, count)
 	end
 end
 
-  ptc_root_locals.layoutActionBarCooldownProgress = function(progressRect)
+  actionbarState.layoutActionBarCooldownProgress = function(progressRect)
 	progressRect:breakAnchors()
 	progressRect:setSize(tosize("32 32"))
 	progressRect:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
@@ -9949,7 +9949,7 @@ function raiseMultiActionMarkerAboveCooldown(slot)
 	end
 end
 
-  ptc_root_locals.raiseEquipmentSlotDecorIconsAboveCooldown = function(slot)
+  actionbarState.raiseEquipmentSlotDecorIconsAboveCooldown = function(slot)
 	if not slot or slot:isDestroyed() then
 		return
 	end
@@ -9961,13 +9961,13 @@ end
 	end
 end
 
-  ptc_root_locals.raiseActionBarCooldownProgress = function(arg_437_0, arg_437_1)
+  actionbarState.raiseActionBarCooldownProgress = function(arg_437_0, arg_437_1)
 	if arg_437_1 and arg_437_1.raise then
 		arg_437_1:raise()
 	end
 
 	raiseMultiActionMarkerAboveCooldown(arg_437_0)
-	ptc_root_locals.raiseEquipmentSlotDecorIconsAboveCooldown(arg_437_0)
+	actionbarState.raiseEquipmentSlotDecorIconsAboveCooldown(arg_437_0)
 end
 
 function passiveCooldownRemainingMs()
@@ -10029,7 +10029,7 @@ function updatePassiveCooldownProgress(arg_441_0)
 
 	arg_441_0:setPercent(math.min(99, (var_441_1 - var_441_0) * 100 / var_441_1))
 
-	if ptc_root_locals.shouldShowCooldownSeconds() then
+	if actionbarState.shouldShowCooldownSeconds() then
 		arg_441_0:setText(formatPassiveCooldownTime(var_441_0))
 		arg_441_0:setTextOffset("-1 0")
 	else
@@ -10049,21 +10049,21 @@ function updatePassiveCooldownProgress(arg_441_0)
 	end
 end
 
-function refreshPassiveCooldownSlot(arg_443_0)
-	if not arg_443_0 or arg_443_0:isDestroyed() or arg_443_0.passiveId ~= GIFT_OF_LIFE_PASSIVE_ID then
+function refreshPassiveCooldownSlot(item)
+	if not item or item:isDestroyed() or item.passiveId ~= GIFT_OF_LIFE_PASSIVE_ID then
 		return
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() or passiveCooldownRemainingMs() <= 0 then
-		clearPassiveCooldownProgress(arg_443_0)
+	if not actionbarState.shouldShowGraphicalCooldown() or passiveCooldownRemainingMs() <= 0 then
+		clearPassiveCooldownProgress(item)
 
 		return
 	end
 
-	local actionBarCooldownProgressWidget = arg_443_0:recursiveGetChildById(PASSIVE_COOLDOWN_PROGRESS_ID)
+	local actionBarCooldownProgressWidget = item:recursiveGetChildById(PASSIVE_COOLDOWN_PROGRESS_ID)
 
 	if not actionBarCooldownProgressWidget then
-		actionBarCooldownProgressWidget = g_ui.createWidget("ActionBarCooldownProgress", arg_443_0)
+		actionBarCooldownProgressWidget = g_ui.createWidget("ActionBarCooldownProgress", item)
 
 		actionBarCooldownProgressWidget:setId(PASSIVE_COOLDOWN_PROGRESS_ID)
 	else
@@ -10072,10 +10072,10 @@ function refreshPassiveCooldownSlot(arg_443_0)
 		actionBarCooldownProgressWidget.event = nil
 	end
 
-	actionBarCooldownProgressWidget.item = arg_443_0
+	actionBarCooldownProgressWidget.item = item
 
-	ptc_root_locals.layoutActionBarCooldownProgress(actionBarCooldownProgressWidget)
-	ptc_root_locals.raiseActionBarCooldownProgress(arg_443_0, actionBarCooldownProgressWidget)
+	actionbarState.layoutActionBarCooldownProgress(actionBarCooldownProgressWidget)
+	actionbarState.raiseActionBarCooldownProgress(item, actionBarCooldownProgressWidget)
 	actionBarCooldownProgressWidget:show()
 	updatePassiveCooldownProgress(actionBarCooldownProgressWidget)
 end
@@ -10129,7 +10129,7 @@ function clearSlotProgressWidgets(arg_446_0, arg_446_1)
 	end
 end
 
-  ptc_root_locals.progressId = function(arg_447_0, arg_447_1)
+  actionbarState.progressId = function(arg_447_0, arg_447_1)
 	local var_447_0 = arg_447_1 and arg_447_0:recursiveGetChildById(arg_447_1)
 
 	return var_447_0 ~= nil and var_447_0:isExplicitlyVisible()
@@ -10140,7 +10140,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 		return
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		return
 	end
 
@@ -10222,7 +10222,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 			end
 
 			if remaining > 0 then
-				groupId = ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY
+				groupId = actionbarState.ACTIONBAR_ITEM_MULTI_CD_KEY
 				var_448_1 = "progress" .. groupId
 				useGroupCooldown = true
 			end
@@ -10239,7 +10239,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 		return
 	end
 
-	if onlyIfMissing and ptc_root_locals.progressId(slot, var_448_1) then
+	if onlyIfMissing and actionbarState.progressId(slot, var_448_1) then
 		return
 	end
 
@@ -10296,8 +10296,8 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 
 	progressRect.item = slot
 
-	ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
-	ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
+	actionbarState.layoutActionBarCooldownProgress(progressRect)
+	actionbarState.raiseActionBarCooldownProgress(slot, progressRect)
 	progressRect:setPercent(initialPercent)
 	progressRect:show()
 
@@ -10326,7 +10326,7 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 	local percent
 	local var_450_1
 
-	if groupId == ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY and getMultiActionItemCooldownTiming then
+	if groupId == actionbarState.ACTIONBAR_ITEM_MULTI_CD_KEY and getMultiActionItemCooldownTiming then
 		percent, var_450_1 = getMultiActionItemCooldownTiming()
 	elseif getMultiActionGroupCooldownTimingById then
 		percent, var_450_1 = getMultiActionGroupCooldownTimingById(groupId)
@@ -10337,7 +10337,7 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 
 	progressRect:setPercent(percent)
 
-	if ptc_root_locals.shouldShowCooldownSeconds() and remainingMs > 0 then
+	if actionbarState.shouldShowCooldownSeconds() and remainingMs > 0 then
 		progressRect:setText(formatActionBarCooldownTime(remainingMs))
 	else
 		progressRect:setText("")
@@ -10366,7 +10366,7 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 			progressRect:hide()
 		end
 
-		if groupId == ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY and onMultiActionItemMultiUseCooldown then
+		if groupId == actionbarState.ACTIONBAR_ITEM_MULTI_CD_KEY and onMultiActionItemMultiUseCooldown then
 			onMultiActionItemMultiUseCooldown(0)
 
 			return
@@ -10392,34 +10392,34 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 	end
 end
 
- ptc_root_locals.startEquipmentSetActionCooldownVisual = function(slot)
-	if not slot or slot:isDestroyed() or not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+ actionbarState.startEquipmentSetActionCooldownVisual = function(slot)
+	if not slot or slot:isDestroyed() or not actionbarState.isActionSlotEquipmentPreset(slot) then
 		return
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		return
 	end
 
-	local groupId = ptc_root_locals.equipmentSetCooldownGroupId()
-	local duration = ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS
-	local progressRect = slot:recursiveGetChildById(ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID)
+	local groupId = actionbarState.equipmentSetCooldownGroupId()
+	local duration = actionbarState.EQUIPMENT_SET_COOLDOWN_MS
+	local progressRect = slot:recursiveGetChildById(actionbarState.EQUIPMENT_SET_CD_PROGRESS_ID)
 
 	if not progressRect then
 		progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
 
-		progressRect:setId(ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID)
+		progressRect:setId(actionbarState.EQUIPMENT_SET_CD_PROGRESS_ID)
 
 		progressRect.item = slot
 
-		ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
-		ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
+		actionbarState.layoutActionBarCooldownProgress(progressRect)
+		actionbarState.raiseActionBarCooldownProgress(slot, progressRect)
 	else
 		removeEvent(progressRect.event)
-		ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+		actionbarState.layoutActionBarCooldownProgress(progressRect)
 		progressRect:setPercent(0)
 		progressRect:show()
-		ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
+		actionbarState.raiseActionBarCooldownProgress(slot, progressRect)
 	end
 
 	groupCooldown[groupId] = true
@@ -10435,11 +10435,11 @@ function onMultiUseCooldown(duration)
 		onMultiActionItemMultiUseCooldown(duration)
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		return
 	end
 
-	local key = ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY
+	local key = actionbarState.ACTIONBAR_ITEM_MULTI_CD_KEY
 	local progressWidgetId = "progress" .. key
 
 	if not duration or duration <= 0 then
@@ -10487,13 +10487,13 @@ function onMultiUseCooldown(duration)
 
 						progressRect.item = slot
 
-						ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
-						ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
+						actionbarState.layoutActionBarCooldownProgress(progressRect)
+						actionbarState.raiseActionBarCooldownProgress(slot, progressRect)
 					else
-						ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+						actionbarState.layoutActionBarCooldownProgress(progressRect)
 						progressRect:setPercent(0)
 						progressRect:show()
-						ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
+						actionbarState.raiseActionBarCooldownProgress(slot, progressRect)
 					end
 
 					local total, rem, tickCount, initialPercent = resolveCooldownProgressState(duration, duration)
@@ -10513,7 +10513,7 @@ function onSpellCooldown(spellId, duration)
 		onMultiActionSpellCooldown(spellId, duration)
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		return true
 	end
 
@@ -10546,13 +10546,13 @@ function onSpellCooldown(spellId, duration)
 
 							progressRect.item = slot
 
-							ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+							actionbarState.layoutActionBarCooldownProgress(progressRect)
 
 							if progressRect.raise then
 								progressRect:raise()
 							end
 						else
-							ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+							actionbarState.layoutActionBarCooldownProgress(progressRect)
 							progressRect:setPercent(0)
 							progressRect:show()
 
@@ -10581,7 +10581,7 @@ function onSpellGroupCooldown(groupId, duration)
 		onMultiActionSpellGroupCooldown(groupId, duration)
 	end
 
-	if not ptc_root_locals.shouldShowGraphicalCooldown() then
+	if not actionbarState.shouldShowGraphicalCooldown() then
 		return
 	end
 
@@ -10635,13 +10635,13 @@ function onSpellGroupCooldown(groupId, duration)
 
 								progressRect.item = slot
 
-								ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+								actionbarState.layoutActionBarCooldownProgress(progressRect)
 
 								if progressRect.raise then
 									progressRect:raise()
 								end
 							else
-								ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+								actionbarState.layoutActionBarCooldownProgress(progressRect)
 								progressRect:setPercent(0)
 								progressRect:show()
 
@@ -10715,7 +10715,7 @@ function filterSpells(text)
 			local spellName = spellListLabel:getId()
 			local spell = spellName and spellName ~= "" and Spells.getSpellByName(spellName) or nil
 
-			if not ptc_root_locals.spellPassesAssignLearntFilter(spell) then
+			if not actionbarState.spellPassesAssignLearntFilter(spell) then
 				visible = false
 			end
 		end
@@ -10757,7 +10757,7 @@ function filterSpells(text)
 	if not textFilterActive then
 		local filterEdit = spellAssignWindow and spellAssignWindow:recursiveGetChildById("filterTextEdit")
 		local typingInFilter = filterEdit and filterEdit:isFocused()
-		local focusTarget = ptc_root_locals.pickSpellAssignListFocusWidget() or firstVisible
+		local focusTarget = actionbarState.pickSpellAssignListFocusWidget() or firstVisible
 
 		spellsPanel:focusChild(focusTarget, KeyboardFocusReason)
 
@@ -10775,7 +10775,7 @@ function filterSpells(text)
 		end
 
 		updatePreviewSpell(focusTarget)
-		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focusTarget)
+		actionbarState.syncSpellAssignParameterFieldFromSlot(focusTarget)
 
 		if typingInFilter and filterEdit then
 			filterEdit:focus()
@@ -10788,7 +10788,7 @@ function filterSpells(text)
 
 	if focused and focused:isVisible() then
 		updatePreviewSpell(focused)
-		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focused)
+		actionbarState.syncSpellAssignParameterFieldFromSlot(focused)
 	else
 		spellsPanel:focusChild(firstVisible, KeyboardFocusReason)
 
@@ -10806,7 +10806,7 @@ function filterSpells(text)
 		end
 
 		updatePreviewSpell(firstVisible)
-		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(firstVisible)
+		actionbarState.syncSpellAssignParameterFieldFromSlot(firstVisible)
 	end
 end
 
@@ -10947,7 +10947,7 @@ function onDecrementVerticalScroll(bar, value)
 		return
 	end
 
-	value = value or ptc_root_locals[3]
+	value = value or actionbarState[3]
 
 	local newVal
 
@@ -10957,7 +10957,7 @@ function onDecrementVerticalScroll(bar, value)
 		newVal = math.max(scroll:getMinimum(), scroll:getValue() - value)
 	end
 
-	scroll:setValue(newVal - newVal % ptc_root_locals[3])
+	scroll:setValue(newVal - newVal % actionbarState[3])
 	updateScrollButtonsForBar(bar)
 end
 
@@ -10972,7 +10972,7 @@ function onIncrementVerticalScroll(bar, value)
 		return
 	end
 
-	value = value or ptc_root_locals[3]
+	value = value or actionbarState[3]
 
 	local newVal
 
@@ -10982,7 +10982,7 @@ function onIncrementVerticalScroll(bar, value)
 		newVal = math.min(scroll:getMaximum(), scroll:getValue() + value)
 	end
 
-	scroll:setValue(newVal - newVal % ptc_root_locals[3])
+	scroll:setValue(newVal - newVal % actionbarState[3])
 	updateScrollButtonsForBar(bar)
 end
 
@@ -11012,14 +11012,14 @@ function getPanelActionbar()
 	return actionBar
 end
 
-  ptc_root_locals.clearSlotData = function(slot)
+  actionbarState.clearSlotData = function(slot)
 	clearSlotActionContent(slot)
 
 	local sid = slot:getId()
 	local idxBottom = sid and tonumber(sid:match("^slot(%d+)$"))
 
 	if idxBottom then
-		ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(slot, idxBottom)
+		actionbarState.initDefaultHotkeysFirstBottomBarSlot(slot, idxBottom)
 	else
 		slot.hotkeyChatOn = ""
 		slot.hotkeyChatOff = ""
@@ -11041,7 +11041,7 @@ function resetAction(barId)
 	unbindHotkeys()
 
 	for _, slot in pairs(actionBarPanels[barId]:getChildren()) do
-		ptc_root_locals.clearSlotData(slot)
+		actionbarState.clearSlotData(slot)
 	end
 
 	setupHotkeys()
@@ -11056,7 +11056,7 @@ function resetActionBars()
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				ptc_root_locals.clearSlotData(slot)
+				actionbarState.clearSlotData(slot)
 			end
 		end
 	end
@@ -11065,13 +11065,13 @@ function resetActionBars()
 	saveActionBar()
 end
 
-  ptc_root_locals.clearAllActionBarSlotsWithoutSave = function()
+  actionbarState.clearAllActionBarSlotsWithoutSave = function()
 	for i = 1, NUM_BARS do
 		local panel = actionBarPanels[i]
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				ptc_root_locals.clearSlotData(slot)
+				actionbarState.clearSlotData(slot)
 			end
 		end
 	end
@@ -11095,8 +11095,8 @@ function prepareActionBarForLogin()
 	applyClientOptionsToActionBar()
 	setupActionBar()
 	beginActionBarBatch()
-	ptc_root_locals.clearAllActionBarSlotsWithoutSave()
-	ptc_root_locals.applyPresetSlotsToActionBar(storedSlots)
+	actionbarState.clearAllActionBarSlotsWithoutSave()
+	actionbarState.applyPresetSlotsToActionBar(storedSlots)
 	endActionBarBatch()
 
 	actionBarPreparedPreset = presetName
@@ -11120,7 +11120,7 @@ function reloadActionBarForPreset(presetName, previousPreset)
 	local var_476_0 = actionBarPreparedPreset
 
 	if var_476_0 and var_476_0 ~= "" and var_476_0 ~= presetName then
-		saveActionBarSlotsForPreset(var_476_0, ptc_root_locals.collectCharacterActionBarSlots())
+		saveActionBarSlotsForPreset(var_476_0, actionbarState.collectCharacterActionBarSlots())
 	end
 
 	local var_476_1 = getActionBarSlotsForPreset(presetName)
@@ -11130,8 +11130,8 @@ function reloadActionBarForPreset(presetName, previousPreset)
 
 	beginActionBarBatch()
 	unbindHotkeys()
-	ptc_root_locals.clearAllActionBarSlotsWithoutSave()
-	ptc_root_locals.applyPresetSlotsToActionBar(var_476_1)
+	actionbarState.clearAllActionBarSlotsWithoutSave()
+	actionbarState.applyPresetSlotsToActionBar(var_476_1)
 	endActionBarBatch()
 
 	actionBarPreparedPreset = presetName

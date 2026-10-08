@@ -1,4 +1,4 @@
-﻿local unusedValue
+local unusedValue
 local chaseModeBox
 local optionsAmount = 0
 local specialsAmount = 0
@@ -773,30 +773,30 @@ local function var_0_29()
 		end
 	end
 
-	local var_39_2 = var_0_27(node.order)
+	local order = var_0_27(node.order)
 
 	if var_39_1 then
-		node.order = var_39_2
+		node.order = order
 	end
 
-	if not (#var_39_2 > 0 or node.shortcutOrderInitialized == true) then
+	if not (#order > 0 or node.shortcutOrderInitialized == true) then
 		local var_39_3, var_39_4 = var_0_28()
 
-		var_39_2 = var_39_3
+		order = var_39_3
 
 		if not var_39_4 then
-			var_39_2 = var_0_27(DEFAULT_SHORTCUT_ORDER)
+			order = var_0_27(DEFAULT_SHORTCUT_ORDER)
 
-			for iter_39_3 = #var_39_2, 1, -1 do
-				local var_39_5 = node.buttons[var_39_2[iter_39_3]]
+			for iter_39_3 = #order, 1, -1 do
+				local var_39_5 = node.buttons[order[iter_39_3]]
 
 				if type(var_39_5) == "table" and var_39_5.visible == false then
-					table.remove(var_39_2, iter_39_3)
+					table.remove(order, iter_39_3)
 				end
 			end
 		end
 
-		node.order = var_39_2
+		node.order = order
 		node.shortcutOrderInitialized = true
 		var_39_1 = true
 	end
@@ -806,7 +806,7 @@ local function var_0_29()
 		g_settings.save()
 	end
 
-	return node, var_39_2
+	return node, order
 end
 
 function saveButtonConfig()
@@ -914,19 +914,19 @@ function applyShortcutOrder(order)
 		local id = child:getId()
 
 		if id and id ~= "" then
-			local var_44_3 = byId[id] == true
+			local visible = byId[id] == true
 
-			child:setVisible(var_44_3)
+			child:setVisible(visible)
 
 			local displayName = ControlButtonNames[id] or stripHotkey(child:getTooltip()) or id
 
 			if not buttonConfigs[id] then
 				buttonConfigs[id] = {
-					visible = var_44_3,
+					visible = visible,
 					tooltip = displayName
 				}
 			else
-				buttonConfigs[id].visible = var_44_3
+				buttonConfigs[id].visible = visible
 			end
 		end
 	end

@@ -1,4 +1,4 @@
-﻿PlayerStates = {
+PlayerStates = {
 	Rewards = 30,
 	Mentor = 536870912,
 	Powerless = 268435456,
@@ -691,7 +691,7 @@ function applyPlayerStateIcon(widget, info, variant)
 	widget:setImageClip(getPlayerStateIconClip(info, variant))
 end
 
-local var_0_11 = 9
+local MAX_BAKRAGORE_ICON_ID = 9
 
 function getBakragoreTaintIconInfo(numericValue)
 	numericValue = tonumber(numericValue) or 0
@@ -700,33 +700,33 @@ function getBakragoreTaintIconInfo(numericValue)
 		return nil
 	end
 
-	if numericValue > var_0_11 then
-		numericValue = var_0_11
+	if numericValue > MAX_BAKRAGORE_ICON_ID then
+		numericValue = MAX_BAKRAGORE_ICON_ID
 	end
 
-	local var_20_0 = numericValue
-	local var_20_1 = false
+	local taintStacks = numericValue
+	local hasFinalTaint = false
 
 	if numericValue >= 5 then
-		var_20_1 = true
-		var_20_0 = numericValue - 5
+		hasFinalTaint = true
+		taintStacks = numericValue - 5
 	end
 
-	local var_20_2
+	local taintTooltip
 
-	if var_20_1 and var_20_0 == 0 then
-		var_20_2 = tr("Bakragore's Final Taint\nEnhanced experience and loot, without the regular penalties.")
-	elseif var_20_1 then
-		var_20_2 = tr("Bakragore's Taint (%d) and Final Taint", var_20_0)
+	if hasFinalTaint and taintStacks == 0 then
+		taintTooltip = tr("Bakragore's Final Taint\nEnhanced experience and loot, without the regular penalties.")
+	elseif hasFinalTaint then
+		taintTooltip = tr("Bakragore's Taint (%d) and Final Taint", taintStacks)
 	else
-		var_20_2 = tr("Bakragore's Taint (%d)", var_20_0)
+		taintTooltip = tr("Bakragore's Taint (%d)", taintStacks)
 	end
 
 	return {
 		id = "condition_bakragore_taint",
 		image = PlayerStateFlagsRottenBloodImage,
 		clipRect = (numericValue - 1) * 9 .. " 0 9 9",
-		tooltip = var_20_2
+		tooltip = taintTooltip
 	}
 end
 
@@ -918,21 +918,21 @@ function Player.getItems(self, itemId, subType)
 
 	for i = InventorySlotFirst, InventorySlotLast do
 		local item = self:getInventoryItem(i)
-		local var_33_3 = type(item)
+		local inventoryItemType = type(item)
 
-		if (var_33_3 == "userdata" or var_33_3 == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
+		if (inventoryItemType == "userdata" or inventoryItemType == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
 			table.insert(items, item)
 		end
 	end
 
 	for i, container in pairs(g_game.getContainers()) do
-		local var_33_4 = type(container)
+		local containerType = type(container)
 
-		if var_33_4 == "userdata" or var_33_4 == "table" then
+		if containerType == "userdata" or containerType == "table" then
 			for j, item in pairs(container:getItems()) do
-				local var_33_5 = type(item)
+				local containerItemType = type(item)
 
-				if (var_33_5 == "userdata" or var_33_5 == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
+				if (containerItemType == "userdata" or containerItemType == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
 					item.container = container
 
 					table.insert(items, item)

@@ -1485,16 +1485,16 @@ local function var_0_131(arg_71_0, arg_71_1, arg_71_2)
 	arg_71_0._hoverBorder = arg_71_0:getChildById("hoverBorder")
 
 	if arg_71_2 ~= false then
-		function arg_71_0.onFocusChange(arg_72_0, arg_72_1)
-			arg_72_0._isFocused = arg_72_1
+		function arg_71_0.onFocusChange(arg_72_0, _isFocused)
+			arg_72_0._isFocused = _isFocused
 
 			refreshRowHoverBorder(arg_72_0)
 		end
 	end
 
 	if arg_71_1 then
-		function arg_71_0.onHoverChange(arg_73_0, arg_73_1)
-			arg_73_0._isHovered = arg_73_1
+		function arg_71_0.onHoverChange(arg_73_0, _isHovered)
+			arg_73_0._isHovered = _isHovered
 
 			refreshRowHoverBorder(arg_73_0)
 		end
@@ -1630,16 +1630,16 @@ local function setImagenHttp(widget, url, arg_79_2, arg_79_3)
 	if IMAGES_URL and IMAGES_URL ~= "" then
 		pendingHttpId = pendingHttpId + 1
 
-		local var_79_1 = pendingHttpId
+		local _httpId = pendingHttpId
 
-		pendingHttpWidgets[var_79_1] = widget
-		widget._httpId = var_79_1
+		pendingHttpWidgets[_httpId] = widget
+		widget._httpId = _httpId
 
 		local var_79_2 = IMAGES_URL .. url
 		local var_79_3 = {
 			widget = widget,
 			isIcon = arg_79_2,
-			httpId = var_79_1,
+			httpId = _httpId,
 			persistent = arg_79_3 == true
 		}
 
@@ -4763,15 +4763,15 @@ function onHoverHomeBanner(arg_212_0)
 		return
 	end
 
-	local var_212_0 = arg_212_0:isHovered()
+	local _bannerCursor = arg_212_0:isHovered()
 
-	if var_212_0 == arg_212_0._bannerCursor then
+	if _bannerCursor == arg_212_0._bannerCursor then
 		return
 	end
 
-	arg_212_0._bannerCursor = var_212_0
+	arg_212_0._bannerCursor = _bannerCursor
 
-	if var_212_0 then
+	if _bannerCursor then
 		g_mouse.pushCursor("point")
 	else
 		g_mouse.popCursor("point")

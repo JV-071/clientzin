@@ -1,4 +1,4 @@
-﻿helperWindow = nil
+helperWindow = nil
 helperButton = nil
 currentTab = nil
 
@@ -856,11 +856,11 @@ local function var_0_65(HELPER_STATS_ITEMS, arg_28_1)
 			end
 
 			if helperLanguageSourceText then
-				local var_28_5 = helperLanguage == "pt" and HELPER_PT_TRANSLATIONS[helperLanguageSourceText] or helperLanguageSourceText
+				local helperLanguageAppliedText = helperLanguage == "pt" and HELPER_PT_TRANSLATIONS[helperLanguageSourceText] or helperLanguageSourceText
 
-				HELPER_STATS_ITEMS:setText(var_28_5)
+				HELPER_STATS_ITEMS:setText(helperLanguageAppliedText)
 
-				HELPER_STATS_ITEMS.helperLanguageAppliedText = var_28_5
+				HELPER_STATS_ITEMS.helperLanguageAppliedText = helperLanguageAppliedText
 			end
 		end
 	end
@@ -1655,14 +1655,14 @@ local function var_0_90()
 		HelperConfigTab.setLanguage(var_66_0.language, false)
 	end
 
-	local var_66_3 = textValue
+	local activeProfile = textValue
 
-	if isAutoSwitchHotkeyPresetEnabled() and var_66_3 and var_66_3 ~= "" and type(var_66_0.profiles[var_66_3]) == "table" and var_66_0.activeProfile ~= var_66_3 then
-		var_66_0.activeProfile = var_66_3
-		var_66_0.current = copyConfig(var_66_0.profiles[var_66_3])
+	if isAutoSwitchHotkeyPresetEnabled() and activeProfile and activeProfile ~= "" and type(var_66_0.profiles[activeProfile]) == "table" and var_66_0.activeProfile ~= activeProfile then
+		var_66_0.activeProfile = activeProfile
+		var_66_0.current = copyConfig(var_66_0.profiles[activeProfile])
 		var_66_2 = true
 
-		helperLog("info", "Auto-switched Helper profile to \"" .. var_66_3 .. "\".")
+		helperLog("info", "Auto-switched Helper profile to \"" .. activeProfile .. "\".")
 	end
 
 	if var_66_0.autoSaveEnabled == nil then

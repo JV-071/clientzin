@@ -1,4 +1,4 @@
-﻿local bottomMenu
+local bottomMenu
 local calendarWindow
 local activeScheduleEvent
 local upcomingScheduleEvent
@@ -497,7 +497,7 @@ function reloadEventsSchedulerCalender()
 
 	local now = os.time()
 	local upcomingWindow = 1209600
-	local var_17_4 = 4
+	local MAX_EVENTS_PER_CATEGORY = 4
 	local activeEvents = {}
 	local upcomingEvents = {}
 
@@ -508,14 +508,14 @@ function reloadEventsSchedulerCalender()
 		if not startTimestamp or not endTimestamp then
 			-- block empty
 		else
-			local var_17_9 = info.colorlight or "#585858"
-			local var_17_10 = info.colordark or "#414141"
+			local activeEventColor = info.colorlight or "#585858"
+			local inactiveEventColor = info.colordark or "#414141"
 			local numericValue = tonumber(info.displaypriority) or 0
 			local eventData = {
 				lastDay = false,
 				firstDay = false,
-				active = var_17_9 .. "ff",
-				inactive = var_17_10 .. "ff",
+				active = activeEventColor .. "ff",
+				inactive = inactiveEventColor .. "ff",
 				description = info.description,
 				priority = numericValue,
 				season = info.isseasonal,
@@ -536,8 +536,8 @@ function reloadEventsSchedulerCalender()
 
 			for index, day in ipairs(days) do
 				table.insert(day, {
-					active = var_17_9 .. "ff",
-					inactive = var_17_10 .. "ff",
+					active = activeEventColor .. "ff",
+					inactive = inactiveEventColor .. "ff",
 					description = info.description,
 					priority = numericValue,
 					season = info.isseasonal,
@@ -558,11 +558,11 @@ function reloadEventsSchedulerCalender()
 		return (a.startTimestamp or 0) < (b.startTimestamp or 0)
 	end)
 
-	while var_17_4 < #upcomingEvents do
+	while MAX_EVENTS_PER_CATEGORY < #upcomingEvents do
 		table.remove(upcomingEvents)
 	end
 
-	while var_17_4 < #activeEvents do
+	while MAX_EVENTS_PER_CATEGORY < #activeEvents do
 		table.remove(activeEvents)
 	end
 

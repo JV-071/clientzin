@@ -1,4 +1,4 @@
-﻿local gameReportWidget
+local gameReportWidget
 local var_0_1
 local uIButtonWidget
 local var_0_3
@@ -27,16 +27,16 @@ local var_0_25 = "#60f8f8"
 local var_0_26 = "#ffffff"
 local var_0_27 = "#909090"
 local var_0_28 = "#C0C0C0"
-local var_0_29 = {
+local REPORT_STATUS_COLORS = {
 	closed = "#d33c3c",
 	open = "#44ad25"
 }
-local var_0_30 = "Support"
-local var_0_31 = "reportShortcutHighlight"
-local var_0_32 = "reportMapHighlight"
-local var_0_33 = "rewardMapHighlight"
-local var_0_34 = "reportMapButton"
-local var_0_35 = "newPlayerRewardMapButton"
+local DEFAULT_SUPPORT_SENDER = "Support"
+local REPORT_SHORTCUT_HIGHLIGHT_ID = "reportShortcutHighlight"
+local REPORT_MAP_HIGHLIGHT_ID = "reportMapHighlight"
+local REWARD_MAP_HIGHLIGHT_ID = "rewardMapHighlight"
+local REPORT_MAP_BUTTON_ID = "reportMapButton"
+local NEW_PLAYER_REWARD_MAP_BUTTON_ID = "newPlayerRewardMapButton"
 local var_0_36 = {
 	3,
 	1,
@@ -47,7 +47,7 @@ local var_0_36 = {
 	7,
 	8
 }
-local var_0_37 = {
+local EXERCISE_WEAPON_CHOICES = {
 	{
 		name = "Sword",
 		id = 63298
@@ -205,18 +205,18 @@ end
 local function unusedValue(textValue)
 	textValue = tostring(textValue or ""):lower()
 
-	return var_0_29[textValue] or var_0_28
+	return REPORT_STATUS_COLORS[textValue] or var_0_28
 end
 
-local function var_0_64(textValue)
+local function formatReportStatus(textValue)
 	textValue = tostring(textValue or ""):lower()
 
 	if textValue == "closed" then
-		return tr("Closed"), var_0_29.closed
+		return tr("Closed"), REPORT_STATUS_COLORS.closed
 	end
 
 	if textValue == "open" then
-		return tr("Open"), var_0_29.open
+		return tr("Open"), REPORT_STATUS_COLORS.open
 	end
 
 	if textValue == "" then
@@ -337,7 +337,7 @@ local function var_0_72(arg_22_0)
 end
 
 local function var_0_73()
-	local var_23_0 = var_0_71(var_0_1, var_0_31, var_0_45)
+	local var_23_0 = var_0_71(var_0_1, REPORT_SHORTCUT_HIGHLIGHT_ID, var_0_45)
 
 	if var_23_0 then
 		var_23_0:setVisible(var_0_13)
@@ -350,7 +350,7 @@ local function var_0_73()
 
 		uIButtonWidget:setVisible(var_0_13)
 
-		local var_23_1 = var_0_71(uIButtonWidget, var_0_32, var_0_46)
+		local var_23_1 = var_0_71(uIButtonWidget, REPORT_MAP_HIGHLIGHT_ID, var_0_46)
 
 		if var_23_1 then
 			var_23_1:setVisible(var_0_13)
@@ -452,7 +452,7 @@ local function var_0_80()
 	if var_0_52(var_0_3) then
 		var_0_3:setVisible(var_0_14)
 
-		local var_30_1 = var_0_71(var_0_3, var_0_33, var_0_46)
+		local var_30_1 = var_0_71(var_0_3, REWARD_MAP_HIGHLIGHT_ID, var_0_46)
 
 		if var_30_1 then
 			var_30_1:setVisible(var_0_14)
@@ -509,7 +509,7 @@ local function var_0_83()
 		return
 	end
 
-	uIButtonWidget:setId(var_0_34)
+	uIButtonWidget:setId(REPORT_MAP_BUTTON_ID)
 	uIButtonWidget:setSize({
 		width = var_0_38,
 		height = var_0_38
@@ -664,7 +664,7 @@ function confirmNewPlayerExercise()
 
 	var_0_87()
 
-	if numericValue >= 1 and numericValue <= #var_0_37 then
+	if numericValue >= 1 and numericValue <= #EXERCISE_WEAPON_CHOICES then
 		var_0_84(numericValue)
 	end
 end
@@ -690,7 +690,7 @@ local function var_0_89()
 	local var_44_3 = 5
 	local var_44_4 = 4
 
-	for index, entry in ipairs(var_0_37) do
+	for index, entry in ipairs(EXERCISE_WEAPON_CHOICES) do
 		local newPlayerExerciseButtonWidget = g_ui.createWidget("NewPlayerExerciseButton", elements)
 
 		if var_0_52(newPlayerExerciseButtonWidget) then
@@ -700,7 +700,7 @@ local function var_0_89()
 
 			local var_44_6 = (index - 1) % var_44_4
 			local var_44_7 = math.floor((index - 1) / var_44_4)
-			local var_44_8 = math.min(var_44_4, #var_0_37 - var_44_7 * var_44_4)
+			local var_44_8 = math.min(var_44_4, #EXERCISE_WEAPON_CHOICES - var_44_7 * var_44_4)
 			local var_44_9 = var_44_8 * var_44_1 + (var_44_8 - 1) * var_44_3
 			local width = math.floor(((elements:getWidth() > 0 and elements:getWidth() or 280) - var_44_9) / 2)
 
@@ -783,7 +783,7 @@ local function var_0_90()
 		return
 	end
 
-	var_0_3:setId(var_0_35)
+	var_0_3:setId(NEW_PLAYER_REWARD_MAP_BUTTON_ID)
 	var_0_3:setSize({
 		width = var_0_38,
 		height = var_0_38
@@ -992,7 +992,7 @@ local function var_0_98(arg_61_0)
 	local var_61_8 = var_0_53("sideStatusValue")
 
 	if var_61_8 then
-		local var_61_9, var_61_10 = var_0_64(arg_61_0.status)
+		local var_61_9, var_61_10 = formatReportStatus(arg_61_0.status)
 
 		var_61_8:setVisible(true)
 		var_61_8:setText(var_61_9)
@@ -1196,7 +1196,7 @@ local function var_0_109()
 		local var_72_6 = entry.replier or ""
 		local var_72_7 = var_72_6 ~= "" and var_72_6 == var_72_2
 
-		var_0_106(var_72_0, entry.createdAt, var_72_7 and var_72_2 or var_0_30, entry.message or "", var_72_7 and var_0_24 or var_0_25)
+		var_0_106(var_72_0, entry.createdAt, var_72_7 and var_72_2 or DEFAULT_SUPPORT_SENDER, entry.message or "", var_72_7 and var_0_24 or var_0_25)
 	end
 
 	local var_72_8 = var_0_53("reportThreadScrollBar")
@@ -1324,7 +1324,7 @@ local function var_0_115(arg_79_0)
 	return true
 end
 
-local function var_0_116(arg_80_0)
+local function onClick(arg_80_0)
 	var_0_115(arg_80_0)
 end
 
@@ -1352,13 +1352,13 @@ local function var_0_118(arg_82_0)
 	var_0_110()
 	var_0_100()
 
-	local var_82_1 = var_0_21
+	local rowColor = var_0_21
 
 	for unusedValue, entry in ipairs(var_0_62(arg_82_0)) do
 		local entry = entry.entry
-		local var_82_3 = var_0_59(entry.id)
+		local reportId = var_0_59(entry.id)
 
-		var_0_9[var_82_3] = entry
+		var_0_9[reportId] = entry
 
 		local reportListRowWidget = g_ui.createWidget("ReportListRow", var_82_0)
 
@@ -1366,17 +1366,17 @@ local function var_0_118(arg_82_0)
 			break
 		end
 
-		reportListRowWidget.reportId = var_82_3
-		reportListRowWidget.rowColor = var_82_1
+		reportListRowWidget.reportId = reportId
+		reportListRowWidget.rowColor = rowColor
 
-		reportListRowWidget:setId("reportRow" .. var_82_3)
-		reportListRowWidget:setBackgroundColor(var_82_1)
+		reportListRowWidget:setId("reportRow" .. reportId)
+		reportListRowWidget:setBackgroundColor(rowColor)
 
 		local ticketLabel = reportListRowWidget:getChildById("ticketLabel")
 		local playerLabel = reportListRowWidget:getChildById("playerLabel")
 		local typeLabel = reportListRowWidget:getChildById("typeLabel")
 		local statusLabel = reportListRowWidget:getChildById("statusLabel")
-		local var_82_9 = "#" .. tostring(var_82_3)
+		local var_82_9 = "#" .. tostring(reportId)
 
 		if var_0_60(entry) then
 			var_82_9 = "* " .. var_82_9
@@ -1395,7 +1395,7 @@ local function var_0_118(arg_82_0)
 		end
 
 		if statusLabel then
-			local var_82_10, var_82_11 = var_0_64(entry.status)
+			local var_82_10, var_82_11 = formatReportStatus(entry.status)
 
 			statusLabel:setText(var_82_10)
 			statusLabel:setColor(var_82_11)
@@ -1407,8 +1407,8 @@ local function var_0_118(arg_82_0)
 			detailsButton.onClick = handleClick
 		end
 
-		reportListRowWidget.onClick = var_0_116
-		var_82_1 = var_82_1 == var_0_21 and var_0_22 or var_0_21
+		reportListRowWidget.onClick = onClick
+		rowColor = rowColor == var_0_21 and var_0_22 or var_0_21
 	end
 
 	var_0_99()

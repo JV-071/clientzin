@@ -1,4 +1,4 @@
-﻿bannersController = Controller:new()
+bannersController = Controller:new()
 
 local var_0_0 = "ui_drop_shadow"
 local bannerQueue = {}
@@ -883,31 +883,31 @@ local function setTextContentOpacity(opacity)
 	end
 end
 
-local function refreshBannerTextLayout(arg_41_0)
+local function refreshBannerTextLayout(width)
 	local var_41_0 = var_0_86()
 
 	if not var_41_0 then
 		return
 	end
 
-	arg_41_0 = math.max(1, math.min(arg_41_0, BANNER_BODY_WIDTH))
+	width = math.max(1, math.min(width, BANNER_BODY_WIDTH))
 
-	if arg_41_0 == var_0_27 then
+	if width == var_0_27 then
 		return
 	end
 
-	var_0_27 = arg_41_0
+	var_0_27 = width
 
 	if var_41_0.backdropAnim then
-		var_41_0.backdropAnim:setWidth(arg_41_0)
+		var_41_0.backdropAnim:setWidth(width)
 
-		var_0_25.width = arg_41_0
+		var_0_25.width = width
 
 		var_41_0.backdropAnim:setImageClip(var_0_25)
 	end
 
 	if var_41_0.textClip then
-		var_41_0.textClip:setWidth(arg_41_0)
+		var_41_0.textClip:setWidth(width)
 	end
 end
 
@@ -1558,31 +1558,31 @@ local function var_0_127(arg_79_0)
 	end
 end
 
-local function var_0_128(arg_80_0)
+local function var_0_128(width)
 	local var_80_0 = var_0_107
 
 	if not var_80_0 then
 		return
 	end
 
-	arg_80_0 = math.max(1, math.min(arg_80_0, BANNER_BODY_WIDTH))
+	width = math.max(1, math.min(width, BANNER_BODY_WIDTH))
 
-	if arg_80_0 == var_0_112 then
+	if width == var_0_112 then
 		return
 	end
 
-	var_0_112 = arg_80_0
+	var_0_112 = width
 
 	if var_80_0.backdropAnim then
-		var_80_0.backdropAnim:setWidth(arg_80_0)
+		var_80_0.backdropAnim:setWidth(width)
 
-		var_0_116.width = arg_80_0
+		var_0_116.width = width
 
 		var_80_0.backdropAnim:setImageClip(var_0_116)
 	end
 
 	if var_80_0.textClip then
-		var_80_0.textClip:setWidth(arg_80_0)
+		var_80_0.textClip:setWidth(width)
 	end
 end
 
