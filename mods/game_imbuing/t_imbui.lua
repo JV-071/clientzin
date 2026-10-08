@@ -1,23 +1,21 @@
-﻿-- chunkname: @/mods/game_imbuing/t_imbui.lua
-
-if not Imbuement then
+﻿if not Imbuement then
 	Imbuement = {
+		inventoryGold = 0,
 		bankGold = 0,
-		awaitingFyiRestore = false,
-		inventoryGold = 0
+		awaitingFyiRestore = false
 	}
 	Imbuement.__index = Imbuement
 end
 
 Imbuement.MessageDialog = {
+	ImbuementSuccess = 0,
 	PreyError = 21,
 	PreyMessage = 20,
 	ClearingCharmError = 11,
 	ClearingCharmSuccess = 10,
 	ImbuingStationNotFound = 3,
 	ImbuementRollFailed = 2,
-	ImbuementError = 1,
-	ImbuementSuccess = 0
+	ImbuementError = 1
 }
 
 local self = Imbuement
@@ -76,10 +74,10 @@ local IMBUEMENT_MENU_KEYS = {
 	"clearImbue"
 }
 local IMBUEMENT_MENU_SIZES = {
+	selectImbue = "740 500",
 	scrollImbue = "740 640",
 	selectItemOrScroll = "740 388",
-	clearImbue = "740 500",
-	selectImbue = "740 500"
+	clearImbue = "740 500"
 }
 
 function Imbuement.init()
@@ -256,7 +254,7 @@ function Imbuement.close()
 	self.window:hide()
 end
 
-function Imbuement:toggleMenu(menu)
+function Imbuement.toggleMenu(self, menu)
 	for _, key in ipairs(IMBUEMENT_MENU_KEYS) do
 		local panel = self[key]
 
@@ -291,9 +289,7 @@ function Imbuement.onOpenImbuementWindow()
 end
 
 function Imbuement.onImbuementItem(itemId, tier, slots, activeSlots, availableImbuements, needItems)
-	local pending = ImbuementItem.pendingClientInfo
-
-	if not pending and not self.awaitingFyiRestore and self.window and not self.window:isDestroyed() and not self.window:isVisible() then
+	if not ImbuementItem.pendingClientInfo and not self.awaitingFyiRestore and self.window and not self.window:isDestroyed() and not self.window:isVisible() then
 		self:show()
 	end
 
@@ -335,7 +331,9 @@ function Imbuement.onMessageDialog(type, content)
 
 	self:hide()
 
-	local message = content or ""
+	local message
+
+	message = content or ""
 
 	if self.messageWindow then
 		self.messageWindow:destroy()

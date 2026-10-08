@@ -2,7 +2,7 @@
 
 Copy `game_announcements.php` next to the site's `login.php` (currently
 `C:\UniServerZ\www`). The client requests
-`http://127.0.0.1/game_announcements.php` and expects a JSON object with a `ptc`
+`http://127.0.0.1/game_announcements_clientzin.php` and expects a JSON object with a `clientzin`
 array. An empty array means there are currently no announcements.
 
 Edit the endpoint's `$announcements` array to publish announcements. Follow the

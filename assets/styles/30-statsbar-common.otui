@@ -64,7 +64,7 @@ StatsHorizontalBarGrade < UIWidget
     id: grade_left_1
     anchors.left: parent.left
     anchors.top: parent.top
-    image-source: /images/bars/marker_top
+    image-source: /images/bars/marker-top
     size: 7 11
     visible: false
     phantom: false
@@ -73,7 +73,7 @@ StatsHorizontalBarGrade < UIWidget
     id: grade_left_2
     anchors.left: parent.left
     anchors.top: parent.top
-    image-source: /images/bars/marker_top
+    image-source: /images/bars/marker-top
     size: 7 11
     visible: false
     phantom: false
@@ -82,7 +82,7 @@ StatsHorizontalBarGrade < UIWidget
     id: grade_right_1
     anchors.right: parent.right
     anchors.top: parent.top
-    image-source: /images/bars/marker_top
+    image-source: /images/bars/marker-top
     size: 7 11
     visible: false
     phantom: false
@@ -91,7 +91,7 @@ StatsHorizontalBarGrade < UIWidget
     id: grade_right_2
     anchors.right: parent.right
     anchors.top: parent.top
-    image-source: /images/bars/marker_top
+    image-source: /images/bars/marker-top
     size: 7 11
     visible: false
     phantom: false
@@ -138,37 +138,114 @@ StatsVerticalLeftBarGrade < UIWidget
     phantom: false
 
   UIWidget
-    id: grade_top_1
+    id: grade_left_1
     anchors.left: parent.left
     anchors.top: parent.top
-    image-source: /images/bars/marker_left
+    image-source: /images/bars/marker-left
     size: 11 7
     visible: false
     phantom: false
 
   UIWidget
-    id: grade_top_2
+    id: grade_left_2
     anchors.left: parent.left
     anchors.top: parent.top
-    image-source: /images/bars/marker_left
+    image-source: /images/bars/marker-left
     size: 11 7
     visible: false
     phantom: false
 
   UIWidget
-    id: grade_bottom_1
+    id: grade_right_1
     anchors.left: parent.left
     anchors.bottom: parent.bottom
-    image-source: /images/bars/marker_left
+    image-source: /images/bars/marker-left
     size: 11 7
     visible: false
     phantom: false
 
   UIWidget
-    id: grade_bottom_2
+    id: grade_right_2
     anchors.left: parent.left
     anchors.bottom: parent.bottom
-    image-source: /images/bars/marker_left
+    image-source: /images/bars/marker-left
+    size: 11 7
+    visible: false
+    phantom: false
+
+StatsVerticalRightBarGrade < UIWidget
+  UIWidget
+    id: grade_border_1
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    background-color: #ffffffff
+    height: 1
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_border_2
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    background-color: #ffffffff
+    height: 1
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_border_3
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.top: parent.top
+    background-color: #ffffffff
+    width: 1
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_border_4
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    anchors.top: parent.top
+    background-color: #ffffffff
+    width: 1
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_left_1
+    anchors.right: parent.right
+    anchors.top: parent.top
+    image-source: /images/bars/marker-right
+    size: 11 7
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_left_2
+    anchors.right: parent.right
+    anchors.top: parent.top
+    image-source: /images/bars/marker-right
+    size: 11 7
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_right_1
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    image-source: /images/bars/marker-right
+    size: 11 7
+    visible: false
+    phantom: false
+
+  UIWidget
+    id: grade_right_2
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    image-source: /images/bars/marker-right
     size: 11 7
     visible: false
     phantom: false
@@ -548,3 +625,649 @@ StatsBarUpSkill < UIStatsBar
     visible: false
     !text: '9999999999/9999999999'
     font: $var-cip-font-new
+
+// --- Barras de valor (vertical / placement left-right) ---
+// Fill cresce de baixo para cima. Texto horizontal rodado -90 no centro da barra.
+
+StatsBarLeftWithShrink < UIWidget
+  clipping: true
+
+  UIWidget
+    id: statsBarLeftBackground
+    anchors.fill: parent
+    image-source: /images/ui/2pixel-up-frame-borderimage
+    image-border: 2
+    image-repeated: true
+
+    UIWidget
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-right: 2
+      height: 98
+      focusable: false
+      image-source: /images/game/topbar/borderimage-statusbar-left
+      @onGeometryChange: function(self) local w = math.min(98, self:getWidth()); if w > 0 then self:setImageClip(string.format('0 0 %d 98', w)); self:setImageSize(tosize(string.format('%d 98', w))) end end
+
+StatsBarRightWithShrink < UIWidget
+  clipping: true
+
+  UIWidget
+    id: statsBarRightBackground
+    anchors.fill: parent
+    image-source: /images/ui/2pixel-up-frame-borderimage
+    image-border: 2
+    image-repeated: true
+
+    UIWidget
+      anchors.top: parent.top
+      anchors.right: parent.right
+      width: 98
+      height: 98
+      focusable: false
+      image-source: /images/game/topbar/borderimage-statusbar-right
+      @onGeometryChange: function(self) local parent = self:getParent(); local avail = parent and math.max(0, parent:getWidth() - 2) or self:getWidth(); local w = math.min(98, avail); if w > 0 then if self:getWidth() ~= w then self:setWidth(w) end; self:setImageClip(string.format('%d 0 %d 98', 98 - w, w)); self:setImageSize(tosize(string.format('%d 98', w))) end end
+
+StatsBarLeft < UIStatsBar
+  clipping: false
+  StatsBarDarkBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalLeftBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  Label
+    id: text
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    text-align: center
+    text-auto-resize: true
+    rotation: -90
+    visible: false
+    phantom: true
+    !text: '9999/9999'
+    font: $var-cip-font-new
+
+StatsBarLeftManaShieldOverlay < UIStatsBar
+  clipping: true
+  phantom: true
+  focusable: false
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 0 1
+    image-repeated: true
+
+  StatsVerticalLeftBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+StatsBarLeftMana < UIStatsBar
+  clipping: false
+  StatsBarDarkBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalLeftBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  StatsBarLeftManaShieldOverlay
+    id: manashield
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 6
+    margin-left: 1
+    visible: false
+    !statsbar-type: 'manashield'
+    !statsbar-orientation: 'vertical'
+    statsbar-text: false
+
+  Panel
+    id: textRow
+    height: 14
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    rotation: -90
+    phantom: true
+    clipping: false
+    layout:
+      type: horizontalBox
+      fit-children: true
+      spacing: 0
+
+    Label
+      id: statsbarManaValue
+      text-align: left
+      text-auto-resize: true
+      visible: true
+      color: #f0f0f0
+      !text: '9999/9999'
+      font: $var-cip-font-new
+
+    UIWidget
+      id: statsbarManaShieldIcon
+      size: 9 9
+      fixed-size: true
+      phantom: true
+      visible: false
+      margin-left: 1
+      image-source: /images/game/creatures/player-state-flags
+      image-clip: 234 0 9 9
+
+    Label
+      id: statsbarManaEnd
+      text-align: left
+      visible: false
+      color: #f0f0f0
+      !text: ')'
+      font: $var-cip-font-new
+
+StatsBarLeftSkill < UIStatsBar
+  clipping: false
+  StatsBarLightBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalLeftBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  Label
+    id: text
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    text-align: center
+    visible: false
+    !text: '9999999999/9999999999'
+    font: $var-cip-font-new
+
+StatsBarRight < UIStatsBar
+  clipping: false
+  StatsBarDarkBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalRightBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  Label
+    id: text
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    text-align: center
+    text-auto-resize: true
+    rotation: 90
+    visible: false
+    phantom: true
+    !text: '9999/9999'
+    font: $var-cip-font-new
+
+StatsBarRightManaShieldOverlay < UIStatsBar
+  clipping: true
+  phantom: true
+  focusable: false
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 0 1
+    image-repeated: true
+
+  StatsVerticalRightBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+StatsBarRightMana < UIStatsBar
+  clipping: false
+  StatsBarDarkBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalRightBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  StatsBarRightManaShieldOverlay
+    id: manashield
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 6
+    margin-right: 1
+    visible: false
+    !statsbar-type: 'manashield'
+    !statsbar-orientation: 'vertical'
+    statsbar-text: false
+
+  Panel
+    id: textRow
+    height: 14
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    rotation: 90
+    phantom: true
+    clipping: false
+    layout:
+      type: horizontalBox
+      fit-children: true
+      spacing: 0
+
+    Label
+      id: statsbarManaValue
+      text-align: left
+      text-auto-resize: true
+      visible: true
+      color: #f0f0f0
+      !text: '9999/9999'
+      font: $var-cip-font-new
+
+    UIWidget
+      id: statsbarManaShieldIcon
+      size: 9 9
+      fixed-size: true
+      phantom: true
+      visible: false
+      margin-left: 1
+      image-source: /images/game/creatures/player-state-flags
+      image-clip: 234 0 9 9
+
+    Label
+      id: statsbarManaEnd
+      text-align: left
+      visible: false
+      color: #f0f0f0
+      !text: ')'
+      font: $var-cip-font-new
+
+StatsBarRightSkill < UIStatsBar
+  clipping: false
+  StatsBarLightBackground
+    anchors.fill: parent
+    phantom: true
+
+  UIWidget
+    id: bar
+    height: 1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin: 1
+    image-repeated: true
+
+  StatsVerticalRightBarGrade
+    id: verticalGrade
+    anchors.fill: parent
+    visible: false
+
+  Label
+    id: text
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    text-align: center
+    visible: false
+    !text: '9999999999/9999999999'
+    font: $var-cip-font-new
+
+// --- Chrome compartilhado (left / right) ---
+
+StatsBarMonkComboSereneVertical < Panel
+  visible: false
+  width: 13
+  fixed-size: true
+  phantom: true
+  focusable: false
+  layout:
+    type: verticalBox
+    fit-children: true
+
+  UIWidget
+    id: topBarMonkSereneIcon
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    image-source: /images/game/topbar/icon-serene-off
+
+  HorizontalSeparatorFlat
+    id: topBarMonkSeparator
+    margin-top: 4
+    size: 13 2
+
+  UIWidget
+    id: topBarMonkCombo5
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    margin-top: 4
+    image-source: /images/game/topbar/icon-combopoint-empty
+
+  UIWidget
+    id: topBarMonkCombo4
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    margin-top: 2
+    image-source: /images/game/topbar/icon-combopoint-empty
+
+  UIWidget
+    id: topBarMonkCombo3
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    margin-top: 2
+    image-source: /images/game/topbar/icon-combopoint-empty
+
+  UIWidget
+    id: topBarMonkCombo2
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    margin-top: 2
+    image-source: /images/game/topbar/icon-combopoint-empty
+
+  UIWidget
+    id: topBarMonkCombo1
+    size: 13 13
+    fixed-size: true
+    phantom: true
+    margin-top: 2
+    image-source: /images/game/topbar/icon-combopoint-empty
+
+StatsBarProficiencyButtonDefault < Panel
+  id: proficiencyButtonColumn
+  size: 13 13
+  fixed-size: true
+  phantom: true
+  clipping: false
+
+  UIButton
+    id: proficiencyButton
+    size: 13 13
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/topbar/proficiency-button-default
+    image-clip: 0 0 13 13
+    !tooltip: tr('Open Weapon Proficiency Dialog')
+    tooltip-delayed: true
+    @onClick: modules.game_proficiency.requestOpenWindow()
+    $hover !pressed:
+      image-clip: 0 0 13 13
+    $pressed:
+      image-clip: 0 13 13 13
+
+  UIWidget
+    id: highlightProficiencyButton
+    size: 15 15
+    phantom: true
+    clipping: false
+    image-source: /images/animations/button-highlight-15x15
+    anchors.horizontalCenter: proficiencyButton.horizontalCenter
+    anchors.verticalCenter: proficiencyButton.verticalCenter
+    visible: false
+
+StatsBarProficiencyButtonCompact < Panel
+  id: proficiencyButtonCompactWrap
+  size: 14 14
+  fixed-size: true
+  phantom: true
+  clipping: false
+  focusable: false
+
+  UIButton
+    id: proficiencyButtonCompact
+    anchors.fill: parent
+    image-source: /images/game/topbar/proficiency-button-compact-unequipped
+    image-clip: 0 0 14 14
+    !tooltip: tr('Open Weapon Proficiency Dialog')
+    tooltip-delayed: true
+    @onClick: modules.game_proficiency.requestOpenWindow()
+    $hover !pressed:
+      image-clip: 0 0 14 14
+    $pressed:
+      image-clip: 0 14 14 14
+
+  Panel
+    id: proficiencyButtonCompactProgress
+    size: 14 14
+    anchors.fill: parent
+    phantom: true
+    clipping: false
+    focusable: false
+    visible: false
+
+  UIWidget
+    id: highlightProficiencyButtonCompact
+    size: 14 14
+    phantom: true
+    clipping: false
+    image-source: /images/animations/button-highlight-15x14
+    anchors.horizontalCenter: proficiencyButtonCompact.horizontalCenter
+    anchors.verticalCenter: proficiencyButtonCompact.verticalCenter
+    visible: false
+
+StatsBarProficiencyButtonLarge < Panel
+  id: proficiencyButtonLargeWrap
+  size: 27 27
+  fixed-size: true
+  phantom: true
+  clipping: false
+  focusable: false
+
+  UIButton
+    id: proficiencyButtonLarge
+    anchors.fill: parent
+    image-source: /images/game/topbar/proficiency-button-large-unequipped
+    image-clip: 0 0 27 27
+    !tooltip: tr('Open Weapon Proficiency Dialog')
+    tooltip-delayed: true
+    @onClick: modules.game_proficiency.requestOpenWindow()
+    $hover !pressed:
+      image-clip: 0 0 27 27
+    $pressed:
+      image-clip: 0 27 27 27
+
+  Panel
+    id: proficiencyButtonLargeProgress
+    size: 27 27
+    anchors.fill: parent
+    phantom: true
+    clipping: false
+    focusable: false
+    visible: false
+
+  UIWidget
+    id: highlightProficiencyButtonLarge
+    size: 23 23
+    phantom: true
+    clipping: false
+    image-source: /images/animations/button-highlight-23x23
+    anchors.horizontalCenter: proficiencyButtonLarge.horizontalCenter
+    anchors.verticalCenter: proficiencyButtonLarge.verticalCenter
+    visible: false
+
+StatsBarProficiencyPanelVertical < Panel
+  id: proficiencyPanel
+  visible: false
+  size: 13 101
+  fixed-size: true
+
+  UIWidget
+    id: proficiencyBg
+    size: 13 100
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 1
+    image-source: /images/game/topbar/proficiency-bar-vertical
+    !tooltip: tr('Proficiency Progress: 0 / 1750')
+    tooltip-delayed: true
+
+    ProgressBarSD
+      id: starProgress
+      anchors.fill: parent
+      image-source: /images/bars/progressbar-teal-11px-vertical
+      margin: 1 1 1 1
+      percent: 0
+      &vertical: true
+
+    Panel
+      id: proficiencyLabelSlot
+      size: 64 11
+      fixed-size: true
+      clipping: false
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-left: 1
+      phantom: true
+
+      Label
+        id: proficiencyLabel
+        text-align: center
+        text-auto-resize: true
+        rotation: -90
+        clipping: false
+        font: $var-cip-font
+        color: #f4f4f4
+        text: 0%
+        phantom: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+
+  UIWidget
+    id: proficiencyIcon
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    size: 9 11
+    margin-top: -3
+    phantom: true
+    on: false
+    rotation: -90
+    image-source: /images/game/topbar/icon-proficiencytree-off
+    $on:
+      image-source: /images/game/topbar/icon-proficiencytree-on
+
+StatsBarProficiencyPanelVerticalRight < Panel
+  id: proficiencyPanel
+  visible: false
+  size: 13 101
+  fixed-size: true
+
+  UIWidget
+    id: proficiencyBg
+    size: 13 100
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 1
+    image-source: /images/game/topbar/proficiency-bar-vertical
+    !tooltip: tr('Proficiency Progress: 0 / 1750')
+    tooltip-delayed: true
+
+    ProgressBarSD
+      id: starProgress
+      anchors.fill: parent
+      image-source: /images/bars/progressbar-teal-11px-vertical
+      margin: 1 1 1 1
+      percent: 0
+      &vertical: true
+      &fillFromTop: true
+
+    Panel
+      id: proficiencyLabelSlot
+      size: 64 11
+      fixed-size: true
+      clipping: false
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-left: 1
+      phantom: true
+
+      Label
+        id: proficiencyLabel
+        text-align: center
+        text-auto-resize: true
+        rotation: 90
+        clipping: false
+        font: $var-cip-font
+        color: #f4f4f4
+        text: 0%
+        phantom: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+
+  UIWidget
+    id: proficiencyIcon
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    size: 9 11
+    margin-bottom: -5
+    margin-left: 1
+    phantom: true
+    on: false
+    rotation: 90
+    image-source: /images/game/topbar/icon-proficiencytree-off
+    $on:
+      image-source: /images/game/topbar/icon-proficiencytree-on

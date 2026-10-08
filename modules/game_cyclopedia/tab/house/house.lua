@@ -1,6 +1,6 @@
-﻿-- chunkname: @/game_cyclopedia/tab/house/house.lua
-
-local UI, setupHouseLayersPanelWheel, updateHouseLayerUI
+﻿local UI
+local setupHouseLayersPanelWheel
+local updateHouseLayerUI
 
 local function getHouseAuctionListGrid()
 	if not UI or not UI.ListBase or not UI.ListBase.AuctionList then
@@ -70,8 +70,8 @@ end
 
 Cyclopedia.House = {}
 Cyclopedia.House.Preview = {
-	panX = 0,
 	panY = 0,
+	panX = 0,
 	houseFloors = {}
 }
 
@@ -110,14 +110,16 @@ local function compareHouseNames(nameA, nameB)
 	nameA = string.lower(nameA or "")
 	nameB = string.lower(nameB or "")
 
-	local indexA, indexB = 1, 1
+	local indexA = 1
+	local indexB = 1
 
 	while indexA <= #nameA and indexB <= #nameB do
 		local numberA = nameA:sub(indexA):match("^(%d+)")
 		local numberB = nameB:sub(indexB):match("^(%d+)")
 
 		if numberA and numberB then
-			local valueA, valueB = tonumber(numberA), tonumber(numberB)
+			local valueA = tonumber(numberA)
+			local valueB = tonumber(numberB)
 
 			if valueA ~= valueB then
 				return valueA < valueB
@@ -566,35 +568,34 @@ local function initHouseMinimap(houseData)
 		local x = houseData.position.x or 0
 		local y = houseData.position.y or 0
 		local houseZ = houseData.position.z or 7
-		local cameraZ = houseZ
-		local isSurface = cameraZ <= 7
+		local isSurface = houseZ <= 7
 
 		if minimap.setCyclopediaViewMode then
 			minimap:setCyclopediaViewMode(isSurface and CYCLOPEDIA_VIEW_SURFACE or CYCLOPEDIA_VIEW_MAP)
 		end
 
 		if minimap.setLevelSeparatorIntensity then
-			minimap:setLevelSeparatorIntensity(cameraZ < 7 and 1 or -1)
+			minimap:setLevelSeparatorIntensity(houseZ < 7 and 1 or -1)
 		end
 
 		minimap:setCameraPosition({
 			x = x,
 			y = y,
-			z = cameraZ
+			z = houseZ
 		})
 
 		Cyclopedia.House.Preview.entrancePos = {
 			x = x,
 			y = y,
-			z = cameraZ
+			z = houseZ
 		}
-		Cyclopedia.House.Preview.cameraZ = cameraZ
+		Cyclopedia.House.Preview.cameraZ = houseZ
 
 		if isSurface then
-			prefetchHouseMinimapChunks(x, y, cameraZ)
+			prefetchHouseMinimapChunks(x, y, houseZ)
 		end
 
-		applyHouseMinimapMapAlign(minimap, Cyclopedia.House.Preview.floor or cameraZ)
+		applyHouseMinimapMapAlign(minimap, Cyclopedia.House.Preview.floor or houseZ)
 	end
 
 	function minimap.onCameraPositionChange(widget, pos, oldPos)
@@ -746,7 +747,7 @@ local function updateHouseLayersMark(floor)
 	end
 end
 
-function updateHouseLayerUI()
+local function updateHouseLayerUI()
 	local preview = Cyclopedia.House.Preview
 
 	updateHouseLayersMark(preview.floor)
@@ -892,7 +893,9 @@ function Cyclopedia.houseOnClickRoseButton(dir)
 			return
 		end
 
-		local x, y, z = pos.x, pos.y, pos.z
+		local x = pos.x
+		local y = pos.y
+		local z = pos.z
 
 		if dir == "north" then
 			y = y - 1
@@ -1083,21 +1086,21 @@ Cyclopedia.House.OwnedIds = Cyclopedia.House.OwnedIds or {}
 Cyclopedia.House.ServerEntries = Cyclopedia.House.ServerEntries or {}
 Cyclopedia.House.Info = Cyclopedia.House.Info or nil
 Cyclopedia.HouseAction = {
-	OPEN = 0,
-	REJECT_TRANSFER = 7,
-	ACCEPT_TRANSFER = 6,
-	CANCEL_TRANSFER = 5,
 	CANCEL_MOVEOUT = 4,
 	TRANSFER = 3,
 	MOVEOUT = 2,
-	BID = 1
+	BID = 1,
+	OPEN = 0,
+	REJECT_TRANSFER = 7,
+	ACCEPT_TRANSFER = 6,
+	CANCEL_TRANSFER = 5
 }
 Cyclopedia.HouseState = {
-	TRANSFER = 3,
 	KEEP = 4,
 	REGULAR = 2,
 	UNRENTABLE = 1,
-	AUCTION = 0
+	AUCTION = 0,
+	TRANSFER = 3
 }
 
 local function resetButtons()
@@ -1502,15 +1505,15 @@ function Cyclopedia.House.refreshFromServer()
 			mergeServerEntryIntoHouse(data, entry)
 		else
 			local synthetic = {
-				description = "",
-				city = "",
-				shop = false,
-				visible = false,
-				owned = true,
+				sqm = 0,
 				rent = 0,
 				beds = 0,
-				sqm = 0,
+				city = "",
+				shop = false,
+				description = "",
 				gh = false,
+				visible = false,
+				owned = true,
 				id = clientId,
 				name = entry.ownerName ~= "" and entry.ownerName or string.format("House #%d", clientId)
 			}
@@ -1632,39 +1635,176 @@ function Cyclopedia.requestHouseList(cityName)
 	g_game.sendCyclopediaHouseAuction(Cyclopedia.HouseAction.OPEN, 0, 0, 0, payload)
 end
 
-Cyclopedia.HouseActionErrors = {
+local var_0_78 = {
+	"Incorrect character name or password.",
+	"Your character does not live on this game world.",
+	"Characters on the beginner's island are not allowed to rent houses.",
 	nil,
-	"Your character does not belong to this world.",
-	"Rookgaard / mainland mismatch.",
+	"Houses can only be rented by characters on Premium accounts.",
+	"A guildhall may only be rented by a leader of an active guild.",
+	"You cannot bid for a house as long as one of your characters has still an open house transfer.",
+	"This house is not auctioned.",
+	"Auction has already ended.",
+	"Your bid limit must be higher than the current highest bid.",
+	"A character of your account already holds the highest bid for another house. You may only bid for one house at the same time.",
+	nil,
+	nil,
+	"A character of your account already owns a guildhall. You cannot own more than one guildhall per account.",
+	"A character of your account already owns a guildhall. You cannot own more than one guildhall per account.",
+	"You may not raise bids while you are online. Please log out first.",
+	"Your character's bank account balance is too low to pay the bid and the rent for the first month.",
+	"You cannot bid for a house as long as there is a pending Character World Transfer for this character.",
+	"You cannot bid for a house as long as your account is frozen.",
+	"This house is scheduled for renovation and cannot be rented.",
+	"The balances of your guild bank account and your character's bank account are too low to pay the bid and the rent for the first month.",
+	"You need to wait until your current house transfer has been completed before you can bid for another house.",
+	"You cannot bid for a house while your character is listed on the character bazaar.",
+	"You need level 300 to buy a house."
+}
+local var_0_79 = {
+	"Incorrect password.",
+	"You are not the owner of this house.",
+	"You cannot change the status of this guildhall because you are no longer the leader of an active guild.",
 	"A character with this name does not exist.",
-	"Your character is not the leader of a guild.",
-	"Only guild leaders can bid on guildhalls.",
-	nil,
-	"This house is not in auction.",
-	"The auction has already ended.",
-	"Bid is below the minimum required.",
-	"Your account already has a leading bid on another house.",
-	"You reached the regular house limit for this account.",
+	"This character does not live on this game world.",
+	"This character is currently excluded from all auctions and may not rent any new houses.",
+	"Houses may only be transferred to characters on Premium accounts.",
+	"A guildhall may only be transferred to a leader of an active guild.",
+	"A character of this account already owns a guildhall. It is not possible to own more than one guildhall per account.",
+	"The characters of this account may not rent more houses.",
+	"The characters of this account may not rent more houses on this world.",
+	"This character cannot accept a house transfer because a character of this account is currently bidding for a house.",
 	"A character of this account has already accepted a house transfer. You need to wait until the first transfer has been completed before you can transfer this house.",
-	"You reached the guildhall limit for this account.",
-	nil,
-	nil,
-	"Your bank balance is insufficient.",
-	"A world transfer is pending on this character.",
-	"A character with this name does not exist.",
-	"This house is scheduled for renovation.",
-	nil,
-	"There is a pending transfer on your character."
+	"Internal error.",
+	"The transfer has already been accepted.",
+	"Characters on the beginner's island are not allowed to rent houses.",
+	"Please select a date in the future.",
+	"Please select a date within the next 30 days.",
+	"You already own this house.",
+	"You cannot accept a transfer of a guildhall if you are about to resign from leadership.",
+	"Internal error.",
+	"You cannot transfer the house to another account because your account is scheduled for deletion or already deleted.",
+	"You have an unacknowledged rule violation record in your account.",
+	"Your account is frozen.",
+	"You can only transfer one house at a time.",
+	"You may not transfer this house as long as you are bidding for a house."
+}
+local var_0_80 = {
+	"Incorrect password.",
+	"This character is not the designated new owner of this house.",
+	"You cannot accept a house transfer as long as one of your characters is bidding for a house.",
+	"A character of your account has already accepted a house transfer. You need to wait until the first transfer has been completed before you can accept a further transfer.",
+	"You cannot accept a transfer of a guildhall because you are not the leader of an active guild.",
+	"You may not rent any new houses as long as you are banished.",
+	"The transfer has already been accepted.",
+	"Characters on the beginner's island are not allowed to rent houses.",
+	"Houses may only be transferred to characters on Premium accounts.",
+	"You are currently excluded from all auctions.",
+	"You may not rent more houses.",
+	"You may not rent more houses on this world.",
+	"You cannot rent more than one guildhall on an account.",
+	"You cannot accept a transfer of a guildhall if you want to resign from leadership.",
+	"You may not rent any new houses as long as your account is frozen.",
+	"The house is scheduled for renovation and can not be rented.",
+	"You may not rent any new houses as long as you have an unacknowledged rule violation record in your account.",
+	"You cannot rent a new house while your character is listed on the character bazaar."
+}
+local var_0_81 = {
+	"Incorrect password.",
+	"This character is not the designated new owner of this house.",
+	"You cannot accept a house transfer as long as one of your characters is bidding for a house.",
+	"A character of your account has already accepted a house transfer. You need to wait until the first transfer has been completed before you can accept a further transfer.",
+	"You cannot accept a transfer of a guildhall because you are not the leader of an active guild.",
+	"You may not rent any new houses as long as you are banished.",
+	"The transfer has already been accepted.",
+	"Characters on the beginner's island are not allowed to rent houses.",
+	"Houses may only be transferred to characters on Premium accounts.",
+	"You are currently excluded from all auctions.",
+	"You may not rent more houses.",
+	"You may not rent more houses on this world.",
+	"You cannot rent more than one guildhall on an account.",
+	"You cannot accept a transfer of a guildhall if you want to resign from leadership.",
+	"You may not rent any new houses as long as your account is frozen.",
+	"The house is scheduled for renovation and can not be rented."
+}
+local var_0_82 = {
+	[Cyclopedia.HouseAction.BID] = var_0_78,
+	[Cyclopedia.HouseAction.MOVEOUT] = var_0_79,
+	[Cyclopedia.HouseAction.TRANSFER] = var_0_80,
+	[Cyclopedia.HouseAction.CANCEL_MOVEOUT] = var_0_79,
+	[Cyclopedia.HouseAction.CANCEL_TRANSFER] = var_0_79,
+	[Cyclopedia.HouseAction.ACCEPT_TRANSFER] = var_0_80,
+	[Cyclopedia.HouseAction.REJECT_TRANSFER] = var_0_81
 }
 
-local function describeActionError(action, result)
-	local msg = Cyclopedia.HouseActionErrors[result]
+local function var_0_83(arg_76_0)
+	local var_76_0 = Cyclopedia.House.Info or {}
 
-	if msg then
-		return msg
+	if arg_76_0 == 4 then
+		local numericValue = tonumber(var_76_0.excludedUntil) or 0
+
+		if numericValue > 0 then
+			return "You have been excluded from any auction until " .. os.date("%Y-%m-%d, %H:%M", numericValue) .. " because you still owe your old landlord the rent for the last month."
+		end
+
+		return "You have been excluded from any auction because you still owe your old landlord the rent for the last month."
+	elseif arg_76_0 == 12 then
+		local numericValue = tonumber(var_76_0.regularHousesOwned) or 0
+		local var_76_3 = tonumber(var_76_0.maxRegularHouses) or 0
+
+		if var_76_3 > 0 then
+			return string.format("The characters of your account already own %d houses. You may only own %d houses at the same time.", numericValue, var_76_3)
+		end
+
+		return "The characters of your account already own the maximum number of houses."
+	elseif arg_76_0 == 13 then
+		local numericValue = tonumber(var_76_0.maxWorldHouses) or 0
+
+		if numericValue > 0 then
+			return string.format("You may only own %d houses on each world at the same time.", numericValue)
+		end
+
+		return "You may only own a limited number of houses on each world at the same time."
+	end
+end
+
+local function describeActionError(action, numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	if numericValue == 0 then
+		return ""
 	end
 
-	return string.format("Action %d failed (error %d).", action or -1, result or -1)
+	if action == Cyclopedia.HouseAction.BID then
+		local var_77_0 = var_0_83(numericValue)
+
+		if var_77_0 then
+			return var_77_0
+		end
+	end
+
+	local var_77_1 = var_0_82[action]
+
+	if var_77_1 and var_77_1[numericValue] then
+		return var_77_1[numericValue]
+	end
+
+	return "Internal error."
+end
+
+local function var_0_85(arg_78_0, arg_78_1, numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	if numericValue == 0 then
+		arg_78_0:setEnabled(true)
+		arg_78_0:setTooltip("")
+
+		return
+	end
+
+	arg_78_0:setEnabled(false)
+	arg_78_0:setTooltip(describeActionError(arg_78_1, numericValue))
+	arg_78_0:setTooltipAlign(AlignTopLeft)
 end
 
 function Cyclopedia.onCyclopediaHouseActionResult(timestamp, action, result, hasBidExtra, bidExtra)
@@ -1726,20 +1866,20 @@ function Cyclopedia.loadProtoHouses()
 		end
 
 		table.insert(houses, {
-			visible = false,
 			canBid = 0,
 			rented = false,
-			isYourOwner = false,
 			inTransfer = false,
-			owner = "?",
 			isYourBid = false,
 			hasBid = false,
-			transferValue = 0,
 			owned = false,
 			transferTime = 0,
 			state = 0,
 			isTransferOwner = false,
+			visible = false,
+			isYourOwner = false,
+			transferValue = 0,
 			canAcceptTransfer = 0,
+			owner = "?",
 			id = house.id,
 			name = house.name or "",
 			description = house.description or "",
@@ -1867,8 +2007,8 @@ function Cyclopedia.houseMessage(houseId, type, message)
 				UI.bidArea:setVisible(false)
 				toggleCyclopedia(true, false)
 			end
-		elseif message == 17 then
-			confirmWindow = displayGeneralBox(tr("Summary"), tr("Bid failed.\nYour character's bank acocunt balance is too low to pay the bid and the rent for the first month."), {
+		else
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("Bid failed.\n%s", describeActionError(type, message)), {
 				{
 					text = tr("Ok"),
 					callback = yesCallback
@@ -1894,6 +2034,18 @@ function Cyclopedia.houseMessage(houseId, type, message)
 			UI.ListBase:setVisible(true)
 			Cyclopedia.houseRefresh()
 			toggleCyclopedia(true, false)
+		else
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("%s", describeActionError(type, message)), {
+				{
+					text = tr("Ok"),
+					callback = yesCallback
+				},
+				anchor = AnchorHorizontalCenter
+			}, yesCallback)
+
+			UI.moveOutArea:setVisible(false)
+			UI.ListBase:setVisible(true)
+			toggleCyclopedia(true, false)
 		end
 	elseif type == 4 then
 		if message == 0 then
@@ -1908,6 +2060,18 @@ function Cyclopedia.houseMessage(houseId, type, message)
 			UI.keepHouseArea:setVisible(false)
 			UI.ListBase:setVisible(true)
 			Cyclopedia.houseRefresh()
+			toggleCyclopedia(true, false)
+		else
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("%s", describeActionError(type, message)), {
+				{
+					text = tr("Ok"),
+					callback = yesCallback
+				},
+				anchor = AnchorHorizontalCenter
+			}, yesCallback)
+
+			UI.keepHouseArea:setVisible(false)
+			UI.ListBase:setVisible(true)
 			toggleCyclopedia(true, false)
 		end
 	elseif type == 3 then
@@ -1949,10 +2113,34 @@ function Cyclopedia.houseMessage(houseId, type, message)
 			UI.cancelHouseTransferArea:setVisible(false)
 			UI.ListBase:setVisible(true)
 			toggleCyclopedia(true, false)
+		else
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("%s", describeActionError(type, message)), {
+				{
+					text = tr("Ok"),
+					callback = yesCallback
+				},
+				anchor = AnchorHorizontalCenter
+			}, yesCallback)
+
+			UI.cancelHouseTransferArea:setVisible(false)
+			UI.ListBase:setVisible(true)
+			toggleCyclopedia(true, false)
 		end
 	elseif type == 6 then
 		if message == 0 then
 			confirmWindow = displayGeneralBox(tr("Summary"), tr("You have sucessfully accepted the transfer."), {
+				{
+					text = tr("Ok"),
+					callback = yesCallback
+				},
+				anchor = AnchorHorizontalCenter
+			}, yesCallback)
+
+			UI.acceptTransferHouse:setVisible(false)
+			UI.ListBase:setVisible(true)
+			toggleCyclopedia(true, false)
+		else
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("Accepting the transfer failed.\n%s", describeActionError(type, message)), {
 				{
 					text = tr("Ok"),
 					callback = yesCallback
@@ -1978,7 +2166,7 @@ function Cyclopedia.houseMessage(houseId, type, message)
 			UI.ListBase:setVisible(true)
 			toggleCyclopedia(true, false)
 		else
-			confirmWindow = displayGeneralBox(tr("Summary"), tr("Rejecting the transfer failed.\nYou may not rent any new houses as long as your account is frozen."), {
+			confirmWindow = displayGeneralBox(tr("Summary"), tr("Rejecting the transfer failed.\n%s", describeActionError(type, message)), {
 				{
 					text = tr("Ok"),
 					callback = yesCallback
@@ -2040,10 +2228,7 @@ function Cyclopedia.houseSort(widget, text, type)
 end
 
 function Cyclopedia.houseFilter(widget)
-	local id = widget:getId()
-	local brother = id == "HousesCheck" and UI.TopBase.GuildhallsCheck or UI.TopBase.HousesCheck
-
-	brother:setChecked(false)
+	(widget:getId() == "HousesCheck" and UI.TopBase.GuildhallsCheck or UI.TopBase.HousesCheck):setChecked(false)
 	widget:setChecked(true)
 	Cyclopedia.House.refreshVisibility()
 end
@@ -2104,9 +2289,7 @@ function Cyclopedia.reloadHouseList()
 				end
 
 				if data.description ~= "" then
-					local icon = g_ui.createWidget("HouseIcon", widget.icons)
-
-					icon:setTooltip(data.description)
+					g_ui.createWidget("HouseIcon", widget.icons):setTooltip(data.description)
 				end
 
 				widget.onClick = Cyclopedia.selectHouse
@@ -2124,9 +2307,7 @@ function Cyclopedia.reloadHouseList()
 		end
 
 		if Cyclopedia.House.lastSelectedHouse then
-			local last = auctionListGrid:getChildById(Cyclopedia.House.lastSelectedHouse:getId())
-
-			last = last or auctionListGrid:getChildByIndex(1)
+			local last = auctionListGrid:getChildById(Cyclopedia.House.lastSelectedHouse:getId()) or auctionListGrid:getChildByIndex(1)
 
 			Cyclopedia.selectHouse(last)
 		else
@@ -2233,9 +2414,8 @@ function Cyclopedia.selectHouse(widget)
 	end
 
 	local last = Cyclopedia.House.lastSelectedHouse
-	local isNewHouse = not last or last:getId() ~= widget:getId()
 
-	if isNewHouse then
+	if not last or last:getId() ~= widget:getId() then
 		local preview = Cyclopedia.House.Preview
 
 		preview.panX = 0
@@ -2258,9 +2438,7 @@ function Cyclopedia.selectHouse(widget)
 	createHouseStatusIcons(lateral.icons, widget.data)
 
 	if widget.data.description ~= "" then
-		local icon = g_ui.createWidget("HouseIcon", lateral.icons)
-
-		icon:setTooltip(widget.data.description)
+		g_ui.createWidget("HouseIcon", lateral.icons):setTooltip(widget.data.description)
 	end
 
 	resetButtons()
@@ -2307,8 +2485,8 @@ function Cyclopedia.selectHouse(widget)
 		local hasMoveOutPending = moveOutDate > 0
 
 		if hasMoveOutPending then
-			formattedDate = os.date("%b %d, %H:%M", moveOutDate)
-			date = string.format("%s %s", formattedDate, "BRA")
+			local formattedDate = os.date("%b %d, %H:%M", moveOutDate)
+			local date = string.format("%s %s", formattedDate, "BRA")
 
 			lateral.moveOutPendingLabel:setVisible(true)
 			lateral.moveOutDateLabel:setVisible(true)
@@ -2317,8 +2495,8 @@ function Cyclopedia.selectHouse(widget)
 		end
 
 		if widget.data.inTransfer then
-			formattedDate = os.date("%b %d, %H:%M", widget.data.transferTime)
-			date = string.format("%s %s", formattedDate, "BRA")
+			local formattedDate = os.date("%b %d, %H:%M", widget.data.transferTime)
+			local date = string.format("%s %s", formattedDate, "BRA")
 
 			lateral.subAuctionLabel:breakAnchors()
 			lateral.subAuctionLabel:addAnchor(AnchorLeft, "MapViewbase", AnchorLeft)
@@ -2359,6 +2537,8 @@ function Cyclopedia.selectHouse(widget)
 
 			rejectBtn.onClick = Cyclopedia.rejectTransfer
 
+			var_0_85(rejectBtn, Cyclopedia.HouseAction.REJECT_TRANSFER, widget.data.canRejectTransfer)
+
 			local acceptBtn = g_ui.createWidget("Button", lateral)
 
 			acceptBtn:setId("acceptTransfer")
@@ -2373,7 +2553,7 @@ function Cyclopedia.selectHouse(widget)
 
 			acceptBtn.onClick = Cyclopedia.acceptTransfer
 
-			acceptBtn:setEnabled(widget.data.canAcceptTransfer == 0)
+			var_0_85(acceptBtn, Cyclopedia.HouseAction.ACCEPT_TRANSFER, widget.data.canAcceptTransfer)
 		elseif widget.data.isYourOwner then
 			local btn = g_ui.createWidget("Button", lateral)
 
@@ -2389,12 +2569,12 @@ function Cyclopedia.selectHouse(widget)
 			btn:setTextOffset(topoint("0 0"))
 
 			btn.onClick = Cyclopedia.cancelTransfer
+
+			var_0_85(btn, Cyclopedia.HouseAction.CANCEL_TRANSFER, widget.data.canCancelTransfer)
 		end
 	elseif widget.data.rented then
 		if widget.data.isYourOwner then
-			local moveOutDate = tonumber(widget.data.moveOutDate) or 0
-
-			if moveOutDate > 0 then
+			if (tonumber(widget.data.moveOutDate) or 0) > 0 then
 				local btn = g_ui.createWidget("HouseActionButton", lateral)
 
 				btn:setId("keepHouseButton")
@@ -2410,74 +2590,69 @@ function Cyclopedia.selectHouse(widget)
 
 				btn.onClick = Cyclopedia.keepHouse
 
-				btn:setEnabled(widget.data.canCancelMoveOut == 0)
+				var_0_85(btn, Cyclopedia.HouseAction.CANCEL_MOVEOUT, widget.data.canCancelMoveOut)
 			else
-				local btn = g_ui.createWidget("HouseActionButton", lateral)
+				local houseActionButtonWidget = g_ui.createWidget("HouseActionButton", lateral)
 
-				btn:setId("transferButton")
-				btn:setText("Transfer")
-				btn:setColor("#C0C0C0")
-				btn:setWidth(64)
-				btn:setHeight(20)
-				btn:addAnchor(AnchorBottom, "parent", AnchorBottom)
-				btn:addAnchor(AnchorRight, "parent", AnchorRight)
-				btn:setMarginRight(7)
-				btn:setMarginBottom(7)
-				btn:setTextOffset(topoint("0 0"))
+				houseActionButtonWidget:setId("transferButton")
+				houseActionButtonWidget:setText("Transfer")
+				houseActionButtonWidget:setColor("#C0C0C0")
+				houseActionButtonWidget:setWidth(64)
+				houseActionButtonWidget:setHeight(20)
+				houseActionButtonWidget:addAnchor(AnchorBottom, "parent", AnchorBottom)
+				houseActionButtonWidget:addAnchor(AnchorRight, "parent", AnchorRight)
+				houseActionButtonWidget:setMarginRight(7)
+				houseActionButtonWidget:setMarginBottom(7)
+				houseActionButtonWidget:setTextOffset(topoint("0 0"))
 
-				btn.onClick = Cyclopedia.transferHouse
-				btn = g_ui.createWidget("HouseActionButton", lateral)
+				houseActionButtonWidget.onClick = Cyclopedia.transferHouse
 
-				btn:setId("moveOutButton")
-				btn:setText("Move Out")
-				btn:setColor("#C0C0C0")
-				btn:setWidth(64)
-				btn:setHeight(20)
-				btn:addAnchor(AnchorTop, "prev", AnchorTop)
-				btn:addAnchor(AnchorRight, "prev", AnchorLeft)
-				btn:setMarginRight(6)
-				btn:setTextOffset(topoint("0 0"))
+				var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.TRANSFER, widget.data.acceptTransferDisabledId)
 
-				btn.onClick = Cyclopedia.moveOutHouse
+				local houseActionButtonWidget = g_ui.createWidget("HouseActionButton", lateral)
+
+				houseActionButtonWidget:setId("moveOutButton")
+				houseActionButtonWidget:setText("Move Out")
+				houseActionButtonWidget:setColor("#C0C0C0")
+				houseActionButtonWidget:setWidth(64)
+				houseActionButtonWidget:setHeight(20)
+				houseActionButtonWidget:addAnchor(AnchorTop, "prev", AnchorTop)
+				houseActionButtonWidget:addAnchor(AnchorRight, "prev", AnchorLeft)
+				houseActionButtonWidget:setMarginRight(6)
+				houseActionButtonWidget:setTextOffset(topoint("0 0"))
+
+				houseActionButtonWidget.onClick = Cyclopedia.moveOutHouse
+
+				var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.MOVEOUT, widget.data.canMoveOut)
 			end
 		end
 	else
-		local btn = g_ui.createWidget("HouseActionButton", lateral)
+		local houseActionButtonWidget = g_ui.createWidget("HouseActionButton", lateral)
 
-		btn:setId("bidButton")
-		btn:setText("Bid")
-		btn:setColor("#C0C0C0")
-		btn:setWidth(64)
-		btn:setHeight(20)
-		btn:addAnchor(AnchorBottom, "parent", AnchorBottom)
-		btn:addAnchor(AnchorRight, "parent", AnchorRight)
-		btn:setMarginRight(7)
-		btn:setMarginBottom(7)
+		houseActionButtonWidget:setId("bidButton")
+		houseActionButtonWidget:setText("Bid")
+		houseActionButtonWidget:setColor("#C0C0C0")
+		houseActionButtonWidget:setWidth(64)
+		houseActionButtonWidget:setHeight(20)
+		houseActionButtonWidget:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		houseActionButtonWidget:addAnchor(AnchorRight, "parent", AnchorRight)
+		houseActionButtonWidget:setMarginRight(7)
+		houseActionButtonWidget:setMarginBottom(7)
 
-		btn.onClick = Cyclopedia.bidHouse
+		houseActionButtonWidget.onClick = Cyclopedia.bidHouse
 
-		if widget.data.canBid == 0 then
-			btn:setEnabled(true)
-			btn:setTooltip("")
-		elseif widget.data.canBid == 11 then
-			btn:setTooltip("A character of your account already holds the highest bid for \nanother house. You may olny bid for one house at the same time.")
-			btn:setTooltipAlign(AlignTopLeft)
-			btn:setEnabled(false)
-		else
-			btn:setEnabled(false)
-			btn:setTooltip("")
-		end
+		var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.BID, widget.data.canBid)
 	end
 
 	widget:setChecked(true)
 
-	local mapBase = lateral.MapViewbase
+	local MapViewbase = lateral.MapViewbase
 
-	mapBase.noHouse:setVisible(false)
-	mapBase.reload:setVisible(true)
-	mapBase.houseImage:setVisible(false)
-	mapBase.houseImage:destroyChildren()
-	mapBase.houseImage:setImageSource("")
+	MapViewbase.noHouse:setVisible(false)
+	MapViewbase.reload:setVisible(true)
+	MapViewbase.houseImage:setVisible(false)
+	MapViewbase.houseImage:destroyChildren()
+	MapViewbase.houseImage:setImageSource("")
 
 	Cyclopedia.House.lastSelectedHouse = widget
 
@@ -2486,7 +2661,7 @@ end
 
 function Cyclopedia.rejectTransfer()
 	local house = Cyclopedia.House.lastSelectedHouse.data
-	local transferTime = os.date("%Y-%m-%d, %H:%M BRA", house.transferTime)
+	local var_99_1 = os.date("%Y-%m-%d, %H:%M BRA", house.transferTime)
 
 	openSubArea(UI.rejectTransferHouse)
 
@@ -2494,7 +2669,7 @@ function Cyclopedia.rejectTransfer()
 		closeSubArea(UI.rejectTransferHouse)
 	end
 
-	function UI.rejectTransferHouse.transfer:onClick()
+	function UI.rejectTransferHouse.transfer.onClick(self)
 		Cyclopedia.House.confirmAction(tr("Confirm House Action"), tr("Do you really want to reject the transfer for the house '%s' offered by %s?\nYou will not get the house. %s will keep the house and can set up a new transfer anytime.", house.name, house.owner, house.owner), function()
 			g_game.sendCyclopediaHouseAuction(Cyclopedia.HouseAction.REJECT_TRANSFER, house.id, 0, 0, "")
 			UI.TopBase.StatesOption:setOption("All States", true)
@@ -2504,7 +2679,7 @@ function Cyclopedia.rejectTransfer()
 
 	Cyclopedia.House.fillHouseSummary(UI.rejectTransferHouse, house)
 	UI.rejectTransferHouse.owner:setText(house.transferName)
-	UI.rejectTransferHouse.transferDate:setText(transferTime)
+	UI.rejectTransferHouse.transferDate:setText(var_99_1)
 	UI.rejectTransferHouse.transferPrice:setText(comma_value(house.transferValue))
 end
 
@@ -2518,7 +2693,7 @@ function Cyclopedia.acceptTransfer()
 		closeSubArea(UI.acceptTransferHouse)
 	end
 
-	function UI.acceptTransferHouse.transfer:onClick()
+	function UI.acceptTransferHouse.transfer.onClick(self)
 		Cyclopedia.House.confirmAction(tr("Confirm House Action"), tr("Do you want to accept the house transfer offered by %s for the property '%s'?\nThe transfer is scheduled for %s.\nThe transfer price was set to %s.\n\nMake sure to have enough gold in your bank account to pay the costs for this house transfer and the next rent.\nRemember to edit the door rights as only the guest list will be reset after the transfer!", house.owner, house.name, transferTime, comma_value(house.transferValue)), function()
 			g_game.sendCyclopediaHouseAuction(Cyclopedia.HouseAction.ACCEPT_TRANSFER, house.id, 0, 0, "")
 			UI.TopBase.StatesOption:setOption("All States", true)
@@ -2542,7 +2717,7 @@ function Cyclopedia.cancelTransfer()
 		closeSubArea(UI.cancelHouseTransferArea)
 	end
 
-	function UI.cancelHouseTransferArea.transfer:onClick()
+	function UI.cancelHouseTransferArea.transfer.onClick(self)
 		Cyclopedia.House.confirmAction(tr("Confirm House Action"), tr("Do you really want to keep your house '%s'?\nYou will no longer transfer the house to %s on %s.", house.name, house.transferName, transferTime), function()
 			g_game.sendCyclopediaHouseAuction(Cyclopedia.HouseAction.CANCEL_TRANSFER, house.id, 0, 0, "")
 
@@ -2636,7 +2811,7 @@ function Cyclopedia.transferHouse()
 		closeSubArea(UI.transferArea)
 	end
 
-	function UI.transferArea.transfer:onClick()
+	function UI.transferArea.transfer.onClick(self)
 		local transfer = UI.transferArea.owner:getText()
 		local value = tonumber(UI.transferArea.price:getText())
 		local ts = getSelectedTransferDate()
@@ -2664,7 +2839,7 @@ function Cyclopedia.transferHouse()
 	verifyName(UI.transferArea.owner, "", "")
 	UI.transferArea.price:setText(HOUSE_TRANSFER_MIN_PRICE)
 
-	function UI.transferArea.price:onTextChange(text, oldText)
+	function UI.transferArea.price.onTextChange(self, text, oldText)
 		local n = tonumber(text)
 
 		if text ~= "" and type(n) ~= "number" then
@@ -2718,7 +2893,7 @@ function Cyclopedia.moveOutHouse()
 		closeSubArea(UI.moveOutArea)
 	end
 
-	function UI.moveOutArea.move:onClick()
+	function UI.moveOutArea.move.onClick(self)
 		local ts = getSelectedMoveOutDate()
 
 		if not ts then
@@ -2850,7 +3025,7 @@ function Cyclopedia.bidHouse(widget)
 
 	bidArea.textEdit:setText(initialBidLimit)
 
-	function bidArea.textEdit:onTextChange(text, oldText)
+	function bidArea.textEdit.onTextChange(self, text, oldText)
 		local n = tonumber(text)
 
 		if text ~= "" and type(n) ~= "number" then
@@ -2874,7 +3049,7 @@ function Cyclopedia.bidHouse(widget)
 		closeSubArea(UI.bidArea)
 	end
 
-	function UI.bidArea.bid:onClick()
+	function UI.bidArea.bid.onClick(self)
 		local value = tonumber(bidArea.textEdit:getText())
 
 		if not value or value <= 0 then
@@ -3051,7 +3226,10 @@ function Cyclopedia.renderHouseFromProto(houseId)
 
 	local visibleFloors = getHousePreviewVisibleFloors(currentFloor, preview.houseFloors)
 	local renderItems = {}
-	local boundsLeft, boundsTop, boundsRight, boundsBottom
+	local boundsLeft
+	local boundsTop
+	local boundsRight
+	local boundsBottom
 
 	for _, item in ipairs(sortedItems) do
 		local worldZ = getItemWorldZ(item, tiles, entranceZ)
@@ -3097,12 +3275,10 @@ function Cyclopedia.renderHouseFromProto(houseId)
 	end
 
 	local layerPadding = math.max(32, math.floor(minimapScale * 2))
-
-	boundsLeft = math.floor(boundsLeft - layerPadding)
-	boundsTop = math.floor(boundsTop - layerPadding)
-	boundsRight = math.ceil(boundsRight + layerPadding)
-	boundsBottom = math.ceil(boundsBottom + layerPadding)
-
+	local boundsLeft = math.floor(boundsLeft - layerPadding)
+	local boundsTop = math.floor(boundsTop - layerPadding)
+	local boundsRight = math.ceil(boundsRight + layerPadding)
+	local boundsBottom = math.ceil(boundsBottom + layerPadding)
 	local spriteLayer = g_ui.createWidget("UIWidget", spriteOverlay)
 
 	spriteLayer:setId("houseSpriteLayer")
@@ -3146,11 +3322,9 @@ function Cyclopedia.renderHouseFromProto(houseId)
 		sprite:setMarginLeft(renderItem.left - boundsLeft)
 		sprite:setMarginTop(renderItem.top - boundsTop)
 
-		local ok = pcall(function()
+		if pcall(function()
 			sprite:setItemId(renderItem.clientId)
-		end)
-
-		if ok then
+		end) then
 			rendered = rendered + 1
 		else
 			sprite:destroy()

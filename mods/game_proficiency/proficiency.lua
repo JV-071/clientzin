@@ -1,6 +1,4 @@
-﻿-- chunkname: @/mods/game_proficiency/proficiency.lua
-
-if not WeaponProficiency then
+﻿if not WeaponProficiency then
 	WeaponProficiency = {}
 	WeaponProficiency.__index = WeaponProficiency
 	WeaponProficiency.window = nil
@@ -57,10 +55,10 @@ if not WeaponProficiency then
 		"threeBonusIconPanel"
 	}
 	WeaponProficiency.filters = {
-		vocButton = false,
 		twoButton = false,
 		oneButton = false,
-		levelButton = false
+		levelButton = false,
+		vocButton = false
 	}
 	WeaponProficiency.listWidgetHeight = 36
 	WeaponProficiency.listCapacity = 0
@@ -148,9 +146,21 @@ function init()
 	connect(g_things, {
 		onLoadDat = loadProficiencyJson
 	})
+	Keybind.new("Dialogs", "Open Weapon Proficiency", "", "")
+	Keybind.bind("Dialogs", "Open Weapon Proficiency", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				requestOpenWindow()
+
+				return true
+			end
+		}
+	}, modules.game_interface.getRootPanel())
 end
 
 function terminate()
+	Keybind.delete("Dialogs", "Open Weapon Proficiency")
 	disconnect(g_game, {
 		onInspection = onInspection,
 		onLogin = loadProficiencyJson,
@@ -355,7 +365,7 @@ function sortWeaponProficiency(marketCategory)
 	return true
 end
 
-function WeaponProficiency:getSelectedClientId()
+function WeaponProficiency.getSelectedClientId(self)
 	return self.selectedClientId or 0
 end
 
@@ -450,14 +460,13 @@ local function updateStarsForWidget(starPanel, weaponLevel, starImage)
 		return
 	end
 
-	local children = starPanel:getChildren()
-	local currentCount = #children
+	local children = #starPanel:getChildren()
 
-	if currentCount < weaponLevel then
-		for i = currentCount + 1, weaponLevel do
+	if children < weaponLevel then
+		for i = children + 1, weaponLevel do
 			g_ui.createWidget("MiniStar", starPanel)
 		end
-	elseif weaponLevel < currentCount then
+	elseif weaponLevel < children then
 		local ch = starPanel:getChildren()
 
 		for i = #ch, weaponLevel + 1, -1 do
@@ -474,10 +483,32 @@ end
 
 function onWeaponProficiency(itemId, experience, perks, marketCategory, modifiers)
 	WeaponProficiency.cacheList[itemId] = {
-		exp = experience,
+		exp = tonumber(experience) or 0,
 		perks = perks,
 		modifiers = modifiers or {}
 	}
+
+	local weaponProficiencyHandItem = modules.game_inventory.getWeaponProficiencyHandItem()
+
+	if weaponProficiencyHandItem and weaponProficiencyHandItem:getId() == itemId then
+		local perkLaneCount = ProficiencyData:getPerkLaneCount(weaponProficiencyHandItem:getProficiencyId())
+
+		if perkLaneCount > 0 then
+			local var_20_2 = WeaponProficiency.cacheList[itemId]
+			local currentLevelByExp = math.min(perkLaneCount, ProficiencyData:getCurrentLevelByExp(weaponProficiencyHandItem, var_20_2.exp))
+			local var_20_4 = false
+
+			for iter_20_0 = 0, currentLevelByExp - 1 do
+				if var_20_2.perks[iter_20_0] == nil then
+					var_20_4 = true
+
+					break
+				end
+			end
+
+			modules.game_interface.StatsBar.onUpdateProficiencyData(var_20_2, var_20_4, weaponProficiencyHandItem)
+		end
+	end
 
 	sortWeaponProficiency(marketCategory)
 	WeaponProficiency:onUpdateSelectedProficiency(itemId)
@@ -511,10 +542,9 @@ function onWeaponProficiency(itemId, experience, perks, marketCategory, modifier
 			local profId = widget.cache.thingType and widget.cache.thingType:getProficiencyId() or displayItem:getProficiencyId()
 			local weaponLevel = ProficiencyData:getCurrentLevelByExp(displayItem, exp)
 			local starPanel = widget:getChildById("starsBackground")
-			local maxExperience = ProficiencyData:getMaxExperience(ProficiencyData:getPerkLaneCount(profId), displayItem)
-			local starImage = maxExperience <= exp and STAR_IMAGE_GOLD or STAR_IMAGE_SILVER
+			local maxExperience = exp >= ProficiencyData:getMaxExperience(ProficiencyData:getPerkLaneCount(profId), displayItem) and STAR_IMAGE_GOLD or STAR_IMAGE_SILVER
 
-			updateStarsForWidget(starPanel, weaponLevel, starImage)
+			updateStarsForWidget(starPanel, weaponLevel, maxExperience)
 		end
 	end
 end
@@ -531,6 +561,8 @@ function onWeaponProficiencyReshape(itemId, grade, slot, options)
 end
 
 function onProficiencyNotification(itemId, experience, hasHighlight, thingType)
+	experience = tonumber(experience) or 0
+
 	local itemCache = WeaponProficiency.cacheList[itemId]
 
 	if not itemCache then
@@ -603,9 +635,8 @@ local function isMasteryAchieved(entry)
 	local displayItem = entry.displayItem
 	local maxExperience = ProficiencyData:getMaxExperience(ProficiencyData:getPerkLaneCount(profId), displayItem)
 	local weaponEntry = WeaponProficiency.cacheList[clientId]
-	local currentExperience = weaponEntry and weaponEntry.exp or 0
 
-	return maxExperience <= currentExperience
+	return maxExperience <= (weaponEntry and weaponEntry.exp or 0)
 end
 
 local function getModifierEntry(modifiers, grade, slot)
@@ -630,6 +661,35 @@ local function getModifiedPerkData(modifiers, grade, slot)
 	end
 
 	return ProficiencyData:getModifierPerkData(modifier.modifierEnum, modifier.refineLevel)
+end
+
+local function var_0_11(arg_30_0, arg_30_1)
+	local perkPanel = WeaponProficiency.perkPanel
+
+	if not perkPanel then
+		return nil
+	end
+
+	local children = perkPanel:getChildren()[arg_30_0 + 1]
+	local var_30_2 = children and children.currentPerkPanel
+
+	return var_30_2 and var_30_2:getChildById("bonusIcon" .. arg_30_1)
+end
+
+local function var_0_12(arg_31_0, arg_31_1)
+	local selectedClientId = WeaponProficiency:getSelectedClientId()
+	local var_31_1 = selectedClientId > 0 and WeaponProficiency.cacheList[selectedClientId] or nil
+	local var_31_2 = var_31_1 and var_31_1.modifiers or {}
+	local var_31_3 = getModifierEntry(var_31_2, arg_31_0, arg_31_1)
+	local modifierPerkData = var_31_3 and ProficiencyData:getModifierPerkData(var_31_3.modifierEnum, var_31_3.refineLevel or 0) or nil
+
+	if modifierPerkData then
+		return modifierPerkData, var_31_3
+	end
+
+	local var_31_5 = var_0_11(arg_31_0, arg_31_1)
+
+	return var_31_5 and (var_31_5.perkData or var_31_5.originalPerkData) or nil, var_31_3
 end
 
 local function updateManipulateRankWidget(bonusIcon, modifierEntry, isActive)
@@ -662,8 +722,7 @@ end
 
 local function applyBonusIconVisualState(bonusIcon)
 	local shaderName
-
-	shaderName = bonusIcon.active and "" or bonusIcon:isHovered() and "Hover - Desaturate" or "Map - Gray Scale"
+	local shaderName = bonusIcon.active and "" or bonusIcon:isHovered() and "Hover - Desaturate" or "Map - Gray Scale"
 
 	for _, id in ipairs({
 		"icon",
@@ -771,9 +830,15 @@ local function updatePercentWidgets(child, currentExperience, _index, itemType)
 	local percent = ProficiencyData:getLevelPercent(currentExperience, _index, itemType)
 	local maxLevelExperience = ProficiencyData:getMaxExperienceByLevel(_index, itemType)
 
+	currentExperience = tonumber(currentExperience) or 0
+
+	local numericValue
+
+	numericValue = tonumber(maxLevelExperience) or 0
+
 	percentWidget:setPercent(percent)
 	starProgress:setPercent(percent)
-	starProgress:setTooltip(string.format("%s / %s", comma_value(currentExperience), comma_value(maxLevelExperience)))
+	starProgress:setTooltip(string.format("%s / %s", comma_value(currentExperience), comma_value(numericValue)))
 
 	if percent >= 100 then
 		local iconTypo = isMasteryAchieved(WeaponProficiency.selectedListEntry) and "gold" or "silver"
@@ -842,7 +907,44 @@ local function setupPerkIconOverlay(perkData, augmentIconNormal)
 	end
 end
 
-local function populateShapePerkPreview(previewWidget, perkData, modifierEntry)
+local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, arg_43_3)
+	if not previewWidget or previewWidget.grade == nil or previewWidget.slot == nil then
+		return
+	end
+
+	local var_43_0 = getModifiedPerkData(perkData, previewWidget.grade, previewWidget.slot)
+	local var_43_1 = var_43_0 or previewWidget.originalPerkData or previewWidget.perkData
+
+	if not var_43_1 then
+		return
+	end
+
+	previewWidget.perkData = var_43_1
+
+	local icon = previewWidget:getChildById("icon")
+
+	if icon then
+		local var_43_3, var_43_4 = ProficiencyData:getImageSourceAndClip(var_43_1)
+
+		icon:setImageSource(var_43_3)
+		icon:setImageClip(string.format("%s 32 32", var_43_4))
+	end
+
+	local var_43_5, var_43_6 = ProficiencyData:getBonusNameAndTooltip(var_43_1)
+
+	previewWidget:setTooltip(string.format("%s\n\n%s", var_43_5, var_43_6))
+	setupPerkIconOverlay(var_43_1, previewWidget:getChildById("iconPerks"))
+
+	local var_43_7 = getModifierEntry(perkData, previewWidget.grade, previewWidget.slot)
+
+	updateManipulateRankWidget(previewWidget, var_43_7, previewWidget.active)
+
+	if modifierEntry and arg_43_3 then
+		enableBonusIcon(previewWidget, previewWidget:getChildById("highlight"), previewWidget:getChildById("border"), arg_43_3:recursiveGetChildById("bonusName"), var_43_6, var_43_1, var_43_0 ~= nil)
+	end
+end
+
+local function var_0_25(previewWidget, perkData, modifierEntry)
 	if not previewWidget or not perkData then
 		return
 	end
@@ -883,12 +985,12 @@ local function formatPerkBonusTitle(name, maxLen, truncatedLen)
 	return name:sub(1, truncatedLen) .. "...", name
 end
 
-local function populateReshapePerkPanel(panel, modifierEnum, refineLevel)
-	if not panel or not modifierEnum then
+local function populateReshapePerkPanel(panel, modifierEnum, refineLevel, perkData)
+	if not panel then
 		return
 	end
 
-	local perkData = ProficiencyData:getModifierPerkData(modifierEnum, refineLevel)
+	perkData = perkData or modifierEnum and ProficiencyData:getModifierPerkData(modifierEnum, refineLevel)
 
 	if not perkData then
 		return
@@ -910,7 +1012,7 @@ local function populateReshapePerkPanel(panel, modifierEnum, refineLevel)
 	local perkPreview = panel:getChildById("perkPreview")
 
 	if perkPreview then
-		populateShapePerkPreview(perkPreview, perkData, modifierEntry)
+		var_0_25(perkPreview, perkData, modifierEntry)
 	end
 
 	local perkBonusText = panel:recursiveGetChildById("perkBonusText")
@@ -956,7 +1058,7 @@ local function onBonusIconClick(bonusIcon)
 	WeaponProficiency:updateModifyCost()
 end
 
-function WeaponProficiency:reset()
+function WeaponProficiency.reset(self)
 	self.cacheList = {}
 	self.allProficiencyRequested = false
 	self.selectedModifySlot = nil
@@ -981,7 +1083,7 @@ function WeaponProficiency:reset()
 	end
 end
 
-function WeaponProficiency:updateMainButtons(currentData)
+function WeaponProficiency.updateMainButtons(self, currentData)
 	local enableReset = canChangeWeaponPerks() and table.size(currentData.perks) > 0
 
 	self.resetButton:setOn(enableReset)
@@ -1001,7 +1103,7 @@ function WeaponProficiency:updateMainButtons(currentData)
 	self.closeButton:setText("Close")
 end
 
-function WeaponProficiency:createItemCache()
+function WeaponProficiency.createItemCache(self)
 	self.itemList[MarketCategory.WeaponsAll] = {}
 
 	for _, v in pairs(self.ItemCategory) do
@@ -1046,7 +1148,7 @@ function WeaponProficiency:createItemCache()
 	end
 end
 
-function WeaponProficiency:onItemListValueChange(scroll, value, delta)
+function WeaponProficiency.onItemListValueChange(self, scroll, value, delta)
 	if value == self.oldScrollValue and self.oldScrollValue ~= nil then
 		return
 	end
@@ -1057,14 +1159,13 @@ function WeaponProficiency:onItemListValueChange(scroll, value, delta)
 	local itemsPerRow = 5
 	local totalItems = #self.listData
 	local ROW_HEIGHT = 37
-	local CONTENT_MARGIN = 2
-	local displayOffset = value - CONTENT_MARGIN
+	local var_53_4 = value - 2
 	local startRow = 0
-	local subOffset = displayOffset
+	local subOffset = var_53_4
 
-	if displayOffset >= 0 then
-		startRow = math.floor(displayOffset / ROW_HEIGHT)
-		subOffset = displayOffset % ROW_HEIGHT
+	if var_53_4 >= 0 then
+		startRow = math.floor(var_53_4 / ROW_HEIGHT)
+		subOffset = var_53_4 % ROW_HEIGHT
 	end
 
 	local startLabel = startRow * itemsPerRow + 1
@@ -1115,7 +1216,7 @@ function WeaponProficiency:onItemListValueChange(scroll, value, delta)
 	end
 end
 
-function WeaponProficiency:onWeaponCategoryChange(selected, searchText, targetItemId, focusFirstChild, fromOptionChange)
+function WeaponProficiency.onWeaponCategoryChange(self, selected, searchText, targetItemId, focusFirstChild, fromOptionChange)
 	local weaponCategory = WeaponStringToCategory[selected]
 
 	if not weaponCategory then
@@ -1215,8 +1316,8 @@ function WeaponProficiency:onWeaponCategoryChange(selected, searchText, targetIt
 	self.itemListScroll:setVisibleItems(math.min(#self.listData, 45))
 	self.itemListScroll:setVirtualChilds(#self.listData)
 	itemListWidget:setVirtualOffset({
-		x = 0,
-		y = 0
+		y = 0,
+		x = 0
 	})
 	self:onItemListValueChange(self.itemListScroll, 0, 0)
 
@@ -1243,7 +1344,7 @@ function WeaponProficiency:onWeaponCategoryChange(selected, searchText, targetIt
 	end
 end
 
-function WeaponProficiency:onItemListFocusChange(selectedCache)
+function WeaponProficiency.onItemListFocusChange(self, selectedCache)
 	if not selectedCache or not g_game.isOnline() then
 		return
 	end
@@ -1318,7 +1419,7 @@ function WeaponProficiency:onItemListFocusChange(selectedCache)
 		return
 	end
 
-	self:updateExperienceProgress(currentData.exp, #profEntry.Levels, displayItem)
+	self:updateExperienceProgress(tonumber(currentData.exp) or 0, #profEntry.Levels, displayItem)
 
 	local canChange = canChangeWeaponPerks()
 
@@ -1327,10 +1428,7 @@ function WeaponProficiency:onItemListFocusChange(selectedCache)
 		local bonusDetail = g_ui.createWidget("BonusDetailPanel", self.bonusDetailPanel)
 
 		bonusDetail:setId("bonusDetail_" .. i)
-
-		local starDetail = g_ui.createWidget("StarWidget", self.starProgressPanel)
-
-		starDetail:setId("starWidget" .. i)
+		g_ui.createWidget("StarWidget", self.starProgressPanel):setId("starWidget" .. i)
 		widget:getChildById("bonusSelectProgress"):setPercent(0)
 
 		local currentPerkPanel = self.perkPanelsName[#levelData.Perks] and widget:getChildById(self.perkPanelsName[#levelData.Perks])
@@ -1394,7 +1492,7 @@ function WeaponProficiency:onItemListFocusChange(selectedCache)
 	end
 end
 
-function WeaponProficiency:onUpdateSelectedProficiency(itemId)
+function WeaponProficiency.onUpdateSelectedProficiency(self, itemId)
 	if not self.selectedClientId or self.selectedClientId ~= itemId then
 		return
 	end
@@ -1415,7 +1513,7 @@ function WeaponProficiency:onUpdateSelectedProficiency(itemId)
 		currentData.modifiers = {}
 	end
 
-	local experience = currentData.exp
+	local experience = tonumber(currentData.exp) or 0
 
 	self:updateExperienceProgress(experience, #self.perkPanel:getChildren(), currentItem)
 	self:updateMainButtons(currentData)
@@ -1427,44 +1525,32 @@ function WeaponProficiency:onUpdateSelectedProficiency(itemId)
 	for i, child in ipairs(self.perkPanel:getChildren()) do
 		updatePercentWidgets(child, experience, i, currentItem)
 
-		local widgetIsBlocked = not canChange and currentData.perks[i - 1]
+		local child = child.currentPerkPanel
 
-		for index, widget in pairs(child.currentPerkPanel:getChildren()) do
-			if widgetIsBlocked then
-				widget:getChildById("locked-perk"):setVisible(true)
+		if not child then
+			-- block empty
+		else
+			local widgetIsBlocked = not canChange and currentData.perks[i - 1]
+			local bonusDetail = self.bonusDetailPanel:getChildById("bonusDetail_" .. i)
 
-				widget.locked = true
-			end
+			for index, iter_60_3 in pairs(child:getChildren()) do
+				if iter_60_3.grade == nil or iter_60_3.slot == nil then
+					-- block empty
+				else
+					if widgetIsBlocked then
+						iter_60_3:getChildById("locked-perk"):setVisible(true)
 
-			if currentData.perks[i - 1] == index - 1 then
-				widget.blocked = false
-				widget.locked = false
+						iter_60_3.locked = true
+					end
 
-				local modifiedPerkData = getModifiedPerkData(currentData.modifiers, i - 1, index - 1)
-				local displayPerkData = modifiedPerkData or widget.originalPerkData or widget.perkData
+					local var_60_7 = currentData.perks[i - 1] == iter_60_3.slot
 
-				if displayPerkData then
-					widget.perkData = displayPerkData
+					if var_60_7 then
+						iter_60_3.blocked = false
+						iter_60_3.locked = false
+					end
 
-					local iconSource, iconClip = ProficiencyData:getImageSourceAndClip(displayPerkData)
-					local icon = widget:getChildById("icon")
-
-					icon:setImageSource(iconSource)
-					icon:setImageClip(string.format("%s 32 32", iconClip))
-
-					local borderWidget = widget:getChildById("border")
-					local hightLightWidget = widget:getChildById("highlight")
-					local augmentIconNormal = widget:getChildById("iconPerks")
-					local bonusDetail = self.bonusDetailPanel:getChildById("bonusDetail_" .. i)
-					local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(displayPerkData)
-
-					setupPerkIconOverlay(displayPerkData, augmentIconNormal)
-					enableBonusIcon(widget, hightLightWidget, borderWidget, bonusDetail:recursiveGetChildById("bonusName"), bonusTooltip, displayPerkData, modifiedPerkData ~= nil)
-					widget:setTooltip(string.format("%s\n\n%s", bonusName, bonusTooltip))
-
-					local modifierEntry = getModifierEntry(currentData.modifiers, i - 1, index - 1)
-
-					updateManipulateRankWidget(widget, modifierEntry, widget.active)
+					populateShapePerkPreview(iter_60_3, currentData.modifiers, var_60_7, bonusDetail)
 				end
 			end
 		end
@@ -1474,12 +1560,15 @@ function WeaponProficiency:onUpdateSelectedProficiency(itemId)
 	self:checkPerksMatch(itemId)
 end
 
-function WeaponProficiency:updateExperienceProgress(currentExp, levelsCount, displayItem)
+function WeaponProficiency.updateExperienceProgress(self, currentExp, levelsCount, displayItem)
 	local experienceWidget = self.progressDescription
 	local experienceLeftWidget = self.nextLevelDescription
 	local totalProgressWidget = self.proficiencyProgress
-	local currentCeilExperience = ProficiencyData:getCurrentCeilExperience(currentExp, displayItem)
-	local maxExperience = ProficiencyData:getMaxExperience(levelsCount, displayItem)
+
+	currentExp = tonumber(currentExp) or 0
+
+	local currentCeilExperience = tonumber(ProficiencyData:getCurrentCeilExperience(currentExp, displayItem)) or 0
+	local maxExperience = tonumber(ProficiencyData:getMaxExperience(levelsCount, displayItem)) or 0
 	local masteryAchieved = maxExperience <= currentExp
 
 	experienceWidget:setText(string.format("%s / %s", comma_value(currentExp), comma_value(currentCeilExperience)))
@@ -1495,7 +1584,7 @@ function WeaponProficiency:updateExperienceProgress(currentExp, levelsCount, dis
 	totalProgressWidget:setTooltip(string.format("%s / %s", comma_value(currentExp), comma_value(maxExperience)))
 end
 
-function WeaponProficiency:updateItemAddons(currentExp, displayItem, masteryAchieved)
+function WeaponProficiency.updateItemAddons(self, currentExp, displayItem, masteryAchieved)
 	local weaponLevel = math.min(7, ProficiencyData:getCurrentLevelByExp(displayItem, currentExp))
 	local iconLevelWidget = self.iconMasteryLevel
 	local weaponLevelWidget = self.itemMasteryLevel
@@ -1510,7 +1599,7 @@ function WeaponProficiency:updateItemAddons(currentExp, displayItem, masteryAchi
 	end
 end
 
-function WeaponProficiency:toggleFilterOption(filter)
+function WeaponProficiency.toggleFilterOption(self, filter)
 	local filterId = filter:getId()
 
 	if filterId == "oneButton" then
@@ -1537,13 +1626,13 @@ function WeaponProficiency:toggleFilterOption(filter)
 	self:onWeaponCategoryChange(self.optionFilter:getCurrentOption().text)
 end
 
-function WeaponProficiency:onSearchTextChange(text)
+function WeaponProficiency.onSearchTextChange(self, text)
 	local currentCategory = self.optionFilter:getCurrentOption().text
 
 	self:onWeaponCategoryChange(currentCategory, text)
 end
 
-function WeaponProficiency:onClearSearch()
+function WeaponProficiency.onClearSearch(self)
 	if not self.window then
 		return
 	end
@@ -1553,7 +1642,7 @@ function WeaponProficiency:onClearSearch()
 	end
 end
 
-function WeaponProficiency:onApplyChanges(button, targetItem)
+function WeaponProficiency.onApplyChanges(self, button, targetItem)
 	if button and not button:isOn() then
 		return
 	end
@@ -1605,7 +1694,7 @@ function WeaponProficiency:onApplyChanges(button, targetItem)
 	self:updateSelectedPerkVisuals()
 end
 
-function WeaponProficiency:updateSelectedPerkVisuals()
+function WeaponProficiency.updateSelectedPerkVisuals(self)
 	local clientId = self:getSelectedClientId()
 	local cacheEntry = clientId > 0 and self.cacheList[clientId] or nil
 	local modifiers = cacheEntry and cacheEntry.modifiers or {}
@@ -1645,7 +1734,7 @@ function WeaponProficiency:updateSelectedPerkVisuals()
 	end
 end
 
-function WeaponProficiency:isLevelUnlocked(grade)
+function WeaponProficiency.isLevelUnlocked(self, grade)
 	local levelPanel = self.perkPanel:getChildren()[grade + 1]
 
 	if not levelPanel then
@@ -1667,7 +1756,7 @@ function WeaponProficiency:isLevelUnlocked(grade)
 	return false
 end
 
-function WeaponProficiency:updateDustBalance()
+function WeaponProficiency.updateDustBalance(self)
 	if not self.dustBalanceText then
 		return
 	end
@@ -1684,7 +1773,7 @@ local function getShapeDialog()
 	return root and root:recursiveGetChildById("shapeDialog")
 end
 
-function WeaponProficiency:updateShapeResourceBalances(shape)
+function WeaponProficiency.updateShapeResourceBalances(self, shape)
 	shape = shape or getShapeDialog()
 
 	if not shape then
@@ -1713,27 +1802,20 @@ function WeaponProficiency:updateShapeResourceBalances(shape)
 	self:setupShapeRankPreviewHover(shape)
 end
 
-function WeaponProficiency:updateShapePerkPreview(shape)
+function WeaponProficiency.updateShapePerkPreview(self, shape)
 	shape = shape or getShapeDialog()
 
 	if not shape or not self.selectedModifySlot then
 		return
 	end
 
-	local modifierEntry = self:getSelectedModifierEntry()
+	local var_72_0, modifierEntry = var_0_12(self.selectedModifySlot.grade, self.selectedModifySlot.slot)
 
-	if not modifierEntry then
+	if not var_72_0 then
 		return
 	end
 
-	local refineLevel = modifierEntry.refineLevel or 0
-	local modifiedPerkData = ProficiencyData:getModifierPerkData(modifierEntry.modifierEnum, refineLevel)
-
-	if not modifiedPerkData then
-		return
-	end
-
-	local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(modifiedPerkData)
+	local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(var_72_0)
 	local displayName, titleTooltip = formatPerkBonusTitle(bonusName, SHAPE_PERK_TITLE_MAX_LEN, SHAPE_PERK_TITLE_TRUNCATED_LEN)
 	local leftTitle = shape:recursiveGetChildById("leftTitle")
 
@@ -1753,7 +1835,7 @@ function WeaponProficiency:updateShapePerkPreview(shape)
 	local perkPreview = shape:recursiveGetChildById("perkPreview")
 
 	if perkPreview then
-		populateShapePerkPreview(perkPreview, modifiedPerkData, modifierEntry)
+		var_0_25(perkPreview, var_72_0, modifierEntry)
 	end
 end
 
@@ -1812,12 +1894,14 @@ local function updateShapePerkBonusTextDisplay(self, shape, targetRank)
 	end
 end
 
-function WeaponProficiency:setupShapeRankPreviewHover(shape)
+function WeaponProficiency.setupShapeRankPreviewHover(self, shape)
 	shape = shape or getShapeDialog()
 
-	if not shape then
+	if not shape or shape._rankPreviewHoverBound then
 		return
 	end
+
+	shape._rankPreviewHoverBound = true
 
 	local refineButton = shape:recursiveGetChildById("shapeRefineButton")
 
@@ -1873,7 +1957,7 @@ local function restoreShapeSideButtonLayout(button, costPanel)
 	end
 end
 
-function WeaponProficiency:updateShapeRefineButtonState(shape)
+function WeaponProficiency.updateShapeRefineButtonState(self, shape)
 	shape = shape or getShapeDialog()
 
 	if not shape then
@@ -1909,10 +1993,8 @@ function WeaponProficiency:updateShapeRefineButtonState(shape)
 	refineCostText:setText(tostring(dustCost))
 
 	local player = g_game.getLocalPlayer()
-	local currentDust = player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0
-	local hasEnoughDust = dustCost <= currentDust
 
-	if hasEnoughDust then
+	if dustCost <= (player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0) then
 		refineButton:setEnabled(true)
 		refineButton:setColor("#c0c0c0")
 		refineButton:setTooltip("")
@@ -1925,7 +2007,7 @@ function WeaponProficiency:updateShapeRefineButtonState(shape)
 	end
 end
 
-function WeaponProficiency:updateShapeReshapeButtonState(shape)
+function WeaponProficiency.updateShapeReshapeButtonState(unusedArgument, shape)
 	shape = shape or getShapeDialog()
 
 	if not shape then
@@ -1944,10 +2026,8 @@ function WeaponProficiency:updateShapeReshapeButtonState(shape)
 	reshapeCostText:setText(tostring(SHAPE_RESHAPE_DUST_COST))
 
 	local player = g_game.getLocalPlayer()
-	local currentDust = player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0
-	local hasEnoughDust = currentDust >= SHAPE_RESHAPE_DUST_COST
 
-	if hasEnoughDust then
+	if (player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0) >= SHAPE_RESHAPE_DUST_COST then
 		reshapeButton:setEnabled(true)
 		reshapeButton:setColor("#c0c0c0")
 		reshapeButton:setTooltip("")
@@ -1960,7 +2040,7 @@ function WeaponProficiency:updateShapeReshapeButtonState(shape)
 	end
 end
 
-function WeaponProficiency:updateShapeMaximiseButtonState(shape)
+function WeaponProficiency.updateShapeMaximiseButtonState(self, shape)
 	shape = shape or getShapeDialog()
 
 	if not shape then
@@ -1981,9 +2061,7 @@ function WeaponProficiency:updateShapeMaximiseButtonState(shape)
 		modifierEntry = self:getSelectedModifierEntry()
 	end
 
-	local refineLevel = modifierEntry and (modifierEntry.refineLevel or 0) or 0
-
-	if refineLevel >= MAX_MODIFIER_REFINE_LEVEL then
+	if (modifierEntry and (modifierEntry.refineLevel or 0) or 0) >= MAX_MODIFIER_REFINE_LEVEL then
 		applyShapeSideButtonMaxRankState(maximiseButton, maximiseCost)
 
 		return
@@ -1996,10 +2074,8 @@ function WeaponProficiency:updateShapeMaximiseButtonState(shape)
 	maximiseCostText:setText(tostring(orbCost))
 
 	local player = g_game.getLocalPlayer()
-	local orbCount = player and player:getResourceBalance(ResourceTypes.LUNAR_ASCENSION_ORBS) or 0
-	local hasEnoughOrbs = orbCost <= orbCount
 
-	if hasEnoughOrbs then
+	if orbCost <= (player and player:getResourceBalance(ResourceTypes.LUNAR_ASCENSION_ORBS) or 0) then
 		maximiseButton:setEnabled(true)
 		maximiseButton:setColor("#c0c0c0")
 		maximiseButton:setTooltip("")
@@ -2111,7 +2187,7 @@ local function getCurrentShapingVocationId()
 	return translateWheelVocation(player:getVocation()) or 0
 end
 
-function WeaponProficiency:buildPerkShapingOptionsData(vocationId)
+function WeaponProficiency.buildPerkShapingOptionsData(self, vocationId)
 	vocationId = vocationId or getCurrentShapingVocationId()
 
 	local cache = self._shapingOptionsCache
@@ -2130,7 +2206,8 @@ function WeaponProficiency:buildPerkShapingOptionsData(vocationId)
 			local name, rank0Desc = ProficiencyData:getBonusNameAndTooltip(perkDataRank0)
 			local _, rank10Desc = ProficiencyData:getBonusNameAndTooltip(perkDataRank10)
 			local iconSource, iconClip = ProficiencyData:getImageSourceAndClip(perkDataRank0)
-			local overlaySource, overlayClip
+			local overlaySource
+			local overlayClip
 			local hasOverlay = false
 			local sortSecondary = rank0Desc:lower()
 			local sortTertiary = ""
@@ -2183,11 +2260,11 @@ function WeaponProficiency:buildPerkShapingOptionsData(vocationId)
 	return result
 end
 
-function WeaponProficiency:invalidateShapingOptionsCache()
+function WeaponProficiency.invalidateShapingOptionsCache(self)
 	self._shapingOptionsCache = nil
 end
 
-function WeaponProficiency:updatePerkShapingOptionsDustBalance(dialog)
+function WeaponProficiency.updatePerkShapingOptionsDustBalance(self, dialog)
 	dialog = dialog or getPerkShapingOptionsDialog()
 
 	if not dialog then
@@ -2206,7 +2283,7 @@ function WeaponProficiency:updatePerkShapingOptionsDustBalance(dialog)
 	dustText:setText(string.format("%s/%s", comma_value(currentDust), comma_value(self.maxDust)))
 end
 
-function WeaponProficiency:populatePerkShapingOptionsList(filterText)
+function WeaponProficiency.populatePerkShapingOptionsList(self, filterText)
 	local dialog = getPerkShapingOptionsDialog()
 
 	if not dialog then
@@ -2293,7 +2370,7 @@ function WeaponProficiency:populatePerkShapingOptionsList(filterText)
 	list:updateLayout()
 end
 
-function WeaponProficiency:openPerkShapingOptions()
+function WeaponProficiency.openPerkShapingOptions(self)
 	local root = g_ui.getRootWidget()
 
 	if not root then
@@ -2328,7 +2405,7 @@ function WeaponProficiency:openPerkShapingOptions()
 	end
 end
 
-function WeaponProficiency:closePerkShapingOptions()
+function WeaponProficiency.closePerkShapingOptions(self)
 	local dialog = getPerkShapingOptionsDialog()
 
 	if dialog then
@@ -2342,23 +2419,23 @@ function WeaponProficiency:closePerkShapingOptions()
 	self:returnToShapeDialog()
 end
 
-function WeaponProficiency:onShapeInfoButtonClick()
+function WeaponProficiency.onShapeInfoButtonClick(self)
 	self:openPerkShapingOptions()
 end
 
-function WeaponProficiency:onPerkShapingOptionsDialogEscape()
+function WeaponProficiency.onPerkShapingOptionsDialogEscape(self)
 	self:closePerkShapingOptions()
 end
 
-function WeaponProficiency:onPerkShapingOptionsClose()
+function WeaponProficiency.onPerkShapingOptionsClose(self)
 	self:closePerkShapingOptions()
 end
 
-function WeaponProficiency:onPerkShapingOptionsSearchChange(text)
+function WeaponProficiency.onPerkShapingOptionsSearchChange(self, text)
 	self:populatePerkShapingOptionsList(text)
 end
 
-function WeaponProficiency:onPerkShapingOptionsSearchClear()
+function WeaponProficiency.onPerkShapingOptionsSearchClear(self)
 	local dialog = getPerkShapingOptionsDialog()
 
 	if not dialog then
@@ -2375,7 +2452,7 @@ function WeaponProficiency:onPerkShapingOptionsSearchClear()
 	self:populatePerkShapingOptionsList("")
 end
 
-function WeaponProficiency:updateModifyCost()
+function WeaponProficiency.updateModifyCost(self)
 	local modifyCostText = self.modifyCostText
 
 	if not modifyCostText then
@@ -2385,22 +2462,20 @@ function WeaponProficiency:updateModifyCost()
 	local currentItem = self.displayItemWidget:getItem()
 	local itemId = currentItem and currentItem:getId()
 	local cacheEntry = itemId and self.cacheList[itemId]
-	local modifiers = cacheEntry and cacheEntry.modifiers or {}
-	local cost = #modifiers >= 1 and 1000 or 250
+	local cost = #(cacheEntry and cacheEntry.modifiers or {}) >= 1 and 1000 or 250
 
 	modifyCostText:setText(tostring(cost))
 
 	local player = g_game.getLocalPlayer()
-	local currentDust = player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0
 
-	if currentDust < cost then
+	if cost > (player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0) then
 		modifyCostText:setColor("#d33c3c")
 	else
 		modifyCostText:setColor("#c0c0c0")
 	end
 end
 
-function WeaponProficiency:resetModifyButton(modifyButton, modifyCost)
+function WeaponProficiency.resetModifyButton(self, modifyButton, modifyCost)
 	modifyButton:setStyle("ModifyButton")
 
 	if modifyCost then
@@ -2408,7 +2483,7 @@ function WeaponProficiency:resetModifyButton(modifyButton, modifyCost)
 	end
 end
 
-function WeaponProficiency:updateModifyButtonState()
+function WeaponProficiency.updateModifyButtonState(self)
 	local modifyButton = self.modifyButton
 	local modifyCost = self.modifyCost
 
@@ -2513,11 +2588,9 @@ function WeaponProficiency:updateModifyButtonState()
 	self:resetModifyButton(modifyButton, modifyCost)
 
 	local player = g_game.getLocalPlayer()
-	local currentDust = player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0
-	local cost = totalModified >= 1 and 1000 or 250
-	local hasEnoughDust = cost <= currentDust
+	local resourceBalance = (player and player:getResourceBalance(ResourceTypes.FORGE_DUST) or 0) >= (totalModified >= 1 and 1000 or 250)
 
-	if level3Unlocked and selectedUnlocked and hasEnoughDust then
+	if level3Unlocked and selectedUnlocked and resourceBalance then
 		modifyButton:setEnabled(true)
 		modifyButton:setTooltip("")
 
@@ -2534,7 +2607,7 @@ function WeaponProficiency:updateModifyButtonState()
 		tooltip = tooltip .. "\n\x95 Level 3 has not been unlocked."
 	end
 
-	if not hasEnoughDust then
+	if not resourceBalance then
 		tooltip = tooltip .. "\n\x95 Not enough dust available."
 	end
 
@@ -2542,7 +2615,7 @@ function WeaponProficiency:updateModifyButtonState()
 	modifyButton:setTooltip(tooltip)
 end
 
-function WeaponProficiency:confirmModify()
+function WeaponProficiency.confirmModify(self)
 	local currentItem = self.displayItemWidget:getItem()
 
 	if not currentItem or not self.selectedModifySlot then
@@ -2565,10 +2638,8 @@ function WeaponProficiency:confirmModify()
 	g_game.sendWeaponProficiencyModifierAction(4, clientId, grade, slot)
 end
 
-function WeaponProficiency:confirmRefine()
-	local currentItem = self.displayItemWidget:getItem()
-
-	if not currentItem or not self.selectedModifySlot then
+function WeaponProficiency.confirmRefine(self)
+	if not self.displayItemWidget:getItem() or not self.selectedModifySlot then
 		return
 	end
 
@@ -2586,12 +2657,11 @@ function WeaponProficiency:confirmRefine()
 	end
 
 	g_game.sendWeaponProficiencyModifierAction(5, clientId, grade, slot)
+	self:onUpdateSelectedProficiency(clientId)
 end
 
-function WeaponProficiency:confirmMaximise()
-	local currentItem = self.displayItemWidget:getItem()
-
-	if not currentItem or not self.selectedModifySlot then
+function WeaponProficiency.confirmMaximise(self)
+	if not self.displayItemWidget:getItem() or not self.selectedModifySlot then
 		return
 	end
 
@@ -2609,12 +2679,11 @@ function WeaponProficiency:confirmMaximise()
 	end
 
 	g_game.sendWeaponProficiencyModifierAction(6, clientId, grade, slot)
+	self:onUpdateSelectedProficiency(clientId)
 end
 
-function WeaponProficiency:requestReshape()
-	local currentItem = self.displayItemWidget:getItem()
-
-	if not currentItem or not self.selectedModifySlot then
+function WeaponProficiency.requestReshape(self)
+	if not self.displayItemWidget:getItem() or not self.selectedModifySlot then
 		return
 	end
 
@@ -2624,16 +2693,14 @@ function WeaponProficiency:requestReshape()
 	g_game.sendWeaponProficiencyModifierAction(7, self:getSelectedClientId(), grade, slot)
 end
 
-function WeaponProficiency:confirmReshapeReplace(optionIndex)
+function WeaponProficiency.confirmReshapeReplace(self, optionIndex)
 	local data = self.reshapeData
 
 	if not data then
 		return
 	end
 
-	local currentItem = self.displayItemWidget:getItem()
-
-	if not currentItem then
+	if not self.displayItemWidget:getItem() then
 		return
 	end
 
@@ -2658,10 +2725,12 @@ function WeaponProficiency:confirmReshapeReplace(optionIndex)
 		end
 	end
 
+	self:onUpdateSelectedProficiency(clientId)
+
 	self.reshapeData = nil
 end
 
-function WeaponProficiency:closeReshapeDialog()
+function WeaponProficiency.closeReshapeDialog(self)
 	local root = g_ui.getRootWidget()
 	local dialog = root and root:recursiveGetChildById("reshapeDialog")
 
@@ -2674,7 +2743,7 @@ function WeaponProficiency:closeReshapeDialog()
 	end
 end
 
-function WeaponProficiency:openReshapeDialog()
+function WeaponProficiency.openReshapeDialog(self)
 	local data = self.reshapeData
 
 	if not data then
@@ -2707,20 +2776,10 @@ function WeaponProficiency:openReshapeDialog()
 
 	dialog:setId("reshapeDialog")
 
-	local modifierEntry = self:getSelectedModifierEntry()
-
-	if not modifierEntry then
-		local currentItem = self.displayItemWidget:getItem()
-		local itemId = currentItem and currentItem:getId()
-		local cacheEntry = itemId and self.cacheList[itemId]
-
-		if cacheEntry then
-			modifierEntry = getModifierEntry(cacheEntry.modifiers, data.grade, data.slot)
-		end
-	end
+	local modifierEntry, var_109_6 = var_0_12(data.grade, data.slot)
 
 	if modifierEntry then
-		populateReshapePerkPanel(dialog:recursiveGetChildById("currentPerkPanel"), modifierEntry.modifierEnum, modifierEntry.refineLevel)
+		populateReshapePerkPanel(dialog:recursiveGetChildById("currentPerkPanel"), var_109_6 and var_109_6.modifierEnum, var_109_6 and var_109_6.refineLevel, modifierEntry)
 	end
 
 	local optionIds = {
@@ -2772,17 +2831,17 @@ function WeaponProficiency:openReshapeDialog()
 	end
 end
 
-function WeaponProficiency:onReshapeDialogKeyBlock()
+function WeaponProficiency.onReshapeDialogKeyBlock(self)
 	return
 end
 
-function WeaponProficiency:onReshapeKeepClicked()
+function WeaponProficiency.onReshapeKeepClicked(self)
 	self:confirmReshapeReplace(3)
 	self:closeReshapeDialog()
 	self:returnToShapeDialog()
 end
 
-function WeaponProficiency:onReshapeOptionSelected(optionIndex)
+function WeaponProficiency.onReshapeOptionSelected(self, optionIndex)
 	local data = self.reshapeData
 
 	if not data then
@@ -2798,9 +2857,8 @@ function WeaponProficiency:onReshapeOptionSelected(optionIndex)
 	local modifierEntry = self:getSelectedModifierEntry()
 
 	if not modifierEntry then
-		local currentItem = self.displayItemWidget:getItem()
-		local itemId = currentItem and currentItem:getId()
-		local cacheEntry = itemId and self.cacheList[itemId]
+		local currentItem = self:getSelectedClientId()
+		local cacheEntry = currentItem > 0 and self.cacheList[currentItem]
 
 		if cacheEntry then
 			modifierEntry = getModifierEntry(cacheEntry.modifiers, data.grade, data.slot)
@@ -2820,7 +2878,7 @@ function WeaponProficiency:onReshapeOptionSelected(optionIndex)
 	self:showReshapeReplaceConfirmDialog(optionIndex)
 end
 
-function WeaponProficiency:confirmClear()
+function WeaponProficiency.confirmClear(self)
 	local currentItem = self.displayItemWidget:getItem()
 
 	if not currentItem or not self.selectedModifySlot then
@@ -2848,7 +2906,7 @@ function WeaponProficiency:confirmClear()
 	self:onUpdateSelectedProficiency(itemId)
 end
 
-function WeaponProficiency:returnToShapeDialog()
+function WeaponProficiency.returnToShapeDialog(self)
 	local root = g_ui.getRootWidget()
 
 	if not root then
@@ -2873,14 +2931,13 @@ function WeaponProficiency:returnToShapeDialog()
 	self:updateShapePerkPreview(shape)
 end
 
-function WeaponProficiency:getSelectedModifierEntry()
+function WeaponProficiency.getSelectedModifierEntry(self)
 	if not self.selectedModifySlot then
 		return nil
 	end
 
-	local currentItem = self.displayItemWidget:getItem()
-	local itemId = currentItem and currentItem:getId()
-	local cacheEntry = itemId and self.cacheList[itemId]
+	local currentItem = self:getSelectedClientId()
+	local cacheEntry = currentItem > 0 and self.cacheList[currentItem]
 
 	if not cacheEntry then
 		return nil
@@ -2890,12 +2947,12 @@ function WeaponProficiency:getSelectedModifierEntry()
 end
 
 local SUB_DIALOG_PARENTS = {
+	saveConfirmDialog = "weaponProficiencyWindow",
 	reshapeReplaceConfirmDialog = "reshapeDialog",
 	reshapeConfirmDialog = "shapeDialog",
 	clearConfirmDialog = "shapeDialog",
 	maximiseConfirmDialog = "shapeDialog",
-	refineConfirmDialog = "shapeDialog",
-	saveConfirmDialog = "weaponProficiencyWindow"
+	refineConfirmDialog = "shapeDialog"
 }
 
 local function showProficiencyConfirmDialog(self, config)
@@ -3019,16 +3076,16 @@ for dialogId, _ in pairs(SUB_DIALOG_PARENTS) do
 	end
 end
 
-function WeaponProficiency:showRefineConfirmDialog()
+function WeaponProficiency.showRefineConfirmDialog(self)
 	local modifierEntry = self:getSelectedModifierEntry()
 	local refineLevel = modifierEntry and (modifierEntry.refineLevel or 0) or 0
 	local dustCost = getShapeRefineDustCost(refineLevel)
 
 	showProficiencyConfirmDialog(self, {
-		dialogId = "refineConfirmDialog",
-		checkButton = "shapeRefineButton",
 		titleText = "Refine?",
 		widgetName = "RefineConfirmDialog",
+		dialogId = "refineConfirmDialog",
+		checkButton = "shapeRefineButton",
 		buildContent = function(s, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3049,14 +3106,14 @@ function WeaponProficiency:showRefineConfirmDialog()
 	})
 end
 
-function WeaponProficiency:showMaximiseConfirmDialog()
+function WeaponProficiency.showMaximiseConfirmDialog(self)
 	local orbCost = 1
 
 	showProficiencyConfirmDialog(self, {
-		dialogId = "maximiseConfirmDialog",
-		checkButton = "shapeMaximiseButton",
 		titleText = "Maximise?",
 		widgetName = "MaximiseConfirmDialog",
+		dialogId = "maximiseConfirmDialog",
+		checkButton = "shapeMaximiseButton",
 		buildContent = function(s, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3077,12 +3134,12 @@ function WeaponProficiency:showMaximiseConfirmDialog()
 	})
 end
 
-function WeaponProficiency:showReshapeConfirmDialog()
+function WeaponProficiency.showReshapeConfirmDialog(self)
 	showProficiencyConfirmDialog(self, {
-		dialogId = "reshapeConfirmDialog",
-		checkButton = "shapeReshapeButton",
 		titleText = "Reshape?",
 		widgetName = "ReshapeConfirmDialog",
+		dialogId = "reshapeConfirmDialog",
+		checkButton = "shapeReshapeButton",
 		buildContent = function(s, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3101,12 +3158,12 @@ function WeaponProficiency:showReshapeConfirmDialog()
 	})
 end
 
-function WeaponProficiency:showReshapeReplaceConfirmDialog(optionIndex)
+function WeaponProficiency.showReshapeReplaceConfirmDialog(self, optionIndex)
 	showProficiencyConfirmDialog(self, {
-		dialogId = "reshapeReplaceConfirmDialog",
-		parentDialogId = "reshapeDialog",
 		titleText = "Reshape?",
 		widgetName = "ReshapeReplaceConfirmDialog",
+		dialogId = "reshapeReplaceConfirmDialog",
+		parentDialogId = "reshapeDialog",
 		buildContent = function(_, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3128,11 +3185,11 @@ function WeaponProficiency:showReshapeReplaceConfirmDialog(optionIndex)
 	})
 end
 
-function WeaponProficiency:showClearConfirmDialog()
+function WeaponProficiency.showClearConfirmDialog(self)
 	showProficiencyConfirmDialog(self, {
-		dialogId = "clearConfirmDialog",
 		titleText = "Clear?",
 		widgetName = "ClearConfirmDialog",
+		dialogId = "clearConfirmDialog",
 		buildContent = function(s, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3163,7 +3220,7 @@ function WeaponProficiency:showClearConfirmDialog()
 	})
 end
 
-function WeaponProficiency:returnToProficiencyWindow()
+function WeaponProficiency.returnToProficiencyWindow(self)
 	self.window:show(true)
 	self.window:raise()
 	self.window:focus()
@@ -3171,39 +3228,43 @@ function WeaponProficiency:returnToProficiencyWindow()
 	if g_modalManager then
 		g_modalManager.show(self.window)
 	end
+
+	local selectedClientId = self:getSelectedClientId()
+
+	if selectedClientId > 0 then
+		self:onUpdateSelectedProficiency(selectedClientId)
+	end
 end
 
-function WeaponProficiency:onModifySubDialogEscape()
-	local root = g_ui.getRootWidget()
+function WeaponProficiency.onModifySubDialogEscape(self)
+	local rootWidget = g_ui.getRootWidget()
 
-	if not root then
+	if not rootWidget then
 		return
 	end
 
-	local reshape = root:recursiveGetChildById("reshapeDialog")
-
-	if reshape then
+	if rootWidget:recursiveGetChildById("reshapeDialog") then
 		return
 	end
 
-	local shape = root:recursiveGetChildById("shapeDialog")
+	local shapeDialog = rootWidget:recursiveGetChildById("shapeDialog")
 
-	if shape then
-		shape:destroy()
+	if shapeDialog then
+		shapeDialog:destroy()
 		self:returnToProficiencyWindow()
 
 		return
 	end
 
-	local dialog = root:recursiveGetChildById("modifyConfirmDialog")
+	local modifyConfirmDialog = rootWidget:recursiveGetChildById("modifyConfirmDialog")
 
-	if dialog then
-		dialog:destroy()
+	if modifyConfirmDialog then
+		modifyConfirmDialog:destroy()
 		self:returnToProficiencyWindow()
 	end
 end
 
-function WeaponProficiency:onModifyConfirmDialogEnter()
+function WeaponProficiency.onModifyConfirmDialogEnter(self)
 	local root = g_ui.getRootWidget()
 
 	if not root then
@@ -3221,7 +3282,7 @@ function WeaponProficiency:onModifyConfirmDialogEnter()
 	self:returnToProficiencyWindow()
 end
 
-function WeaponProficiency:onModifyClick()
+function WeaponProficiency.onModifyClick(self)
 	local currentItem = self.displayItemWidget:getItem()
 
 	if not currentItem or not self.selectedModifySlot then
@@ -3239,9 +3300,8 @@ function WeaponProficiency:onModifyClick()
 	local cost = 250
 	local currentItemId = currentItem:getId()
 	local cacheEntry = self.cacheList[currentItemId]
-	local modifiers = cacheEntry and cacheEntry.modifiers or {}
 
-	if #modifiers >= 1 then
+	if #(cacheEntry and cacheEntry.modifiers or {}) >= 1 then
 		cost = 1000
 	end
 
@@ -3273,36 +3333,7 @@ function WeaponProficiency:onModifyClick()
 		local shape = g_ui.createWidget("ShapeDialog", root)
 
 		shape:setId("shapeDialog")
-
-		local modifierEntry = getModifierEntry(currentData.modifiers, self.selectedModifySlot.grade, self.selectedModifySlot.slot)
-		local modifiedPerkData = modifierEntry and ProficiencyData:getModifierPerkData(modifierEntry.modifierEnum)
-		local bonusName, bonusTooltip = "Modified Bonus", ""
-
-		if modifiedPerkData then
-			bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(modifiedPerkData)
-		end
-
-		local displayName, titleTooltip = formatPerkBonusTitle(bonusName, SHAPE_PERK_TITLE_MAX_LEN, SHAPE_PERK_TITLE_TRUNCATED_LEN)
-		local leftTitle = shape:recursiveGetChildById("leftTitle")
-
-		if leftTitle then
-			leftTitle:setText(displayName)
-			leftTitle:setTooltip(titleTooltip)
-		end
-
-		local perkBonusText = shape:recursiveGetChildById("perkBonusText")
-
-		if perkBonusText then
-			perkBonusText:setText(bonusTooltip)
-		end
-
-		local perkPreview = shape:recursiveGetChildById("perkPreview")
-
-		if modifiedPerkData then
-			populateShapePerkPreview(perkPreview, modifiedPerkData, modifierEntry)
-		end
-
-		self:updateShapeResourceBalances()
+		self:updateShapeResourceBalances(shape)
 
 		local infoBtn = shape:recursiveGetChildById("shapeInfoButton")
 
@@ -3371,7 +3402,7 @@ function WeaponProficiency:onModifyClick()
 		dialog:destroy()
 	end
 
-	dialog = g_ui.createWidget("ModifyConfirmDialog", root)
+	local dialog = g_ui.createWidget("ModifyConfirmDialog", root)
 
 	dialog:setId("modifyConfirmDialog")
 
@@ -3417,7 +3448,7 @@ function WeaponProficiency:onModifyClick()
 	end
 end
 
-function WeaponProficiency:onResetWeapon(button)
+function WeaponProficiency.onResetWeapon(self, button)
 	if not canChangeWeaponPerks() or not button:isOn() then
 		return
 	end
@@ -3472,7 +3503,7 @@ function WeaponProficiency:onResetWeapon(button)
 	end
 end
 
-function WeaponProficiency:onCloseWindow(button)
+function WeaponProficiency.onCloseWindow(self, button)
 	if button:getText() == "Close" then
 		hide()
 
@@ -3488,7 +3519,7 @@ function WeaponProficiency:onCloseWindow(button)
 	self:onCloseMessage(true)
 end
 
-function WeaponProficiency:onCloseMessage(userClosingWindow, targetItem, callbackFunction)
+function WeaponProficiency.onCloseMessage(self, userClosingWindow, targetItem, callbackFunction)
 	self.warningWindow = nil
 
 	if g_modalManager then
@@ -3550,10 +3581,10 @@ function WeaponProficiency:onCloseMessage(userClosingWindow, targetItem, callbac
 	end
 
 	showProficiencyConfirmDialog(self, {
-		dialogId = "saveConfirmDialog",
-		parentDialogId = "weaponProficiencyWindow",
 		titleText = "Save?",
 		widgetName = "SaveConfirmDialog",
+		dialogId = "saveConfirmDialog",
+		parentDialogId = "weaponProficiencyWindow",
 		buildContent = function(s, dialog)
 			local ct = dialog:recursiveGetChildById("contentText")
 
@@ -3582,7 +3613,7 @@ function WeaponProficiency:onCloseMessage(userClosingWindow, targetItem, callbac
 	self.warningWindow = g_ui.getRootWidget() and g_ui.getRootWidget():recursiveGetChildById("saveConfirmDialog")
 end
 
-function WeaponProficiency:checkPerksMatch(itemId)
+function WeaponProficiency.checkPerksMatch(self, itemId)
 	local cacheEntry = self.cacheList[itemId]
 	local cachePerks = cacheEntry and cacheEntry.perks or {}
 	local allPerksMatch = true

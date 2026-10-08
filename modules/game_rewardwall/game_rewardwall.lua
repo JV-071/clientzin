@@ -1,14 +1,12 @@
-﻿-- chunkname: @/game_rewardwall/game_rewardwall.lua
-
-rewardWallController = Controller:new()
+﻿rewardWallController = Controller:new()
 
 local ServerPackets = {
+	DailyRewardHistory = 229,
+	DailyRewardBasic = 228,
 	CloseRewardWall = 227,
 	OpenRewardWall = 226,
 	DailyRewardCollectionState = 222,
-	ShowDialog = 237,
-	DailyRewardHistory = 229,
-	DailyRewardBasic = 228
+	ShowDialog = 237
 }
 local ClientPackets = {
 	JokerResource = 21,
@@ -17,23 +15,28 @@ local ClientPackets = {
 	SelectReward = 218,
 	OpenRewardHistory = 217
 }
-local ButtonRewardWall, windowsPickWindow, generalBox
+local ButtonRewardWall
+local windowsPickWindow
+local generalBox
 local bonuses = {}
 local actualUsed = {}
 local bonusShrine = 0
 local DAILY_REWARD_CYCLE = 86400
-local dailyRewardSlotTimerEvent, dailyRewardSlotTimerData, restingAreaTimerEvent, restingAreaTimerData
+local dailyRewardSlotTimerEvent
+local dailyRewardSlotTimerData
+local restingAreaTimerEvent
+local restingAreaTimerData
 local claimPending = false
 local claimCloseResetEvent
 local COLORS = {
-	BASE_1 = "#484848",
-	BASE_2 = "#414141"
+	BASE_2 = "#414141",
+	BASE_1 = "#484848"
 }
 local ZONE = {
-	RESTING_AREA_ZONE = 1,
 	LAST_ZONE = -99,
 	NUMERIC_ICON_ID = 30,
-	ICON_ID = "condition_Rewards"
+	ICON_ID = "condition_Rewards",
+	RESTING_AREA_ZONE = 1
 }
 local bundleType = {
 	XPBOOST = 3,
@@ -46,27 +49,27 @@ local STATUS = {
 	COLLECTED = 1
 }
 local OPEN_WINDOWS = {
-	SHRINE = 1,
-	BUTTON_WIDGET = 0
+	BUTTON_WIDGET = 0,
+	SHRINE = 1
 }
 local DailyRewardStatus = {
-	DAILY_REWARD_COLLECTED = 0,
 	DAILY_REWARD_NOTAVAILABLE = 2,
-	DAILY_REWARD_NOTCOLLECTED = 1
+	DAILY_REWARD_NOTCOLLECTED = 1,
+	DAILY_REWARD_COLLECTED = 0
 }
 local CONST_WINDOWS_BOX = {
-	ALREADY = 1,
 	NO_IRA = 4,
-	RELEASE = 2
+	RELEASE = 2,
+	ALREADY = 1
 }
 local BOX_CONFIGS = {
 	[CONST_WINDOWS_BOX.ALREADY] = {
-		title = "Warning",
-		content = "Sorry, you have already taken your daily reward or you are unable to collect it"
+		content = "Sorry, you have already taken your daily reward or you are unable to collect it",
+		title = "Warning"
 	},
 	[CONST_WINDOWS_BOX.NO_IRA] = {
-		title = "Warning: No Sufficient Instant Reward Access",
-		content = "Remember! you can always collect your daily reward for free by visiting a reward shrine!\nyou do not have an Instant Reward Access.\nVisit the store to buy more!"
+		content = "Remember! you can always collect your daily reward for free by visiting a reward shrine!\nyou do not have an Instant Reward Access.\nVisit the store to buy more!",
+		title = "Warning: No Sufficient Instant Reward Access"
 	}
 }
 
@@ -264,7 +267,8 @@ local function updateTimerOverlayUI(timerData)
 	local nextRewardTime = timerData.nextRewardTime
 	local elapsed = os.time() - timerData.startTime
 	local useRemaining = timerData.useRemainingProgress == true
-	local text, percent
+	local text
+	local percent
 
 	if nextRewardTime == 0 then
 		text = "00:00"
@@ -377,9 +381,9 @@ end
 local REWARD_CONTAINER_ACTIVE = "/game_rewardwall/images/container-bonus-active"
 local REWARD_CONTAINER_INACTIVE = "/game_rewardwall/images/container-bonus-inactive"
 local REWARD_GOLD_CLIPS = {
-	CHECK_BOTTOM = "0 40 66 20",
-	LOCKED = "0 0 66 20",
 	CHECK_TOP = "0 20 66 20",
+	LOCKED = "0 0 66 20",
+	CHECK_BOTTOM = "0 40 66 20",
 	EMPTY = "0 60 66 20"
 }
 local REWARD_ARROW_CLIPS = {
@@ -387,10 +391,10 @@ local REWARD_ARROW_CLIPS = {
 	DEFAULT = "0 0 5 7"
 }
 local REWARD_BUTTON_MODE = {
-	LOCKED = 3,
-	WAITING = 2,
 	COLLECTABLE = 1,
-	COLLECTED = 4
+	LOCKED = 3,
+	COLLECTED = 4,
+	WAITING = 2
 }
 local pendingRewardButton
 
@@ -726,7 +730,7 @@ local function checkRewards(data)
 		local iconWidget = rewardButton
 
 		if hasSelectableItems then
-			iconWidget:setIcon("game_rewardwall/images/icon-reward-pickitems")
+			iconWidget:setIcon("/game_rewardwall/images/icon-reward-pickitems")
 
 			rewardButton.bundleType = bundleType.ITEMS
 			rewardButton.rewardItem = reward.selectableItems
@@ -735,7 +739,7 @@ local function checkRewards(data)
 				altReward and altReward.itemsToSelect or 0
 			}
 		elseif reward.bundleItems[1] and reward.bundleItems[1].bundleType == bundleType.XPBOOST then
-			iconWidget:setIcon("game_rewardwall/images/icon-reward-xpboost")
+			iconWidget:setIcon("/game_rewardwall/images/icon-reward-xpboost")
 
 			rewardButton.bundleType = bundleType.XPBOOST
 			rewardButton.itemsToSelect = {
@@ -743,7 +747,7 @@ local function checkRewards(data)
 				altReward and altReward.bundleItems[1].itemId or 0
 			}
 		else
-			iconWidget:setIcon("game_rewardwall/images/icon-reward-fixeditems")
+			iconWidget:setIcon("/game_rewardwall/images/icon-reward-fixeditems")
 
 			rewardButton.bundleType = bundleType.PREY
 			rewardButton.itemsToSelect = {
@@ -786,7 +790,7 @@ local function onRestingAreaState(zone, state, message)
 		end, true)
 	else
 		gameInterface.processIcon(ZONE.ICON_ID, function(icon)
-			icon:destroy()
+			icon:hide()
 		end)
 	end
 end
@@ -1030,7 +1034,7 @@ local function wireHover(widget, handler)
 		return
 	end
 
-	function widget:onHoverChange(hovered)
+	function widget.onHoverChange(self, hovered)
 		handler({
 			target = self,
 			value = hovered
@@ -1119,7 +1123,7 @@ function onClickPickReward(widget)
 	})
 end
 
-function rewardWallController:onInit()
+function rewardWallController.onInit(unusedArgument)
 	g_ui.importStyle("styles/style.otui")
 	rewardWallController:loadUI("game_rewardwall")
 
@@ -1139,9 +1143,17 @@ function rewardWallController:onInit()
 		onDailyRewardCollectionState = onDailyRewardCollectionState
 	})
 	setupRewardWallUi()
+	Keybind.new("Dialogs", "Open Reward Wall", "", "")
+	Keybind.bind("Dialogs", "Open Reward Wall", {
+		{
+			type = KEY_DOWN,
+			callback = toggle
+		}
+	}, modules.game_interface.getRootPanel())
 end
 
-function rewardWallController:onTerminate()
+function rewardWallController.onTerminate(unusedArgument)
+	Keybind.delete("Dialogs", "Open Reward Wall")
 	stopDailyRewardSlotTimer()
 	stopRestingAreaTimer()
 
@@ -1152,19 +1164,13 @@ function rewardWallController:onTerminate()
 	})
 end
 
-function rewardWallController:onGameStart()
-	if g_game.getClientVersion() > 1140 then
-		if not ButtonRewardWall then
-			ButtonRewardWall = modules.game_mainpanel.addToggleButton("rewardWall", tr("Open Reward Wall"), "/images/options/button_reward_wall", toggle, false, 21)
-		end
-	else
-		scheduleEvent(function()
-			g_modules.getModule("game_rewardwall"):unload()
-		end, 100)
+function rewardWallController.onGameStart(unusedArgument)
+	if not ButtonRewardWall then
+		ButtonRewardWall = modules.game_mainpanel.addToggleButton("rewardWall", tr("Open Reward Wall"), "/images/options/button_reward_wall", toggle, false, 21)
 	end
 end
 
-function rewardWallController:onGameEnd()
+function rewardWallController.onGameEnd(self)
 	stopDailyRewardSlotTimer()
 	stopRestingAreaTimer()
 
@@ -1191,21 +1197,21 @@ function rewardWallController:onGameEnd()
 	})
 end
 
-function rewardWallController:onClickshowHistory()
+function rewardWallController.onClickshowHistory(self)
 	visibleHistory(not rewardWallController.ui.historyPanel:isVisible())
 	g_game.requestOpenRewardHistory()
 	rewardWallController.ui.footerPanel.historyButton:setText(rewardWallController.ui.historyPanel:isVisible() and "Back" or "History")
 end
 
-function rewardWallController:onClickToggle()
+function rewardWallController.onClickToggle(self)
 	toggle()
 end
 
-function rewardWallController:onClickSendStoreRewardWall()
+function rewardWallController.onClickSendStoreRewardWall(self)
 	modules.game_store.openPremiumBoost()
 end
 
-function rewardWallController:onClickDisplayWindowsPickRewardWindow(event)
+function rewardWallController.onClickDisplayWindowsPickRewardWindow(self, event)
 	if event.target.rewardVisualMode ~= REWARD_BUTTON_MODE.COLLECTABLE or claimPending then
 		return
 	end
@@ -1265,7 +1271,7 @@ function rewardWallController:onClickDisplayWindowsPickRewardWindow(event)
 	end
 end
 
-function rewardWallController:onhoverBonus(event)
+function rewardWallController.onhoverBonus(self, event)
 	if not event.value then
 		clearInfoPanel()
 
@@ -1288,7 +1294,7 @@ function rewardWallController:onhoverBonus(event)
 	showInfoPanelDescription(bonusText, true)
 end
 
-function rewardWallController:onhoverStatusPlayer(event)
+function rewardWallController.onhoverStatusPlayer(unusedArgument, event)
 	if not event.value then
 		clearInfoPanel()
 
@@ -1296,18 +1302,17 @@ function rewardWallController:onhoverStatusPlayer(event)
 	end
 
 	local playerStatus = {
+		restingAreaGold = "This explains how Daily Reward Jokers work. They help you maintain your streak on days when you can't claim your daily reward. Each character receives one Daily Reward Joker on the first day of each month. The message recommends collecting rewards daily to stay safe.",
 		rewardStreakIcon = "This explains the reward streak system. You need to claim your daily reward between regular server saves to maintain your streak. At a streak of 2+, your character gets resting area bonuses. Free accounts can reach a maximum bonus at streak level 3, while premium players can reach higher levels. Characters on the same account share the streak.",
-		timeLeft = "This is an urgent notification to claim your daily reward within one minute (before the next server save) to raise your reward streak by 1. It mentions that 3 Daily Reward Jokers will be used to prevent resetting your streak. It also encourages raising your streak to benefit from bonuses in resting areas.",
-		restingAreaGold = "This explains how Daily Reward Jokers work. They help you maintain your streak on days when you can't claim your daily reward. Each character receives one Daily Reward Joker on the first day of each month. The message recommends collecting rewards daily to stay safe."
+		timeLeft = "This is an urgent notification to claim your daily reward within one minute (before the next server save) to raise your reward streak by 1. It mentions that 3 Daily Reward Jokers will be used to prevent resetting your streak. It also encourages raising your streak to benefit from bonuses in resting areas."
 	}
 	local DEFAULT_MESSAGE = "Unknown bonus."
-	local id = event.target:getId()
-	local info = playerStatus[id]
+	local info = playerStatus[event.target:getId()]
 
 	showInfoPanelDescription(info or DEFAULT_MESSAGE, true)
 end
 
-function rewardWallController:onhoverRewardType(event)
+function rewardWallController.onhoverRewardType(self, event)
 	if not event.value then
 		clearInfoPanel()
 
@@ -1358,7 +1363,7 @@ function rewardWallController:onhoverRewardType(event)
 	showInfoPanelRewardSplit(rewardTexts.free, rewardTexts.premium)
 end
 
-function rewardWallController:onhoverStatusReward(event)
+function rewardWallController.onhoverStatusReward(self, event)
 	local statusReward = {
 		[STATUS.COLLECTED] = "You have already collected this daily reward.\nThe daily rewards follow a specific cycle where each day you claim it, you get another reward. The cycle repeats after 7 claimed rewards. You will be able to claim this daily reward again as soon as you have reached this postion in the next cycle.",
 		[STATUS.ACTIVE] = "The daily reward can be claimed now.\nIf you claim this reward now, it will cost you one Instant Reward Access.\nGet your daily reward for free by visiting a reward shrine.\nYou did not claim your daily reward in time.\nToo bad, you do not have enough Daily Reward Jokers.",
@@ -1629,7 +1634,7 @@ function displayGeneralBox3(title, message, buttons, onEnterCallback, onEscapeCa
 	generalBox:setWidth(math.min(916, math.max(300, contentWidth)))
 	generalBox:setHeight(math.min(616, math.max(119, contentHeight)))
 
-	function generalBox:setContent(newMessage)
+	function generalBox.setContent(self, newMessage)
 		local content = generalBox:getChildById("content")
 
 		if not content then
@@ -1654,7 +1659,7 @@ function displayGeneralBox3(title, message, buttons, onEnterCallback, onEscapeCa
 		generalBox:setHeight(math.min(300, math.max(89, contentHeight)))
 	end
 
-	function generalBox:setTitle(newTitle)
+	function generalBox.setTitle(self, newTitle)
 		local titleWidget = generalBox:getChildById("title")
 
 		if not titleWidget then
@@ -1664,7 +1669,7 @@ function displayGeneralBox3(title, message, buttons, onEnterCallback, onEscapeCa
 		titleWidget:setText(newTitle)
 	end
 
-	function generalBox:modifyButton(buttonId, newText, newCallback)
+	function generalBox.modifyButton(self, buttonId, newText, newCallback)
 		local holder = generalBox:getChildById("holder")
 
 		if not holder then

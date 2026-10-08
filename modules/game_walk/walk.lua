@@ -1,24 +1,88 @@
-﻿-- chunkname: @/game_walk/walk.lua
-
-local smartWalkDirs = {}
-local smartWalkDir, walkEvent
+﻿local smartWalkDirs = {}
+local smartWalkDir
+local walkEvent
 local lastTurn = 0
-local nextWalkDir, lastWalkDir
+local nextWalkDir
+local lastWalkDir
 local lastCancelWalkTime = 0
 local pendingWalkEventDir
 local DEFAULT_KEYBOARD_DELAY_MS = 250
-local walkRepeatEvent, walkRepeatRetryEvent
+local walkRepeatEvent
+local walkRepeatRetryEvent
 local walkRepeatActive = false
 local continueWalk
 local activeWalkKeys = {}
 local walkKeyDirs = {}
+local var_0_15 = {}
+local var_0_16 = "Movement"
+local var_0_17 = {
+	{
+		action = "Go East",
+		defaultKey = "D",
+		direction = East
+	},
+	{
+		action = "Go North",
+		defaultKey = "W",
+		direction = North
+	},
+	{
+		action = "Go North-East",
+		defaultKey = "E",
+		direction = NorthEast
+	},
+	{
+		action = "Go North-West",
+		defaultKey = "Q",
+		direction = NorthWest
+	},
+	{
+		action = "Go South",
+		defaultKey = "S",
+		direction = South
+	},
+	{
+		action = "Go South-East",
+		defaultKey = "C",
+		direction = SouthEast
+	},
+	{
+		action = "Go South-West",
+		defaultKey = "Z",
+		direction = SouthWest
+	},
+	{
+		action = "Go West",
+		defaultKey = "A",
+		direction = West
+	}
+}
+
+local function var_0_18()
+	for unusedValue, entry in ipairs(var_0_17) do
+		Keybind.new(var_0_16, entry.action, {
+			[CHAT_MODE.ON] = "",
+			[CHAT_MODE.OFF] = entry.defaultKey
+		}, "", true)
+	end
+end
+
+local function var_0_19()
+	for unusedValue, entry in ipairs(var_0_17) do
+		Keybind.delete(var_0_16, entry.action)
+	end
+end
 
 local function getWalkOptionNumber(name)
-	if modules.client_options and type(modules.client_options.getOption) == "function" then
-		return modules.client_options.getOption(name)
+	local var_3_0
+
+	if modules.client_options and iscallable(modules.client_options.getOption) then
+		var_3_0 = modules.client_options.getOption(name)
+	else
+		var_3_0 = g_settings.getNumber(name)
 	end
 
-	return g_settings.getNumber(name)
+	return tonumber(var_3_0) or 0
 end
 
 local function getKeyboardDelay()
@@ -60,10 +124,7 @@ local function isWalkDirHeld(dir)
 end
 
 local function canContinueHeldWalk()
-	local modifiers = g_keyboard.getModifiers()
-	local allowsCurrentDirection = modifiers == KeyboardNoModifier or modifiers == KeyboardShiftModifier
-
-	return allowsCurrentDirection and smartWalkDir ~= nil and hasPhysicallyPressedWalkKey()
+	return smartWalkDir ~= nil and hasPhysicallyPressedWalkKey()
 end
 
 local function registerHeldWalkKeysForDir(dir)
@@ -639,16 +700,21 @@ local function unbindKeys()
 end
 
 local function onTeleport(player, newPos, oldPos)
-	if not newPos or not oldPos then
+	if not player or not newPos or not oldPos then
 		return
 	end
 
-	local offsetX, offsetY, offsetZ = Position.offsetX(newPos, oldPos), Position.offsetY(newPos, oldPos), Position.offsetZ(newPos, oldPos)
+	local var_32_0 = Position.offsetX(newPos, oldPos)
+	local offsetY = Position.offsetY(newPos, oldPos)
+	local offsetZ = Position.offsetZ(newPos, oldPos)
 	local TELEPORT_DELAY = getWalkOptionNumber("walkTeleportDelay")
 	local STAIRS_DELAY = getWalkOptionNumber("walkStairsDelay")
-	local delay = (offsetX >= 3 or offsetY >= 3 or offsetZ >= 2) and TELEPORT_DELAY or STAIRS_DELAY
+	local delay = (var_32_0 >= 3 or offsetY >= 3 or offsetZ >= 2) and TELEPORT_DELAY or STAIRS_DELAY
+	local numericValue
 
-	player:lockWalk(delay)
+	numericValue = tonumber(delay) or 100
+
+	player:lockWalk(numericValue)
 end
 
 local function onWalkFinish(player)
@@ -681,19 +747,23 @@ local function onCancelWalk(player)
 	player:lockWalk(50)
 end
 
-function WalkController:onInit()
+function WalkController.onInit(unusedArgument)
+	var_0_18()
 	bindKeys()
+	rebindMovementKeys(Keybind.chatMode)
 	scheduleEvent(function()
 		rebindTurnKeys()
 	end, 0)
 end
 
-function WalkController:onTerminate()
+function WalkController.onTerminate(unusedArgument)
 	abortSmartWalk()
+	unbindMovementKeys()
 	unbindKeys()
+	var_0_19()
 end
 
-function WalkController:onGameStart()
+function WalkController.onGameStart(self)
 	self:registerEvents(g_game, {
 		onGameStart = onGameStart,
 		onTeleport = onTeleport,
@@ -705,7 +775,17 @@ function WalkController:onGameStart()
 		onAutoWalk = onAutoWalk
 	})
 
-	modules.game_interface.getRootPanel().onFocusChange = abortSmartWalk
+	modules.game_interface.getRootPanel().onFocusChange = function(unusedArgument, arg_40_1)
+		if arg_40_1 then
+			return
+		end
+
+		if hasPhysicallyPressedWalkKey() then
+			return
+		end
+
+		abortSmartWalk()
+	end
 
 	modules.game_joystick.addOnJoystickMoveListener(function(dir)
 		g_game.walk(dir)
@@ -722,26 +802,20 @@ function WalkController:onGameStart()
 	end, 0)
 end
 
-function WalkController:onGameEnd()
+function WalkController.onGameEnd(unusedArgument)
 	abortSmartWalk()
 end
 
 function bindWalkKey(key, dir)
 	local gameRootPanel = modules.game_interface.getRootPanel()
 
-	unbindWalkKey(key)
+	unbindWalkKey(key, activeWalkKeys[key] ~= nil)
 
 	walkKeyDirs[key] = dir
 
 	local handlers = {
 		down = function()
-			local modifiers = g_keyboard.getModifiers()
-
-			if modifiers ~= KeyboardNoModifier then
-				if modifiers ~= KeyboardShiftModifier then
-					abortSmartWalk()
-				end
-
+			if g_keyboard.getModifiers() ~= KeyboardNoModifier then
 				return false
 			end
 
@@ -825,12 +899,12 @@ function bindTurnKey(key, dir)
 	g_keyboard.bindKeyUp(key, handlers.up, gameRootPanel)
 end
 
-function unbindWalkKey(key)
+function unbindWalkKey(key, arg_51_1)
 	local gameRootPanel = modules.game_interface.getRootPanel()
 	local handlers = walkKeyHandlers[key]
 
 	if handlers then
-		if activeWalkKeys[key] then
+		if activeWalkKeys[key] and not arg_51_1 then
 			abortSmartWalk()
 		end
 
@@ -905,44 +979,175 @@ function syncWasdTurnKeyLayout(enabled)
 	rebindTurnKeys()
 end
 
-local WASD_MOVEMENT_KEYS = {
-	W = North,
-	D = East,
-	S = South,
-	A = West,
-	E = NorthEast,
-	Q = NorthWest,
-	C = SouthEast,
-	Z = SouthWest
-}
+function getMovementKeyDirs(arg_56_0)
+	arg_56_0 = arg_56_0 or Keybind.chatMode
 
-function getWasdMovementKeyDirs()
+	local var_56_0 = {}
+	local var_56_1 = {}
+
+	for unusedValue, entry in ipairs(var_0_17) do
+		local keybindKeys = Keybind.getKeybindKeys(var_0_16, entry.action, arg_56_0)
+
+		for unusedValue, iter_56_3 in ipairs({
+			"primary",
+			"secondary"
+		}) do
+			local var_56_3 = keybindKeys[iter_56_3]
+
+			if var_56_3 and var_56_3 ~= "" and not var_56_1[var_56_3] then
+				var_56_1[var_56_3] = true
+
+				table.insert(var_56_0, {
+					var_56_3,
+					entry.direction,
+					entry.action
+				})
+			end
+		end
+	end
+
+	return var_56_0
+end
+
+function isMovementKeyBlockedByHotkey(arg_57_0, arg_57_1, arg_57_2)
+	if not arg_57_0 or arg_57_0 == "" then
+		return false
+	end
+
+	arg_57_2 = arg_57_2 or Keybind.chatMode
+
+	if modules.game_actionbar and modules.game_actionbar.isKeyComboUsedOnActionBar and modules.game_actionbar.isKeyComboUsedOnActionBar(arg_57_0, arg_57_2 == CHAT_MODE.ON) then
+		return true
+	end
+
+	if Keybind and Keybind.isKeyComboUsed and Keybind.isKeyComboUsed(arg_57_0, var_0_16, arg_57_1, arg_57_2) then
+		return true
+	end
+
+	return false
+end
+
+local function var_0_61()
 	local list = {}
 
-	for key, dir in pairs(WASD_MOVEMENT_KEYS) do
-		table.insert(list, {
-			key,
-			dir
-		})
+	for key, dir in pairs(walkKeyDirs) do
+		if g_keyboard.isKeyPressed(key) then
+			list[key] = dir
+		end
 	end
 
 	return list
 end
 
-function isMovementKeyBlockedByHotkey(key)
-	if not key or key == "" then
-		return false
+local function var_0_62(arg_59_0)
+	if not arg_59_0 then
+		return
 	end
 
-	if modules.game_actionbar and modules.game_actionbar.isKeyComboUsedOnActionBar and modules.game_actionbar.isKeyComboUsedOnActionBar(key, false) then
-		return true
+	local var_59_0 = false
+
+	for iter_59_0 in pairs(arg_59_0) do
+		local var_59_1 = walkKeyDirs[iter_59_0]
+
+		if var_59_1 and g_keyboard.isKeyPressed(iter_59_0) then
+			activeWalkKeys[iter_59_0] = true
+
+			local var_59_2 = false
+
+			for unusedValue, smartWalkDir in ipairs(smartWalkDirs) do
+				if smartWalkDir == var_59_1 then
+					var_59_2 = true
+
+					break
+				end
+			end
+
+			if not var_59_2 then
+				table.insert(smartWalkDirs, 1, var_59_1)
+			end
+
+			var_59_0 = true
+		end
 	end
 
-	if Keybind and Keybind.isKeyComboUsed and Keybind.isKeyComboUsed(key, nil, nil, CHAT_MODE.OFF) then
-		return true
+	if not var_59_0 then
+		return
+	end
+
+	updateSmartWalkDir()
+
+	if smartWalkDir and not walkRepeatActive then
+		walkRepeatActive = true
+
+		continueWalk(0)
+	end
+end
+
+function unbindMovementKeys(arg_60_0)
+	for iter_60_0 in pairs(var_0_15) do
+		unbindWalkKey(iter_60_0, arg_60_0)
+	end
+
+	var_0_15 = {}
+end
+
+function getDesiredMovementKeys(arg_61_0)
+	arg_61_0 = arg_61_0 or Keybind.chatMode
+
+	local var_61_0 = {}
+
+	for unusedValue, entry in ipairs(getMovementKeyDirs(arg_61_0)) do
+		local var_61_1 = entry[1]
+		local var_61_2 = entry[3]
+
+		if not isMovementKeyBlockedByHotkey(var_61_1, var_61_2, arg_61_0) then
+			var_61_0[var_61_1] = true
+		end
+	end
+
+	return var_61_0
+end
+
+function movementKeyBindsNeedSync(arg_62_0)
+	arg_62_0 = arg_62_0 or Keybind.chatMode
+
+	local var_62_0 = getDesiredMovementKeys(arg_62_0)
+
+	for iter_62_0 in pairs(var_62_0) do
+		if not var_0_15[iter_62_0] then
+			return true
+		end
+	end
+
+	for iter_62_1 in pairs(var_0_15) do
+		if not var_62_0[iter_62_1] then
+			return true
+		end
 	end
 
 	return false
+end
+
+function rebindMovementKeys(arg_63_0)
+	arg_63_0 = arg_63_0 or Keybind.chatMode
+
+	local var_63_0 = var_0_61()
+
+	unbindMovementKeys(true)
+
+	for unusedValue, entry in ipairs(getMovementKeyDirs(arg_63_0)) do
+		local var_63_1 = entry[1]
+		local var_63_2 = entry[2]
+		local var_63_3 = entry[3]
+
+		if not isMovementKeyBlockedByHotkey(var_63_1, var_63_3, arg_63_0) then
+			bindWalkKey(var_63_1, var_63_2)
+
+			var_0_15[var_63_1] = true
+		end
+	end
+
+	var_0_62(var_63_0)
 end
 
 if modules and modules.game_walk then
@@ -951,6 +1156,15 @@ if modules and modules.game_walk then
 	modules.game_walk.bindTurnKey = bindTurnKey
 	modules.game_walk.unbindTurnKey = unbindTurnKey
 	modules.game_walk.syncWasdTurnKeyLayout = syncWasdTurnKeyLayout
-	modules.game_walk.getWasdMovementKeyDirs = getWasdMovementKeyDirs
+
+	function modules.game_walk.getWasdMovementKeyDirs()
+		return getMovementKeyDirs(CHAT_MODE.OFF)
+	end
+
+	modules.game_walk.getMovementKeyDirs = getMovementKeyDirs
 	modules.game_walk.isMovementKeyBlockedByHotkey = isMovementKeyBlockedByHotkey
+	modules.game_walk.rebindMovementKeys = rebindMovementKeys
+	modules.game_walk.movementKeyBindsNeedSync = movementKeyBindsNeedSync
+	modules.game_walk.getDesiredMovementKeys = getDesiredMovementKeys
+	modules.game_walk.unbindMovementKeys = unbindMovementKeys
 end

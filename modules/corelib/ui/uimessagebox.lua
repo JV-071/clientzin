@@ -1,26 +1,22 @@
-﻿-- chunkname: @/corelib/ui/uimessagebox.lua
-
-if not UIMiniWindow then
+﻿if not UIMiniWindow then
 	dofile("uiminiwindow")
 end
 
 UIMessageBox = extends(UIMiniWindow, "UIMessageBox")
 
 function UIMessageBox.create(title, okCallback, cancelCallback)
-	local calendar = UIMessageBox.internalCreate()
-
-	return calendar
+	return (UIMessageBox.internalCreate())
 end
 
 function UIMessageBox.display(title, message, buttons, onEnterCallback, onEscapeCallback)
 	local staticSizes = {
 		width = {
-			min = 116,
-			max = 916
+			max = 916,
+			min = 116
 		},
 		height = {
-			min = 56,
-			max = 616
+			max = 616,
+			min = 56
 		}
 	}
 	local currentSizes = {
@@ -415,7 +411,7 @@ function displayGeneralSHOPBox(title, message, productLine, priceAmount, priceIc
 	return UIMessageBox.displaySHOP(title, message, productLine, priceAmount, priceIcon, buttons, onEnterCallback, onEscapeCallback)
 end
 
-function UIMessageBox:addButton(text, callback)
+function UIMessageBox.addButton(self, text, callback)
 	local holder = self:getChildById("holder")
 	local button = g_ui.createWidget("Button", holder)
 
@@ -429,18 +425,26 @@ function UIMessageBox:addButton(text, callback)
 	return button
 end
 
-function UIMessageBox:ok()
+function UIMessageBox.ok(self)
 	signalcall(self.onOk, self)
 
 	self.onOk = nil
 
+	if g_modalManager and g_modalManager.hide then
+		g_modalManager.hide(self)
+	end
+
 	self:destroy()
 end
 
-function UIMessageBox:cancel()
+function UIMessageBox.cancel(self)
 	signalcall(self.onCancel, self)
 
 	self.onCancel = nil
+
+	if g_modalManager and g_modalManager.hide then
+		g_modalManager.hide(self)
+	end
 
 	self:destroy()
 end
@@ -448,12 +452,12 @@ end
 function UIMessageBox.displaySHOP(title, message, productLine, priceAmount, priceIcon, buttons, onEnterCallback, onEscapeCallback)
 	local staticSizes = {
 		width = {
-			min = 390,
-			max = 390
+			max = 390,
+			min = 390
 		},
 		height = {
-			min = 205,
-			max = 616
+			max = 616,
+			min = 205
 		}
 	}
 	local currentSizes = {

@@ -113,11 +113,7 @@ BattleSorcerers < BattleIcon
 
 BattleMonks < BattleIcon
   @onSetup: |
-    if g_game.getClientVersion() >= 1500 then
-      self:setVisible(true)
-    else
-      self:setVisible(false)
-    end
+    self:setVisible(true)
   
   UIWidget
     id: iconWidget
@@ -169,9 +165,9 @@ MiniWindow
     anchors.left: miniwindowHeader.left
     anchors.right: miniwindowHeader.right
     margin-top: 1
-    margin-left: 20
+    margin-left: 19
     margin-right: 50
-    font: verdana-11px-monochrome
+    font: $var-cip-font-new
     height: 13
     color: #ffffffe7
     !text: tr('Battle List')
@@ -260,8 +256,8 @@ MiniWindow
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: parent.top
-      margin-top: 5
-      padding-right: 5
+      margin-top: 2
+      padding-right: 2
       layout:
         type: verticalBox
         fit-children: true

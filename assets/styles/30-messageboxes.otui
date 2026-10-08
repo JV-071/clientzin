@@ -2,6 +2,12 @@ MessageBoxBodyCip < UILabel
   font: Verdana Bold-11px-new
   color: #c0c0c0ff
 
+// Clickable word inside a message box body (opens an url).
+MessageBoxLink < UIButton
+  font: Verdana-11px-lowspace-underline
+  color: #ffffffff
+  text-auto-resize: true
+
 MessageBoxWindow < UIMessageBox
   icon-rect: 4 4 16 16
   size: 246 116

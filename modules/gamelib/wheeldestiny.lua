@@ -1,6 +1,4 @@
-﻿-- chunkname: @/gamelib/wheeldestiny.lua
-
-WheelDestiny = {}
+﻿WheelDestiny = {}
 WheelDestiny.Sides = {
 	topLeft = {
 		child = {
@@ -1083,13 +1081,11 @@ WheelDestiny.MAX_VOCATION = 5
 WheelDestiny.INFO_CONVICTION_MEDIUM = 2
 
 function WheelDestiny.CreateDedicationInfo(data)
-	local result = {}
-
-	result.text = data.id
-	result.quantity = data.quantity
-	result.percent = WheelDestiny.Dedications[data.id].percent or false
-
-	return result
+	return {
+		text = data.id,
+		quantity = data.quantity,
+		percent = WheelDestiny.Dedications[data.id].percent or false
+	}
 end
 
 function WheelDestiny.CreateConvictionInfo(data, convType)
@@ -1132,12 +1128,10 @@ function WheelDestiny.CreateConvictionInfo(data, convType)
 end
 
 function WheelDestiny.CreateConvictionAug(augId, data)
-	local result = {}
-
-	result.augmentation = augId
-	result.text = data
-
-	return result
+	return {
+		augmentation = augId,
+		text = data
+	}
 end
 
 function WheelDestiny.AddSlotData(slot, vocation, data)
@@ -1179,8 +1173,8 @@ function WheelDestiny.AddSlotData(slot, vocation, data)
 end
 
 WheelDestiny.AddSlotData(1, VocationsClient.Knight, {
-	subIcon = 2,
 	icon = 8,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -1202,8 +1196,8 @@ WheelDestiny.AddSlotData(1, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(2, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1214,16 +1208,16 @@ WheelDestiny.AddSlotData(2, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(3, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 37,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1241,8 +1235,8 @@ WheelDestiny.AddSlotData(3, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(4, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 7,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1253,16 +1247,16 @@ WheelDestiny.AddSlotData(4, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 8,
-					quantity = 1
+					quantity = 1,
+					id = 8
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(5, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 38,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1280,8 +1274,8 @@ WheelDestiny.AddSlotData(5, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(6, VocationsClient.Knight, {
-	subIcon = 2,
 	icon = 12,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -1303,8 +1297,8 @@ WheelDestiny.AddSlotData(6, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(7, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 37,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1322,8 +1316,8 @@ WheelDestiny.AddSlotData(7, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(8, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 14,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1341,8 +1335,8 @@ WheelDestiny.AddSlotData(8, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(9, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1353,16 +1347,16 @@ WheelDestiny.AddSlotData(9, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(10, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 38,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1380,8 +1374,8 @@ WheelDestiny.AddSlotData(10, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(11, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 13,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1399,8 +1393,8 @@ WheelDestiny.AddSlotData(11, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(12, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1411,16 +1405,16 @@ WheelDestiny.AddSlotData(12, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(13, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 11,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1438,8 +1432,8 @@ WheelDestiny.AddSlotData(13, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(14, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 7,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1450,16 +1444,16 @@ WheelDestiny.AddSlotData(14, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 8,
-					quantity = 1
+					quantity = 1,
+					id = 8
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(15, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 37,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1477,8 +1471,8 @@ WheelDestiny.AddSlotData(15, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(16, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 10,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1496,8 +1490,8 @@ WheelDestiny.AddSlotData(16, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(17, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1508,16 +1502,16 @@ WheelDestiny.AddSlotData(17, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(18, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 38,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1535,8 +1529,8 @@ WheelDestiny.AddSlotData(18, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(19, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 39,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1554,8 +1548,8 @@ WheelDestiny.AddSlotData(19, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(20, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1566,16 +1560,16 @@ WheelDestiny.AddSlotData(20, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(21, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 12,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1593,8 +1587,8 @@ WheelDestiny.AddSlotData(21, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(22, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 40,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1612,8 +1606,8 @@ WheelDestiny.AddSlotData(22, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(23, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 7,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1631,8 +1625,8 @@ WheelDestiny.AddSlotData(23, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(24, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 14,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1650,8 +1644,8 @@ WheelDestiny.AddSlotData(24, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(25, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1662,16 +1656,16 @@ WheelDestiny.AddSlotData(25, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(26, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 13,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1689,8 +1683,8 @@ WheelDestiny.AddSlotData(26, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(27, VocationsClient.Knight, {
-	subIcon = 0,
 	icon = 39,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1708,8 +1702,8 @@ WheelDestiny.AddSlotData(27, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(28, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1720,16 +1714,16 @@ WheelDestiny.AddSlotData(28, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(29, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 11,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1747,8 +1741,8 @@ WheelDestiny.AddSlotData(29, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(30, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 40,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1766,8 +1760,8 @@ WheelDestiny.AddSlotData(30, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(31, VocationsClient.Knight, {
-	subIcon = 2,
 	icon = 10,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -1789,8 +1783,8 @@ WheelDestiny.AddSlotData(31, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(32, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 39,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1808,8 +1802,8 @@ WheelDestiny.AddSlotData(32, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(33, VocationsClient.Knight, {
-	subIcon = 4,
 	icon = 7,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1827,8 +1821,8 @@ WheelDestiny.AddSlotData(33, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(34, VocationsClient.Knight, {
-	subIcon = 3,
 	icon = 40,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -1846,8 +1840,8 @@ WheelDestiny.AddSlotData(34, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(35, VocationsClient.Knight, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1858,16 +1852,16 @@ WheelDestiny.AddSlotData(35, VocationsClient.Knight, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(36, VocationsClient.Knight, {
-	subIcon = 2,
 	icon = 9,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -1889,8 +1883,8 @@ WheelDestiny.AddSlotData(36, VocationsClient.Knight, {
 	}
 })
 WheelDestiny.AddSlotData(1, VocationsClient.Paladin, {
-	subIcon = 2,
 	icon = 17,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -1912,8 +1906,8 @@ WheelDestiny.AddSlotData(1, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(2, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -1924,16 +1918,16 @@ WheelDestiny.AddSlotData(2, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(3, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 37,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1951,8 +1945,8 @@ WheelDestiny.AddSlotData(3, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(4, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 15,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -1963,16 +1957,16 @@ WheelDestiny.AddSlotData(4, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 16,
-					quantity = 1
+					quantity = 1,
+					id = 16
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(5, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 38,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -1990,8 +1984,8 @@ WheelDestiny.AddSlotData(5, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(6, VocationsClient.Paladin, {
-	subIcon = 2,
 	icon = 22,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -2013,8 +2007,8 @@ WheelDestiny.AddSlotData(6, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(7, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 37,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2032,8 +2026,8 @@ WheelDestiny.AddSlotData(7, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(8, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 21,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2051,8 +2045,8 @@ WheelDestiny.AddSlotData(8, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(9, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2063,16 +2057,16 @@ WheelDestiny.AddSlotData(9, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(10, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 38,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2090,8 +2084,8 @@ WheelDestiny.AddSlotData(10, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(11, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 20,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2109,8 +2103,8 @@ WheelDestiny.AddSlotData(11, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(12, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2121,16 +2115,16 @@ WheelDestiny.AddSlotData(12, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(13, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 19,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2148,8 +2142,8 @@ WheelDestiny.AddSlotData(13, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(14, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 15,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2160,16 +2154,16 @@ WheelDestiny.AddSlotData(14, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 16,
-					quantity = 1
+					quantity = 1,
+					id = 16
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(15, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 37,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2187,8 +2181,8 @@ WheelDestiny.AddSlotData(15, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(16, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 18,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2206,8 +2200,8 @@ WheelDestiny.AddSlotData(16, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(17, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2218,16 +2212,16 @@ WheelDestiny.AddSlotData(17, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(18, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 38,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2245,8 +2239,8 @@ WheelDestiny.AddSlotData(18, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(19, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 39,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2264,8 +2258,8 @@ WheelDestiny.AddSlotData(19, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(20, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2276,16 +2270,16 @@ WheelDestiny.AddSlotData(20, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(21, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 22,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2303,8 +2297,8 @@ WheelDestiny.AddSlotData(21, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(22, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 40,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2322,8 +2316,8 @@ WheelDestiny.AddSlotData(22, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(23, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 15,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2334,16 +2328,16 @@ WheelDestiny.AddSlotData(23, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 16,
-					quantity = 1
+					quantity = 1,
+					id = 16
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(24, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 21,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2361,8 +2355,8 @@ WheelDestiny.AddSlotData(24, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(25, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2373,16 +2367,16 @@ WheelDestiny.AddSlotData(25, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(26, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 20,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2400,8 +2394,8 @@ WheelDestiny.AddSlotData(26, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(27, VocationsClient.Paladin, {
-	subIcon = 0,
 	icon = 39,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2419,8 +2413,8 @@ WheelDestiny.AddSlotData(27, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(28, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2431,16 +2425,16 @@ WheelDestiny.AddSlotData(28, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(29, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 19,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2458,8 +2452,8 @@ WheelDestiny.AddSlotData(29, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(30, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 40,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2477,8 +2471,8 @@ WheelDestiny.AddSlotData(30, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(31, VocationsClient.Paladin, {
-	subIcon = 2,
 	icon = 18,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -2500,8 +2494,8 @@ WheelDestiny.AddSlotData(31, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(32, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 39,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2519,8 +2513,8 @@ WheelDestiny.AddSlotData(32, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(33, VocationsClient.Paladin, {
-	subIcon = 4,
 	icon = 15,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2531,16 +2525,16 @@ WheelDestiny.AddSlotData(33, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 16,
-					quantity = 1
+					quantity = 1,
+					id = 16
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(34, VocationsClient.Paladin, {
-	subIcon = 3,
 	icon = 40,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2558,8 +2552,8 @@ WheelDestiny.AddSlotData(34, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(35, VocationsClient.Paladin, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2570,16 +2564,16 @@ WheelDestiny.AddSlotData(35, VocationsClient.Paladin, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(36, VocationsClient.Paladin, {
-	subIcon = 2,
 	icon = 16,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -2601,8 +2595,8 @@ WheelDestiny.AddSlotData(36, VocationsClient.Paladin, {
 	}
 })
 WheelDestiny.AddSlotData(1, VocationsClient.Sorcerer, {
-	subIcon = 2,
 	icon = 35,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -2624,8 +2618,8 @@ WheelDestiny.AddSlotData(1, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(2, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2636,16 +2630,16 @@ WheelDestiny.AddSlotData(2, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(3, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 37,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2663,8 +2657,8 @@ WheelDestiny.AddSlotData(3, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(4, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 34,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2675,16 +2669,16 @@ WheelDestiny.AddSlotData(4, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(5, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 38,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2702,8 +2696,8 @@ WheelDestiny.AddSlotData(5, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(6, VocationsClient.Sorcerer, {
-	subIcon = 2,
 	icon = 27,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -2725,8 +2719,8 @@ WheelDestiny.AddSlotData(6, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(7, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 37,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2744,8 +2738,8 @@ WheelDestiny.AddSlotData(7, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(8, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 26,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2763,8 +2757,8 @@ WheelDestiny.AddSlotData(8, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(9, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2775,16 +2769,16 @@ WheelDestiny.AddSlotData(9, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(10, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 38,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2802,8 +2796,8 @@ WheelDestiny.AddSlotData(10, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(11, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 36,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2821,8 +2815,8 @@ WheelDestiny.AddSlotData(11, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(12, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2833,16 +2827,16 @@ WheelDestiny.AddSlotData(12, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(13, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 25,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2860,8 +2854,8 @@ WheelDestiny.AddSlotData(13, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(14, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 34,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2872,16 +2866,16 @@ WheelDestiny.AddSlotData(14, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(15, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 37,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2899,8 +2893,8 @@ WheelDestiny.AddSlotData(15, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(16, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 24,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2918,8 +2912,8 @@ WheelDestiny.AddSlotData(16, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(17, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -2930,16 +2924,16 @@ WheelDestiny.AddSlotData(17, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(18, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 38,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -2957,8 +2951,8 @@ WheelDestiny.AddSlotData(18, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(19, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 39,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -2976,8 +2970,8 @@ WheelDestiny.AddSlotData(19, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(20, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -2988,16 +2982,16 @@ WheelDestiny.AddSlotData(20, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(21, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 27,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3015,8 +3009,8 @@ WheelDestiny.AddSlotData(21, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(22, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 40,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3034,8 +3028,8 @@ WheelDestiny.AddSlotData(22, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(23, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 34,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3046,16 +3040,16 @@ WheelDestiny.AddSlotData(23, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(24, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 26,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3073,8 +3067,8 @@ WheelDestiny.AddSlotData(24, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(25, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3085,16 +3079,16 @@ WheelDestiny.AddSlotData(25, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(26, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 36,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3112,8 +3106,8 @@ WheelDestiny.AddSlotData(26, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(27, VocationsClient.Sorcerer, {
-	subIcon = 0,
 	icon = 39,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3131,8 +3125,8 @@ WheelDestiny.AddSlotData(27, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(28, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3143,16 +3137,16 @@ WheelDestiny.AddSlotData(28, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(29, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 25,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3170,8 +3164,8 @@ WheelDestiny.AddSlotData(29, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(30, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 40,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3189,8 +3183,8 @@ WheelDestiny.AddSlotData(30, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(31, VocationsClient.Sorcerer, {
-	subIcon = 2,
 	icon = 24,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -3212,8 +3206,8 @@ WheelDestiny.AddSlotData(31, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(32, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 39,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3231,8 +3225,8 @@ WheelDestiny.AddSlotData(32, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(33, VocationsClient.Sorcerer, {
-	subIcon = 4,
 	icon = 34,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3243,16 +3237,16 @@ WheelDestiny.AddSlotData(33, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(34, VocationsClient.Sorcerer, {
-	subIcon = 3,
 	icon = 40,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3270,8 +3264,8 @@ WheelDestiny.AddSlotData(34, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(35, VocationsClient.Sorcerer, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3282,16 +3276,16 @@ WheelDestiny.AddSlotData(35, VocationsClient.Sorcerer, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(36, VocationsClient.Sorcerer, {
-	subIcon = 2,
 	icon = 23,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -3313,8 +3307,8 @@ WheelDestiny.AddSlotData(36, VocationsClient.Sorcerer, {
 	}
 })
 WheelDestiny.AddSlotData(1, VocationsClient.Druid, {
-	subIcon = 2,
 	icon = 28,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -3336,8 +3330,8 @@ WheelDestiny.AddSlotData(1, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(2, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3348,16 +3342,16 @@ WheelDestiny.AddSlotData(2, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(3, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 37,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3375,8 +3369,8 @@ WheelDestiny.AddSlotData(3, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(4, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 34,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3387,16 +3381,16 @@ WheelDestiny.AddSlotData(4, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(5, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 38,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3414,8 +3408,8 @@ WheelDestiny.AddSlotData(5, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(6, VocationsClient.Druid, {
-	subIcon = 2,
 	icon = 29,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -3437,8 +3431,8 @@ WheelDestiny.AddSlotData(6, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(7, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 37,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3456,8 +3450,8 @@ WheelDestiny.AddSlotData(7, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(8, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 32,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3475,8 +3469,8 @@ WheelDestiny.AddSlotData(8, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(9, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3487,16 +3481,16 @@ WheelDestiny.AddSlotData(9, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(10, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 38,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3514,8 +3508,8 @@ WheelDestiny.AddSlotData(10, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(11, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 33,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3533,8 +3527,8 @@ WheelDestiny.AddSlotData(11, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(12, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3545,16 +3539,16 @@ WheelDestiny.AddSlotData(12, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(13, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 30,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3572,8 +3566,8 @@ WheelDestiny.AddSlotData(13, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(14, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 34,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3584,16 +3578,16 @@ WheelDestiny.AddSlotData(14, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(15, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 37,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3611,8 +3605,8 @@ WheelDestiny.AddSlotData(15, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(16, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 31,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3630,8 +3624,8 @@ WheelDestiny.AddSlotData(16, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(17, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3642,16 +3636,16 @@ WheelDestiny.AddSlotData(17, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(18, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 38,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3669,8 +3663,8 @@ WheelDestiny.AddSlotData(18, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(19, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 39,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3688,8 +3682,8 @@ WheelDestiny.AddSlotData(19, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(20, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3700,16 +3694,16 @@ WheelDestiny.AddSlotData(20, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(21, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 29,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3727,8 +3721,8 @@ WheelDestiny.AddSlotData(21, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(22, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 40,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3746,8 +3740,8 @@ WheelDestiny.AddSlotData(22, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(23, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 34,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3758,16 +3752,16 @@ WheelDestiny.AddSlotData(23, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(24, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 32,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3785,8 +3779,8 @@ WheelDestiny.AddSlotData(24, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(25, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3797,16 +3791,16 @@ WheelDestiny.AddSlotData(25, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(26, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 33,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3824,8 +3818,8 @@ WheelDestiny.AddSlotData(26, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(27, VocationsClient.Druid, {
-	subIcon = 0,
 	icon = 39,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -3843,8 +3837,8 @@ WheelDestiny.AddSlotData(27, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(28, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3855,16 +3849,16 @@ WheelDestiny.AddSlotData(28, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(29, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 30,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3882,8 +3876,8 @@ WheelDestiny.AddSlotData(29, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(30, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 40,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3901,8 +3895,8 @@ WheelDestiny.AddSlotData(30, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(31, VocationsClient.Druid, {
-	subIcon = 2,
 	icon = 31,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -3924,8 +3918,8 @@ WheelDestiny.AddSlotData(31, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(32, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 39,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3943,8 +3937,8 @@ WheelDestiny.AddSlotData(32, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(33, VocationsClient.Druid, {
-	subIcon = 4,
 	icon = 34,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -3955,16 +3949,16 @@ WheelDestiny.AddSlotData(33, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 35,
-					quantity = 1
+					quantity = 1,
+					id = 35
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(34, VocationsClient.Druid, {
-	subIcon = 3,
 	icon = 40,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -3982,8 +3976,8 @@ WheelDestiny.AddSlotData(34, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(35, VocationsClient.Druid, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -3994,16 +3988,16 @@ WheelDestiny.AddSlotData(35, VocationsClient.Druid, {
 		convictions = {
 			medium = {
 				{
-					id = 7,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 7
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(36, VocationsClient.Druid, {
-	subIcon = 2,
 	icon = 35,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -4025,8 +4019,8 @@ WheelDestiny.AddSlotData(36, VocationsClient.Druid, {
 	}
 })
 WheelDestiny.AddSlotData(1, VocationsClient.Monk, {
-	subIcon = 2,
 	icon = 42,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -4048,8 +4042,8 @@ WheelDestiny.AddSlotData(1, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(2, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4060,16 +4054,16 @@ WheelDestiny.AddSlotData(2, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(3, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 37,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4087,8 +4081,8 @@ WheelDestiny.AddSlotData(3, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(4, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 43,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4099,16 +4093,16 @@ WheelDestiny.AddSlotData(4, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 44,
-					quantity = 1
+					quantity = 1,
+					id = 44
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(5, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 38,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4126,8 +4120,8 @@ WheelDestiny.AddSlotData(5, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(6, VocationsClient.Monk, {
-	subIcon = 2,
 	icon = 47,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -4149,8 +4143,8 @@ WheelDestiny.AddSlotData(6, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(7, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 37,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4168,8 +4162,8 @@ WheelDestiny.AddSlotData(7, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(8, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 45,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4187,8 +4181,8 @@ WheelDestiny.AddSlotData(8, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(9, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4199,16 +4193,16 @@ WheelDestiny.AddSlotData(9, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(10, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 38,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4226,8 +4220,8 @@ WheelDestiny.AddSlotData(10, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(11, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 46,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4245,8 +4239,8 @@ WheelDestiny.AddSlotData(11, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(12, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4257,16 +4251,16 @@ WheelDestiny.AddSlotData(12, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(13, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 48,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4284,8 +4278,8 @@ WheelDestiny.AddSlotData(13, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(14, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 43,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4296,16 +4290,16 @@ WheelDestiny.AddSlotData(14, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 44,
-					quantity = 1
+					quantity = 1,
+					id = 44
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(15, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 37,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4323,8 +4317,8 @@ WheelDestiny.AddSlotData(15, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(16, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 44,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4342,8 +4336,8 @@ WheelDestiny.AddSlotData(16, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(17, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4354,16 +4348,16 @@ WheelDestiny.AddSlotData(17, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(18, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 38,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4381,8 +4375,8 @@ WheelDestiny.AddSlotData(18, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(19, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 39,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4400,8 +4394,8 @@ WheelDestiny.AddSlotData(19, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(20, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 5,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4412,16 +4406,16 @@ WheelDestiny.AddSlotData(20, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(21, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 47,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4439,8 +4433,8 @@ WheelDestiny.AddSlotData(21, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(22, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 40,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4458,8 +4452,8 @@ WheelDestiny.AddSlotData(22, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(23, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 43,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4470,16 +4464,16 @@ WheelDestiny.AddSlotData(23, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 44,
-					quantity = 1
+					quantity = 1,
+					id = 44
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(24, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 45,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4497,8 +4491,8 @@ WheelDestiny.AddSlotData(24, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(25, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 6,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4509,16 +4503,16 @@ WheelDestiny.AddSlotData(25, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(26, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 46,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4536,8 +4530,8 @@ WheelDestiny.AddSlotData(26, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(27, VocationsClient.Monk, {
-	subIcon = 0,
 	icon = 39,
+	subIcon = 0,
 	perkData = {
 		dedications = {
 			{
@@ -4555,8 +4549,8 @@ WheelDestiny.AddSlotData(27, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(28, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 5,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4567,16 +4561,16 @@ WheelDestiny.AddSlotData(28, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.25
+					quantity = 0.25,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(29, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 48,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4594,8 +4588,8 @@ WheelDestiny.AddSlotData(29, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(30, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 40,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4613,8 +4607,8 @@ WheelDestiny.AddSlotData(30, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(31, VocationsClient.Monk, {
-	subIcon = 2,
 	icon = 44,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{
@@ -4636,8 +4630,8 @@ WheelDestiny.AddSlotData(31, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(32, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 39,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4655,8 +4649,8 @@ WheelDestiny.AddSlotData(32, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(33, VocationsClient.Monk, {
-	subIcon = 4,
 	icon = 43,
+	subIcon = 4,
 	perkData = {
 		dedications = {
 			{
@@ -4667,16 +4661,16 @@ WheelDestiny.AddSlotData(33, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 44,
-					quantity = 1
+					quantity = 1,
+					id = 44
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(34, VocationsClient.Monk, {
-	subIcon = 3,
 	icon = 40,
+	subIcon = 3,
 	perkData = {
 		dedications = {
 			{
@@ -4694,8 +4688,8 @@ WheelDestiny.AddSlotData(34, VocationsClient.Monk, {
 	}
 })
 WheelDestiny.AddSlotData(35, VocationsClient.Monk, {
-	subIcon = 1,
 	icon = 6,
+	subIcon = 1,
 	perkData = {
 		dedications = {
 			{
@@ -4706,16 +4700,16 @@ WheelDestiny.AddSlotData(35, VocationsClient.Monk, {
 		convictions = {
 			medium = {
 				{
-					id = 6,
-					quantity = 0.75
+					quantity = 0.75,
+					id = 6
 				}
 			}
 		}
 	}
 })
 WheelDestiny.AddSlotData(36, VocationsClient.Monk, {
-	subIcon = 2,
 	icon = 41,
+	subIcon = 2,
 	perkData = {
 		dedications = {
 			{

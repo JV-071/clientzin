@@ -1,18 +1,16 @@
-﻿-- chunkname: @/corelib/json.lua
-
-json = {
+﻿json = {
 	_version = "0.1.2"
 }
 
 local encode
 local escape_char_map = {
-	["\f"] = "f",
 	["\r"] = "r",
 	["\b"] = "b",
 	["\""] = "\"",
 	["\\"] = "\\",
 	["\t"] = "t",
-	["\n"] = "n"
+	["\n"] = "n",
+	["\f"] = "f"
 }
 local escape_char_map_inv = {
 	["/"] = "/"
@@ -329,7 +327,7 @@ local function parse_literal(str, i)
 end
 
 local function parse_array(str, i)
-	local res = {}
+	local var_17_0 = {}
 	local n = 1
 
 	i = i + 1
@@ -345,8 +343,7 @@ local function parse_array(str, i)
 			break
 		end
 
-		x, i = parse(str, i)
-		res[n] = x
+		var_17_0[n], i = parse(str, i)
 		n = n + 1
 		i = next_char(str, i, space_chars, true)
 
@@ -363,16 +360,17 @@ local function parse_array(str, i)
 		end
 	end
 
-	return res, i
+	return var_17_0, i
 end
 
 local function parse_object(str, i)
-	local res = {}
+	local var_18_0 = {}
 
 	i = i + 1
 
 	while true do
-		local key, val
+		local key
+		local val
 
 		i = next_char(str, i, space_chars, true)
 
@@ -386,6 +384,8 @@ local function parse_object(str, i)
 			decode_error(str, i, "expected string for key")
 		end
 
+		local key
+
 		key, i = parse(str, i)
 		i = next_char(str, i, space_chars, true)
 
@@ -394,8 +394,7 @@ local function parse_object(str, i)
 		end
 
 		i = next_char(str, i + 1, space_chars, true)
-		val, i = parse(str, i)
-		res[key] = val
+		var_18_0[key], i = parse(str, i)
 		i = next_char(str, i, space_chars, true)
 
 		local chr = str:sub(i, i)
@@ -411,7 +410,7 @@ local function parse_object(str, i)
 		end
 	end
 
-	return res, i
+	return var_18_0, i
 end
 
 local char_func_map = {
@@ -451,8 +450,7 @@ function json.decode(str)
 	end
 
 	local res, idx = parse(str, next_char(str, 1, space_chars, true))
-
-	idx = next_char(str, idx, space_chars, true)
+	local idx = next_char(str, idx, space_chars, true)
 
 	if idx <= #str then
 		decode_error(str, idx, "trailing garbage")

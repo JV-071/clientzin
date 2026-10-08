@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_interface/widgets/uigamemap.lua
-
-UIGameMap = extends(UIMap, "UIGameMap")
+﻿UIGameMap = extends(UIMap, "UIGameMap")
 
 local mapDragPreviewItem
 
@@ -67,15 +65,15 @@ function UIGameMap.create()
 
 	gameMap:setKeepAspectRatio(true)
 	gameMap:setVisibleDimension({
-		width = 15,
-		height = 11
+		height = 11,
+		width = 15
 	})
 	gameMap:setDrawLights(true)
 
 	return gameMap
 end
 
-function UIGameMap:onDragEnter(mousePos)
+function UIGameMap.onDragEnter(self, mousePos)
 	local clickPos = self:getLastClickPosition()
 
 	if not clickPos then
@@ -94,9 +92,7 @@ function UIGameMap:onDragEnter(mousePos)
 		return false
 	end
 
-	local isDraggableThing = thing:isCreature() or thing:isItem() and isMapThingDraggableItem(thing)
-
-	if not isDraggableThing then
+	if not (thing:isCreature() or thing:isItem() and isMapThingDraggableItem(thing)) then
 		return false
 	end
 
@@ -124,7 +120,7 @@ function UIGameMap:onDragEnter(mousePos)
 	return true
 end
 
-function UIGameMap:onDragLeave(droppedWidget, mousePos)
+function UIGameMap.onDragLeave(self, droppedWidget, mousePos)
 	self.currentDragThing = nil
 	self.hoveredWho = nil
 
@@ -138,7 +134,7 @@ function UIGameMap:onDragLeave(droppedWidget, mousePos)
 	return true
 end
 
-function UIGameMap:onDrop(widget, mousePos)
+function UIGameMap.onDrop(self, widget, mousePos)
 	if not self:canAcceptDrop(widget, mousePos) then
 		return false
 	end
@@ -192,7 +188,7 @@ function UIGameMap:onDrop(widget, mousePos)
 	return true
 end
 
-function UIGameMap:onDragMove(mousePos, mouseMoved)
+function UIGameMap.onDragMove(self, mousePos, mouseMoved)
 	if self.currentDragThing and self.currentDragThing:isItem() then
 		updateMapDragPreviewPosition(mousePos or g_window.getMousePosition())
 	end
@@ -200,7 +196,7 @@ function UIGameMap:onDragMove(mousePos, mouseMoved)
 	return false
 end
 
-function UIGameMap:onMousePress()
+function UIGameMap.onMousePress(self)
 	local actionbar = modules.game_actionbar
 
 	if actionbar and actionbar.closeCurrentMultiActionPanel then
@@ -212,7 +208,7 @@ function UIGameMap:onMousePress()
 	end
 end
 
-function UIGameMap:onMouseMove(mousePos, mouseMoved)
+function UIGameMap.onMouseMove(self, mousePos, mouseMoved)
 	if g_mouse.isPressed(MouseLeftButton) and mouseMoved and (math.abs(mouseMoved.x) > 0 or math.abs(mouseMoved.y) > 0) then
 		self.allowNextRelease = false
 	end
@@ -224,7 +220,7 @@ function UIGameMap:onMouseMove(mousePos, mouseMoved)
 	return false
 end
 
-function UIGameMap:onMouseRelease(mousePosition, mouseButton)
+function UIGameMap.onMouseRelease(self, mousePosition, mouseButton)
 	if not self.allowNextRelease then
 		return true
 	end
@@ -245,7 +241,11 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
 		autoWalkPos.z = localPlayerPos.z
 	end
 
-	local lookThing, useThing, creatureThing, multiUseThing, attackCreature
+	local lookThing
+	local useThing
+	local creatureThing
+	local multiUseThing
+	local attackCreature
 	local tile = self:getTile(mousePosition)
 
 	if tile then
@@ -269,7 +269,7 @@ function UIGameMap:onMouseRelease(mousePosition, mouseButton)
 	return ret
 end
 
-function UIGameMap:canAcceptDrop(widget, mousePos)
+function UIGameMap.canAcceptDrop(self, widget, mousePos)
 	if not widget or not widget.currentDragThing then
 		return false
 	end

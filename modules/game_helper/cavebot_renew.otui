@@ -1,0 +1,53 @@
+MainWindowHigh
+  id: cavebotRenewWindow
+  text: Renew Cavebot Time
+  size: 280 150
+  font: $var-cip-font-new
+  color: $var-text-cip-color-grey
+  text-offset: 0 2
+  @onEscape: modules.game_helper.closeCavebotRenewWindow()
+  @onEnter: modules.game_helper.confirmCavebotRenewWindow()
+
+  Label
+    id: cavebotRenewDescriptionLabel
+    height: 20
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-left: 6
+    margin-right: 6
+    font: $var-cip-font
+    color: $var-text-cip-color
+    text: Renew Cavebot access for 1 hour?
+    text-align: center
+    text-auto-resize: false
+
+  CavebotGoldChip
+    id: cavebotRenewModalPrice
+    anchors.top: cavebotRenewDescriptionLabel.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+
+  HorizontalSeparator
+    id: cavebotRenewSeparator
+    height: 2
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: okButton.top
+    margin-bottom: 11
+
+  // EXCEPTION: This Cavebot confirmation keeps the affirmative action on the left per product request.
+  CipsoftButton
+    id: cancelButton
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    !text: tr('Cancel')
+    @onClick: modules.game_helper.closeCavebotRenewWindow()
+
+  CipsoftButton
+    id: okButton
+    anchors.right: cancelButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+    !text: tr('Ok')
+    @onClick: modules.game_helper.confirmCavebotRenewWindow()

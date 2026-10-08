@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_healthcircle/game_healthcircle.lua
-
-imageSizeBroad = 0
+﻿imageSizeBroad = 0
 imageSizeThin = 0
 mapPanel = modules.game_interface.getMapPanel()
 
@@ -25,9 +23,9 @@ local SERENE_INSET_FROM_HEALTH_WIDGET_RIGHT_AT_BASE = 10
 local SERENE_DIAMETER_AT_100 = 11.5
 local SERENE_MIN_DIAMETER = 5
 local SERENE_DIAMETER_PRESET_MUL = {
+	small = 0.8,
 	large = 1,
-	default = 1,
-	small = 0.8
+	default = 1
 }
 local CONDITION_BAR_WIDTH_AT_100 = 13
 local CONDITION_BAR_MIN_HEIGHT_AT_100 = 21
@@ -61,14 +59,12 @@ local HUD_ARC_SCALE_PRESET_LARGE = 1.61
 hudArcScaleMul = 1
 isHealthCircle = not g_settings.getBoolean("healthcircle_hpcircle")
 isManaCircle = not g_settings.getBoolean("healthcircle_mpcircle")
-distanceFromCenter = g_settings.getNumber("healthcircle_distfromcenter")
+distanceFromCenter = tonumber(g_settings.getNumber("healthcircle_distfromcenter")) or 0
 
 local function arcDistanceScrollLoHi()
-	local row = ARC_DISTANCE_SCROLL_RANGE[hudArcsSizePreset]
+	local row = ARC_DISTANCE_SCROLL_RANGE[hudArcsSizePreset] or ARC_DISTANCE_SCROLL_RANGE.default
 
-	row = row or ARC_DISTANCE_SCROLL_RANGE.default
-
-	return row.min, row.max
+	return tonumber(row.min) or 0, tonumber(row.max) or 0
 end
 
 function arcScrollPercentToDistancePixels(percent)
@@ -79,8 +75,15 @@ function arcScrollPercentToDistancePixels(percent)
 	percent = math.max(0, math.min(100, percent))
 
 	local lo, hi = arcDistanceScrollLoHi()
+	local numericValue
 
-	return math.floor(lo + (hi - lo) * percent / 100 + 0.5)
+	numericValue = tonumber(lo) or 0
+
+	local var_3_3
+
+	var_3_3 = tonumber(hi) or numericValue
+
+	return math.floor(numericValue + (var_3_3 - numericValue) * percent / 100 + 0.5)
 end
 
 function arcDistancePixelsToScrollPercent(px)
@@ -89,16 +92,29 @@ function arcDistancePixelsToScrollPercent(px)
 	end
 
 	local lo, hi = arcDistanceScrollLoHi()
+	local numericValue
 
-	px = math.max(lo, math.min(hi, px))
+	numericValue = tonumber(lo) or 0
 
-	return math.floor((px - lo) / (hi - lo) * 100 + 0.5)
+	local var_4_3
+
+	var_4_3 = tonumber(hi) or numericValue
+
+	if var_4_3 <= numericValue then
+		return 0
+	end
+
+	px = math.max(numericValue, math.min(var_4_3, px))
+
+	return math.floor((px - numericValue) / (var_4_3 - numericValue) * 100 + 0.5)
 end
 
 statsBarMenuLoaded = false
 
 local hudArcsAllowed = false
-local vitalsRefreshEvent, lastManaShieldSplitKey, lastHarmonySplitKey
+local vitalsRefreshEvent
+local lastManaShieldSplitKey
+local lastHarmonySplitKey
 
 local function hudOptionBool(key)
 	local co = modules.client_options
@@ -161,9 +177,7 @@ function updateSereneDisplay()
 		return
 	end
 
-	local hSplit = computeHarmonySplit()
-
-	if not hSplit then
+	if not computeHarmonySplit() then
 		sereneCircle:setVisible(false)
 
 		return
@@ -187,7 +201,11 @@ local function computeManaShieldSplit()
 
 	local player = g_game.isOnline() and g_game.getLocalPlayer() or nil
 
-	if not player or player:getManaShield() <= 0 then
+	if not player then
+		return false, nil
+	end
+
+	if (tonumber(player:getManaShield()) or 0) <= 0 then
 		return false, nil
 	end
 
@@ -207,8 +225,8 @@ local function getMapArcLayoutScale()
 		return 1
 	end
 
-	local mapWidth = mapPanel:getWidth()
-	local mapHeight = mapPanel:getHeight()
+	local mapWidth = tonumber(mapPanel:getWidth()) or 0
+	local mapHeight = tonumber(mapPanel:getHeight()) or 0
 
 	if mapWidth <= 0 or mapHeight <= 0 then
 		return 1
@@ -216,13 +234,16 @@ local function getMapArcLayoutScale()
 
 	local scaleByWidth = mapWidth / MAP_BASE_WIDTH_AT_100
 	local scaleByHeight = mapHeight / MAP_BASE_HEIGHT_AT_100
-	local scale = math.min(scaleByWidth, scaleByHeight) * hudArcScaleMul
+	local scale = math.min(scaleByWidth, scaleByHeight) * (tonumber(hudArcScaleMul) or 1)
+	local numericValue
 
-	if not scale or scale <= 0 then
+	numericValue = tonumber(scale) or 1
+
+	if numericValue <= 0 then
 		return 1
 	end
 
-	return scale
+	return numericValue
 end
 
 local function getArcLayoutHalfGap()
@@ -244,14 +265,21 @@ local function getArcOutfitPlacementOffset()
 
 	local outfit = player:getOutfit()
 
-	if not outfit or not outfit.type or outfit.type <= 0 then
+	if not outfit then
 		return 0, 0
 	end
 
-	local lookType = outfit.type
+	local numericValue = tonumber(outfit.type) or 0
 
-	if outfit.mount and outfit.mount > 0 then
-		lookType = outfit.mount
+	if numericValue <= 0 then
+		return 0, 0
+	end
+
+	local lookType = numericValue
+	local numericValue = tonumber(outfit.mount) or 0
+
+	if numericValue > 0 then
+		lookType = numericValue
 	end
 
 	local thingType = g_things.getThingType(lookType, ThingCategoryCreature)
@@ -273,12 +301,18 @@ local function getHealthArcBaseLayoutXY()
 	end
 
 	local halfGap = getArcLayoutHalfGap()
+	local width = tonumber(mapPanel:getWidth()) or 0
+	local height = tonumber(mapPanel:getHeight()) or 0
+	local x = tonumber(mapPanel:getX()) or 0
+	local y = tonumber(mapPanel:getY()) or 0
+	local numericValue = tonumber(imageSizeThin) or 0
+	local var_13_6 = tonumber(imageSizeBroad) or 0
 
 	if currentViewMode() == 2 then
-		return math.floor(mapPanel:getWidth() / 2 - imageSizeThin - halfGap), math.floor(mapPanel:getHeight() / 2 - imageSizeBroad / 2 + ARC_VERTICAL_OFFSET)
+		return math.floor(width / 2 - numericValue - halfGap), math.floor(height / 2 - var_13_6 / 2 + ARC_VERTICAL_OFFSET)
 	end
 
-	return math.floor(mapPanel:getX() + mapPanel:getWidth() / 2 - imageSizeThin - halfGap), math.floor(mapPanel:getY() + mapPanel:getHeight() / 2 - imageSizeBroad / 2 + ARC_VERTICAL_OFFSET)
+	return math.floor(x + width / 2 - numericValue - halfGap), math.floor(y + height / 2 - var_13_6 / 2 + ARC_VERTICAL_OFFSET)
 end
 
 local function getManaArcLeftNudge()
@@ -291,23 +325,34 @@ local function getManaArcLayoutX()
 	end
 
 	local ox = getArcOutfitPlacementOffset()
+	local numericValue
+
+	numericValue = tonumber(ox) or 0
+
 	local halfGap = getArcLayoutHalfGap()
 	local nudge = getManaArcLeftNudge()
+	local width = tonumber(mapPanel:getWidth()) or 0
+	local x = tonumber(mapPanel:getX()) or 0
 
 	if currentViewMode() == 2 then
-		return math.floor(mapPanel:getWidth() / 2 + halfGap) + ox - nudge
+		return math.floor(width / 2 + halfGap) + numericValue - nudge
 	end
 
-	return math.floor(mapPanel:getX() + mapPanel:getWidth() / 2 + halfGap) + ox - nudge
+	return math.floor(x + width / 2 + halfGap) + numericValue - nudge
 end
 
 local arcHudLayoutGuard = false
 local arcHudLayoutPending = false
 local arcConditionsRefreshScheduled = false
+local var_0_38
 
 local function getConditionsBarScale()
-	if healthCircle and healthCircle:getHeight() > 0 then
-		return healthCircle:getHeight() / ARC_BASE_HEIGHT_AT_100
+	if healthCircle then
+		local height = tonumber(healthCircle:getHeight()) or 0
+
+		if height > 0 then
+			return height / ARC_BASE_HEIGHT_AT_100
+		end
 	end
 
 	return getMapArcLayoutScale()
@@ -365,8 +410,8 @@ local function resetArcConditionsIconsPanel(iconsPanel)
 	end
 
 	iconsPanel:setPosition({
-		x = 0,
-		y = 0
+		y = 0,
+		x = 0
 	})
 	iconsPanel:setPaddingTop(0)
 	iconsPanel:setPaddingBottom(0)
@@ -398,9 +443,7 @@ local function collectActiveConditionStates(states)
 	local redSwordsActive = bit.band(states, PlayerStates.RedSwords) ~= 0
 
 	for state, info in pairs(Icons) do
-		local overriddenByRedSwords = state == PlayerStates.Swords and redSwordsActive
-
-		if not overriddenByRedSwords and type(state) == "number" and state > 0 and info and info.id and bit.band(states, state) ~= 0 and (not modules.client_options or not modules.client_options.isSpecialConditionId(info.id) or modules.client_options.isConditionVisibleInHud(info.id)) then
+		if not (state == PlayerStates.Swords and redSwordsActive) and type(state) == "number" and state > 0 and info and info.id and bit.band(states, state) ~= 0 and (not modules.client_options or not modules.client_options.isSpecialConditionId(info.id) or modules.client_options.isConditionVisibleInHud(info.id)) then
 			list[#list + 1] = {
 				state = state,
 				info = info
@@ -448,10 +491,10 @@ local function collectArcConditionEntries(player)
 	local list = collectActiveConditionStates(player:getStates())
 
 	if isPlayerHungry(player) then
-		local hungryInfo = Icons[PlayerStates.Hungry]
+		local hungryInfo = Icons.hungry
 
 		if hungryInfo then
-			appendVirtualArcCondition(list, hungryInfo, PlayerStates.Hungry, hungryInfo.id)
+			appendVirtualArcCondition(list, hungryInfo, 0, hungryInfo.id)
 		end
 	end
 
@@ -461,6 +504,12 @@ local function collectArcConditionEntries(player)
 		if restingInfo then
 			appendVirtualArcCondition(list, SpecialConditionExtraIcons.condition_restingarea, 1, "condition_restingarea", restingInfo)
 		end
+	end
+
+	local bakragoreIcon = getBakragoreTaintIconInfo(player:getBakragoreIcon())
+
+	if bakragoreIcon then
+		appendVirtualArcCondition(list, SpecialConditionExtraIcons.condition_bakragore_taint, 2, "condition_bakragore_taint", bakragoreIcon)
 	end
 
 	return list
@@ -476,10 +525,8 @@ local function getArcConditionsClusterWidth()
 	end
 
 	local scale = getConditionsBarScale()
-	local barW = math.max(1, math.floor(CONDITION_BAR_WIDTH_AT_100 * scale + 0.5))
-	local gap = math.max(1, math.floor(CONDITION_BAR_GAP_FROM_HEALTH_AT_100 * scale + 0.5))
 
-	return barW + gap
+	return math.max(1, math.floor(CONDITION_BAR_WIDTH_AT_100 * scale + 0.5)) + math.max(1, math.floor(CONDITION_BAR_GAP_FROM_HEALTH_AT_100 * scale + 0.5))
 end
 
 local function getHealthOutfitPlacementInwardCompensation()
@@ -490,16 +537,24 @@ end
 
 local function getHealthConditionsInwardOffset()
 	local lo, hi = arcDistanceScrollLoHi()
-	local dist = distanceFromCenter or 0
+	local numericValue
 
-	if dist <= lo then
+	numericValue = tonumber(lo) or 0
+
+	local var_28_3
+
+	var_28_3 = tonumber(hi) or numericValue
+
+	local dist = tonumber(distanceFromCenter) or 0
+
+	if dist <= numericValue then
 		return 0
 	end
 
 	local t = 1
 
-	if lo < hi then
-		t = math.min(1, (dist - lo) / (hi - lo))
+	if numericValue < var_28_3 then
+		t = math.min(1, (dist - numericValue) / (var_28_3 - numericValue))
 	end
 
 	local inward = 0
@@ -510,8 +565,11 @@ local function getHealthConditionsInwardOffset()
 	end
 
 	local outfitInX, _ = getHealthOutfitPlacementInwardCompensation()
+	local numericValue
 
-	return inward + math.floor(outfitInX * t + 0.5)
+	numericValue = tonumber(outfitInX) or 0
+
+	return inward + math.floor(numericValue * t + 0.5)
 end
 
 local function getMapPanelLayoutLeftTop()
@@ -523,7 +581,7 @@ local function getMapPanelLayoutLeftTop()
 		return 0, 0
 	end
 
-	return mapPanel:getX(), mapPanel:getY()
+	return tonumber(mapPanel:getX()) or 0, tonumber(mapPanel:getY()) or 0
 end
 
 local function clampHealthArcLayoutXY(healthX, healthY)
@@ -531,8 +589,19 @@ local function clampHealthArcLayoutXY(healthX, healthY)
 		return healthX, healthY
 	end
 
-	local mapLeft, mapTop = getMapPanelLayoutLeftTop()
-	local cluster = getArcConditionsClusterWidth()
+	healthX = tonumber(healthX) or 0
+	healthY = tonumber(healthY) or 0
+
+	local var_30_0, var_30_1 = getMapPanelLayoutLeftTop()
+	local mapLeft
+
+	mapLeft = tonumber(var_30_0) or 0
+
+	local mapTop
+
+	mapTop = tonumber(var_30_1) or 0
+
+	local cluster = tonumber(getArcConditionsClusterWidth()) or 0
 
 	if cluster > 0 then
 		local leftEdge = healthX - cluster
@@ -553,20 +622,35 @@ end
 
 local function getHealthArcLayoutXY()
 	local x, y = getHealthArcBaseLayoutXY()
-	local ox, oy = getArcOutfitPlacementOffset()
-	local _, outfitInY = getHealthOutfitPlacementInwardCompensation()
-	local inward = getHealthConditionsInwardOffset()
+	local ox
 
-	x = x + inward + ox
-	y = y + oy + outfitInY
+	ox = tonumber(x) or 0
+
+	local numericValue
+
+	numericValue = tonumber(y) or 0
+
+	local var_31_4, var_31_5 = getArcOutfitPlacementOffset()
+	local var_31_6
+
+	var_31_6 = tonumber(var_31_4) or 0
+
+	local oy
+
+	oy = tonumber(var_31_5) or 0
+
+	local unusedValue, var_31_9 = getHealthOutfitPlacementInwardCompensation()
+	local outfitInY
+
+	outfitInY = tonumber(var_31_9) or 0
+
+	local x = ox + (tonumber(getHealthConditionsInwardOffset()) or 0) + var_31_6
+	local y = numericValue + oy + outfitInY
 
 	return clampHealthArcLayoutXY(x, y)
 end
 
-local function createArcConditionIcon(parent, info, iconSize)
-	local icon = g_ui.createWidget("ArcConditionIcon", parent)
-
-	icon:setId(info.id)
+local function createArcConditionIcon(icon, info, iconSize)
 	applyPlayerStateIcon(icon, info)
 
 	local tooltip = info.tooltip
@@ -581,6 +665,22 @@ local function createArcConditionIcon(parent, info, iconSize)
 		height = iconSize
 	})
 	icon:setImageSize(tosize(iconSize .. " " .. iconSize))
+end
+
+local function var_0_55(arg_33_0)
+	for unusedValue, child in ipairs(arg_33_0:getChildren()) do
+		child:hide()
+	end
+end
+
+local function var_0_56(arg_34_0)
+	local icon = 0
+
+	for unusedValue, child in ipairs(arg_34_0:getChildren()) do
+		if child:isExplicitlyVisible() then
+			icon = icon + 1
+		end
+	end
 
 	return icon
 end
@@ -592,7 +692,7 @@ local function ensureArcConditionsIconsLayout(iconsPanel)
 		return layout
 	end
 
-	layout = UIVerticalLayout.create(iconsPanel)
+	local layout = UIVerticalLayout.create(iconsPanel)
 
 	iconsPanel:setLayout(layout)
 
@@ -607,13 +707,30 @@ local function layoutArcConditionIcons(iconsPanel, active, metrics, barWidth)
 	iconsPanel:setPaddingBottom(padBottom)
 	iconsPanel:setPaddingLeft(sidePad)
 	iconsPanel:setPaddingRight(sidePad)
+	ensureArcConditionsIconsLayout(iconsPanel):setSpacing(metrics.iconSpacing)
 
-	local layout = ensureArcConditionsIconsLayout(iconsPanel)
-
-	layout:setSpacing(metrics.iconSpacing)
+	local var_36_2 = {}
 
 	for _, entry in ipairs(active) do
-		createArcConditionIcon(iconsPanel, entry.info, metrics.iconSize)
+		local childById = iconsPanel:getChildById(entry.info.id)
+
+		if not childById then
+			childById = g_ui.createWidget("ArcConditionIcon", iconsPanel)
+
+			childById:setId(entry.info.id)
+		end
+
+		createArcConditionIcon(childById, entry.info, metrics.iconSize)
+		childById:show()
+		iconsPanel:moveChildToIndex(childById, _)
+
+		var_36_2[entry.info.id] = true
+	end
+
+	for unusedValue, child in ipairs(iconsPanel:getChildren()) do
+		if not var_36_2[child:getId()] then
+			child:hide()
+		end
 	end
 
 	iconsPanel:updateLayout()
@@ -626,9 +743,10 @@ local function layoutArcConditionsPosition()
 
 	local scale = getMapArcLayoutScale()
 	local gap = math.max(1, math.floor(CONDITION_BAR_GAP_FROM_HEALTH_AT_100 * scale + 0.5))
-	local barW = arcConditionsBar:getWidth()
-	local barH = arcConditionsBar:getHeight()
+	local barW = tonumber(arcConditionsBar:getWidth()) or 0
+	local barH = tonumber(arcConditionsBar:getHeight()) or 0
 	local healthX, healthY = getHealthArcLayoutXY()
+	local numericValue = tonumber(imageSizeBroad) or 0
 
 	if arcConditionsBar.breakAnchors then
 		arcConditionsBar:breakAnchors()
@@ -636,7 +754,7 @@ local function layoutArcConditionsPosition()
 
 	arcConditionsBar:setPosition({
 		x = healthX - gap - barW,
-		y = healthY + math.floor((imageSizeBroad - barH) / 2 + 0.5)
+		y = healthY + math.floor((numericValue - barH) / 2 + 0.5)
 	})
 end
 
@@ -651,9 +769,11 @@ local function updateArcConditionsDisplay()
 		return
 	end
 
+	var_0_38 = nil
+
 	if not hudArcsShown() or not isHealthCircle or not healthCircle or not healthCircle:isVisible() then
 		arcConditionsBar:setVisible(false)
-		iconsPanel:destroyChildren()
+		var_0_55(iconsPanel)
 
 		return
 	end
@@ -662,19 +782,30 @@ local function updateArcConditionsDisplay()
 
 	if not player then
 		arcConditionsBar:setVisible(false)
-		iconsPanel:destroyChildren()
+		var_0_55(iconsPanel)
 
 		return
 	end
 
+	var_0_38 = isPlayerHungry(player)
+
 	local scale = getConditionsBarScale()
 	local barWidth = math.max(1, math.floor(CONDITION_BAR_WIDTH_AT_100 * scale + 0.5))
-	local active = collectArcConditionEntries(player)
+	local active = {}
+	local var_38_5 = {}
+
+	for unusedValue, entry in ipairs(collectArcConditionEntries(player)) do
+		if not var_38_5[entry.info.id] then
+			var_38_5[entry.info.id] = true
+			active[#active + 1] = entry
+		end
+	end
+
 	local iconCount = #active
 
 	if iconCount == 0 then
 		arcConditionsBar:setVisible(false)
-		iconsPanel:destroyChildren()
+		var_0_55(iconsPanel)
 
 		return
 	end
@@ -682,7 +813,6 @@ local function updateArcConditionsDisplay()
 	arcConditionsBar:setVisible(false)
 	resetArcConditionsBarLayout()
 	resetArcConditionsIconsPanel(iconsPanel)
-	iconsPanel:destroyChildren()
 
 	local ok, err = pcall(function()
 		local metrics = arcConditionsBarMetrics(iconCount, scale)
@@ -698,16 +828,16 @@ local function updateArcConditionsDisplay()
 		layoutArcConditionIcons(iconsPanel, active, metrics, barWidth)
 	end)
 
-	if ok and iconsPanel:getChildCount() > 0 then
+	if ok and var_0_56(iconsPanel) > 0 then
 		arcConditionsBar:setVisible(true)
 		layoutArcConditionsPosition()
 		arcConditionsBar:raise()
 	else
 		arcConditionsBar:setVisible(false)
-		iconsPanel:destroyChildren()
+		var_0_55(iconsPanel)
 
 		if not ok then
-			g_logger.error("[game_healthcircle] updateArcConditionsDisplay: %s", tostring(err))
+			g_logger.error(string.format("[game_healthcircle] updateArcConditionsDisplay: %s", tostring(err)))
 		end
 	end
 end
@@ -737,7 +867,7 @@ local function repairArcConditionsIfMissing()
 
 	local iconsPanel = arcConditionsBar:getChildById("icons")
 
-	if not iconsPanel or iconsPanel:getChildCount() > 0 then
+	if not iconsPanel or var_0_56(iconsPanel) > 0 then
 		return
 	end
 
@@ -802,19 +932,25 @@ local function layoutHealthManaArcPositions()
 	end
 
 	if sereneCircle and healthCircle and manaCircle then
-		local sw = sereneCircle:getWidth()
-		local sh = sereneCircle:getHeight()
+		local sw = tonumber(sereneCircle:getWidth()) or 0
+		local sh = tonumber(sereneCircle:getHeight()) or 0
 
 		if sw > 0 and sh > 0 then
-			local serenePullLeft = math.max(0, math.floor(SERENE_INSET_FROM_HEALTH_WIDGET_RIGHT_AT_BASE * (imageSizeThin / ARC_BASE_WIDTH_AT_100) + 0.5))
+			local serenePullLeft = tonumber(imageSizeThin) or 1
+			local numericValue = tonumber(imageSizeBroad) or 1
+			local var_44_11 = math.max(0, math.floor(SERENE_INSET_FROM_HEALTH_WIDGET_RIGHT_AT_BASE * (serenePullLeft / ARC_BASE_WIDTH_AT_100) + 0.5))
 			local hSplit, hPair = computeHarmonySplit()
+			local x = tonumber(manaCircle:getX()) or 0
+			local y = tonumber(manaCircle:getY()) or 0
+			local var_44_16 = tonumber(healthCircle:getX()) or 0
+			local var_44_17 = tonumber(healthCircle:getY()) or 0
 
 			if hSplit and hPair == "mana" then
-				sereneCircle:setX(manaCircle:getX() + serenePullLeft)
-				sereneCircle:setY(manaCircle:getY() + math.floor((imageSizeBroad - sh) / 2))
+				sereneCircle:setX(x + var_44_11)
+				sereneCircle:setY(y + math.floor((numericValue - sh) / 2))
 			else
-				sereneCircle:setX(healthCircle:getX() + imageSizeThin - sw - serenePullLeft)
-				sereneCircle:setY(healthCircle:getY() + math.floor((imageSizeBroad - sh) / 2))
+				sereneCircle:setX(var_44_16 + serenePullLeft - sw - var_44_11)
+				sereneCircle:setY(var_44_17 + math.floor((numericValue - sh) / 2))
 			end
 
 			if hudArcsShown() and sereneCircle:isVisible() then
@@ -846,6 +982,10 @@ end
 
 local function whenRegenerationChange(localPlayer, now, old)
 	if now == old then
+		return
+	end
+
+	if isPlayerHungry(localPlayer) == var_0_38 then
 		return
 	end
 
@@ -929,10 +1069,10 @@ function init()
 		end
 	end
 
-	imageSizeBroad = math.max(1, healthCircle:getHeight())
-	imageSizeThin = math.max(1, healthCircle:getWidth())
-	manaShieldImageSizeBroad = math.max(1, manaShieldCircle:getHeight())
-	manaShieldImageSizeThin = math.max(1, manaShieldCircle:getWidth())
+	imageSizeBroad = math.max(1, tonumber(healthCircle:getHeight()) or 1)
+	imageSizeThin = math.max(1, tonumber(healthCircle:getWidth()) or 1)
+	manaShieldImageSizeBroad = math.max(1, tonumber(manaShieldCircle:getHeight()) or 1)
+	manaShieldImageSizeThin = math.max(1, tonumber(manaShieldCircle:getWidth()) or 1)
 
 	manaShieldCircle:setVisible(false)
 	harmonyCircle:setVisible(false)
@@ -1004,6 +1144,7 @@ function initOnHpAndMpChange()
 		onVocationChange = whenLocalPlayerVocationChange,
 		onOutfitChange = whenLocalPlayerOutfitChange,
 		onStatesChange = whenLocalPlayerStatesChange,
+		onBakragoreIconChange = updateArcConditionsDisplay,
 		onRegenerationChange = whenRegenerationChange
 	})
 end
@@ -1018,6 +1159,7 @@ function terminateOnHpAndMpChange()
 		onVocationChange = whenLocalPlayerVocationChange,
 		onOutfitChange = whenLocalPlayerOutfitChange,
 		onStatesChange = whenLocalPlayerStatesChange,
+		onBakragoreIconChange = updateArcConditionsDisplay,
 		onRegenerationChange = whenRegenerationChange
 	})
 end
@@ -1102,7 +1244,10 @@ local function updateHarmonyDisplay()
 	end
 
 	harmonyCircle:setVisible(true)
-	harmonyCircle:setArcFilledSlots(math.min(HARMONY_ARC_SLOTS, player:getHarmony()))
+
+	local harmony = tonumber(player:getHarmony()) or 0
+
+	harmonyCircle:setArcFilledSlots(math.min(HARMONY_ARC_SLOTS, harmony))
 
 	if pair ~= lastHarmonySplitKey then
 		lastHarmonySplitKey = pair
@@ -1154,11 +1299,10 @@ local function updateManaShieldDisplay()
 			maxShield = remainingShield
 		end
 
-		local clampedShield = math.max(math.min(remainingShield, maxShield), 0)
-		local shieldPercent = 100 * clampedShield / maxShield
+		local var_65_5 = 100 * math.max(math.min(remainingShield, maxShield), 0) / maxShield
 
 		manaShieldCircle:setVisible(true)
-		manaShieldCircle:setPercent(shieldPercent)
+		manaShieldCircle:setPercent(var_65_5)
 
 		if pair ~= lastManaShieldSplitKey then
 			lastManaShieldSplitKey = pair
@@ -1254,7 +1398,7 @@ function whenMapResizeChange()
 	arcHudLayoutGuard = false
 
 	if not ok then
-		g_logger.error("[game_healthcircle] whenMapResizeChange: %s", tostring(err))
+		g_logger.error(string.format("[game_healthcircle] whenMapResizeChange: %s", tostring(err)))
 	end
 
 	if arcHudLayoutPending then
@@ -1273,27 +1417,30 @@ function applyArcScaleByMapPanel()
 		return
 	end
 
-	local mapWidth = mapPanel:getWidth()
-	local mapHeight = mapPanel:getHeight()
+	local mapWidth = tonumber(mapPanel:getWidth()) or 0
+	local mapHeight = tonumber(mapPanel:getHeight()) or 0
 
 	if mapWidth <= 0 or mapHeight <= 0 then
-		imageSizeBroad = math.max(1, healthCircle:getHeight())
-		imageSizeThin = math.max(1, healthCircle:getWidth())
+		imageSizeBroad = math.max(1, tonumber(healthCircle:getHeight()) or 1)
+		imageSizeThin = math.max(1, tonumber(healthCircle:getWidth()) or 1)
 
 		return
 	end
 
 	local scaleByWidth = mapWidth / MAP_BASE_WIDTH_AT_100
 	local scaleByHeight = mapHeight / MAP_BASE_HEIGHT_AT_100
-	local scale = math.min(scaleByWidth, scaleByHeight) * hudArcScaleMul
+	local scale = math.min(scaleByWidth, scaleByHeight) * (tonumber(hudArcScaleMul) or 1)
+	local numericValue
 
-	if not scale or scale <= 0 then
-		scale = 1
+	numericValue = tonumber(scale) or 1
+
+	if numericValue <= 0 then
+		numericValue = 1
 	end
 
-	local arcWidth = math.max(1, math.floor(ARC_BASE_WIDTH_AT_100 * scale + 0.5))
-	local arcHeight = math.max(1, math.floor(ARC_BASE_HEIGHT_AT_100 * scale))
-	local arcThickness = math.max(1, math.floor(ARC_THICKNESS_AT_100 * scale + 0.5))
+	local arcWidth = math.max(1, math.floor(ARC_BASE_WIDTH_AT_100 * numericValue + 0.5))
+	local arcHeight = math.max(1, math.floor(ARC_BASE_HEIGHT_AT_100 * numericValue))
+	local arcThickness = math.max(1, math.floor(ARC_THICKNESS_AT_100 * numericValue + 0.5))
 	local sShield, pShield = computeManaShieldSplit()
 	local sHarm, pHarm = computeHarmonySplit()
 
@@ -1302,8 +1449,26 @@ function applyArcScaleByMapPanel()
 		sHarm, pHarm = false
 	end
 
-	local nHealthAux = (sShield and pShield == "health" and 1 or 0) + (sHarm and pHarm == "health" and 1 or 0)
-	local nManaAux = (sShield and pShield == "mana" and 1 or 0) + (sHarm and pHarm == "mana" and 1 or 0)
+	local nHealthAux = 0
+
+	if sShield and pShield == "health" then
+		nHealthAux = 1
+	end
+
+	if sHarm and pHarm == "health" then
+		nHealthAux = nHealthAux + 1
+	end
+
+	local nManaAux = 0
+
+	if sShield and pShield == "mana" then
+		nManaAux = 1
+	end
+
+	if sHarm and pHarm == "mana" then
+		nManaAux = nManaAux + 1
+	end
+
 	local bandsHealth = 1 + nHealthAux
 	local bandsMana = 1 + nManaAux
 	local hpThickness = math.max(1, math.floor(arcThickness / bandsHealth + 0.5))
@@ -1348,12 +1513,12 @@ function applyArcScaleByMapPanel()
 	end
 
 	if sHarm and pHarm == "health" then
-		idxHealth = idxHealth + 1
+		local idxHealth = idxHealth + 1
 
 		harmonyCircle:setThickness(hpThickness)
 		harmonyCircle:setRadialInset(hpThickness * idxHealth)
 	elseif sHarm and pHarm == "mana" then
-		idxMana = idxMana + 1
+		local idxMana = idxMana + 1
 
 		harmonyCircle:setThickness(mpThickness)
 		harmonyCircle:setRadialInset(mpThickness * idxMana)
@@ -1396,10 +1561,10 @@ function applyArcScaleByMapPanel()
 		harmonyCircle:setFillFromEnd(false)
 	end
 
-	imageSizeBroad = math.max(1, healthCircle:getHeight())
-	imageSizeThin = math.max(1, healthCircle:getWidth())
-	manaShieldImageSizeBroad = math.max(1, manaShieldCircle:getHeight())
-	manaShieldImageSizeThin = math.max(1, manaShieldCircle:getWidth())
+	imageSizeBroad = math.max(1, tonumber(healthCircle:getHeight()) or 1)
+	imageSizeThin = math.max(1, tonumber(healthCircle:getWidth()) or 1)
+	manaShieldImageSizeBroad = math.max(1, tonumber(manaShieldCircle:getHeight()) or 1)
+	manaShieldImageSizeThin = math.max(1, tonumber(manaShieldCircle:getWidth()) or 1)
 end
 
 function syncManaShieldHudOptions(options)
@@ -1508,23 +1673,21 @@ function syncShowArcsFromClientOptions(show, options)
 	local op = hudOptionValue(options, "showArcsOpacityScroll")
 
 	if type(op) == "number" then
-		op = math.max(20, math.min(100, op))
+		local var_76_3 = math.max(20, math.min(100, op)) / 100
 
-		local a = op / 100
-
-		healthCircle:setOpacity(a)
-		manaCircle:setOpacity(a)
+		healthCircle:setOpacity(var_76_3)
+		manaCircle:setOpacity(var_76_3)
 
 		if manaShieldCircle then
-			manaShieldCircle:setOpacity(a)
+			manaShieldCircle:setOpacity(var_76_3)
 		end
 
 		if harmonyCircle then
-			harmonyCircle:setOpacity(a)
+			harmonyCircle:setOpacity(var_76_3)
 		end
 
 		if sereneCircle then
-			sereneCircle:setOpacity(a)
+			sereneCircle:setOpacity(var_76_3)
 		end
 	end
 
@@ -1632,6 +1795,8 @@ function addToOptionsModule()
 
 	chooseStatsBarPlacement:addOption(tr("Top"), "top")
 	chooseStatsBarPlacement:addOption(tr("Bottom"), "bottom")
+	chooseStatsBarPlacement:addOption(tr("Left"), "left")
+	chooseStatsBarPlacement:addOption(tr("Right"), "right")
 	chooseStatsBarDimension:addOption(tr("Hide"), "hide")
 	chooseStatsBarDimension:addOption(tr("Compact"), "compact")
 	chooseStatsBarDimension:addOption(tr("Default"), "default")

@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cyclopedia/tab/map/map.lua
-
-local UI
+﻿local UI
 local virtualFloor = 7
 local updatingMapFlags = false
 local loadingMapConfig = false
@@ -40,7 +38,11 @@ local CYCLOPEDIA_BG_MAP_Z7 = "#336699"
 local CYCLOPEDIA_GROUND_FLOOR = 7
 local dragStartMouseY = 0
 local dragStartMargin = 0
-local mapPositionEvent, areaLabelData
+local mapPositionEvent
+local var_0_41
+local var_0_42
+local var_0_43
+local areaLabelData
 local areaDataById = {}
 local areaLabelWidgets = {}
 local areaLabelRefreshEvent
@@ -217,6 +219,59 @@ local function setupLayersPanelWheel()
 	end
 end
 
+local function clearCyclopediaAreaState()
+	if not var_0_41 then
+		return
+	end
+
+	if var_0_42 then
+		g_keyboard.unbindKeyPress("PageUp", var_0_42, var_0_41)
+	end
+
+	if var_0_43 then
+		g_keyboard.unbindKeyPress("PageDown", var_0_43, var_0_41)
+	end
+
+	var_0_41 = nil
+	var_0_42 = nil
+	var_0_43 = nil
+end
+
+local function var_0_71()
+	clearCyclopediaAreaState()
+
+	local var_16_0 = controllerCyclopedia and controllerCyclopedia.ui
+
+	if not var_16_0 or var_16_0:isDestroyed() then
+		return
+	end
+
+	var_0_41 = var_16_0
+
+	function var_0_42()
+		if not UI or UI:isDestroyed() or var_16_0:isDestroyed() or not var_16_0:isVisible() then
+			return false
+		end
+
+		Cyclopedia.upLayer()
+
+		return true
+	end
+
+	function var_0_43()
+		if not UI or UI:isDestroyed() or var_16_0:isDestroyed() or not var_16_0:isVisible() then
+			return false
+		end
+
+		Cyclopedia.downLayer()
+
+		return true
+	end
+
+	g_keyboard.bindKeyPress("PageUp", var_0_42, var_0_41)
+	g_keyboard.bindKeyPress("PageDown", var_0_43, var_0_41)
+end
+
 local function getCyclopediaMinimap()
 	if not UI then
 		return nil
@@ -381,7 +436,8 @@ local function setElidedAreaPanelText(widget, name)
 	end
 
 	local ellipsis = "..."
-	local low, high = 0, #name
+	local low = 0
+	local high = #name
 	local displayName = ellipsis
 
 	while low <= high do
@@ -702,11 +758,12 @@ local function refreshAreaLabels()
 				label:destroy()
 
 				label = nil
-				entry = nil
+
+				local unusedValue
 			end
 
 			if not label or label:isDestroyed() then
-				label = g_ui.createWidget("CyclopediaMapAreaLabel", minimap)
+				local label = g_ui.createWidget("CyclopediaMapAreaLabel", minimap)
 
 				label:setId("cyclopediaAreaLabel" .. data.id)
 
@@ -754,7 +811,7 @@ local function scheduleAreaLabelRefresh()
 	areaLabelRefreshEvent = scheduleEvent(refreshAreaLabels, 35)
 end
 
-local function clearCyclopediaAreaState()
+local function var_0_92()
 	if areaLabelRefreshEvent then
 		removeEvent(areaLabelRefreshEvent)
 
@@ -844,9 +901,7 @@ local function setupCyclopediaAreas()
 		local baseMouseRelease = minimap.onMouseRelease
 
 		function minimap.onMouseRelease(widget, mousePos, button)
-			local isGmTeleport = button == MouseLeftButton and g_game.getClientVersion() > 1288 and g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed()
-
-			if isGmTeleport and baseMouseRelease then
+			if button == MouseLeftButton and g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed() and baseMouseRelease then
 				return baseMouseRelease(widget, mousePos, button)
 			end
 
@@ -915,11 +970,7 @@ local function applyCyclopediaDefaultZoom(minimap)
 		return
 	end
 
-	local savedSettingZoom = minimap.zoomMinimap
-
-	minimap:setZoom(targetZoom)
-
-	minimap.zoomMinimap = savedSettingZoom
+	minimap.zoomMinimap = minimap.zoomMinimap, minimap:setZoom(targetZoom)
 end
 
 local function getLevelScrollBar()
@@ -982,7 +1033,6 @@ end
 
 local function getDefaultMapConfiguration()
 	return {
-		showAreaAndSubAreaInfo = true,
 		shadingValue = 0,
 		surfaceView = false,
 		showPassageMarker = false,
@@ -990,6 +1040,7 @@ local function getDefaultMapConfiguration()
 		showNPCMarker = false,
 		showHouseMarker = false,
 		showDisplay = true,
+		showAreaAndSubAreaInfo = true,
 		selectedMarkers = {}
 	}
 end
@@ -1049,9 +1100,7 @@ function Cyclopedia.saveMapConfiguration()
 		return
 	end
 
-	local player = g_game.getLocalPlayer()
-
-	if not player then
+	if not g_game.getLocalPlayer() then
 		return
 	end
 
@@ -1340,9 +1389,7 @@ function Cyclopedia.updateMinimapBackgroundColor()
 		return
 	end
 
-	local floorZ = getMinimapViewFloor()
-
-	if floorZ ~= CYCLOPEDIA_GROUND_FLOOR then
+	if getMinimapViewFloor() ~= CYCLOPEDIA_GROUND_FLOOR then
 		minimap:setColor("black")
 
 		return
@@ -1462,9 +1509,7 @@ local function setupLayersMarkDrag(mark)
 		local rawMargin = dragStartMargin + dyTotal
 		local minM = layerMarginTopForFloor(LAYER_FLOOR_MIN)
 		local maxM = layerMarginTopForFloor(LAYER_FLOOR_MAX)
-
-		rawMargin = math.max(minM, math.min(maxM, rawMargin))
-
+		local rawMargin = math.max(minM, math.min(maxM, rawMargin))
 		local newFloor = math.floor(rawMargin / 4)
 
 		if newFloor ~= virtualFloor then
@@ -1570,8 +1615,8 @@ local function hookCyclopediaMinimapFlags()
 
 	local baseAddFlag = minimap.addFlag
 
-	function minimap:addFlag(pos, icon, description, temporary, bundled)
-		baseAddFlag(self, pos, icon, description, temporary, bundled)
+	function minimap.addFlag(pos, arg_94_1, icon, description, temporary, bundled)
+		baseAddFlag(pos, arg_94_1, icon, description, temporary, bundled)
 		Cyclopedia.applyMapFlagFilter()
 	end
 
@@ -1608,11 +1653,8 @@ function Cyclopedia.centerMapAtPosition(pos, zoomDelta)
 	if zoomDelta and minimapWidget.getZoom and minimapWidget.setZoom then
 		local maxZoom = minimapWidget.getMaxZoom and minimapWidget:getMaxZoom() or minimapWidget:getZoom()
 		local targetZoom = math.min(maxZoom, minimapWidget:getZoom() + zoomDelta)
-		local savedSettingZoom = minimapWidget.zoomMinimap
 
-		minimapWidget:setZoom(targetZoom)
-
-		minimapWidget.zoomMinimap = savedSettingZoom
+		minimapWidget.zoomMinimap = minimapWidget.zoomMinimap, minimapWidget:setZoom(targetZoom)
 	end
 
 	minimapWidget:setCameraPosition(targetPos)
@@ -1637,8 +1679,9 @@ function Cyclopedia.centerMapAtPosition(pos, zoomDelta)
 end
 
 function Cyclopedia.clearMapUI()
-	Cyclopedia.disconnectMapPositionEvent()
 	clearCyclopediaAreaState()
+	Cyclopedia.disconnectMapPositionEvent()
+	var_0_92()
 
 	UI = nil
 end
@@ -1662,6 +1705,7 @@ function showMap()
 
 	function UI.onDestroy()
 		clearCyclopediaAreaState()
+		var_0_92()
 
 		UI = nil
 	end
@@ -1697,6 +1741,7 @@ function showMap()
 	setupCyclopediaAreas()
 	setupLayersMarkDrag(getLayersMark())
 	setupLayersPanelWheel()
+	var_0_71()
 
 	if pendingMapPosition then
 		Cyclopedia.centerMapAtPosition(pendingMapPosition, pendingMapZoomDelta)
@@ -1738,9 +1783,7 @@ function Cyclopedia.CreateMarkItem(Data)
 		return
 	end
 
-	local MarkItem = g_ui.createWidget("MarkListItem", markList)
-
-	MarkItem:setIcon("/images/game/minimap/flag" .. Data.flagId)
+	g_ui.createWidget("MarkListItem", markList):setIcon("/images/game/minimap/flag" .. Data.flagId)
 	Cyclopedia.applyMapFlagFilter()
 end
 

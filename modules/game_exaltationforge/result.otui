@@ -97,7 +97,7 @@ MainWindowHigh
     margin-left: 16
     margin-right: 16
     text: You transfer was successful.
-    font: $var-cip-font
+    font: $var-cip-font-new
     color: #C0C0C0
     visible: false
     text-auto-resize: true
@@ -110,7 +110,7 @@ MainWindowHigh
     anchors.top: resultText.bottom
     margin-top: -1
     text:
-    font: $var-cip-font
+    font: $var-cip-font-new
     color: #C0C0C0
     visible: false
     text-auto-resize: true

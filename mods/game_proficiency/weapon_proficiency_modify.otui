@@ -195,7 +195,7 @@ ShapeDialog < UIMessageBox
     anchors.top: leftWindow.top
     anchors.left: leftWindow.right
     margin-left: 11
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 4
 
     UIWidget
@@ -551,7 +551,7 @@ ReshapeDialog < UIMessageBox
     size: 200 27
     anchors.left: parent.left
     anchors.top: parent.top
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 3
 
     Label
@@ -588,7 +588,7 @@ ReshapeDialog < UIMessageBox
     anchors.left: verticalSeparator.right
     anchors.top: currentHeader.top
     margin-left: 11
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 3
 
     Label

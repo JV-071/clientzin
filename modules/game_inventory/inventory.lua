@@ -1,11 +1,27 @@
-﻿-- chunkname: @/game_inventory/inventory.lua
-
-local iconTopMenu
+﻿local iconTopMenu
 local inventoryShrink = false
 local itemSlotsWithDuration = {}
 local updateSlotsDurationEvent
 local DURATION_UPDATE_INTERVAL = 1000
 local pvpModeRadioGroup
+local var_0_6 = {
+	{
+		action = "Set to Dove",
+		mode = PVPWhiteDove
+	},
+	{
+		action = "Set to Red Fist",
+		mode = PVPRedFist
+	},
+	{
+		action = "Set to White Hand",
+		mode = PVPWhiteHand
+	},
+	{
+		action = "Set to Yellow Hand",
+		mode = PVPYellowHand
+	}
+}
 local SHIELD_MIRROR_OPACITY = 0.6
 
 local function getInventoryUi()
@@ -158,9 +174,7 @@ local function syncEquippedQuiverAmmoFromContainer(container)
 		return
 	end
 
-	local containerItem = container:getContainerItem()
-
-	if containerItem ~= quiver then
+	if container:getContainerItem() ~= quiver then
 		return
 	end
 
@@ -202,7 +216,7 @@ local function updateSlotsDuration()
 				local slotPanel = getSlotInfo(ui)
 
 				if slotPanel and slotPanel.item then
-					slotPanel.item.duration:setText("")
+					ItemsDatabase.setDurationText(slotPanel.item, nil)
 				end
 			end
 		end
@@ -225,7 +239,7 @@ local function updateSlotsDuration()
 					local slotPanel = getSlotInfo(ui)
 
 					if slotPanel and slotPanel.item then
-						slotPanel.item.duration:setText("")
+						ItemsDatabase.setDurationText(slotPanel.item, nil)
 					end
 				end
 			else
@@ -238,7 +252,7 @@ local function updateSlotsDuration()
 					local slotPanel = getSlotInfo(ui)
 
 					if slotPanel and slotPanel.item then
-						slotPanel.item.duration:setText(formatItemDuration(durationTimeLeft))
+						ItemsDatabase.setDurationText(slotPanel.item, durationTimeLeft)
 					end
 				end
 			end
@@ -311,7 +325,7 @@ local function inventoryEvent(player, slot, item, oldItem)
 	toggler:setEnabled(not item and not mirrorShieldSlot)
 	slotPanel.item:setWidth(34)
 	slotPanel.item:setHeight(34)
-	slotPanel.item.duration:setText("")
+	ItemsDatabase.setDurationText(slotPanel.item, nil)
 	slotPanel.item.charges:setText("")
 
 	if g_game.getFeature(GameThingClock) then
@@ -341,7 +355,10 @@ local function inventoryEvent(player, slot, item, oldItem)
 		ItemsDatabase.setCharges(slotPanel.item, item)
 	end
 
-	ItemsDatabase.setTier(slotPanel.item, mirrorShieldSlot and displayItem or item)
+	local var_23_7 = mirrorShieldSlot and displayItem or item
+	local var_23_8 = var_23_7 and not mirrorShieldSlot and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
+
+	ItemsDatabase.setTier(slotPanel.item, var_23_7, var_23_8)
 
 	if slot == InventorySlotRight and item and inventoryItemIsQuiver(item) and not mirrorShieldSlot then
 		for _, container in pairs(g_game.getContainers()) do
@@ -569,6 +586,35 @@ local function refreshInventory_panel()
 	end
 end
 
+local function var_0_34()
+	if inventoryShrink then
+		return
+	end
+
+	local localPlayer = g_game.getLocalPlayer()
+	local var_37_1 = getInventoryUi()
+
+	if not localPlayer or not var_37_1 then
+		return
+	end
+
+	local var_37_2 = ItemsDatabase.isOverlordActive()
+
+	for iter_37_0 in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
+		local var_37_3 = getSlotPanelBySlot[iter_37_0]
+
+		if var_37_3 then
+			local var_37_4 = var_37_3(var_37_1)
+
+			if var_37_4 and var_37_4.item then
+				local inventoryItem = localPlayer:getInventoryItem(iter_37_0)
+
+				ItemsDatabase.setTier(var_37_4.item, inventoryItem, inventoryItem and var_37_2)
+			end
+		end
+	end
+end
+
 local EXPERT_PVP_BOX_IDS = {
 	"whiteDoveBox",
 	"whiteHandBox",
@@ -721,7 +767,7 @@ inventoryController = Controller:new()
 
 inventoryController:setUI("inventory", modules.game_interface.getMainRightPanel())
 
-function inventoryController:onInit()
+function inventoryController.onInit(unusedArgument)
 	refreshInventory_panel()
 
 	local ui = getInventoryUi()
@@ -745,12 +791,30 @@ function inventoryController:onInit()
 		onBaseCapacityChange = onCapacityStatsChange,
 		onBlessingsChange = onBlessingsChange
 	})
+
+	for unusedValue, entry in ipairs(var_0_6) do
+		local mode = entry.mode
+
+		Keybind.new("PvP Mode", entry.action, "", "")
+		Keybind.bind("PvP Mode", entry.action, {
+			{
+				type = KEY_DOWN,
+				callback = function()
+					if not g_game.isOnline() or not g_game.getFeature(GamePVPMode) then
+						return false
+					end
+
+					g_game.setPVPMode(mode)
+
+					return true
+				end
+			}
+		}, modules.game_interface.getRootPanel())
+	end
 end
 
-function inventoryController:onGameStart()
-	local player = g_game.getLocalPlayer()
-
-	if player then
+function inventoryController.onGameStart(unusedArgument)
+	if g_game.getLocalPlayer() then
 		local char = g_game.getCharacterName()
 		local lastCombatControls = g_settings.getNode("LastCombatControls")
 
@@ -768,7 +832,12 @@ function inventoryController:onGameStart()
 		onAutoWalk = walkEvent,
 		onChaseModeChange = combatEvent,
 		onSafeFightChange = combatEvent,
-		onPVPModeChange = combatEvent
+		onPVPModeChange = combatEvent,
+		onOtcToggle = function(arg_49_0)
+			if OtcOpCode and arg_49_0 == OtcOpCode.OVERLORD_ACTIVE then
+				var_0_34()
+			end
+		end
 	}):execute()
 
 	inventoryShrink = false
@@ -810,7 +879,7 @@ function inventoryController:onGameStart()
 			inventoryController.ui.onPanel.redFistBox
 		}
 	}
-	local showBlessings = g_game.getClientVersion() >= 1000
+	local showBlessings = true
 	local showPVPMode = g_game.getFeature(GamePVPMode)
 
 	for i, elementGroup in ipairs(elements) do
@@ -850,7 +919,7 @@ function inventoryController:onGameStart()
 	})
 end
 
-function inventoryController:onGameEnd()
+function inventoryController.onGameEnd(unusedArgument)
 	stopEvent()
 	toggleAdventurerStyle(false)
 
@@ -875,13 +944,9 @@ function inventoryController:onGameEnd()
 		ui.helmet:setImageColor("#FFFFFF")
 	end
 
-	local lastCombatControls = g_settings.getNode("LastCombatControls")
+	local lastCombatControls = g_settings.getNode("LastCombatControls") or {}
 
-	lastCombatControls = lastCombatControls or {}
-
-	local player = g_game.getLocalPlayer()
-
-	if player then
+	if g_game.getLocalPlayer() then
 		local char = g_game.getCharacterName()
 
 		lastCombatControls[char] = {
@@ -896,7 +961,11 @@ function inventoryController:onGameEnd()
 	end
 end
 
-function inventoryController:onTerminate()
+function inventoryController.onTerminate(unusedArgument)
+	for unusedValue, entry in ipairs(var_0_6) do
+		Keybind.delete("PvP Mode", entry.action)
+	end
+
 	if iconTopMenu then
 		iconTopMenu:destroy()
 
@@ -932,13 +1001,13 @@ end
 function selectPosture(key, ignoreUpdate)
 	local standSelected = key == "stand"
 
-	for _, panel in ipairs({
+	for _, slot in ipairs({
 		inventoryController.ui.onPanel,
 		inventoryController.ui.offPanel
 	}) do
-		if panel.standPosture then
-			panel.standPosture:setOn(standSelected)
-			panel.followPosture:setOn(not standSelected)
+		if slot.standPosture then
+			slot.standPosture:setOn(standSelected)
+			slot.followPosture:setOn(not standSelected)
 		end
 	end
 
@@ -1023,12 +1092,12 @@ function changeInventorySize()
 	refreshInventorySizes()
 	modules.game_mainpanel.reloadMainPanelSizes()
 
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if player and g_game.isOnline() then
-		onFreeCapacityChange(player, player:getFreeCapacity())
-		onSoulChange(player, player:getSoul())
-		onBlessingsChange(player, player:getBlessings())
+	if localPlayer and g_game.isOnline() then
+		onFreeCapacityChange(localPlayer, localPlayer:getFreeCapacity())
+		onSoulChange(localPlayer, localPlayer:getSoul())
+		onBlessingsChange(localPlayer, localPlayer:getBlessings())
 	end
 end
 
@@ -1041,15 +1110,15 @@ function reloadInventory()
 		updateSlotsDuration()
 	end
 
-	for slot, getSlotInfo in pairs(getSlotPanelBySlot) do
-		local ui = getInventoryUi()
-		local slotPanel, toggler = getSlotInfo(ui)
+	for key, entry in pairs(getSlotPanelBySlot) do
+		local var_62_0 = getInventoryUi()
+		local var_62_1, unusedValue = entry(var_62_0)
 
-		if slotPanel then
-			local player = g_game.getLocalPlayer()
+		if var_62_1 then
+			local localPlayer = g_game.getLocalPlayer()
 
-			if player then
-				inventoryEvent(player, slot, player:getInventoryItem(slot))
+			if localPlayer then
+				inventoryEvent(localPlayer, key, localPlayer:getInventoryItem(key))
 			end
 		end
 	end

@@ -1,0 +1,258 @@
+// The value keeps its full width; the name stops at the value and is cut with "..." if needed.
+// Rows with damage grow a second "Damage" line (see setRowDetail in MiscAnalyser.lua).
+MiscAnalyserRow < UIWidget
+  height: 15
+
+  UIWidget
+    id: icon
+    size: 12 12
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 6
+    margin-top: 1
+    phantom: true
+
+  Label
+    id: value
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-right: 5
+    text-auto-resize: true
+    color: $var-text-cip-color
+    font: $var-cip-font
+
+  Label
+    id: name
+    anchors.left: icon.right
+    anchors.right: value.left
+    anchors.top: parent.top
+    margin-left: 4
+    margin-right: 4
+    text-auto-resize: true
+    text-horizontal-auto-resize: false
+    text-overflow: ellipsis
+    color: $var-text-cip-color
+    font: $var-cip-font
+
+  Label
+    id: detailValue
+    anchors.right: parent.right
+    anchors.top: value.bottom
+    margin-top: -2
+    margin-right: 5
+    text-auto-resize: true
+    color: $var-text-cip-color
+    font: $var-cip-font
+    visible: false
+
+  Label
+    id: detailName
+    anchors.left: name.left
+    anchors.right: detailValue.left
+    anchors.top: detailValue.top
+    margin-right: 4
+    text-auto-resize: true
+    text-horizontal-auto-resize: false
+    text-overflow: ellipsis
+    !text: tr('Damage')
+    color: #909090
+    font: $var-cip-font
+    visible: false
+
+MiscAnalyserEmptyLabel < Label
+  id: empty
+  height: 15
+  text-align: left
+  text-offset: 6 0
+  !text: tr('No data yet')
+  color: $var-text-cip-color
+  font: $var-cip-font
+
+MiscAnalyserSectionLabel < Label
+  anchors.top: prev.bottom
+  anchors.left: parent.left
+  margin-top: 6
+  text-auto-resize: true
+  color: $var-text-cip-color-white
+  font: $var-cip-font
+
+MiscAnalyserSection < Panel
+  anchors.top: prev.bottom
+  anchors.left: parent.left
+  anchors.right: parent.right
+  margin-top: 2
+  layout:
+    type: verticalBox
+    fit-children: true
+
+MiniWindow
+  id: miscAnalyserMiniWindow
+  height: 225
+
+  &save: true
+  @onSetup: |
+    do
+      for _, id in ipairs({ 'newWindowButton', 'toggleFilterButton' }) do
+        local w = self:recursiveGetChildById(id)
+        if w then
+          w:setVisible(false)
+          w:setOn(false)
+        end
+      end
+
+      local contextMenuButton = self:recursiveGetChildById("contextMenuButton")
+      if contextMenuButton then
+        contextMenuButton:setMarginRight(-7)
+        contextMenuButton.onMousePress = function(widget, mousePosition, mouseButton)
+          if mouseButton == MouseLeftButton then
+            onMiscExtra(mousePosition)
+            return true
+          end
+        end
+      end
+    end
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-source: /modules/game_analysers/images/icon-miscanalyser-widget
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 1
+    margin-left: 19
+    font: $var-cip-font-new
+    height: 13
+    !text: tr('Misc Analyser')
+    color: #909090
+
+  ScrollablePanel
+    id: contentsPanel
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: miniwindowScrollBar.left
+    anchors.bottom: parent.bottom
+    margin-left: 5
+    margin-top: 16
+    margin-right: 1
+    margin-bottom: 5
+    vertical-scrollbar: miniwindowScrollBar
+
+    Label
+      id: sessionLabel
+      !text: tr('Session:')
+      anchors.top: parent.top
+      anchors.left: parent.left
+      text-auto-resize: true
+      color: $var-text-cip-color
+      font: $var-cip-font
+
+    Label
+      id: session
+      !text: tr('00:00h')
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-right: 5
+      text-auto-resize: true
+      color: $var-text-cip-color
+      font: $var-cip-font
+
+    MiscAnalyserSectionLabel
+      id: charmLabel
+      anchors.top: sessionLabel.bottom
+      !text: tr('Charm')
+
+    MiscAnalyserSection
+      id: charmList
+
+      MiscAnalyserEmptyLabel
+
+    MiscAnalyserSectionLabel
+      id: imbuementLabel
+      !text: tr('Imbuement')
+
+    MiscAnalyserSection
+      id: imbuementList
+
+      MiscAnalyserEmptyLabel
+
+      MiscAnalyserRow
+        id: critical
+
+      MiscAnalyserRow
+        id: manaGain
+
+      MiscAnalyserRow
+        id: lifeGain
+
+    MiscAnalyserSectionLabel
+      id: upgradeLabel
+      !text: tr('Item Upgrade')
+
+    MiscAnalyserSection
+      id: upgradeList
+
+      MiscAnalyserEmptyLabel
+
+      MiscAnalyserRow
+        id: onslaught
+
+      MiscAnalyserRow
+        id: ruse
+
+      MiscAnalyserRow
+        id: momentum
+
+      MiscAnalyserRow
+        id: transcendence
+
+    MiscAnalyserSectionLabel
+      id: efficiencyLabel
+      !text: tr('Efficiency')
+
+    MiscAnalyserSection
+      id: efficiencyList
+
+      MiscAnalyserEmptyLabel
+
+      MiscAnalyserRow
+        id: critRate
+
+      MiscAnalyserRow
+        id: charmShare
+
+      MiscAnalyserRow
+        id: lifeGainHour
+
+      MiscAnalyserRow
+        id: manaGainHour
+
+      MiscAnalyserRow
+        id: sustain
+
+  UIWidget
+    id: miniborder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    image-source: /images/ui/miniborder-bottom-left
+    size: 14 14
+    margin-left: 3
+    margin-bottom: 3
+
+  ResizeBorder
+    id: bottomResizeBorder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 3
+    minimum: 60
+    margin-left: 3
+    margin-right: 3

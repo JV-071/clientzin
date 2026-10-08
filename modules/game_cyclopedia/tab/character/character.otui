@@ -58,7 +58,7 @@ UIWidget
     anchors.bottom: parent.bottom
     margin-top: 6
     margin-bottom: 30
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-size: 164 278
     image-border: 10
     width: 170
@@ -297,7 +297,7 @@ UIWidget
       UIWidget
         id: xpBoostButton
         visible: false
-        image-source: /images/ui/button-storexp
+        image-source: /images/ui/button-storexp-noborder-idle
         !tooltip: tr('Increase your experience gain with a temporary XP Boost!')
         tooltip-delayed: true
         anchors.horizontalCenter: parent.horizontalCenter
@@ -2275,7 +2275,7 @@ UIWidget
         anchors.right: CurrentTitleClear.left
         anchors.verticalCenter: CurrentTitleValue.verticalCenter
         margin-right: 4
-        image-source: /images/game/wheel/small_information_button
+        image-source: /images/game/wheel/buttons/button-information-unselected
         change-cursor-image: true
         cursor: pointer
         @onClick: modules.game_cyclopedia.Cyclopedia.characterTitleShowCurrentInfo()

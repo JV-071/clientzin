@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cyclopedia/tab/boss_slots/boss_slots.lua
-
-local UI
+﻿local UI
 
 function Cyclopedia.clearBossSlotsUI()
 	if UI and UI.SearchEdit and not UI.SearchEdit:isDestroyed() then
@@ -42,14 +40,14 @@ function showBossSlot()
 end
 
 local CATEGORY = {
-	BANE = 0,
 	ARCHFOE = 1,
-	NEMESIS = 2
+	NEMESIS = 2,
+	BANE = 0
 }
-local SLOT_STATE = {
-	EMPTY = 1,
+local unusedValue = {
 	ACTIVE = 2,
-	LOCKED = 0
+	LOCKED = 0,
+	EMPTY = 1
 }
 local ICONS = {
 	[CATEGORY.BANE] = "/images/icons/icon-bosstiary-bane",
@@ -62,19 +60,19 @@ local SLOTS = {
 }
 local CONFIG = {
 	[0] = {
-		MASTERY = 300,
 		PROWESS = 25,
-		EXPERTISE = 100
+		EXPERTISE = 100,
+		MASTERY = 300
 	},
 	{
-		MASTERY = 60,
 		PROWESS = 5,
-		EXPERTISE = 20
+		EXPERTISE = 20,
+		MASTERY = 60
 	},
 	{
-		MASTERY = 5,
 		PROWESS = 1,
-		EXPERTISE = 3
+		EXPERTISE = 3,
+		MASTERY = 5
 	}
 }
 
@@ -223,8 +221,7 @@ function Cyclopedia.loadBossSlots(data)
 	UI.TypeIcon:setImageSource(ICONS[data.todaySlotData.bossRace])
 
 	local tooltip = "Bane\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 5\nExpertise: 15\nMastery: 30"
-
-	tooltip = data.todaySlotData.bossRace == CATEGORY.ARCHFOE and "Archfoe\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60" or "Nemesis\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60"
+	local tooltip = data.todaySlotData.bossRace == CATEGORY.ARCHFOE and "Archfoe\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60" or "Nemesis\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60"
 
 	UI.TypeIcon:setTooltip(tooltip)
 
@@ -431,9 +428,9 @@ function Cyclopedia.setBosstiarySlotsProgress(value, maxValue)
 	fill:setVisible(true)
 
 	local rect = {
-		height = 18,
 		y = 0,
 		x = 0,
+		height = 18,
 		width = width
 	}
 
@@ -449,27 +446,21 @@ function Cyclopedia.setBosstiarySlotsBossProgress(object, value, firstGoal, seco
 	local width = 0
 
 	if clampedValue > 0 and firstGoal > 0 then
-		local firstProgress = math.min(clampedValue, firstGoal) / firstGoal
-
-		width = width + firstProgress * segmentWidth
+		width = width + math.min(clampedValue, firstGoal) / firstGoal * segmentWidth
 	end
 
 	if firstGoal < clampedValue and firstGoal < secondGoal then
-		local secondProgress = math.min(clampedValue - firstGoal, secondGoal - firstGoal) / (secondGoal - firstGoal)
-
-		width = width + secondProgress * segmentWidth
+		width = width + math.min(clampedValue - firstGoal, secondGoal - firstGoal) / (secondGoal - firstGoal) * segmentWidth
 	end
 
 	if secondGoal < clampedValue and secondGoal < thirdGoal then
-		local thirdProgress = math.min(clampedValue - secondGoal, thirdGoal - secondGoal) / (thirdGoal - secondGoal)
-
-		width = width + thirdProgress * segmentWidth
+		width = width + math.min(clampedValue - secondGoal, thirdGoal - secondGoal) / (thirdGoal - secondGoal) * segmentWidth
 	end
 
 	local rect = {
-		height = 12,
 		y = 0,
 		x = 0,
+		height = 12,
 		width = math.floor(math.min(width, totalWidth))
 	}
 
@@ -494,9 +485,7 @@ function Cyclopedia.bossSlotSelectBoss(widget)
 	local button = widget:getParent():getParent():getParent().SelectButton
 
 	for i = 1, widget:getParent():getChildCount() do
-		local child = widget:getParent():getChildByIndex(i)
-
-		child:setChecked(false)
+		widget:getParent():getChildByIndex(i):setChecked(false)
 	end
 
 	widget:setChecked(true)
@@ -515,7 +504,7 @@ function Cyclopedia.readjustSelectBoss()
 
 	local icons = {
 		[CATEGORY.BANE] = "/images/icons/icon-bosstiary-bane",
-		[CATEGORY.ARCHFOE] = "/images/icons/icon-archfoe",
+		[CATEGORY.ARCHFOE] = "/images/icons/icon-bosstiary-archfoe",
 		[CATEGORY.NEMESIS] = "/images/icons/icon-bosstiary-nemesis"
 	}
 
@@ -538,14 +527,14 @@ function Cyclopedia.readjustSelectBoss()
 			local raceData = g_things.getRaceData(internalData.bossId)
 			local internalWidget = g_ui.createWidget("SelectBossBossSlots", widget.SelectBoss.ListBase.List)
 
+			internalWidget:setId(internalData.bossId)
 			internalWidget.Sprite:setOutfit(raceData.outfit)
 			internalWidget:setText(format(raceData.name))
 			internalWidget.Sprite:getCreature():setStaticWalking(1000)
 			internalWidget.TypeIcon:setImageSource(icons[internalData.category])
 
 			local tooltip = "Bane\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 5\nExpertise: 15\nMastery: 30"
-
-			tooltip = internalData.category == CATEGORY.ARCHFOE and "Archfoe\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60" or "Nemesis\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60"
+			local tooltip = internalData.category == CATEGORY.ARCHFOE and "Archfoe\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60" or "Nemesis\n\nFor unlocking a level, you will receive the following boss points:\nProwess: 10\nExpertise: 30\nMastery: 60"
 
 			internalWidget.TypeIcon:setTooltip(tooltip)
 		end

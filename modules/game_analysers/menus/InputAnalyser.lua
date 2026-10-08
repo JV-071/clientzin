@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_analysers/menus/InputAnalyser.lua
-
-if not InputAnalyser then
+﻿if not InputAnalyser then
 	InputAnalyser = {
 		monsterName = "",
 		maxDPS = 0,
@@ -34,7 +32,21 @@ local effectsFiles = {
 	"agony"
 }
 
-local function applyDamageTypesAnchors(contentsPanel)
+local function applyDamageTypesAnchors(contentsPanel, arg_1_1)
+	if not contentsPanel then
+		return
+	end
+
+	function contentsPanel.onMousePress(unusedArgument, arg_2_1, arg_2_2)
+		if arg_2_2 == MouseRightButton then
+			onInputExtra(arg_2_1, arg_1_1)
+
+			return true
+		end
+	end
+end
+
+local function var_0_3(contentsPanel)
 	if not contentsPanel.damageTypeLabel:isVisible() then
 		return
 	end
@@ -81,6 +93,47 @@ local function syncDamageSourcesEmptyState(contentsPanel)
 end
 
 local function valueInSeconds(t)
+	local d = t.dmgSourceTypes
+	local var_5_1 = {}
+	local var_5_2 = InputAnalyser.inputValues[InputAnalyser.monsterName]
+
+	if var_5_2 then
+		local var_5_3 = 1
+
+		for iter_5_0, damage in pairs(var_5_2) do
+			local var_5_4 = "sourceEffect" .. tostring(iter_5_0)
+			local widget = d:getChildById(var_5_4)
+
+			if not widget then
+				widget = g_ui.createWidget("DamagePanel", d)
+
+				widget:setId(var_5_4)
+				applyDamageTypesAnchors(widget, "sources")
+				widget.icon:setImageSource(string.format(imageDir, effectsFiles[iter_5_0]))
+				widget.icon:setTooltip(getCombatName(iter_5_0))
+			end
+
+			var_5_1[var_5_4] = true
+			var_5_3 = var_5_3 + 1
+
+			local percent = damage * 100 / InputAnalyser.total
+
+			widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
+		end
+
+		d:setHeight(15 * var_5_3)
+	elseif table.empty(InputAnalyser.inputValues) then
+		d:setHeight(1)
+	end
+
+	for unusedValue, noData in pairs(d:getChildren()) do
+		if not var_5_1[noData:getId()] then
+			noData:destroy()
+		end
+	end
+end
+
+local function var_0_6(t)
 	local d = 0
 	local time = 0
 	local now = g_clock.millis()
@@ -108,7 +161,7 @@ local function valueInSeconds(t)
 	return math.ceil(d / ((now - time) / 1000))
 end
 
-function InputAnalyser:create()
+function InputAnalyser.create(unusedArgument)
 	InputAnalyser.window = openedWindows.damageButton
 	InputAnalyser.launchTime = g_clock.millis()
 	InputAnalyser.session = 0
@@ -118,9 +171,36 @@ function InputAnalyser:create()
 	InputAnalyser.inputValues = {}
 	InputAnalyser.damageEffect = {}
 	InputAnalyser.damageTicks = {}
+
+	local contentsPanel = InputAnalyser.window.contentsPanel
+
+	for unusedValue, iter_7_1 in ipairs({
+		contentsPanel.graphPanel,
+		contentsPanel.horizontalGraph
+	}) do
+		applyDamageTypesAnchors(iter_7_1, "graph")
+	end
+
+	for unusedValue, iter_7_3 in ipairs({
+		contentsPanel.damageTypeLabel,
+		contentsPanel.noDataLabel1,
+		contentsPanel.dmgTypes
+	}) do
+		applyDamageTypesAnchors(iter_7_3, "types")
+	end
+
+	for unusedValue, iter_7_5 in ipairs({
+		contentsPanel.damageSource,
+		contentsPanel.noDataLabel2,
+		contentsPanel.damageSourceName,
+		contentsPanel.dmgSrc,
+		contentsPanel.dmgSourceTypes
+	}) do
+		applyDamageTypesAnchors(iter_7_5, "sources")
+	end
 end
 
-function InputAnalyser:reset()
+function InputAnalyser.reset(self)
 	InputAnalyser.launchTime = g_clock.millis()
 	InputAnalyser.session = 0
 	InputAnalyser.total = 0
@@ -140,7 +220,7 @@ function InputAnalyser:reset()
 	InputAnalyser:updateWindow(true)
 end
 
-function InputAnalyser:updateWindow(ignoreVisible)
+function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	if not InputAnalyser.window then
 		return
 	end
@@ -152,27 +232,31 @@ function InputAnalyser:updateWindow(ignoreVisible)
 	InputAnalyser:checkAnchos()
 
 	local contentsPanel = InputAnalyser.window.contentsPanel
-	local dps = tonumber(InputAnalyser.maxDPS) or 1
+	local numericValue = tonumber(InputAnalyser.maxDPS) or 1
 
 	contentsPanel.rcvDmg:setText(formatMoney(InputAnalyser.total, ","))
-	contentsPanel.maxDps:setText(formatMoney(dps, ","))
+	contentsPanel.maxDps:setText(formatMoney(numericValue, ","))
 
-	local count = 1
+	local var_9_2 = 1
 	local widgets = {}
 
-	for effect, damage in pairs(InputAnalyser.damageEffect) do
-		local widget = contentsPanel.dmgTypes:recursiveGetChildById(tostring(effect))
+	for monsterName, iter_9_1 in pairs(InputAnalyser.damageEffect) do
+		local widget = contentsPanel.dmgTypes:recursiveGetChildById(tostring(monsterName))
 
-		widget = widget or g_ui.createWidget("DamagePanel", contentsPanel.dmgTypes)
+		if not widget then
+			widget = g_ui.createWidget("DamagePanel", contentsPanel.dmgTypes)
 
-		local percent = damage * 100 / InputAnalyser.total
+			applyDamageTypesAnchors(widget, "types")
+		end
 
-		widget:setId(effect)
-		widget.icon:setImageSource(string.format(imageDir, effectsFiles[effect]))
-		widget.icon:setTooltip(getCombatName(effect))
-		widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
+		local percent = iter_9_1 * 100 / InputAnalyser.total
 
-		count = count + 1
+		widget:setId(monsterName)
+		widget.icon:setImageSource(string.format(imageDir, effectsFiles[monsterName]))
+		widget.icon:setTooltip(getCombatName(monsterName))
+		widget.desc:setText(formatMoney(iter_9_1, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
+
+		var_9_2 = var_9_2 + 1
 
 		table.insert(widgets, {
 			widget = widget,
@@ -189,58 +273,63 @@ function InputAnalyser:updateWindow(ignoreVisible)
 	end
 
 	if next(InputAnalyser.damageEffect) ~= nil then
-		contentsPanel.dmgTypes:setHeight(15 * count)
+		contentsPanel.dmgTypes:setHeight(15 * var_9_2)
 	else
 		contentsPanel.dmgTypes:setHeight(1)
 	end
 
-	if count > 1 then
-		local noData = contentsPanel.dmgTypes:recursiveGetChildById("nodata")
+	if var_9_2 > 1 then
+		local nodata = contentsPanel.dmgTypes:recursiveGetChildById("nodata")
 
-		if noData then
-			noData:destroy()
+		if nodata then
+			nodata:destroy()
 		end
 	end
 
-	applyDamageTypesAnchors(contentsPanel)
+	var_0_3(contentsPanel)
 
-	count = 1
-	widgets = {}
+	local count = 1
+	local widgets = {}
 
-	for monsterName, damageInfo in pairs(InputAnalyser.inputValues) do
-		local damageMonster = 0
+	for key, inputValue in pairs(InputAnalyser.inputValues) do
+		local var_9_9 = 0
 
-		for effect, damage in pairs(damageInfo) do
-			damageMonster = damageMonster + damage
+		for unusedValue, entry in pairs(inputValue) do
+			var_9_9 = var_9_9 + entry
 		end
 
-		local widget = contentsPanel.dmgSrc:recursiveGetChildById(monsterName)
+		local damageSourcePanelWidget = contentsPanel.dmgSrc:recursiveGetChildById(key)
 
-		widget = widget or g_ui.createWidget("DamageSourcePanel", contentsPanel.dmgSrc)
+		if not damageSourcePanelWidget then
+			damageSourcePanelWidget = g_ui.createWidget("DamageSourcePanel", contentsPanel.dmgSrc)
+
+			applyDamageTypesAnchors(damageSourcePanelWidget, "sources")
+		end
+
 		count = count + 1
 
-		widget:setId(monsterName)
-		widget.name:setText(short_text(string.capitalize(monsterName), 17))
-		widget:setTooltip(string.capitalize(monsterName))
+		damageSourcePanelWidget:setId(key)
+		damageSourcePanelWidget.name:setText(short_text(string.capitalize(key), 17))
+		damageSourcePanelWidget:setTooltip(string.capitalize(key))
 
-		local percent = damageMonster * 100 / InputAnalyser.total
+		local percent = var_9_9 * 100 / InputAnalyser.total
 
-		widget.desc:setText(string.format("%.1f", percent) .. "%")
+		damageSourcePanelWidget.desc:setText(string.format("%.1f", percent) .. "%")
 
-		function widget.onClick()
-			if InputAnalyser.monsterName == monsterName then
+		function damageSourcePanelWidget.onClick()
+			if InputAnalyser.monsterName == key then
 				InputAnalyser.monsterName = ""
 
 				InputAnalyser:toggleDamageSource(false)
 			else
-				InputAnalyser.monsterName = monsterName
+				InputAnalyser.monsterName = key
 
 				InputAnalyser:toggleDamageSource(true)
 			end
 		end
 
 		table.insert(widgets, {
-			widget = widget,
+			widget = damageSourcePanelWidget,
 			percent = percent
 		})
 	end
@@ -267,35 +356,13 @@ function InputAnalyser:updateWindow(ignoreVisible)
 		end
 	end
 
-	contentsPanel.dmgSourceTypes:destroyChildren()
-
-	if InputAnalyser.inputValues[InputAnalyser.monsterName] then
-		local count = 1
-
-		for effect, damage in pairs(InputAnalyser.inputValues[InputAnalyser.monsterName]) do
-			local widget = g_ui.createWidget("DamagePanel", contentsPanel.dmgSourceTypes)
-
-			count = count + 1
-
-			widget.icon:setImageSource(string.format(imageDir, effectsFiles[effect]))
-			widget.icon:setTooltip(getCombatName(effect))
-
-			local percent = damage * 100 / InputAnalyser.total
-
-			widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
-		end
-
-		contentsPanel.dmgSourceTypes:setHeight(15 * count)
-	elseif table.empty(InputAnalyser.inputValues) then
-		contentsPanel.dmgSourceTypes:setHeight(1)
-	end
-
+	valueInSeconds(contentsPanel)
 	syncDamageSourcesEmptyState(contentsPanel)
 	InputAnalyser:checkAnchos()
 end
 
-function InputAnalyser:checkDPS()
-	local curDPS = valueInSeconds(InputAnalyser.damageTicks)
+function InputAnalyser.checkDPS(unusedArgument)
+	local curDPS = var_0_6(InputAnalyser.damageTicks)
 
 	if not curDPS or not tonumber(curDPS) then
 		curDPS = 0
@@ -315,7 +382,7 @@ function InputAnalyser:checkDPS()
 	analyserUIGraphPushValue(InputAnalyser.window.contentsPanel.graphPanel, InputAnalyser.curDPS)
 end
 
-function InputAnalyser:addInputDamage(amount, effect, target)
+function InputAnalyser.addInputDamage(self, amount, effect, target)
 	if not InputAnalyser.inputValues[target] then
 		InputAnalyser.inputValues[target] = {}
 	end
@@ -338,73 +405,70 @@ function InputAnalyser:addInputDamage(amount, effect, target)
 	InputAnalyser.damageEffect[effect] = InputAnalyser.damageEffect[effect] + amount
 end
 
-function InputAnalyser:toggleDamageSource(bool)
+function InputAnalyser.toggleDamageSource(unusedArgument, bool)
 	local cp = InputAnalyser.window.contentsPanel
 
 	cp.dmgSourceTypes:setVisible(bool)
 	cp.damageSourceName:setText(string.capitalize(InputAnalyser.monsterName))
-	cp.dmgSourceTypes:destroyChildren()
-
-	if InputAnalyser.inputValues[InputAnalyser.monsterName] then
-		local count = 1
-
-		for effect, damage in pairs(InputAnalyser.inputValues[InputAnalyser.monsterName]) do
-			local widget = g_ui.createWidget("DamagePanel", cp.dmgSourceTypes)
-
-			count = count + 1
-
-			widget.icon:setImageSource(string.format(imageDir, effectsFiles[effect]))
-			widget.icon:setTooltip(getCombatName(effect))
-
-			local percent = damage * 100 / InputAnalyser.total
-
-			widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
-		end
-
-		cp.dmgSourceTypes:setHeight(15 * count)
-	elseif table.empty(InputAnalyser.inputValues) then
-		cp.dmgSourceTypes:setHeight(1)
-	end
-
+	valueInSeconds(cp)
 	syncDamageSourcesEmptyState(cp)
 end
 
-function onInputExtra(mousePosition)
+function onInputExtra(arg_16_0, mousePosition)
 	if cancelNextRelease then
 		cancelNextRelease = false
 
 		return false
 	end
 
-	local graphVisible = InputAnalyser.window.contentsPanel.graphPanel:isVisible()
-	local typesVisible = InputAnalyser.window.contentsPanel.damageTypeLabel:isVisible()
-	local sourceVisible = InputAnalyser.window.contentsPanel.damageSource:isVisible()
+	mousePosition = mousePosition or "full"
+
+	local graphVisible = InputAnalyser.window.contentsPanel
+	local var_16_1 = graphVisible.graphPanel:isVisible()
+	local typesVisible = graphVisible.damageTypeLabel:isVisible()
+	local sourceVisible = graphVisible.damageSource:isVisible()
 	local menu = g_ui.createWidget("PopupMenu")
 
 	menu:setGameMenu(true)
-	menu:addOption(tr("Reset Data"), function()
-		InputAnalyser:reset()
-	end)
-	menu:addSeparator()
-	menu:addCheckBoxOption(tr("Show Damage Graph"), function()
-		InputAnalyser:setDamageGraph(not graphVisible, true)
-	end, "", graphVisible)
-	menu:addCheckBoxOption(tr("Show Damage Types"), function()
-		InputAnalyser:setDamageTypes(not typesVisible, true)
-	end, "", typesVisible)
-	menu:addCheckBoxOption(tr("Show Damage Sources"), function()
-		InputAnalyser:setDamageSource(not sourceVisible, true)
-	end, "", sourceVisible)
-	menu:addSeparator()
-	menu:addOption(tr("Copy to Clipboard"), function()
-		InputAnalyser:clipboardData()
-	end)
-	menu:display(mousePosition)
+
+	if mousePosition == "full" then
+		menu:addOption(tr("Reset Data"), function()
+			InputAnalyser:reset()
+		end)
+		menu:addSeparator()
+	end
+
+	if mousePosition == "full" or mousePosition == "graph" then
+		menu:addCheckBoxOption(tr("Show Damage Graph"), function()
+			InputAnalyser:setDamageGraph(not var_16_1, true)
+		end, "", var_16_1)
+	end
+
+	if mousePosition == "full" or mousePosition == "types" then
+		menu:addCheckBoxOption(tr("Show Damage Types"), function()
+			InputAnalyser:setDamageTypes(not typesVisible, true)
+		end, "", typesVisible)
+	end
+
+	if mousePosition == "full" or mousePosition == "sources" then
+		menu:addCheckBoxOption(tr("Show Damage Sources"), function()
+			InputAnalyser:setDamageSource(not sourceVisible, true)
+		end, "", sourceVisible)
+	end
+
+	if mousePosition == "full" then
+		menu:addSeparator()
+		menu:addOption(tr("Copy to Clipboard"), function()
+			InputAnalyser:clipboardData()
+		end)
+	end
+
+	menu:display(arg_16_0)
 
 	return true
 end
 
-function InputAnalyser:checkAnchos()
+function InputAnalyser.checkAnchos(self)
 	if InputAnalyser.window.contentsPanel.graphPanel:isVisible() then
 		InputAnalyser.window.contentsPanel.damageTypeLabel:addAnchor(AnchorTop, "separatorGraph", AnchorBottom)
 	else
@@ -420,7 +484,7 @@ function InputAnalyser:checkAnchos()
 	end
 end
 
-function InputAnalyser:setDamageGraph(value, check)
+function InputAnalyser.setDamageGraph(self, value, check)
 	InputAnalyser.window.contentsPanel.graphPanel:setVisible(value)
 	InputAnalyser.window.contentsPanel.horizontalGraph:setVisible(value)
 	InputAnalyser.window.contentsPanel.separatorGraph:setVisible(value)
@@ -432,7 +496,7 @@ function InputAnalyser:setDamageGraph(value, check)
 	end
 end
 
-function InputAnalyser:setDamageTypes(value, check)
+function InputAnalyser.setDamageTypes(self, value, check)
 	InputAnalyser.typesVisible = value
 
 	InputAnalyser.window.contentsPanel.damageTypeLabel:setVisible(value)
@@ -450,7 +514,7 @@ function InputAnalyser:setDamageTypes(value, check)
 	end
 end
 
-function InputAnalyser:setDamageSource(value, check)
+function InputAnalyser.setDamageSource(unusedArgument, value, check)
 	local cp = InputAnalyser.window.contentsPanel
 
 	cp.damageSource:setVisible(value)
@@ -473,12 +537,8 @@ function InputAnalyser:setDamageSource(value, check)
 	end
 end
 
-function InputAnalyser:clipboardData()
-	local text = "Received Damage"
-
-	text = text .. "\nTotal: " .. formatMoney(InputAnalyser.total, ",")
-	text = text .. "\nMax-DPS: " .. formatMoney(InputAnalyser.maxDPS, ",")
-	text = text .. "\nDamage Types"
+function InputAnalyser.clipboardData(unusedArgument)
+	local text = (("Received Damage" .. "\nTotal: " .. formatMoney(InputAnalyser.total, ",")) .. "\nMax-DPS: " .. formatMoney(InputAnalyser.maxDPS, ",")) .. "\nDamage Types"
 
 	if table.empty(InputAnalyser.inputValues) then
 		text = text .. "\n\tNo Data"
@@ -492,7 +552,7 @@ function InputAnalyser:clipboardData()
 		end
 	end
 
-	text = text .. "\nDamage Sources"
+	local text = text .. "\nDamage Sources"
 
 	if table.empty(InputAnalyser.inputValues) then
 		text = text .. "\n\tNo Data"
@@ -523,24 +583,24 @@ function InputAnalyser:clipboardData()
 	g_window.setClipboardText(text)
 end
 
-function InputAnalyser:damageGraphIsVisible()
+function InputAnalyser.damageGraphIsVisible(self)
 	return InputAnalyser.graphVisible
 end
 
-function InputAnalyser:damageTypesIsVisible()
+function InputAnalyser.damageTypesIsVisible(self)
 	return InputAnalyser.typesVisible
 end
 
-function InputAnalyser:damageSourceIsVisible()
+function InputAnalyser.damageSourceIsVisible(self)
 	return InputAnalyser.sourceVisible
 end
 
-function InputAnalyser:loadConfigJson()
+function InputAnalyser.loadConfigJson(self)
 	local config = {
-		showDamageTypes = true,
 		showDamageSources = true,
 		showDamageGraph = true,
-		showSessionValues = false
+		showSessionValues = false,
+		showDamageTypes = true
 	}
 	local player = g_game.getLocalPlayer()
 
@@ -568,7 +628,7 @@ function InputAnalyser:loadConfigJson()
 	InputAnalyser:checkAnchos()
 end
 
-function InputAnalyser:saveConfigJson()
+function InputAnalyser.saveConfigJson(self)
 	if not LoadedPlayer:isLoaded() then
 		return
 	end

@@ -269,7 +269,7 @@ StoreWindow
       focusable: false
       margin-bottom: 4
       image-source: /images/icons/icon-tibiacointransferable
-      !tooltip: tr('Transferable Tibia Coins can be used in the Store or transferred to another character.')
+      !tooltip: tr('Transferable Clientzin Coins')
 
     Label
       id: lblTibiaTransfer
@@ -290,7 +290,7 @@ StoreWindow
       margin-bottom: 4
       image-source: /images/icons/icon-tibiacoin
       focusable: false
-      !tooltip: tr('Tibia Coins can be used to purchase products in the Store.')
+      !tooltip: tr('Clientzin coins')
 
     Label
       id: lblTibiaCoins
@@ -315,7 +315,7 @@ StoreWindow
     image-source: /images/ui/button-green-up
     image-border: 5
     image-clip: 0 0 98 40
-    !tooltip: tr('Get Tibia Coins')
+    !tooltip: tr('Get Clientzin Coins')
     icon: /images/icons/icon-tibiacoin
     icon-align: center
     icon-offset: 8 0
@@ -336,7 +336,7 @@ StoreWindow
     anchors.top: btnCoins.top
     anchors.left: btnCoins.right
     image-color: #ffffff
-    !tooltip: tr('Transfer Coins')
+    !tooltip: tr('Gift Clientzin Coins to another character')
     margin-left: 6
     image-source: /images/ui/button-grey-up
     image-border: 5
@@ -356,7 +356,7 @@ StoreWindow
     anchors.top: transferPoints.top
     anchors.left: transferPoints.right
     image-color: #ffffff
-    !tooltip: tr('Setup up an auction to sell you currents characters.')
+    !tooltip: tr('Set up up an auction to sell you current character')
     margin-left: 6
     image-source: /images/ui/button-grey-up
     image-border: 5
@@ -724,10 +724,10 @@ StoreWindow
         anchors.fill: parent
         margin: 1
         @onClick: modules.game_store.onClickHomeBanner()
+        @onHoverChange: modules.game_store.onHoverHomeBanner(self)
 
     UIButton
       id: prevImagen
-      enabled: false
       anchors.verticalCenter: prev.verticalCenter
       anchors.left: prev.left
       size: 16 29
@@ -742,7 +742,6 @@ StoreWindow
 
     UIButton
       id: nextImagen
-      enabled: false
       anchors.verticalCenter: prev.verticalCenter
       anchors.right: HomeImagenFrame.right
       size: 16 29

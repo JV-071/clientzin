@@ -1,6 +1,4 @@
-﻿-- chunkname: @/gamelib/creature.lua
-
-NpcIconNone = 0
+﻿NpcIconNone = 0
 NpcIconChat = 1
 NpcIconTrade = 2
 NpcIconSail = 5
@@ -12,7 +10,6 @@ CreatureTypeSummonOwn = 3
 CreatureTypeSummonOther = 4
 CreatureTypeHidden = 5
 VocationsClient = {
-	None = 0,
 	ExaltedMonk = 15,
 	ElderDruid = 14,
 	MasterSorcerer = 13,
@@ -22,7 +19,8 @@ VocationsClient = {
 	Druid = 4,
 	Sorcerer = 3,
 	Paladin = 2,
-	Knight = 1
+	Knight = 1,
+	None = 0
 }
 
 function getNextSkullId(skullId)
@@ -36,8 +34,7 @@ end
 function getSkullImagePath(skullId)
 	local path = "/images/game/creatures/creature-state-flags"
 	local clip
-
-	clip = skullId == SkullYellow and "11 11 11 11" or skullId == SkullGreen and "22 11 11 11" or skullId == SkullWhite and "33 11 11 11" or skullId == SkullRed and "44 11 11 11" or skullId == SkullBlack and "55 11 11 11" or skullId == SkullOrange and "66 11 11 11" or "0 11 11 11"
+	local clip = skullId == SkullYellow and "11 11 11 11" or skullId == SkullGreen and "22 11 11 11" or skullId == SkullWhite and "33 11 11 11" or skullId == SkullRed and "44 11 11 11" or skullId == SkullBlack and "55 11 11 11" or skullId == SkullOrange and "66 11 11 11" or "0 11 11 11"
 
 	return path, clip
 end
@@ -68,8 +65,7 @@ end
 function getShieldImagePath(shieldId)
 	local path = "/images/game/creatures/creature-state-flags"
 	local clip
-
-	clip = shieldId == ShieldWhiteYellow and "11 0 11 11" or shieldId == ShieldWhiteBlue and "22 0 11 11" or shieldId == ShieldBlue and "33 0 11 11" or shieldId == ShieldYellow and "44 0 11 11" or shieldId == ShieldBlueSharedExp and "55 0 11 11" or shieldId == ShieldYellowSharedExp and "66 0 11 11" or (shieldId == ShieldBlueNoSharedExpBlink or shieldId == ShieldBlueNoSharedExp) and "77 0 11 11" or (shieldId == ShieldYellowNoSharedExpBlink or shieldId == ShieldYellowNoSharedExp) and "88 0 11 11" or shieldId == ShieldGray and "99 0 11 11" or "0 0 11 11"
+	local clip = shieldId == ShieldWhiteYellow and "11 0 11 11" or shieldId == ShieldWhiteBlue and "22 0 11 11" or shieldId == ShieldBlue and "33 0 11 11" or shieldId == ShieldYellow and "44 0 11 11" or shieldId == ShieldBlueSharedExp and "55 0 11 11" or shieldId == ShieldYellowSharedExp and "66 0 11 11" or (shieldId == ShieldBlueNoSharedExpBlink or shieldId == ShieldBlueNoSharedExp) and "77 0 11 11" or (shieldId == ShieldYellowNoSharedExpBlink or shieldId == ShieldYellowNoSharedExp) and "88 0 11 11" or shieldId == ShieldGray and "99 0 11 11" or "0 0 11 11"
 
 	return path, clip
 end
@@ -77,8 +73,7 @@ end
 function getEmblemImagePath(emblemId)
 	local path = "/images/game/creatures/creature-state-flags"
 	local clip
-
-	clip = emblemId == EmblemGreen and "11 22 11 11" or emblemId == EmblemRed and "22 22 11 11" or emblemId == EmblemBlue and "33 22 11 11" or emblemId == EmblemMember and "44 22 11 11" or emblemId == EmblemOther and "55 22 11 11" or "0 22 11 11"
+	local clip = emblemId == EmblemGreen and "11 22 11 11" or emblemId == EmblemRed and "22 22 11 11" or emblemId == EmblemBlue and "33 22 11 11" or emblemId == EmblemMember and "44 22 11 11" or emblemId == EmblemOther and "55 22 11 11" or "0 22 11 11"
 
 	return path, clip
 end
@@ -86,8 +81,7 @@ end
 function getTypeImagePath(creatureType)
 	local path = "/images/game/creatures/creature-state-flags"
 	local clip
-
-	clip = creatureType == CreatureTypeSummonOwn and "11 33 11 11" or creatureType == CreatureTypeSummonOther and "22 33 11 11" or "0 33 11 11"
+	local clip = creatureType == CreatureTypeSummonOwn and "11 33 11 11" or creatureType == CreatureTypeSummonOther and "22 33 11 11" or "0 33 11 11"
 
 	return path, clip
 end
@@ -119,7 +113,7 @@ function getIconsImagePath(category)
 	return "/images/game/creatures/hud/flags/quests"
 end
 
-function Creature:onIconsChange(icon, category, count, hideCount)
+function Creature.onIconsChange(self, icon, category, count, hideCount)
 	local imagePath = getIconsImagePath(category)
 
 	if imagePath then
@@ -129,43 +123,43 @@ function Creature:onIconsChange(icon, category, count, hideCount)
 	end
 end
 
-function Creature:onSkullChange(skullId)
+function Creature.onSkullChange(self, skullId)
 	local imagePath, clip = getSkullImagePath(skullId)
 
 	self:setSkullTexture(imagePath, torect(clip))
 end
 
-function Creature:onShieldChange(shieldId)
+function Creature.onShieldChange(self, shieldId)
 	local imagePath, clip = getShieldImagePath(shieldId)
 
 	self:setShieldTexture(imagePath, torect(clip))
 end
 
-function Creature:onManaPercentChange(manaPercent, oldManaPercent)
+function Creature.onManaPercentChange(self, unusedArgument, unusedArgument)
 	return
 end
 
-function Creature:onShowStatusChange(showStatus)
+function Creature.onShowStatusChange(self, showStatus)
 	return
 end
 
-function Creature:onVocationChange(vocation, oldVocation)
+function Creature.onVocationChange(self, unusedArgument, unusedArgument)
 	return
 end
 
-function Creature:onEmblemChange(emblemId)
+function Creature.onEmblemChange(self, emblemId)
 	local imagePath, clip = getEmblemImagePath(emblemId)
 
 	self:setEmblemTexture(imagePath, torect(clip))
 end
 
-function Creature:onTypeChange(typeId)
+function Creature.onTypeChange(self, typeId)
 	local imagePath, clip = getTypeImagePath(typeId)
 
 	self:setTypeTexture(imagePath, torect(clip))
 end
 
-function Creature:onIconChange(iconId)
+function Creature.onIconChange(self, iconId)
 	local imagePath, clip = getIconImagePath(iconId)
 
 	if imagePath then
@@ -173,35 +167,35 @@ function Creature:onIconChange(iconId)
 	end
 end
 
-function Creature:isHireling()
+function Creature.isHireling(self)
 	return self:isNpc() and self:getIcon() == NpcIconHireling
 end
 
-function Creature:isDruid()
+function Creature.isDruid(self)
 	local vocation = self:getVocation()
 
 	return vocation == VocationsClient.Druid or vocation == VocationsClient.ElderDruid
 end
 
-function Creature:isSorcerer()
+function Creature.isSorcerer(self)
 	local vocation = self:getVocation()
 
 	return vocation == VocationsClient.Sorcerer or vocation == VocationsClient.MasterSorcerer
 end
 
-function Creature:isPaladin()
+function Creature.isPaladin(self)
 	local vocation = self:getVocation()
 
 	return vocation == VocationsClient.Paladin or vocation == VocationsClient.RoyalPaladin
 end
 
-function Creature:isKnight()
+function Creature.isKnight(self)
 	local vocation = self:getVocation()
 
 	return vocation == VocationsClient.Knight or vocation == VocationsClient.EliteKnight
 end
 
-function Creature:isMonk()
+function Creature.isMonk(self)
 	local vocation = self:getVocation()
 
 	return vocation == VocationsClient.Monk or vocation == VocationsClient.ExaltedMonk

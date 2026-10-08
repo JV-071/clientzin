@@ -1,66 +1,64 @@
-﻿-- chunkname: @/game_shaders/shaders.lua
-
-local MAP_SHADERS = {
+﻿local MAP_SHADERS = {
 	{
 		name = "Map - Default"
 	},
 	{
-		tex1 = "images/clouds",
 		name = "Map - Fog",
-		frag = "shaders/fragment/fog.frag"
+		frag = "shaders/fragment/fog.frag",
+		tex1 = "images/clouds"
 	},
 	{
-		frag = "shaders/fragment/rain.frag",
-		name = "Map - Rain"
+		name = "Map - Rain",
+		frag = "shaders/fragment/rain.frag"
 	},
 	{
-		tex1 = "images/snow",
 		name = "Map - Snow",
-		frag = "shaders/fragment/snow.frag"
+		frag = "shaders/fragment/snow.frag",
+		tex1 = "images/snow"
 	},
 	{
-		frag = "shaders/fragment/grayscale.frag",
-		name = "Map - Gray Scale"
+		name = "Map - Gray Scale",
+		frag = "shaders/fragment/grayscale.frag"
 	},
 	{
-		frag = "shaders/fragment/bloom.frag",
-		name = "Map - Bloom"
+		name = "Map - Bloom",
+		frag = "shaders/fragment/bloom.frag"
 	},
 	{
-		frag = "shaders/fragment/sepia.frag",
-		name = "Map - Sepia"
+		name = "Map - Sepia",
+		frag = "shaders/fragment/sepia.frag"
 	},
 	{
-		drawViewportEdge = true,
 		name = "Map - Pulse",
+		drawViewportEdge = true,
 		frag = "shaders/fragment/pulse.frag"
 	},
 	{
-		frag = "shaders/fragment/oldtv.frag",
-		name = "Map - Old Tv"
+		name = "Map - Old Tv",
+		frag = "shaders/fragment/oldtv.frag"
 	},
 	{
-		frag = "shaders/fragment/party.frag",
-		name = "Map - Party"
+		name = "Map - Party",
+		frag = "shaders/fragment/party.frag"
 	},
 	{
-		drawViewportEdge = true,
 		name = "Map - Radial Blur",
+		drawViewportEdge = true,
 		frag = "shaders/fragment/radialblur.frag"
 	},
 	{
-		drawViewportEdge = true,
 		name = "Map - Zomg",
+		drawViewportEdge = true,
 		frag = "shaders/fragment/zomg.frag"
 	},
 	{
-		drawViewportEdge = true,
 		name = "Map - Heat",
+		drawViewportEdge = true,
 		frag = "shaders/fragment/heat.frag"
 	},
 	{
-		frag = "shaders/fragment/noise.frag",
-		name = "Map - Noise"
+		name = "Map - Noise",
+		frag = "shaders/fragment/noise.frag"
 	}
 }
 
@@ -69,25 +67,25 @@ OUTFIT_SHADERS = {
 		name = "Outfit - Default"
 	},
 	{
-		frag = "shaders/fragment/party.frag",
-		name = "Outfit - Rainbow"
+		name = "Outfit - Rainbow",
+		frag = "shaders/fragment/party.frag"
 	},
 	{
-		drawColor = false,
 		name = "Outfit - Ghost",
-		frag = "shaders/fragment/radialblur.frag"
+		frag = "shaders/fragment/radialblur.frag",
+		drawColor = false
 	},
 	{
-		frag = "shaders/fragment/heat.frag",
-		name = "Outfit - Jelly"
+		name = "Outfit - Jelly",
+		frag = "shaders/fragment/heat.frag"
 	},
 	{
-		frag = "shaders/fragment/noise.frag",
-		name = "Outfit - Fragmented"
+		name = "Outfit - Fragmented",
+		frag = "shaders/fragment/noise.frag"
 	},
 	{
-		frag = "shaders/fragment/cyclopedia.frag",
-		name = "Outfit - cyclopedia-black"
+		name = "Outfit - cyclopedia-black",
+		frag = "shaders/fragment/cyclopedia.frag"
 	},
 	{
 		name = "Outfit - Outline",
@@ -100,8 +98,8 @@ ITEM_SHADERS = {
 		name = "Item - Default"
 	},
 	{
-		frag = "shaders/fragment/hover_desaturate.frag",
-		name = "Hover - Desaturate"
+		name = "Hover - Desaturate",
+		frag = "shaders/fragment/hover_desaturate.frag"
 	}
 }
 MOUNT_SHADERS = {
@@ -109,8 +107,8 @@ MOUNT_SHADERS = {
 		name = "Mount - Default"
 	},
 	{
-		frag = "shaders/fragment/party.frag",
-		name = "Mount - Rainbow"
+		name = "Mount - Rainbow",
+		frag = "shaders/fragment/party.frag"
 	}
 }
 
@@ -123,9 +121,7 @@ function registerItemShaders()
 end
 
 local function attachShaders()
-	local map = modules.game_interface.getMapPanel()
-
-	map:setShader("Default")
+	modules.game_interface.getMapPanel():setShader("Default")
 
 	local player = g_game.getLocalPlayer()
 
@@ -134,9 +130,7 @@ local function attachShaders()
 end
 
 local function registerShader(opts, method)
-	local fragmentShaderPath = resolvepath(opts.frag)
-
-	if fragmentShaderPath ~= nil then
+	if resolvepath(opts.frag) ~= nil then
 		g_shaders.createFragmentShader(opts.name, opts.frag, opts.useFramebuffer or false)
 
 		if opts.tex1 then
@@ -153,7 +147,7 @@ end
 
 ShaderController = Controller:new()
 
-function ShaderController:onInit()
+function ShaderController.onInit(self)
 	for _, opts in pairs(MAP_SHADERS) do
 		registerShader(opts, "setupMapShader")
 	end
@@ -169,54 +163,10 @@ function ShaderController:onInit()
 	registerItemShaders()
 end
 
-function ShaderController:onTerminate()
+function ShaderController.onTerminate(unusedArgument)
 	g_shaders.clear()
-	Keybind.delete("Windows", "show/hide Shader Windows")
 end
 
-function ShaderController:onGameStart()
+function ShaderController.onGameStart(unusedArgument)
 	attachShaders()
-	self:loadHtml("shaders.html", modules.game_interface.getMapPanel())
-
-	for _, opts in pairs(MAP_SHADERS) do
-		self.ui.mapComboBox:addOption(opts.name, opts)
-	end
-
-	for _, opts in pairs(OUTFIT_SHADERS) do
-		self.ui.outfitComboBox:addOption(opts.name, opts)
-	end
-
-	for _, opts in pairs(MOUNT_SHADERS) do
-		self.ui.mountComboBox:addOption(opts.name, opts)
-	end
-end
-
-function ShaderController:onMapComboBoxChange(event)
-	local map = modules.game_interface.getMapPanel()
-
-	map:setShader(event.text)
-
-	local data = event.target:getCurrentOption().data
-
-	map:setDrawViewportEdge(data.drawViewportEdge == true)
-end
-
-function ShaderController:onOutfitComboBoxChange(event)
-	local player = g_game.getLocalPlayer()
-
-	if player then
-		player:setShader(event.text)
-
-		local data = event.target:getCurrentOption().data
-
-		player:setDrawOutfitColor(data.drawColor ~= false)
-	end
-end
-
-function ShaderController:onMountComboBoxChange(event)
-	local player = g_game.getLocalPlayer()
-
-	if player then
-		player:setMountShader(event.text)
-	end
 end

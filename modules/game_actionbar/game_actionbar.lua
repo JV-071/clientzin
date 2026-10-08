@@ -1,16 +1,15 @@
-﻿-- chunkname: @/game_actionbar/game_actionbar.lua
-
+-- Root locals stored in a lexical table to fit the LuaJIT 200-local limit.
+local ptc_root_locals = {}
 HOTKEY_USE = nil
 HOTKEY_USEONSELF = 1
 HOTKEY_USEONTARGET = 2
 HOTKEY_USEWITH = 3
 
-local maxSlots = 50
-local SIDE_BAR_TOTAL_SLOTS = 36
-local SIDE_BAR_VISIBLE_SLOTS = 18
-local SIDE_BAR_SLOT_PITCH = 37
-local SIDE_BAR_VISIBLE_HEIGHT = SIDE_BAR_VISIBLE_SLOTS * 34 + (SIDE_BAR_VISIBLE_SLOTS - 1) * 3
-local SIDE_BAR_HEIGHT = 22 + SIDE_BAR_VISIBLE_HEIGHT + 22
+ ptc_root_locals.maxSlots = 50
+ ptc_root_locals.SIDE_BAR_TOTAL_SLOTS = 36
+ ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS = 18
+ ptc_root_locals[3] = 36
+ ptc_root_locals[4] = 22 + (ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS * 34 + (ptc_root_locals.SIDE_BAR_VISIBLE_SLOTS - 1) * 3) + 22
 
 SIDE_BAR_WIDTH = 36
 SIDE_BAR_SPACING = 0
@@ -43,7 +42,7 @@ spellAssignWindow = nil
 spellsPanel = nil
 spellAssignPreferredSpellOverride = nil
 
-local spellAssignFocusParameterOnOpen = false
+ ptc_root_locals.spellAssignFocusParameterOnOpen = false
 
 externalAssignSlot = nil
 externalAssignSlotId = nil
@@ -57,18 +56,19 @@ textAssignWindow = nil
 equipmentAssignWindow = nil
 equipmentAssignIconWindow = nil
 
-local equipmentAssignDraft, equipmentAssignPickInvSlot
-local equipmentAssignHiddenForPick = false
-local equipmentAssignHiddenForIconPicker = false
-local equipmentAssignIconIndex = 0
-local equipmentAssignDescription = ""
-local equipmentAssignIconPickerRevertIndex = 0
-local equipmentAssignIconPickerRevertDescription = ""
-local equipmentAssignTypeIndex = 0
-local equipmentAssignTypePickerRevertIndex = 0
-local equipmentAssignTypeRadioGroup
-local EQUIPMENT_TYPE_ICON_BASE = "/game_cyclopedia/images/bestiary/icons/monster-icon-"
-local EQUIPMENT_TYPE_OPTIONS = {
+ ptc_root_locals.equipmentAssignDraft = nil
+ ptc_root_locals.equipmentAssignPickInvSlot = nil
+ ptc_root_locals.equipmentAssignHiddenForPick = false
+ ptc_root_locals.equipmentAssignHiddenForIconPicker = false
+ ptc_root_locals.equipmentAssignIconIndex = 0
+ ptc_root_locals.equipmentAssignDescription = ""
+ ptc_root_locals.equipmentAssignIconPickerRevertIndex = 0
+ ptc_root_locals.equipmentAssignIconPickerRevertDescription = ""
+ ptc_root_locals.equipmentAssignTypeIndex = 0
+ ptc_root_locals.equipmentAssignTypePickerRevertIndex = 0
+ ptc_root_locals.equipmentAssignTypeRadioGroup = nil
+ ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE = "/game_cyclopedia/images/bestiary/icons/monster-icon-"
+ ptc_root_locals.EQUIPMENT_TYPE_OPTIONS = {
 	"energy-resist",
 	"earth-resist",
 	"fire-resist",
@@ -85,17 +85,28 @@ local EQUIPMENT_TYPE_OPTIONS = {
 	"speed",
 	"noattack"
 }
-local EQUIPMENT_TYPE_MAX_INDEX = #EQUIPMENT_TYPE_OPTIONS
-local EQUIPMENT_SLOT_DECOR_ICON_SIZE = {
-	height = 9,
-	width = 9
+ ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX = #ptc_root_locals.EQUIPMENT_TYPE_OPTIONS
+ ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE = {
+	width = 9,
+	height = 9
 }
-local EQUIPMENT_ICONS_SHEET = "/images/game/spells/equipment-icons"
-local EQUIPMENT_ICON_SIZE = 32
-local EQUIPMENT_ICON_UNDETERMINED_INDEX = 0
-local EQUIPMENT_ICON_PICKER_COUNT = 6
-local EQUIPMENT_ICON_MAX_INDEX = EQUIPMENT_ICON_PICKER_COUNT
-local normalizeEquipmentIconIndex, isEquipmentIconDeterminedOnSlot, resolvePickItemAtMouse, findGameMapWidgetAtClick, isEquippableActionBarItem, isValidActionBarObjectItem, serializeEquipmentsForJson, normalizeEquipmentsFromSetting, startEquipmentSetActionCooldownVisual, refreshAllSmartModeSlots, updateSmartModeAssignLayout, updateSmartModeAssignCheckboxState
+ ptc_root_locals.EQUIPMENT_ICONS_SHEET = "/images/game/spells/equipment-icons"
+ ptc_root_locals.EQUIPMENT_ICON_SIZE = 32
+ ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX = 0
+ ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT = 6
+ ptc_root_locals.EQUIPMENT_ICON_MAX_INDEX = ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT
+ ptc_root_locals[26] = nil
+ ptc_root_locals[27] = nil
+ ptc_root_locals.resolvePickItemAtMouse = nil
+ ptc_root_locals[29] = nil
+ ptc_root_locals.isEquippableActionBarItem = nil
+ ptc_root_locals[31] = nil
+ ptc_root_locals[32] = nil
+ ptc_root_locals.normalizeEquipmentsFromSetting = nil
+ ptc_root_locals.startEquipmentSetActionCooldownVisual = nil
+ ptc_root_locals.refreshAllSmartModeSlots = nil
+ ptc_root_locals[36] = nil
+ ptc_root_locals.updateSmartModeAssignCheckboxState = nil
 
 objectAssignWindow = nil
 objectAssignHiddenForPick = false
@@ -105,6 +116,7 @@ editHotkeyWindow = nil
 editHotkeyOverlay = nil
 editHotkeyPendingCombo = ""
 hotkeyPauseDepth = 0
+actionBarCorruptHotkeySeen = false
 actionBarBatchDepth = 0
 missedSlotToEdit = nil
 itemDragRetry = nil
@@ -112,15 +124,19 @@ slotReassign = nil
 multiActionEditIndex = nil
 cooldown = {}
 groupCooldown = {}
+GIFT_OF_LIFE_PASSIVE_ID = 1
+PASSIVE_COOLDOWN_KEY = "passive:" .. GIFT_OF_LIFE_PASSIVE_ID
+PASSIVE_COOLDOWN_PROGRESS_ID = "progressPassive" .. GIFT_OF_LIFE_PASSIVE_ID
+passiveCooldownData = nil
 virtuesYellowBorderSpellIds = {}
 
-local managedVirtueYellowBorderSpellIds = {}
-local managedVirtueYellowBorderSelection = {}
+ ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
+ ptc_root_locals.managedVirtueYellowBorderSelection = {}
 
 VIRTUE_YELLOW_BORDER_IMAGE = "/assets/images/game/actionbar/border_activespell"
 
-local ACTIONBAR_ITEM_MULTI_CD_KEY = "itemShared"
-local slotGrayRefreshEvent
+ ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY = "itemShared"
+ ptc_root_locals.slotGrayRefreshEvent = nil
 
 slotGrayFullRefreshPending = false
 slotGrayStatsPendingSlots = {}
@@ -131,14 +147,14 @@ function isVirtueYellowBorderActive(spellId)
 		return false
 	end
 
-	if managedVirtueYellowBorderSpellIds[spellId] then
-		return managedVirtueYellowBorderSelection[spellId] == true
+	if ptc_root_locals.managedVirtueYellowBorderSpellIds[spellId] then
+		return ptc_root_locals.managedVirtueYellowBorderSelection[spellId] == true
 	end
 
 	return virtuesYellowBorderSpellIds[spellId] == true
 end
 
-local function resolveBorderSpellId(incomingId)
+  ptc_root_locals.resolveBorderSpellId = function(incomingId)
 	if not incomingId or incomingId <= 0 then
 		return nil
 	end
@@ -152,11 +168,11 @@ local function resolveBorderSpellId(incomingId)
 	return incomingId
 end
 
-local function registerVirtueBorderSpellId(incomingId)
-	local spellId = resolveBorderSpellId(incomingId)
+  ptc_root_locals.registerVirtueBorderSpellId = function(arg_3_0)
+	local var_3_0 = ptc_root_locals.resolveBorderSpellId(arg_3_0)
 
-	if spellId then
-		virtuesYellowBorderSpellIds[spellId] = true
+	if var_3_0 then
+		virtuesYellowBorderSpellIds[var_3_0] = true
 	end
 end
 
@@ -218,53 +234,53 @@ function onVirtuesYellowBorder(spellIds)
 
 	if spellIds then
 		if type(spellIds) == "table" then
-			for _, incomingId in ipairs(spellIds) do
-				registerVirtueBorderSpellId(incomingId)
+			for unusedValue, entry in ipairs(spellIds) do
+				ptc_root_locals.registerVirtueBorderSpellId(entry)
 			end
 		elseif type(spellIds) == "number" then
-			registerVirtueBorderSpellId(spellIds)
+			ptc_root_locals.registerVirtueBorderSpellId(spellIds)
 		end
 	end
 
 	refreshAllVirtueYellowBorders()
 
-	local spellList = modules.game_spelllist
+	local game_spelllist = modules.game_spelllist
 
-	if spellList and spellList.refreshVirtueYellowBorders then
-		spellList.refreshVirtueYellowBorders()
+	if game_spelllist and game_spelllist.refreshVirtueYellowBorders then
+		game_spelllist.refreshVirtueYellowBorders()
 	end
 end
 
 function setManagedVirtueYellowBorderSpellIds(selectedSpellIds, managedSpellIds)
-	managedVirtueYellowBorderSpellIds = {}
-	managedVirtueYellowBorderSelection = {}
+	ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
+	ptc_root_locals.managedVirtueYellowBorderSelection = {}
 
 	if type(managedSpellIds) == "table" then
-		for _, incomingId in ipairs(managedSpellIds) do
-			local spellId = resolveBorderSpellId(incomingId)
+		for unusedValue, entry in ipairs(managedSpellIds) do
+			local var_8_0 = ptc_root_locals.resolveBorderSpellId(entry)
 
-			if spellId then
-				managedVirtueYellowBorderSpellIds[spellId] = true
+			if var_8_0 then
+				ptc_root_locals.managedVirtueYellowBorderSpellIds[var_8_0] = true
 			end
 		end
 	end
 
 	if type(selectedSpellIds) == "table" then
-		for _, incomingId in ipairs(selectedSpellIds) do
-			local spellId = resolveBorderSpellId(incomingId)
+		for unusedValue, entry in ipairs(selectedSpellIds) do
+			local var_8_1 = ptc_root_locals.resolveBorderSpellId(entry)
 
-			if spellId and managedVirtueYellowBorderSpellIds[spellId] then
-				managedVirtueYellowBorderSelection[spellId] = true
+			if var_8_1 and ptc_root_locals.managedVirtueYellowBorderSpellIds[var_8_1] then
+				ptc_root_locals.managedVirtueYellowBorderSelection[var_8_1] = true
 			end
 		end
 	end
 
 	refreshAllVirtueYellowBorders()
 
-	local spellList = modules.game_spelllist
+	local game_spelllist = modules.game_spelllist
 
-	if spellList and spellList.refreshVirtueYellowBorders then
-		spellList.refreshVirtueYellowBorders()
+	if game_spelllist and game_spelllist.refreshVirtueYellowBorders then
+		game_spelllist.refreshVirtueYellowBorders()
 	end
 end
 
@@ -274,9 +290,9 @@ modules.game_actionbar.isVirtueYellowBorderActive = isVirtueYellowBorderActive
 modules.game_actionbar.refreshAllVirtueYellowBorders = refreshAllVirtueYellowBorders
 modules.game_actionbar.setManagedVirtueYellowBorderSpellIds = setManagedVirtueYellowBorderSpellIds
 
-local syncSlotHotkeyMirror
+ ptc_root_locals.syncSlotHotkeyMirror = nil
 
-local function actionSlotItemTier(slot)
+  ptc_root_locals.actionSlotItemTier = function(slot)
 	if g_game.getFeature(GameThingUpgradeClassification) then
 		local stored = slot.getTier
 
@@ -288,55 +304,55 @@ local function actionSlotItemTier(slot)
 	return 0
 end
 
-local function playerHasActionBarItem(slot)
-	local player = g_game.getLocalPlayer()
+  ptc_root_locals.playerHasActionBarItem = function(arg_10_0)
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player then
+	if not localPlayer then
 		return true
 	end
 
-	if not slot.itemId or slot.itemId <= 0 then
+	if not arg_10_0.itemId or arg_10_0.itemId <= 0 then
 		return true
 	end
 
-	return getActionBarInventoryDisplayCount(slot.itemId, actionSlotItemTier(slot), player) > 0
+	return getActionBarInventoryDisplayCount(arg_10_0.itemId, ptc_root_locals.actionSlotItemTier(arg_10_0), localPlayer) > 0
 end
 
-local EQUIPMENT_ASSIGN_BACKPACK_SLOT = InventorySlotBack
+ ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT = InventorySlotBack
 
-local function isEquipmentAssignVisualBackpackSlot(invSlot)
-	return invSlot == EQUIPMENT_ASSIGN_BACKPACK_SLOT
+  ptc_root_locals.isEquipmentAssignVisualBackpackSlot = function(arg_11_0)
+	return arg_11_0 == ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT
 end
 
-local function isActionSlotEquip(slot)
+  ptc_root_locals.isActionSlotEquip = function(slot)
 	return slot and slot.useType == "equip"
 end
 
-function normalizeEquipmentIconIndex(index)
-	if type(index) ~= "number" then
-		return EQUIPMENT_ICON_UNDETERMINED_INDEX
+  ptc_root_locals.normalizeEquipmentIconIndex = function(arg_13_0)
+	if type(arg_13_0) ~= "number" then
+		return ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
 	end
 
-	return math.max(EQUIPMENT_ICON_UNDETERMINED_INDEX, math.min(EQUIPMENT_ICON_MAX_INDEX, math.floor(index)))
+	return math.max(ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX, math.min(ptc_root_locals.EQUIPMENT_ICON_MAX_INDEX, math.floor(arg_13_0)))
 end
 
-function isEquipmentIconDeterminedOnSlot(slot)
-	return type(slot.equipmentIconIndex) == "number" and normalizeEquipmentIconIndex(slot.equipmentIconIndex) > EQUIPMENT_ICON_UNDETERMINED_INDEX
+  ptc_root_locals.isEquipmentIconDeterminedOnSlot = function(arg_14_0)
+	return type(arg_14_0.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_14_0.equipmentIconIndex) > ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
 end
 
-local function slotHasEquipmentSet(slot)
-	if not isActionSlotEquip(slot) then
+  ptc_root_locals[52] = function(entry)
+	if not ptc_root_locals.isActionSlotEquip(entry) then
 		return false
 	end
 
-	if slot.equipments ~= nil or isEquipmentIconDeterminedOnSlot(slot) then
+	if entry.equipments ~= nil or ptc_root_locals.isEquipmentIconDeterminedOnSlot(entry) then
 		return true
 	end
 
-	return slot.itemId and slot.itemId > 0
+	return entry.itemId and entry.itemId > 0
 end
 
-local function equipmentEntryFromItem(item)
+  ptc_root_locals.equipmentEntryFromItem = function(item)
 	if not item then
 		return nil
 	end
@@ -356,7 +372,7 @@ local function equipmentEntryFromItem(item)
 	return entry
 end
 
-local function equipmentEntryToItem(entry)
+  ptc_root_locals.equipmentEntryToItem = function(entry)
 	if not entry or not entry.itemId or entry.itemId <= 0 then
 		return nil
 	end
@@ -378,8 +394,8 @@ local function equipmentEntryToItem(entry)
 	return item
 end
 
-local function equipmentAssignDisplayEntry(equipments)
-	if not equipments then
+  ptc_root_locals.equipmentAssignDisplayEntry = function(panel)
+	if not panel then
 		return nil
 	end
 
@@ -396,14 +412,14 @@ local function equipmentAssignDisplayEntry(equipments)
 	}
 
 	for _, invSlot in ipairs(order) do
-		local entry = equipments[invSlot]
+		local entry = panel[invSlot]
 
 		if entry and entry.itemId and entry.itemId > 0 then
 			return entry
 		end
 	end
 
-	for _, entry in pairs(equipments) do
+	for _, entry in pairs(panel) do
 		if entry and entry.itemId and entry.itemId > 0 then
 			return entry
 		end
@@ -412,171 +428,171 @@ local function equipmentAssignDisplayEntry(equipments)
 	return nil
 end
 
-local function copyEquipmentAssignDraft(source)
-	equipmentAssignDraft = {}
-
-	if not source then
-		return
-	end
-
-	for invSlot, entry in pairs(source) do
-		if not isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
-			equipmentAssignDraft[invSlot] = {
-				itemId = entry.itemId,
-				getTier = entry.getTier,
-				subType = entry.subType
-			}
-		end
-	end
-end
-
-local function isActionSlotEquipmentPreset(slot)
-	if not isActionSlotEquip(slot) then
-		return false
-	end
-
-	if slot.equipments ~= nil then
-		return true
-	end
-
-	return isEquipmentIconDeterminedOnSlot(slot)
-end
-
-local function isEquipmentAssignIconDetermined()
-	return normalizeEquipmentIconIndex(equipmentAssignIconIndex) > EQUIPMENT_ICON_UNDETERMINED_INDEX
-end
-
-local function normalizeEquipmentTypeIndex(index)
-	if type(index) ~= "number" then
-		return 0
-	end
-
-	return math.max(0, math.min(EQUIPMENT_TYPE_MAX_INDEX, math.floor(index)))
-end
-
-local function destroyEquipmentAssignTypeRadioGroup()
-	if equipmentAssignTypeRadioGroup then
-		equipmentAssignTypeRadioGroup:destroy()
-
-		equipmentAssignTypeRadioGroup = nil
-	end
-end
-
-local refreshAssignActionSlotPreview
-
-local function setupEquipmentAssignTypePicker()
-	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
-		return
-	end
-
-	local panel = equipmentAssignIconWindow:recursiveGetChildById("typeButtonsPanel")
+  ptc_root_locals.copyEquipmentAssignDraft = function(panel)
+	ptc_root_locals.equipmentAssignDraft = {}
 
 	if not panel then
 		return
 	end
 
-	destroyEquipmentAssignTypeRadioGroup()
-	panel:destroyChildren()
-
-	equipmentAssignTypeRadioGroup = UIRadioGroup.create()
-
-	local selectedWidget
-
-	for typeIndex = 0, EQUIPMENT_TYPE_MAX_INDEX do
-		local btn = g_ui.createWidget("EquipmentTypeButton", panel)
-
-		btn.typeIndex = typeIndex
-
-		if typeIndex > 0 then
-			local suffix = EQUIPMENT_TYPE_OPTIONS[typeIndex]
-
-			if suffix then
-				local icon = btn:getChildById("typeIcon")
-
-				icon:setImageSource(EQUIPMENT_TYPE_ICON_BASE .. suffix)
-				icon:show()
-			end
+	for _, slot in pairs(panel) do
+		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
+			ptc_root_locals.equipmentAssignDraft[_] = {
+				itemId = slot.itemId,
+				getTier = slot.getTier,
+				subType = slot.subType
+			}
 		end
-
-		equipmentAssignTypeRadioGroup:addWidget(btn)
-
-		if typeIndex == equipmentAssignTypeIndex then
-			selectedWidget = btn
-		end
-	end
-
-	if selectedWidget then
-		equipmentAssignTypeRadioGroup:selectWidget(selectedWidget, true)
-	end
-
-	function equipmentAssignTypeRadioGroup.onSelectionChange(_, selected)
-		if selected and selected.typeIndex ~= nil then
-			equipmentAssignTypeIndex = selected.typeIndex
-		else
-			equipmentAssignTypeIndex = 0
-		end
-
-		refreshAssignActionSlotPreview()
 	end
 end
 
-local function equipmentIconClip(index)
-	local i = normalizeEquipmentIconIndex(index)
+  ptc_root_locals.isActionSlotEquipmentPreset = function(arg_20_0)
+	if not ptc_root_locals.isActionSlotEquip(arg_20_0) then
+		return false
+	end
 
-	return string.format("%d 0 %d %d", i * EQUIPMENT_ICON_SIZE, EQUIPMENT_ICON_SIZE, EQUIPMENT_ICON_SIZE)
+	if arg_20_0.equipments ~= nil then
+		return true
+	end
+
+	return ptc_root_locals.isEquipmentIconDeterminedOnSlot(arg_20_0)
 end
 
-local function applyEquipmentIconToWidget(widget, index)
-	if not widget or widget:isDestroyed() then
+  ptc_root_locals.isEquipmentAssignIconDetermined = function()
+	return ptc_root_locals.normalizeEquipmentIconIndex(ptc_root_locals.equipmentAssignIconIndex) > ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
+end
+
+  ptc_root_locals.normalizeEquipmentTypeIndex = function(arg_22_0)
+	if type(arg_22_0) ~= "number" then
+		return 0
+	end
+
+	return math.max(0, math.min(ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX, math.floor(arg_22_0)))
+end
+
+  ptc_root_locals.destroyEquipmentAssignTypeRadioGroup = function()
+	if ptc_root_locals.equipmentAssignTypeRadioGroup then
+		ptc_root_locals.equipmentAssignTypeRadioGroup:destroy()
+
+		ptc_root_locals.equipmentAssignTypeRadioGroup = nil
+	end
+end
+
+ ptc_root_locals.refreshAssignActionSlotPreview = nil
+
+  ptc_root_locals.setupEquipmentAssignTypePicker = function()
+	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
 
-	widget:setImageSource(EQUIPMENT_ICONS_SHEET)
-	widget:setImageSize(tosize("32 32"))
-	widget:setImageClip(equipmentIconClip(index))
-	widget:show()
+	local typeButtonsPanel = equipmentAssignIconWindow:recursiveGetChildById("typeButtonsPanel")
+
+	if not typeButtonsPanel then
+		return
+	end
+
+	ptc_root_locals.destroyEquipmentAssignTypeRadioGroup()
+	typeButtonsPanel:destroyChildren()
+
+	ptc_root_locals.equipmentAssignTypeRadioGroup = UIRadioGroup.create()
+
+	local var_24_1
+
+	for iter_24_0 = 0, ptc_root_locals.EQUIPMENT_TYPE_MAX_INDEX do
+		local equipmentTypeButtonWidget = g_ui.createWidget("EquipmentTypeButton", typeButtonsPanel)
+
+		equipmentTypeButtonWidget.typeIndex = iter_24_0
+
+		if iter_24_0 > 0 then
+			local var_24_3 = ptc_root_locals.EQUIPMENT_TYPE_OPTIONS[iter_24_0]
+
+			if var_24_3 then
+				local typeIcon = equipmentTypeButtonWidget:getChildById("typeIcon")
+
+				typeIcon:setImageSource(ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE .. var_24_3)
+				typeIcon:show()
+			end
+		end
+
+		ptc_root_locals.equipmentAssignTypeRadioGroup:addWidget(equipmentTypeButtonWidget)
+
+		if iter_24_0 == ptc_root_locals.equipmentAssignTypeIndex then
+			var_24_1 = equipmentTypeButtonWidget
+		end
+	end
+
+	if var_24_1 then
+		ptc_root_locals.equipmentAssignTypeRadioGroup:selectWidget(var_24_1, true)
+	end
+
+	 ptc_root_locals.equipmentAssignTypeRadioGroup.onSelectionChange = function(unusedArgument, arg_25_1)
+		if arg_25_1 and arg_25_1.typeIndex ~= nil then
+			ptc_root_locals.equipmentAssignTypeIndex = arg_25_1.typeIndex
+		else
+			ptc_root_locals.equipmentAssignTypeIndex = 0
+		end
+
+		ptc_root_locals.refreshAssignActionSlotPreview()
+	end
 end
 
-local function equipmentTypeIconSource(typeIndex)
-	typeIndex = normalizeEquipmentTypeIndex(typeIndex)
+  ptc_root_locals.equipmentIconClip = function(arg_26_0)
+	local var_26_0 = ptc_root_locals.normalizeEquipmentIconIndex(arg_26_0)
 
-	if typeIndex <= 0 then
-		return nil
-	end
-
-	local suffix = EQUIPMENT_TYPE_OPTIONS[typeIndex]
-
-	if not suffix then
-		return nil
-	end
-
-	return EQUIPMENT_TYPE_ICON_BASE .. suffix
+	return string.format("%d 0 %d %d", var_26_0 * ptc_root_locals.EQUIPMENT_ICON_SIZE, ptc_root_locals.EQUIPMENT_ICON_SIZE, ptc_root_locals.EQUIPMENT_ICON_SIZE)
 end
 
-local function ensureEquipmentTypeIconWidget(slot)
-	if not slot or slot:isDestroyed() then
+  ptc_root_locals.applyEquipmentIconToWidget = function(arg_27_0, arg_27_1)
+	if not arg_27_0 or arg_27_0:isDestroyed() then
+		return
+	end
+
+	arg_27_0:setImageSource(ptc_root_locals.EQUIPMENT_ICONS_SHEET)
+	arg_27_0:setImageSize(tosize("32 32"))
+	arg_27_0:setImageClip(ptc_root_locals.equipmentIconClip(arg_27_1))
+	arg_27_0:show()
+end
+
+  ptc_root_locals.equipmentTypeIconSource = function(arg_28_0)
+	arg_28_0 = ptc_root_locals.normalizeEquipmentTypeIndex(arg_28_0)
+
+	if arg_28_0 <= 0 then
 		return nil
 	end
 
-	local icon = slot:getChildById("equipmentTypeIcon")
+	local var_28_0 = ptc_root_locals.EQUIPMENT_TYPE_OPTIONS[arg_28_0]
 
-	if icon and not icon:isDestroyed() then
-		return icon
+	if not var_28_0 then
+		return nil
 	end
 
-	icon = g_ui.createWidget("UIWidget", slot)
+	return ptc_root_locals.EQUIPMENT_TYPE_ICON_BASE .. var_28_0
+end
 
-	icon:setId("equipmentTypeIcon")
-	icon:setSize(EQUIPMENT_SLOT_DECOR_ICON_SIZE)
-	icon:addAnchor(AnchorBottom, "parent", AnchorBottom)
-	icon:addAnchor(AnchorLeft, "parent", AnchorLeft)
-	icon:setMarginLeft(1)
-	icon:setMarginBottom(1)
-	icon:setPhantom(true)
-	icon:setFocusable(false)
-	icon:setVisible(false)
+  ptc_root_locals.ensureEquipmentTypeIconWidget = function(arg_29_0)
+	if not arg_29_0 or arg_29_0:isDestroyed() then
+		return nil
+	end
 
-	return icon
+	local equipmentTypeIcon = arg_29_0:getChildById("equipmentTypeIcon")
+
+	if equipmentTypeIcon and not equipmentTypeIcon:isDestroyed() then
+		return equipmentTypeIcon
+	end
+
+	local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_29_0)
+
+	uIWidgetWidget:setId("equipmentTypeIcon")
+	uIWidgetWidget:setSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+	uIWidgetWidget:addAnchor(AnchorBottom, "parent", AnchorBottom)
+	uIWidgetWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	uIWidgetWidget:setMarginLeft(1)
+	uIWidgetWidget:setMarginBottom(1)
+	uIWidgetWidget:setPhantom(true)
+	uIWidgetWidget:setFocusable(false)
+	uIWidgetWidget:setVisible(false)
+
+	return uIWidgetWidget
 end
 
 function refreshActionSlotEquipmentTypeIcon(slot)
@@ -584,45 +600,45 @@ function refreshActionSlotEquipmentTypeIcon(slot)
 		return
 	end
 
-	local icon = ensureEquipmentTypeIconWidget(slot)
+	local var_30_0 = ptc_root_locals.ensureEquipmentTypeIconWidget(slot)
 
-	if not icon then
+	if not var_30_0 then
 		return
 	end
 
-	if not isActionSlotEquipmentPreset(slot) then
-		icon:setVisible(false)
-
-		return
-	end
-
-	local src = equipmentTypeIconSource(slot.equipmentTypeIndex)
-
-	if not src then
-		icon:setVisible(false)
+	if not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+		var_30_0:setVisible(false)
 
 		return
 	end
 
-	icon:setImageSource(src)
-	icon:setImageSize(EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+	local var_30_1 = ptc_root_locals.equipmentTypeIconSource(slot.equipmentTypeIndex)
 
-	local multi = slot:getChildById("multiIcon")
+	if not var_30_1 then
+		var_30_0:setVisible(false)
 
-	if multi and not multi:isDestroyed() and multi:isVisible() then
-		icon:setMarginLeft(12)
+		return
+	end
+
+	var_30_0:setImageSource(var_30_1)
+	var_30_0:setImageSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+
+	local multiIcon = slot:getChildById("multiIcon")
+
+	if multiIcon and not multiIcon:isDestroyed() and multiIcon:isVisible() then
+		var_30_0:setMarginLeft(12)
 	else
-		icon:setMarginLeft(1)
+		var_30_0:setMarginLeft(1)
 	end
 
-	icon:show()
+	var_30_0:show()
 
-	if icon.raise then
-		icon:raise()
+	if var_30_0.raise then
+		var_30_0:raise()
 	end
 end
 
-local function refreshActionSlotEquipmentDecorations(slot)
+  ptc_root_locals.refreshActionSlotEquipmentDecorations = function(slot)
 	refreshActionSlotEquipmentTypeIcon(slot)
 end
 
@@ -634,8 +650,8 @@ function loadEquipmentSetDisplay(slot)
 	local spellIcon = slot:getChildById("spellIcon")
 
 	if spellIcon then
-		if isEquipmentIconDeterminedOnSlot(slot) then
-			applyEquipmentIconToWidget(spellIcon, slot.equipmentIconIndex)
+		if ptc_root_locals.isEquipmentIconDeterminedOnSlot(slot) then
+			ptc_root_locals.applyEquipmentIconToWidget(spellIcon, slot.equipmentIconIndex)
 		else
 			spellIcon:hide()
 			spellIcon:setImageSource("")
@@ -644,14 +660,14 @@ function loadEquipmentSetDisplay(slot)
 
 	slot:setItemId(0)
 
-	local textWidget = slot:getChildById("text")
+	local text = slot:getChildById("text")
 
-	if textWidget then
-		textWidget:setText("")
+	if text then
+		text:setText("")
 	end
 
 	slot:setBorderWidth(0)
-	refreshActionSlotEquipmentDecorations(slot)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 	refreshActionSlotTooltip(slot)
 	updateSlotGray(slot)
 	refreshActionSlotInventoryQuantity(slot)
@@ -688,6 +704,11 @@ function clearSlotActionContent(slot)
 	slot.useType = nil
 	slot.getTier = nil
 	slot.passiveId = nil
+	slot.helperId = nil
+	slot.multiHelper = nil
+
+	hideHelperSlotBorder(slot)
+
 	slot.equipments = nil
 	slot.equipmentIconIndex = nil
 	slot.equipmentDescription = nil
@@ -705,10 +726,10 @@ function clearSlotActionContent(slot)
 		tier:setVisible(false)
 	end
 
-	local txt = slot:getChildById("text")
+	local text = slot:getChildById("text")
 
-	if txt then
-		txt:setText("")
+	if text then
+		text:setText("")
 	end
 
 	local gray = slot:getChildById("gray")
@@ -718,71 +739,71 @@ function clearSlotActionContent(slot)
 	end
 
 	refreshActionSlotVirtueBorder(slot)
-	refreshActionSlotEquipmentDecorations(slot)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 	refreshActionSlotTooltip(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
 end
 
-local function copyEquipmentAssignMetaFromSlot(actionSlot)
-	if actionSlot then
-		equipmentAssignIconIndex = normalizeEquipmentIconIndex(actionSlot.equipmentIconIndex)
-		equipmentAssignDescription = actionSlot.equipmentDescription or ""
-		equipmentAssignTypeIndex = normalizeEquipmentTypeIndex(actionSlot.equipmentTypeIndex)
+  ptc_root_locals.copyEquipmentAssignMetaFromSlot = function(arg_34_0)
+	if arg_34_0 then
+		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.normalizeEquipmentIconIndex(arg_34_0.equipmentIconIndex)
+		ptc_root_locals.equipmentAssignDescription = arg_34_0.equipmentDescription or ""
+		ptc_root_locals.equipmentAssignTypeIndex = ptc_root_locals.normalizeEquipmentTypeIndex(arg_34_0.equipmentTypeIndex)
 	else
-		equipmentAssignIconIndex = EQUIPMENT_ICON_UNDETERMINED_INDEX
-		equipmentAssignDescription = ""
-		equipmentAssignTypeIndex = 0
+		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.EQUIPMENT_ICON_UNDETERMINED_INDEX
+		ptc_root_locals.equipmentAssignDescription = ""
+		ptc_root_locals.equipmentAssignTypeIndex = 0
 	end
 end
 
-function refreshAssignActionSlotPreview()
+ ptc_root_locals.refreshAssignActionSlotPreview = function()
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
 
-	local slotWidget = equipmentAssignWindow:recursiveGetChildById("assignActionSlot")
+	local assignActionSlot = equipmentAssignWindow:recursiveGetChildById("assignActionSlot")
 
-	if not slotWidget then
+	if not assignActionSlot then
 		return
 	end
 
-	local icon = slotWidget:recursiveGetChildById("equipmentSlotIcon")
+	local equipmentSlotIcon = assignActionSlot:recursiveGetChildById("equipmentSlotIcon")
 
-	applyEquipmentIconToWidget(icon, equipmentAssignIconIndex)
+	ptc_root_locals.applyEquipmentIconToWidget(equipmentSlotIcon, ptc_root_locals.equipmentAssignIconIndex)
 
-	local typeIcon = slotWidget:recursiveGetChildById("equipmentTypeIcon")
+	local equipmentTypeIcon = assignActionSlot:recursiveGetChildById("equipmentTypeIcon")
 
-	if typeIcon then
-		local src = equipmentTypeIconSource(equipmentAssignTypeIndex)
+	if equipmentTypeIcon then
+		local var_35_3 = ptc_root_locals.equipmentTypeIconSource(ptc_root_locals.equipmentAssignTypeIndex)
 
-		if src then
-			typeIcon:setImageSource(src)
-			typeIcon:setImageSize(EQUIPMENT_SLOT_DECOR_ICON_SIZE)
-			typeIcon:show()
+		if var_35_3 then
+			equipmentTypeIcon:setImageSource(var_35_3)
+			equipmentTypeIcon:setImageSize(ptc_root_locals.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
+			equipmentTypeIcon:show()
 		else
-			typeIcon:setVisible(false)
+			equipmentTypeIcon:setVisible(false)
 		end
 	end
 end
 
-local function refreshEquipmentAssignIconPickerSelection()
+  ptc_root_locals.refreshEquipmentAssignIconPickerSelection = function()
 	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
 
-	local panel = equipmentAssignIconWindow:recursiveGetChildById("iconScrollPanel")
+	local iconScrollPanel = equipmentAssignIconWindow:recursiveGetChildById("iconScrollPanel")
 
-	if not panel then
+	if not iconScrollPanel then
 		return
 	end
 
-	for _, child in pairs(panel:getChildren()) do
+	for unusedValue, child in pairs(iconScrollPanel:getChildren()) do
 		if child.iconIndex ~= nil then
 			child:setImageSource("/images/game/actionbar/slot-actionbar-filled")
 			child:setImageSize(tosize("34 34"))
 
-			if child.iconIndex == equipmentAssignIconIndex then
+			if child.iconIndex == ptc_root_locals.equipmentAssignIconIndex then
 				child:setImageClip("0 34 34 34")
 			else
 				child:setImageClip("0 0 34 34")
@@ -791,60 +812,60 @@ local function refreshEquipmentAssignIconPickerSelection()
 	end
 end
 
-local function setupEquipmentAssignIconPicker()
+  ptc_root_locals.setupEquipmentAssignIconPicker = function()
 	if not equipmentAssignIconWindow or equipmentAssignIconWindow:isDestroyed() then
 		return
 	end
 
-	local panel = equipmentAssignIconWindow:recursiveGetChildById("iconScrollPanel")
+	local iconScrollPanel = equipmentAssignIconWindow:recursiveGetChildById("iconScrollPanel")
 
-	if not panel then
+	if not iconScrollPanel then
 		return
 	end
 
-	panel:destroyChildren()
+	iconScrollPanel:destroyChildren()
 
-	for i = 1, EQUIPMENT_ICON_PICKER_COUNT do
-		local btn = g_ui.createWidget("EquipmentIconPickerOption", panel)
+	for iter_37_0 = 1, ptc_root_locals.EQUIPMENT_ICON_PICKER_COUNT do
+		local equipmentIconPickerOptionWidget = g_ui.createWidget("EquipmentIconPickerOption", iconScrollPanel)
 
-		btn.iconIndex = i
+		equipmentIconPickerOptionWidget.iconIndex = iter_37_0
 
-		local iconWidget = btn:getChildById("icon")
+		local icon = equipmentIconPickerOptionWidget:getChildById("icon")
 
-		applyEquipmentIconToWidget(iconWidget, i)
+		ptc_root_locals.applyEquipmentIconToWidget(icon, iter_37_0)
 
-		function btn.onClick()
-			equipmentAssignIconIndex = i
+		function equipmentIconPickerOptionWidget.onClick()
+			ptc_root_locals.equipmentAssignIconIndex = iter_37_0
 
-			refreshEquipmentAssignIconPickerSelection()
-			refreshAssignActionSlotPreview()
+			ptc_root_locals.refreshEquipmentAssignIconPickerSelection()
+			ptc_root_locals.refreshAssignActionSlotPreview()
 			equipmentAssignUpdateButtons()
 		end
 	end
 
-	refreshEquipmentAssignIconPickerSelection()
+	ptc_root_locals.refreshEquipmentAssignIconPickerSelection()
 end
 
-local function commitEquipmentAssignIconPicker()
-	local edit = equipmentAssignIconWindow and equipmentAssignIconWindow:recursiveGetChildById("descriptionTextEdit")
+  ptc_root_locals.commitEquipmentAssignIconPicker = function()
+	local descriptionTextEdit = equipmentAssignIconWindow and equipmentAssignIconWindow:recursiveGetChildById("descriptionTextEdit")
 
-	if edit then
-		equipmentAssignDescription = edit:getText() or ""
+	if descriptionTextEdit then
+		ptc_root_locals.equipmentAssignDescription = descriptionTextEdit:getText() or ""
 	end
 
-	if equipmentAssignTypeRadioGroup then
-		local selected = equipmentAssignTypeRadioGroup:getSelectedWidget()
+	if ptc_root_locals.equipmentAssignTypeRadioGroup then
+		local selectedWidget = ptc_root_locals.equipmentAssignTypeRadioGroup:getSelectedWidget()
 
-		if selected and selected.typeIndex ~= nil then
-			equipmentAssignTypeIndex = selected.typeIndex
+		if selectedWidget and selectedWidget.typeIndex ~= nil then
+			ptc_root_locals.equipmentAssignTypeIndex = selectedWidget.typeIndex
 		end
 	end
 
-	refreshAssignActionSlotPreview()
+	ptc_root_locals.refreshAssignActionSlotPreview()
 	equipmentAssignUpdateButtons()
 end
 
-local function forEachEquipmentAssignSlot(callback)
+  ptc_root_locals.forEachEquipmentAssignSlot = function(callback)
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
@@ -864,7 +885,7 @@ local function forEachEquipmentAssignSlot(callback)
 	end
 end
 
-local function equipmentAssignItemHasRarityFrame(item)
+  ptc_root_locals.equipmentAssignItemHasRarityFrame = function(item)
 	if not item or not g_game.getFeature(GameColorizedLootValue) then
 		return false
 	end
@@ -876,27 +897,27 @@ local function equipmentAssignItemHasRarityFrame(item)
 	return (item:getMeanPrice() or 0) >= 50
 end
 
-local function clearEquipmentAssignItemFrame(itemWidget)
+  ptc_root_locals.clearEquipmentAssignItemFrame = function(itemWidget)
 	itemWidget:setImageSource("")
 	itemWidget:setImageClip("0 0 0 0")
 end
 
-local function applyEquipmentAssignItemRarity(itemWidget, item)
-	if equipmentAssignItemHasRarityFrame(item) then
-		ItemsDatabase.setRarityItem(itemWidget, item)
+  ptc_root_locals.applyEquipmentAssignItemRarity = function(arg_43_0, arg_43_1)
+	if ptc_root_locals.equipmentAssignItemHasRarityFrame(arg_43_1) then
+		ItemsDatabase.setRarityItem(arg_43_0, arg_43_1)
 
 		return
 	end
 
-	ItemsDatabase.setRarityItem(itemWidget, nil)
-	clearEquipmentAssignItemFrame(itemWidget)
+	ItemsDatabase.setRarityItem(arg_43_0, nil)
+	ptc_root_locals.clearEquipmentAssignItemFrame(arg_43_0)
 end
 
-local function clearEquipmentAssignSlotItemWidget(itemWidget)
-	itemWidget:setItem(nil)
-	ItemsDatabase.setTier(itemWidget, 0)
-	ItemsDatabase.setBigTier(itemWidget, 0)
-	applyEquipmentAssignItemRarity(itemWidget, nil)
+  ptc_root_locals.clearEquipmentAssignSlotItemWidget = function(arg_44_0)
+	arg_44_0:setItem(nil)
+	ItemsDatabase.setTier(arg_44_0, 0)
+	ItemsDatabase.setBigTier(arg_44_0, 0)
+	ptc_root_locals.applyEquipmentAssignItemRarity(arg_44_0, nil)
 end
 
 EAssign = {}
@@ -966,23 +987,24 @@ function EAssign.getWeaponMarketSlots(item)
 end
 
 function EAssign.weaponHandFlags(item)
-	local slots = EAssign.getWeaponMarketSlots(item)
+	local weaponMarketSlots = EAssign.getWeaponMarketSlots(item)
 
-	if not slots then
+	if not weaponMarketSlots then
 		return false, false
 	end
 
-	local canOneHand, canTwoHand = false, false
+	local var_51_1 = false
+	local var_51_2 = false
 
-	for _, allowed in ipairs(slots) do
-		if allowed == InventorySlotLeft then
-			canOneHand = true
-		elseif allowed == 255 or allowed == InventorySlotOther then
-			canTwoHand = true
+	for unusedValue, entry in ipairs(weaponMarketSlots) do
+		if entry == InventorySlotLeft then
+			var_51_1 = true
+		elseif entry == 255 or entry == InventorySlotOther then
+			var_51_2 = true
 		end
 	end
 
-	return canOneHand, canTwoHand
+	return var_51_1, var_51_2
 end
 
 function EAssign.blocksShieldSlot(item)
@@ -1012,122 +1034,122 @@ function EAssign.blocksShieldSlot(item)
 end
 
 function EAssign.draftLeftHandItem()
-	local entry = equipmentAssignDraft and equipmentAssignDraft[InventorySlotLeft]
+	local var_53_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[InventorySlotLeft]
 
-	return entry and equipmentEntryToItem(entry) or nil
+	return var_53_0 and ptc_root_locals.equipmentEntryToItem(var_53_0) or nil
 end
 
-function EAssign.resolveRightSlotEntry(rightEntry)
-	if rightEntry and rightEntry.itemId and rightEntry.itemId > 0 then
-		return rightEntry, false
+function EAssign.resolveRightSlotEntry(slot)
+	if slot and slot.itemId and slot.itemId > 0 then
+		return slot, false
 	end
 
-	local leftItem = EAssign.draftLeftHandItem()
+	local var_54_0 = EAssign.draftLeftHandItem()
 
-	if leftItem and EAssign.isDualWielding(leftItem) then
-		return equipmentAssignDraft[InventorySlotLeft], true
+	if var_54_0 and EAssign.isDualWielding(var_54_0) then
+		return ptc_root_locals.equipmentAssignDraft[InventorySlotLeft], true
 	end
 
 	return nil, false
 end
 
 function EAssign.reconcileHandSlots()
-	if not equipmentAssignDraft then
+	if not ptc_root_locals.equipmentAssignDraft then
 		return
 	end
 
-	local leftItem = EAssign.draftLeftHandItem()
-	local rightEntry = equipmentAssignDraft[InventorySlotRight]
+	local var_55_0 = EAssign.draftLeftHandItem()
+	local var_55_1 = ptc_root_locals.equipmentAssignDraft[InventorySlotRight]
 
-	if not rightEntry then
+	if not var_55_1 then
 		return
 	end
 
-	local rightItem = equipmentEntryToItem(rightEntry)
+	local var_55_2 = ptc_root_locals.equipmentEntryToItem(var_55_1)
 
-	if leftItem and EAssign.isDualWielding(leftItem) then
-		equipmentAssignDraft[InventorySlotRight] = nil
-
-		return
-	end
-
-	if leftItem and EAssign.blocksShieldSlot(leftItem) then
-		equipmentAssignDraft[InventorySlotRight] = nil
+	if var_55_0 and EAssign.isDualWielding(var_55_0) then
+		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
 
 		return
 	end
 
-	if rightItem and leftItem and EAssign.isBowOrCrossbow(leftItem) and EAssign.isShield(rightItem) then
-		equipmentAssignDraft[InventorySlotRight] = nil
+	if var_55_0 and EAssign.blocksShieldSlot(var_55_0) then
+		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
+
+		return
+	end
+
+	if var_55_2 and var_55_0 and EAssign.isBowOrCrossbow(var_55_0) and EAssign.isShield(var_55_2) then
+		ptc_root_locals.equipmentAssignDraft[InventorySlotRight] = nil
 	end
 end
 
-local function refreshEquipmentAssignSlotWidget(slotWidget, entry)
-	local itemWidget = slotWidget:getChildById("equippedItem")
-	local slotIcon = slotWidget:getChildById("slotIcon")
+  ptc_root_locals.refreshEquipmentAssignSlotWidget = function(arg_56_0, arg_56_1)
+	local equippedItem = arg_56_0:getChildById("equippedItem")
+	local slotIcon = arg_56_0:getChildById("slotIcon")
 
-	if not itemWidget then
+	if not equippedItem then
 		return
 	end
 
-	local invSlot = slotWidget.inventorySlot
-	local mirrorShieldSlot = false
+	local inventorySlot = arg_56_0.inventorySlot
+	local var_56_3 = false
 
-	if invSlot == InventorySlotRight then
-		entry, mirrorShieldSlot = EAssign.resolveRightSlotEntry(entry)
+	if inventorySlot == InventorySlotRight then
+		arg_56_1, var_56_3 = EAssign.resolveRightSlotEntry(arg_56_1)
 	end
 
-	local item = equipmentEntryToItem(entry)
+	local var_56_4 = ptc_root_locals.equipmentEntryToItem(arg_56_1)
 
-	if item then
-		if mirrorShieldSlot then
-			local mirrored = item:clone()
+	if var_56_4 then
+		if var_56_3 then
+			local var_56_5 = var_56_4:clone()
 
-			itemWidget:setItem(mirrored)
+			equippedItem:setItem(var_56_5)
 
-			item = mirrored
+			var_56_4 = var_56_5
 		else
-			itemWidget:setItem(item)
+			equippedItem:setItem(var_56_4)
 		end
 
-		itemWidget:setMirrorHorizontal(mirrorShieldSlot)
+		equippedItem:setMirrorHorizontal(var_56_3)
 
-		if invSlot == InventorySlotRight then
-			if mirrorShieldSlot then
-				slotWidget:setOpacity(0.6)
-				itemWidget:setOpacity(0.6)
+		if inventorySlot == InventorySlotRight then
+			if var_56_3 then
+				arg_56_0:setOpacity(0.6)
+				equippedItem:setOpacity(0.6)
 			else
-				slotWidget:setOpacity(1)
-				itemWidget:setOpacity(1)
+				arg_56_0:setOpacity(1)
+				equippedItem:setOpacity(1)
 			end
 		end
 
-		applyEquipmentAssignItemRarity(itemWidget, item)
-		ItemsDatabase.setTier(itemWidget, 0)
-		ItemsDatabase.setBigTier(itemWidget, item)
+		ptc_root_locals.applyEquipmentAssignItemRarity(equippedItem, var_56_4)
+		ItemsDatabase.setTier(equippedItem, 0)
+		ItemsDatabase.setBigTier(equippedItem, var_56_4)
 
-		if not equipmentAssignItemHasRarityFrame(item) then
-			clearEquipmentAssignItemFrame(itemWidget)
+		if not ptc_root_locals.equipmentAssignItemHasRarityFrame(var_56_4) then
+			ptc_root_locals.clearEquipmentAssignItemFrame(equippedItem)
 		end
 
-		local quicklootIcon = itemWidget:recursiveGetChildById("quickloot")
+		local quickloot = equippedItem:recursiveGetChildById("quickloot")
 
-		if quicklootIcon then
-			quicklootIcon:setVisible(false)
+		if quickloot then
+			quickloot:setVisible(false)
 		end
 
 		if slotIcon then
 			slotIcon:setVisible(false)
 		end
 	else
-		itemWidget:setMirrorHorizontal(false)
+		equippedItem:setMirrorHorizontal(false)
 
-		if invSlot == InventorySlotRight then
-			slotWidget:setOpacity(1)
-			itemWidget:setOpacity(1)
+		if inventorySlot == InventorySlotRight then
+			arg_56_0:setOpacity(1)
+			equippedItem:setOpacity(1)
 		end
 
-		clearEquipmentAssignSlotItemWidget(itemWidget)
+		ptc_root_locals.clearEquipmentAssignSlotItemWidget(equippedItem)
 
 		if slotIcon then
 			slotIcon:setVisible(true)
@@ -1137,16 +1159,16 @@ local function refreshEquipmentAssignSlotWidget(slotWidget, entry)
 end
 
 function EAssign.refreshHandSlotWidgets()
-	forEachEquipmentAssignSlot(function(widget, slotId)
-		if slotId == InventorySlotLeft or slotId == InventorySlotRight then
-			local entry = equipmentAssignDraft and equipmentAssignDraft[slotId]
+	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_58_0, arg_58_1)
+		if arg_58_1 == InventorySlotLeft or arg_58_1 == InventorySlotRight then
+			local var_58_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_58_1]
 
-			refreshEquipmentAssignSlotWidget(widget, entry)
+			ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_58_0, var_58_0)
 		end
 	end)
 end
 
-local function refreshEquipmentAssignBackpackSlot()
+  ptc_root_locals.refreshEquipmentAssignBackpackSlot = function()
 	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() then
 		return
 	end
@@ -1157,24 +1179,24 @@ local function refreshEquipmentAssignBackpackSlot()
 		return
 	end
 
-	local player = g_game.getLocalPlayer()
-	local entry = player and equipmentEntryFromItem(player:getInventoryItem(EQUIPMENT_ASSIGN_BACKPACK_SLOT))
+	local localPlayer = g_game.getLocalPlayer()
+	local inventoryItem = localPlayer and ptc_root_locals.equipmentEntryFromItem(localPlayer:getInventoryItem(ptc_root_locals.EQUIPMENT_ASSIGN_BACKPACK_SLOT))
 
-	refreshEquipmentAssignSlotWidget(backSlot, entry)
+	ptc_root_locals.refreshEquipmentAssignSlotWidget(backSlot, inventoryItem)
 end
 
-local function refreshAllEquipmentAssignSlots()
+  ptc_root_locals.refreshAllEquipmentAssignSlots = function()
 	EAssign.reconcileHandSlots()
-	forEachEquipmentAssignSlot(function(widget, invSlot)
-		if isEquipmentAssignVisualBackpackSlot(invSlot) then
+	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_61_0, arg_61_1)
+		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_61_1) then
 			return
 		end
 
-		local entry = equipmentAssignDraft and equipmentAssignDraft[invSlot] or nil
+		local var_61_0 = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_61_1] or nil
 
-		refreshEquipmentAssignSlotWidget(widget, entry)
+		ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_61_0, var_61_0)
 	end)
-	refreshEquipmentAssignBackpackSlot()
+	ptc_root_locals.refreshEquipmentAssignBackpackSlot()
 end
 
 function equipmentAssignUpdateButtons()
@@ -1182,108 +1204,108 @@ function equipmentAssignUpdateButtons()
 		return
 	end
 
-	local okBtn = equipmentAssignWindow:getChildById("okButton")
-	local applyBtn = equipmentAssignWindow:getChildById("applyButton")
-	local canSave = isEquipmentAssignIconDetermined()
+	local okButton = equipmentAssignWindow:getChildById("okButton")
+	local applyButton = equipmentAssignWindow:getChildById("applyButton")
+	local var_62_2 = ptc_root_locals.isEquipmentAssignIconDetermined()
 
-	if okBtn then
-		okBtn:setEnabled(canSave)
+	if okButton then
+		okButton:setEnabled(var_62_2)
 	end
 
-	if applyBtn then
-		applyBtn:setEnabled(canSave)
+	if applyButton then
+		applyButton:setEnabled(var_62_2)
 	end
 end
 
 function equipmentAssignCopyCurrentSet()
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player then
+	if not localPlayer then
 		return
 	end
 
-	equipmentAssignDraft = {}
+	ptc_root_locals.equipmentAssignDraft = {}
 
-	forEachEquipmentAssignSlot(function(widget, invSlot)
-		if isEquipmentAssignVisualBackpackSlot(invSlot) then
+	ptc_root_locals.forEachEquipmentAssignSlot(function(unusedArgument, arg_64_1)
+		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_64_1) then
 			return
 		end
 
-		local entry = equipmentEntryFromItem(player:getInventoryItem(invSlot))
+		local inventoryItem = ptc_root_locals.equipmentEntryFromItem(localPlayer:getInventoryItem(arg_64_1))
 
-		if entry then
-			equipmentAssignDraft[invSlot] = entry
+		if inventoryItem then
+			ptc_root_locals.equipmentAssignDraft[arg_64_1] = inventoryItem
 		end
 	end)
-	refreshAllEquipmentAssignSlots()
+	ptc_root_locals.refreshAllEquipmentAssignSlots()
 	equipmentAssignUpdateButtons()
 end
 
-local function itemFitsEquipmentAssignSlot(item, invSlot)
-	if not item or isEquipmentAssignVisualBackpackSlot(invSlot) then
+  ptc_root_locals.itemFitsEquipmentAssignSlot = function(arg_65_0, arg_65_1)
+	if not arg_65_0 or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_65_1) then
 		return false
 	end
 
-	if not isEquippableActionBarItem(item) then
+	if not ptc_root_locals.isEquippableActionBarItem(arg_65_0) then
 		return false
 	end
 
-	local clothSlot = item:getClothSlot()
+	local clothSlot = arg_65_0:getClothSlot()
 
 	if clothSlot == InventorySlotBack then
 		return false
 	end
 
-	if invSlot == InventorySlotRight then
-		local leftItem = EAssign.draftLeftHandItem()
+	if arg_65_1 == InventorySlotRight then
+		local var_65_1 = EAssign.draftLeftHandItem()
 
-		if leftItem and EAssign.isBowOrCrossbow(leftItem) then
-			return EAssign.isQuiver(item)
+		if var_65_1 and EAssign.isBowOrCrossbow(var_65_1) then
+			return EAssign.isQuiver(arg_65_0)
 		end
 
-		if EAssign.isQuiver(item) then
-			return not leftItem or not EAssign.blocksShieldSlot(leftItem)
+		if EAssign.isQuiver(arg_65_0) then
+			return not var_65_1 or not EAssign.blocksShieldSlot(var_65_1)
 		end
 
-		if not EAssign.isShield(item) then
+		if not EAssign.isShield(arg_65_0) then
 			return false
 		end
 
-		return not leftItem or not EAssign.blocksShieldSlot(leftItem)
+		return not var_65_1 or not EAssign.blocksShieldSlot(var_65_1)
 	end
 
-	if invSlot == InventorySlotLeft then
-		if EAssign.isShield(item) then
+	if arg_65_1 == InventorySlotLeft then
+		if EAssign.isShield(arg_65_0) then
 			return false
 		end
 
-		if EAssign.isDualWielding(item) then
+		if EAssign.isDualWielding(arg_65_0) then
 			return true
 		end
 
 		if clothSlot > 0 then
-			return clothSlot == invSlot
+			return clothSlot == arg_65_1
 		end
 
-		local weaponSlots = EAssign.getWeaponMarketSlots(item)
+		local weaponMarketSlots = EAssign.getWeaponMarketSlots(arg_65_0)
 
-		if weaponSlots then
-			if #weaponSlots == 1 and weaponSlots[1] == 255 then
+		if weaponMarketSlots then
+			if #weaponMarketSlots == 1 and weaponMarketSlots[1] == 255 then
 				return false
 			end
 
-			local canOneHand, canTwoHand = EAssign.weaponHandFlags(item)
+			local var_65_3, var_65_4 = EAssign.weaponHandFlags(arg_65_0)
 
-			return canOneHand or canTwoHand
+			return var_65_3 or var_65_4
 		end
 
-		local cat = EAssign.getMarketCategory(item)
+		local marketCategory = EAssign.getMarketCategory(arg_65_0)
 
-		if MarketCategory and (cat == MarketCategory.FistWeapons or cat == MarketCategory.Quivers) then
+		if MarketCategory and (marketCategory == MarketCategory.FistWeapons or marketCategory == MarketCategory.Quivers) then
 			return true
 		end
 
-		local thingType = g_things.getThingType(item:getId(), ThingCategoryItem)
+		local thingType = g_things.getThingType(arg_65_0:getId(), ThingCategoryItem)
 
 		if thingType and thingType.isCloth and thingType:isCloth() then
 			return true
@@ -1293,13 +1315,13 @@ local function itemFitsEquipmentAssignSlot(item, invSlot)
 	end
 
 	if clothSlot > 0 then
-		return clothSlot == invSlot
+		return clothSlot == arg_65_1
 	end
 
 	return false
 end
 
-local function equipmentAssignDraggedItem(draggingWidget)
+  ptc_root_locals.equipmentAssignDraggedItem = function(draggingWidget)
 	if not draggingWidget or draggingWidget:getClassName() ~= "UIItem" or draggingWidget:isVirtual() then
 		return nil
 	end
@@ -1313,17 +1335,17 @@ local function equipmentAssignDraggedItem(draggingWidget)
 	return nil
 end
 
-local function equipmentAssignSetSlotItem(invSlot, item, slotWidget)
-	if isEquipmentAssignVisualBackpackSlot(invSlot) or not item then
+  ptc_root_locals.equipmentAssignSetSlotItem = function(arg_67_0, arg_67_1, arg_67_2)
+	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_67_0) or not arg_67_1 then
 		return false
 	end
 
-	if not itemFitsEquipmentAssignSlot(item, invSlot) then
-		if invSlot == InventorySlotRight and EAssign.isQuiver(item) and EAssign.draftLeftHandItem() and EAssign.blocksShieldSlot(EAssign.draftLeftHandItem()) then
+	if not ptc_root_locals.itemFitsEquipmentAssignSlot(arg_67_1, arg_67_0) then
+		if arg_67_0 == InventorySlotRight and EAssign.isQuiver(arg_67_1) and EAssign.draftLeftHandItem() and EAssign.blocksShieldSlot(EAssign.draftLeftHandItem()) then
 			modules.game_textmessage.displayFailureMessage(tr("You cannot use a quiver while wielding a two-handed weapon."))
-		elseif invSlot == InventorySlotRight and EAssign.isShield(item) and EAssign.draftLeftHandItem() and EAssign.isBowOrCrossbow(EAssign.draftLeftHandItem()) then
+		elseif arg_67_0 == InventorySlotRight and EAssign.isShield(arg_67_1) and EAssign.draftLeftHandItem() and EAssign.isBowOrCrossbow(EAssign.draftLeftHandItem()) then
 			modules.game_textmessage.displayFailureMessage(tr("You cannot use a shield while wielding a bow or crossbow."))
-		elseif invSlot == InventorySlotRight and EAssign.isShield(item) and EAssign.draftLeftHandItem() and EAssign.blocksShieldSlot(EAssign.draftLeftHandItem()) then
+		elseif arg_67_0 == InventorySlotRight and EAssign.isShield(arg_67_1) and EAssign.draftLeftHandItem() and EAssign.blocksShieldSlot(EAssign.draftLeftHandItem()) then
 			modules.game_textmessage.displayFailureMessage(tr("You cannot use a shield while wielding a two-handed weapon."))
 		else
 			modules.game_textmessage.displayFailureMessage(tr("This item is not suitable for this equipment slot."))
@@ -1332,19 +1354,19 @@ local function equipmentAssignSetSlotItem(invSlot, item, slotWidget)
 		return false
 	end
 
-	equipmentAssignDraft = equipmentAssignDraft or {}
-	equipmentAssignDraft[invSlot] = equipmentEntryFromItem(item)
+	ptc_root_locals.equipmentAssignDraft = ptc_root_locals.equipmentAssignDraft or {}
+	ptc_root_locals.equipmentAssignDraft[arg_67_0] = ptc_root_locals.equipmentEntryFromItem(arg_67_1)
 
 	EAssign.reconcileHandSlots()
 
-	if invSlot == InventorySlotLeft or invSlot == InventorySlotRight then
+	if arg_67_0 == InventorySlotLeft or arg_67_0 == InventorySlotRight then
 		EAssign.refreshHandSlotWidgets()
-	elseif slotWidget then
-		refreshEquipmentAssignSlotWidget(slotWidget, equipmentAssignDraft[invSlot])
+	elseif arg_67_2 then
+		ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_67_2, ptc_root_locals.equipmentAssignDraft[arg_67_0])
 	else
-		forEachEquipmentAssignSlot(function(widget, slotId)
-			if slotId == invSlot then
-				refreshEquipmentAssignSlotWidget(widget, equipmentAssignDraft[invSlot])
+		ptc_root_locals.forEachEquipmentAssignSlot(function(arg_68_0, arg_68_1)
+			if arg_68_1 == arg_67_0 then
+				ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_68_0, ptc_root_locals.equipmentAssignDraft[arg_67_0])
 			end
 		end)
 	end
@@ -1354,22 +1376,22 @@ local function equipmentAssignSetSlotItem(invSlot, item, slotWidget)
 	return true
 end
 
-local function onEquipmentAssignSlotDrop(slotWidget, draggedWidget, mousePos, invSlot)
-	if isEquipmentAssignVisualBackpackSlot(invSlot) then
+  ptc_root_locals[83] = function(arg_69_0, arg_69_1, unusedArgument, arg_69_3)
+	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_69_3) then
 		return false
 	end
 
-	local item = equipmentAssignDraggedItem(draggedWidget)
+	local var_69_0 = ptc_root_locals.equipmentAssignDraggedItem(arg_69_1)
 
-	if not item then
+	if not var_69_0 then
 		return false
 	end
 
-	if equipmentAssignSetSlotItem(invSlot, item, slotWidget) then
-		slotWidget:setBorderWidth(0)
+	if ptc_root_locals.equipmentAssignSetSlotItem(arg_69_3, var_69_0, arg_69_0) then
+		arg_69_0:setBorderWidth(0)
 
-		if draggedWidget then
-			draggedWidget:setBorderWidth(0)
+		if arg_69_1 then
+			arg_69_1:setBorderWidth(0)
 		end
 
 		return true
@@ -1378,32 +1400,32 @@ local function onEquipmentAssignSlotDrop(slotWidget, draggedWidget, mousePos, in
 	return false
 end
 
-local function onEquipmentAssignSlotHoverChange(slotWidget, hovered, invSlot)
+  ptc_root_locals.onEquipmentAssignSlotHoverChange = function(arg_70_0, arg_70_1, arg_70_2)
 	if UIWidget.onHoverChange then
-		UIWidget.onHoverChange(slotWidget, hovered)
+		UIWidget.onHoverChange(arg_70_0, arg_70_1)
 	end
 
-	if isEquipmentAssignVisualBackpackSlot(invSlot) then
+	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_70_2) then
 		return
 	end
 
 	local draggingWidget = g_ui.getDraggingWidget()
-	local item = equipmentAssignDraggedItem(draggingWidget)
+	local var_70_1 = ptc_root_locals.equipmentAssignDraggedItem(draggingWidget)
 
-	if hovered and item and itemFitsEquipmentAssignSlot(item, invSlot) then
-		slotWidget:setBorderWidth(1)
-		slotWidget:setBorderColor("#ffffff")
+	if arg_70_1 and var_70_1 and ptc_root_locals.itemFitsEquipmentAssignSlot(var_70_1, arg_70_2) then
+		arg_70_0:setBorderWidth(1)
+		arg_70_0:setBorderColor("#ffffff")
 	else
-		slotWidget:setBorderWidth(0)
+		arg_70_0:setBorderWidth(0)
 	end
 end
 
-local function restoreEquipmentAssignWindowAfterPick()
-	if not equipmentAssignHiddenForPick then
+  ptc_root_locals.restoreEquipmentAssignWindowAfterPick = function()
+	if not ptc_root_locals.equipmentAssignHiddenForPick then
 		return
 	end
 
-	equipmentAssignHiddenForPick = false
+	ptc_root_locals.equipmentAssignHiddenForPick = false
 
 	if equipmentAssignWindow and not equipmentAssignWindow:isDestroyed() then
 		equipmentAssignWindow:show()
@@ -1412,66 +1434,66 @@ local function restoreEquipmentAssignWindowAfterPick()
 	end
 end
 
-local function startEquipmentAssignChooseItem(invSlot)
-	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() or isEquipmentAssignVisualBackpackSlot(invSlot) or g_ui.isMouseGrabbed() then
+  ptc_root_locals.startEquipmentAssignChooseItem = function(arg_72_0)
+	if not equipmentAssignWindow or equipmentAssignWindow:isDestroyed() or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_72_0) or g_ui.isMouseGrabbed() then
 		return
 	end
 
-	equipmentAssignPickInvSlot = invSlot
+	ptc_root_locals.equipmentAssignPickInvSlot = arg_72_0
 
 	equipmentAssignWindow:hide()
 
-	equipmentAssignHiddenForPick = true
+	ptc_root_locals.equipmentAssignHiddenForPick = true
 
 	mouseGrabberWidget:grabMouse()
 	g_mouse.pushCursor("target")
 end
 
-local function onEquipmentAssignChooseItemMouseRelease(self, mousePosition, mouseButton)
-	local invSlot = equipmentAssignPickInvSlot
+  ptc_root_locals.onEquipmentAssignChooseItemMouseRelease = function(arg_73_0, arg_73_1, arg_73_2)
+	local equipmentAssignPickInvSlot = ptc_root_locals.equipmentAssignPickInvSlot
 
-	equipmentAssignPickInvSlot = nil
+	ptc_root_locals.equipmentAssignPickInvSlot = nil
 
-	local item
+	local var_73_1
 
-	if mouseButton == MouseLeftButton then
-		item = resolvePickItemAtMouse(mousePosition)
+	if arg_73_2 == MouseLeftButton then
+		var_73_1 = ptc_root_locals.resolvePickItemAtMouse(arg_73_1)
 
-		if item and not itemFitsEquipmentAssignSlot(item, invSlot) then
+		if var_73_1 and not ptc_root_locals.itemFitsEquipmentAssignSlot(var_73_1, equipmentAssignPickInvSlot) then
 			modules.game_textmessage.displayFailureMessage(tr("This item is not suitable for this equipment slot."))
 
-			item = nil
+			var_73_1 = nil
 		end
 	end
 
-	if item then
-		equipmentAssignSetSlotItem(invSlot, item, nil)
+	if var_73_1 then
+		ptc_root_locals.equipmentAssignSetSlotItem(equipmentAssignPickInvSlot, var_73_1, nil)
 	end
 
-	restoreEquipmentAssignWindowAfterPick()
+	ptc_root_locals.restoreEquipmentAssignWindowAfterPick()
 	g_mouse.popCursor("target")
-	self:ungrabMouse()
+	arg_73_0:ungrabMouse()
 
 	return true
 end
 
-local function equipmentAssignRemoveSlot(invSlot)
-	if isEquipmentAssignVisualBackpackSlot(invSlot) then
+  ptc_root_locals.equipmentAssignRemoveSlot = function(arg_74_0)
+	if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_74_0) then
 		return
 	end
 
-	if not equipmentAssignDraft then
-		equipmentAssignDraft = {}
+	if not ptc_root_locals.equipmentAssignDraft then
+		ptc_root_locals.equipmentAssignDraft = {}
 	end
 
-	equipmentAssignDraft[invSlot] = nil
+	ptc_root_locals.equipmentAssignDraft[arg_74_0] = nil
 
-	if invSlot == InventorySlotLeft or invSlot == InventorySlotRight then
+	if arg_74_0 == InventorySlotLeft or arg_74_0 == InventorySlotRight then
 		EAssign.refreshHandSlotWidgets()
 	else
-		forEachEquipmentAssignSlot(function(widget, slotId)
-			if slotId == invSlot then
-				refreshEquipmentAssignSlotWidget(widget, nil)
+		ptc_root_locals.forEachEquipmentAssignSlot(function(arg_75_0, arg_75_1)
+			if arg_75_1 == arg_74_0 then
+				ptc_root_locals.refreshEquipmentAssignSlotWidget(arg_75_0, nil)
 			end
 		end)
 	end
@@ -1479,87 +1501,87 @@ local function equipmentAssignRemoveSlot(invSlot)
 	equipmentAssignUpdateButtons()
 end
 
-local function onEquipmentAssignSlotMouseRelease(widget, mousePos, mouseButton, invSlot)
-	if mouseButton ~= MouseRightButton or isEquipmentAssignVisualBackpackSlot(invSlot) then
+  ptc_root_locals.onEquipmentAssignSlotMouseRelease = function(unusedArgument, arg_76_1, arg_76_2, arg_76_3)
+	if arg_76_2 ~= MouseRightButton or ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_76_3) then
 		return false
 	end
 
-	local menu = g_ui.createWidget("GamePopupMenu")
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
-	menu:addOption(tr("Select Equipment"), function()
-		startEquipmentAssignChooseItem(invSlot)
+	gamePopupMenuWidget:addOption(tr("Select Equipment"), function()
+		ptc_root_locals.startEquipmentAssignChooseItem(arg_76_3)
 	end)
 
-	local entry = equipmentAssignDraft and equipmentAssignDraft[invSlot]
+	local slot = ptc_root_locals.equipmentAssignDraft and ptc_root_locals.equipmentAssignDraft[arg_76_3]
 
-	if entry and entry.itemId and entry.itemId > 0 then
-		menu:addOption(tr("Remove Equipment"), function()
-			equipmentAssignRemoveSlot(invSlot)
+	if slot and slot.itemId and slot.itemId > 0 then
+		gamePopupMenuWidget:addOption(tr("Remove Equipment"), function()
+			ptc_root_locals.equipmentAssignRemoveSlot(arg_76_3)
 		end)
 	end
 
-	menu:display(mousePos)
+	gamePopupMenuWidget:display(arg_76_1)
 
 	return true
 end
 
-local function setupEquipmentAssignSlotHandlers()
-	forEachEquipmentAssignSlot(function(widget, invSlot)
-		if isEquipmentAssignVisualBackpackSlot(invSlot) then
-			widget.onMouseRelease = nil
-			widget.onDrop = nil
-			widget.onHoverChange = nil
+  ptc_root_locals.setupEquipmentAssignSlotHandlers = function()
+	ptc_root_locals.forEachEquipmentAssignSlot(function(arg_80_0, arg_80_1)
+		if ptc_root_locals.isEquipmentAssignVisualBackpackSlot(arg_80_1) then
+			arg_80_0.onMouseRelease = nil
+			arg_80_0.onDrop = nil
+			arg_80_0.onHoverChange = nil
 
 			return
 		end
 
-		function widget.onMouseRelease(w, mousePos, button)
-			return onEquipmentAssignSlotMouseRelease(w, mousePos, button, invSlot)
+		function arg_80_0.onMouseRelease(arg_81_0, arg_81_1, arg_81_2)
+			return ptc_root_locals.onEquipmentAssignSlotMouseRelease(arg_81_0, arg_81_1, arg_81_2, arg_80_1)
 		end
 
-		function widget:onDrop(draggedWidget, mousePos)
-			return onEquipmentAssignSlotDrop(widget, draggedWidget, mousePos, invSlot)
+		function arg_80_0.onDrop(unusedArgument, arg_82_1, arg_82_2)
+			return ptc_root_locals[83](arg_80_0, arg_82_1, arg_82_2, arg_80_1)
 		end
 
-		function widget:onHoverChange(hovered)
-			onEquipmentAssignSlotHoverChange(widget, hovered, invSlot)
+		function arg_80_0.onHoverChange(unusedArgument, arg_83_1)
+			ptc_root_locals.onEquipmentAssignSlotHoverChange(arg_80_0, arg_83_1, arg_80_1)
 		end
 
-		local equippedItem = widget:recursiveGetChildById("equippedItem")
+		local equippedItem = arg_80_0:recursiveGetChildById("equippedItem")
 
 		if equippedItem then
-			function equippedItem:onDrop(draggedWidget, mousePos)
-				return onEquipmentAssignSlotDrop(widget, draggedWidget, mousePos, invSlot)
+			function equippedItem.onDrop(unusedArgument, draggedWidget, mousePos)
+				return ptc_root_locals[83](arg_80_0, draggedWidget, mousePos, arg_80_1)
 			end
 
-			function equippedItem:onHoverChange(hovered)
-				onEquipmentAssignSlotHoverChange(widget, hovered, invSlot)
+			function equippedItem.onHoverChange(unusedArgument, hovered)
+				ptc_root_locals.onEquipmentAssignSlotHoverChange(arg_80_0, hovered, arg_80_1)
 			end
 		end
 	end)
 end
 
-local function actionSlotEquippedItemMatches(item, itemId, tier)
-	if not item or item:getId() ~= itemId then
+  ptc_root_locals.actionSlotEquippedItemMatches = function(arg_86_0, arg_86_1, arg_86_2)
+	local var_86_0 = type(arg_86_0)
+
+	if var_86_0 ~= "userdata" and var_86_0 ~= "table" or arg_86_0:getId() ~= arg_86_1 then
 		return false
 	end
 
 	if g_game.getFeature(GameThingUpgradeClassification) then
-		local itemTier = item.getTier and item:getTier() or 0
-
-		return itemTier == (tier or 0)
+		return (arg_86_0.getTier and arg_86_0:getTier() or 0) == (arg_86_2 or 0)
 	end
 
 	return true
 end
 
-local function actionSlotHasEquipmentSetEntries(slot)
-	if not slot or not slot.equipments then
+  ptc_root_locals[92] = function(panel)
+	if not panel or not panel.equipments then
 		return false
 	end
 
-	for invSlot, entry in pairs(slot.equipments) do
-		if not isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
+	for _, slot in pairs(panel.equipments) do
+		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(_) and slot and slot.itemId and slot.itemId > 0 then
 			return true
 		end
 	end
@@ -1567,7 +1589,7 @@ local function actionSlotHasEquipmentSetEntries(slot)
 	return false
 end
 
-local EQUIPMENT_SET_EQUIP_ORDER = {
+ ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER = {
 	InventorySlotHead,
 	InventorySlotNeck,
 	InventorySlotBody,
@@ -1578,124 +1600,120 @@ local EQUIPMENT_SET_EQUIP_ORDER = {
 	InventorySlotFinger,
 	InventorySlotAmmo
 }
-local EQUIPMENT_SET_COOLDOWN_MS = 1000
-local EQUIPMENT_SET_CD_PROGRESS_ID = "progressEquipmentSet"
-local EQUIPMENT_SET_SHARED_CD_KEY = "equipmentSetShared"
-local equipmentSetSharedCooldownUntil
+ ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS = 1000
+ ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID = "progressEquipmentSet"
+ ptc_root_locals[96] = "equipmentSetShared"
+ ptc_root_locals.equipmentSetSharedCooldownUntil = nil
 
-local function equipmentSetCooldownGroupId()
-	return EQUIPMENT_SET_SHARED_CD_KEY
+  ptc_root_locals.equipmentSetCooldownGroupId = function()
+	return ptc_root_locals[96]
 end
 
-local function forEachEquipmentSetActionSlot(callback)
-	if not callback then
+  ptc_root_locals.forEachEquipmentSetActionSlot = function(arg_89_0)
+	if not arg_89_0 then
 		return
 	end
 
-	for barId = 1, NUM_BARS do
-		local panel = actionBarPanels[barId]
+	for iter_89_0 = 1, NUM_BARS do
+		local var_89_0 = actionBarPanels[iter_89_0]
 
-		if panel then
-			for _, slot in pairs(panel:getChildren()) do
-				if isActionSlotEquipmentPreset(slot) then
-					callback(slot)
+		if var_89_0 then
+			for unusedValue, child in pairs(var_89_0:getChildren()) do
+				if ptc_root_locals.isActionSlotEquipmentPreset(child) then
+					arg_89_0(child)
 				end
 			end
 		end
 	end
 end
 
-local function isEquipmentSetActionOnCooldown(slot)
-	if not isActionSlotEquipmentPreset(slot) then
+  ptc_root_locals.isEquipmentSetActionOnCooldown = function(arg_90_0)
+	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_90_0) then
 		return false
 	end
 
-	return equipmentSetSharedCooldownUntil and g_clock.millis() < equipmentSetSharedCooldownUntil
+	return ptc_root_locals.equipmentSetSharedCooldownUntil and g_clock.millis() < ptc_root_locals.equipmentSetSharedCooldownUntil
 end
 
-local function startEquipmentSetActionCooldown()
-	equipmentSetSharedCooldownUntil = g_clock.millis() + EQUIPMENT_SET_COOLDOWN_MS
+  ptc_root_locals.startEquipmentSetActionCooldown = function()
+	ptc_root_locals.equipmentSetSharedCooldownUntil = g_clock.millis() + ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS
 
-	forEachEquipmentSetActionSlot(function(slot)
-		slot._equipmentSetCooldownUntil = equipmentSetSharedCooldownUntil
+	ptc_root_locals.forEachEquipmentSetActionSlot(function(arg_92_0)
+		arg_92_0._equipmentSetCooldownUntil = ptc_root_locals.equipmentSetSharedCooldownUntil
 
-		if startEquipmentSetActionCooldownVisual then
-			startEquipmentSetActionCooldownVisual(slot)
+		if ptc_root_locals.startEquipmentSetActionCooldownVisual then
+			ptc_root_locals.startEquipmentSetActionCooldownVisual(arg_92_0)
 		end
 	end)
 end
 
-local function actionSlotPresetEntryMatchesEquipped(player, invSlot, entry)
-	if not player or not entry or not entry.itemId or entry.itemId <= 0 then
+  ptc_root_locals.actionSlotPresetEntryMatchesEquipped = function(arg_93_0, arg_93_1, arg_93_2)
+	if not arg_93_0 or not arg_93_2 or not arg_93_2.itemId or arg_93_2.itemId <= 0 then
 		return true
 	end
 
-	return actionSlotEquippedItemMatches(player:getInventoryItem(invSlot), entry.itemId, entry.getTier or 0)
+	return ptc_root_locals.actionSlotEquippedItemMatches(arg_93_0:getInventoryItem(arg_93_1), arg_93_2.itemId, arg_93_2.getTier or 0)
 end
 
-local function actionSlotPresetEntryForSlot(slot, invSlot)
+  ptc_root_locals.actionSlotPresetEntryForSlot = function(slot, invSlot)
 	if not slot or not slot.equipments then
 		return nil
 	end
 
-	local entry = slot.equipments[invSlot]
+	local slot = slot.equipments[invSlot]
 
-	if entry and entry.itemId and entry.itemId > 0 then
-		return entry
+	if slot and slot.itemId and slot.itemId > 0 then
+		return slot
 	end
 
 	return nil
 end
 
-local function actionSlotEquipmentSetNeedsEquip(slot)
-	if not isActionSlotEquipmentPreset(slot) then
+  ptc_root_locals[104] = function(arg_95_0)
+	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_95_0) then
 		return false
 	end
 
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player or not player.getInventoryItem then
+	if not localPlayer or not localPlayer.getInventoryItem then
 		return false
 	end
 
-	for _, invSlot in ipairs(EQUIPMENT_SET_EQUIP_ORDER) do
-		local entry = actionSlotPresetEntryForSlot(slot, invSlot)
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
+		local var_95_1 = ptc_root_locals.actionSlotPresetEntryForSlot(arg_95_0, ptc_root_local)
 
-		if entry and not actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
+		if var_95_1 and not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_95_1) then
 			return true
 		end
 
-		if not entry then
-			local equipped = player:getInventoryItem(invSlot)
-
-			if equipped then
-				return true
-			end
+		if not var_95_1 and localPlayer:getInventoryItem(ptc_root_local) then
+			return true
 		end
 	end
 
 	return false
 end
 
-local function isActionSlotEquipSetActive(slot)
-	if not isActionSlotEquipmentPreset(slot) then
+  ptc_root_locals.isActionSlotEquipSetActive = function(arg_96_0)
+	if not ptc_root_locals.isActionSlotEquipmentPreset(arg_96_0) then
 		return false
 	end
 
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player or not player.getInventoryItem then
+	if not localPlayer or not localPlayer.getInventoryItem then
 		return false
 	end
 
-	for _, invSlot in ipairs(EQUIPMENT_SET_EQUIP_ORDER) do
-		local entry = actionSlotPresetEntryForSlot(slot, invSlot)
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
+		local var_96_1 = ptc_root_locals.actionSlotPresetEntryForSlot(arg_96_0, ptc_root_local)
 
-		if entry then
-			if not actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
+		if var_96_1 then
+			if not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(localPlayer, ptc_root_local, var_96_1) then
 				return false
 			end
-		elseif player:getInventoryItem(invSlot) then
+		elseif localPlayer:getInventoryItem(ptc_root_local) then
 			return false
 		end
 	end
@@ -1703,32 +1721,32 @@ local function isActionSlotEquipSetActive(slot)
 	return true
 end
 
-local function isActionSlotEquipEquipped(slot)
-	if not isActionSlotEquip(slot) then
+  ptc_root_locals.isActionSlotEquipEquipped = function(arg_97_0)
+	if not ptc_root_locals.isActionSlotEquip(arg_97_0) then
 		return false
 	end
 
-	if isActionSlotEquipmentPreset(slot) then
-		return isActionSlotEquipSetActive(slot)
+	if ptc_root_locals.isActionSlotEquipmentPreset(arg_97_0) then
+		return ptc_root_locals.isActionSlotEquipSetActive(arg_97_0)
 	end
 
-	if not slot.itemId or slot.itemId <= 0 then
+	if not arg_97_0.itemId or arg_97_0.itemId <= 0 then
 		return false
 	end
 
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player or not player.getInventoryItem then
+	if not localPlayer or not localPlayer.getInventoryItem then
 		return false
 	end
 
-	local itemId = slot.itemId
-	local tier = actionSlotItemTier(slot)
-	local first = InventorySlotFirst or 1
-	local last = InventorySlotLast or 10
+	local itemId = arg_97_0.itemId
+	local var_97_2 = ptc_root_locals.actionSlotItemTier(arg_97_0)
+	local var_97_3 = InventorySlotFirst or 1
+	local var_97_4 = InventorySlotLast or 10
 
-	for i = first, last do
-		if actionSlotEquippedItemMatches(player:getInventoryItem(i), itemId, tier) then
+	for iter_97_0 = var_97_3, var_97_4 do
+		if ptc_root_locals.actionSlotEquippedItemMatches(localPlayer:getInventoryItem(iter_97_0), itemId, var_97_2) then
 			return true
 		end
 	end
@@ -1736,7 +1754,7 @@ local function isActionSlotEquipEquipped(slot)
 	return false
 end
 
-local function refreshSpellAssignPreviewIfOpen()
+  ptc_root_locals.refreshSpellAssignPreviewIfOpen = function()
 	if not spellAssignWindow or not spellsPanel then
 		return
 	end
@@ -1748,91 +1766,93 @@ local function refreshSpellAssignPreviewIfOpen()
 	end
 end
 
-local function scheduleSlotGrayRefresh(fullRefresh)
-	slotGrayFullRefreshPending = slotGrayFullRefreshPending or fullRefresh == true
+  ptc_root_locals.scheduleSlotGrayRefresh = function(arg_99_0)
+	slotGrayFullRefreshPending = slotGrayFullRefreshPending or arg_99_0 == true
 
-	if slotGrayRefreshEvent then
+	if ptc_root_locals.slotGrayRefreshEvent then
 		return
 	end
 
-	slotGrayRefreshEvent = scheduleEvent(function()
-		slotGrayRefreshEvent = nil
+	tagHitchEventSource("game_actionbar.scheduleSlotGrayRefresh")
 
-		local runFullRefresh = slotGrayFullRefreshPending
-		local runInventoryRefresh = slotGrayInventoryRefreshPending
-		local runStatsRefresh = next(slotGrayStatsPendingSlots) ~= nil
+	ptc_root_locals.slotGrayRefreshEvent = scheduleEvent(function()
+		ptc_root_locals.slotGrayRefreshEvent = nil
+
+		local var_100_0 = slotGrayFullRefreshPending
+		local var_100_1 = slotGrayInventoryRefreshPending
+		local var_100_2 = next(slotGrayStatsPendingSlots) ~= nil
 
 		slotGrayFullRefreshPending = false
 		slotGrayInventoryRefreshPending = false
 
-		if runFullRefresh then
+		if var_100_0 then
 			slotGrayStatsPendingSlots = {}
 
 			updateSlotsVocation()
 
-			if refreshAllSmartModeSlots then
-				refreshAllSmartModeSlots()
+			if ptc_root_locals.refreshAllSmartModeSlots then
+				ptc_root_locals.refreshAllSmartModeSlots()
 			end
 
-			refreshSpellAssignPreviewIfOpen()
-			refreshAllEquipmentAssignSlots()
+			ptc_root_locals.refreshSpellAssignPreviewIfOpen()
+			ptc_root_locals.refreshAllEquipmentAssignSlots()
 		else
-			if runInventoryRefresh and updateInventoryDependentActionSlots then
+			if var_100_1 and updateInventoryDependentActionSlots then
 				updateInventoryDependentActionSlots()
 			end
 
-			if runStatsRefresh and updateStatsDependentSlotGray then
+			if var_100_2 and updateStatsDependentSlotGray then
 				updateStatsDependentSlotGray()
 			end
 		end
 
-		if runFullRefresh or runStatsRefresh and spellAssignWindow then
+		if var_100_0 or var_100_2 and spellAssignWindow then
 			refreshAssignSpellListGrayOverlays()
 		end
 	end, 50)
 end
 
 function scheduleFullSlotGrayRefresh()
-	scheduleSlotGrayRefresh(true)
+	ptc_root_locals.scheduleSlotGrayRefresh(true)
 end
 
 function scheduleInventorySlotGrayRefresh()
 	slotGrayInventoryRefreshPending = true
 
-	scheduleSlotGrayRefresh(false)
+	ptc_root_locals.scheduleSlotGrayRefresh(false)
 end
 
-local function onLocalPlayerManaChange(player, mana, maxMana, oldMana, oldMaxMana)
-	local currentMana = tonumber(mana)
-	local previousMana = tonumber(oldMana)
+  ptc_root_locals.onLocalPlayerManaChange = function(unusedArgument, arg_103_1, unusedArgument, arg_103_3, unusedArgument)
+	local numericValue = tonumber(arg_103_1)
+	local var_103_1 = tonumber(arg_103_3)
 
-	if not currentMana or not previousMana or currentMana == previousMana then
+	if not numericValue or not var_103_1 or numericValue == var_103_1 then
 		return
 	end
 
-	local crossedThreshold = false
+	local var_103_2 = false
 
-	for i = 1, NUM_BARS do
-		local panel = actionBarPanels[i]
+	for iter_103_0 = 1, NUM_BARS do
+		local slots = actionBarPanels[iter_103_0]
 
-		if panel then
-			for _, slot in pairs(panel:getChildren()) do
-				local manaCost = slot.grayManaCost
+		if slots then
+			for slotKey, setting in pairs(slots:getChildren()) do
+				local grayManaCost = setting.grayManaCost
 
-				if manaCost and manaCost > 0 and (previousMana < manaCost and manaCost <= currentMana or manaCost <= previousMana and currentMana < manaCost) then
-					slotGrayStatsPendingSlots[slot] = true
-					crossedThreshold = true
+				if grayManaCost and grayManaCost > 0 and (var_103_1 < grayManaCost and grayManaCost <= numericValue or grayManaCost <= var_103_1 and numericValue < grayManaCost) then
+					slotGrayStatsPendingSlots[setting] = true
+					var_103_2 = true
 				end
 			end
 		end
 	end
 
-	if crossedThreshold then
-		scheduleSlotGrayRefresh(false)
+	if var_103_2 then
+		ptc_root_locals.scheduleSlotGrayRefresh(false)
 	end
 end
 
-local function playerMeetsSpellLevelForAssign(spell)
+  ptc_root_locals.playerMeetsSpellLevelForAssign = function(spell)
 	if not spell then
 		return false
 	end
@@ -1850,111 +1870,110 @@ local function playerMeetsSpellLevelForAssign(spell)
 	return true
 end
 
-local function spellPassesAssignLearntFilter(spell)
-	if not spell then
+  ptc_root_locals.spellPassesAssignLearntFilter = function(arg_105_0)
+	if not arg_105_0 then
 		return false
 	end
 
-	return canUseSpell(spell) and playerMeetsSpellLevelForAssign(spell)
+	return canUseSpell(arg_105_0) and ptc_root_locals.playerMeetsSpellLevelForAssign(arg_105_0)
 end
 
-local SPELL_PARAM_MAX_WIDTH_PX = 34
+ ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX = 34
 
-local function ellipsizeSpellParameterLabelText(lbl, text)
-	if not lbl or not text or text == "" then
+  ptc_root_locals.ellipsizeSpellParameterLabelText = function(arg_106_0, arg_106_1)
+	if not arg_106_0 or not arg_106_1 or arg_106_1 == "" then
 		return ""
 	end
 
-	lbl:setText(text)
+	arg_106_0:setText(arg_106_1)
 
-	local sz = lbl:getTextSize()
+	local textSize = arg_106_0:getTextSize()
 
-	if not sz or sz.width <= SPELL_PARAM_MAX_WIDTH_PX then
-		return text
+	if not textSize or textSize.width <= ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX then
+		return arg_106_1
 	end
 
-	local dots = "..."
+	local var_106_1 = "..."
 
-	lbl:setText(dots)
+	arg_106_0:setText(var_106_1)
 
-	local dotSz = lbl:getTextSize()
-	local dotsW = dotSz and dotSz.width or SPELL_PARAM_MAX_WIDTH_PX
-	local budget = SPELL_PARAM_MAX_WIDTH_PX - dotsW
+	local textSize = arg_106_0:getTextSize()
+	local var_106_3 = textSize and textSize.width or ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX
+	local var_106_4 = ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX - var_106_3
 
-	if budget <= 0 then
-		return dots
+	if var_106_4 <= 0 then
+		return var_106_1
 	end
 
-	local lo, hi = 1, #text
-	local best = ""
+	local var_106_5 = 1
+	local var_106_6 = #arg_106_1
+	local var_106_7 = ""
 
-	while lo <= hi do
-		local mid = math.floor((lo + hi) / 2)
-		local sub = string.sub(text, 1, mid)
+	while var_106_5 <= var_106_6 do
+		local var_106_8 = math.floor((var_106_5 + var_106_6) / 2)
+		local var_106_9 = string.sub(arg_106_1, 1, var_106_8)
 
-		lbl:setText(sub)
+		arg_106_0:setText(var_106_9)
 
-		local w = lbl:getTextSize().width
-
-		if w <= budget then
-			best = sub
-			lo = mid + 1
+		if var_106_4 >= arg_106_0:getTextSize().width then
+			var_106_7 = var_106_9
+			var_106_5 = var_106_8 + 1
 		else
-			hi = mid - 1
+			var_106_6 = var_106_8 - 1
 		end
 	end
 
-	if best == "" then
-		return dots
+	if var_106_7 == "" then
+		return var_106_1
 	end
 
-	local out = best .. dots
+	local var_106_10 = var_106_7 .. var_106_1
 
-	lbl:setText(out)
+	arg_106_0:setText(var_106_10)
 
-	local guard = 0
+	local var_106_11 = 0
 
-	while best ~= "" and lbl:getTextSize().width > SPELL_PARAM_MAX_WIDTH_PX and guard < 64 do
-		best = string.sub(best, 1, #best - 1)
-		out = best ~= "" and best .. dots or dots
+	while var_106_7 ~= "" and arg_106_0:getTextSize().width > ptc_root_locals.SPELL_PARAM_MAX_WIDTH_PX and var_106_11 < 64 do
+		var_106_7 = string.sub(var_106_7, 1, #var_106_7 - 1)
+		var_106_10 = var_106_7 ~= "" and var_106_7 .. var_106_1 or var_106_1
 
-		lbl:setText(out)
+		arg_106_0:setText(var_106_10)
 
-		guard = guard + 1
+		var_106_11 = var_106_11 + 1
 	end
 
-	return out
+	return var_106_10
 end
 
-local function refreshActionSlotSpellParameter(slot)
-	if not slot or slot:isDestroyed() then
+  ptc_root_locals.refreshActionSlotSpellParameter = function(arg_107_0)
+	if not arg_107_0 or arg_107_0:isDestroyed() then
 		return
 	end
 
-	local lbl = slot:recursiveGetChildById("spellParameter")
+	local spellParameter = arg_107_0:recursiveGetChildById("spellParameter")
 
-	if not lbl then
+	if not spellParameter then
 		return
 	end
 
-	if slot.words and slot.words ~= "" then
-		local spell = Spells.getSpellByWords(slot.words)
+	if arg_107_0.words and arg_107_0.words ~= "" then
+		local spellByWords = Spells.getSpellByWords(arg_107_0.words)
 
-		if spell and spell.parameter then
-			local p = slot.parameter
-			local s = p ~= nil and tostring(p):gsub("^%s+", ""):gsub("%s+$", "") or ""
+		if spellByWords and spellByWords.parameter then
+			local parameter = arg_107_0.parameter
+			local var_107_3 = parameter ~= nil and tostring(parameter):gsub("^%s+", ""):gsub("%s+$", "") or ""
 
-			if s ~= "" then
-				lbl:setVisible(true)
-				lbl:setText(ellipsizeSpellParameterLabelText(lbl, s))
+			if var_107_3 ~= "" then
+				spellParameter:setVisible(true)
+				spellParameter:setText(ptc_root_locals.ellipsizeSpellParameterLabelText(spellParameter, var_107_3))
 
 				return
 			end
 		end
 	end
 
-	lbl:setVisible(false)
-	lbl:setText("")
+	spellParameter:setVisible(false)
+	spellParameter:setText("")
 end
 
 function refreshActionSlotInventoryQuantity(slot)
@@ -1964,84 +1983,84 @@ function refreshActionSlotInventoryQuantity(slot)
 
 	local lbl = slot:getChildById("count")
 
-	local function hideCountLabel()
+	local function var_108_1()
 		if lbl then
 			lbl:setVisible(false)
 			lbl:setText("")
 		end
 	end
 
-	if slot.text or slot.passiveId then
-		hideCountLabel()
-		refreshActionSlotSpellParameter(slot)
+	if slot.text or slot.passiveId or isHelperActionSlot(slot) or isMultiHelperSlot(slot) then
+		var_108_1()
+		ptc_root_locals.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if slot.words and slot.words ~= "" then
-		hideCountLabel()
-		refreshActionSlotSpellParameter(slot)
+		var_108_1()
+		ptc_root_locals.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
-	if isActionSlotEquip(slot) and isActionSlotEquipmentPreset(slot) then
-		hideCountLabel()
-		refreshActionSlotSpellParameter(slot)
+	if ptc_root_locals.isActionSlotEquip(slot) and ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+		var_108_1()
+		ptc_root_locals.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if not slot.itemId or slot.itemId <= 0 then
-		hideCountLabel()
-		refreshActionSlotSpellParameter(slot)
+		var_108_1()
+		ptc_root_locals.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
-	local player = g_game.getLocalPlayer()
-	local n = 0
+	local localPlayer = g_game.getLocalPlayer()
+	local var_108_3 = 0
 
-	if player then
-		n = getActionBarInventoryDisplayCount(slot.itemId, actionSlotItemTier(slot), player)
+	if localPlayer then
+		var_108_3 = getActionBarInventoryDisplayCount(slot.itemId, ptc_root_locals.actionSlotItemTier(slot), localPlayer)
 	end
 
 	if not lbl then
 		return
 	end
 
-	local show = slot._actionBarShowCount == true
+	local var_108_4 = slot._actionBarShowCount == true
 
-	lbl:setVisible(show)
+	lbl:setVisible(var_108_4)
 
-	if show then
-		lbl:setText(tostring(n))
+	if var_108_4 then
+		lbl:setText(tostring(var_108_3))
 	else
 		lbl:setText("")
 	end
 
-	refreshActionSlotSpellParameter(slot)
+	ptc_root_locals.refreshActionSlotSpellParameter(slot)
 end
 
-local ProgressCallback = {
-	finish = 2,
-	update = 1
+ ptc_root_locals[115] = {
+	update = 1,
+	finish = 2
 }
 
-local function isBottomBar(barId)
+  ptc_root_locals.isBottomBar = function(barId)
 	return barId and barId >= BAR_BOTTOM_1 and barId <= BAR_BOTTOM_3
 end
 
-local function isLeftBar(barId)
+  ptc_root_locals.isLeftBar = function(barId)
 	return barId and barId >= BAR_LEFT_1 and barId <= BAR_LEFT_3
 end
 
-local function isRightBar(barId)
+  ptc_root_locals.isRightBar = function(barId)
 	return barId and barId >= BAR_RIGHT_1 and barId <= BAR_RIGHT_3
 end
 
-local function isSideBar(barId)
-	return isLeftBar(barId) or isRightBar(barId)
+  ptc_root_locals.isSideBar = function(arg_113_0)
+	return ptc_root_locals.isLeftBar(arg_113_0) or ptc_root_locals.isRightBar(arg_113_0)
 end
 
 function normalizeSideBarChildOrder(side)
@@ -2073,9 +2092,9 @@ function normalizeSideBarChildOrder(side)
 end
 
 function actionBarLockGroupForBar(barId)
-	if isLeftBar(barId) then
+	if ptc_root_locals.isLeftBar(barId) then
 		return "left"
-	elseif isRightBar(barId) then
+	elseif ptc_root_locals.isRightBar(barId) then
 		return "right"
 	end
 
@@ -2098,8 +2117,8 @@ function isActionBarLocked(barId)
 	return isActionBarGroupLocked(actionBarLockGroupForBar(barId))
 end
 
-local function slotsForBar(barId)
-	return isSideBar(barId) and SIDE_BAR_TOTAL_SLOTS or maxSlots
+  ptc_root_locals[120] = function(arg_118_0)
+	return ptc_root_locals.isSideBar(arg_118_0) and ptc_root_locals.SIDE_BAR_TOTAL_SLOTS or ptc_root_locals.maxSlots
 end
 
 function barWidgetChild(bar, id)
@@ -2114,25 +2133,1078 @@ function barWidgetChild(bar, id)
 	return bar:getChildById(id)
 end
 
-local SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
-local SLOT_IMG_FILLED = "/images/game/actionbar/slot-actionbar-filled"
-local SLOT_CLIP_EMPTY = "0 0 0 0"
-local SLOT_CLIP_FILLED_NORMAL = "0 0 34 34"
-local SLOT_CLIP_FILLED_PRESSED = "0 34 34 34"
+ ptc_root_locals.SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
+ ptc_root_locals.SLOT_IMG_FILLED = "/images/game/actionbar/slot-actionbar-filled"
+ ptc_root_locals.SLOT_CLIP_EMPTY = "0 0 0 0"
+ ptc_root_locals.SLOT_CLIP_FILLED_NORMAL = "0 0 34 34"
+ ptc_root_locals[125] = "0 34 34 34"
 
-local function refreshActionSlotFilledClip(slot)
-	if not slot or slot:isDestroyed() or not slot._actionBarFilledFrame then
+HelperAction = {
+	MAX_MULTI = 3,
+	BORDER_CLIP_3_ON = "170 0 34 34",
+	BORDER_CLIP_3_OFF = "136 0 34 34",
+	BORDER_CLIP_2_ON = "102 0 34 34",
+	BORDER_CLIP_2_OFF = "68 0 34 34",
+	BORDER_CLIP_ON = "34 0 34 34",
+	BORDER_CLIP_OFF = "0 0 34 34",
+	BORDER_FILE = "/images/game/actionbar/border_active_helper",
+	ICON_FILE = "/images/game/spells/helper-icons",
+	CLIP_SHADER = {
+		[2] = {
+			"helper_clip_2_0",
+			"helper_clip_2_1"
+		},
+		[3] = {
+			"helper_clip_3_0",
+			"helper_clip_3_1",
+			"helper_clip_3_2"
+		}
+	},
+	SHADER_FILES = {
+		{
+			"helper_clip_2_0",
+			"shaders/helper_clip_2_0.frag"
+		},
+		{
+			"helper_clip_2_1",
+			"shaders/helper_clip_2_1.frag"
+		},
+		{
+			"helper_clip_3_0",
+			"shaders/helper_clip_3_0.frag"
+		},
+		{
+			"helper_clip_3_1",
+			"shaders/helper_clip_3_1.frag"
+		},
+		{
+			"helper_clip_3_2",
+			"shaders/helper_clip_3_2.frag"
+		}
+	},
+	OVERLAY_IDS = {
+		"gray",
+		"text",
+		"spellParameter",
+		"multiIcon",
+		"equipmentTypeIcon",
+		"helperBorder",
+		"activeSpell",
+		"count",
+		"tier",
+		"key"
+	},
+	ITEMS = {
+		{
+			iconIndex = 0,
+			label = "Healing",
+			id = "healing"
+		},
+		{
+			iconIndex = 1,
+			label = "Heal Friend",
+			id = "healFriend"
+		},
+		{
+			iconIndex = 2,
+			label = "Target Helper",
+			id = "target"
+		},
+		{
+			iconIndex = 3,
+			label = "Shooter Helper",
+			id = "shooter"
+		},
+		{
+			iconIndex = 4,
+			label = "Cavebot Helper",
+			id = "cavebot"
+		},
+		{
+			iconIndex = 5,
+			label = "Auto Invite",
+			id = "autoInvite"
+		},
+		{
+			iconIndex = 6,
+			label = "Auto Accept",
+			id = "autoAccept"
+		},
+		{
+			iconIndex = 7,
+			label = "Auto Haste",
+			id = "autoHaste"
+		},
+		{
+			iconIndex = 8,
+			label = "Auto Training",
+			id = "autoTraining"
+		},
+		{
+			iconIndex = 9,
+			label = "Anti Idle",
+			id = "antiIdle"
+		},
+		{
+			iconIndex = 10,
+			label = "Mana Training",
+			id = "manaTraining"
+		},
+		{
+			iconIndex = 11,
+			label = "Change Gold",
+			id = "changeGold"
+		},
+		{
+			iconIndex = 12,
+			label = "Eat Food",
+			id = "eatFood"
+		},
+		{
+			iconIndex = 13,
+			label = "Reconnect",
+			id = "reconnect"
+		}
+	}
+}
+
+function HelperAction.isItemVisible(arg_120_0)
+	if not arg_120_0 then
+		return false
+	end
+
+	if arg_120_0.id == "healFriend" then
+		local game_helper = modules.game_helper
+
+		if game_helper and game_helper.isHealFriendAllowed then
+			return game_helper.isHealFriendAllowed() == true
+		end
+
+		if HelperHealFriend and HelperHealFriend.isAllowedVocation then
+			return HelperHealFriend.isAllowedVocation() == true
+		end
+
+		return false
+	end
+
+	return true
+end
+
+function HelperAction.getItem(arg_121_0)
+	if type(arg_121_0) ~= "string" or arg_121_0 == "" then
+		return nil
+	end
+
+	for unusedValue, entry in ipairs(HelperAction.ITEMS) do
+		if entry.id == arg_121_0 then
+			return entry
+		end
+	end
+
+	return nil
+end
+
+function HelperAction.iconClip(arg_122_0)
+	return string.format("%d 0 32 32", (tonumber(arg_122_0) or 0) * 32)
+end
+
+function HelperAction.registerShaders()
+	if not g_shaders or not g_shaders.createFragmentShader then
 		return
 	end
 
-	if slot.passiveId ~= nil then
-		slot:setImageClip(SLOT_CLIP_FILLED_PRESSED)
-	elseif slot._helperAssignPreview then
-		slot:setImageClip(SLOT_CLIP_FILLED_NORMAL)
-	elseif slot:isPressed() or not isActionSlotEquipmentPreset(slot) and isActionSlotEquipEquipped(slot) then
-		slot:setImageClip(SLOT_CLIP_FILLED_PRESSED)
+	for unusedValue, entry in ipairs(HelperAction.SHADER_FILES) do
+		if not g_shaders.getShader(entry[1]) then
+			g_shaders.createFragmentShader(entry[1], entry[2], true)
+		end
+	end
+end
+
+function HelperAction.countFilled(arg_124_0)
+	if type(arg_124_0) ~= "table" then
+		return 0
+	end
+
+	local var_124_0 = 0
+
+	for iter_124_0 = 1, HelperAction.MAX_MULTI do
+		if HelperAction.getItem(arg_124_0[iter_124_0]) then
+			var_124_0 = var_124_0 + 1
+		end
+	end
+
+	return var_124_0
+end
+
+function HelperAction.filledEntries(arg_125_0)
+	local var_125_0 = {}
+
+	if type(arg_125_0) ~= "table" then
+		return var_125_0
+	end
+
+	for iter_125_0 = 1, HelperAction.MAX_MULTI do
+		if HelperAction.getItem(arg_125_0[iter_125_0]) then
+			var_125_0[#var_125_0 + 1] = {
+				index = iter_125_0,
+				id = arg_125_0[iter_125_0]
+			}
+		end
+	end
+
+	return var_125_0
+end
+
+function HelperAction.copyList(arg_126_0)
+	if type(arg_126_0) ~= "table" then
+		return nil
+	end
+
+	local out = {}
+
+	for invSlot = 1, HelperAction.MAX_MULTI do
+		out[invSlot] = arg_126_0[invSlot] or false
+	end
+
+	if HelperAction.countFilled(out) == 0 then
+		return nil
+	end
+
+	return out
+end
+
+function HelperAction.normalizeList(arg_127_0)
+	if type(arg_127_0) ~= "table" then
+		return nil
+	end
+
+	local var_127_0 = {}
+	local var_127_1 = {}
+
+	for iter_127_0 = 1, HelperAction.MAX_MULTI do
+		local var_127_2 = arg_127_0[iter_127_0]
+
+		if type(var_127_2) == "string" and var_127_2 ~= "" and not var_127_0[var_127_2] and HelperAction.getItem(var_127_2) then
+			var_127_0[var_127_2] = true
+			var_127_1[iter_127_0] = var_127_2
+		else
+			var_127_1[iter_127_0] = false
+		end
+	end
+
+	if HelperAction.countFilled(var_127_1) == 0 then
+		return nil
+	end
+
+	return var_127_1
+end
+
+function isMultiHelperSlot(arg_128_0)
+	return arg_128_0 and HelperAction.countFilled(arg_128_0.multiHelper) >= 1
+end
+
+function isHelperActionSlot(arg_129_0)
+	if isMultiHelperSlot(arg_129_0) then
+		return false
+	end
+
+	return arg_129_0 and type(arg_129_0.helperId) == "string" and arg_129_0.helperId ~= "" and HelperAction.getItem(arg_129_0.helperId) ~= nil
+end
+
+function HelperAction.clearIcons(arg_130_0)
+	if not arg_130_0 or arg_130_0:isDestroyed() then
+		return
+	end
+
+	for iter_130_0 = 0, HelperAction.MAX_MULTI - 1 do
+		local multiHelperIcon = arg_130_0:getChildById("multiHelperIcon" .. iter_130_0)
+
+		if multiHelperIcon then
+			multiHelperIcon:destroy()
+		end
+	end
+end
+
+function HelperAction.raiseHotkey(arg_131_0)
+	if not arg_131_0 or arg_131_0:isDestroyed() then
+		return
+	end
+
+	local key = arg_131_0:getChildById("key")
+
+	if key then
+		key:raise()
+	end
+end
+
+function HelperAction.raiseOverlays(arg_132_0)
+	if not arg_132_0 or arg_132_0:isDestroyed() then
+		return
+	end
+
+	for unusedValue, entry in ipairs(HelperAction.OVERLAY_IDS) do
+		local childById = arg_132_0:getChildById(entry)
+
+		if childById then
+			childById:raise()
+		end
+	end
+
+	HelperAction.raiseHotkey(arg_132_0)
+end
+
+function HelperAction.allEnabled(arg_133_0)
+	local var_133_0 = HelperAction.filledEntries(arg_133_0)
+
+	if #var_133_0 == 0 then
+		return false
+	end
+
+	for iter_133_0 = 1, #var_133_0 do
+		if not HelperAction.isEnabled(var_133_0[iter_133_0].id) then
+			return false
+		end
+	end
+
+	return true
+end
+
+function HelperAction.applyIconWidget(arg_134_0, arg_134_1, arg_134_2)
+	local item = HelperAction.getItem(arg_134_1)
+
+	if not arg_134_0 or not item then
+		return
+	end
+
+	arg_134_0:setImageSource(HelperAction.ICON_FILE)
+	arg_134_0:setImageClip(HelperAction.iconClip(item.iconIndex))
+
+	if arg_134_0.setShader then
+		arg_134_0:setShader(arg_134_2 or "")
+	end
+
+	arg_134_0:show()
+end
+
+function HelperAction.getBarId(arg_135_0)
+	if arg_135_0 and arg_135_0._actionBarId then
+		return arg_135_0._actionBarId
+	end
+
+	if arg_135_0 and getSlotBarId then
+		return getSlotBarId(arg_135_0:getId()) or BAR_BOTTOM_1
+	end
+
+	return BAR_BOTTOM_1
+end
+
+function HelperAction.getPanelLayout(arg_136_0)
+	if getMultiActionLayout then
+		return getMultiActionLayout(arg_136_0) or "slot-multi-action-bottom"
+	end
+
+	if arg_136_0 and arg_136_0 >= BAR_BOTTOM_1 and arg_136_0 <= BAR_BOTTOM_3 then
+		return "slot-multi-action-bottom"
+	end
+
+	if arg_136_0 and arg_136_0 >= BAR_LEFT_1 and arg_136_0 <= BAR_LEFT_3 then
+		return "LeftMultiAction"
+	end
+
+	if arg_136_0 and arg_136_0 >= BAR_RIGHT_1 and arg_136_0 <= BAR_RIGHT_3 then
+		return "RightMultiAction"
+	end
+
+	return "slot-multi-action-bottom"
+end
+
+function HelperAction.getPanelPosition(arg_137_0)
+	if getMultiActionPosition then
+		return getMultiActionPosition(arg_137_0)
+	end
+
+	local barId = HelperAction.getBarId(arg_137_0)
+
+	if barId >= BAR_BOTTOM_1 and barId <= BAR_BOTTOM_3 then
+		return topoint(string.format("%s %s", arg_137_0:getX() - 28, arg_137_0:getY() - 116))
+	end
+
+	if barId >= BAR_LEFT_1 and barId <= BAR_LEFT_3 then
+		return topoint(string.format("%s %s", arg_137_0:getX() + 34, arg_137_0:getY() - 28))
+	end
+
+	return topoint(string.format("%s %s", arg_137_0:getX() - 116, arg_137_0:getY() - 28))
+end
+
+function HelperAction.stopPanelTracking()
+	if HelperAction.panelEvent then
+		removeEvent(HelperAction.panelEvent)
+
+		HelperAction.panelEvent = nil
+	end
+end
+
+function HelperAction.closePanel()
+	HelperAction.stopPanelTracking()
+
+	local panel = HelperAction.panel
+
+	if not panel then
+		return
+	end
+
+	local parentSlot = panel.parentSlot
+
+	if parentSlot and not parentSlot:isDestroyed() then
+		parentSlot._multiHelperPanelOpen = nil
+		parentSlot.onVisibilityChange = nil
+	end
+
+	if not panel:isDestroyed() then
+		panel:destroy()
+	end
+
+	HelperAction.panel = nil
+end
+
+function HelperAction.paintSubSlot(arg_140_0, arg_140_1)
+	if not arg_140_0 or arg_140_0:isDestroyed() then
+		return
+	end
+
+	arg_140_0.helperId = nil
+	arg_140_0.multiHelper = nil
+	arg_140_0.itemId = nil
+
+	if arg_140_0.clearItem then
+		arg_140_0:clearItem()
+	end
+
+	local spellIcon = arg_140_0:getChildById("spellIcon")
+	local helperBorder = arg_140_0:getChildById("helperBorder")
+	local text = arg_140_0:getChildById("text")
+
+	if text then
+		text:setText("")
+	end
+
+	local item = HelperAction.getItem(arg_140_1)
+
+	if not item then
+		if spellIcon then
+			spellIcon:hide()
+			spellIcon:setImageSource("")
+		end
+
+		if helperBorder then
+			helperBorder:hide()
+		end
+
+		arg_140_0:setTooltip(tr("Action: None"))
+		arg_140_0:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
+		arg_140_0:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
+
+		return
+	end
+
+	if spellIcon then
+		HelperAction.applyIconWidget(spellIcon, arg_140_1, "")
+	end
+
+	arg_140_0:setTooltip(tr(item.label))
+	arg_140_0:setImageSource(ptc_root_locals.SLOT_IMG_FILLED)
+
+	if ptc_root_locals.SLOT_CLIP_FILLED_NORMAL then
+		arg_140_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
+	end
+
+	if helperBorder then
+		helperBorder:setImageSource(HelperAction.BORDER_FILE)
+
+		if HelperAction.isEnabled(arg_140_1) then
+			helperBorder:setImageClip(HelperAction.BORDER_CLIP_ON)
+		else
+			helperBorder:setImageClip(HelperAction.BORDER_CLIP_OFF)
+		end
+
+		helperBorder:show()
+		helperBorder:raise()
+	end
+end
+
+function HelperAction.refreshPanel()
+	local panel = HelperAction.panel
+
+	if not panel or panel:isDestroyed() or not panel.parentSlot then
+		return
+	end
+
+	local parentSlot = panel.parentSlot
+
+	for iter_141_0 = 1, HelperAction.MAX_MULTI do
+		local actionButton = panel:recursiveGetChildById("actionButton" .. iter_141_0)
+
+		if actionButton then
+			HelperAction.paintSubSlot(actionButton, parentSlot.multiHelper and parentSlot.multiHelper[iter_141_0] or nil)
+		end
+	end
+end
+
+function HelperAction.openSubSlotMenu(arg_142_0, arg_142_1, arg_142_2)
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
+
+	gamePopupMenuWidget:setGameMenu(true)
+
+	local var_142_1 = arg_142_0.multiHelper and arg_142_0.multiHelper[arg_142_1] or nil
+	local item = HelperAction.getItem(var_142_1) ~= nil
+
+	gamePopupMenuWidget:addOption(item and tr("Edit Helper") or tr("Assign Helper"), function()
+		slotToEdit = arg_142_0:getId()
+
+		assignHelper(arg_142_0:getId(), arg_142_1)
+	end)
+
+	if item then
+		gamePopupMenuWidget:addSeparator()
+		gamePopupMenuWidget:addOption(tr("Clear Action"), function()
+			HelperAction.clearIndex(arg_142_0, arg_142_1)
+		end)
+	end
+
+	gamePopupMenuWidget:display(arg_142_2)
+end
+
+function HelperAction.prepareSlot(arg_145_0)
+	if not arg_145_0 or arg_145_0:isDestroyed() then
+		return
+	end
+
+	if HelperAction.countFilled(arg_145_0.multiHelper) > 0 then
+		arg_145_0.multiHelper = HelperAction.normalizeList(arg_145_0.multiHelper)
+
+		return
+	end
+
+	if arg_145_0.helperId and HelperAction.getItem(arg_145_0.helperId) then
+		arg_145_0.multiHelper = HelperAction.normalizeList({
+			arg_145_0.helperId
+		})
+		arg_145_0.helperId = nil
+
+		return
+	end
+
+	arg_145_0.multiHelper = nil
+end
+
+function HelperAction.clearIndex(arg_146_0, arg_146_1)
+	if not arg_146_0 or type(arg_146_1) ~= "number" then
+		return
+	end
+
+	local var_146_0 = HelperAction.copyList(arg_146_0.multiHelper) or {}
+
+	var_146_0[arg_146_1] = nil
+	arg_146_0.multiHelper = HelperAction.normalizeList(var_146_0)
+
+	if isMultiHelperSlot(arg_146_0) then
+		loadMultiHelper(arg_146_0)
 	else
-		slot:setImageClip(SLOT_CLIP_FILLED_NORMAL)
+		HelperAction.clearIcons(arg_146_0)
+		hideHelperSlotBorder(arg_146_0)
+
+		arg_146_0.itemId = nil
+
+		if arg_146_0.clearItem then
+			arg_146_0:clearItem()
+		end
+
+		applyActionSlotFrame(arg_146_0)
+		refreshActionSlotTooltip(arg_146_0)
+	end
+
+	HelperAction.refreshPanel()
+	saveActionBar()
+end
+
+function HelperAction.handleDropOnSubSlot(arg_147_0, arg_147_1)
+	if not arg_147_0 or arg_147_0:isDestroyed() then
+		return
+	end
+
+	if isActionBarLocked and isActionBarLocked(arg_147_0._actionBarId) then
+		return
+	end
+
+	local pressedWidget = g_ui.getPressedWidget()
+
+	if not pressedWidget or pressedWidget:isDestroyed() then
+		return
+	end
+
+	if pressedWidget.multiHelperIndex and pressedWidget.parentSlot then
+		local multiHelperIndex = pressedWidget.multiHelperIndex
+		local parentSlot = pressedWidget.parentSlot
+
+		if not parentSlot or parentSlot:isDestroyed() then
+			return
+		end
+
+		if parentSlot == arg_147_0 and multiHelperIndex == arg_147_1 then
+			return
+		end
+
+		local var_147_3 = HelperAction.copyList(parentSlot.multiHelper) or {}
+		local var_147_4 = parentSlot == arg_147_0 and var_147_3 or HelperAction.copyList(arg_147_0.multiHelper) or {}
+
+		var_147_4[arg_147_1], var_147_3[multiHelperIndex] = var_147_3[multiHelperIndex], var_147_4[arg_147_1]
+		parentSlot.multiHelper = HelperAction.normalizeList(var_147_3)
+
+		if parentSlot ~= arg_147_0 then
+			arg_147_0.multiHelper = HelperAction.normalizeList(var_147_4)
+		end
+
+		if isMultiHelperSlot(parentSlot) then
+			loadMultiHelper(parentSlot)
+		else
+			HelperAction.clearIcons(parentSlot)
+			hideHelperSlotBorder(parentSlot)
+
+			parentSlot.itemId = nil
+
+			if parentSlot.clearItem then
+				parentSlot:clearItem()
+			end
+
+			applyActionSlotFrame(parentSlot)
+			refreshActionSlotTooltip(parentSlot)
+		end
+
+		if parentSlot ~= arg_147_0 then
+			if isMultiHelperSlot(arg_147_0) then
+				loadMultiHelper(arg_147_0)
+			else
+				HelperAction.clearIcons(arg_147_0)
+				hideHelperSlotBorder(arg_147_0)
+
+				arg_147_0.itemId = nil
+
+				if arg_147_0.clearItem then
+					arg_147_0:clearItem()
+				end
+
+				applyActionSlotFrame(arg_147_0)
+				refreshActionSlotTooltip(arg_147_0)
+			end
+		end
+
+		HelperAction.refreshPanel()
+		saveActionBar()
+
+		return
+	end
+
+	if pressedWidget:getClassName() == "UIActionSlot" and pressedWidget ~= arg_147_0 then
+		local helperId = pressedWidget.helperId
+
+		if not helperId or not HelperAction.getItem(helperId) then
+			return
+		end
+
+		if pressedWidget.multiHelper then
+			return
+		end
+
+		local var_147_6 = HelperAction.copyList(arg_147_0.multiHelper) or {}
+
+		for iter_147_0 = 1, HelperAction.MAX_MULTI do
+			if var_147_6[iter_147_0] == helperId and iter_147_0 ~= arg_147_1 then
+				return
+			end
+		end
+
+		local var_147_7 = var_147_6[arg_147_1]
+
+		if var_147_7 == helperId then
+			return
+		end
+
+		var_147_6[arg_147_1] = helperId
+		arg_147_0.multiHelper = HelperAction.normalizeList(var_147_6)
+
+		loadMultiHelper(arg_147_0)
+
+		if var_147_7 and HelperAction.getItem(var_147_7) then
+			clearSlotActionContent(pressedWidget)
+
+			pressedWidget.helperId = var_147_7
+			pressedWidget.itemId = 469
+
+			if pressedWidget.setItemId then
+				pressedWidget:setItemId(469)
+			end
+
+			loadHelper(pressedWidget)
+		else
+			clearSlotActionContent(pressedWidget)
+			applyActionSlotFrame(pressedWidget)
+			refreshActionSlotTooltip(pressedWidget)
+		end
+
+		HelperAction.refreshPanel()
+		saveActionBar()
+
+		return
+	end
+end
+
+function HelperAction.handleDropFromSubSlotOntoSlot(arg_148_0, arg_148_1)
+	if not arg_148_0 or arg_148_0:isDestroyed() then
+		return
+	end
+
+	local parentSlot = arg_148_0.parentSlot
+	local multiHelperIndex = arg_148_0.multiHelperIndex
+
+	if not parentSlot or parentSlot:isDestroyed() or not multiHelperIndex then
+		return
+	end
+
+	if isActionBarLocked and isActionBarLocked(parentSlot._actionBarId) then
+		return
+	end
+
+	local var_148_2 = findSlotById and findSlotById(arg_148_1) or nil
+
+	if not var_148_2 or var_148_2:isDestroyed() then
+		return
+	end
+
+	if isActionBarLocked and isActionBarLocked(var_148_2._actionBarId) then
+		return
+	end
+
+	if var_148_2 == parentSlot then
+		return
+	end
+
+	local var_148_3 = parentSlot.multiHelper and parentSlot.multiHelper[multiHelperIndex] or nil
+
+	if not var_148_3 or not HelperAction.getItem(var_148_3) then
+		return
+	end
+
+	local var_148_4 = HelperAction.copyList(parentSlot.multiHelper) or {}
+
+	var_148_4[multiHelperIndex] = nil
+	parentSlot.multiHelper = HelperAction.normalizeList(var_148_4)
+
+	if isMultiHelperSlot(parentSlot) then
+		loadMultiHelper(parentSlot)
+	else
+		HelperAction.clearIcons(parentSlot)
+		hideHelperSlotBorder(parentSlot)
+
+		parentSlot.itemId = nil
+
+		if parentSlot.clearItem then
+			parentSlot:clearItem()
+		end
+
+		applyActionSlotFrame(parentSlot)
+		refreshActionSlotTooltip(parentSlot)
+	end
+
+	var_148_2.words = nil
+	var_148_2.text = nil
+	var_148_2.passiveId = nil
+	var_148_2.multiHelper = nil
+	var_148_2.useType = nil
+	var_148_2.parameter = nil
+	var_148_2.equipments = nil
+	var_148_2.equipmentIconIndex = nil
+
+	if clearSlotMultiActions then
+		clearSlotMultiActions(var_148_2)
+	end
+
+	var_148_2.helperId = var_148_3
+	var_148_2.itemId = 469
+
+	if var_148_2.setItemId then
+		var_148_2:setItemId(469)
+	end
+
+	loadHelper(var_148_2)
+	applyActionSlotFrame(var_148_2)
+	refreshActionSlotTooltip(var_148_2)
+	HelperAction.refreshPanel()
+	saveActionBar()
+end
+
+function HelperAction.applyToIndex(arg_149_0, arg_149_1, arg_149_2)
+	if not arg_149_0 or type(arg_149_1) ~= "number" or not HelperAction.getItem(arg_149_2) then
+		return
+	end
+
+	arg_149_0.words = nil
+	arg_149_0.text = nil
+	arg_149_0.passiveId = nil
+	arg_149_0.helperId = nil
+	arg_149_0.useType = nil
+	arg_149_0.parameter = nil
+	arg_149_0.equipments = nil
+	arg_149_0.equipmentIconIndex = nil
+
+	if clearSlotMultiActions then
+		clearSlotMultiActions(arg_149_0)
+	end
+
+	local var_149_0 = HelperAction.copyList(arg_149_0.multiHelper) or {}
+
+	for iter_149_0 = 1, HelperAction.MAX_MULTI do
+		if iter_149_0 ~= arg_149_1 and var_149_0[iter_149_0] == arg_149_2 then
+			var_149_0[iter_149_0] = nil
+		end
+	end
+
+	var_149_0[arg_149_1] = arg_149_2
+	arg_149_0.multiHelper = HelperAction.normalizeList(var_149_0)
+	arg_149_0.itemId = 469
+
+	if arg_149_0.setItemId then
+		arg_149_0:setItemId(469)
+	end
+
+	loadMultiHelper(arg_149_0)
+	HelperAction.refreshPanel()
+	saveActionBar()
+end
+
+function HelperAction.openPanel(arg_150_0)
+	if not arg_150_0 or arg_150_0:isDestroyed() then
+		return
+	end
+
+	if closeCurrentMultiActionPanel then
+		closeCurrentMultiActionPanel()
+	end
+
+	local barId = HelperAction.getBarId(arg_150_0)
+
+	arg_150_0._actionBarId = barId
+
+	local panelLayout = HelperAction.getPanelLayout(barId)
+
+	if HelperAction.panel and HelperAction.panel.parentSlot == arg_150_0 then
+		HelperAction.closePanel()
+
+		return
+	end
+
+	HelperAction.closePanel()
+	HelperAction.prepareSlot(arg_150_0)
+
+	local rootPanel = modules.game_interface.getRootPanel()
+	local var_150_3 = g_ui.createWidget(panelLayout, rootPanel)
+
+	if not var_150_3 then
+		return
+	end
+
+	HelperAction.panel = var_150_3
+	var_150_3.parentSlot = arg_150_0
+
+	var_150_3:breakAnchors()
+	var_150_3:setPosition(HelperAction.getPanelPosition(arg_150_0))
+
+	arg_150_0._multiHelperPanelOpen = true
+
+	function arg_150_0.onVisibilityChange()
+		if not arg_150_0:isVisible() then
+			HelperAction.closePanel()
+		end
+	end
+
+	for iter_150_0 = 1, HelperAction.MAX_MULTI do
+		local actionButton = var_150_3:recursiveGetChildById("actionButton" .. iter_150_0)
+
+		if actionButton then
+			actionButton.multiHelperIndex = iter_150_0
+			actionButton.parentSlot = arg_150_0
+
+			g_mouse.bindPress(actionButton, function()
+				return
+			end, MouseLeftButton)
+			g_mouse.bindPress(actionButton, function()
+				HelperAction.openSubSlotMenu(arg_150_0, iter_150_0, g_window.getMousePosition())
+			end, MouseRightButton)
+			g_mouse.bindOnDrop(actionButton, function()
+				HelperAction.handleDropOnSubSlot(arg_150_0, iter_150_0)
+			end)
+		end
+	end
+
+	HelperAction.refreshPanel()
+
+	local function var_150_5()
+		HelperAction.panelEvent = nil
+
+		if not HelperAction.panel or HelperAction.panel:isDestroyed() then
+			return
+		end
+
+		if not arg_150_0 or arg_150_0:isDestroyed() or not arg_150_0:isVisible() then
+			HelperAction.closePanel()
+
+			return
+		end
+
+		HelperAction.panel:breakAnchors()
+		HelperAction.panel:setPosition(HelperAction.getPanelPosition(arg_150_0))
+		HelperAction.panel:raise()
+		tagHitchEventSource("game_actionbar.HelperAction.panelTick")
+
+		HelperAction.panelEvent = scheduleEvent(var_150_5, 50)
+	end
+
+	var_150_5()
+end
+
+function closeCurrentMultiHelperPanel()
+	HelperAction.closePanel()
+end
+
+function HelperAction.isEnabled(arg_157_0)
+	local game_helper = modules.game_helper
+
+	if game_helper and game_helper.isHelperStatsEntryEnabled then
+		return game_helper.isHelperStatsEntryEnabled(arg_157_0) == true
+	end
+
+	return false
+end
+
+function hideHelperSlotBorder(arg_158_0)
+	if not arg_158_0 or arg_158_0:isDestroyed() then
+		return
+	end
+
+	HelperAction.clearIcons(arg_158_0)
+
+	local helperBorder = arg_158_0:getChildById("helperBorder")
+
+	if helperBorder then
+		helperBorder:hide()
+	end
+end
+
+function refreshMultiHelperSlotBorder(arg_159_0)
+	if not arg_159_0 or arg_159_0:isDestroyed() then
+		return
+	end
+
+	local helperBorder = arg_159_0:getChildById("helperBorder")
+
+	if not helperBorder then
+		return
+	end
+
+	if not isMultiHelperSlot(arg_159_0) then
+		helperBorder:hide()
+
+		return
+	end
+
+	local var_159_1 = HelperAction.countFilled(arg_159_0.multiHelper)
+	local var_159_2 = HelperAction.allEnabled(arg_159_0.multiHelper)
+
+	helperBorder:setImageSource(HelperAction.BORDER_FILE)
+
+	if var_159_1 >= 3 then
+		helperBorder:setImageClip(var_159_2 and HelperAction.BORDER_CLIP_3_ON or HelperAction.BORDER_CLIP_3_OFF)
+	elseif var_159_1 == 2 then
+		helperBorder:setImageClip(var_159_2 and HelperAction.BORDER_CLIP_2_ON or HelperAction.BORDER_CLIP_2_OFF)
+	elseif var_159_2 then
+		helperBorder:setImageClip(HelperAction.BORDER_CLIP_ON)
+	else
+		helperBorder:setImageClip(HelperAction.BORDER_CLIP_OFF)
+	end
+
+	helperBorder:show()
+	helperBorder:raise()
+	HelperAction.raiseHotkey(arg_159_0)
+end
+
+function refreshHelperSlotBorder(arg_160_0)
+	if not arg_160_0 or arg_160_0:isDestroyed() then
+		return
+	end
+
+	if isMultiHelperSlot(arg_160_0) then
+		refreshMultiHelperSlotBorder(arg_160_0)
+
+		return
+	end
+
+	local helperBorder = arg_160_0:getChildById("helperBorder")
+
+	if not helperBorder then
+		return
+	end
+
+	if not isHelperActionSlot(arg_160_0) then
+		helperBorder:hide()
+
+		return
+	end
+
+	helperBorder:setImageSource(HelperAction.BORDER_FILE)
+
+	if HelperAction.isEnabled(arg_160_0.helperId) then
+		helperBorder:setImageClip(HelperAction.BORDER_CLIP_ON)
+	else
+		helperBorder:setImageClip(HelperAction.BORDER_CLIP_OFF)
+	end
+
+	helperBorder:show()
+	helperBorder:raise()
+	HelperAction.raiseHotkey(arg_160_0)
+end
+
+function refreshHelperActionBarSlots()
+	for iter_161_0 = 1, NUM_BARS do
+		local hotkeys = actionBarPanels[iter_161_0]
+
+		if hotkeys then
+			for slotKey, setting in pairs(hotkeys:getChildren()) do
+				if isMultiHelperSlot(setting) then
+					refreshMultiHelperSlotBorder(setting)
+					refreshActionSlotTooltip(setting)
+				elseif isHelperActionSlot(setting) then
+					refreshHelperSlotBorder(setting)
+					refreshActionSlotTooltip(setting)
+				end
+			end
+		end
+	end
+
+	HelperAction.refreshPanel()
+end
+
+  ptc_root_locals[126] = function(arg_162_0)
+	if not arg_162_0 or arg_162_0:isDestroyed() or not arg_162_0._actionBarFilledFrame then
+		return
+	end
+
+	if arg_162_0.passiveId ~= nil then
+		arg_162_0:setImageClip(ptc_root_locals[125])
+	elseif arg_162_0._helperAssignPreview then
+		arg_162_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
+	elseif arg_162_0:isPressed() or not ptc_root_locals.isActionSlotEquipmentPreset(arg_162_0) and ptc_root_locals.isActionSlotEquipEquipped(arg_162_0) then
+		arg_162_0:setImageClip(ptc_root_locals[125])
+	else
+		arg_162_0:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
 	end
 end
 
@@ -2141,26 +3213,28 @@ function applyActionSlotFrame(slot)
 		return
 	end
 
-	local hasText = slot.text and slot.text ~= ""
-	local hasItem = slot:getItem() ~= nil
-	local hasSpell = slot.words ~= nil and slot.words ~= ""
-	local hasPassive = slot.passiveId ~= nil
-	local hasEquipmentPreset = isActionSlotEquipmentPreset(slot)
+	local var_163_0 = type(slot.text) == "string" and slot.text ~= ""
+	local item = slot:getItem() ~= nil
+	local var_163_2 = slot.words ~= nil and slot.words ~= ""
+	local var_163_3 = slot.passiveId ~= nil
+	local var_163_4 = isHelperActionSlot(slot) or isMultiHelperSlot(slot)
+	local var_163_5 = ptc_root_locals.isActionSlotEquipmentPreset(slot)
 
-	if hasText or hasItem or hasSpell or hasPassive or hasEquipmentPreset then
-		slot:setImageSource(SLOT_IMG_FILLED)
+	if var_163_0 or item or var_163_2 or var_163_3 or var_163_4 or var_163_5 then
+		slot:setImageSource(ptc_root_locals.SLOT_IMG_FILLED)
 
 		slot._actionBarFilledFrame = true
 
-		refreshActionSlotFilledClip(slot)
+		ptc_root_locals[126](slot)
 	else
-		slot:setImageSource(SLOT_IMG_EMPTY)
-		slot:setImageClip(SLOT_CLIP_EMPTY)
+		slot:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
+		slot:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
 
 		slot._actionBarFilledFrame = false
 	end
 
-	syncSlotHotkeyMirror(slot)
+	refreshHelperSlotBorder(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(slot)
 end
 
 function refreshActionSlotFrameClip(slot)
@@ -2168,10 +3242,10 @@ function refreshActionSlotFrameClip(slot)
 		return
 	end
 
-	refreshActionSlotFilledClip(slot)
+	ptc_root_locals[126](slot)
 end
 
-local function anchorGroupCooldownBelowBottomStack()
+  ptc_root_locals.anchorGroupCooldownBelowBottomStack = function()
 	local cd = modules.game_cooldown and modules.game_cooldown.cooldownWindow
 
 	if not cd or cd:isDestroyed() then
@@ -2218,7 +3292,7 @@ local function anchorGroupCooldownBelowBottomStack()
 end
 
 function refreshBottomCooldownDock()
-	anchorGroupCooldownBelowBottomStack()
+	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
 end
 
 function slotIdFor(barId, i)
@@ -2229,7 +3303,7 @@ function slotIdFor(barId, i)
 	return "bar" .. barId .. "_slot" .. i
 end
 
-local function clearExternalSpellAssignContext()
+  ptc_root_locals.clearExternalSpellAssignContext = function()
 	externalAssignSlot = nil
 	externalAssignSlotId = nil
 	spellAssignListFilter = nil
@@ -2286,7 +3360,7 @@ function findSlotById(slotId)
 	return nil, nil
 end
 
-local function slotBarAndIndexFromSlotId(slotId)
+  ptc_root_locals.slotBarAndIndexFromSlotId = function(slotId)
 	if not slotId then
 		return nil, nil
 	end
@@ -2307,12 +3381,10 @@ local function slotBarAndIndexFromSlotId(slotId)
 end
 
 function getSlotBarId(slotId)
-	local barId = slotBarAndIndexFromSlotId(slotId)
-
-	return barId
+	return (ptc_root_locals.slotBarAndIndexFromSlotId(slotId))
 end
 
-local function actionBarRegionTitle(barId)
+  ptc_root_locals.actionBarRegionTitle = function(barId)
 	if not barId then
 		return tr("Action Bar")
 	end
@@ -2332,7 +3404,7 @@ local function actionBarRegionTitle(barId)
 	return tr("Action Bar")
 end
 
-local function actionBarSlotCoordinateBarNumber(barId)
+  ptc_root_locals[131] = function(barId)
 	if barId >= BAR_BOTTOM_1 and barId <= BAR_BOTTOM_3 then
 		return barId
 	end
@@ -2364,74 +3436,134 @@ local function actionBarSlotCoordinateBarNumber(barId)
 	return barId
 end
 
-local function actionBarDisplayNumber(barId)
-	return actionBarSlotCoordinateBarNumber(barId)
+  ptc_root_locals.actionBarDisplayNumber = function(arg_175_0)
+	return ptc_root_locals[131](arg_175_0)
 end
 
-local function setObjectAssignWindowTitle()
+  ptc_root_locals.setObjectAssignWindowTitle = function()
 	if not objectAssignWindow then
 		return
 	end
 
-	local slot = slotToEdit and findSlotById(slotToEdit) or nil
-	local isEdit = slot and slot.itemId and slot.itemId > 0
-	local barId, slotIdx = slotBarAndIndexFromSlotId(slotToEdit)
+	local var_176_0 = slotToEdit and findSlotById(slotToEdit) or nil
+	local var_176_1 = var_176_0 and var_176_0.itemId and var_176_0.itemId > 0
+	local var_176_2, var_176_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
 
-	if barId and slotIdx then
-		local barNum = actionBarDisplayNumber(barId)
+	if var_176_2 and var_176_3 then
+		local var_176_4 = ptc_root_locals.actionBarDisplayNumber(var_176_2)
 
-		if isEdit then
-			objectAssignWindow:setText(tr("Edit Object to Action Button %d.%02d", barNum, slotIdx))
+		if var_176_1 then
+			objectAssignWindow:setText(tr("Edit Object to Action Button %d.%02d", var_176_4, var_176_3))
 		else
-			objectAssignWindow:setText(tr("Assign Object to Action Button %d.%02d", barNum, slotIdx))
+			objectAssignWindow:setText(tr("Assign Object to Action Button %d.%02d", var_176_4, var_176_3))
 		end
 	else
-		objectAssignWindow:setText(tr(isEdit and "Edit Object" or "Assign Object"))
+		objectAssignWindow:setText(tr(var_176_1 and "Edit Object" or "Assign Object"))
 	end
 end
 
-local function setTextAssignWindowTitle()
+  ptc_root_locals.setTextAssignWindowTitle = function()
 	if not textAssignWindow then
 		return
 	end
 
-	local slot = slotToEdit and findSlotById(slotToEdit) or nil
-	local isEdit = slot and slot.text and slot.text ~= ""
-	local barId, slotIdx = slotBarAndIndexFromSlotId(slotToEdit)
+	local var_177_0 = slotToEdit and findSlotById(slotToEdit) or nil
+	local var_177_1 = var_177_0 and var_177_0.text and var_177_0.text ~= ""
+	local var_177_2, var_177_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
 
-	if barId and slotIdx then
-		local barNum = actionBarDisplayNumber(barId)
+	if var_177_2 and var_177_3 then
+		local var_177_4 = ptc_root_locals.actionBarDisplayNumber(var_177_2)
 
-		if isEdit then
-			textAssignWindow:setText(tr("Edit Text to Action Button %d.%02d", barNum, slotIdx))
+		if var_177_1 then
+			textAssignWindow:setText(tr("Edit Text to Action Button %d.%02d", var_177_4, var_177_3))
 		else
-			textAssignWindow:setText(tr("Assign Text to Action Button %d.%02d", barNum, slotIdx))
+			textAssignWindow:setText(tr("Assign Text to Action Button %d.%02d", var_177_4, var_177_3))
 		end
 	else
-		textAssignWindow:setText(tr(isEdit and "Edit Text" or "Assign Text"))
+		textAssignWindow:setText(tr(var_177_1 and "Edit Text" or "Assign Text"))
 	end
 end
 
-local function setSpellAssignWindowTitle()
+  ptc_root_locals.setSpellAssignWindowTitle = function()
 	if not spellAssignWindow then
 		return
 	end
 
-	local slot = slotToEdit and findSlotById(slotToEdit) or nil
-	local isEdit = slot and slot.words and slot.words ~= ""
-	local barId, slotIdx = slotBarAndIndexFromSlotId(slotToEdit)
+	local var_178_0 = slotToEdit and findSlotById(slotToEdit) or nil
+	local var_178_1 = var_178_0 and var_178_0.words and var_178_0.words ~= ""
+	local var_178_2, var_178_3 = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
 
-	if barId and slotIdx then
-		local barNum = actionBarDisplayNumber(barId)
+	if var_178_2 and var_178_3 then
+		local var_178_4 = ptc_root_locals.actionBarDisplayNumber(var_178_2)
 
-		if isEdit then
-			spellAssignWindow:setText(tr("Edit Spell to Action Button %d.%02d", barNum, slotIdx))
+		if var_178_1 then
+			spellAssignWindow:setText(tr("Edit Spell to Action Button %d.%02d", var_178_4, var_178_3))
 		else
-			spellAssignWindow:setText(tr("Assign Spell to Action Button %d.%02d", barNum, slotIdx))
+			spellAssignWindow:setText(tr("Assign Spell to Action Button %d.%02d", var_178_4, var_178_3))
 		end
 	else
-		spellAssignWindow:setText(tr(isEdit and "Edit Spell" or "Assign Spell"))
+		spellAssignWindow:setText(tr(var_178_1 and "Edit Spell" or "Assign Spell"))
 	end
+end
+
+function isCorruptHotkeyTypeName(arg_179_0)
+	if type(arg_179_0) ~= "string" then
+		return false
+	end
+
+	if arg_179_0 == "string" then
+		return true
+	end
+
+	if arg_179_0 == "number" then
+		return true
+	end
+
+	if arg_179_0 == "nil" then
+		return true
+	end
+
+	if arg_179_0 == "boolean" then
+		return true
+	end
+
+	if arg_179_0 == "table" then
+		return true
+	end
+
+	if arg_179_0 == "function" then
+		return true
+	end
+
+	if arg_179_0 == "userdata" then
+		return true
+	end
+
+	if arg_179_0 == "thread" then
+		return true
+	end
+
+	return false
+end
+
+function hotkeyFieldToString(textValue)
+	if textValue == nil then
+		return ""
+	end
+
+	if type(textValue) ~= "string" then
+		textValue = tostring(textValue)
+	end
+
+	if textValue == "" then
+		return ""
+	end
+
+	if isCorruptHotkeyTypeName(textValue) then
+		return ""
+	end
+
+	return textValue
 end
 
 function getSlotHotkeyForChatMode(slot, chatOn)
@@ -2443,31 +3575,27 @@ function getSlotHotkeyForChatMode(slot, chatOn)
 		chatOn = modules.game_console and modules.game_console.isChatEnabled and modules.game_console.isChatEnabled()
 	end
 
-	local raw
+	local var_181_0
 
 	if chatOn then
-		raw = slot.hotkeyChatOn
+		var_181_0 = slot.hotkeyChatOn
 	else
-		raw = slot.hotkeyChatOff
+		var_181_0 = slot.hotkeyChatOff
 	end
 
-	if raw == nil or raw == "" then
-		return ""
-	end
-
-	return type(raw) == "string" and raw or tostring(raw)
+	return hotkeyFieldToString(var_181_0)
 end
 
-local USE_TYPE_ACTION_LABELS = {
+ ptc_root_locals[136] = {
 	useAtCursor = "Use this object at Cursor Position",
-	useOnTarget = "Use this object on Target",
-	equip = "Equip this object",
 	useOnSelf = "Use this object on Yourself",
+	equip = "Equip this object",
 	use = "Use this object",
-	useWith = "Use this object with Crosshair"
+	useWith = "Use this object with Crosshair",
+	useOnTarget = "Use this object on Target"
 }
 
-local function formatSpellExhaustionTooltip(ms)
+  ptc_root_locals[137] = function(ms)
 	if type(ms) ~= "number" or ms <= 0 then
 		return "0s"
 	end
@@ -2485,7 +3613,7 @@ local function formatSpellExhaustionTooltip(ms)
 	return string.format("%ds", sec)
 end
 
-local function actionSlotHotkeyTooltipText(slot)
+  ptc_root_locals[138] = function(slot)
 	local hk = getSlotHotkeyForChatMode(slot)
 
 	if hk == nil or hk == "" then
@@ -2501,112 +3629,144 @@ local function actionSlotHotkeyTooltipText(slot)
 	return shown
 end
 
-local function actionSlotHasAssignedAction(slot)
-	if not slot then
+  ptc_root_locals[139] = function(arg_184_0)
+	if not arg_184_0 then
 		return false
 	end
 
-	if slot.words and slot.words ~= "" then
+	if arg_184_0.words and arg_184_0.words ~= "" then
 		return true
 	end
 
-	if slot.text and slot.text ~= "" then
+	if arg_184_0.text and arg_184_0.text ~= "" then
 		return true
 	end
 
-	if slot.passiveId then
+	if arg_184_0.passiveId then
 		return true
 	end
 
-	if isActionSlotEquipmentPreset(slot) then
+	if isHelperActionSlot(arg_184_0) or isMultiHelperSlot(arg_184_0) then
 		return true
 	end
 
-	if slot.itemId and slot.itemId > 0 and slot.useType then
+	if ptc_root_locals.isActionSlotEquipmentPreset(arg_184_0) then
 		return true
 	end
 
-	if slotHasMultiActions and slotHasMultiActions(slot) then
+	if arg_184_0.itemId and arg_184_0.itemId > 0 and arg_184_0.useType then
+		return true
+	end
+
+	if slotHasMultiActions and slotHasMultiActions(arg_184_0) then
 		return true
 	end
 
 	return false
 end
 
-local function buildActionSlotTooltip(slot)
-	if not slot then
+  ptc_root_locals[140] = function(arg_185_0)
+	if not arg_185_0 then
 		return ""
 	end
 
-	local barId, slotIdx = slotBarAndIndexFromSlotId(slot:getId())
-	local header = "Action Button"
+	local var_185_0, var_185_1 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_185_0:getId())
+	local formattedText = "Action Button"
 
-	if barId and slotIdx then
-		header = string.format("Action Button %d.%d", actionBarDisplayNumber(barId), slotIdx)
+	if var_185_0 and var_185_1 then
+		formattedText = string.format("Action Button %d.%d", ptc_root_locals.actionBarDisplayNumber(var_185_0), var_185_1)
 	end
 
-	local hotkeyLine = "Hotkeys: " .. actionSlotHotkeyTooltipText(slot)
+	local var_185_3 = "Hotkeys: " .. ptc_root_locals[138](arg_185_0)
 
-	if not actionSlotHasAssignedAction(slot) then
-		return header .. "\n\nAction: None\n" .. hotkeyLine
+	if not ptc_root_locals[139](arg_185_0) then
+		return formattedText .. "\n\nAction: None\n" .. var_185_3
 	end
 
-	if slot.passiveId and PassiveAbilities[slot.passiveId] then
-		return header .. "\n\nPassive Ability: " .. PassiveAbilities[slot.passiveId].name .. "\n" .. hotkeyLine
+	if arg_185_0.passiveId and PassiveAbilities[arg_185_0.passiveId] then
+		return formattedText .. "\n\nPassive Ability: " .. PassiveAbilities[arg_185_0.passiveId].name .. "\n" .. var_185_3
 	end
 
-	if slot.words and slot.words ~= "" then
-		local spell, _, spellName = Spells.getSpellByWords(slot.words)
-		local displayName = spellName or spell and spell.name or slot.words
-		local lines = {
-			"Action: Cast " .. displayName,
-			"Formula: " .. slot.words
+	if isMultiHelperSlot(arg_185_0) then
+		local var_185_4 = {
+			formattedText,
+			"",
+			"Multi-Helper:"
+		}
+		local var_185_5 = HelperAction.filledEntries(arg_185_0.multiHelper)
+
+		for iter_185_0 = 1, #var_185_5 do
+			local var_185_6 = var_185_5[iter_185_0].id
+			local item = HelperAction.getItem(var_185_6)
+			local var_185_8 = HelperAction.isEnabled(var_185_6) and "Enabled" or "Disabled"
+
+			var_185_4[#var_185_4 + 1] = var_185_5[iter_185_0].index .. ". " .. (item and item.label or var_185_6) .. ": " .. var_185_8
+		end
+
+		var_185_4[#var_185_4 + 1] = var_185_3
+
+		return table.concat(var_185_4, "\n")
+	end
+
+	if isHelperActionSlot(arg_185_0) then
+		local item = HelperAction.getItem(arg_185_0.helperId)
+		local var_185_10 = HelperAction.isEnabled(arg_185_0.helperId) and "Enabled" or "Disabled"
+
+		return formattedText .. "\n\nHelper: " .. (item and item.label or arg_185_0.helperId) .. "\nStatus: " .. var_185_10 .. "\n" .. var_185_3
+	end
+
+	if arg_185_0.words and arg_185_0.words ~= "" then
+		local var_185_11, unusedValue, var_185_13 = Spells.getSpellByWords(arg_185_0.words)
+		local var_185_14 = var_185_13 or var_185_11 and var_185_11.name or arg_185_0.words
+		local var_185_15 = {
+			"Action: Cast " .. var_185_14,
+			"Formula: " .. arg_185_0.words
 		}
 
-		if spell and spell.exhaustion then
-			table.insert(lines, "Cooldown: " .. formatSpellExhaustionTooltip(spell.exhaustion))
+		if var_185_11 and var_185_11.exhaustion then
+			table.insert(var_185_15, "Cooldown: " .. ptc_root_locals[137](var_185_11.exhaustion))
 		end
 
-		if spell and spell.mana then
-			table.insert(lines, "Mana: " .. tostring(spell.mana))
+		if var_185_11 and var_185_11.mana then
+			table.insert(var_185_15, "Mana: " .. tostring(var_185_11.mana))
 		end
 
-		table.insert(lines, hotkeyLine)
+		table.insert(var_185_15, var_185_3)
 
-		return header .. "\n\n" .. table.concat(lines, "\n")
+		return formattedText .. "\n\n" .. table.concat(var_185_15, "\n")
 	end
 
-	if slot.text and slot.text ~= "" then
-		return header .. "\n\nAction: Say \"" .. slot.text .. "\"\nAuto sent: " .. (slot.autoSend and "Yes" or "No") .. "\n" .. hotkeyLine
+	if type(arg_185_0.text) == "string" and arg_185_0.text ~= "" then
+		return formattedText .. "\n\nAction: Say \"" .. arg_185_0.text .. "\"\nAuto sent: " .. (arg_185_0.autoSend and "Yes" or "No") .. "\n" .. var_185_3
 	end
 
-	if isActionSlotEquipmentPreset(slot) then
-		local actionText = "Equip equipment set"
+	if ptc_root_locals.isActionSlotEquipmentPreset(arg_185_0) then
+		local equipmentDescription = "Equip equipment set"
 
-		if slot.equipmentDescription and slot.equipmentDescription ~= "" then
-			actionText = slot.equipmentDescription
+		if arg_185_0.equipmentDescription and arg_185_0.equipmentDescription ~= "" then
+			equipmentDescription = arg_185_0.equipmentDescription
 		end
 
-		return header .. "\n\nAction: " .. actionText .. "\n" .. hotkeyLine
+		return formattedText .. "\n\nAction: " .. equipmentDescription .. "\n" .. var_185_3
 	end
 
-	if slotHasMultiActions and slotHasMultiActions(slot) then
-		return header .. "\n\nAction: Multi-Action\n" .. hotkeyLine
+	if slotHasMultiActions and slotHasMultiActions(arg_185_0) then
+		return formattedText .. "\n\nAction: Multi-Action\n" .. var_185_3
 	end
 
-	if slot.itemId and slot.itemId > 0 and slot.useType then
-		local actionLabel = USE_TYPE_ACTION_LABELS[slot.useType] or "Use this object"
-		local amount = 0
-		local player = g_game.getLocalPlayer()
+	if arg_185_0.itemId and arg_185_0.itemId > 0 and arg_185_0.useType then
+		local var_185_17 = ptc_root_locals[136][arg_185_0.useType] or "Use this object"
+		local inventoryCount = 0
+		local localPlayer = g_game.getLocalPlayer()
 
-		if player then
-			amount = player:getInventoryCount(slot.itemId, actionSlotItemTier(slot))
+		if localPlayer then
+			inventoryCount = localPlayer:getInventoryCount(arg_185_0.itemId, ptc_root_locals.actionSlotItemTier(arg_185_0))
 		end
 
-		return header .. "\n\nAction: " .. actionLabel .. "\nAmount: " .. tostring(amount) .. "\n" .. hotkeyLine
+		return formattedText .. "\n\nAction: " .. var_185_17 .. "\nAmount: " .. tostring(inventoryCount) .. "\n" .. var_185_3
 	end
 
-	return header .. "\n\nAction: None\n" .. hotkeyLine
+	return formattedText .. "\n\nAction: None\n" .. var_185_3
 end
 
 function refreshActionSlotTooltip(slot)
@@ -2620,10 +3780,10 @@ function refreshActionSlotTooltip(slot)
 		return
 	end
 
-	slot:setTooltip(buildActionSlotTooltip(slot))
+	slot:setTooltip(ptc_root_locals[140](slot))
 end
 
-local function applyHotkeyKeyLabel(slot, combo)
+  ptc_root_locals[141] = function(slot, combo)
 	local key = slot:getChildById("key")
 
 	if key then
@@ -2631,143 +3791,179 @@ local function applyHotkeyKeyLabel(slot, combo)
 	end
 end
 
-function syncSlotHotkeyMirror(slot)
-	local hk = getSlotHotkeyForChatMode(slot)
+ ptc_root_locals.syncSlotHotkeyMirror = function(arg_188_0)
+	local var_188_0 = getSlotHotkeyForChatMode(arg_188_0)
 
-	slot.hotkey = hk
+	arg_188_0.hotkey = var_188_0
 
-	applyHotkeyKeyLabel(slot, hk)
-	refreshActionSlotTooltip(slot)
+	ptc_root_locals[141](arg_188_0, var_188_0)
+	refreshActionSlotTooltip(arg_188_0)
 end
 
-local function refreshAllSlotsHotkeyMirror()
-	for i = 1, NUM_BARS do
-		local panel = actionBarPanels[i]
+  ptc_root_locals.refreshAllSlotsHotkeyMirror = function()
+	for iter_189_0 = 1, NUM_BARS do
+		local var_189_0 = actionBarPanels[iter_189_0]
 
-		if panel then
-			for _, slot in pairs(panel:getChildren()) do
-				syncSlotHotkeyMirror(slot)
+		if var_189_0 then
+			for unusedValue, child in pairs(var_189_0:getChildren()) do
+				ptc_root_locals.syncSlotHotkeyMirror(child)
 			end
 		end
 	end
 end
 
-local function coerceStoredHotkeyField(v, fallback)
-	local x = v
+  ptc_root_locals[143] = function(arg_190_0, arg_190_1)
+	local var_190_0 = arg_190_0
 
-	if x == nil then
-		x = fallback
+	if var_190_0 == nil then
+		var_190_0 = arg_190_1
 	end
 
-	if x == nil then
-		return ""
-	end
-
-	return type(x) == "string" and x or tostring(x)
+	return hotkeyFieldToString(var_190_0)
 end
 
-local function initDefaultHotkeysFirstBottomBarSlot(slot, indexInBar)
-	if indexInBar >= 1 and indexInBar <= 12 then
-		local def = "F" .. tostring(indexInBar)
+  ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot = function(arg_191_0, arg_191_1)
+	if arg_191_1 >= 1 and arg_191_1 <= 12 then
+		local var_191_0 = "F" .. tostring(arg_191_1)
 
-		slot.hotkeyChatOn = def
-		slot.hotkeyChatOff = def
+		arg_191_0.hotkeyChatOn = var_191_0
+		arg_191_0.hotkeyChatOff = var_191_0
 	else
-		slot.hotkeyChatOn = ""
-		slot.hotkeyChatOff = ""
+		arg_191_0.hotkeyChatOn = ""
+		arg_191_0.hotkeyChatOff = ""
 	end
 
-	syncSlotHotkeyMirror(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(arg_191_0)
 end
 
-local function applyLoadedSlotHotkeys(slot, setting)
-	local legacy = setting.hotkey
+  ptc_root_locals[145] = function(arg_192_0, arg_192_1)
+	local hotkey = arg_192_1.hotkey
 
-	if setting.hotkeyChatOn ~= nil or setting.hotkeyChatOff ~= nil or legacy ~= nil then
-		slot.hotkeyChatOn = coerceStoredHotkeyField(setting.hotkeyChatOn, legacy)
-		slot.hotkeyChatOff = coerceStoredHotkeyField(setting.hotkeyChatOff, legacy)
+	if arg_192_1.hotkeyChatOn ~= nil or arg_192_1.hotkeyChatOff ~= nil or hotkey ~= nil then
+		local var_192_1 = isCorruptHotkeyTypeName(arg_192_1.hotkeyChatOn)
+
+		if not var_192_1 and arg_192_1.hotkeyChatOn == nil then
+			var_192_1 = isCorruptHotkeyTypeName(hotkey)
+		end
+
+		local var_192_2 = isCorruptHotkeyTypeName(arg_192_1.hotkeyChatOff)
+
+		if not var_192_2 and arg_192_1.hotkeyChatOff == nil then
+			var_192_2 = isCorruptHotkeyTypeName(hotkey)
+		end
+
+		if var_192_1 then
+			actionBarCorruptHotkeySeen = true
+		elseif var_192_2 then
+			actionBarCorruptHotkeySeen = true
+		end
+
+		arg_192_0.hotkeyChatOn = ptc_root_locals[143](arg_192_1.hotkeyChatOn, hotkey)
+		arg_192_0.hotkeyChatOff = ptc_root_locals[143](arg_192_1.hotkeyChatOff, hotkey)
+
+		local var_192_3 = false
+
+		if var_192_1 then
+			var_192_3 = true
+		elseif var_192_2 then
+			var_192_3 = true
+		end
+
+		if var_192_3 and arg_192_0.hotkeyChatOn == "" and arg_192_0.hotkeyChatOff == "" then
+			local var_192_4, var_192_5 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_192_0:getId())
+
+			if var_192_4 == BAR_BOTTOM_1 then
+				ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(arg_192_0, var_192_5)
+
+				return
+			end
+		end
 	end
 
-	syncSlotHotkeyMirror(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(arg_192_0)
 end
 
-local function applySavedSlotSetting(slot, setting)
-	if not slot or not setting then
+  ptc_root_locals[146] = function(arg_193_0, arg_193_1)
+	if not arg_193_0 or not arg_193_1 then
 		return
 	end
 
-	applyLoadedSlotHotkeys(slot, setting)
+	ptc_root_locals[145](arg_193_0, arg_193_1)
 
-	local hasMulti = setting.multiActions and not table.empty(setting.multiActions)
-
-	if hasMulti and loadSlotMultiActions then
-		loadSlotMultiActions(slot, setting.multiActions)
+	if arg_193_1.multiActions and not table.empty(arg_193_1.multiActions) and loadSlotMultiActions then
+		loadSlotMultiActions(arg_193_0, arg_193_1.multiActions)
 
 		return
 	end
 
 	if initMultiActionSlot then
-		initMultiActionSlot(slot)
+		initMultiActionSlot(arg_193_0)
 	end
 
-	slot.itemId = setting.itemId
+	arg_193_0.itemId = arg_193_1.itemId
 
-	slot:setItemId(setting.itemId)
+	arg_193_0:setItemId(arg_193_1.itemId)
 
-	slot.subType = setting.subType
-	slot.words = setting.words
-	slot.text = setting.text
-	slot.useType = setting.useType
-	slot.autoSend = setting.autoSend
-	slot.parameter = setting.parameter
-	slot.crossHairMode = type(setting.crossHairMode) == "string" and setting.crossHairMode or nil
+	arg_193_0.subType = arg_193_1.subType
+	arg_193_0.words = arg_193_1.words
+	arg_193_0.text = arg_193_1.text
+	arg_193_0.useType = arg_193_1.useType
+	arg_193_0.autoSend = arg_193_1.autoSend
+	arg_193_0.parameter = arg_193_1.parameter
+	arg_193_0.crossHairMode = type(arg_193_1.crossHairMode) == "string" and arg_193_1.crossHairMode or nil
 
-	local tier = setting.getTier
+	local getTier = arg_193_1.getTier
 
-	slot.getTier = type(tier) == "number" and tier or nil
-	slot.passiveId = setting.passiveId
-	slot.equipmentIconIndex = type(setting.equipmentIconIndex) == "number" and normalizeEquipmentIconIndex(setting.equipmentIconIndex) or nil
-	slot.equipmentDescription = setting.equipmentDescription or ""
-	slot.equipmentTypeIndex = type(setting.equipmentTypeIndex) == "number" and normalizeEquipmentTypeIndex(setting.equipmentTypeIndex) or 0
-	slot.smartMode = setting.smartMode == true and true or nil
-	slot.smartBaseItemId = type(setting.smartBaseItemId) == "number" and setting.smartBaseItemId or nil
-	slot.equipments = normalizeEquipmentsFromSetting(setting.equipments)
+	arg_193_0.getTier = type(getTier) == "number" and getTier or nil
+	arg_193_0.passiveId = arg_193_1.passiveId
+	arg_193_0.helperId = type(arg_193_1.helperId) == "string" and arg_193_1.helperId ~= "" and arg_193_1.helperId or nil
+	arg_193_0.multiHelper = HelperAction.normalizeList(arg_193_1.multiHelper)
+	arg_193_0.equipmentIconIndex = type(arg_193_1.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_193_1.equipmentIconIndex) or nil
+	arg_193_0.equipmentDescription = arg_193_1.equipmentDescription or ""
+	arg_193_0.equipmentTypeIndex = type(arg_193_1.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(arg_193_1.equipmentTypeIndex) or 0
+	arg_193_0.smartMode = arg_193_1.smartMode == true and true or nil
+	arg_193_0.smartBaseItemId = type(arg_193_1.smartBaseItemId) == "number" and arg_193_1.smartBaseItemId or nil
+	arg_193_0.equipments = ptc_root_locals.normalizeEquipmentsFromSetting(arg_193_1.equipments)
 
-	ItemsDatabase.setTier(slot, slot.getTier)
+	ItemsDatabase.setTier(arg_193_0, arg_193_0.getTier)
 
-	if slot.words then
-		loadSpell(slot)
-	elseif slot.text then
-		loadText(slot)
-	elseif slot.passiveId then
-		loadPassive(slot)
-	elseif slot.useType == "equip" then
-		if isEquipmentIconDeterminedOnSlot(slot) or slot.equipments ~= nil then
-			slot.equipments = slot.equipments or {}
+	if arg_193_0.words then
+		loadSpell(arg_193_0)
+	elseif arg_193_0.text then
+		loadText(arg_193_0)
+	elseif arg_193_0.passiveId then
+		loadPassive(arg_193_0)
+	elseif arg_193_0.multiHelper then
+		loadMultiHelper(arg_193_0)
+	elseif arg_193_0.helperId then
+		loadHelper(arg_193_0)
+	elseif arg_193_0.useType == "equip" then
+		if ptc_root_locals.isEquipmentIconDeterminedOnSlot(arg_193_0) or arg_193_0.equipments ~= nil then
+			arg_193_0.equipments = arg_193_0.equipments or {}
 
-			local display = equipmentAssignDisplayEntry(slot.equipments)
+			local var_193_1 = ptc_root_locals.equipmentAssignDisplayEntry(arg_193_0.equipments)
 
-			if display then
-				slot.itemId = display.itemId
-				slot.getTier = display.getTier
-				slot.subType = display.subType
+			if var_193_1 then
+				arg_193_0.itemId = var_193_1.itemId
+				arg_193_0.getTier = var_193_1.getTier
+				arg_193_0.subType = var_193_1.subType
 			else
-				slot.itemId = 0
-				slot.getTier = nil
-				slot.subType = nil
+				arg_193_0.itemId = 0
+				arg_193_0.getTier = nil
+				arg_193_0.subType = nil
 			end
 
-			loadEquipmentSetDisplay(slot)
-		elseif slot.itemId and slot.itemId > 0 then
-			slot.equipments = nil
-			slot.equipmentIconIndex = nil
-			slot.equipmentDescription = nil
-			slot.equipmentTypeIndex = nil
+			loadEquipmentSetDisplay(arg_193_0)
+		elseif arg_193_0.itemId and arg_193_0.itemId > 0 then
+			arg_193_0.equipments = nil
+			arg_193_0.equipmentIconIndex = nil
+			arg_193_0.equipmentDescription = nil
+			arg_193_0.equipmentTypeIndex = nil
 
-			loadObject(slot)
+			loadObject(arg_193_0)
 		end
-	elseif slot.itemId and slot.itemId > 0 then
-		loadObject(slot)
+	elseif arg_193_0.itemId and arg_193_0.itemId > 0 then
+		loadObject(arg_193_0)
 	end
 end
 
@@ -2777,21 +3973,21 @@ function maybeSetupHotkeysAfterSlotLoad()
 	end
 end
 
-local function applyPresetSlotsToActionBar(slots)
-	if not slots then
+  ptc_root_locals.applyPresetSlotsToActionBar = function(arg_195_0)
+	if not arg_195_0 then
 		return
 	end
 
-	for slotKey, setting in pairs(slots) do
-		local slot = findSlotById(slotKey)
+	for key, entry in pairs(arg_195_0) do
+		local var_195_0 = findSlotById(key)
 
-		if slot then
-			applySavedSlotSetting(slot, setting)
+		if var_195_0 then
+			ptc_root_locals[146](var_195_0, entry)
 		end
 	end
 end
 
-local function jsonScalar(value)
+  ptc_root_locals[148] = function(value)
 	local t = type(value)
 
 	if t == "number" or t == "string" or t == "boolean" then
@@ -2801,16 +3997,16 @@ local function jsonScalar(value)
 	return nil
 end
 
-function serializeEquipmentsForJson(equipments)
-	if not equipments then
+  ptc_root_locals.serializeEquipmentsForJson = function(arg_197_0)
+	if not arg_197_0 then
 		return nil
 	end
 
-	local out = {}
+	local var_197_0 = {}
 
-	for invSlot, entry in pairs(equipments) do
-		if type(invSlot) == "number" and entry and entry.itemId and entry.itemId > 0 and not isEquipmentAssignVisualBackpackSlot(invSlot) then
-			out[tostring(invSlot)] = {
+	for key, entry in pairs(arg_197_0) do
+		if type(key) == "number" and entry and entry.itemId and entry.itemId > 0 and not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(key) then
+			var_197_0[tostring(key)] = {
 				itemId = entry.itemId,
 				getTier = type(entry.getTier) == "number" and entry.getTier or nil,
 				subType = type(entry.subType) == "number" and entry.subType or nil
@@ -2818,26 +4014,26 @@ function serializeEquipmentsForJson(equipments)
 		end
 	end
 
-	return out
+	return var_197_0
 end
 
-function normalizeEquipmentsFromSetting(equipments)
-	if equipments == nil then
+ ptc_root_locals.normalizeEquipmentsFromSetting = function(arg_198_0)
+	if arg_198_0 == nil then
 		return nil
 	end
 
-	if type(equipments) ~= "table" then
+	if type(arg_198_0) ~= "table" then
 		return nil
 	end
 
-	local out = {}
+	local var_198_0 = {}
 
-	for k, entry in pairs(equipments) do
+	for key, entry in pairs(arg_198_0) do
 		if type(entry) == "table" and type(entry.itemId) == "number" and entry.itemId > 0 then
-			local invSlot = type(k) == "number" and k or tonumber(k)
+			local var_198_1 = type(key) == "number" and key or tonumber(key)
 
-			if invSlot and not isEquipmentAssignVisualBackpackSlot(invSlot) then
-				out[invSlot] = {
+			if var_198_1 and not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(var_198_1) then
+				var_198_0[var_198_1] = {
 					itemId = entry.itemId,
 					getTier = type(entry.getTier) == "number" and entry.getTier or nil,
 					subType = type(entry.subType) == "number" and entry.subType or nil
@@ -2846,77 +4042,72 @@ function normalizeEquipmentsFromSetting(equipments)
 		end
 	end
 
-	return out
+	return var_198_0
 end
 
-local function serializeSlotToSetting(slot)
-	local tier = slot.getTier
+  ptc_root_locals[150] = function(arg_199_0)
+	local getTier = arg_199_0.getTier
 
-	if type(tier) ~= "number" then
-		tier = nil
+	if type(getTier) ~= "number" then
+		getTier = nil
 	end
 
-	local hotkeyOn = slot.hotkeyChatOn
-	local hotkeyOff = slot.hotkeyChatOff
-
-	if type(hotkeyOn) ~= "string" then
-		hotkeyOn = ""
-	end
-
-	if type(hotkeyOff) ~= "string" then
-		hotkeyOff = ""
-	end
+	local var_199_1 = hotkeyFieldToString(arg_199_0.hotkeyChatOn)
+	local var_199_2 = hotkeyFieldToString(arg_199_0.hotkeyChatOff)
 
 	return {
-		hotkeyChatOn = hotkeyOn,
-		hotkeyChatOff = hotkeyOff,
-		autoSend = slot.autoSend == true and true or (slot.autoSend ~= false or true) and nil,
-		itemId = type(slot.itemId) == "number" and slot.itemId or nil,
-		subType = type(slot.subType) == "number" and slot.subType or nil,
-		useType = jsonScalar(slot.useType),
-		text = jsonScalar(slot.text),
-		words = jsonScalar(slot.words),
-		parameter = jsonScalar(slot.parameter),
-		crossHairMode = type(slot.crossHairMode) == "string" and slot.crossHairMode or nil,
-		getTier = tier,
-		passiveId = type(slot.passiveId) == "number" and slot.passiveId or nil,
-		multiActions = serializeSlotMultiActions and serializeSlotMultiActions(slot) or nil,
-		equipments = slot.equipments ~= nil and serializeEquipmentsForJson(slot.equipments) or nil,
-		equipmentIconIndex = type(slot.equipmentIconIndex) == "number" and normalizeEquipmentIconIndex(slot.equipmentIconIndex) or nil,
-		equipmentDescription = jsonScalar(slot.equipmentDescription),
-		equipmentTypeIndex = type(slot.equipmentTypeIndex) == "number" and normalizeEquipmentTypeIndex(slot.equipmentTypeIndex) or nil,
-		smartMode = slot.smartMode == true and true or nil,
-		smartBaseItemId = type(slot.smartBaseItemId) == "number" and slot.smartBaseItemId or nil
+		hotkeyChatOn = var_199_1,
+		hotkeyChatOff = var_199_2,
+		autoSend = arg_199_0.autoSend == true and true or (arg_199_0.autoSend ~= false or true) and nil,
+		itemId = type(arg_199_0.itemId) == "number" and arg_199_0.itemId or nil,
+		subType = type(arg_199_0.subType) == "number" and arg_199_0.subType or nil,
+		useType = ptc_root_locals[148](arg_199_0.useType),
+		text = ptc_root_locals[148](arg_199_0.text),
+		words = ptc_root_locals[148](arg_199_0.words),
+		parameter = ptc_root_locals[148](arg_199_0.parameter),
+		crossHairMode = type(arg_199_0.crossHairMode) == "string" and arg_199_0.crossHairMode or nil,
+		getTier = getTier,
+		passiveId = type(arg_199_0.passiveId) == "number" and arg_199_0.passiveId or nil,
+		helperId = ptc_root_locals[148](arg_199_0.helperId),
+		multiHelper = HelperAction.normalizeList(arg_199_0.multiHelper),
+		multiActions = serializeSlotMultiActions and serializeSlotMultiActions(arg_199_0) or nil,
+		equipments = arg_199_0.equipments ~= nil and ptc_root_locals.serializeEquipmentsForJson(arg_199_0.equipments) or nil,
+		equipmentIconIndex = type(arg_199_0.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(arg_199_0.equipmentIconIndex) or nil,
+		equipmentDescription = ptc_root_locals[148](arg_199_0.equipmentDescription),
+		equipmentTypeIndex = type(arg_199_0.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(arg_199_0.equipmentTypeIndex) or nil,
+		smartMode = arg_199_0.smartMode == true and true or nil,
+		smartBaseItemId = type(arg_199_0.smartBaseItemId) == "number" and arg_199_0.smartBaseItemId or nil
 	}
 end
 
-local function collectCharacterActionBarSlots()
-	local hotkeys = {}
+  ptc_root_locals.collectCharacterActionBarSlots = function()
+	local var_200_0 = {}
 
-	for i = 1, NUM_BARS do
-		local panel = actionBarPanels[i]
+	for iter_200_0 = 1, NUM_BARS do
+		local var_200_1 = actionBarPanels[iter_200_0]
 
-		if panel then
-			for _, slot in ipairs(panel:getChildren()) do
-				hotkeys[slot:getId()] = serializeSlotToSetting(slot)
+		if var_200_1 then
+			for unusedValue, child in ipairs(var_200_1:getChildren()) do
+				var_200_0[child:getId()] = ptc_root_locals[150](child)
 			end
 		end
 	end
 
-	return hotkeys
+	return var_200_0
 end
 
-local function loadActionBarSettingsForCurrentPreset()
-	return getActionBarSlotsForPreset(getActionBarDefaultPresetName())
+  ptc_root_locals.loadActionBarSettingsForCurrentPreset = function()
+	local var_201_0 = getActionBarDefaultPresetName()
+	local var_201_1, var_201_2 = getActionBarSlotsForPreset(var_201_0)
+
+	return var_201_1, var_201_2, var_201_0
 end
 
 function getCurrentSlot()
-	local s = findSlotById(slotToEdit)
-
-	return s
+	return (findSlotById(slotToEdit))
 end
 
-local function updateSideContainerWidths()
+  ptc_root_locals.updateSideContainerWidths = function()
 	local leftContainer = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
 	local rightContainer = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
 
@@ -3002,26 +4193,44 @@ local function updateSideContainerWidths()
 	end
 end
 
-local function sideTopButtonsOffset()
-	local offset = 54
+  ptc_root_locals[154] = function(arg_205_0)
+	local game_interface = modules.game_interface
+
+	if not game_interface or not game_interface[arg_205_0] then
+		return false
+	end
+
+	local var_205_1 = game_interface[arg_205_0]()
+
+	return var_205_1 and not var_205_1:isDestroyed() and var_205_1:isVisible() and (tonumber(var_205_1:getWidth()) or 0) > 0
+end
+
+  ptc_root_locals[155] = function(arg_206_0)
+	if ptc_root_locals.isLeftBar(arg_206_0) and ptc_root_locals[154]("getGameLeftStatsBar") then
+		return 0
+	end
+
+	if ptc_root_locals.isRightBar(arg_206_0) and ptc_root_locals[154]("getGameRightStatsBar") then
+		return 0
+	end
+
+	local height = 54
 
 	if g_settings.getString("statsbar_placement") ~= "top" then
-		return offset
+		return height
 	end
 
-	local topStatsBar = modules.game_interface.getGameTopStatsBar and modules.game_interface.getGameTopStatsBar()
+	local gameTopStatsBar = modules.game_interface.getGameTopStatsBar and modules.game_interface.getGameTopStatsBar()
 
-	if topStatsBar and not topStatsBar:isDestroyed() and topStatsBar:isVisible() then
-		offset = math.max(offset, topStatsBar:getHeight())
+	if gameTopStatsBar and not gameTopStatsBar:isDestroyed() and gameTopStatsBar:isVisible() then
+		height = math.max(height, gameTopStatsBar:getHeight())
 	end
 
-	return offset
+	return height
 end
 
 function refreshSideActionBarOffsets()
-	local offset = sideTopButtonsOffset()
-
-	for _, barId in ipairs({
+	for unusedValue, iter_207_1 in ipairs({
 		BAR_LEFT_1,
 		BAR_LEFT_2,
 		BAR_LEFT_3,
@@ -3029,19 +4238,42 @@ function refreshSideActionBarOffsets()
 		BAR_RIGHT_2,
 		BAR_RIGHT_3
 	}) do
-		local bar = actionBars[barId]
+		local var_207_0 = actionBars[iter_207_1]
 
-		if bar and not bar:isDestroyed() then
-			local prevBtn = barWidgetChild(bar, "prevButton")
+		if var_207_0 and not var_207_0:isDestroyed() then
+			local var_207_1 = barWidgetChild(var_207_0, "prevButton")
 
-			if prevBtn then
-				prevBtn:setMarginTop(offset)
+			if var_207_1 then
+				var_207_1:setMarginTop(ptc_root_locals[155](iter_207_1))
 			end
 		end
 	end
 end
 
-local function bottomBarStackAnchorTarget(barId)
+function clipSideBarPanelToWholeSlots(arg_208_0)
+	if not arg_208_0 or arg_208_0:isDestroyed() then
+		return
+	end
+
+	local height = arg_208_0:getHeight()
+	local var_208_1 = math.max(height - height % ptc_root_locals[3], 1)
+	local var_208_2 = math.max(height - var_208_1, 0)
+
+	if arg_208_0:getPaddingBottom() ~= var_208_2 then
+		arg_208_0:setPaddingBottom(var_208_2)
+	end
+
+	local verticalScrollBar = arg_208_0.verticalScrollBar
+	local maximum = verticalScrollBar and verticalScrollBar:getMaximum()
+
+	arg_208_0:updateScrollBars()
+
+	if verticalScrollBar and verticalScrollBar:getMaximum() ~= maximum then
+		updateScrollButtonsForBar(arg_208_0:getParent())
+	end
+end
+
+  ptc_root_locals[156] = function(barId)
 	if barId <= BAR_BOTTOM_1 then
 		return "parent", AnchorTop
 	end
@@ -3057,77 +4289,85 @@ local function bottomBarStackAnchorTarget(barId)
 	return "parent", AnchorTop
 end
 
-local function applyBottomAnchors()
-	for _, bid in ipairs({
+  ptc_root_locals.applyBottomAnchors = function()
+	for unusedValue, iter_210_1 in ipairs({
 		BAR_BOTTOM_1,
 		BAR_BOTTOM_2,
 		BAR_BOTTOM_3
 	}) do
-		local bar = actionBars[bid]
+		local var_210_0 = actionBars[iter_210_1]
 
-		if bar and not bar:isDestroyed() then
-			bar:breakAnchors()
-			bar:addAnchor(AnchorLeft, "parent", AnchorLeft)
-			bar:addAnchor(AnchorRight, "parent", AnchorRight)
+		if var_210_0 and not var_210_0:isDestroyed() then
+			var_210_0:breakAnchors()
+			var_210_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
+			var_210_0:addAnchor(AnchorRight, "parent", AnchorRight)
 
-			local targetId, targetEdge = bottomBarStackAnchorTarget(bid)
+			local var_210_1, var_210_2 = ptc_root_locals[156](iter_210_1)
 
-			bar:addAnchor(AnchorTop, targetId, targetEdge)
+			var_210_0:addAnchor(AnchorTop, var_210_1, var_210_2)
 		end
 	end
 
 	layoutBottomLockButton()
-	anchorGroupCooldownBelowBottomStack()
+	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
 end
 
-local function setupSlotsForPanel(barId, panel)
-	local template = isSideBar(barId) and "ActionSlotV" or "ActionSlot"
-	local slotCount = slotsForBar(barId)
+  ptc_root_locals[158] = function(arg_211_0, arg_211_1)
+	local var_211_0 = ptc_root_locals.isSideBar(arg_211_0) and "ActionSlotV" or "ActionSlot"
+	local var_211_1 = ptc_root_locals[120](arg_211_0)
 
-	for i = 1, slotCount do
-		local sid = slotIdFor(barId, i)
-		local slot = g_ui.createWidget(template, panel)
+	for iter_211_0 = 1, var_211_1 do
+		local sid = slotIdFor(arg_211_0, iter_211_0)
+		local var_211_3 = g_ui.createWidget(var_211_0, arg_211_1)
 
-		slot:setId(sid)
+		var_211_3:setId(sid)
 
-		slot._actionBarId = barId
+		var_211_3._actionBarId = arg_211_0
 
 		if initMultiActionSlot then
-			initMultiActionSlot(slot)
+			initMultiActionSlot(var_211_3)
 		end
 
-		slot:setVisible(true)
+		var_211_3:setVisible(true)
 
-		slot.itemId = nil
-		slot.subType = nil
-		slot.words = nil
-		slot.text = nil
-		slot.useType = nil
-		slot.getTier = nil
+		var_211_3.itemId = nil
+		var_211_3.subType = nil
+		var_211_3.words = nil
+		var_211_3.text = nil
+		var_211_3.useType = nil
+		var_211_3.getTier = nil
+		var_211_3.helperId = nil
+		var_211_3.multiHelper = nil
 
-		if barId == BAR_BOTTOM_1 then
-			initDefaultHotkeysFirstBottomBarSlot(slot, i)
+		if arg_211_0 == BAR_BOTTOM_1 then
+			ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(var_211_3, iter_211_0)
 		else
-			slot.hotkeyChatOn = ""
-			slot.hotkeyChatOff = ""
-			slot.hotkey = ""
+			var_211_3.hotkeyChatOn = ""
+			var_211_3.hotkeyChatOff = ""
+			var_211_3.hotkey = ""
 
-			syncSlotHotkeyMirror(slot)
+			ptc_root_locals.syncSlotHotkeyMirror(var_211_3)
 		end
 
-		g_mouse.bindPress(slot, function()
+		g_mouse.bindPress(var_211_3, function()
 			slotToEdit = sid
 		end, MouseLeftButton)
-		g_mouse.bindPress(slot, function()
+		g_mouse.bindPress(var_211_3, function()
 			createMenu(sid)
 		end, MouseRightButton)
 
-		if not isActionBarLocked(barId) then
-			g_mouse.bindOnDrop(slot, function()
-				local pressed = g_ui.getPressedWidget()
+		if not isActionBarLocked(arg_211_0) then
+			g_mouse.bindOnDrop(var_211_3, function()
+				local pressedWidget = g_ui.getPressedWidget()
 
-				if pressed and pressed ~= slot and pressed.multiActionIndex and pressed.parentSlot and handleDropFromMultiSubSlotOntoSlot then
-					handleDropFromMultiSubSlotOntoSlot(pressed, sid)
+				if pressedWidget and pressedWidget ~= var_211_3 and pressedWidget.multiActionIndex and pressedWidget.parentSlot and handleDropFromMultiSubSlotOntoSlot then
+					handleDropFromMultiSubSlotOntoSlot(pressedWidget, sid)
+
+					return
+				end
+
+				if pressedWidget and pressedWidget ~= var_211_3 and pressedWidget.multiHelperIndex and pressedWidget.parentSlot then
+					HelperAction.handleDropFromSubSlotOntoSlot(pressedWidget, sid)
 
 					return
 				end
@@ -3140,16 +4380,17 @@ local function setupSlotsForPanel(barId, panel)
 			end)
 		end
 
-		if i == 1 then
-			slot:breakAnchors()
+		if iter_211_0 == 1 then
+			var_211_3:breakAnchors()
 
-			if isSideBar(barId) then
-				slot:addAnchor(AnchorTop, "parent", AnchorTop)
-				slot:addAnchor(AnchorLeft, "parent", AnchorLeft)
+			if ptc_root_locals.isSideBar(arg_211_0) then
+				var_211_3:addAnchor(AnchorTop, "parent", AnchorTop)
+				var_211_3:addAnchor(AnchorLeft, "parent", AnchorLeft)
+				var_211_3:setMarginTop(2)
 			else
-				slot:addAnchor(AnchorLeft, "parent", AnchorLeft)
-				slot:addAnchor(AnchorTop, "parent", AnchorTop)
-				slot:setMarginLeft(2)
+				var_211_3:addAnchor(AnchorLeft, "parent", AnchorLeft)
+				var_211_3:addAnchor(AnchorTop, "parent", AnchorTop)
+				var_211_3:setMarginLeft(2)
 			end
 		end
 	end
@@ -3160,15 +4401,14 @@ function actionBarPanelHasExpectedSlots(barId, panel)
 		return false
 	end
 
-	local slotCount = slotsForBar(barId)
-	local children = panel:getChildren()
+	local var_215_0 = ptc_root_locals[120](barId)
 
-	if #children ~= slotCount then
+	if #panel:getChildren() ~= var_215_0 then
 		return false
 	end
 
-	for i = 1, slotCount do
-		if not panel:getChildById(slotIdFor(barId, i)) then
+	for iter_215_0 = 1, var_215_0 do
+		if not panel:getChildById(slotIdFor(barId, iter_215_0)) then
 			return false
 		end
 	end
@@ -3182,32 +4422,32 @@ function ensureActionBarPanelSlots(barId, panel)
 	end
 
 	panel:destroyChildren()
-	setupSlotsForPanel(barId, panel)
+	ptc_root_locals[158](barId, panel)
 
 	return true
 end
 
-local function loadSavedSlotsForBar(barId)
-	if not actionBarPanels[barId] then
+  ptc_root_locals.loadSavedSlotsForBar = function(arg_217_0)
+	if not actionBarPanels[arg_217_0] then
 		return
 	end
 
-	local hotkeys = loadActionBarSettingsForCurrentPreset()
+	local var_217_0 = ptc_root_locals.loadActionBarSettingsForCurrentPreset()
 
-	if not hotkeys then
+	if not var_217_0 then
 		return
 	end
 
-	for slotKey, setting in pairs(hotkeys) do
-		local slot = actionBarPanels[barId]:getChildById(slotKey)
+	for key, entry in pairs(var_217_0) do
+		local childById = actionBarPanels[arg_217_0]:getChildById(key)
 
-		if slot then
-			applySavedSlotSetting(slot, setting)
+		if childById then
+			ptc_root_locals[146](childById, entry)
 		end
 	end
 end
 
-local function ensureBarLoaded(barId)
+  ptc_root_locals.ensureBarLoaded = function(barId)
 	if actionBars[barId] then
 		return actionBars[barId]
 	end
@@ -3216,34 +4456,35 @@ local function ensureBarLoaded(barId)
 		bottomPanel = modules.game_interface.getBottomPanel()
 	end
 
-	local ok, bar
+	local var_218_0
+	local bar
 
-	if isSideBar(barId) then
-		local container
+	if ptc_root_locals.isSideBar(barId) then
+		local var_218_2
 
-		if isLeftBar(barId) then
-			container = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
+		if ptc_root_locals.isLeftBar(barId) then
+			var_218_2 = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
 		else
-			container = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
+			var_218_2 = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
 		end
 
-		if not container then
+		if not var_218_2 then
 			return nil
 		end
 
-		ok, bar = pcall(g_ui.loadUI, "game_actionbar_side", container)
+		var_218_0, bar = pcall(g_ui.loadUI, "game_actionbar_side", var_218_2)
 	else
-		ok, bar = pcall(g_ui.loadUI, "game_actionbar", bottomPanel)
+		var_218_0, bar = pcall(g_ui.loadUI, "game_actionbar", bottomPanel)
 	end
 
-	if not ok or not bar then
+	if not var_218_0 or not bar then
 		return nil
 	end
 
 	bar:setId("actionBar" .. barId)
 	bar:setVisible(false)
 
-	if isSideBar(barId) then
+	if ptc_root_locals.isSideBar(barId) then
 		bar:setWidth(0)
 		bar:setImageSource("/images/ui/background")
 		bar:setImageRepeated(true)
@@ -3261,77 +4502,79 @@ local function ensureBarLoaded(barId)
 		end
 	end
 
-	if isSideBar(barId) then
-		local vScroll = barWidgetChild(bar, "verticalScroll")
+	if ptc_root_locals.isSideBar(barId) then
+		local var_218_3 = barWidgetChild(bar, "verticalScroll")
 
-		if vScroll then
-			function vScroll.onMouseWheel()
+		if var_218_3 then
+			function var_218_3.onMouseWheel()
 				return true
 			end
 		end
 	else
-		local hScroll = barWidgetChild(bar, "horizontalScroll")
+		local var_218_4 = barWidgetChild(bar, "horizontalScroll")
 
-		if hScroll then
-			function hScroll.onMouseWheel()
+		if var_218_4 then
+			function var_218_4.onMouseWheel()
 				return true
 			end
 		end
 	end
 
-	if isBottomBar(barId) then
-		applyBottomAnchors()
+	if ptc_root_locals.isBottomBar(barId) then
+		ptc_root_locals.applyBottomAnchors()
 	end
 
-	if isSideBar(barId) then
-		local SIDEBAR_BUTTON_OFFSET = sideTopButtonsOffset()
-		local sideContentMarginLeft = isRightBar(barId) and 2 or 0
-		local topButtonsMarginLeft = isRightBar(barId) and 2 or 0
-		local bottomButtonsMarginRight = isLeftBar(barId) and 2 or 0
-		local prevBtn = barWidgetChild(bar, "prevButton")
+	if ptc_root_locals.isSideBar(barId) then
+		local var_218_5 = ptc_root_locals[155](barId)
+		local var_218_6 = ptc_root_locals.isRightBar(barId) and 2 or 0
+		local var_218_7 = ptc_root_locals.isRightBar(barId) and 2 or 0
+		local var_218_8 = ptc_root_locals.isLeftBar(barId) and 2 or 0
+		local var_218_9 = barWidgetChild(bar, "prevButton")
 
-		if prevBtn then
-			prevBtn:setMarginTop(SIDEBAR_BUTTON_OFFSET)
-			prevBtn:setMarginLeft(topButtonsMarginLeft)
+		if var_218_9 then
+			var_218_9:setMarginTop(var_218_5)
+			var_218_9:setMarginLeft(var_218_7)
 		end
 
-		local lockBtn = barWidgetChild(bar, "sideLockButton")
+		local var_218_10 = barWidgetChild(bar, "sideLockButton")
 
-		if lockBtn then
-			lockBtn:setMarginLeft(sideContentMarginLeft)
-			lockBtn:setMarginBottom(1)
+		if var_218_10 then
+			var_218_10:setMarginLeft(var_218_6)
+			var_218_10:setMarginBottom(1)
 		end
 
-		local nextBtn = barWidgetChild(bar, "nextButton")
+		local var_218_11 = barWidgetChild(bar, "nextButton")
 
-		if nextBtn then
-			nextBtn:setMarginBottom(1)
+		if var_218_11 then
+			var_218_11:setMarginBottom(1)
 		end
 
-		local nextSkipBtn = barWidgetChild(bar, "nextSkipButton")
+		local var_218_12 = barWidgetChild(bar, "nextSkipButton")
 
-		if nextSkipBtn then
-			nextSkipBtn:setMarginRight(bottomButtonsMarginRight)
-			nextSkipBtn:setMarginBottom(1)
+		if var_218_12 then
+			var_218_12:setMarginRight(var_218_8)
+			var_218_12:setMarginBottom(1)
 		end
 
-		local panel = barWidgetChild(bar, "actionBarPanel")
+		local var_218_13 = barWidgetChild(bar, "actionBarPanel")
 
-		if panel then
-			panel:setMarginTop(0)
-			panel:setMarginLeft(sideContentMarginLeft)
+		if var_218_13 then
+			var_218_13:setMarginTop(1)
+			var_218_13:setMarginLeft(var_218_6)
+
+			var_218_13.onLayoutUpdate = clipSideBarPanelToWholeSlots
 		end
 
-		local vScroll = barWidgetChild(bar, "verticalScroll")
+		local var_218_14 = barWidgetChild(bar, "verticalScroll")
 
-		if vScroll then
-			vScroll:setMarginTop(0)
+		if var_218_14 then
+			var_218_14:setMarginTop(0)
 		end
 	end
 
-	if isLeftBar(barId) then
+	if ptc_root_locals.isLeftBar(barId) then
 		normalizeSideBarChildOrder("left")
-	elseif isRightBar(barId) then
+	elseif ptc_root_locals.isRightBar(barId) then
 		normalizeSideBarChildOrder("right")
 	end
 
@@ -3339,7 +4582,7 @@ local function ensureBarLoaded(barId)
 		ensureActionBarPanelSlots(barId, actionBarPanels[barId])
 
 		if g_game.isOnline() then
-			loadSavedSlotsForBar(barId)
+			ptc_root_locals.loadSavedSlotsForBar(barId)
 			setupHotkeys()
 		end
 	end
@@ -3347,7 +4590,56 @@ local function ensureBarLoaded(barId)
 	return bar
 end
 
+actionBarVisibilityKeybinds = {
+	{
+		option = "actionBarShowBottom1",
+		action = "Show/hide Bottom Action Bar 1"
+	},
+	{
+		option = "actionBarShowBottom2",
+		action = "Show/hide Bottom Action Bar 2"
+	},
+	{
+		option = "actionBarShowBottom3",
+		action = "Show/hide Bottom Action Bar 3"
+	},
+	{
+		option = "actionBarShowLeft1",
+		action = "Show/hide Left Action Bar 1"
+	},
+	{
+		option = "actionBarShowLeft2",
+		action = "Show/hide Left Action Bar 2"
+	},
+	{
+		option = "actionBarShowLeft3",
+		action = "Show/hide Left Action Bar 3"
+	},
+	{
+		option = "allActionBar46",
+		action = "Show/hide Left Action Bars"
+	},
+	{
+		option = "actionBarShowRight1",
+		action = "Show/hide Right Action Bar 1"
+	},
+	{
+		option = "actionBarShowRight2",
+		action = "Show/hide Right Action Bar 2"
+	},
+	{
+		option = "actionBarShowRight3",
+		action = "Show/hide Right Action Bar 3"
+	},
+	{
+		option = "allActionBar79",
+		action = "Show/hide Right Action Bars"
+	}
+}
+
 function init()
+	HelperAction.registerShaders()
+
 	if initMultiActionStyles then
 		initMultiActionStyles()
 	end
@@ -3404,6 +4696,7 @@ function init()
 	connect(g_game, {
 		onGameStart = online,
 		onGameEnd = offline,
+		onPassiveData = onPassiveData,
 		onSpellGroupCooldown = onSpellGroupCooldown,
 		onSpellCooldown = onSpellCooldown,
 		onMultiUseCooldown = onMultiUseCooldown,
@@ -3412,7 +4705,7 @@ function init()
 	connect(LocalPlayer, {
 		onInventoryChange = scheduleFullSlotGrayRefresh,
 		onInventoryCountChange = scheduleInventorySlotGrayRefresh,
-		onManaChange = onLocalPlayerManaChange,
+		onManaChange = ptc_root_locals.onLocalPlayerManaChange,
 		onLevelChange = scheduleFullSlotGrayRefresh
 	})
 	connect(Container, {
@@ -3437,6 +4730,28 @@ function init()
 
 			return clearActionBarHotkeyConflicts(keyCombo, chatMode == CHAT_MODE.ON)
 		end
+
+		for unusedValue, actionBarVisibilityKeybind in ipairs(actionBarVisibilityKeybinds) do
+			local option = actionBarVisibilityKeybind.option
+
+			Keybind.new("Action Bar", actionBarVisibilityKeybind.action, "", "")
+			Keybind.bind("Action Bar", actionBarVisibilityKeybind.action, {
+				{
+					type = KEY_DOWN,
+					callback = function()
+						if not g_game.isOnline() or not modules.client_options then
+							return false
+						end
+
+						local var_229_0 = modules.client_options.getOption(option) == true
+
+						modules.client_options.setOption(option, not var_229_0)
+
+						return true
+					end
+				}
+			}, modules.game_interface.getRootPanel())
+		end
 	end
 
 	modules.game_actionbar.replaceActionBarPresetSlots = replaceActionBarPresetSlots
@@ -3451,6 +4766,12 @@ function init()
 end
 
 function terminate()
+	if Keybind then
+		for unusedValue, actionBarVisibilityKeybind in ipairs(actionBarVisibilityKeybinds) do
+			Keybind.delete("Action Bar", actionBarVisibilityKeybind.action)
+		end
+	end
+
 	if actionBarPreloadEvent then
 		removeEvent(actionBarPreloadEvent)
 
@@ -3461,16 +4782,20 @@ function terminate()
 		terminateMultiAction()
 	end
 
+	if closeCurrentMultiHelperPanel then
+		closeCurrentMultiHelperPanel()
+	end
+
 	if bottomLockPressDeferredEvent then
 		removeEvent(bottomLockPressDeferredEvent)
 
 		bottomLockPressDeferredEvent = nil
 	end
 
-	if slotGrayRefreshEvent then
-		removeEvent(slotGrayRefreshEvent)
+	if ptc_root_locals.slotGrayRefreshEvent then
+		removeEvent(ptc_root_locals.slotGrayRefreshEvent)
 
-		slotGrayRefreshEvent = nil
+		ptc_root_locals.slotGrayRefreshEvent = nil
 	end
 
 	slotGrayFullRefreshPending = false
@@ -3480,7 +4805,7 @@ function terminate()
 	disconnect(LocalPlayer, {
 		onInventoryChange = scheduleFullSlotGrayRefresh,
 		onInventoryCountChange = scheduleInventorySlotGrayRefresh,
-		onManaChange = onLocalPlayerManaChange,
+		onManaChange = ptc_root_locals.onLocalPlayerManaChange,
 		onLevelChange = scheduleFullSlotGrayRefresh
 	})
 	disconnect(Container, {
@@ -3510,6 +4835,7 @@ function terminate()
 	disconnect(g_game, {
 		onGameStart = online,
 		onGameEnd = offline,
+		onPassiveData = onPassiveData,
 		onSpellGroupCooldown = onSpellGroupCooldown,
 		onSpellCooldown = onSpellCooldown,
 		onMultiUseCooldown = onMultiUseCooldown,
@@ -3551,7 +4877,7 @@ end
 
 function online()
 	invalidateActionBarSettingsCache()
-	anchorGroupCooldownBelowBottomStack()
+	ptc_root_locals.anchorGroupCooldownBelowBottomStack()
 
 	slotToEdit = nil
 	slotReassign = nil
@@ -3566,21 +4892,6 @@ function online()
 
 		setupActionBar()
 
-		if g_settings.getBoolean("autoSwitchPreset") then
-			local name = g_game.getCharacterName()
-
-			if name and name ~= "" and Keybind.presetToIndex and Keybind.presetToIndex[name] then
-				if Keybind.currentPreset ~= name then
-					Keybind.selectPreset(name)
-					updateSlotsVocation()
-
-					return
-				end
-			elseif name and name ~= "" then
-				g_logger.info(string.format("[login] autoSwitchPreset: no preset named \"%s\" (current=%s)", name, Keybind.currentPreset or "?"))
-			end
-		end
-
 		local presetName = Keybind.currentPreset
 		local reusedPreparedPreset = actionBarPreparedPreset == presetName
 
@@ -3589,6 +4900,12 @@ function online()
 			applyClientOptionsToActionBar()
 			refreshAllVirtueYellowBorders()
 			updateSlotsVocation()
+
+			if actionBarCorruptHotkeySeen then
+				saveActionBar()
+
+				actionBarCorruptHotkeySeen = false
+			end
 		else
 			reloadActionBarForPreset(presetName, nil)
 		end
@@ -3602,9 +4919,15 @@ function offline()
 		closeCurrentMultiActionPanel()
 	end
 
+	passiveCooldownData = nil
+
+	if refreshAllPassiveCooldownSlots then
+		refreshAllPassiveCooldownSlots()
+	end
+
 	virtuesYellowBorderSpellIds = {}
-	managedVirtueYellowBorderSpellIds = {}
-	managedVirtueYellowBorderSelection = {}
+	ptc_root_locals.managedVirtueYellowBorderSpellIds = {}
+	ptc_root_locals.managedVirtueYellowBorderSelection = {}
 
 	if not g_settings or not g_settings.getBoolean("cip_import_skip_session_save") then
 		saveActionBar()
@@ -3614,7 +4937,7 @@ function offline()
 	invalidateActionBarSettingsCache()
 end
 
-local DRAG_PREVIEW_CHILD_IDS = {
+ ptc_root_locals.DRAG_PREVIEW_CHILD_IDS = {
 	"count",
 	"tier",
 	"spellIcon",
@@ -3623,10 +4946,11 @@ local DRAG_PREVIEW_CHILD_IDS = {
 	"spellParameter",
 	"multiIcon",
 	"equipmentTypeIcon",
+	"helperBorder",
 	"activeSpell"
 }
 
-local function copyDragPreviewChild(srcChild, dstChild)
+  ptc_root_locals.copyDragPreviewChild = function(srcChild, dstChild)
 	if not srcChild or not dstChild then
 		return
 	end
@@ -3689,8 +5013,8 @@ function applyDragPreviewFromSlot(sourceSlot, previewSlot)
 
 	local sourceImage = sourceSlot:getImageSource()
 
-	if sourceSlot._actionBarFilledFrame or sourceImage == SLOT_IMG_FILLED then
-		previewSlot:setImageClip(SLOT_CLIP_FILLED_NORMAL)
+	if sourceSlot._actionBarFilledFrame or sourceImage == ptc_root_locals.SLOT_IMG_FILLED then
+		previewSlot:setImageClip(ptc_root_locals.SLOT_CLIP_FILLED_NORMAL)
 	else
 		local frameClip = sourceSlot:getImageClip()
 
@@ -3707,8 +5031,8 @@ function applyDragPreviewFromSlot(sourceSlot, previewSlot)
 		previewSlot:setItem(nil)
 	end
 
-	for _, id in ipairs(DRAG_PREVIEW_CHILD_IDS) do
-		copyDragPreviewChild(sourceSlot:getChildById(id), previewSlot:getChildById(id))
+	for _, id in ipairs(ptc_root_locals.DRAG_PREVIEW_CHILD_IDS) do
+		ptc_root_locals.copyDragPreviewChild(sourceSlot:getChildById(id), previewSlot:getChildById(id))
 	end
 
 	previewSlot.words = sourceSlot.words
@@ -3718,7 +5042,16 @@ function applyDragPreviewFromSlot(sourceSlot, previewSlot)
 	previewSlot.useType = sourceSlot.useType
 	previewSlot.getTier = sourceSlot.getTier
 	previewSlot.text = sourceSlot.text
+	previewSlot.helperId = sourceSlot.helperId
+
+	HelperAction.clearIcons(previewSlot)
+
+	previewSlot.multiHelper = HelperAction.copyList(sourceSlot.multiHelper)
 	previewSlot.multiActions = sourceSlot.multiActions
+
+	if isMultiHelperSlot(previewSlot) then
+		loadMultiHelper(previewSlot)
+	end
 
 	if clearSlotProgressWidgets then
 		clearSlotProgressWidgets(previewSlot)
@@ -3736,6 +5069,10 @@ function hideSourceSlotForDrag(sourceSlot)
 
 	if sourceSlot._multiPanelOpen and closeCurrentMultiActionPanel then
 		closeCurrentMultiActionPanel()
+	end
+
+	if sourceSlot._multiHelperPanelOpen and closeCurrentMultiHelperPanel then
+		closeCurrentMultiHelperPanel()
 	end
 
 	local existing = sourceSlot._dragSourceOverlay
@@ -3758,12 +5095,12 @@ function hideSourceSlotForDrag(sourceSlot)
 	overlay:setDraggable(false)
 	overlay:setSize(sourceSlot:getSize())
 	overlay:setPosition(sourceSlot:getPosition())
-	overlay:setImageSource(SLOT_IMG_EMPTY)
+	overlay:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
 	overlay:setImageSize({
-		height = 34,
-		width = 34
+		width = 34,
+		height = 34
 	})
-	overlay:setImageClip(SLOT_CLIP_EMPTY)
+	overlay:setImageClip(ptc_root_locals.SLOT_CLIP_EMPTY)
 	overlay:setBackgroundColor("#1a1a1aff")
 	overlay:setBorderWidth(1)
 	overlay:setBorderColor("#ffffff")
@@ -3822,7 +5159,7 @@ function clearDragPreviewSlot(previewSlot)
 
 	previewSlot:setItem(nil)
 
-	for _, id in ipairs(DRAG_PREVIEW_CHILD_IDS) do
+	for _, id in ipairs(ptc_root_locals.DRAG_PREVIEW_CHILD_IDS) do
 		local child = previewSlot:getChildById(id)
 
 		if child and not child:isDestroyed() then
@@ -3845,10 +5182,15 @@ function clearDragPreviewSlot(previewSlot)
 	previewSlot.useType = nil
 	previewSlot.getTier = nil
 	previewSlot.text = nil
+	previewSlot.helperId = nil
+	previewSlot.multiHelper = nil
+
+	HelperAction.clearIcons(previewSlot)
+
 	previewSlot.multiActions = nil
 end
 
-local function clearCopiedSlotMultiActions(slot)
+  ptc_root_locals.clearCopiedSlotMultiActions = function(slot)
 	if detachMultiActionFromSlot then
 		detachMultiActionFromSlot(slot)
 
@@ -3864,30 +5206,30 @@ local function clearCopiedSlotMultiActions(slot)
 	end
 end
 
-local function copySlotMultiActions(fromSlot, toSlot)
-	if not toSlot then
+  ptc_root_locals.copySlotMultiActions = function(arg_241_0, arg_241_1)
+	if not arg_241_1 then
 		return
 	end
 
-	if slotHasMultiActions and slotHasMultiActions(fromSlot) and serializeSlotMultiActions and loadSlotMultiActions then
-		local copiedMultiActions = serializeSlotMultiActions(fromSlot)
+	if slotHasMultiActions and slotHasMultiActions(arg_241_0) and serializeSlotMultiActions and loadSlotMultiActions then
+		local var_241_0 = serializeSlotMultiActions(arg_241_0)
 
-		if copiedMultiActions then
-			loadSlotMultiActions(toSlot, copiedMultiActions)
+		if var_241_0 then
+			loadSlotMultiActions(arg_241_1, var_241_0)
 
 			return
 		end
 	end
 
-	clearCopiedSlotMultiActions(toSlot)
+	ptc_root_locals.clearCopiedSlotMultiActions(arg_241_1)
 end
 
-local function copySlotEquipmentPreset(fromSlot, toSlot)
+  ptc_root_locals.copySlotEquipmentPreset = function(fromSlot, toSlot)
 	if not toSlot then
 		return
 	end
 
-	if not isActionSlotEquipmentPreset(fromSlot) then
+	if not ptc_root_locals.isActionSlotEquipmentPreset(fromSlot) then
 		toSlot.equipments = nil
 		toSlot.equipmentIconIndex = nil
 		toSlot.equipmentDescription = nil
@@ -3896,8 +5238,8 @@ local function copySlotEquipmentPreset(fromSlot, toSlot)
 		return
 	end
 
-	if serializeEquipmentsForJson and normalizeEquipmentsFromSetting then
-		toSlot.equipments = normalizeEquipmentsFromSetting(serializeEquipmentsForJson(fromSlot.equipments))
+	if ptc_root_locals.serializeEquipmentsForJson and ptc_root_locals.normalizeEquipmentsFromSetting then
+		toSlot.equipments = ptc_root_locals.normalizeEquipmentsFromSetting(ptc_root_locals.serializeEquipmentsForJson(fromSlot.equipments))
 	else
 		toSlot.equipments = nil
 	end
@@ -3906,9 +5248,9 @@ local function copySlotEquipmentPreset(fromSlot, toSlot)
 		toSlot.equipments = {}
 	end
 
-	toSlot.equipmentIconIndex = type(fromSlot.equipmentIconIndex) == "number" and normalizeEquipmentIconIndex(fromSlot.equipmentIconIndex) or nil
+	toSlot.equipmentIconIndex = type(fromSlot.equipmentIconIndex) == "number" and ptc_root_locals.normalizeEquipmentIconIndex(fromSlot.equipmentIconIndex) or nil
 	toSlot.equipmentDescription = fromSlot.equipmentDescription or ""
-	toSlot.equipmentTypeIndex = type(fromSlot.equipmentTypeIndex) == "number" and normalizeEquipmentTypeIndex(fromSlot.equipmentTypeIndex) or 0
+	toSlot.equipmentTypeIndex = type(fromSlot.equipmentTypeIndex) == "number" and ptc_root_locals.normalizeEquipmentTypeIndex(fromSlot.equipmentTypeIndex) or 0
 end
 
 function copySlot(fromSlotId, toSlotId, visible)
@@ -3920,7 +5262,8 @@ function copySlot(fromSlotId, toSlotId, visible)
 
 	local tmpslot = findSlotById(toSlotId)
 	local destAlreadyExisted = tmpslot ~= nil
-	local savedHotkeyOn, savedHotkeyOff
+	local savedHotkeyOn
+	local savedHotkeyOff
 
 	if destAlreadyExisted then
 		savedHotkeyOn = tmpslot.hotkeyChatOn or ""
@@ -3929,7 +5272,7 @@ function copySlot(fromSlotId, toSlotId, visible)
 
 	if not tmpslot then
 		local panel = actionBarPanels[fromBar]
-		local template = isSideBar(fromBar) and "ActionSlotV" or "ActionSlot"
+		local template = ptc_root_locals.isSideBar(fromBar) and "ActionSlotV" or "ActionSlot"
 
 		tmpslot = g_ui.createWidget(template, panel)
 
@@ -3959,10 +5302,15 @@ function copySlot(fromSlotId, toSlotId, visible)
 	tmpslot.useType = fromSlot.useType
 	tmpslot.getTier = fromSlot.getTier
 	tmpslot.passiveId = fromSlot.passiveId
+	tmpslot.helperId = fromSlot.helperId
+
+	HelperAction.clearIcons(tmpslot)
+
+	tmpslot.multiHelper = HelperAction.copyList(fromSlot.multiHelper)
 	tmpslot.smartMode = fromSlot.smartMode
 	tmpslot.smartBaseItemId = fromSlot.smartBaseItemId
 
-	copySlotEquipmentPreset(fromSlot, tmpslot)
+	ptc_root_locals.copySlotEquipmentPreset(fromSlot, tmpslot)
 
 	if destAlreadyExisted then
 		tmpslot.hotkeyChatOn = savedHotkeyOn
@@ -3972,7 +5320,7 @@ function copySlot(fromSlotId, toSlotId, visible)
 		tmpslot.hotkeyChatOff = fromSlot.hotkeyChatOff or ""
 	end
 
-	syncSlotHotkeyMirror(tmpslot)
+	ptc_root_locals.syncSlotHotkeyMirror(tmpslot)
 	tmpslot:getChildById("text"):setText(fromSlot:getChildById("text"):getText())
 	tmpslot:setTooltip(fromSlot:getTooltip())
 
@@ -4001,11 +5349,15 @@ function copySlot(fromSlotId, toSlotId, visible)
 			toSpellIcon:setImageClip("0 0 32 32")
 			toSpellIcon:show()
 		end
+	elseif isMultiHelperSlot(tmpslot) then
+		loadMultiHelper(tmpslot)
+	elseif tmpslot.helperId then
+		loadHelper(tmpslot)
 	end
 
-	copySlotMultiActions(fromSlot, tmpslot)
+	ptc_root_locals.copySlotMultiActions(fromSlot, tmpslot)
 
-	if isActionSlotEquipmentPreset(tmpslot) then
+	if ptc_root_locals.isActionSlotEquipmentPreset(tmpslot) then
 		loadEquipmentSetDisplay(tmpslot)
 	end
 
@@ -4027,7 +5379,7 @@ function onDropFunc(slotId)
 		local toSlot = findSlotById(toSlotId)
 
 		if fromSlot and toSlot then
-			local tmpslotid = "slot" .. maxSlots + 1
+			local tmpslotid = "slot" .. ptc_root_locals.maxSlots + 1
 
 			copySlot(fromSlotId, tmpslotid, false)
 			copySlot(toSlotId, fromSlotId, true)
@@ -4101,7 +5453,7 @@ function setupActionBar()
 	end
 end
 
-local function assignOrEditMenuLabel(assignLabel, editLabel, hasAssigned)
+  ptc_root_locals.assignOrEditMenuLabel = function(assignLabel, editLabel, hasAssigned)
 	return hasAssigned and editLabel or assignLabel
 end
 
@@ -4114,20 +5466,32 @@ function createMenu(slotId)
 
 	local slotForMenu = findSlotById(slotId)
 	local slotHasSpell = slotForMenu and slotForMenu.words and slotForMenu.words ~= ""
-	local slotIsEquipPreset = slotForMenu and isActionSlotEquipmentPreset(slotForMenu)
+	local slotIsEquipPreset = slotForMenu and ptc_root_locals.isActionSlotEquipmentPreset(slotForMenu)
 	local slotHasObject = slotForMenu and not slotIsEquipPreset and slotForMenu.useType and slotForMenu.itemId and slotForMenu.itemId > 0
 	local slotHasText = slotForMenu and slotForMenu.text and slotForMenu.text ~= ""
 	local slotHasPassive = slotForMenu and slotForMenu.passiveId ~= nil
-	local slotHasHotkey = slotForMenu and ((slotForMenu.hotkeyChatOn or "") ~= "" or (slotForMenu.hotkeyChatOff or "") ~= "")
+	local slotHasHotkey = slotForMenu and isHelperActionSlot(slotForMenu)
+	local var_247_8 = slotForMenu and isMultiHelperSlot(slotForMenu)
+	local var_247_9 = slotForMenu and ((slotForMenu.hotkeyChatOn or "") ~= "" or (slotForMenu.hotkeyChatOff or "") ~= "")
 	local slotHasMulti = slotForMenu and slotHasMultiActions and slotHasMultiActions(slotForMenu)
 	local slotMultiPanelOpen = slotForMenu and slotForMenu._multiPanelOpen
-	local spellMenuLabel = not slotHasMulti and assignOrEditMenuLabel("Assign Spell", "Edit Spell", slotHasSpell) or "Assign Spell"
-	local objectMenuLabel = not slotHasMulti and assignOrEditMenuLabel("Assign Object", "Edit Object", slotHasObject) or "Assign Object"
-	local textMenuLabel = not slotHasMulti and assignOrEditMenuLabel("Assign Text", "Edit Text", slotHasText) or "Assign Text"
-	local passiveMenuLabel = not slotHasMulti and assignOrEditMenuLabel("Assign Passive Ability", "Edit Passive Ability", slotHasPassive) or "Assign Passive Ability"
-	local hotkeyMenuLabel = assignOrEditMenuLabel(tr("Assign Hotkey"), tr("Edit Hotkey"), slotHasHotkey)
+	local spellMenuLabel = slotForMenu and slotForMenu._multiHelperPanelOpen
+	local var_247_13 = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Spell", "Edit Spell", slotHasSpell) or "Assign Spell"
+	local objectMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Object", "Edit Object", slotHasObject) or "Assign Object"
+	local textMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Text", "Edit Text", slotHasText) or "Assign Text"
+	local passiveMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Passive Ability", "Edit Passive Ability", slotHasPassive) or "Assign Passive Ability"
+	local hotkeyMenuLabel = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Helper", "Edit Helper", slotHasHotkey) or "Assign Helper"
+	local var_247_18
 
-	menu:addOption(spellMenuLabel, function()
+	if spellMenuLabel then
+		var_247_18 = tr("Close Multi-Helper")
+	else
+		var_247_18 = not slotHasMulti and ptc_root_locals.assignOrEditMenuLabel("Assign Multi-Helper", "Edit Multi-Helper", var_247_8) or "Assign Multi-Helper"
+	end
+
+	local var_247_19 = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Hotkey"), tr("Edit Hotkey"), var_247_9)
+
+	menu:addOption(var_247_13, function()
 		openSpellAssignWindow()
 	end)
 	menu:addOption(objectMenuLabel, function()
@@ -4142,7 +5506,7 @@ function createMenu(slotId)
 
 				local item = slot.subType and Item.create(slot.itemId, slot.subType) or Item.create(slot.itemId)
 
-				populateObjectAssignWindowFromItem(item, slot.useType, actionSlotItemTier(slot), {
+				populateObjectAssignWindowFromItem(item, slot.useType, ptc_root_locals.actionSlotItemTier(slot), {
 					smartMode = slot.smartMode,
 					smartBaseItemId = slot.smartBaseItemId
 				})
@@ -4161,48 +5525,58 @@ function createMenu(slotId)
 	menu:addOption(passiveMenuLabel, function()
 		assignPassive(slotId)
 	end)
+	menu:addOption(hotkeyMenuLabel, function()
+		assignHelper(slotId)
+	end)
 
+	if not (slotHasPassive or slotIsEquipPreset or slotHasMulti) or spellMenuLabel then
+		menu:addOption(var_247_18, function()
+			if spellMenuLabel then
+				HelperAction.closePanel()
+			else
+				assignMultiHelper(slotId)
+			end
+		end)
+	end
+
+	local var_247_20 = slotHasPassive or slotHasHotkey or var_247_8 or slotIsEquipPreset
 	local multiMenuLabel
 
 	if slotMultiPanelOpen then
 		multiMenuLabel = tr("Close Multi-Action")
 	else
-		multiMenuLabel = assignOrEditMenuLabel(tr("Assign Multi-Action"), tr("Edit Multi-Action"), slotHasMulti)
+		multiMenuLabel = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Multi-Action"), tr("Edit Multi-Action"), slotHasMulti)
 	end
 
-	menu:addOption(multiMenuLabel, function()
-		if slotMultiPanelOpen and closeCurrentMultiActionPanel then
-			closeCurrentMultiActionPanel()
-		elseif assignMultiAction then
-			local targetSlot = findSlotById(slotId)
-
-			if targetSlot and not slotHasMulti and (targetSlot.passiveId ~= nil or isActionSlotEquipmentPreset(targetSlot)) then
-				clearSlotActionContent(targetSlot)
+	if not var_247_20 or slotMultiPanelOpen then
+		menu:addOption(multiMenuLabel, function()
+			if slotMultiPanelOpen and closeCurrentMultiActionPanel then
+				closeCurrentMultiActionPanel()
+			elseif assignMultiAction then
+				assignMultiAction(slotId)
 			end
-
-			assignMultiAction(slotId)
-		end
-	end)
+		end)
+	end
 
 	local equipmentMenuLabel
 
 	if slotHasMulti then
 		equipmentMenuLabel = tr("Assign Equipments")
 	else
-		equipmentMenuLabel = assignOrEditMenuLabel(tr("Assign Equipments"), tr("Edit Equipments"), slotIsEquipPreset)
+		equipmentMenuLabel = ptc_root_locals.assignOrEditMenuLabel(tr("Assign Equipments"), tr("Edit Equipments"), slotIsEquipPreset)
 	end
 
 	menu:addOption(equipmentMenuLabel, function()
 		openEquipmentAssignWindow()
 	end)
-	menu:addOption(hotkeyMenuLabel, function()
+	menu:addOption(var_247_19, function()
 		openEditHotkeyWindow()
 	end)
 
 	local actionSlot = findSlotById(slotToEdit)
-	local slotHasEquipPreset = actionSlot and isActionSlotEquipmentPreset(actionSlot)
+	local slotHasEquipPreset = actionSlot and ptc_root_locals.isActionSlotEquipmentPreset(actionSlot)
 
-	if actionSlot and (actionSlot.itemId or actionSlot.words or actionSlot.text or actionSlot.useType or slotHasHotkey or actionSlot.passiveId or slotHasMulti or slotHasEquipPreset) then
+	if actionSlot and (actionSlot.itemId or actionSlot.words or actionSlot.text or actionSlot.useType or var_247_9 or actionSlot.passiveId or actionSlot.helperId or var_247_8 or slotHasMulti or slotHasEquipPreset) then
 		menu:addSeparator()
 		menu:addOption("Clear Action", function()
 			clearSlot()
@@ -4216,31 +5590,31 @@ end
 
 CastMode = {
 	_radioUpdating = false,
-	panelMargin = 6,
 	panelHeight = 45,
+	panelMargin = 6,
 	ids = {
 		"castWithCrosshairRadio",
 		"castAtCursorRadio",
 		"castAtTargetRadio"
 	},
 	byRadio = {
+		castAtTargetRadio = "target",
 		castAtCursorRadio = "cursor",
-		castWithCrosshairRadio = "crosshair",
-		castAtTargetRadio = "target"
+		castWithCrosshairRadio = "crosshair"
 	},
 	toRadio = {
+		target = "castAtTargetRadio",
 		cursor = "castAtCursorRadio",
-		crosshair = "castWithCrosshairRadio",
-		target = "castAtTargetRadio"
+		crosshair = "castWithCrosshairRadio"
 	},
 	validModes = {
+		target = true,
 		cursor = true,
-		crosshair = true,
-		target = true
+		crosshair = true
 	}
 }
 
-local function normalizeCrossHairMode(mode)
+  ptc_root_locals.normalizeCrossHairMode = function(mode)
 	if type(mode) == "string" and CastMode.validModes[mode] then
 		return mode
 	end
@@ -4271,7 +5645,7 @@ function CastMode.setSelection(mode)
 		return
 	end
 
-	local selectedRadioId = CastMode.toRadio[normalizeCrossHairMode(mode)] or CastMode.toRadio.crosshair
+	local selectedRadioId = CastMode.toRadio[ptc_root_locals.normalizeCrossHairMode(mode)] or CastMode.toRadio.crosshair
 
 	CastMode._radioUpdating = true
 
@@ -4297,7 +5671,7 @@ function CastMode.getSelected()
 		local radio = panel:getChildById(radioId)
 
 		if radio and not radio:isDestroyed() and radio:isChecked() then
-			return normalizeCrossHairMode(CastMode.byRadio[radioId])
+			return ptc_root_locals.normalizeCrossHairMode(CastMode.byRadio[radioId])
 		end
 	end
 
@@ -4317,9 +5691,7 @@ function CastMode.setVisible(visible)
 		return
 	end
 
-	local wasVisible = panel:isVisible()
-
-	if visible == wasVisible then
+	if visible == panel:isVisible() then
 		return
 	end
 
@@ -4383,7 +5755,7 @@ function openSpellAssignWindow()
 
 	spellAssignWindow = g_ui.loadUI(uiFile, g_ui.getRootWidget())
 
-	setSpellAssignWindowTitle()
+	ptc_root_locals.setSpellAssignWindowTitle()
 
 	spellsPanel = spellAssignWindow:recursiveGetChildById("spellsPanel")
 	CastMode._spellsListBaseHeight = nil
@@ -4398,7 +5770,7 @@ function openSpellAssignWindow()
 	spellAssignWindow:raise()
 	spellAssignWindow:focus()
 
-	if not spellAssignFocusParameterOnOpen then
+	if not ptc_root_locals.spellAssignFocusParameterOnOpen then
 		spellAssignWindow:recursiveGetChildById("filterTextEdit"):focus()
 	end
 
@@ -4420,17 +5792,17 @@ function openSpellAssignWindowForDraggedSpell(slotId, words, multiIndex)
 	slotToEdit = slotId
 	multiActionEditIndex = multiIndex or nil
 	spellAssignPreferredSpellOverride = Spells.getSpellNameByWords(normalizedWords)
-	spellAssignFocusParameterOnOpen = true
+	ptc_root_locals.spellAssignFocusParameterOnOpen = true
 
 	openSpellAssignWindow()
 end
 
 function closeSpellAssignWindow()
 	spellAssignPreferredSpellOverride = nil
-	spellAssignFocusParameterOnOpen = false
+	ptc_root_locals.spellAssignFocusParameterOnOpen = false
 	multiActionEditIndex = nil
 
-	clearExternalSpellAssignContext()
+	ptc_root_locals.clearExternalSpellAssignContext()
 
 	CastMode._spellsListBaseHeight = nil
 	CastMode._previewSpellKey = nil
@@ -4443,7 +5815,7 @@ function closeSpellAssignWindow()
 	spellsPanel = nil
 end
 
-local function getSpellAssignPreferredSpellName()
+  ptc_root_locals.getSpellAssignPreferredSpellName = function()
 	if spellAssignPreferredSpellOverride then
 		return spellAssignPreferredSpellOverride
 	end
@@ -4457,7 +5829,7 @@ local function getSpellAssignPreferredSpellName()
 	return Spells.getSpellNameByWords(slot.words:lower():trim())
 end
 
-local function syncSpellAssignParameterFieldFromSlot(focusedChild)
+  ptc_root_locals.syncSpellAssignParameterFieldFromSlot = function(focusedChild)
 	if not spellAssignWindow or not focusedChild then
 		return
 	end
@@ -4468,7 +5840,7 @@ local function syncSpellAssignParameterFieldFromSlot(focusedChild)
 		return
 	end
 
-	local preferred = getSpellAssignPreferredSpellName()
+	local preferred = ptc_root_locals.getSpellAssignPreferredSpellName()
 	local slot = slotToEdit and findSlotById(slotToEdit)
 
 	if preferred and focusedChild:getId() == preferred and slot then
@@ -4478,12 +5850,12 @@ local function syncSpellAssignParameterFieldFromSlot(focusedChild)
 	end
 end
 
-local function pickSpellAssignListFocusWidget()
+  ptc_root_locals.pickSpellAssignListFocusWidget = function()
 	if not spellsPanel then
 		return nil
 	end
 
-	local preferredName = getSpellAssignPreferredSpellName()
+	local preferredName = ptc_root_locals.getSpellAssignPreferredSpellName()
 
 	if preferredName then
 		for _, child in ipairs(spellsPanel:getChildren()) do
@@ -4578,7 +5950,7 @@ function initializeSpelllist()
 				local spellIconGray = tmpLabel:getChildById("spellIconGray")
 
 				if spellIconGray then
-					spellIconGray:setVisible(not spellPassesAssignLearntFilter(info))
+					spellIconGray:setVisible(not ptc_root_locals.spellPassesAssignLearntFilter(info))
 				end
 
 				connect(tmpLabel, {
@@ -4606,7 +5978,7 @@ function initializeSpelllist()
 			end
 
 			updatePreviewSpell(focusedChild)
-			syncSpellAssignParameterFieldFromSlot(focusedChild)
+			ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focusedChild)
 		end
 	})
 
@@ -4624,7 +5996,7 @@ function initializeSpelllist()
 
 	filterSpells("")
 
-	local toFocus = pickSpellAssignListFocusWidget()
+	local toFocus = ptc_root_locals.pickSpellAssignListFocusWidget()
 
 	if toFocus then
 		spellsPanel:focusChild(toFocus, KeyboardFocusReason)
@@ -4643,8 +6015,8 @@ function initializeSpelllist()
 		end
 	end
 
-	if spellAssignFocusParameterOnOpen then
-		spellAssignFocusParameterOnOpen = false
+	if ptc_root_locals.spellAssignFocusParameterOnOpen then
+		ptc_root_locals.spellAssignFocusParameterOnOpen = false
 		spellAssignPreferredSpellOverride = nil
 
 		local paramEdit = spellAssignWindow:getChildById("parameterTextEdit")
@@ -4661,7 +6033,7 @@ function initializeSpelllist()
 	end
 end
 
-local function updateSpellAssignParameterField(spell)
+  ptc_root_locals.updateSpellAssignParameterField = function(spell)
 	if not spellAssignWindow then
 		return
 	end
@@ -4706,7 +6078,7 @@ local function updateSpellAssignParameterField(spell)
 			CastMode._previewSpellKey = spellKey
 
 			local slot = slotToEdit and findSlotById(slotToEdit) or nil
-			local savedMode = normalizeCrossHairMode(slot and slot.crossHairMode or "crosshair")
+			local savedMode = ptc_root_locals.normalizeCrossHairMode(slot and slot.crossHairMode or "crosshair")
 
 			CastMode.setSelection(savedMode)
 		end
@@ -4764,7 +6136,7 @@ function spellAssignPreviewNoSpellSelected()
 		previewItemIcon:setVisible(false)
 	end
 
-	updateSpellAssignParameterField(nil)
+	ptc_root_locals.updateSpellAssignParameterField(nil)
 end
 
 function updatePreviewSpell(focusedChild)
@@ -4807,7 +6179,7 @@ function updatePreviewSpell(focusedChild)
 		local previewGray = previewPanel:getChildById("previewSpellGray")
 
 		if previewGray then
-			previewGray:setVisible(spell ~= nil and not spellPassesAssignLearntFilter(spell))
+			previewGray:setVisible(spell ~= nil and not ptc_root_locals.spellPassesAssignLearntFilter(spell))
 		end
 
 		local previewItemBg = previewPanel:getChildById("previewItemBackground")
@@ -4823,7 +6195,7 @@ function updatePreviewSpell(focusedChild)
 		end
 	end
 
-	updateSpellAssignParameterField(spell)
+	ptc_root_locals.updateSpellAssignParameterField(spell)
 end
 
 function spellAssignApply(closeAfter)
@@ -4886,7 +6258,7 @@ function spellAssignApply(closeAfter)
 	end
 
 	if Spells.hasCrossHairTarget(spell) then
-		slot.crossHairMode = normalizeCrossHairMode(CastMode.getSelected())
+		slot.crossHairMode = ptc_root_locals.normalizeCrossHairMode(CastMode.getSelected())
 	else
 		slot.crossHairMode = nil
 	end
@@ -5050,7 +6422,7 @@ function clearSlotById(slotId)
 	slot.hotkeyChatOn = ""
 	slot.hotkeyChatOff = ""
 
-	syncSlotHotkeyMirror(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
 end
@@ -5065,7 +6437,7 @@ function clearHotkey()
 	slot.hotkeyChatOn = ""
 	slot.hotkeyChatOff = ""
 
-	syncSlotHotkeyMirror(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(slot)
 	setupHotkeys()
 	saveActionBar()
 end
@@ -5093,11 +6465,11 @@ function openEquipmentAssignWindow()
 
 	local actionSlot = findSlotById(slotToEdit)
 
-	copyEquipmentAssignDraft(actionSlot and actionSlot.equipments or nil)
-	copyEquipmentAssignMetaFromSlot(actionSlot)
-	refreshAllEquipmentAssignSlots()
-	setupEquipmentAssignSlotHandlers()
-	refreshAssignActionSlotPreview()
+	ptc_root_locals.copyEquipmentAssignDraft(actionSlot and actionSlot.equipments or nil)
+	ptc_root_locals.copyEquipmentAssignMetaFromSlot(actionSlot)
+	ptc_root_locals.refreshAllEquipmentAssignSlots()
+	ptc_root_locals.setupEquipmentAssignSlotHandlers()
+	ptc_root_locals.refreshAssignActionSlotPreview()
 	equipmentAssignUpdateButtons()
 end
 
@@ -5110,17 +6482,17 @@ function openEquipmentAssignIconWindow()
 		closeEquipmentAssignIconWindow(false)
 	end
 
-	equipmentAssignIconPickerRevertIndex = equipmentAssignIconIndex
-	equipmentAssignIconPickerRevertDescription = equipmentAssignDescription
-	equipmentAssignTypePickerRevertIndex = equipmentAssignTypeIndex
+	ptc_root_locals.equipmentAssignIconPickerRevertIndex = ptc_root_locals.equipmentAssignIconIndex
+	ptc_root_locals.equipmentAssignIconPickerRevertDescription = ptc_root_locals.equipmentAssignDescription
+	ptc_root_locals.equipmentAssignTypePickerRevertIndex = ptc_root_locals.equipmentAssignTypeIndex
 
 	equipmentAssignWindow:hide()
 
-	equipmentAssignHiddenForIconPicker = true
+	ptc_root_locals.equipmentAssignHiddenForIconPicker = true
 	equipmentAssignIconWindow = g_ui.loadUI("assign_equipment_icon", g_ui.getRootWidget())
 
 	if not equipmentAssignIconWindow then
-		equipmentAssignHiddenForIconPicker = false
+		ptc_root_locals.equipmentAssignHiddenForIconPicker = false
 
 		equipmentAssignWindow:show()
 
@@ -5135,11 +6507,11 @@ function openEquipmentAssignIconWindow()
 	local edit = equipmentAssignIconWindow:recursiveGetChildById("descriptionTextEdit")
 
 	if edit then
-		edit:setText(equipmentAssignDescription or "")
+		edit:setText(ptc_root_locals.equipmentAssignDescription or "")
 	end
 
-	setupEquipmentAssignIconPicker()
-	setupEquipmentAssignTypePicker()
+	ptc_root_locals.setupEquipmentAssignIconPicker()
+	ptc_root_locals.setupEquipmentAssignTypePicker()
 end
 
 function closeEquipmentAssignIconWindow(revert)
@@ -5148,21 +6520,21 @@ function closeEquipmentAssignIconWindow(revert)
 	end
 
 	if revert then
-		equipmentAssignIconIndex = equipmentAssignIconPickerRevertIndex
-		equipmentAssignDescription = equipmentAssignIconPickerRevertDescription
-		equipmentAssignTypeIndex = equipmentAssignTypePickerRevertIndex
+		ptc_root_locals.equipmentAssignIconIndex = ptc_root_locals.equipmentAssignIconPickerRevertIndex
+		ptc_root_locals.equipmentAssignDescription = ptc_root_locals.equipmentAssignIconPickerRevertDescription
+		ptc_root_locals.equipmentAssignTypeIndex = ptc_root_locals.equipmentAssignTypePickerRevertIndex
 
-		refreshAssignActionSlotPreview()
+		ptc_root_locals.refreshAssignActionSlotPreview()
 		equipmentAssignUpdateButtons()
 	end
 
-	destroyEquipmentAssignTypeRadioGroup()
+	ptc_root_locals.destroyEquipmentAssignTypeRadioGroup()
 	equipmentAssignIconWindow:destroy()
 
 	equipmentAssignIconWindow = nil
 
-	if equipmentAssignHiddenForIconPicker then
-		equipmentAssignHiddenForIconPicker = false
+	if ptc_root_locals.equipmentAssignHiddenForIconPicker then
+		ptc_root_locals.equipmentAssignHiddenForIconPicker = false
 
 		if equipmentAssignWindow and not equipmentAssignWindow:isDestroyed() then
 			equipmentAssignWindow:show()
@@ -5177,7 +6549,7 @@ function equipmentAssignIconApply()
 		return
 	end
 
-	commitEquipmentAssignIconPicker()
+	ptc_root_locals.commitEquipmentAssignIconPicker()
 end
 
 function equipmentAssignIconOk()
@@ -5192,8 +6564,8 @@ function closeEquipmentAssignWindow()
 
 	closeEquipmentAssignIconWindow(false)
 
-	if equipmentAssignPickInvSlot ~= nil then
-		equipmentAssignPickInvSlot = nil
+	if ptc_root_locals.equipmentAssignPickInvSlot ~= nil then
+		ptc_root_locals.equipmentAssignPickInvSlot = nil
 
 		if mouseGrabberWidget and not mouseGrabberWidget:isDestroyed() then
 			mouseGrabberWidget:ungrabMouse()
@@ -5202,13 +6574,13 @@ function closeEquipmentAssignWindow()
 		g_mouse.popCursor("target")
 	end
 
-	equipmentAssignHiddenForPick = false
-	equipmentAssignHiddenForIconPicker = false
+	ptc_root_locals.equipmentAssignHiddenForPick = false
+	ptc_root_locals.equipmentAssignHiddenForIconPicker = false
 
 	equipmentAssignWindow:destroy()
 
 	equipmentAssignWindow = nil
-	equipmentAssignDraft = nil
+	ptc_root_locals.equipmentAssignDraft = nil
 end
 
 function equipmentAssignApply()
@@ -5230,7 +6602,7 @@ function applyEquipmentAssign(closeAfter)
 		return
 	end
 
-	if not isEquipmentAssignIconDetermined() then
+	if not ptc_root_locals.isEquipmentAssignIconDetermined() then
 		return
 	end
 
@@ -5249,11 +6621,16 @@ function applyEquipmentAssign(closeAfter)
 	slot.grayManaCost = nil
 	slot.text = nil
 	slot.passiveId = nil
+	slot.helperId = nil
+	slot.multiHelper = nil
+
+	hideHelperSlotBorder(slot)
+
 	slot.parameter = nil
 	slot.equipments = {}
 
-	for invSlot, entry in pairs(equipmentAssignDraft or {}) do
-		if not isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
+	for invSlot, entry in pairs(ptc_root_locals.equipmentAssignDraft or {}) do
+		if not ptc_root_locals.isEquipmentAssignVisualBackpackSlot(invSlot) and entry and entry.itemId and entry.itemId > 0 then
 			slot.equipments[invSlot] = {
 				itemId = entry.itemId,
 				getTier = entry.getTier,
@@ -5264,7 +6641,7 @@ function applyEquipmentAssign(closeAfter)
 
 	slot.useType = "equip"
 
-	local display = equipmentAssignDisplayEntry(equipmentAssignDraft)
+	local display = ptc_root_locals.equipmentAssignDisplayEntry(ptc_root_locals.equipmentAssignDraft)
 
 	if display then
 		slot.itemId = display.itemId
@@ -5276,9 +6653,9 @@ function applyEquipmentAssign(closeAfter)
 		slot.subType = nil
 	end
 
-	slot.equipmentIconIndex = normalizeEquipmentIconIndex(equipmentAssignIconIndex)
-	slot.equipmentDescription = equipmentAssignDescription or ""
-	slot.equipmentTypeIndex = normalizeEquipmentTypeIndex(equipmentAssignTypeIndex)
+	slot.equipmentIconIndex = ptc_root_locals.normalizeEquipmentIconIndex(ptc_root_locals.equipmentAssignIconIndex)
+	slot.equipmentDescription = ptc_root_locals.equipmentAssignDescription or ""
+	slot.equipmentTypeIndex = ptc_root_locals.normalizeEquipmentTypeIndex(ptc_root_locals.equipmentAssignTypeIndex)
 
 	loadEquipmentSetDisplay(slot)
 	setupHotkeys()
@@ -5324,7 +6701,7 @@ function openTextAssignWindow()
 		end
 	end
 
-	setTextAssignWindowTitle()
+	ptc_root_locals.setTextAssignWindowTitle()
 	textAssignWindow:raise()
 	textAssignWindow:focus()
 
@@ -5370,22 +6747,20 @@ function assignPassive(slotId)
 		window:focus()
 	end, 50)
 
-	do
-		local slotForTitle = findSlotById(slotId)
-		local isEditPassive = slotForTitle and slotForTitle.passiveId ~= nil
-		local barId, slotIdx = slotBarAndIndexFromSlotId(slotId)
+	local slotForTitle = findSlotById(slotId)
+	local isEditPassive = slotForTitle and slotForTitle.passiveId ~= nil
+	local barId, slotIdx = ptc_root_locals.slotBarAndIndexFromSlotId(slotId)
 
-		if barId and slotIdx then
-			local barNum = actionBarDisplayNumber(barId)
+	if barId and slotIdx then
+		local barNum = ptc_root_locals.actionBarDisplayNumber(barId)
 
-			if isEditPassive then
-				window:setText(tr("Edit Passive to Action Button %d.%02d", barNum, slotIdx))
-			else
-				window:setText(tr("Assign Passive to Action Button %d.%02d", barNum, slotIdx))
-			end
+		if isEditPassive then
+			window:setText(tr("Edit Passive to Action Button %d.%02d", barNum, slotIdx))
 		else
-			window:setText(tr(isEditPassive and "Edit Passive" or "Assign Passive"))
+			window:setText(tr("Assign Passive to Action Button %d.%02d", barNum, slotIdx))
 		end
+	else
+		window:setText(tr(isEditPassive and "Edit Passive" or "Assign Passive"))
 	end
 
 	local selectedPassiveId
@@ -5429,7 +6804,7 @@ function assignPassive(slotId)
 		widget.source = passiveData.icon
 	end
 
-	function passiveList:onChildFocusChange(focusedChild)
+	function passiveList.onChildFocusChange(unusedArgument, focusedChild)
 		applyPassiveAssignFocus(focusedChild)
 	end
 
@@ -5513,6 +6888,226 @@ function assignPassive(slotId)
 	window.onEscape = cancelFunc
 end
 
+function assignHelper(arg_313_0, arg_313_1)
+	local rootWidget = g_ui.loadUI("assign_helper", g_ui.getRootWidget())
+
+	if not rootWidget then
+		return
+	end
+
+	g_client.setInputLockWidget(rootWidget)
+
+	if rootWidget.centerIn then
+		rootWidget:centerIn("parent")
+	end
+
+	rootWidget:raise()
+	rootWidget:focus()
+
+	local var_313_1 = findSlotById(arg_313_0)
+	local item = var_313_1 and isHelperActionSlot(var_313_1)
+
+	if type(arg_313_1) == "number" then
+		local var_313_3 = var_313_1 and var_313_1.multiHelper and var_313_1.multiHelper[arg_313_1]
+
+		item = HelperAction.getItem(var_313_3) ~= nil
+
+		rootWidget:setText(tr(item and "Edit Helper %d" or "Assign Helper %d", arg_313_1))
+	else
+		local var_313_4, var_313_5 = ptc_root_locals.slotBarAndIndexFromSlotId(arg_313_0)
+
+		if var_313_4 and var_313_5 then
+			local var_313_6 = ptc_root_locals.actionBarDisplayNumber(var_313_4)
+
+			if item then
+				rootWidget:setText(tr("Edit Helper to Action Button %d.%02d", var_313_6, var_313_5))
+			else
+				rootWidget:setText(tr("Assign Helper to Action Button %d.%02d", var_313_6, var_313_5))
+			end
+		else
+			rootWidget:setText(tr(item and "Edit Helper" or "Assign Helper"))
+		end
+	end
+
+	local id
+	local helperList = rootWidget.contentPanel.helperList
+	local helperId
+	local var_313_10 = findSlotById(arg_313_0)
+
+	if type(arg_313_1) == "number" and var_313_10 and var_313_10.multiHelper then
+		helperId = var_313_10.multiHelper[arg_313_1]
+	elseif var_313_10 and isHelperActionSlot(var_313_10) then
+		helperId = var_313_10.helperId
+	end
+
+	local function var_313_11(arg_314_0)
+		if not arg_314_0 then
+			return ""
+		end
+
+		local helperName = arg_314_0:getChildById("helperName")
+
+		if helperName then
+			return helperName:getText()
+		end
+
+		return arg_314_0:getText() or ""
+	end
+
+	local function var_313_12(arg_315_0)
+		if not arg_315_0 then
+			return
+		end
+
+		id = arg_315_0:getId()
+
+		rootWidget.contentPanel.preview.previewLabel:setText(var_313_11(arg_315_0))
+		rootWidget.contentPanel.preview.previewLabel:setColor("#C0C0C0")
+		rootWidget.contentPanel.preview.previewIcon:setImageSource(HelperAction.ICON_FILE)
+		rootWidget.contentPanel.preview.previewIcon:setImageClip(arg_315_0.helperClip or "0 0 32 32")
+		helperList:ensureChildVisible(arg_315_0)
+	end
+
+	local var_313_13
+
+	for unusedValue, entry in ipairs(HelperAction.ITEMS) do
+		if not HelperAction.isItemVisible(entry) then
+			-- block empty
+		else
+			local helperPreviewWidget = g_ui.createWidget("HelperPreview", helperList)
+
+			helperPreviewWidget:setId(entry.id)
+
+			helperPreviewWidget.helperClip = HelperAction.iconClip(entry.iconIndex)
+
+			helperPreviewWidget.image:setImageSource(HelperAction.ICON_FILE)
+			helperPreviewWidget.image:setImageClip(helperPreviewWidget.helperClip)
+
+			local helperName = helperPreviewWidget:getChildById("helperName")
+
+			if helperName then
+				helperName:setText(tr(entry.label))
+			end
+
+			connect(helperPreviewWidget, {
+				onFocusChange = function(arg_316_0, arg_316_1)
+					local helperName = arg_316_0:getChildById("helperName")
+
+					if helperName then
+						helperName:setColor(arg_316_1 and "#ffffff" or "#c0c0c0")
+					end
+				end
+			})
+
+			if entry.id == helperId then
+				var_313_13 = helperPreviewWidget
+			end
+		end
+	end
+
+	function helperList.onChildFocusChange(unusedArgument, arg_317_1)
+		var_313_12(arg_317_1)
+	end
+
+	local children = var_313_13
+
+	if not children and type(arg_313_1) ~= "number" then
+		children = helperList:getChildren()[1]
+	end
+
+	if children then
+		var_313_12(children)
+		helperList:focusChild(children, KeyboardFocusReason)
+
+		local helperName = children:getChildById("helperName")
+
+		if helperName then
+			helperName:setColor("#ffffff")
+		end
+	end
+
+	local function var_313_18()
+		if g_client.setInputLockWidget then
+			g_client.setInputLockWidget(nil)
+		end
+
+		if rootWidget and not rootWidget:isDestroyed() then
+			rootWidget:destroy()
+		end
+	end
+
+	local function var_313_19(arg_319_0)
+		if not id or not HelperAction.getItem(id) then
+			return
+		end
+
+		local var_319_0 = findSlotById(slotToEdit)
+
+		if not var_319_0 then
+			if arg_319_0 then
+				var_313_18()
+			end
+
+			return
+		end
+
+		if arg_319_0 then
+			var_313_18()
+		end
+
+		if type(arg_313_1) == "number" then
+			HelperAction.applyToIndex(var_319_0, arg_313_1, id)
+		else
+			clearSlot()
+
+			local var_319_1 = findSlotById(slotToEdit)
+
+			if not var_319_1 then
+				return
+			end
+
+			var_319_1.helperId = id
+			var_319_1.itemId = 469
+
+			var_319_1:setItemId(469)
+			loadHelper(var_319_1)
+			saveActionBar()
+		end
+	end
+
+	local function var_313_20()
+		var_313_18()
+	end
+
+	function rootWidget.contentPanel.buttonOk.onClick()
+		var_313_19(true)
+	end
+
+	function rootWidget.contentPanel.buttonApply.onClick()
+		var_313_19(false)
+	end
+
+	rootWidget.contentPanel.buttonClose.onClick = var_313_20
+
+	function rootWidget.onEnter()
+		var_313_19(true)
+	end
+
+	rootWidget.onEscape = var_313_20
+end
+
+function assignMultiHelper(arg_324_0)
+	local var_324_0 = findSlotById(arg_324_0)
+
+	if not var_324_0 then
+		return
+	end
+
+	slotToEdit = arg_324_0
+
+	HelperAction.openPanel(var_324_0)
+end
+
 function closeTextAssignWindow()
 	if textAssignWindow then
 		if textAssignWindow.hotkeyBlock then
@@ -5546,11 +7141,11 @@ function applyTextAssign(closeAfter)
 		return
 	end
 
-	local autoSend = textAssignWindow:recursiveGetChildById("sendAutomaticallyCheckBox"):isChecked()
+	local sendAutomaticallyCheckBox = textAssignWindow:recursiveGetChildById("sendAutomaticallyCheckBox"):isChecked()
 
 	if externalAssignSlotId and slotToEdit == externalAssignSlotId then
 		if onExternalTextAssignApplied then
-			onExternalTextAssignApplied(text, autoSend)
+			onExternalTextAssignApplied(text, sendAutomaticallyCheckBox)
 		end
 
 		if closeAfter then
@@ -5561,7 +7156,8 @@ function applyTextAssign(closeAfter)
 	end
 
 	local checkForParameter = text:split(" \"")
-	local name, parameter
+	local name
+	local parameter
 
 	if #checkForParameter == 2 then
 		name = checkForParameter[1]
@@ -5623,8 +7219,7 @@ function applyTextAssign(closeAfter)
 
 		while slot:getChildById("text"):getTextSize().height > 30 do
 			local subString = slot:getChildById("text"):getText()
-
-			subString = string.sub(subString, 1, #subString - 1)
+			local subString = string.sub(subString, 1, #subString - 1)
 
 			slot:getChildById("text"):setText(subString)
 		end
@@ -5668,12 +7263,12 @@ function openObjectAssignWindow()
 		local item = previewItem and previewItem:getItem()
 
 		if item then
-			updateSmartModeAssignCheckboxState(item, objectAssignWindow._smartModeAssignContext)
+			ptc_root_locals.updateSmartModeAssignCheckboxState(item, objectAssignWindow._smartModeAssignContext)
 		end
 	end
 
 	objectAssignWindow:setVisible(false)
-	setObjectAssignWindowTitle()
+	ptc_root_locals.setObjectAssignWindowTitle()
 end
 
 function closeObjectAssignWindow()
@@ -5687,10 +7282,10 @@ function closeObjectAssignWindow()
 	actionRadioGroup = nil
 end
 
-local ASSIGN_OBJECT_CB_ENABLED = "#c0c0c0"
-local ASSIGN_OBJECT_CB_DISABLED = "#707070"
+ ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED = "#c0c0c0"
+ ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED = "#707070"
 
-local function itemHasDurationDecay(item)
+  ptc_root_locals[174] = function(item)
 	if not item then
 		return false
 	end
@@ -5698,7 +7293,7 @@ local function itemHasDurationDecay(item)
 	return item:hasClockExpire() or item:hasExpire() or item:hasExpireStop()
 end
 
-local function itemIdHasDurationDecay(itemId)
+  ptc_root_locals.itemIdHasDurationDecay = function(itemId)
 	if not itemId or itemId <= 0 then
 		return false
 	end
@@ -5712,7 +7307,7 @@ local function itemIdHasDurationDecay(itemId)
 	return tt:hasClockExpire() or tt:hasExpire() or tt:hasExpireStop()
 end
 
-local function getClothSlotForItemId(itemId)
+  ptc_root_locals.getClothSlotForItemId = function(itemId)
 	if not itemId or itemId <= 0 then
 		return 0
 	end
@@ -5722,7 +7317,7 @@ local function getClothSlotForItemId(itemId)
 	return item and item:getClothSlot() or 0
 end
 
-local function smartModeItemMatchesBase(baseId, itemId)
+  ptc_root_locals.smartModeItemMatchesBase = function(baseId, itemId)
 	if not baseId or not itemId or baseId <= 0 or itemId <= 0 then
 		return false
 	end
@@ -5773,38 +7368,33 @@ function getActionBarInventoryDisplayCount(itemId, tier, player)
 	end
 
 	local marketData = itemType.getMarketData and itemType:getMarketData()
-	local isRing = itemType:getClothSlot() == InventorySlotFinger or MarketCategory and marketData and marketData.category == MarketCategory.Rings
 
-	if not isRing or not smartModeItemMatchesBase(itemId, equipped:getId()) then
+	if not (itemType:getClothSlot() == InventorySlotFinger or MarketCategory and marketData and marketData.category == MarketCategory.Rings) or not ptc_root_locals.smartModeItemMatchesBase(itemId, equipped:getId()) then
 		return count
 	end
 
-	if g_game.getFeature(GameThingUpgradeClassification) then
-		local equippedTier = equipped.getTier and equipped:getTier() or 0
-
-		if equippedTier ~= tier then
-			return count
-		end
+	if g_game.getFeature(GameThingUpgradeClassification) and (equipped.getTier and equipped:getTier() or 0) ~= tier then
+		return count
 	end
 
 	return count + 1
 end
 
-local function smartModeItemMatchesEntry(entry, itemId)
+  ptc_root_locals.smartModeItemMatchesEntry = function(entry, itemId)
 	local baseId = entry.smartBaseItemId or entry.itemId
 
-	if smartModeItemMatchesBase(baseId, itemId) then
+	if ptc_root_locals.smartModeItemMatchesBase(baseId, itemId) then
 		return true
 	end
 
 	if entry.itemId and entry.itemId ~= baseId then
-		return smartModeItemMatchesBase(entry.itemId, itemId)
+		return ptc_root_locals.smartModeItemMatchesBase(entry.itemId, itemId)
 	end
 
 	return false
 end
 
-function updateSmartModeAssignLayout(smartVisible)
+  ptc_root_locals.updateSmartModeAssignLayout = function(smartVisible)
 	if not objectAssignWindow then
 		return
 	end
@@ -5830,7 +7420,7 @@ function updateSmartModeAssignLayout(smartVisible)
 	objectAssignWindow:updateLayout()
 end
 
-function updateSmartModeAssignCheckboxState(item, assignContext)
+ ptc_root_locals.updateSmartModeAssignCheckboxState = function(item, assignContext)
 	if not objectAssignWindow or not item then
 		return
 	end
@@ -5843,14 +7433,14 @@ function updateSmartModeAssignCheckboxState(item, assignContext)
 	end
 
 	local baseItemId = assignContext and type(assignContext.smartBaseItemId) == "number" and assignContext.smartBaseItemId or item:getId()
-	local showSmart = isEquippableActionBarItem(item) and itemIdHasDurationDecay(baseItemId)
+	local showSmart = ptc_root_locals.isEquippableActionBarItem(item) and ptc_root_locals.itemIdHasDurationDecay(baseItemId)
 
 	smartCb:setVisible(showSmart)
 
 	if not showSmart then
 		smartCb:setChecked(false)
 		smartCb:setEnabled(false)
-		updateSmartModeAssignLayout(false)
+		ptc_root_locals.updateSmartModeAssignLayout(false)
 
 		return
 	end
@@ -5858,7 +7448,7 @@ function updateSmartModeAssignCheckboxState(item, assignContext)
 	local equipSelected = equipCb:isChecked()
 
 	smartCb:setEnabled(equipSelected)
-	smartCb:setColor(equipSelected and ASSIGN_OBJECT_CB_ENABLED or ASSIGN_OBJECT_CB_DISABLED)
+	smartCb:setColor(equipSelected and ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED or ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED)
 
 	if assignContext and assignContext.smartMode == true then
 		smartCb:setChecked(true)
@@ -5866,17 +7456,17 @@ function updateSmartModeAssignCheckboxState(item, assignContext)
 		smartCb:setChecked(false)
 	end
 
-	updateSmartModeAssignLayout(true)
+	ptc_root_locals.updateSmartModeAssignLayout(true)
 end
 
-local function readSmartModeFromAssignWindow(item, useType, assignContext)
+  ptc_root_locals.readSmartModeFromAssignWindow = function(item, useType, assignContext)
 	if useType ~= "equip" or not item then
 		return false, nil
 	end
 
 	local baseItemId = assignContext and type(assignContext.smartBaseItemId) == "number" and assignContext.smartBaseItemId or item:getId()
 
-	if not itemIdHasDurationDecay(baseItemId) then
+	if not ptc_root_locals.itemIdHasDurationDecay(baseItemId) then
 		return false, nil
 	end
 
@@ -5889,7 +7479,7 @@ local function readSmartModeFromAssignWindow(item, useType, assignContext)
 	return true, baseItemId
 end
 
-local function refreshSmartModeEntry(entry, player)
+  ptc_root_locals.refreshSmartModeEntry = function(entry, player)
 	if not entry or not player or not entry.smartMode or entry.useType ~= "equip" then
 		return false
 	end
@@ -5899,7 +7489,7 @@ local function refreshSmartModeEntry(entry, player)
 	end
 
 	local baseId = entry.smartBaseItemId or entry.itemId
-	local clothSlot = getClothSlotForItemId(baseId)
+	local clothSlot = ptc_root_locals.getClothSlotForItemId(baseId)
 
 	if not clothSlot or clothSlot <= 0 then
 		return false
@@ -5911,7 +7501,7 @@ local function refreshSmartModeEntry(entry, player)
 	if equipped then
 		local eqId = equipped:getId()
 
-		if smartModeItemMatchesEntry(entry, eqId) then
+		if ptc_root_locals.smartModeItemMatchesEntry(entry, eqId) then
 			if eqId ~= entry.itemId then
 				if not entry.smartBaseItemId then
 					entry.smartBaseItemId = baseId
@@ -5935,7 +7525,7 @@ local function refreshSmartModeEntry(entry, player)
 	return changed
 end
 
-local function refreshSmartModeSlot(slot)
+  ptc_root_locals.refreshSmartModeSlot = function(slot)
 	if not slot then
 		return false
 	end
@@ -5946,7 +7536,7 @@ local function refreshSmartModeSlot(slot)
 		return false
 	end
 
-	if isActionSlotEquipmentPreset(slot) then
+	if ptc_root_locals.isActionSlotEquipmentPreset(slot) then
 		return false
 	end
 
@@ -5956,7 +7546,7 @@ local function refreshSmartModeSlot(slot)
 		for i = 1, 3 do
 			local entry = slot.multiActions[i]
 
-			if entry and refreshSmartModeEntry(entry, player) then
+			if entry and ptc_root_locals.refreshSmartModeEntry(entry, player) then
 				changed = true
 			end
 		end
@@ -5964,7 +7554,7 @@ local function refreshSmartModeSlot(slot)
 		if changed and syncMultiActionSlot then
 			syncMultiActionSlot(slot)
 		end
-	elseif slot.smartMode and refreshSmartModeEntry(slot, player) then
+	elseif slot.smartMode and ptc_root_locals.refreshSmartModeEntry(slot, player) then
 		loadObject(slot)
 		applyActionSlotFrame(slot)
 
@@ -5974,10 +7564,8 @@ local function refreshSmartModeSlot(slot)
 	return changed
 end
 
-function refreshAllSmartModeSlots()
-	local player = g_game.getLocalPlayer()
-
-	if not player then
+ ptc_root_locals.refreshAllSmartModeSlots = function()
+	if not g_game.getLocalPlayer() then
 		return
 	end
 
@@ -5988,7 +7576,7 @@ function refreshAllSmartModeSlots()
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				if refreshSmartModeSlot(slot) then
+				if ptc_root_locals.refreshSmartModeSlot(slot) then
 					anyChanged = true
 				end
 			end
@@ -6000,7 +7588,7 @@ function refreshAllSmartModeSlots()
 	end
 end
 
-local function styleAssignObjectCheckbox(id, enabled)
+  ptc_root_locals.styleAssignObjectCheckbox = function(id, enabled)
 	local cb = objectAssignWindow:getChildById(id)
 
 	if not cb then
@@ -6008,10 +7596,10 @@ local function styleAssignObjectCheckbox(id, enabled)
 	end
 
 	cb:setEnabled(enabled)
-	cb:setColor(enabled and ASSIGN_OBJECT_CB_ENABLED or ASSIGN_OBJECT_CB_DISABLED)
+	cb:setColor(enabled and ptc_root_locals.ASSIGN_OBJECT_CB_ENABLED or ptc_root_locals.ASSIGN_OBJECT_CB_DISABLED)
 end
 
-function isEquippableActionBarItem(item)
+ ptc_root_locals.isEquippableActionBarItem = function(item)
 	if not item then
 		return false
 	end
@@ -6049,18 +7637,18 @@ function isEquippableActionBarItem(item)
 	return false
 end
 
-function isValidActionBarObjectItem(item, fromMap)
-	if not item or not item.getId then
+  ptc_root_locals.isValidActionBarObjectItem = function(arg_346_0, arg_346_1)
+	if not arg_346_0 or not arg_346_0.getId then
 		return false
 	end
 
-	local itemId = item:getId()
+	local id = arg_346_0:getId()
 
-	if not itemId or itemId <= 0 then
+	if not id or id <= 0 then
 		return false
 	end
 
-	local thingType = g_things.getThingType(itemId, ThingCategoryItem)
+	local thingType = g_things.getThingType(id, ThingCategoryItem)
 
 	if not thingType then
 		return false
@@ -6082,11 +7670,11 @@ function isValidActionBarObjectItem(item, fromMap)
 		return false
 	end
 
-	if not fromMap then
+	if not arg_346_1 then
 		return true
 	end
 
-	if isEquippableActionBarItem(item) then
+	if ptc_root_locals.isEquippableActionBarItem(arg_346_0) then
 		return true
 	end
 
@@ -6116,103 +7704,103 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 
 	objectAssignWindow._smartModeAssignContext = assignContext
 
-	setObjectAssignWindowTitle()
+	ptc_root_locals.setObjectAssignWindowTitle()
 
-	local preview = objectAssignWindow:recursiveGetChildById("previewItem")
+	local previewItem = objectAssignWindow:recursiveGetChildById("previewItem")
 
-	preview:setItemId(item:getId())
+	previewItem:setItemId(item:getId())
 
 	local tier = tierOverride ~= nil and tierOverride or item:getTier()
 
-	ItemsDatabase.setTier(preview, 0)
-	ItemsDatabase.setBigTier(preview, tier)
+	ItemsDatabase.setTier(previewItem, 0)
+	ItemsDatabase.setBigTier(previewItem, tier)
 
-	preview.auxTier = tier
+	previewItem.auxTier = tier
 
-	preview:setItemCount(1)
+	previewItem:setItemCount(1)
 
-	local defaultWidget
-	local equippable = isEquippableActionBarItem(item)
-	local multiUse = item:isMultiUse()
+	local var_347_2
+	local var_347_3 = ptc_root_locals.isEquippableActionBarItem(item)
+	local var_347_4 = item:isMultiUse()
 
-	if equippable and multiUse then
-		styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
-		styleAssignObjectCheckbox("useOnTargetCheckbox", true)
-		styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
-		styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
-		styleAssignObjectCheckbox("equipCheckbox", true)
-		styleAssignObjectCheckbox("useCheckbox", false)
+	if var_347_3 and var_347_4 then
+		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", false)
 
-		defaultWidget = objectAssignWindow:getChildById("equipCheckbox")
-	elseif equippable then
-		styleAssignObjectCheckbox("equipCheckbox", true)
-		styleAssignObjectCheckbox("useCheckbox", true)
-		styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
-		styleAssignObjectCheckbox("useOnTargetCheckbox", false)
-		styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
-		styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
+		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
+	elseif var_347_3 then
+		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
-		defaultWidget = objectAssignWindow:getChildById("equipCheckbox")
-	elseif multiUse then
-		styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
-		styleAssignObjectCheckbox("useOnTargetCheckbox", true)
-		styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
-		styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
-		styleAssignObjectCheckbox("equipCheckbox", false)
-		styleAssignObjectCheckbox("useCheckbox", false)
+		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
+	elseif var_347_4 then
+		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", false)
 
-		defaultWidget = objectAssignWindow:getChildById("useOnYourselfCheckbox")
+		var_347_2 = objectAssignWindow:getChildById("useOnYourselfCheckbox")
 	else
-		styleAssignObjectCheckbox("useCheckbox", true)
-		styleAssignObjectCheckbox("equipCheckbox", false)
-		styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
-		styleAssignObjectCheckbox("useOnTargetCheckbox", false)
-		styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
-		styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useCheckbox", true)
+		ptc_root_locals.styleAssignObjectCheckbox("equipCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useOnTargetCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
+		ptc_root_locals.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
-		defaultWidget = objectAssignWindow:getChildById("useCheckbox")
+		var_347_2 = objectAssignWindow:getChildById("useCheckbox")
 	end
 
-	local preferredMap = {
-		useAtCursor = "useCursorPositionCheckbox",
-		useOnTarget = "useOnTargetCheckbox",
-		equip = "equipCheckbox",
+	local var_347_5 = {
+		useWith = "useWithCrosshairCheckbox",
 		useOnSelf = "useOnYourselfCheckbox",
+		useAtCursor = "useCursorPositionCheckbox",
 		use = "useCheckbox",
-		useWith = "useWithCrosshairCheckbox"
+		equip = "equipCheckbox",
+		useOnTarget = "useOnTargetCheckbox"
 	}
-	local chosen = defaultWidget
+	local var_347_6 = var_347_2
 
 	if preferredUseType then
-		local prefId = preferredMap[preferredUseType]
+		local var_347_7 = var_347_5[preferredUseType]
 
-		if prefId then
-			local prefW = objectAssignWindow:getChildById(prefId)
+		if var_347_7 then
+			local childById = objectAssignWindow:getChildById(var_347_7)
 
-			if prefW and prefW:isEnabled() then
-				chosen = prefW
+			if childById and childById:isEnabled() then
+				var_347_6 = childById
 			end
 		end
 	end
 
-	if chosen then
-		actionRadioGroup:selectWidget(chosen)
+	if var_347_6 then
+		actionRadioGroup:selectWidget(var_347_6)
 	end
 
-	updateSmartModeAssignCheckboxState(item, assignContext)
+	ptc_root_locals.updateSmartModeAssignCheckboxState(item, assignContext)
 
 	if not objectAssignWindow:isVisible() then
 		objectAssignWindow:show()
 	end
 
-	local smartCb = objectAssignWindow:getChildById("smartModeCheckbox")
+	local smartModeCheckbox = objectAssignWindow:getChildById("smartModeCheckbox")
 
-	updateSmartModeAssignLayout(smartCb and smartCb:isVisible())
+	ptc_root_locals.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
 	objectAssignWindow:raise()
 	objectAssignWindow:focus()
 end
 
-function findGameMapWidgetAtClick(clickedWidget)
+  ptc_root_locals.findGameMapWidgetAtClick = function(clickedWidget)
 	if not clickedWidget then
 		return nil
 	end
@@ -6234,39 +7822,39 @@ function findGameMapWidgetAtClick(clickedWidget)
 	return nil
 end
 
-function resolvePickItemAtMouse(mousePosition)
-	local root = modules.game_interface.getRootPanel()
+ ptc_root_locals.resolvePickItemAtMouse = function(arg_349_0)
+	local rootPanel = modules.game_interface.getRootPanel()
 
-	if not root then
+	if not rootPanel then
 		return nil
 	end
 
-	local clickedWidget = root:recursiveGetChildByPos(mousePosition, false)
+	local var_349_1 = rootPanel:recursiveGetChildByPos(arg_349_0, false)
 
-	if not clickedWidget then
+	if not var_349_1 then
 		return nil
 	end
 
-	if clickedWidget:getClassName() == "UIItem" and not clickedWidget:isVirtual() then
-		local invItem = clickedWidget:getItem()
+	if var_349_1:getClassName() == "UIItem" and not var_349_1:isVirtual() then
+		local item = var_349_1:getItem()
 
-		if isValidActionBarObjectItem(invItem, false) then
-			return invItem
+		if ptc_root_locals.isValidActionBarObjectItem(item, false) then
+			return item
 		end
 
 		return nil
 	end
 
-	local mapWidget = findGameMapWidgetAtClick(clickedWidget)
+	local var_349_3 = ptc_root_locals.findGameMapWidgetAtClick(var_349_1)
 
-	if mapWidget and mapWidget.getTile then
-		local tile = mapWidget:getTile(mousePosition)
+	if var_349_3 and var_349_3.getTile then
+		local tile = var_349_3:getTile(arg_349_0)
 
 		if tile then
-			local thing = tile:getTopMoveThing()
+			local topMoveThing = tile:getTopMoveThing()
 
-			if thing and thing.isItem and thing:isItem() and isValidActionBarObjectItem(thing, true) then
-				return thing
+			if topMoveThing and topMoveThing.isItem and topMoveThing:isItem() and ptc_root_locals.isValidActionBarObjectItem(topMoveThing, true) then
+				return topMoveThing
 			end
 		end
 	end
@@ -6274,7 +7862,7 @@ function resolvePickItemAtMouse(mousePosition)
 	return nil
 end
 
-local function restoreObjectAssignWindowAfterPick()
+  ptc_root_locals.restoreObjectAssignWindowAfterPick = function()
 	if not objectAssignHiddenForPick then
 		return
 	end
@@ -6284,9 +7872,9 @@ local function restoreObjectAssignWindowAfterPick()
 	if objectAssignWindow and not objectAssignWindow:isDestroyed() then
 		objectAssignWindow:show()
 
-		local smartCb = objectAssignWindow:getChildById("smartModeCheckbox")
+		local smartModeCheckbox = objectAssignWindow:getChildById("smartModeCheckbox")
 
-		updateSmartModeAssignLayout(smartCb and smartCb:isVisible())
+		ptc_root_locals.updateSmartModeAssignLayout(smartModeCheckbox and smartModeCheckbox:isVisible())
 		objectAssignWindow:raise()
 		objectAssignWindow:focus()
 	end
@@ -6307,7 +7895,7 @@ function startChooseItem()
 	g_mouse.pushCursor("target")
 end
 
-local function applyObjectAssign(closeAfter)
+  ptc_root_locals.applyObjectAssign = function(closeAfter)
 	local item = objectAssignWindow:recursiveGetChildById("previewItem"):getItem()
 
 	if not item then
@@ -6338,7 +7926,7 @@ local function applyObjectAssign(closeAfter)
 		useType = "useAtCursor"
 	end
 
-	local smartMode, smartBaseItemId = readSmartModeFromAssignWindow(item, useType, objectAssignWindow and objectAssignWindow._smartModeAssignContext)
+	local smartMode, smartBaseItemId = ptc_root_locals.readSmartModeFromAssignWindow(item, useType, objectAssignWindow and objectAssignWindow._smartModeAssignContext)
 
 	if externalAssignSlotId and slotToEdit == externalAssignSlotId then
 		slot.itemId = item:getId()
@@ -6377,7 +7965,7 @@ local function applyObjectAssign(closeAfter)
 			smartMode = smartMode and true or nil,
 			smartBaseItemId = smartBaseItemId
 		})
-		refreshSmartModeSlot(slot)
+		ptc_root_locals.refreshSmartModeSlot(slot)
 
 		if closeAfter then
 			multiActionEditIndex = nil
@@ -6408,7 +7996,7 @@ local function applyObjectAssign(closeAfter)
 	updateSlotGray(slot)
 	refreshActionSlotInventoryQuantity(slot)
 	applyActionSlotFrame(slot)
-	refreshSmartModeSlot(slot)
+	ptc_root_locals.refreshSmartModeSlot(slot)
 	setupHotkeys()
 
 	if closeAfter then
@@ -6417,11 +8005,11 @@ local function applyObjectAssign(closeAfter)
 end
 
 function objectAssignApply()
-	applyObjectAssign(false)
+	ptc_root_locals.applyObjectAssign(false)
 end
 
 function objectAssignOk()
-	applyObjectAssign(true)
+	ptc_root_locals.applyObjectAssign(true)
 end
 
 function objectAssignAccept()
@@ -6437,8 +8025,8 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 		return onCyclopediaSpellAssignMouseRelease(self, mousePosition, mouseButton)
 	end
 
-	if equipmentAssignPickInvSlot ~= nil then
-		return onEquipmentAssignChooseItemMouseRelease(self, mousePosition, mouseButton)
+	if ptc_root_locals.equipmentAssignPickInvSlot ~= nil then
+		return ptc_root_locals.onEquipmentAssignChooseItemMouseRelease(self, mousePosition, mouseButton)
 	end
 
 	local item
@@ -6448,11 +8036,11 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 		local root = modules.game_interface.getRootPanel()
 		local clickedWidget = root and root:recursiveGetChildByPos(mousePosition, false)
 
-		if clickedWidget and findGameMapWidgetAtClick(clickedWidget) then
+		if clickedWidget and ptc_root_locals.findGameMapWidgetAtClick(clickedWidget) then
 			hadMapClick = true
 		end
 
-		item = resolvePickItemAtMouse(mousePosition)
+		item = ptc_root_locals.resolvePickItemAtMouse(mousePosition)
 
 		if hadMapClick and not item and objectAssignHiddenForPick then
 			modules.game_textmessage.displayFailureMessage(tr("Sorry, not possible."))
@@ -6464,7 +8052,7 @@ function onChooseItemMouseRelease(self, mousePosition, mouseButton)
 
 		populateObjectAssignWindowFromItem(item)
 	else
-		restoreObjectAssignWindowAfterPick()
+		ptc_root_locals.restoreObjectAssignWindowAfterPick()
 	end
 
 	g_mouse.popCursor("target")
@@ -6523,11 +8111,11 @@ function openEditHotkeyWindow()
 	end
 
 	local instrLabel = editHotkeyWindow:recursiveGetChildById("hotkeyInstructionLabel")
-	local barId, slotIdx = slotBarAndIndexFromSlotId(slotToEdit)
+	local barId, slotIdx = ptc_root_locals.slotBarAndIndexFromSlotId(slotToEdit)
 
 	if barId and slotIdx then
-		local region = actionBarRegionTitle(barId)
-		local barNum = actionBarDisplayNumber(barId)
+		local region = ptc_root_locals.actionBarRegionTitle(barId)
+		local barNum = ptc_root_locals.actionBarDisplayNumber(barId)
 
 		editHotkeyWindow:setText(tr("Edit Hotkey for \"%s: Action Button %d.%d\"", region, barNum, slotIdx))
 
@@ -6633,26 +8221,28 @@ function unbindHotkeys()
 	end
 end
 
-local function actionBarResolveSourceItem(slot)
+  ptc_root_locals.actionBarResolveSourceItem = function(slot)
 	local tier = slot.getTier or 0
 
-	if g_game.getClientVersion() < 780 or slot.subType then
+	if slot.subType then
 		return g_game.findPlayerItem(slot.itemId, slot.subType or -1, tier)
 	end
 
 	return nil
 end
 
-local function actionBarPerformInventoryUseWith(slot, toThing)
+  ptc_root_locals.actionBarPerformInventoryUseWith = function(slot, toThing, arg_367_2)
 	if not toThing then
 		return
 	end
 
-	local invItem = actionBarResolveSourceItem(slot)
+	local invItem = ptc_root_locals.actionBarResolveSourceItem(slot)
 
-	if g_game.getClientVersion() >= 780 and not slot.subType then
+	if not slot.subType then
+		CrosshairCast.prioritizeManualHotkey(arg_367_2)
 		g_game.useInventoryItemWith(slot.itemId, toThing)
 	elseif invItem then
+		CrosshairCast.prioritizeManualHotkey(arg_367_2)
 		g_game.useWith(invItem, toThing)
 	else
 		local item = Item.create(slot.itemId)
@@ -6669,11 +8259,12 @@ local function actionBarPerformInventoryUseWith(slot, toThing)
 			item:setTier(slot.getTier)
 		end
 
+		CrosshairCast.prioritizeManualHotkey(arg_367_2)
 		g_game.useWith(item, toThing)
 	end
 end
 
-local function actionBarPickTileTargetForUseWith(tile, logicItem)
+  ptc_root_locals.actionBarPickTileTargetForUseWith = function(tile, logicItem)
 	if not tile or not logicItem then
 		return nil
 	end
@@ -6691,7 +8282,7 @@ local function actionBarPickTileTargetForUseWith(tile, logicItem)
 	return target
 end
 
-local function actionBarUseItemAtCursor(slot)
+  ptc_root_locals.actionBarUseItemAtCursor = function(slot, arg_369_1)
 	if not slot or not slot.itemId then
 		return
 	end
@@ -6710,7 +8301,7 @@ local function actionBarUseItemAtCursor(slot)
 		mapWidget = mapWidget:getParent()
 	end
 
-	local logicItem = actionBarResolveSourceItem(slot)
+	local logicItem = ptc_root_locals.actionBarResolveSourceItem(slot)
 
 	if not logicItem then
 		logicItem = Item.create(slot.itemId)
@@ -6735,10 +8326,10 @@ local function actionBarUseItemAtCursor(slot)
 			return
 		end
 
-		local target = actionBarPickTileTargetForUseWith(tile, logicItem)
+		local var_369_6 = ptc_root_locals.actionBarPickTileTargetForUseWith(tile, logicItem)
 
-		if target then
-			actionBarPerformInventoryUseWith(slot, target)
+		if var_369_6 then
+			ptc_root_locals.actionBarPerformInventoryUseWith(slot, var_369_6, arg_369_1)
 		end
 
 		return
@@ -6748,10 +8339,10 @@ local function actionBarUseItemAtCursor(slot)
 		local cn = leaf:getClassName()
 
 		if cn == "UIItem" and not leaf:isVirtual() then
-			local targetItem = leaf:getItem()
+			local item = leaf:getItem()
 
-			if targetItem then
-				actionBarPerformInventoryUseWith(slot, targetItem)
+			if item then
+				ptc_root_locals.actionBarPerformInventoryUseWith(slot, item, arg_369_1)
 			end
 
 			return
@@ -6761,13 +8352,13 @@ local function actionBarUseItemAtCursor(slot)
 			local creature = leaf:getCreature()
 
 			if creature then
-				actionBarPerformInventoryUseWith(slot, creature)
+				ptc_root_locals.actionBarPerformInventoryUseWith(slot, creature, arg_369_1)
 			end
 		end
 	end
 end
 
-local function actionSlotSpellStillOnCooldown(slot)
+  ptc_root_locals.actionSlotSpellStillOnCooldown = function(slot)
 	if not slot then
 		return false
 	end
@@ -6805,6 +8396,18 @@ local function actionSlotSpellStillOnCooldown(slot)
 	end
 
 	return false
+end
+
+function CrosshairCast.prioritizeManualHotkey(arg_371_0)
+	if not arg_371_0 then
+		return
+	end
+
+	local game_helper = modules.game_helper
+
+	if game_helper and game_helper.beginManualHotkeyAction then
+		game_helper.beginManualHotkeyAction()
+	end
 end
 
 function CrosshairCast.isActive()
@@ -6845,6 +8448,7 @@ end
 
 function CrosshairCast.finish()
 	CrosshairCast.activeWords = nil
+	CrosshairCast.activeHotkey = nil
 
 	if mouseGrabberWidget and not mouseGrabberWidget:isDestroyed() then
 		mouseGrabberWidget:ungrabMouse()
@@ -6855,7 +8459,7 @@ function CrosshairCast.finish()
 	end
 end
 
-function CrosshairCast.start(words)
+function CrosshairCast.start(words, mode)
 	if not words or words == "" then
 		return
 	end
@@ -6869,6 +8473,7 @@ function CrosshairCast.start(words)
 	end
 
 	CrosshairCast.activeWords = words
+	CrosshairCast.activeHotkey = mode == true
 
 	mouseGrabberWidget:grabMouse()
 
@@ -6877,7 +8482,7 @@ function CrosshairCast.start(words)
 	end
 end
 
-function CrosshairCast.castWithMode(words, mode)
+function CrosshairCast.castWithMode(words, arg_376_1, arg_376_2)
 	if not words or words == "" then
 		return
 	end
@@ -6887,32 +8492,36 @@ function CrosshairCast.castWithMode(words, mode)
 	end
 
 	if not g_game.talkSpell then
+		CrosshairCast.prioritizeManualHotkey(arg_376_2)
 		g_game.talk(words)
 
 		return
 	end
 
-	mode = normalizeCrossHairMode(mode)
+	arg_376_1 = ptc_root_locals.normalizeCrossHairMode(arg_376_1)
 
-	if mode == "cursor" then
-		local tilePos = CrosshairCast.getMapTilePositionAt(g_window.getMousePosition())
+	if arg_376_1 == "cursor" then
+		local mapTilePositionAt = CrosshairCast.getMapTilePositionAt(g_window.getMousePosition())
 
-		if tilePos then
-			g_game.talkSpell(words, 2, tilePos)
+		if mapTilePositionAt then
+			CrosshairCast.prioritizeManualHotkey(arg_376_2)
+			g_game.talkSpell(words, 2, mapTilePositionAt)
 		end
-	elseif mode == "target" then
+	elseif arg_376_1 == "target" then
+		CrosshairCast.prioritizeManualHotkey(arg_376_2)
 		g_game.talkSpell(words, 3, {
 			x = 0,
 			z = 0,
 			y = 0
 		})
 	else
-		CrosshairCast.start(words)
+		CrosshairCast.start(words, arg_376_2)
 	end
 end
 
 function onSpellCrosshairMouseRelease(self, mousePosition, mouseButton)
 	local words = CrosshairCast.activeWords
+	local activeHotkey = CrosshairCast.activeHotkey
 
 	CrosshairCast.finish()
 
@@ -6924,10 +8533,11 @@ function onSpellCrosshairMouseRelease(self, mousePosition, mouseButton)
 		return true
 	end
 
-	local pos = CrosshairCast.getMapTilePositionAt(mousePosition)
+	local mapTilePositionAt = CrosshairCast.getMapTilePositionAt(mousePosition)
 
-	if pos and g_game.talkSpell then
-		g_game.talkSpell(words, 1, pos)
+	if mapTilePositionAt and g_game.talkSpell then
+		CrosshairCast.prioritizeManualHotkey(activeHotkey)
+		g_game.talkSpell(words, 1, mapTilePositionAt)
 	end
 
 	return true
@@ -6938,23 +8548,68 @@ function executeActionSlot(slot, fromKeyboard)
 		closeCurrentMultiActionPanel()
 	end
 
+	if closeCurrentMultiHelperPanel then
+		closeCurrentMultiHelperPanel()
+	end
+
+	if isMultiHelperSlot(slot) then
+		local game_helper = modules.game_helper
+
+		if game_helper and game_helper.toggleHelperStatsEntry then
+			local var_378_1 = HelperAction.filledEntries(slot.multiHelper)
+			local var_378_2 = not HelperAction.allEnabled(slot.multiHelper)
+
+			for iter_378_0 = 1, #var_378_1 do
+				local var_378_3 = var_378_1[iter_378_0].id
+
+				if HelperAction.isEnabled(var_378_3) ~= var_378_2 then
+					game_helper.toggleHelperStatsEntry(var_378_3)
+				end
+			end
+		end
+
+		refreshMultiHelperSlotBorder(slot)
+		refreshActionSlotTooltip(slot)
+
+		return
+	end
+
+	if isHelperActionSlot(slot) then
+		local game_helper = modules.game_helper
+
+		if game_helper and game_helper.toggleHelperStatsEntry then
+			game_helper.toggleHelperStatsEntry(slot.helperId)
+		end
+
+		refreshHelperSlotBorder(slot)
+		refreshActionSlotTooltip(slot)
+
+		return
+	end
+
 	if slot.itemId and slot.useType then
 		if slot.useType == "use" then
-			HotkeyUtils.executeHotkeyItem(HOTKEY_USE, slot.itemId, slot.subType)
+			HotkeyUtils.executeHotkeyItem(HOTKEY_USE, slot.itemId, slot.subType, fromKeyboard and CrosshairCast.prioritizeManualHotkey or nil)
 		elseif slot.useType == "useOnTarget" then
-			HotkeyUtils.executeHotkeyItem(HOTKEY_USEONTARGET, slot.itemId, slot.subType)
+			HotkeyUtils.executeHotkeyItem(HOTKEY_USEONTARGET, slot.itemId, slot.subType, fromKeyboard and CrosshairCast.prioritizeManualHotkey or nil)
 		elseif slot.useType == "useWith" then
-			HotkeyUtils.executeHotkeyItem(HOTKEY_USEWITH, slot.itemId, slot.subType)
+			HotkeyUtils.executeHotkeyItem(HOTKEY_USEWITH, slot.itemId, slot.subType, fromKeyboard and CrosshairCast.prioritizeManualHotkey or nil)
 		elseif slot.useType == "useOnSelf" then
-			HotkeyUtils.executeHotkeyItem(HOTKEY_USEONSELF, slot.itemId, slot.subType)
+			HotkeyUtils.executeHotkeyItem(HOTKEY_USEONSELF, slot.itemId, slot.subType, fromKeyboard and CrosshairCast.prioritizeManualHotkey or nil)
 		elseif slot.useType == "equip" then
-			if isActionSlotEquipmentPreset(slot) then
-				if actionSlotEquipmentSetNeedsEquip(slot) then
+			if ptc_root_locals.isActionSlotEquipmentPreset(slot) then
+				if ptc_root_locals[104](slot) then
 					local player = g_game.getLocalPlayer()
 
 					if player then
-						for _, invSlot in ipairs(EQUIPMENT_SET_EQUIP_ORDER) do
-							if not actionSlotPresetEntryForSlot(slot, invSlot) then
+						local game_helper = modules.game_helper
+
+						if game_helper and game_helper.beginManualEquipmentAction then
+							pcall(game_helper.beginManualEquipmentAction)
+						end
+
+						for _, invSlot in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
+							if not ptc_root_locals.actionSlotPresetEntryForSlot(slot, invSlot) then
 								local equipped = player:getInventoryItem(invSlot)
 
 								if equipped then
@@ -6965,24 +8620,30 @@ function executeActionSlot(slot, fromKeyboard)
 							end
 						end
 
-						for _, invSlot in ipairs(EQUIPMENT_SET_EQUIP_ORDER) do
-							local entry = actionSlotPresetEntryForSlot(slot, invSlot)
+						for _, invSlot in ipairs(ptc_root_locals.EQUIPMENT_SET_EQUIP_ORDER) do
+							local entry = ptc_root_locals.actionSlotPresetEntryForSlot(slot, invSlot)
 
-							if entry and not actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
+							if entry and not ptc_root_locals.actionSlotPresetEntryMatchesEquipped(player, invSlot, entry) then
 								g_game.equipItemId(entry.itemId, entry.getTier or 0)
 							end
 						end
 					end
 				end
 
-				startEquipmentSetActionCooldown()
+				ptc_root_locals.startEquipmentSetActionCooldown()
 			elseif slot.itemId and slot.itemId > 0 then
 				local player = g_game.getLocalPlayer()
 
 				if player then
-					local tier = actionSlotItemTier(slot)
+					local tier = ptc_root_locals.actionSlotItemTier(slot)
 
-					if player:getInventoryCount(slot.itemId, tier) > 0 or isActionSlotEquipEquipped(slot) then
+					if player:getInventoryCount(slot.itemId, tier) > 0 or ptc_root_locals.isActionSlotEquipEquipped(slot) then
+						local game_helper = modules.game_helper
+
+						if game_helper and game_helper.beginManualEquipmentAction then
+							pcall(game_helper.beginManualEquipmentAction, slot.itemId)
+						end
+
 						if slot.smartMode then
 							slot._smartEquipPending = true
 
@@ -7000,24 +8661,21 @@ function executeActionSlot(slot, fromKeyboard)
 				end
 			end
 		elseif slot.useType == "useAtCursor" then
-			actionBarUseItemAtCursor(slot)
+			ptc_root_locals.actionBarUseItemAtCursor(slot, fromKeyboard)
 		end
 	elseif slot.words and slot.words ~= "" then
 		local words = slot.parameter and slot.parameter ~= "" and slot.words .. " \"" .. slot.parameter or slot.words
 		local spell = Spells.getSpellByWords and Spells.getSpellByWords(slot.words) or nil
 
 		if spell and Spells.hasCrossHairTarget(spell) then
-			CrosshairCast.castWithMode(words, normalizeCrossHairMode(slot.crossHairMode))
+			CrosshairCast.castWithMode(words, ptc_root_locals.normalizeCrossHairMode(slot.crossHairMode), fromKeyboard)
 		else
+			CrosshairCast.prioritizeManualHotkey(fromKeyboard)
 			g_game.talk(words)
 		end
 	elseif slot.text then
 		if slot.autoSend then
-			if fromKeyboard or modules.game_console.isChatEnabled() then
-				modules.game_console.sendMessage(slot.text)
-			else
-				g_game.talk(slot.text)
-			end
+			modules.game_console.sendActionBarMessage(slot.text)
 		elseif fromKeyboard then
 			scheduleEvent(function()
 				if not modules.game_console.isChatEnabled() then
@@ -7036,14 +8694,14 @@ function executeActionSlot(slot, fromKeyboard)
 	end
 end
 
-local function tryExecuteActionSlot(slot, fromKeyboard)
+  ptc_root_locals.tryExecuteActionSlot = function(slot, fromKeyboard)
 	if not slot then
 		return
 	end
 
-	local isEquip = isActionSlotEquip(slot)
+	local isEquip = ptc_root_locals.isActionSlotEquip(slot)
 
-	if isEquip and isActionSlotEquipmentPreset(slot) and isEquipmentSetActionOnCooldown(slot) then
+	if isEquip and ptc_root_locals.isActionSlotEquipmentPreset(slot) and ptc_root_locals.isEquipmentSetActionOnCooldown(slot) then
 		return
 	end
 
@@ -7055,7 +8713,7 @@ local function tryExecuteActionSlot(slot, fromKeyboard)
 		return
 	end
 
-	if slot.words and slot.words ~= "" and actionSlotSpellStillOnCooldown(slot) then
+	if slot.words and slot.words ~= "" and ptc_root_locals.actionSlotSpellStillOnCooldown(slot) then
 		executeActionSlot(slot, fromKeyboard)
 
 		return
@@ -7068,9 +8726,9 @@ local function tryExecuteActionSlot(slot, fromKeyboard)
 	end
 end
 
-local function bindSlotHotkey(slot)
+  ptc_root_locals.bindSlotHotkey = function(slot)
 	function slot.onMouseRelease()
-		tryExecuteActionSlot(slot, false)
+		ptc_root_locals.tryExecuteActionSlot(slot, false)
 	end
 
 	if slot.hotkey and slot.hotkey ~= "" then
@@ -7083,7 +8741,7 @@ local function bindSlotHotkey(slot)
 				return
 			end
 
-			tryExecuteActionSlot(slot, true)
+			ptc_root_locals.tryExecuteActionSlot(slot, true)
 		end, modules.game_interface and modules.game_interface.getRootPanel())
 	end
 end
@@ -7091,7 +8749,7 @@ end
 function setupHotkeys()
 	updateScrollButtons()
 	unbindHotkeys()
-	refreshAllSlotsHotkeyMirror()
+	ptc_root_locals.refreshAllSlotsHotkeyMirror()
 
 	if hotkeyPauseDepth > 0 then
 		return
@@ -7102,12 +8760,14 @@ function setupHotkeys()
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				bindSlotHotkey(slot)
+				ptc_root_locals.bindSlotHotkey(slot)
 			end
 		end
 	end
 
-	if modules.game_console and modules.game_console.syncMovingKeys then
+	local game_walk = modules.game_walk
+
+	if game_walk and game_walk.movementKeyBindsNeedSync and game_walk.movementKeyBindsNeedSync() and modules.game_console and modules.game_console.syncMovingKeys then
 		modules.game_console.syncMovingKeys()
 	end
 end
@@ -7187,7 +8847,7 @@ function clearActionBarHotkeyConflicts(keyCombo, chatOn)
 						slot.hotkeyChatOff = ""
 					end
 
-					syncSlotHotkeyMirror(slot)
+					ptc_root_locals.syncSlotHotkeyMirror(slot)
 
 					cleared = true
 				end
@@ -7272,7 +8932,7 @@ function hotkeyClear(assignWindow)
 			slot.hotkeyChatOff = ""
 		end
 
-		syncSlotHotkeyMirror(slot)
+		ptc_root_locals.syncSlotHotkeyMirror(slot)
 		setupHotkeys()
 		saveActionBar()
 	end
@@ -7337,7 +8997,7 @@ function hotkeyCaptureOk(assignWindow)
 							k.hotkeyChatOff = ""
 						end
 
-						syncSlotHotkeyMirror(k)
+						ptc_root_locals.syncSlotHotkeyMirror(k)
 					end
 				end
 			end
@@ -7365,7 +9025,7 @@ function hotkeyCaptureOk(assignWindow)
 		slot.hotkeyChatOff = keyCombo or ""
 	end
 
-	syncSlotHotkeyMirror(slot)
+	ptc_root_locals.syncSlotHotkeyMirror(slot)
 	setupHotkeys()
 	saveActionBar()
 
@@ -7383,13 +9043,13 @@ function saveActionBar()
 		return
 	end
 
-	local preset = getActionBarDefaultPresetName()
+	local preset = actionBarPreparedPreset or getActionBarDefaultPresetName()
 
 	if not preset or preset == "" then
 		return
 	end
 
-	saveActionBarSlotsForPreset(preset, collectCharacterActionBarSlots())
+	saveActionBarSlotsForPreset(preset, ptc_root_locals.collectCharacterActionBarSlots())
 end
 
 function canUseSpell(spell)
@@ -7408,7 +9068,7 @@ function canUseSpell(spell)
 	return table.contains(spell.vocations, vocation)
 end
 
-local function playerMeetsSpellLevelAndMana(spell)
+  ptc_root_locals.playerMeetsSpellLevelAndMana = function(spell)
 	if not spell then
 		return false
 	end
@@ -7441,7 +9101,7 @@ function refreshAssignSpellListGrayOverlays()
 		local gray = row:getChildById("spellIconGray")
 
 		if gray then
-			gray:setVisible(spell ~= nil and not spellPassesAssignLearntFilter(spell))
+			gray:setVisible(spell ~= nil and not ptc_root_locals.spellPassesAssignLearntFilter(spell))
 		end
 	end
 end
@@ -7464,17 +9124,19 @@ function updateSlotGray(slot)
 		slot.grayManaCost = manaCost and manaCost > 0 and manaCost or nil
 
 		local vocOk = canUseSpell(spell)
-		local statsOk = playerMeetsSpellLevelAndMana(spell)
+		local statsOk = ptc_root_locals.playerMeetsSpellLevelAndMana(spell)
 
 		show = not vocOk or not statsOk
 	elseif slot.passiveId then
 		show = not PassiveAbilityUnlockedInWheel(slot.passiveId)
+	elseif isHelperActionSlot(slot) or isMultiHelperSlot(slot) then
+		show = false
 	elseif slot.text then
 		show = false
-	elseif isActionSlotEquipmentPreset(slot) then
+	elseif ptc_root_locals.isActionSlotEquipmentPreset(slot) then
 		show = false
 	elseif slot.itemId and slot.itemId > 0 then
-		show = not playerHasActionBarItem(slot)
+		show = not ptc_root_locals.playerHasActionBarItem(slot)
 	end
 
 	grayPanel:setVisible(show)
@@ -7488,7 +9150,7 @@ function updateSlotsVocation()
 			for _, slot in pairs(panel:getChildren()) do
 				updateSlotGray(slot)
 				refreshActionSlotInventoryQuantity(slot)
-				refreshActionSlotEquipmentDecorations(slot)
+				ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 				refreshActionSlotFrameClip(slot)
 			end
 		end
@@ -7511,13 +9173,11 @@ function updateInventoryDependentActionSlots()
 			for _, slot in pairs(panel:getChildren()) do
 				local hasMultiActions = slotHasMultiActions and slotHasMultiActions(slot)
 
-				if (slot.smartMode or hasMultiActions) and refreshSmartModeSlot(slot) then
+				if (slot.smartMode or hasMultiActions) and ptc_root_locals.refreshSmartModeSlot(slot) then
 					smartModeChanged = true
 				end
 
-				local hasInventoryItem = slot.itemId and slot.itemId > 0 and not slot.words and not slot.text and not slot.passiveId and not isActionSlotEquipmentPreset(slot)
-
-				if hasInventoryItem then
+				if slot.itemId and slot.itemId > 0 and not slot.words and not slot.text and not slot.passiveId and not isHelperActionSlot(slot) and not isMultiHelperSlot(slot) and not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
 					updateSlotGray(slot)
 					refreshActionSlotInventoryQuantity(slot)
 				end
@@ -7567,7 +9227,7 @@ function loadSpell(slot)
 
 	slot:getChildById("text"):setText("")
 	slot:setBorderWidth(0)
-	refreshActionSlotEquipmentDecorations(slot)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 	updateSlotGray(slot)
 	applyActionSlotFrame(slot)
 	maybeSetupHotkeysAfterSlotLoad()
@@ -7584,7 +9244,7 @@ function loadObject(slot)
 		icon:setImageSource("")
 	end
 
-	refreshActionSlotEquipmentDecorations(slot)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 	slot:setItemId(slot.itemId)
 	slot:getChildById("text"):setText("")
 	slot:setBorderWidth(0)
@@ -7610,29 +9270,130 @@ function loadPassive(slot)
 
 		slot:getChildById("text"):setText("")
 		slot:setBorderWidth(0)
-		refreshActionSlotEquipmentDecorations(slot)
+		ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 		updateSlotGray(slot)
 		applyActionSlotFrame(slot)
+
+		if refreshPassiveCooldownSlot then
+			refreshPassiveCooldownSlot(slot)
+		end
+
 		maybeSetupHotkeysAfterSlotLoad()
 		refreshActionSlotTooltip(slot)
 	end
 end
 
-function loadText(slot)
+function loadHelper(slot)
+	local item = HelperAction.getItem(slot and slot.helperId)
+
+	if not item then
+		return
+	end
+
+	slot.multiHelper = nil
+
+	HelperAction.clearIcons(slot)
+
 	local icon = slot:getChildById("spellIcon")
 
 	if icon then
-		icon:hide()
-		icon:setImageSource("")
+		icon:setImageSource(HelperAction.ICON_FILE)
+		icon:setImageClip(HelperAction.iconClip(item.iconIndex))
+		icon:show()
 	end
 
-	refreshActionSlotEquipmentDecorations(slot)
+	local text = slot:getChildById("text")
+
+	if text then
+		text:setText("")
+	end
+
+	slot:setBorderWidth(0)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
+	updateSlotGray(slot)
+	applyActionSlotFrame(slot)
+	refreshHelperSlotBorder(slot)
+	maybeSetupHotkeysAfterSlotLoad()
+	refreshActionSlotInventoryQuantity(slot)
+	refreshActionSlotTooltip(slot)
+end
+
+function loadMultiHelper(arg_408_0)
+	arg_408_0.multiHelper = HelperAction.normalizeList(arg_408_0 and arg_408_0.multiHelper)
+
+	if not isMultiHelperSlot(arg_408_0) then
+		return
+	end
+
+	arg_408_0.helperId = nil
+
+	HelperAction.clearIcons(arg_408_0)
+
+	if arg_408_0.clearItem then
+		arg_408_0:clearItem()
+	end
+
+	local spellIcon = arg_408_0:getChildById("spellIcon")
+
+	if spellIcon then
+		spellIcon:hide()
+		spellIcon:setImageSource("")
+	end
+
+	local var_408_1 = HelperAction.filledEntries(arg_408_0.multiHelper)
+	local var_408_2 = HelperAction.CLIP_SHADER[#var_408_1]
+
+	for iter_408_0 = 1, #var_408_1 do
+		local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_408_0)
+
+		uIWidgetWidget:setId("multiHelperIcon" .. iter_408_0 - 1)
+		uIWidgetWidget:setSize({
+			width = 32,
+			height = 32
+		})
+		uIWidgetWidget:setImageSize({
+			width = 32,
+			height = 32
+		})
+		uIWidgetWidget:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
+		uIWidgetWidget:addAnchor(AnchorVerticalCenter, "parent", AnchorVerticalCenter)
+		uIWidgetWidget:setPhantom(true)
+		uIWidgetWidget:setFocusable(false)
+		HelperAction.applyIconWidget(uIWidgetWidget, var_408_1[iter_408_0].id, #var_408_1 >= 2 and var_408_2 and var_408_2[iter_408_0] or "")
+	end
+
+	HelperAction.raiseOverlays(arg_408_0)
+
+	local text = arg_408_0:getChildById("text")
+
+	if text then
+		text:setText("")
+	end
+
+	arg_408_0:setBorderWidth(0)
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(arg_408_0)
+	updateSlotGray(arg_408_0)
+	applyActionSlotFrame(arg_408_0)
+	refreshMultiHelperSlotBorder(arg_408_0)
+	maybeSetupHotkeysAfterSlotLoad()
+	refreshActionSlotInventoryQuantity(arg_408_0)
+	refreshActionSlotTooltip(arg_408_0)
+end
+
+function loadText(slot)
+	local spellIcon = slot:getChildById("spellIcon")
+
+	if spellIcon then
+		spellIcon:hide()
+		spellIcon:setImageSource("")
+	end
+
+	ptc_root_locals.refreshActionSlotEquipmentDecorations(slot)
 	slot:getChildById("text"):setText(slot.text)
 
 	while slot:getChildById("text"):getTextSize().height > 30 do
 		local subString = slot:getChildById("text"):getText()
-
-		subString = string.sub(subString, 1, #subString - 1)
+		local subString = string.sub(subString, 1, #subString - 1)
 
 		slot:getChildById("text"):setText(subString)
 	end
@@ -7645,22 +9406,28 @@ end
 function loadActionBar()
 	unbindHotkeys()
 
-	local hotkeys, migrated = loadActionBarSettingsForCurrentPreset()
+	actionBarCorruptHotkeySeen = false
+
+	local var_410_0, var_410_1, var_410_2 = ptc_root_locals.loadActionBarSettingsForCurrentPreset()
 
 	beginActionBarBatch()
-	applyPresetSlotsToActionBar(hotkeys)
+	ptc_root_locals.applyPresetSlotsToActionBar(var_410_0)
 	endActionBarBatch()
 
-	if migrated then
+	actionBarPreparedPreset = var_410_2
+
+	if var_410_1 or actionBarCorruptHotkeySeen then
 		saveActionBar()
+
+		actionBarCorruptHotkeySeen = false
 	end
 
 	setupHotkeys()
 	applyClientOptionsToActionBar()
 	refreshAllVirtueYellowBorders()
 
-	if refreshAllSmartModeSlots then
-		refreshAllSmartModeSlots()
+	if ptc_root_locals.refreshAllSmartModeSlots then
+		ptc_root_locals.refreshAllSmartModeSlots()
 	end
 end
 
@@ -7672,7 +9439,7 @@ function setBarVisible(barId, visible)
 			return
 		end
 
-		local ok, result = pcall(ensureBarLoaded, barId)
+		local ok, result = pcall(ptc_root_locals.ensureBarLoaded, barId)
 
 		if not ok or not result then
 			return
@@ -7689,11 +9456,11 @@ function setBarVisible(barId, visible)
 	end
 
 	if visible then
-		if isSideBar(barId) then
+		if ptc_root_locals.isSideBar(barId) then
 			bar:setWidth(SIDE_BAR_WIDTH)
-			updateSideContainerWidths()
+			ptc_root_locals.updateSideContainerWidths()
 			bar:show()
-			layoutSideLockButton(isLeftBar(barId) and "left" or "right")
+			layoutSideLockButton(ptc_root_locals.isLeftBar(barId) and "left" or "right")
 		else
 			bar:setHeight(37)
 			bar:show()
@@ -7701,7 +9468,7 @@ function setBarVisible(barId, visible)
 
 		updateScrollButtonsForBar(bar)
 	else
-		if isSideBar(barId) then
+		if ptc_root_locals.isSideBar(barId) then
 			bar:setWidth(0)
 		else
 			bar:setHeight(0)
@@ -7709,14 +9476,14 @@ function setBarVisible(barId, visible)
 
 		bar:hide()
 
-		if isSideBar(barId) then
-			updateSideContainerWidths()
-			layoutSideLockButton(isLeftBar(barId) and "left" or "right")
+		if ptc_root_locals.isSideBar(barId) then
+			ptc_root_locals.updateSideContainerWidths()
+			layoutSideLockButton(ptc_root_locals.isLeftBar(barId) and "left" or "right")
 		end
 	end
 
-	if isBottomBar(barId) then
-		applyBottomAnchors()
+	if ptc_root_locals.isBottomBar(barId) then
+		ptc_root_locals.applyBottomAnchors()
 		refreshBottomCooldownDock()
 
 		if modules.game_interface and modules.game_interface.refreshStatsBarDockLayout then
@@ -7845,7 +9612,7 @@ function configureActionBar(id, enabled)
 	end
 end
 
-local function shouldShowGraphicalCooldown()
+  ptc_root_locals.shouldShowGraphicalCooldown = function()
 	if not modules or not modules.client_options then
 		return true
 	end
@@ -7853,7 +9620,7 @@ local function shouldShowGraphicalCooldown()
 	return modules.client_options.getOption("graphicalCooldown") ~= false
 end
 
-local function shouldShowCooldownSeconds()
+  ptc_root_locals.shouldShowCooldownSeconds = function()
 	if not modules or not modules.client_options then
 		return true
 	end
@@ -7882,12 +9649,14 @@ function clearCooldownVisuals()
 
 	cooldown = {}
 	groupCooldown = {}
-	equipmentSetSharedCooldownUntil = nil
+	ptc_root_locals.equipmentSetSharedCooldownUntil = nil
 end
 
 function toggleCooldownOption()
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		clearCooldownVisuals()
+	elseif refreshAllPassiveCooldownSlots then
+		refreshAllPassiveCooldownSlots()
 	end
 end
 
@@ -7943,7 +9712,7 @@ function reapplyAllSlotDisplayOpts()
 		mab.reapplyMultiSubSlotDisplayOpts()
 	end
 
-	refreshAllSlotsHotkeyMirror()
+	ptc_root_locals.refreshAllSlotsHotkeyMirror()
 end
 
 function applyClientOptionsToActionBar()
@@ -7986,7 +9755,7 @@ function applyClientOptionsToActionBar()
 	normalizeSideBarChildOrder("right")
 	reapplyAllSlotDisplayOpts()
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		clearCooldownVisuals()
 	end
 end
@@ -7995,9 +9764,52 @@ function round(n)
 	return n % 1 >= 0.5 and math.ceil(n) or math.floor(n)
 end
 
+function formatActionBarCooldownTime(arg_427_0)
+	local var_427_0 = math.max(0, arg_427_0 / 1000)
+	local var_427_1 = math.floor(var_427_0)
+
+	if var_427_1 >= 36000 then
+		return math.floor(var_427_1 / 3600) .. "h"
+	elseif var_427_1 >= 3600 then
+		local var_427_2 = math.floor(var_427_1 / 3600)
+		local var_427_3 = math.floor(var_427_1 % 3600 / 60)
+
+		return string.format("%dh%02d", var_427_2, var_427_3)
+	elseif var_427_1 >= 600 then
+		return math.floor(var_427_1 / 60) .. "m"
+	elseif var_427_1 >= 60 then
+		local var_427_4 = math.floor(var_427_1 / 60)
+
+		return string.format("%dm%02d", var_427_4, var_427_1 % 60)
+	end
+
+	return string.format("%.1f", var_427_0)
+end
+
+function resolveActionBarCooldownTiming(arg_428_0, arg_428_1, arg_428_2, arg_428_3, remainingMs)
+	if arg_428_3 and arg_428_3 > 0 then
+		local remainingMs = math.max(0, remainingMs or 0)
+
+		return math.max(arg_428_3, remainingMs), remainingMs
+	end
+
+	arg_428_2 = arg_428_2 or 0
+
+	if not arg_428_0.cooldownEndTime or arg_428_2 == 0 then
+		local var_428_1 = math.max(0, arg_428_1 - arg_428_2 * 100)
+
+		arg_428_0.cooldownDuration = math.max(arg_428_1, var_428_1)
+		arg_428_0.cooldownEndTime = g_clock.millis() + var_428_1
+	end
+
+	local var_428_2 = math.max(0, arg_428_0.cooldownEndTime - g_clock.millis())
+
+	return math.max(arg_428_0.cooldownDuration or arg_428_1, var_428_2), var_428_2
+end
+
 multiActionCooldownSyncLock = false
 
-local function syncMultiActionFromCooldownWidget(widget)
+  ptc_root_locals[198] = function(widget)
 	if multiActionCooldownSyncLock or not widget or widget:isDestroyed() or not syncMultiActionSlot then
 		return
 	end
@@ -8033,8 +9845,8 @@ function resolveCooldownProgressState(totalDuration, remainingMs)
 	end
 
 	remainingMs = math.max(0, remainingMs or 0)
-	total = math.max(total, remainingMs)
 
+	local total = math.max(total, remainingMs)
 	local elapsed = total - remainingMs
 	local count = math.max(0, math.floor(elapsed / 100 + 0.5))
 	local maxCount = math.max(1, math.floor(total / 100 + 0.5))
@@ -8055,25 +9867,29 @@ function updateCooldown(progressRect, duration, spellId, count)
 
 	count = count or 0
 
-	local percent = math.min(100, count * 10000 / duration)
+	local percent
+	local var_431_1
 
-	progressRect:setPercent(percent)
+	if getMultiActionSpellCooldownTiming then
+		percent, var_431_1 = getMultiActionSpellCooldownTiming(spellId)
+	end
 
-	local remainingMs = duration * (1 - percent / 100)
+	local var_431_2, var_431_3 = resolveActionBarCooldownTiming(progressRect, duration, count, percent, var_431_1)
+	local var_431_4 = var_431_3 <= 0 and 100 or math.min(99.99, math.max(0, (var_431_2 - var_431_3) * 100 / var_431_2))
 
-	remainingMs = math.max(0, remainingMs)
+	progressRect:setPercent(var_431_4)
 
-	if shouldShowCooldownSeconds() and remainingMs > 0 then
-		progressRect:setText(string.format("%.1f", remainingMs / 1000))
+	if ptc_root_locals.shouldShowCooldownSeconds() and var_431_3 > 0 then
+		progressRect:setText(formatActionBarCooldownTime(var_431_3))
 		progressRect:setTextOffset("-1 0")
 	else
 		progressRect:setText("")
 	end
 
-	if percent < 100 then
+	if var_431_4 < 100 then
 		removeEvent(progressRect.event)
 
-		cooldown[spellId] = duration - count * 100
+		cooldown[spellId] = var_431_3
 		progressRect.event = scheduleEvent(function()
 			updateCooldown(progressRect, duration, spellId, count + 1)
 		end, 100)
@@ -8086,6 +9902,8 @@ function updateCooldown(progressRect, duration, spellId, count)
 			removeEvent(progressRect.event)
 
 			progressRect.event = nil
+			progressRect.cooldownEndTime = nil
+			progressRect.cooldownDuration = nil
 
 			progressRect:setPercent(0)
 			progressRect:setText("")
@@ -8112,7 +9930,7 @@ function updateCooldown(progressRect, duration, spellId, count)
 	end
 end
 
-local function layoutActionBarCooldownProgress(progressRect)
+  ptc_root_locals.layoutActionBarCooldownProgress = function(progressRect)
 	progressRect:breakAnchors()
 	progressRect:setSize(tosize("32 32"))
 	progressRect:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
@@ -8131,7 +9949,7 @@ function raiseMultiActionMarkerAboveCooldown(slot)
 	end
 end
 
-local function raiseEquipmentSlotDecorIconsAboveCooldown(slot)
+  ptc_root_locals.raiseEquipmentSlotDecorIconsAboveCooldown = function(slot)
 	if not slot or slot:isDestroyed() then
 		return
 	end
@@ -8143,83 +9961,178 @@ local function raiseEquipmentSlotDecorIconsAboveCooldown(slot)
 	end
 end
 
-local function raiseActionBarCooldownProgress(slot, progressRect)
-	if progressRect and progressRect.raise then
-		progressRect:raise()
+  ptc_root_locals.raiseActionBarCooldownProgress = function(arg_437_0, arg_437_1)
+	if arg_437_1 and arg_437_1.raise then
+		arg_437_1:raise()
 	end
 
-	raiseMultiActionMarkerAboveCooldown(slot)
-	raiseEquipmentSlotDecorIconsAboveCooldown(slot)
+	raiseMultiActionMarkerAboveCooldown(arg_437_0)
+	ptc_root_locals.raiseEquipmentSlotDecorIconsAboveCooldown(arg_437_0)
 end
 
-function clearSlotProgressWidgets(slot)
-	for _, ch in pairs(slot:getChildren()) do
-		local cid = ch:getId()
+function passiveCooldownRemainingMs()
+	if not passiveCooldownData then
+		return 0
+	end
 
-		if cid and tostring(cid):sub(1, 8) == "progress" then
-			if ch.event then
-				removeEvent(ch.event)
+	local remainingMs = passiveCooldownData.remainingMs
 
-				ch.event = nil
+	if passiveCooldownData.canDecay then
+		remainingMs = remainingMs - (g_clock.millis() - passiveCooldownData.updatedAt)
+	end
+
+	return math.max(0, remainingMs)
+end
+
+function formatPassiveCooldownTime(arg_439_0)
+	local var_439_0 = math.max(0, math.ceil(arg_439_0 / 1000))
+
+	if var_439_0 >= 3600 then
+		return math.ceil(var_439_0 / 3600) .. "h"
+	elseif var_439_0 >= 60 then
+		return math.ceil(var_439_0 / 60) .. "m"
+	end
+
+	return var_439_0 .. "s"
+end
+
+function clearPassiveCooldownProgress(arg_440_0)
+	local var_440_0 = arg_440_0 and arg_440_0:recursiveGetChildById(PASSIVE_COOLDOWN_PROGRESS_ID)
+
+	if var_440_0 and not var_440_0:isDestroyed() then
+		removeEvent(var_440_0.event)
+
+		var_440_0.event = nil
+
+		var_440_0:setPercent(0)
+		var_440_0:setText("")
+		var_440_0:hide()
+	end
+
+	cooldown[PASSIVE_COOLDOWN_KEY] = nil
+end
+
+function updatePassiveCooldownProgress(arg_441_0)
+	if not arg_441_0 or arg_441_0:isDestroyed() or not passiveCooldownData then
+		return
+	end
+
+	local var_441_0 = passiveCooldownRemainingMs()
+
+	if var_441_0 <= 0 then
+		clearPassiveCooldownProgress(arg_441_0.item)
+
+		return
+	end
+
+	local var_441_1 = math.max(passiveCooldownData.totalMs, var_441_0)
+
+	arg_441_0:setPercent(math.min(99, (var_441_1 - var_441_0) * 100 / var_441_1))
+
+	if ptc_root_locals.shouldShowCooldownSeconds() then
+		arg_441_0:setText(formatPassiveCooldownTime(var_441_0))
+		arg_441_0:setTextOffset("-1 0")
+	else
+		arg_441_0:setText("")
+	end
+
+	cooldown[PASSIVE_COOLDOWN_KEY] = var_441_0
+
+	removeEvent(arg_441_0.event)
+
+	arg_441_0.event = nil
+
+	if passiveCooldownData.canDecay then
+		arg_441_0.event = scheduleEvent(function()
+			updatePassiveCooldownProgress(arg_441_0)
+		end, 1000)
+	end
+end
+
+function refreshPassiveCooldownSlot(arg_443_0)
+	if not arg_443_0 or arg_443_0:isDestroyed() or arg_443_0.passiveId ~= GIFT_OF_LIFE_PASSIVE_ID then
+		return
+	end
+
+	if not ptc_root_locals.shouldShowGraphicalCooldown() or passiveCooldownRemainingMs() <= 0 then
+		clearPassiveCooldownProgress(arg_443_0)
+
+		return
+	end
+
+	local actionBarCooldownProgressWidget = arg_443_0:recursiveGetChildById(PASSIVE_COOLDOWN_PROGRESS_ID)
+
+	if not actionBarCooldownProgressWidget then
+		actionBarCooldownProgressWidget = g_ui.createWidget("ActionBarCooldownProgress", arg_443_0)
+
+		actionBarCooldownProgressWidget:setId(PASSIVE_COOLDOWN_PROGRESS_ID)
+	else
+		removeEvent(actionBarCooldownProgressWidget.event)
+
+		actionBarCooldownProgressWidget.event = nil
+	end
+
+	actionBarCooldownProgressWidget.item = arg_443_0
+
+	ptc_root_locals.layoutActionBarCooldownProgress(actionBarCooldownProgressWidget)
+	ptc_root_locals.raiseActionBarCooldownProgress(arg_443_0, actionBarCooldownProgressWidget)
+	actionBarCooldownProgressWidget:show()
+	updatePassiveCooldownProgress(actionBarCooldownProgressWidget)
+end
+
+function refreshAllPassiveCooldownSlots()
+	for iter_444_0 = 1, NUM_BARS do
+		local var_444_0 = actionBarPanels[iter_444_0]
+
+		if var_444_0 then
+			for unusedValue, child in pairs(var_444_0:getChildren()) do
+				if child.passiveId == GIFT_OF_LIFE_PASSIVE_ID then
+					refreshPassiveCooldownSlot(child)
+				end
 			end
-
-			ch:destroy()
 		end
 	end
 end
 
-local function applyCooldownOverlayToSlot(slot, overlay, onlyIfMissing)
-	if not overlay or overlay.remaining <= 0 then
-		clearSlotProgressWidgets(slot)
+function onPassiveData(arg_445_0, arg_445_1, arg_445_2)
+	local var_445_0 = math.max(0, tonumber(arg_445_0) or 0) * 1000
+	local var_445_1 = math.max(var_445_0, math.max(0, tonumber(arg_445_1) or 0) * 1000)
 
-		return
+	passiveCooldownData = {
+		remainingMs = var_445_0,
+		totalMs = var_445_1,
+		canDecay = arg_445_2 == true,
+		updatedAt = g_clock.millis()
+	}
+
+	refreshAllPassiveCooldownSlots()
+end
+
+function clearSlotProgressWidgets(arg_446_0, arg_446_1)
+	for unusedValue, child in pairs(arg_446_0:getChildren()) do
+		local id = child:getId()
+
+		if id and id ~= arg_446_1 and tostring(id):sub(1, 8) == "progress" then
+			if child.event then
+				removeEvent(child.event)
+
+				child.event = nil
+			end
+
+			child.cooldownEndTime = nil
+			child.cooldownDuration = nil
+
+			child:setPercent(0)
+			child:setText("")
+			child:hide()
+		end
 	end
+end
 
-	if onlyIfMissing and overlay.progressId and slot:recursiveGetChildById(overlay.progressId) then
-		return
-	end
+  ptc_root_locals.progressId = function(arg_447_0, arg_447_1)
+	local var_447_0 = arg_447_1 and arg_447_0:recursiveGetChildById(arg_447_1)
 
-	clearSlotProgressWidgets(slot)
-
-	if overlay.useGroupCooldown and overlay.groupId then
-		groupCooldown[overlay.groupId] = true
-	elseif overlay.spellId then
-		cooldown[overlay.spellId] = overlay.remaining
-	end
-
-	local totalDuration = overlay.totalDuration
-	local remainingMs = overlay.remainingMs
-
-	if not totalDuration or totalDuration <= 0 then
-		totalDuration = overlay.remaining
-		remainingMs = overlay.remaining
-	end
-
-	local total, rem, tickCount, initialPercent = resolveCooldownProgressState(totalDuration, remainingMs)
-	local progressRect = slot:recursiveGetChildById(overlay.progressId)
-
-	if progressRect and not progressRect:isDestroyed() then
-		removeEvent(progressRect.event)
-
-		progressRect.event = nil
-	else
-		progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
-
-		progressRect:setId(overlay.progressId)
-	end
-
-	progressRect.item = slot
-
-	layoutActionBarCooldownProgress(progressRect)
-	raiseActionBarCooldownProgress(slot, progressRect)
-	progressRect:setPercent(initialPercent)
-	progressRect:show()
-
-	if overlay.useGroupCooldown and overlay.groupId then
-		updateGroupCooldown(progressRect, total, overlay.groupId, tickCount)
-	elseif overlay.spellId then
-		updateCooldown(progressRect, total, overlay.spellId, tickCount)
-	end
+	return var_447_0 ~= nil and var_447_0:isExplicitlyVisible()
 end
 
 function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
@@ -8227,7 +10140,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 		return
 	end
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		return
 	end
 
@@ -8236,9 +10149,11 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 	end
 
 	local remaining = 0
-	local progressId
+	local var_448_1
 	local useGroupCooldown = false
-	local groupId, spellId, spell
+	local groupId
+	local spellId
+	local spell
 
 	if slot.words and slot.words ~= "" then
 		spell = Spells.getSpellByWords(slot.words)
@@ -8260,13 +10175,13 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 			if not groupId then
 				useGroupCooldown = false
 			else
-				progressId = "progress" .. groupId
+				var_448_1 = "progress" .. groupId
 			end
 		end
 
 		if not useGroupCooldown then
 			spellId = spell.id
-			progressId = "progress" .. spellId
+			var_448_1 = "progress" .. spellId
 		end
 	elseif slot.itemId and slot.itemId > 0 and slot.useType and slot.useType ~= "equip" then
 		local runeSpell = getRuneUsageSpell and getRuneUsageSpell(slot.itemId) or Spells.getRuneSpellByItem(slot.itemId)
@@ -8281,7 +10196,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 				groupId = getMultiActionActiveGroupId and getMultiActionActiveGroupId(runeSpell)
 
 				if groupId then
-					progressId = "progress" .. groupId
+					var_448_1 = "progress" .. groupId
 				else
 					useGroupCooldown = false
 				end
@@ -8289,7 +10204,7 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 
 			if not useGroupCooldown then
 				spellId = runeSpell.id
-				progressId = "progress" .. spellId
+				var_448_1 = "progress" .. spellId
 			end
 		else
 			if shouldPaintItemMultiCdOnMainSlot and not shouldPaintItemMultiCdOnMainSlot(slot) then
@@ -8307,8 +10222,8 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 			end
 
 			if remaining > 0 then
-				groupId = ACTIONBAR_ITEM_MULTI_CD_KEY
-				progressId = "progress" .. groupId
+				groupId = ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY
+				var_448_1 = "progress" .. groupId
 				useGroupCooldown = true
 			end
 		end
@@ -8324,11 +10239,11 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 		return
 	end
 
-	if onlyIfMissing and progressId and slot:recursiveGetChildById(progressId) then
+	if onlyIfMissing and ptc_root_locals.progressId(slot, var_448_1) then
 		return
 	end
 
-	clearSlotProgressWidgets(slot)
+	clearSlotProgressWidgets(slot, var_448_1)
 
 	if useGroupCooldown then
 		groupCooldown[groupId] = true
@@ -8336,7 +10251,8 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 		cooldown[spellId] = remaining
 	end
 
-	local totalDuration, remainingMs = remaining, remaining
+	local totalDuration = remaining
+	local remainingMs = remaining
 
 	if spell then
 		if useGroupCooldown and getMultiActionGroupCooldownTiming then
@@ -8364,22 +10280,24 @@ function refreshMultiActionSlotCooldownDisplay(slot, onlyIfMissing)
 	end
 
 	local total, rem, tickCount, initialPercent = resolveCooldownProgressState(totalDuration, remainingMs)
-	local progressRect = slot:recursiveGetChildById(progressId)
+	local progressRect = slot:recursiveGetChildById(var_448_1)
 
 	if progressRect and not progressRect:isDestroyed() then
 		removeEvent(progressRect.event)
 
 		progressRect.event = nil
+		progressRect.cooldownEndTime = nil
+		progressRect.cooldownDuration = nil
 	else
 		progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
 
-		progressRect:setId(progressId)
+		progressRect:setId(var_448_1)
 	end
 
 	progressRect.item = slot
 
-	layoutActionBarCooldownProgress(progressRect)
-	raiseActionBarCooldownProgress(slot, progressRect)
+	ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+	ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
 	progressRect:setPercent(initialPercent)
 	progressRect:show()
 
@@ -8405,16 +10323,22 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 
 	count = count or 0
 
-	local percent = math.min(100, count * 10000 / duration)
+	local percent
+	local var_450_1
+
+	if groupId == ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY and getMultiActionItemCooldownTiming then
+		percent, var_450_1 = getMultiActionItemCooldownTiming()
+	elseif getMultiActionGroupCooldownTimingById then
+		percent, var_450_1 = getMultiActionGroupCooldownTimingById(groupId)
+	end
+
+	local var_450_2, remainingMs = resolveActionBarCooldownTiming(progressRect, duration, count, percent, var_450_1)
+	local percent = remainingMs <= 0 and 100 or math.min(99.99, math.max(0, (var_450_2 - remainingMs) * 100 / var_450_2))
 
 	progressRect:setPercent(percent)
 
-	local remainingMs = duration * (1 - percent / 100)
-
-	remainingMs = math.max(0, remainingMs)
-
-	if shouldShowCooldownSeconds() and remainingMs > 0 then
-		progressRect:setText(string.format("%.1f", remainingMs / 1000))
+	if ptc_root_locals.shouldShowCooldownSeconds() and remainingMs > 0 then
+		progressRect:setText(formatActionBarCooldownTime(remainingMs))
 	else
 		progressRect:setText("")
 	end
@@ -8434,13 +10358,15 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 			removeEvent(progressRect.event)
 
 			progressRect.event = nil
+			progressRect.cooldownEndTime = nil
+			progressRect.cooldownDuration = nil
 
 			progressRect:setPercent(0)
 			progressRect:setText("")
 			progressRect:hide()
 		end
 
-		if groupId == ACTIONBAR_ITEM_MULTI_CD_KEY and onMultiActionItemMultiUseCooldown then
+		if groupId == ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY and onMultiActionItemMultiUseCooldown then
 			onMultiActionItemMultiUseCooldown(0)
 
 			return
@@ -8466,34 +10392,34 @@ function updateGroupCooldown(progressRect, duration, groupId, count)
 	end
 end
 
-function startEquipmentSetActionCooldownVisual(slot)
-	if not slot or slot:isDestroyed() or not isActionSlotEquipmentPreset(slot) then
+ ptc_root_locals.startEquipmentSetActionCooldownVisual = function(slot)
+	if not slot or slot:isDestroyed() or not ptc_root_locals.isActionSlotEquipmentPreset(slot) then
 		return
 	end
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		return
 	end
 
-	local groupId = equipmentSetCooldownGroupId()
-	local duration = EQUIPMENT_SET_COOLDOWN_MS
-	local progressRect = slot:recursiveGetChildById(EQUIPMENT_SET_CD_PROGRESS_ID)
+	local groupId = ptc_root_locals.equipmentSetCooldownGroupId()
+	local duration = ptc_root_locals.EQUIPMENT_SET_COOLDOWN_MS
+	local progressRect = slot:recursiveGetChildById(ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID)
 
 	if not progressRect then
 		progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
 
-		progressRect:setId(EQUIPMENT_SET_CD_PROGRESS_ID)
+		progressRect:setId(ptc_root_locals.EQUIPMENT_SET_CD_PROGRESS_ID)
 
 		progressRect.item = slot
 
-		layoutActionBarCooldownProgress(progressRect)
-		raiseActionBarCooldownProgress(slot, progressRect)
+		ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+		ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
 	else
 		removeEvent(progressRect.event)
-		layoutActionBarCooldownProgress(progressRect)
+		ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
 		progressRect:setPercent(0)
 		progressRect:show()
-		raiseActionBarCooldownProgress(slot, progressRect)
+		ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
 	end
 
 	groupCooldown[groupId] = true
@@ -8509,11 +10435,11 @@ function onMultiUseCooldown(duration)
 		onMultiActionItemMultiUseCooldown(duration)
 	end
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		return
 	end
 
-	local key = ACTIONBAR_ITEM_MULTI_CD_KEY
+	local key = ptc_root_locals.ACTIONBAR_ITEM_MULTI_CD_KEY
 	local progressWidgetId = "progress" .. key
 
 	if not duration or duration <= 0 then
@@ -8528,7 +10454,12 @@ function onMultiUseCooldown(duration)
 
 					if pr then
 						removeEvent(pr.event)
-						pr:destroy()
+
+						pr.event = nil
+
+						pr:setPercent(0)
+						pr:setText("")
+						pr:hide()
 					end
 				end
 			end
@@ -8544,37 +10475,33 @@ function onMultiUseCooldown(duration)
 			for _, slot in pairs(panel:getChildren()) do
 				if slotHasMultiActions and slotHasMultiActions(slot) then
 					-- block empty
+				elseif slot.words and slot.words ~= "" or slot.passiveId or slot.helperId or isMultiHelperSlot(slot) or not slot.itemId or not (slot.itemId > 0) or slot.useType == "equip" or getRuneUsageSpell and getRuneUsageSpell(slot.itemId) then
+					-- block empty
 				else
-					local isSpellSlot = slot.words and slot.words ~= ""
+					local progressRect = slot:recursiveGetChildById(progressWidgetId)
 
-					if isSpellSlot or slot.passiveId or not slot.itemId or not (slot.itemId > 0) or slot.useType == "equip" or getRuneUsageSpell and getRuneUsageSpell(slot.itemId) then
-						-- block empty
+					if not progressRect then
+						progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
+
+						progressRect:setId(progressWidgetId)
+
+						progressRect.item = slot
+
+						ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+						ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
 					else
-						local progressRect = slot:recursiveGetChildById(progressWidgetId)
-
-						if not progressRect then
-							progressRect = g_ui.createWidget("ActionBarCooldownProgress", slot)
-
-							progressRect:setId(progressWidgetId)
-
-							progressRect.item = slot
-
-							layoutActionBarCooldownProgress(progressRect)
-							raiseActionBarCooldownProgress(slot, progressRect)
-						else
-							layoutActionBarCooldownProgress(progressRect)
-							progressRect:setPercent(0)
-							progressRect:show()
-							raiseActionBarCooldownProgress(slot, progressRect)
-						end
-
-						local total, rem, tickCount, initialPercent = resolveCooldownProgressState(duration, duration)
-
-						progressRect:setPercent(initialPercent)
-						updateGroupCooldown(progressRect, total, key, tickCount)
-
-						groupCooldown[key] = true
+						ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
+						progressRect:setPercent(0)
+						progressRect:show()
+						ptc_root_locals.raiseActionBarCooldownProgress(slot, progressRect)
 					end
+
+					local total, rem, tickCount, initialPercent = resolveCooldownProgressState(duration, duration)
+
+					progressRect:setPercent(initialPercent)
+					updateGroupCooldown(progressRect, total, key, tickCount)
+
+					groupCooldown[key] = true
 				end
 			end
 		end
@@ -8586,7 +10513,7 @@ function onSpellCooldown(spellId, duration)
 		onMultiActionSpellCooldown(spellId, duration)
 	end
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		return true
 	end
 
@@ -8619,13 +10546,13 @@ function onSpellCooldown(spellId, duration)
 
 							progressRect.item = slot
 
-							layoutActionBarCooldownProgress(progressRect)
+							ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
 
 							if progressRect.raise then
 								progressRect:raise()
 							end
 						else
-							layoutActionBarCooldownProgress(progressRect)
+							ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
 							progressRect:setPercent(0)
 							progressRect:show()
 
@@ -8654,7 +10581,7 @@ function onSpellGroupCooldown(groupId, duration)
 		onMultiActionSpellGroupCooldown(groupId, duration)
 	end
 
-	if not shouldShowGraphicalCooldown() then
+	if not ptc_root_locals.shouldShowGraphicalCooldown() then
 		return
 	end
 
@@ -8666,9 +10593,13 @@ function onSpellGroupCooldown(groupId, duration)
 				if slotHasMultiActions and slotHasMultiActions(k) then
 					-- block empty
 				else
-					local spell, profile, spellName
+					local spell
+					local unusedValue
+					local spellName
 
 					if k.words and k.words ~= "" then
+						local profile, spellName
+
 						spell, profile, spellName = Spells.getSpellByWords(k.words)
 					elseif k.itemId and k.itemId > 0 and getRuneUsageSpell then
 						spell = getRuneUsageSpell(k.itemId)
@@ -8704,13 +10635,13 @@ function onSpellGroupCooldown(groupId, duration)
 
 								progressRect.item = slot
 
-								layoutActionBarCooldownProgress(progressRect)
+								ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
 
 								if progressRect.raise then
 									progressRect:raise()
 								end
 							else
-								layoutActionBarCooldownProgress(progressRect)
+								ptc_root_locals.layoutActionBarCooldownProgress(progressRect)
 								progressRect:setPercent(0)
 								progressRect:show()
 
@@ -8784,7 +10715,7 @@ function filterSpells(text)
 			local spellName = spellListLabel:getId()
 			local spell = spellName and spellName ~= "" and Spells.getSpellByName(spellName) or nil
 
-			if not spellPassesAssignLearntFilter(spell) then
+			if not ptc_root_locals.spellPassesAssignLearntFilter(spell) then
 				visible = false
 			end
 		end
@@ -8826,7 +10757,7 @@ function filterSpells(text)
 	if not textFilterActive then
 		local filterEdit = spellAssignWindow and spellAssignWindow:recursiveGetChildById("filterTextEdit")
 		local typingInFilter = filterEdit and filterEdit:isFocused()
-		local focusTarget = pickSpellAssignListFocusWidget() or firstVisible
+		local focusTarget = ptc_root_locals.pickSpellAssignListFocusWidget() or firstVisible
 
 		spellsPanel:focusChild(focusTarget, KeyboardFocusReason)
 
@@ -8844,7 +10775,7 @@ function filterSpells(text)
 		end
 
 		updatePreviewSpell(focusTarget)
-		syncSpellAssignParameterFieldFromSlot(focusTarget)
+		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focusTarget)
 
 		if typingInFilter and filterEdit then
 			filterEdit:focus()
@@ -8857,7 +10788,7 @@ function filterSpells(text)
 
 	if focused and focused:isVisible() then
 		updatePreviewSpell(focused)
-		syncSpellAssignParameterFieldFromSlot(focused)
+		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(focused)
 	else
 		spellsPanel:focusChild(firstVisible, KeyboardFocusReason)
 
@@ -8875,7 +10806,7 @@ function filterSpells(text)
 		end
 
 		updatePreviewSpell(firstVisible)
-		syncSpellAssignParameterFieldFromSlot(firstVisible)
+		ptc_root_locals.syncSpellAssignParameterFieldFromSlot(firstVisible)
 	end
 end
 
@@ -9016,7 +10947,7 @@ function onDecrementVerticalScroll(bar, value)
 		return
 	end
 
-	value = value or SIDE_BAR_SLOT_PITCH
+	value = value or ptc_root_locals[3]
 
 	local newVal
 
@@ -9026,7 +10957,7 @@ function onDecrementVerticalScroll(bar, value)
 		newVal = math.max(scroll:getMinimum(), scroll:getValue() - value)
 	end
 
-	scroll:setValue(newVal)
+	scroll:setValue(newVal - newVal % ptc_root_locals[3])
 	updateScrollButtonsForBar(bar)
 end
 
@@ -9041,7 +10972,7 @@ function onIncrementVerticalScroll(bar, value)
 		return
 	end
 
-	value = value or SIDE_BAR_SLOT_PITCH
+	value = value or ptc_root_locals[3]
 
 	local newVal
 
@@ -9051,7 +10982,7 @@ function onIncrementVerticalScroll(bar, value)
 		newVal = math.min(scroll:getMaximum(), scroll:getValue() + value)
 	end
 
-	scroll:setValue(newVal)
+	scroll:setValue(newVal - newVal % ptc_root_locals[3])
 	updateScrollButtonsForBar(bar)
 end
 
@@ -9081,14 +11012,14 @@ function getPanelActionbar()
 	return actionBar
 end
 
-local function clearSlotData(slot)
+  ptc_root_locals.clearSlotData = function(slot)
 	clearSlotActionContent(slot)
 
 	local sid = slot:getId()
 	local idxBottom = sid and tonumber(sid:match("^slot(%d+)$"))
 
 	if idxBottom then
-		initDefaultHotkeysFirstBottomBarSlot(slot, idxBottom)
+		ptc_root_locals.initDefaultHotkeysFirstBottomBarSlot(slot, idxBottom)
 	else
 		slot.hotkeyChatOn = ""
 		slot.hotkeyChatOff = ""
@@ -9110,7 +11041,7 @@ function resetAction(barId)
 	unbindHotkeys()
 
 	for _, slot in pairs(actionBarPanels[barId]:getChildren()) do
-		clearSlotData(slot)
+		ptc_root_locals.clearSlotData(slot)
 	end
 
 	setupHotkeys()
@@ -9125,7 +11056,7 @@ function resetActionBars()
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				clearSlotData(slot)
+				ptc_root_locals.clearSlotData(slot)
 			end
 		end
 	end
@@ -9134,13 +11065,13 @@ function resetActionBars()
 	saveActionBar()
 end
 
-local function clearAllActionBarSlotsWithoutSave()
+  ptc_root_locals.clearAllActionBarSlotsWithoutSave = function()
 	for i = 1, NUM_BARS do
 		local panel = actionBarPanels[i]
 
 		if panel then
 			for _, slot in pairs(panel:getChildren()) do
-				clearSlotData(slot)
+				ptc_root_locals.clearSlotData(slot)
 			end
 		end
 	end
@@ -9164,8 +11095,8 @@ function prepareActionBarForLogin()
 	applyClientOptionsToActionBar()
 	setupActionBar()
 	beginActionBarBatch()
-	clearAllActionBarSlotsWithoutSave()
-	applyPresetSlotsToActionBar(storedSlots)
+	ptc_root_locals.clearAllActionBarSlotsWithoutSave()
+	ptc_root_locals.applyPresetSlotsToActionBar(storedSlots)
 	endActionBarBatch()
 
 	actionBarPreparedPreset = presetName
@@ -9186,25 +11117,35 @@ function reloadActionBarForPreset(presetName, previousPreset)
 		return
 	end
 
-	if previousPreset and previousPreset ~= "" and previousPreset ~= presetName then
-		saveActionBarSlotsForPreset(previousPreset, collectCharacterActionBarSlots())
+	local var_476_0 = actionBarPreparedPreset
+
+	if var_476_0 and var_476_0 ~= "" and var_476_0 ~= presetName then
+		saveActionBarSlotsForPreset(var_476_0, ptc_root_locals.collectCharacterActionBarSlots())
 	end
 
-	local storedSlots = getActionBarSlotsForPreset(presetName)
-	local storedCount = countActionBarSlotsWithContent(storedSlots)
+	local var_476_1 = getActionBarSlotsForPreset(presetName)
+	local storedCount = countActionBarSlotsWithContent(var_476_1)
+
+	actionBarCorruptHotkeySeen = false
 
 	beginActionBarBatch()
 	unbindHotkeys()
-	clearAllActionBarSlotsWithoutSave()
-	applyPresetSlotsToActionBar(storedSlots)
+	ptc_root_locals.clearAllActionBarSlotsWithoutSave()
+	ptc_root_locals.applyPresetSlotsToActionBar(var_476_1)
 	endActionBarBatch()
+
+	actionBarPreparedPreset = presetName
+
+	if actionBarCorruptHotkeySeen then
+		saveActionBar()
+
+		actionBarCorruptHotkeySeen = false
+	end
+
 	setupHotkeys()
 	applyClientOptionsToActionBar()
 	refreshAllVirtueYellowBorders()
 	updateSlotsVocation()
-
-	actionBarPreparedPreset = presetName
-
 	g_logger.info(string.format("[actionbar] reload preset=%s storedSlots=%d", presetName, storedCount))
 end
 
@@ -9217,5 +11158,23 @@ function onHotkeyPresetChanged(newPreset, oldPreset)
 		return
 	end
 
-	reloadActionBarForPreset(newPreset, oldPreset)
+	addEvent(function()
+		if not g_game.isOnline() then
+			return
+		end
+
+		if not actionBarPanels or not actionBarPanels[BAR_BOTTOM_1] then
+			return
+		end
+
+		if Keybind.currentPreset ~= newPreset then
+			return
+		end
+
+		if actionBarPreparedPreset == newPreset then
+			return
+		end
+
+		reloadActionBarForPreset(newPreset, oldPreset)
+	end)
 end

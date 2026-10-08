@@ -1,13 +1,19 @@
-﻿-- chunkname: @/corelib/ui/tooltip.lua
+﻿g_tooltip = {}
 
-g_tooltip = {}
-
-local toolTipLabel, SpecialToolTipLabel, currentHoveredWidget, pendingHoveredWidget, pendingTooltipEvent
+local toolTipLabel
+local SpecialToolTipLabel
+local currentHoveredWidget
+local pendingHoveredWidget
+local pendingTooltipEvent
 local tooltipDelay = 500
 
 local function tooltipPointerStillOver(widget)
 	if not widget then
 		return false
+	end
+
+	if widget.tooltipHitTest then
+		return widget:tooltipHitTest()
 	end
 
 	if widget:isHovered() then
@@ -125,38 +131,13 @@ local function wrapTooltipText(text, maxWidth)
 end
 
 local function htmlToTooltipText(html)
-	local text = html:gsub("\r", "")
-
-	text = text:gsub("<[bB][rR]%s*/?>", "\n")
-	text = text:gsub("</[lL][iI]>%s*<[lL][iI]>%s*", "\n" .. LIST_INDENT .. LIST_BULLET)
-	text = text:gsub("(.?)<[lL][iI]>%s*", function(prev)
+	return (html:gsub("\r", ""):gsub("<[bB][rR]%s*/?>", "\n"):gsub("</[lL][iI]>%s*<[lL][iI]>%s*", "\n" .. LIST_INDENT .. LIST_BULLET):gsub("(.?)<[lL][iI]>%s*", function(prev)
 		if prev == "" or prev == "\n" then
 			return prev .. LIST_INDENT .. LIST_BULLET
 		end
 
 		return prev .. "\n" .. LIST_INDENT .. LIST_BULLET
-	end)
-	text = text:gsub("</[lL][iI]>[ \t]*", "\n")
-	text = text:gsub("%s*</?[uUoO][lL]>%s*", "\n")
-	text = text:gsub("<[pP]>%s*", "")
-	text = text:gsub("</[pP]>%s*", "\n")
-	text = text:gsub("<[cC][oO][lL][oO][rR]%s*=%s*\"(#?%x+)\"%s*>", "[color=%1]")
-	text = text:gsub("<[cC][oO][lL][oO][rR]%s*=%s*'(#?%x+)'%s*>", "[color=%1]")
-	text = text:gsub("<[cC][oO][lL][oO][rR]%s*=%s*(#?%x+)%s*>", "[color=%1]")
-	text = text:gsub("</[cC][oO][lL][oO][rR]>", "[/color]")
-	text = text:gsub("</?[bB]>", "")
-	text = text:gsub("</?[iI]>", "")
-	text = text:gsub("</?[uU]>", "")
-	text = text:gsub("&nbsp;", " ")
-	text = text:gsub("&lt;", "<")
-	text = text:gsub("&gt;", ">")
-	text = text:gsub("&quot;", "\"")
-	text = text:gsub("&amp;", "&")
-	text = text:gsub("^\n+", "")
-	text = text:gsub("\n+$", "")
-	text = text:gsub("\n\n\n+", "\n\n")
-
-	return text
+	end):gsub("</[lL][iI]>[ \t]*", "\n"):gsub("%s*</?[uUoO][lL]>%s*", "\n"):gsub("<[pP]>%s*", ""):gsub("</[pP]>%s*", "\n"):gsub("<[cC][oO][lL][oO][rR]%s*=%s*\"(#?%x+)\"%s*>", "[color=%1]"):gsub("<[cC][oO][lL][oO][rR]%s*=%s*'(#?%x+)'%s*>", "[color=%1]"):gsub("<[cC][oO][lL][oO][rR]%s*=%s*(#?%x+)%s*>", "[color=%1]"):gsub("</[cC][oO][lL][oO][rR]>", "[/color]"):gsub("</?[bB]>", ""):gsub("</?[iI]>", ""):gsub("</?[uU]>", ""):gsub("&nbsp;", " "):gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", "\""):gsub("&amp;", "&"):gsub("^\n+", ""):gsub("\n+$", ""):gsub("\n\n\n+", "\n\n"))
 end
 
 local function cancelPendingTooltip()
@@ -509,9 +490,7 @@ function g_tooltip.display(text)
 		processed = htmlToTooltipText(text)
 	end
 
-	local needsManualWrap = type(processed) == "string" and processed:find(LIST_BULLET, 1, true) ~= nil
-
-	if needsManualWrap and TOOLTIP_MAX_WIDTH > 0 then
+	if type(processed) == "string" and processed:find(LIST_BULLET, 1, true) ~= nil and TOOLTIP_MAX_WIDTH > 0 then
 		processed = wrapTooltipText(processed, TOOLTIP_MAX_WIDTH)
 
 		toolTipLabel:setTextWrap(false)
@@ -631,8 +610,8 @@ function g_tooltip.displaySpecial(special)
 		info:setText(data.info:wrap(445))
 		info:setTextAlign(AlignLeft)
 		info:setColor("#3f3f3f")
-		info:setFont("Verdana-11px-lowspace")
-		info:setTextOffset(topoint("5 0"))
+		info:setFont("Verdana Bold-11px-new")
+		info:setTextOffset(topoint("4 0"))
 		info:resizeToText()
 		info:resize(info:getWidth(), info:getHeight())
 
@@ -665,7 +644,7 @@ function g_tooltip.hideSpecial()
 	})
 end
 
-function UIWidget:setTooltip(text)
+function UIWidget.setTooltip(self, text)
 	local tooltipWidget = self:getChildById("toolTipWidget")
 
 	if tooltipWidget then
@@ -675,7 +654,7 @@ function UIWidget:setTooltip(text)
 	end
 end
 
-function UIWidget:parseColoreDisplayToolTip(text)
+function UIWidget.parseColoreDisplayToolTip(self, text)
 	local tooltipWidget = self:getChildById("toolTipWidget")
 
 	if tooltipWidget then
@@ -685,7 +664,7 @@ function UIWidget:parseColoreDisplayToolTip(text)
 	end
 end
 
-function UIWidget:setSpecialToolTip(special)
+function UIWidget.setSpecialToolTip(self, special)
 	if type(special) == "string" then
 		special = {
 			{
@@ -698,21 +677,21 @@ function UIWidget:setSpecialToolTip(special)
 	self.specialtooltip = special
 end
 
-function UIWidget:removeTooltip()
+function UIWidget.removeTooltip(self)
 	self.tooltip = nil
 	self.specialtooltip = nil
 	self.parseColoreDisplay = nil
 end
 
-function UIWidget:getTooltip()
+function UIWidget.getTooltip(self)
 	return self.tooltip
 end
 
-function UIWidget:getSpecialTooltip()
+function UIWidget.getSpecialTooltip(self)
 	return self.specialtooltip
 end
 
-function UIWidget:setTooltipAlign(align)
+function UIWidget.setTooltipAlign(self, align)
 	self.hasTooltipAlign = true
 	self.tooltipAlign = align
 end

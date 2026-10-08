@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_exaltationforge/game_exaltationforge.lua
-
-Forge = {}
+﻿Forge = {}
 
 function Forge.getForgeContainerHighlightTarget(container)
 	local slot = container:getChildById("forgeItem")
@@ -76,15 +74,72 @@ function Forge.onTabButtonEnabled(previousButton, nextButtonPanel, enabled)
 	end
 end
 
+function Forge.getMenus()
+	if Forge.mainWindow then
+		return Forge.mainWindow:getChildById("menus") or Forge.mainWindow
+	end
+
+	return nil
+end
+
+function Forge.createTabPanel(arg_9_0, arg_9_1)
+	local menus = g_ui.createWidget(arg_9_0, Forge.getMenus())
+
+	if arg_9_1 then
+		menus:setId(arg_9_1)
+	end
+
+	return menus
+end
+
+function Forge.anchorContentPanel(arg_10_0)
+	arg_10_0:addAnchor(AnchorTop, "menus", AnchorBottom)
+	arg_10_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	arg_10_0:addAnchor(AnchorRight, "parent", AnchorRight)
+	arg_10_0:addAnchor(AnchorBottom, "parent", AnchorBottom)
+end
+
+function Forge.setActiveTabButton(arg_11_0)
+	if Forge.currentButton and Forge.currentButton ~= arg_11_0 then
+		if Forge.currentButton.setOn then
+			Forge.currentButton:setOn(false)
+		end
+
+		if Forge.currentButton.setChecked then
+			Forge.currentButton:setChecked(false)
+		end
+
+		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
+	end
+
+	Forge.currentButton = arg_11_0
+
+	if not arg_11_0 then
+		return
+	end
+
+	if arg_11_0.setOn then
+		arg_11_0:setOn(true)
+	end
+
+	if arg_11_0.setChecked then
+		arg_11_0:setChecked(true)
+	end
+
+	local parent = arg_11_0.getParent and arg_11_0:getParent()
+
+	Forge.onTabButtonEnabled(nil, parent, false)
+end
+
 Forge.resourceTypes = {
+	core = 72,
 	sliver = 71,
 	dust = 70,
-	money = 0,
-	core = 72
+	money = 0
 }
 Forge.colors = {
-	missing = "#D33C3C",
-	enough = "#C0C0C0"
+	enough = "#C0C0C0",
+	missing = "#D33C3C"
 }
 Forge.forceApplyNextOpenSnapshot = false
 
@@ -96,7 +151,10 @@ ACTION_DUST_TO_SILVER = 2
 ACTION_SILVER_TO_CORE = 3
 ACTION_INCREASE_DUST_LIMIT = 4
 
-local Fusion, Transfer, Conversion, History
+local Fusion
+local Transfer
+local Conversion
+local History
 
 function init()
 	Forge.mainButton = modules.game_mainpanel.addToggleButton("forgeButton", tr("Open Exaltation Forge"), "/images/options/button_exaltation_forge", function()
@@ -127,13 +185,9 @@ function init()
 	Forge.sliverBalanceValue = Forge.sliverBalancePanel:getChildById("value")
 	Forge.coreBalancePanel = Forge.mainWindow:getChildById("coreBalancePanel")
 	Forge.coreBalanceValue = Forge.coreBalancePanel:getChildById("value")
-
-	local closeWidget = Forge.mainWindow:getChildById("close")
-
-	function closeWidget:onClick()
+	Forge.mainWindow:getChildById("close").onClick = function(self)
 		Forge:close()
 	end
-
 	Fusion = Forge.Fusion:get()
 	Transfer = Forge.Transfer
 	Conversion = Forge.Conversion
@@ -153,6 +207,17 @@ function init()
 			Forge:close()
 		end
 	})
+	Keybind.new("Dialogs", "Open Exaltation Forge", "", "")
+	Keybind.bind("Dialogs", "Open Exaltation Forge", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				Forge:displayPreview()
+
+				return true
+			end
+		}
+	}, modules.game_interface.getRootPanel())
 	g_shaders.createFragmentShader(FORGE_RESULT_SILHOUETTE_SHADER, "menu/shaders/silhouette.frag", false)
 end
 
@@ -164,22 +229,21 @@ function onResourceBalance()
 	end
 end
 
-function Forge:getDustLevel()
+function Forge.getDustLevel(self)
 	return math.max(0, self.dustLevel or 0)
 end
 
-function Forge:updateResources()
+function Forge.updateResources(self)
 	self.goldBalanceValue:setText(self:formatNumber(self:getResourceBalance("money")))
 
-	local dustLevel = self:getDustLevel()
-	local dustMax = 100 + dustLevel * 20
+	local dustLevel = 100 + self:getDustLevel() * 20
 
-	self.dustBalanceValue:setText(self:formatNumber(self:getResourceBalance("dust")) .. "/" .. self:formatNumber(dustMax))
+	self.dustBalanceValue:setText(self:formatNumber(self:getResourceBalance("dust")) .. "/" .. self:formatNumber(dustLevel))
 	self.sliverBalanceValue:setText(self:getResourceBalance("sliver"))
 	self.coreBalanceValue:setText(self:getResourceBalance("core"))
 end
 
-function Forge:resetConvergenceModes()
+function Forge.resetConvergenceModes(self)
 	if Forge.Fusion and Forge.Fusion.resetConvergenceMode then
 		Forge.Fusion:resetConvergenceMode()
 	end
@@ -189,7 +253,7 @@ function Forge:resetConvergenceModes()
 	end
 end
 
-function Forge:close()
+function Forge.close(self)
 	self:resetConvergenceModes()
 	self.mainWindow:setVisible(false)
 
@@ -204,11 +268,11 @@ function Forge:close()
 	Forge.preview = false
 end
 
-function Forge:get()
+function Forge.get(self)
 	return self
 end
 
-function Forge:displayPreview()
+function Forge.displayPreview(self)
 	if not self.mainWindow:isVisible() then
 		g_game.sendResourceBalance()
 
@@ -232,20 +296,19 @@ function Forge:displayPreview()
 	end
 end
 
-function Forge:formatNumber(n)
+function Forge.formatNumber(unusedArgument, n)
 	n = math.floor(tonumber(n) or 0)
 
-	local str = string.format("%.0f", n)
-	local result = str:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	local formattedText = string.format("%.0f", n):reverse():gsub("(%d%d%d)", "%1,"):reverse()
 
-	if result:sub(1, 1) == "," then
-		result = result:sub(2)
+	if formattedText:sub(1, 1) == "," then
+		formattedText = formattedText:sub(2)
 	end
 
-	return result
+	return formattedText
 end
 
-function Forge:updateWidget(resourceType, widget, value, _disabled)
+function Forge.updateWidget(self, resourceType, widget, value, _disabled)
 	local balance = Forge:getResourceBalance(resourceType)
 
 	value = tonumber(value)
@@ -265,7 +328,7 @@ function Forge:updateWidget(resourceType, widget, value, _disabled)
 	end
 end
 
-function Forge:setWidget(widget, value, boolean)
+function Forge.setWidget(self, widget, value, boolean)
 	widget:setText(value)
 
 	if boolean then
@@ -275,7 +338,7 @@ function Forge:setWidget(widget, value, boolean)
 	end
 end
 
-function Forge:getResourceBalance(str)
+function Forge.getResourceBalance(self, str)
 	local t = self.resourceTypes[str]
 
 	if not t then
@@ -320,9 +383,9 @@ local function setResultBigTier(widget, tier)
 		local xOffset = (math.min(math.max(tier, 1), 10) - 1) * 18
 
 		bigtier:setImageClip({
+			height = 16,
 			width = 18,
 			y = 0,
-			height = 16,
 			x = xOffset
 		})
 		bigtier:setMarginRight(-1)
@@ -418,8 +481,7 @@ local FORGE_RESULT_STEPS = {
 		on = FORGE_RESULT_FINAL_FLASH_MS
 	}
 }
-
-local function buildForgeResultTimeline(steps, initialDelayMs)
+local FORGE_RESULT_FLASHES, FORGE_RESULT_FADE_START_MS = (function(steps, initialDelayMs)
 	local t = initialDelayMs
 	local flashes = {}
 
@@ -440,9 +502,7 @@ local function buildForgeResultTimeline(steps, initialDelayMs)
 	end
 
 	return flashes, t
-end
-
-local FORGE_RESULT_FLASHES, FORGE_RESULT_FADE_START_MS = buildForgeResultTimeline(FORGE_RESULT_STEPS, FORGE_RESULT_INITIAL_DELAY_MS)
+end)(FORGE_RESULT_STEPS, FORGE_RESULT_INITIAL_DELAY_MS)
 local FORGE_RESULT_FINAL_FLASH = FORGE_RESULT_FLASHES[#FORGE_RESULT_FLASHES]
 local FORGE_RESULT_BLINK_SHADER = "Item - ForgeBlink"
 local FORGE_RESULT_BLINK_RED_SHADER = "Item - ForgeBlinkRed"
@@ -690,18 +750,58 @@ end
 local FORGE_DUST_ITEM_ID = 37160
 local FORGE_CORE_ITEM_ID = 37110
 local FORGE_GOLD_ITEM_ID = 3031
-local FORGE_ICON_DUST = string.char(164)
-local FORGE_ICON_EXALTED = string.char(166)
-local FORGE_ICON_GOLD = string.char(167)
-local FORGE_BONUS_TEXT_COLOR = "#C0C0C0"
-local FORGE_BONUS_ICON_COLOR = "#FFFFFF"
+local var_0_37 = "#C0C0C0"
 
-local function resolveFusionGoldCost(itemId, tier)
+local function var_0_38(ch, arg_54_1)
+	arg_54_1 = arg_54_1 or var_0_37
+
+	if not ch:find("{icon:", 1, true) then
+		return string.format("{%s, %s}", ch, arg_54_1)
+	end
+
+	local var_54_0 = {}
+	local buffer = 1
+
+	while buffer <= #ch do
+		local var_54_2 = ch:find("{icon:", buffer, true)
+
+		if not var_54_2 then
+			local var_54_3 = ch:sub(buffer)
+
+			if var_54_3 ~= "" then
+				var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", var_54_3, arg_54_1)
+			end
+
+			break
+		end
+
+		local var_54_4 = ch:find("}", var_54_2, true)
+
+		if not var_54_4 then
+			var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", ch:sub(buffer), arg_54_1)
+
+			break
+		end
+
+		local var_54_5 = ch:sub(buffer, var_54_2 - 1)
+
+		if var_54_5 ~= "" then
+			var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", var_54_5, arg_54_1)
+		end
+
+		var_54_0[#var_54_0 + 1] = ch:sub(var_54_2, var_54_4)
+		buffer = var_54_4 + 1
+	end
+
+	return table.concat(var_54_0)
+end
+
+local function buildForgeBonusPresentation(bonus, leftItemId)
 	if not Fusion or not Fusion.classificationTable then
 		return 0
 	end
 
-	local probe = Item.create(itemId)
+	local probe = Item.create(bonus)
 
 	if not probe then
 		return 0
@@ -713,45 +813,10 @@ local function resolveFusionGoldCost(itemId, tier)
 		return 0
 	end
 
-	return tonumber(byClass[tostring(tier or 0)]) or 0
+	return tonumber(byClass[tostring(leftItemId or 0)]) or 0
 end
 
-local function forgeBonusColoredText(text)
-	local iconSet = {
-		[FORGE_ICON_DUST] = true,
-		[FORGE_ICON_EXALTED] = true,
-		[FORGE_ICON_GOLD] = true
-	}
-	local parts = {}
-	local buffer = {}
-
-	local function flushBuffer()
-		if #buffer == 0 then
-			return
-		end
-
-		parts[#parts + 1] = string.format("{%s, %s}", table.concat(buffer), FORGE_BONUS_TEXT_COLOR)
-		buffer = {}
-	end
-
-	for i = 1, #text do
-		local ch = text:sub(i, i)
-
-		if iconSet[ch] then
-			flushBuffer()
-
-			parts[#parts + 1] = string.format("{%s, %s}", ch, FORGE_BONUS_ICON_COLOR)
-		else
-			buffer[#buffer + 1] = ch
-		end
-	end
-
-	flushBuffer()
-
-	return table.concat(parts)
-end
-
-local function buildForgeBonusPresentation(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
+local function var_0_40(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
 	bonus = tonumber(bonus) or 0
 
 	if bonus <= 0 then
@@ -767,35 +832,32 @@ local function buildForgeBonusPresentation(bonus, leftItemId, leftTier, coreCoun
 	local bonusItemId = extraItemId > 0 and extraItemId or leftItemId
 
 	if bonus == 1 then
-		local text = string.format("Neat! The used 100%s were not consumed.", FORGE_ICON_DUST)
+		local text = "Neat! The used 100{icon:dust} were not consumed."
 
 		return {
-			count = 1,
 			tier = 0,
+			count = 1,
 			itemId = FORGE_DUST_ITEM_ID,
-			text = text,
-			coloredText = forgeBonusColoredText(text)
+			text = text
 		}
 	elseif bonus == 2 then
-		local text = string.format("Great! The used%s was not consumed.", FORGE_ICON_EXALTED)
+		local text = "Great! The used{icon:exalted-core} was not consumed."
 
 		return {
 			tier = 0,
 			itemId = FORGE_CORE_ITEM_ID,
 			count = math.max(coreCount, 1),
-			text = text,
-			coloredText = forgeBonusColoredText(text)
+			text = text
 		}
 	elseif bonus == 3 then
-		local goldCost = resolveFusionGoldCost(leftItemId, leftTier)
-		local text = string.format("Awesome! The used %s%s were not consumed.", Forge:formatNumber(goldCost), FORGE_ICON_GOLD)
+		local goldCost = buildForgeBonusPresentation(leftItemId, leftTier)
+		local text = string.format("Awesome! The used %s{icon:gold-coin} were not consumed.", Forge:formatNumber(goldCost))
 
 		return {
-			count = 100,
 			tier = 0,
+			count = 100,
 			itemId = FORGE_GOLD_ITEM_ID,
-			text = text,
-			coloredText = forgeBonusColoredText(text)
+			text = text
 		}
 	elseif bonus >= 4 and bonus <= 8 then
 		local texts = {
@@ -847,7 +909,7 @@ local function hideResultFusionWidgets(resultWindow)
 	end
 end
 
-function Forge:showResultBonus(bonusInfo)
+function Forge.showResultBonus(self, bonusInfo)
 	local resultWindow = self.resultWindow
 
 	if not resultWindow or not bonusInfo then
@@ -887,10 +949,10 @@ function Forge:showResultBonus(bonusInfo)
 
 	if descWidget then
 		local text = bonusInfo.text or ""
-		local line1, line2 = text:match("^(.-)\n(.*)$")
+		local var_58_7, line2 = text:match("^(.-)\n(.*)$")
 
-		if not line1 then
-			line1 = text
+		if not var_58_7 then
+			var_58_7 = text
 			line2 = nil
 		end
 
@@ -907,19 +969,19 @@ function Forge:showResultBonus(bonusInfo)
 			descWidget:setTextWrap(false)
 		end
 
-		descWidget:setColor(FORGE_BONUS_TEXT_COLOR)
+		descWidget:setColor(var_0_37)
 
-		if bonusInfo.coloredText and not line2 then
-			descWidget:setColoredText(bonusInfo.coloredText)
+		if var_58_7:find("{icon:", 1, true) and not line2 then
+			descWidget:setColoredText(var_0_38(var_58_7))
 		else
-			descWidget:setText(line1)
+			descWidget:setText(var_58_7)
 		end
 
 		descWidget:setVisible(true)
 
 		if descWidget2 then
 			if line2 and line2 ~= "" then
-				descWidget2:setColor(FORGE_BONUS_TEXT_COLOR)
+				descWidget2:setColor(var_0_37)
 				descWidget2:setText(line2)
 				descWidget2:setVisible(true)
 			else
@@ -937,7 +999,7 @@ function Forge:showResultBonus(bonusInfo)
 	end
 end
 
-function Forge:ProcessFlash(item, widget, startDelay, item2, widget2, descWidget, description, success, revealTier, closeWidget)
+function Forge.ProcessFlash(item, item, widget, startDelay, item2, widget2, descWidget, description, success, revealTier, closeWidget)
 	local animationId = Forge.resultAnimationId
 
 	local function isAnimationActive()
@@ -1016,7 +1078,7 @@ function Forge:ProcessFlash(item, widget, startDelay, item2, widget2, descWidget
 	end, animationStartDelay + totalDuration)
 end
 
-function Forge:displayResult(actionType, convergence, success, leftItemId, rightItemId, leftTier, rightTier, bonus, coreCount, extraItemId, extraTier)
+function Forge.displayResult(self, actionType, convergence, success, leftItemId, rightItemId, leftTier, rightTier, bonus, coreCount, extraItemId, extraTier)
 	if self.resultWindow then
 		self.resultWindow:destroy()
 
@@ -1044,7 +1106,7 @@ function Forge:displayResult(actionType, convergence, success, leftItemId, right
 	local bonusInfo
 
 	if actionType == ACTION_FUSION_TYPE then
-		bonusInfo = buildForgeBonusPresentation(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
+		bonusInfo = var_0_40(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
 	end
 
 	local closeWidget = resultWindow:getChildById("close")
@@ -1195,5 +1257,5 @@ function onForgeHistory(currentPage, lastPage, data)
 end
 
 function terminate()
-	return
+	Keybind.delete("Dialogs", "Open Exaltation Forge")
 end

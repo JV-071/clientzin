@@ -272,7 +272,7 @@ bh_unicode_properties.cache
 GitHub.sublime-settings
 
 # Header Files
-# src/gitinfo.h is intentionally tracked — upstream OTC ignores it but provides
+# src/gitinfo.h is intentionally tracked â€” upstream OTC ignores it but provides
 # no CMake step to regenerate it, so a fresh clone fails on "fatal error:
 # gitinfo.h: No such file or directory". Tracking a fallback file keeps CI happy.
 
@@ -402,8 +402,10 @@ _wip_stance_icons/
 !src/framework/graphics/dx/
 /diagnostics/
 
-# Local game data: explicitly excluded from the public repository.
-/assets/things/assets/
+# Recovered game resources are tracked on this branch.
 
 /.ci/
 /package/
+
+# Readable sources only.
+*.luac

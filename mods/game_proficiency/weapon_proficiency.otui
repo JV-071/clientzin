@@ -202,7 +202,7 @@ BonusSelectPanel < UIWidget
       id: bonusIcon0
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
   Panel
     id: twoBonusIconPanel
@@ -214,14 +214,14 @@ BonusSelectPanel < UIWidget
       anchors.left: parent.left
       margin-top: 49
       margin-left: 14
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
     BonusIcon
       id: bonusIcon1
       anchors.bottom: parent.bottom
       anchors.left: bonusIcon0.left
       margin-bottom: 49
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
   Panel
     id: threeBonusIconPanel
@@ -233,19 +233,19 @@ BonusSelectPanel < UIWidget
       anchors.left: parent.left
       margin-top: 20
       margin-left: 14
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
     BonusIcon
       id: bonusIcon1
       anchors.top: bonusIcon0.bottom
       anchors.left: bonusIcon0.left
       margin-top: 38
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
     BonusIcon
       id: bonusIcon2
       anchors.top: bonusIcon1.bottom
       anchors.left: bonusIcon1.left
       margin-top: 39
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
 
 BonusDetailPanel < UIWidget
@@ -263,7 +263,7 @@ BonusDetailPanel < UIWidget
     anchors.left: parent.left
     margin-left: -2
     margin-top: -1
-    font: $var-cip-font-wheel
+    font: $var-cip-font-new
     color: #c0c0c0
     text-align: topLeft
     text-wrap: true

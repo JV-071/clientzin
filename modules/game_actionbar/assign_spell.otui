@@ -89,9 +89,9 @@ SpellListLabel < Panel
     focusable: false
     anchors.left: groupCooldownIcon.right
     anchors.verticalCenter: parent.verticalCenter
-    margin-left: 6
-    margin-top: 2
-    font: verdana-11px-monochrome
+    margin-left: 5
+    margin-top: 1
+    font: $var-cip-font-new
     color: #c0c0c0
     text-auto-resize: true
     text-align: right
@@ -103,10 +103,10 @@ SpellListLabel < Panel
     anchors.left: spellIcon.right
     anchors.right: spellLevel.left
     anchors.top: parent.top
-    margin-left: 3
+    margin-left: 2
     margin-right: 6
     margin-top: 4
-    font: verdana-11px-monochrome
+    font: $var-cip-font-new
     color: #c0c0c0
     text-auto-resize: true
 
@@ -118,8 +118,8 @@ SpellListLabel < Panel
     anchors.right: spellLevel.left
     anchors.top: spellName.bottom
     margin-right: 6
-    margin-top: -2
-    font: verdana-11px-monochrome
+    margin-top: 1
+    font: $var-cip-font-new
     color: #c0c0c0
     text-auto-resize: true
 

@@ -5,5 +5,21 @@ Module
   website: https://github.com/edubart/otclient
   sandboxed: true
   scripts: [ options, keybins, custom_hotkey_manager, custom_hotkeys_controller, custom_hotkeys, cip_import_mappings, cip_import_reader, cip_import_converter, cip_import_applier, cip_import ]
-  @onLoad: controller:init()
-  @onUnload: controller:terminate()
+  @onLoad: |
+    if Controller and Controller.ensureMethods then
+      Controller.ensureMethods()
+    end
+    if controller then
+      rawset(controller, 'init', nil)
+      rawset(controller, 'loadUI', nil)
+      rawset(controller, 'terminate', nil)
+      controller:init()
+    end
+  @onUnload: |
+    if controller then
+      rawset(controller, 'terminate', nil)
+      if Controller and Controller.ensureMethods then
+        Controller.ensureMethods()
+      end
+      controller:terminate()
+    end

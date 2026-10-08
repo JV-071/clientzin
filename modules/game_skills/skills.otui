@@ -582,9 +582,13 @@ MiniWindow
     SmallSkillButton
       id: damageReflection
       visible: false
+      !tooltip: tr('Damage Reflection')
       SkillNameLabel
-        !text: tr('Damage Reflection')
-      SkillValueLabel  
+        !text: tr('Dmg Reflect')
+        width: 80
+        text-auto-resize: false
+        text-elide: true
+      SkillValueLabel
 
     HorizontalSeparator
       id: separadorOnForgeBonusesChange

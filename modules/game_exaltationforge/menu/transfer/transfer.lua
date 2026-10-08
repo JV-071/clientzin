@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_exaltationforge/menu/transfer/transfer.lua
-
-Forge.Transfer = {}
+﻿Forge.Transfer = {}
 
 local Transfer = Forge.Transfer
 
@@ -9,6 +7,7 @@ Transfer.mainWindow = nil
 local DUST_NORMAL_TRANSFER = 100
 local DUST_CONVERGENCE_TRANSFER = 160
 local DESCRIPTIONS = {
+	convergence = "A Convergence transfer does not reduce the tier of the consumed item.",
 	dustRequirement = "A transfer requires %d dust.",
 	receiverList = "Select the item to which you want to transfer the tier.",
 	coreRequirement = "A transfer requires %d exalted cores.",
@@ -21,18 +20,17 @@ local DESCRIPTIONS = {
 	default = "You can transfer the tier of an item to another item of the same classification. To do so, you need at least a tier 2 item that will be consumed during the transfer and additional resources. The other item will receive the consumed item's tier reduced by one.",
 	transferReady = "Click here to carry out the transfer. This will consume all required ingredients.",
 	consumedItem = "%s with tier %d will be consumed during the transfer.",
-	selectItemAbove = "Please select an item above to continue.",
-	convergence = "A Convergence transfer does not reduce the tier of the consumed item."
+	selectItemAbove = "Please select an item above to continue."
 }
 local REQUIREMENTS_SLOT_IDS = {
-	previewTransferHoverArea = "preview",
 	requiredCoreHoverArea = "core",
+	previewTransferHoverArea = "preview",
 	requiredDustHoverArea = "dust"
 }
 local TRANSFER_ACTION_WIDGET_IDS = {
+	transferButtonProcced = true,
 	transferButtonHoverArea = true,
-	transferActionWrapper = true,
-	transferButtonProcced = true
+	transferActionWrapper = true
 }
 
 local function getItemDisplayName(item)
@@ -49,13 +47,13 @@ local function getItemDisplayName(item)
 	return thing and thing:getName():lower() or "item"
 end
 
-function Transfer:setDescription(text)
+function Transfer.setDescription(self, text)
 	if self.descriptionLabel then
 		self.descriptionLabel:setText(text or "")
 	end
 end
 
-function Transfer:resetDescription()
+function Transfer.resetDescription(self)
 	if self:isConvergenceTransfer() then
 		self:setDescription(DESCRIPTIONS.defaultConvergence)
 	else
@@ -63,7 +61,7 @@ function Transfer:resetDescription()
 	end
 end
 
-function Transfer:getDonorItem()
+function Transfer.getDonorItem(self)
 	local ws = self.widgetStorage
 
 	if not ws then
@@ -85,11 +83,11 @@ function Transfer:getDonorItem()
 	return nil
 end
 
-function Transfer:hasDonorItemSelected()
+function Transfer.hasDonorItemSelected(self)
 	return self:getDonorItem() ~= nil
 end
 
-function Transfer:describePreviewItemRequirement()
+function Transfer.describePreviewItemRequirement(self)
 	local item = self:getDonorItem()
 
 	if not item then
@@ -99,11 +97,11 @@ function Transfer:describePreviewItemRequirement()
 	return string.format(DESCRIPTIONS.consumedItem, getItemDisplayName(item), item:getTier())
 end
 
-function Transfer:describeDustRequirement()
+function Transfer.describeDustRequirement(self)
 	return string.format(DESCRIPTIONS.dustRequirement, self:getDustCost())
 end
 
-function Transfer:describeCoreRequirement()
+function Transfer.describeCoreRequirement(self)
 	if not self:hasDonorItemSelected() then
 		return DESCRIPTIONS.selectItemAbove
 	end
@@ -162,7 +160,7 @@ function Transfer.isTransferActionWidget(widget)
 	return false
 end
 
-function Transfer:hasTransferResources()
+function Transfer.hasTransferResources(self)
 	local ws = self.widgetStorage
 
 	if not ws or not Forge.data then
@@ -175,9 +173,7 @@ function Transfer:hasTransferResources()
 		return false
 	end
 
-	local dustCost = self:getDustCost()
-
-	if dustCost > Forge:getResourceBalance("dust") then
+	if self:getDustCost() > Forge:getResourceBalance("dust") then
 		return false
 	end
 
@@ -196,7 +192,7 @@ function Transfer:hasTransferResources()
 	return true
 end
 
-function Transfer:describeTransferAction()
+function Transfer.describeTransferAction(self)
 	local ws = self.widgetStorage
 
 	if not ws then
@@ -443,7 +439,7 @@ local function setupForgeAreaClearHover()
 	end
 
 	for _, widgetId in ipairs({
-		"headerPainel",
+		"menus",
 		"goldBalancePanel",
 		"dustBalancePanel",
 		"sliverBalancePanel",
@@ -455,11 +451,11 @@ local function setupForgeAreaClearHover()
 		"ConversionButton",
 		"HistoryButton"
 	}) do
-		clearOnEnter(forgeWindow:getChildById(widgetId))
+		clearOnEnter(forgeWindow:recursiveGetChildById(widgetId))
 	end
 end
 
-function Transfer:setupHovers()
+function Transfer.setupHovers(self)
 	setupForgeAreaClearHover()
 
 	local mainWindow = self.mainWindow
@@ -473,27 +469,23 @@ function Transfer:setupHovers()
 	bindRequirementsDefaultHover(self.widgetStorage.transferRequirements)
 end
 
-function Transfer:createButton()
-	local buttonPanel = g_ui.createWidget("ForgeButton", Forge.mainWindow)
+function Transfer.createButton(self)
+	local transferButtonPanel = Forge.createTabPanel("ForgeButton", "TransferButton")
 
-	buttonPanel:addAnchor(AnchorTop, "FusionButton", AnchorTop)
-	buttonPanel:addAnchor(AnchorLeft, "FusionButton", AnchorRight)
-	buttonPanel:setId("TransferButton")
+	transferButtonPanel:addAnchor(AnchorTop, "parent", AnchorTop)
+	transferButtonPanel:addAnchor(AnchorLeft, "FusionButton", AnchorRight)
 
-	self.buttonPanel = buttonPanel
-	self.mainButton = buttonPanel:getChildById("button")
+	self.buttonPanel = transferButtonPanel
+	self.mainButton = transferButtonPanel:getChildById("button")
 
-	Forge.setupTabButtonIcon(buttonPanel, "/images/icons_big/icon-transfer", 6, 3)
+	Forge.setupTabButtonIcon(transferButtonPanel, "/images/icons_big/icon-transfer", 6, 3)
 
 	if not self.mainWindow then
 		g_ui.importStyle("Transfer")
 
 		self.mainWindow = g_ui.createWidget("TransferWindow", Forge.mainWindow)
 
-		self.mainWindow:addAnchor(AnchorTop, "TransferButton", AnchorBottom)
-		self.mainWindow:addAnchor(AnchorLeft, "FusionButton", AnchorLeft)
-		self.mainWindow:addAnchor(AnchorRight, "parent", AnchorRight)
-		self.mainWindow:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		Forge.anchorContentPanel(self.mainWindow)
 	end
 
 	self:init()
@@ -503,7 +495,7 @@ function Transfer:createButton()
 	end
 end
 
-function Transfer:resetConvergenceMode()
+function Transfer.resetConvergenceMode(self)
 	if not self.widgetStorage or not self.widgetStorage.convergence then
 		return
 	end
@@ -523,7 +515,7 @@ function Transfer:resetConvergenceMode()
 	self:resetDescription()
 end
 
-function Transfer:updateRequirementsTitle()
+function Transfer.updateRequirementsTitle(self)
 	if not self.widgetStorage or not self.widgetStorage.transferRequirements then
 		return
 	end
@@ -535,7 +527,7 @@ function Transfer:updateRequirementsTitle()
 	end
 end
 
-function Transfer:refreshListView()
+function Transfer.refreshListView(self)
 	if not self.widgetStorage then
 		return
 	end
@@ -554,18 +546,14 @@ function Transfer:refreshListView()
 	end
 end
 
-function Transfer:showWindow()
+function Transfer.showWindow(self)
 	if Forge.currentPanel then
 		Forge.currentPanel:setVisible(false)
 	end
 
-	if Forge.currentButton then
-		Forge.currentButton:setEnabled(true)
-		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
-	end
-
 	Forge.currentPanel = self.mainWindow
-	Forge.currentButton = self.mainButton
+
+	Forge.setActiveTabButton(self.mainButton)
 
 	if self.widgetStorage and self.widgetStorage.requiredTransferCoreItem then
 		self.widgetStorage.requiredTransferCoreItem:setItemId(37110)
@@ -573,8 +561,6 @@ function Transfer:showWindow()
 
 	self.mainWindow:setVisible(true)
 	self.mainWindow:raise()
-	self.mainButton:setEnabled(false)
-	Forge.onTabButtonEnabled(nil, self.buttonPanel, false)
 	Forge.firstTooltip:setVisible(false)
 	self:resetDescription()
 	self:updateRequirementsTitle()
@@ -584,7 +570,7 @@ end
 local delay = 250
 local lastClick = 0
 
-function Transfer:canProceedTransfer()
+function Transfer.canProceedTransfer(self)
 	local ws = self.widgetStorage
 
 	if not ws then
@@ -601,7 +587,7 @@ function Transfer:canProceedTransfer()
 	return self:hasTransferResources()
 end
 
-function Transfer:refreshTransferProceedState()
+function Transfer.refreshTransferProceedState(self)
 	local ws = self.widgetStorage
 
 	if not ws then
@@ -625,6 +611,8 @@ local function updateButtonPreviewSlot(itemWidget, questionMarkWidget, item)
 	end
 
 	if item then
+		local item = item:clone()
+
 		itemWidget:setVisible(true)
 		itemWidget:setItem(item)
 		ItemsDatabase.setTier(itemWidget, item)
@@ -643,7 +631,7 @@ local function updateButtonPreviewSlot(itemWidget, questionMarkWidget, item)
 	end
 end
 
-function Transfer:init()
+function Transfer.init(self)
 	self.widgetStorage = {}
 	self.transferClickLocked = false
 	self.dustNormalTransfer = DUST_NORMAL_TRANSFER
@@ -652,10 +640,7 @@ function Transfer:init()
 	local mainPanel = self.mainWindow
 
 	self.widgetStorage.mainButton = self.mainButton
-
-	local tooltipPanel = mainPanel:getChildById("firstTooltip")
-
-	self.descriptionLabel = tooltipPanel:getChildById("description")
+	self.descriptionLabel = mainPanel:getChildById("firstTooltip"):getChildById("description")
 
 	self:resetDescription()
 
@@ -792,18 +777,13 @@ local function clearPreviewTransferItem(widgetStorage)
 	end
 
 	local previewTransferItem = widgetStorage.previewTransferItem
-	local item = previewTransferItem:getItem()
-
-	if item then
-		item:setTier(0)
-	end
 
 	ItemsDatabase.setTier(previewTransferItem, 0)
 	ItemsDatabase.setBigTier(previewTransferItem, 0)
 	previewTransferItem:setItem(nil)
 end
 
-function Transfer:getDustCost()
+function Transfer.getDustCost(self)
 	if self.widgetStorage.convergence:isChecked() then
 		return self.dustConvergenceTransfer
 	end
@@ -811,11 +791,11 @@ function Transfer:getDustCost()
 	return self.dustNormalTransfer
 end
 
-function Transfer:isConvergenceTransfer()
+function Transfer.isConvergenceTransfer(self)
 	return self.widgetStorage and self.widgetStorage.convergence and self.widgetStorage.convergence:isChecked()
 end
 
-function Transfer:getTransferCoreCost(donorTier)
+function Transfer.getTransferCoreCost(self, donorTier)
 	if not Forge.data or not Forge.data.exaltedCores or not donorTier then
 		return nil
 	end
@@ -829,7 +809,7 @@ function Transfer:getTransferCoreCost(donorTier)
 	return Forge.data.exaltedCores[tostring(tierKey)]
 end
 
-function Transfer:getTransferGoldCost(item, donorTier)
+function Transfer.getTransferGoldCost(self, item, donorTier)
 	if not Forge.data or not item or not donorTier then
 		return nil
 	end
@@ -846,7 +826,7 @@ function Transfer:getTransferGoldCost(item, donorTier)
 	return costTable and costTable[tostring(donorTier - 1)]
 end
 
-function Transfer:parseResourcesChange(data)
+function Transfer.parseResourcesChange(self, data)
 	if not data or not data.config then
 		return
 	end
@@ -866,7 +846,7 @@ function Transfer:parseResourcesChange(data)
 	end
 end
 
-function Transfer:updateWidgets()
+function Transfer.updateWidgets(self)
 	Forge:setWidget(self.widgetStorage.previewTransferItemCount, "0/1", false)
 
 	local dustCost = self:getDustCost()
@@ -884,7 +864,7 @@ function Transfer:updateWidgets()
 	self:refreshTransferProceedState()
 end
 
-function Transfer:setActiveItem(panel, id)
+function Transfer.setActiveItem(self, panel, id)
 	if not self.activePanels then
 		self.activePanels = {}
 	end
@@ -916,7 +896,7 @@ function Transfer:setActiveItem(panel, id)
 	self.activePanelList[id] = panel
 end
 
-function Transfer:displayItems()
+function Transfer.displayItems(self)
 	local data = self.transfers
 
 	if not data then
@@ -972,7 +952,7 @@ function Transfer:displayItems()
 			function itemWidget.onClick()
 				secondItemPanel:destroyChildren()
 				self:setActiveItem(container, container:getId())
-				previewTransferItem:setItem(item)
+				previewTransferItem:setItem(item:clone())
 				ItemsDatabase.setBigTier(previewTransferItem, item)
 				updateButtonPreviewSlot(firstButtonPreviewItem, firstButtonPreviewQuestionMark, item)
 				previewTransferQuestionMark:setVisible(false)
@@ -1026,6 +1006,9 @@ function Transfer:displayItems()
 
 						function itemWidget.onClick()
 							self:setActiveItem(container, container:getId())
+
+							local item = item:clone()
+
 							item:setTier(donor.tier - 1)
 							updateButtonPreviewSlot(secondButtonPreviewItem, secondButtonPreviewQuestionMark, item)
 							self:refreshTransferProceedState()
@@ -1037,7 +1020,7 @@ function Transfer:displayItems()
 	end
 end
 
-function Transfer:displayConvergence()
+function Transfer.displayConvergence(self)
 	local data = self.convergenceTransfers
 
 	if not data then
@@ -1094,7 +1077,7 @@ function Transfer:displayConvergence()
 				updateButtonPreviewSlot(secondButtonPreviewItem, secondButtonPreviewQuestionMark, nil)
 				secondItemPanel:destroyChildren()
 				self:setActiveItem(container, container:getId())
-				previewTransferItem:setItem(item)
+				previewTransferItem:setItem(item:clone())
 				ItemsDatabase.setBigTier(previewTransferItem, item)
 				updateButtonPreviewSlot(firstButtonPreviewItem, firstButtonPreviewQuestionMark, item)
 				previewTransferQuestionMark:setVisible(false)
@@ -1161,7 +1144,7 @@ function Transfer:displayConvergence()
 	end
 end
 
-function Transfer:parseData(data)
+function Transfer.parseData(self, data)
 	if Forge.data then
 		self:parseResourcesChange(Forge.data)
 	end
@@ -1180,7 +1163,7 @@ function Transfer:parseData(data)
 	end, 10)
 end
 
-function Transfer:applyTransferResult(data)
+function Transfer.applyTransferResult(self, data)
 	local ctx = self.lastTransferContext
 
 	if not ctx or not data then
@@ -1236,7 +1219,7 @@ function Transfer:applyTransferResult(data)
 	end
 end
 
-function Transfer:parseResult(data)
+function Transfer.parseResult(self, data)
 	if self.mainWindow and self.mainWindow:isVisible() then
 		self.mainWindow:setVisible(false)
 	end

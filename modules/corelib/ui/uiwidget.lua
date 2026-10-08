@@ -1,6 +1,14 @@
-﻿-- chunkname: @/corelib/ui/uiwidget.lua
+﻿local var_0_0 = UIWidget.setColoredText
 
-function UIWidget:setMargin(...)
+function UIWidget.setColoredText(arg_1_0, arg_1_1, arg_1_2)
+	if type(arg_1_1) == "table" then
+		arg_1_1 = tableToColoredText(arg_1_1)
+	end
+
+	var_0_0(arg_1_0, arg_1_1, arg_1_2)
+end
+
+function UIWidget.setMargin(self, ...)
 	local params = {
 		...
 	}
@@ -23,10 +31,11 @@ function UIWidget:setMargin(...)
 	end
 end
 
-function UIWidget:parseColoredText(text, default_color)
+function UIWidget.parseColoredText(self, text, default_color)
 	default_color = default_color or "#ffffff"
 
-	local result, last_pos = "", 1
+	local result = ""
+	local last_pos = 1
 
 	for start, stop in text:gmatch("()%[color=#?%x+%]()") do
 		if last_pos < start then

@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_screenshot/game_screenshot.lua
-
-local AUTO_SCREENSHOTS_ENABLED = false
+﻿local AUTO_SCREENSHOTS_ENABLED = false
 local CLIENT_EVENT_TYPE_SIMPLE = 1
 local CLIENT_EVENT_TYPE_ACHIEVEMENT = 2
 local CLIENT_EVENT_TYPE_LEVEL = 4
@@ -16,88 +14,88 @@ local CLIENT_EVENT_TREASUREFOUND = 7
 local CLIENT_EVENT_GIFTOFLIFE = 8
 local AutoScreenshotEvents = {
 	{
-		enableDefault = true,
 		label = "Level Up",
+		enableDefault = true,
 		optionKey = "levelUp"
 	},
 	{
-		enableDefault = true,
 		label = "Skill Up",
+		enableDefault = true,
 		optionKey = "skillUp"
 	},
 	{
-		enableDefault = true,
 		label = "Achievement",
+		enableDefault = true,
 		optionKey = "achievement"
 	},
 	{
-		enableDefault = false,
 		label = "Bestiary Entry Unlocked",
+		enableDefault = false,
 		optionKey = "bestiaryUnlocked"
 	},
 	{
-		enableDefault = false,
 		label = "Bestiary Entry Completed",
+		enableDefault = false,
 		optionKey = "bestiaryCompleted"
 	},
 	{
-		enableDefault = false,
 		label = "Treasure Found",
+		enableDefault = false,
 		optionKey = "treasureFound"
 	},
 	{
-		enableDefault = false,
 		label = "Valuable Loot",
+		enableDefault = false,
 		optionKey = "valuableLoot"
 	},
 	{
-		enableDefault = false,
 		label = "Boss Defeated",
+		enableDefault = false,
 		optionKey = "bossDefeated"
 	},
 	{
-		enableDefault = true,
 		label = "Death PvE",
+		enableDefault = true,
 		optionKey = "deathPvE"
 	},
 	{
-		enableDefault = false,
 		label = "Death PvP",
+		enableDefault = false,
 		optionKey = "deathPvP"
 	},
 	{
-		enableDefault = false,
 		label = "Player Kill",
+		enableDefault = false,
 		optionKey = "playerKill"
 	},
 	{
-		enableDefault = false,
 		label = "Player Kill Assist",
+		enableDefault = false,
 		optionKey = "playerKillAssist"
 	},
 	{
-		enableDefault = false,
 		label = "Player Attacking",
+		enableDefault = false,
 		optionKey = "playerAttacking"
 	},
 	{
-		enableDefault = false,
 		label = "Highest Damage Dealt",
+		enableDefault = false,
 		optionKey = "highestDamage"
 	},
 	{
-		enableDefault = false,
 		label = "Highest Healing Done",
+		enableDefault = false,
 		optionKey = "highestHealing"
 	},
 	{
-		enableDefault = false,
 		label = "Low Health",
+		enableDefault = false,
 		optionKey = "lowHealth"
 	},
 	{
-		enableDefault = true,
 		label = "Gift of Life Triggered",
+		enableDefault = true,
 		optionKey = "giftOfLife"
 	}
 }
@@ -136,6 +134,7 @@ local SIMPLE_EVENT_SCREENSHOTS = {
 	}
 }
 local autoScreenshotDir = "/auto_screenshots"
+local var_0_17 = "/screenshots"
 
 screenshotController = Controller:new()
 
@@ -148,9 +147,19 @@ end
 local function getScreenshotDirPath()
 	ensureScreenshotDir()
 
-	local writeDir = g_resources.getWriteDir():gsub("[/\\]+$", "")
+	return g_resources.getWriteDir():gsub("[/\\]+$", ""):gsub("/", "\\") .. "\\auto_screenshots"
+end
 
-	return writeDir:gsub("/", "\\") .. "\\auto_screenshots"
+local function var_0_20()
+	if not g_resources.directoryExists(var_0_17) then
+		g_resources.makeDir(var_0_17)
+	end
+end
+
+local function var_0_21()
+	var_0_20()
+
+	return g_resources.getWriteDir():gsub("[/\\]+$", ""):gsub("/", "\\") .. "\\screenshots"
 end
 
 local function showScreenshotSavedMessage(eventName)
@@ -236,26 +245,30 @@ local function onClientEvent(eventType, ...)
 	end
 end
 
-function screenshotController:onInit()
-	return
+function screenshotController.onInit(unusedArgument)
+	Keybind.new("Misc.", "Take Screenshot", "", "")
+	Keybind.bind("Misc.", "Take Screenshot", {
+		{
+			type = KEY_DOWN,
+			callback = takeManualScreenshot
+		}
+	})
 end
 
-function screenshotController:onTerminate()
+function screenshotController.onTerminate(unusedArgument)
+	Keybind.delete("Misc.", "Take Screenshot")
+
 	AutoScreenshotEvents = {}
 end
 
-function screenshotController:onGameStart()
-	if g_game.getClientVersion() < 1180 then
-		return
-	end
-
+function screenshotController.onGameStart(unusedArgument)
 	ensureScreenshotDir()
 	screenshotController:registerEvents(g_game, {
 		onClientEvent = onClientEvent
 	})
 end
 
-function screenshotController:onGameEnd()
+function screenshotController.onGameEnd(self)
 	return
 end
 
@@ -292,6 +305,36 @@ function takeScreenshot(name, eventName)
 
 		showScreenshotSavedMessage(eventName)
 	end, 50, "screenshotScheduleEvent")
+end
+
+function takeManualScreenshot()
+	if not g_game.isOnline() then
+		return
+	end
+
+	local localPlayer = g_game.getLocalPlayer()
+
+	if not localPlayer then
+		return
+	end
+
+	var_0_20()
+
+	local name = (localPlayer:getName() or "player"):gsub("[^%w%-_]", "_")
+	local formattedText = string.format("%s_%s_%03d.png", name, os.date("%Y%m%d_%H%M%S"), g_clock.millis() % 1000)
+	local var_16_3 = var_0_17 .. "/" .. formattedText
+
+	screenshotController:scheduleEvent(function()
+		if getScreenshotOption("onlyCaptureGameWindow") then
+			g_app.doMapScreenshot(var_16_3)
+		else
+			g_app.doScreenshot(var_16_3)
+		end
+
+		if modules.game_textmessage and modules.game_textmessage.displayStatusMessage then
+			modules.game_textmessage.displayStatusMessage(tr("Screenshot has been saved to location '%s'.", var_0_21()))
+		end
+	end, 50, "manualScreenshotScheduleEvent")
 end
 
 function OpenFolder()

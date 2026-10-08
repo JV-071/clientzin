@@ -317,17 +317,18 @@ MainWindow
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           !text: tr('Character') .. ''
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
+          text-offset: -1 -1
           color: #c0c0c0
           text-align: center
-          text-offset: 0 0
 
         Label
           margin-left: 281
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           !text: tr('Status') .. ''
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
+          text-offset: -1 -1
           color: #c0c0c0
           text-align: center
 
@@ -336,7 +337,8 @@ MainWindow
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           !text: tr('Level') .. ''
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
+          text-offset: -1 -1
           color: #c0c0c0
           text-align: center
 
@@ -345,7 +347,8 @@ MainWindow
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           !text: tr('Vocation') .. ''
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
+          text-offset: -1 -1
           color: #c0c0c0
           text-align: center
 
@@ -354,7 +357,8 @@ MainWindow
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           !text: tr('World') .. ''
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
+          text-offset: -1 -1
           color: #c0c0c0
           text-align: center
 

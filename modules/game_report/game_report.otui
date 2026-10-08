@@ -1,0 +1,710 @@
+ReportThreadLabel < Label
+  font: $var-cip-font-new
+  text-wrap: true
+  text-auto-resize: true
+  color: #a0a0ff
+  phantom: true
+
+ReportListRow < UIWidget
+  height: 15
+  min-height: 15
+  max-height: 15
+  clipping: true
+  focusable: true
+  phantom: false
+  change-cursor-image: true
+  cursor: pointer
+  background-color: #484848
+
+  Label
+    id: ticketLabel
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: separator.left
+    margin-left: 2
+    margin-top: 1
+    margin-right: 2
+    font: $var-cip-font-new
+    color: #C0C0C0
+    text-elide: true
+    phantom: true
+
+  VerticalSeparatorFlat
+    id: separator
+    height: 15
+    fixed-size: true
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 57
+    phantom: true
+
+  Label
+    id: playerLabel
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: separator.left
+    anchors.right: separatorTwo.left
+    margin-left: 3
+    margin-top: 1
+    margin-right: 2
+    font: $var-cip-font-new
+    color: #C0C0C0
+    text-elide: true
+    phantom: true
+
+  VerticalSeparatorFlat
+    id: separatorTwo
+    height: 15
+    fixed-size: true
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 204
+    phantom: true
+
+  Label
+    id: typeLabel
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: separatorTwo.left
+    anchors.right: separatorThree.left
+    margin-left: 3
+    margin-top: 1
+    margin-right: 2
+    font: $var-cip-font-new
+    color: #C0C0C0
+    text-elide: true
+    phantom: true
+
+  VerticalSeparatorFlat
+    id: separatorThree
+    height: 15
+    fixed-size: true
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 124
+    phantom: true
+
+  Label
+    id: statusLabel
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: separatorThree.left
+    anchors.right: separatorFour.left
+    margin-left: 3
+    margin-top: 1
+    margin-right: 2
+    font: $var-cip-font-new
+    color: #C0C0C0
+    text-elide: true
+    phantom: true
+
+  VerticalSeparatorFlat
+    id: separatorFour
+    height: 15
+    fixed-size: true
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 50
+    phantom: true
+
+  UIButton
+    id: detailsButton
+    size: 50 15
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: separatorFour.left
+    margin-left: 2
+    image-source: /images/ui/button-details-up
+    image-clip: 0 0 50 15
+    phantom: false
+    focusable: false
+    $pressed:
+      image-source: /images/ui/button-details-down
+      image-clip: 0 0 50 15
+
+NewPlayerExerciseButton < UIButton
+  size: 64 64
+  image-source: /images/ui/button-grey-up
+  image-border: 5
+  checkable: true
+  focusable: false
+  border: 1 alpha
+
+  $hover:
+    image-source: /images/ui/button-grey-up
+
+  $pressed:
+    image-source: /images/ui/button-grey-up
+
+  $checked:
+    image-source: /images/ui/button-grey-up
+    border: 1 white
+
+  UIItem
+    id: item
+    size: 32 32
+    virtual: true
+    phantom: true
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    show-count: false
+
+NewPlayerExerciseSelector < MainLogoWindow
+  id: newPlayerExerciseSelector
+  size: 303 220
+  !text: ''
+  padding-top: 8
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
+  clipping: false
+  anchors.centerIn: parent
+  @onEscape: modules.game_report.cancelNewPlayerExercise()
+  @onEnter: modules.game_report.confirmNewPlayerExercise()
+
+  Button
+    id: cancelButton
+    !text: tr('Close')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: modules.game_report.cancelNewPlayerExercise()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  Button
+    id: selectButton
+    !text: tr('Ok')
+    size: 43 20
+    text-offset: 0 0
+    enabled: false
+    anchors.bottom: parent.bottom
+    anchors.right: cancelButton.left
+    margin-right: 6
+    @onClick: modules.game_report.confirmNewPlayerExercise()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: cancelButton.top
+    margin-bottom: 11
+
+  Panel
+    id: elements
+    anchors.top: logoBackdropCrest.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: separator.top
+    margin-top: 6
+    margin-bottom: 8
+    clipping: true
+
+MainLogoWindow
+  !text: ''
+  size: 700 538
+  padding-top: 8
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
+  clipping: false
+  margin-top: -1
+  @onEscape: modules.game_report.onCloseButtonClick()
+
+  UIWidget
+    id: menus
+    size: 668 36
+    anchors.top: logoBackdropCrest.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+    image-source: /images/ui/1pixel-down-frame
+    image-border: 36
+
+    UIWidget
+      id: reportHeaderButton
+      size: 666 34
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-left: 1
+      margin-top: 1
+      image-source: /images/ui/button-grey-down
+      image-border: 5
+      phantom: true
+
+      UIWidget
+        id: reportHeaderIcon
+        size: 32 32
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 6
+        image-source: /images/icons_big/icon-friends-friendlist
+        image-smooth: true
+        phantom: true
+
+      Label
+        id: reportHeaderTitle
+        anchors.fill: parent
+        font: $var-cip-font-new
+        color: #c0c0c0
+        text-align: center
+        text-offset: 0 2
+        phantom: true
+        !text: tr('Report')
+
+  Panel
+    id: reportContentPanel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: menus.bottom
+    anchors.bottom: reportSeparator.top
+    margin-top: 2
+    margin-bottom: 8
+    phantom: false
+
+    UIWidget
+      id: reportCharacterBase
+      anchors.left: parent.left
+      anchors.top: parent.top
+      margin-top: 4
+      size: 164 132
+      image-source: /images/ui/popupwindow-sem-borda-interna
+      image-border: 20
+      font: $var-cip-font-new
+      color: #909090
+      text-offset: 0 2
+      text-align: top
+      !text: tr('Player Name')
+
+      Label
+        id: reportInfoLabel
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        margin-bottom: 7
+        font: $var-cip-font-new
+        !text: tr('Level 0\nVocation')
+        text-auto-resize: true
+        text-align: center
+        color: #C0C0C0
+
+      UICreature
+        id: reportOutfit
+        size: 64 64
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: reportInfoLabel.top
+        margin-bottom: 1
+        fixed-creature-size: true
+        base-scale: true
+        phantom: true
+
+      Label
+        id: reportWorldInfoLabel
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: reportOutfit.top
+        font: $var-cip-font-new
+        !text: tr('World')
+        text-auto-resize: true
+        text-align: center
+        color: #C0C0C0
+        margin-bottom: 1
+
+    UIWidget
+      id: reportSidePanel
+      anchors.left: reportCharacterBase.left
+      anchors.right: reportCharacterBase.right
+      anchors.top: reportCharacterBase.bottom
+      anchors.bottom: parent.bottom
+      margin-top: 6
+      margin-bottom: -2
+      image-source: /images/ui/popupwindow-sem-borda-interna
+      image-border: 20
+
+      Label
+        id: sideTitle
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 2
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #909090
+        text-align: center
+        !text: tr('Select a ticket')
+
+      Label
+        id: sideCreatedCaption
+        anchors.top: sideTitle.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+        !text: tr('Created At:')
+
+      Label
+        id: sideCreatedDate
+        anchors.top: sideCreatedCaption.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 2
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+
+      Label
+        id: sideCreatedTime
+        anchors.top: sideCreatedDate.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 1
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+
+      Label
+        id: sideClosedCaption
+        anchors.top: sideCreatedTime.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+        !text: tr('Closed At:')
+
+      Label
+        id: sideClosedDate
+        anchors.top: sideClosedCaption.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 2
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+
+      Label
+        id: sideClosedTime
+        anchors.top: sideClosedDate.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 1
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+
+      Label
+        id: sideStatusCaption
+        anchors.top: sideClosedTime.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 10
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+        !text: tr('Status:')
+
+      Label
+        id: sideStatusValue
+        anchors.top: sideStatusCaption.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 2
+        margin-left: 8
+        margin-right: 8
+        font: $var-cip-font-new
+        color: #C0C0C0
+        text-align: center
+        visible: false
+
+      Button
+        id: sideGotoPlayerButton
+        !text: tr('Go to Reported Player')
+        text-offset: 0 0
+        size: 140 20
+        anchors.bottom: sideGotoPositionButton.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-bottom: 4
+        visible: false
+        @onClick: modules.game_report.onGotoPlayerClick()
+
+      Button
+        id: sideGotoPositionButton
+        !text: tr('Go to Position')
+        text-offset: 0 0
+        size: 140 20
+        anchors.bottom: sideCloseTicketButton.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-bottom: 4
+        visible: false
+        @onClick: modules.game_report.onGotoPositionClick()
+
+      Button
+        id: sideCloseTicketButton
+        !text: tr('Close Ticket')
+        text-offset: 0 0
+        size: 140 20
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-bottom: 8
+        image-source: /images/ui/button-red-up
+        image-border: 5
+        color: #ffffff
+        visible: false
+        $pressed:
+          image-source: /images/ui/button-red-down
+        @onClick: modules.game_report.onCloseTicketClick()
+
+    UIWidget
+      id: reportListBase
+      anchors.top: reportCharacterBase.top
+      anchors.left: reportCharacterBase.right
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      margin-left: 11
+      margin-bottom: -2
+      image-source: /images/ui/1pixel-down-frame
+      image-border: 1
+
+      UIWidget
+        id: reportListTop
+        height: 16
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        margin-right: 13
+        image-source: /images/ui/1pixel-down-frame
+        image-border: 5
+
+        UIWidget
+          anchors.fill: parent
+          margin: 1
+          background-color: #363636
+
+        Label
+          !text: tr('Ticket')
+          font: $var-cip-font-new
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          anchors.right: reportListSeparator.left
+          margin-left: 2
+          margin-top: 1
+          color: #C0C0C0
+
+        VerticalSeparator
+          id: reportListSeparator
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          margin-top: 1
+          margin-left: 58
+
+        Label
+          id: reportSecondColumnHeader
+          !text: tr('Player')
+          font: $var-cip-font-new
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: reportListSeparator.left
+          anchors.right: reportListSeparatorTwo.left
+          margin-left: 3
+          margin-top: 1
+          color: #C0C0C0
+
+        VerticalSeparator
+          id: reportListSeparatorTwo
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 1
+          margin-right: 204
+
+        Label
+          !text: tr('Type')
+          font: $var-cip-font-new
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: reportListSeparatorTwo.left
+          anchors.right: reportListSeparatorThree.left
+          margin-left: 3
+          margin-top: 1
+          color: #C0C0C0
+
+        VerticalSeparator
+          id: reportListSeparatorThree
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 1
+          margin-right: 124
+
+        Label
+          !text: tr('Status')
+          font: $var-cip-font-new
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: reportListSeparatorThree.left
+          anchors.right: reportListSeparatorFour.left
+          margin-left: 3
+          margin-top: 1
+          color: #C0C0C0
+
+        VerticalSeparator
+          id: reportListSeparatorFour
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 1
+          margin-right: 50
+
+      HorizontalSeparator
+        id: reportListHeaderSeparator
+        anchors.top: reportListTop.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-right: 13
+        margin-left: 1
+
+      UIWidget
+        id: reportListBackground
+        anchors.top: reportListHeaderSeparator.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-top: 1
+        margin-left: 1
+        margin-bottom: 1
+        margin-right: 13
+        background-color: #404040
+        phantom: true
+
+      UIScrollArea
+        id: reportList
+        vertical-scrollbar: reportListScrollBar
+        anchors.top: reportListHeaderSeparator.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-top: 1
+        margin-left: 1
+        margin-bottom: 1
+        margin-right: 13
+        layout:
+          type: verticalBox
+          spacing: 0
+
+      VerticalQtScrollBar
+        id: reportListScrollBar
+        anchors.top: reportList.top
+        anchors.right: reportList.right
+        anchors.bottom: reportList.bottom
+        margin: 1
+        margin-right: -12
+        margin-top: -16
+        margin-bottom: 0
+        step: 15
+        pixels-scroll: true
+
+      Panel
+        id: reportThreadPanel
+        anchors.fill: parent
+        margin: 1
+        visible: false
+        background-color: #404040
+
+        UIScrollArea
+          id: reportThreadList
+          vertical-scrollbar: reportThreadScrollBar
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: reportThreadScrollBar.left
+          anchors.bottom: parent.bottom
+          margin-top: 2
+          margin-left: 4
+          margin-right: 5
+          margin-bottom: 2
+          layout:
+            type: verticalBox
+            spacing: 1
+            align-bottom: true
+
+        VerticalQtScrollBar
+          id: reportThreadScrollBar
+          anchors.top: parent.top
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-top: 0
+          margin-right: 0
+          margin-bottom: 0
+          step: 14
+          pixels-scroll: true
+
+    Button
+      id: reportSendButton
+      !text: tr('Send')
+      size: 43 16
+      anchors.right: reportListBase.right
+      anchors.top: reportListBase.bottom
+      margin-top: 6
+      visible: false
+      enabled: false
+      @onClick: modules.game_report.onSendReply()
+
+    TextEdit
+      id: reportReplyEdit
+      anchors.left: reportListBase.left
+      anchors.right: reportSendButton.left
+      anchors.top: reportListBase.bottom
+      margin-top: 6
+      margin-right: 5
+      height: 16
+      max-length: 500
+      font: $var-cip-font-new
+      visible: false
+      @onTextChange: modules.game_report.onReplyTextChange()
+
+  HorizontalSeparator
+    id: reportSeparator
+    anchors.bottom: closeButton.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-bottom: 11
+    height: 2
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: modules.game_report.onCloseButtonClick()

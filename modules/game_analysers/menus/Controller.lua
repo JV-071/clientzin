@@ -1,15 +1,13 @@
-﻿-- chunkname: @/game_analysers/menus/Controller.lua
-
-if not ControllerAnalyser then
+﻿if not ControllerAnalyser then
 	ControllerAnalyser = {
-		name = "ControllerAnalyser",
 		class = "ControllerAnalyser",
+		name = "ControllerAnalyser",
 		data = {}
 	}
 	ControllerAnalyser.__index = ControllerAnalyser
 end
 
-function ControllerAnalyser:startEvent()
+function ControllerAnalyser.startEvent(unusedArgument)
 	if ControllerAnalyser.eventGraph then
 		ControllerAnalyser.eventGraph:cancel()
 	end
@@ -41,6 +39,7 @@ function ControllerAnalyser:startEvent()
 			XPAnalyser:checkExpHour()
 			DropTrackerAnalyser:checkTracker()
 			SupplyAnalyser:updateWindow(false, true)
+			MiscAnalyser:updateWindow()
 		end
 	end, ANALYSER_GRAPH_PUSH_INTERVAL_4_MIN_MS)
 	ControllerAnalyser.event2000 = cycleEvent(function()

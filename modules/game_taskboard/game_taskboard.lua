@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_taskboard/game_taskboard.lua
-
-TaskBoard = {}
+﻿TaskBoard = {}
 
 local TAB_BOUNTY = "bounty"
 local TAB_WEEKLY = "weekly"
@@ -43,8 +41,8 @@ local function syncBountyShortcutHighlight()
 
 		highlight:setId(BOUNTY_SHORTCUT_HIGHLIGHT_ID)
 		highlight:setSize({
-			width = 22,
-			height = 22
+			height = 22,
+			width = 22
 		})
 		highlight:setPhantom(true)
 		highlight:setClipping(false)
@@ -55,15 +53,19 @@ local function syncBountyShortcutHighlight()
 	end
 
 	highlight:setVisible(bountyShortcutHighlightActive)
+
+	if modules.game_mainpanel and modules.game_mainpanel.refreshOffPanelResizerHighlight then
+		modules.game_mainpanel.refreshOffPanelResizerHighlight()
+	end
 end
 
-function TaskBoard:setBountyShortcutHighlightVisible(show)
+function TaskBoard.setBountyShortcutHighlightVisible(self, show)
 	bountyShortcutHighlightActive = show == true or show == 1
 
 	syncBountyShortcutHighlight()
 end
 
-function TaskBoard:clearBountyShortcutHighlight()
+function TaskBoard.clearBountyShortcutHighlight(self)
 	self:setBountyShortcutHighlightVisible(false)
 end
 
@@ -83,7 +85,7 @@ TaskBoard.resourceTypes = {
 	taskHunting = 50
 }
 
-function TaskBoard:formatNumberWithCommas(n)
+function TaskBoard.formatNumberWithCommas(self, n)
 	local s = tostring(n)
 	local pos = string.len(s) % 3
 
@@ -100,7 +102,7 @@ function TaskBoard:formatNumberWithCommas(n)
 	return t
 end
 
-function TaskBoard:getResourceBalance(str)
+function TaskBoard.getResourceBalance(self, str)
 	local t = self.resourceTypes[str]
 
 	if not t then
@@ -116,7 +118,7 @@ function TaskBoard:getResourceBalance(str)
 	return player:getResourceBalance(t)
 end
 
-function TaskBoard:updateMenuSelection(tab)
+function TaskBoard.updateMenuSelection(self, tab)
 	local bountyOn = tab == TAB_BOUNTY
 	local weeklyOn = tab == TAB_WEEKLY
 	local shopOn = tab == TAB_SHOP
@@ -159,7 +161,7 @@ local function onTaskBoardResourceBalance()
 	TaskBoard.SoulSealsPoints:getChildById("value"):setText(TaskBoard:formatNumberWithCommas(TaskBoard:getResourceBalance("soulSeals")))
 end
 
-function TaskBoard:showTab(tab)
+function TaskBoard.showTab(self, tab)
 	self:updateMenuSelection(tab)
 
 	if self.bountyTaskPanel then
@@ -179,16 +181,18 @@ function TaskBoard:showTab(tab)
 	end
 end
 
-function TaskBoard:showBountyTab()
+function TaskBoard.showBountyTab(self)
 	self:clearBountyShortcutHighlight()
 	self:showTab(TAB_BOUNTY)
+	self.BountyTask:refreshPanel()
 end
 
-function TaskBoard:showWeeklyTab()
+function TaskBoard.showWeeklyTab(self)
 	self:showTab(TAB_WEEKLY)
+	self.WeeklyTask:refreshPanel()
 end
 
-function TaskBoard:showTaskShopTab()
+function TaskBoard.showTaskShopTab(self)
 	self:showTab(TAB_SHOP)
 end
 
@@ -236,9 +240,21 @@ function init()
 	TaskBoard.TaskShop:init()
 	TaskBoard.WeeklyTask:init()
 	scheduleEvent(syncBountyShortcutHighlight, 0)
+	Keybind.new("Dialogs", "Open Task Board", "", "")
+	Keybind.bind("Dialogs", "Open Task Board", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				TaskBoard:toggleWindow("bounty")
+
+				return true
+			end
+		}
+	}, modules.game_interface.getRootPanel())
 end
 
 function terminate()
+	Keybind.delete("Dialogs", "Open Task Board")
 	disconnect(g_game, {
 		onGameStart = onTaskBoardGameStart,
 		onGameEnd = onTaskBoardGameEnd,
@@ -251,7 +267,7 @@ function terminate()
 	TaskBoard.WeeklyTask:terminate()
 end
 
-function TaskBoard:toggleWindow(mode)
+function TaskBoard.toggleWindow(self, mode)
 	if not self.mainWindow:isVisible() then
 		g_game.sendResourceBalance()
 		self.mainWindow:setVisible(true)

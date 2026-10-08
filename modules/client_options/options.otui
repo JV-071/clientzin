@@ -163,7 +163,7 @@ MainWindow
     margin-left: 4
     margin-top: 17
     image-border: 3
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     size: 129 450
 
   QtPanel

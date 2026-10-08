@@ -1,7 +1,10 @@
-﻿-- chunkname: @/game_analysers/menus/HuntingAnalyser.lua
-
-if not HuntingAnalyser then
+﻿if not HuntingAnalyser then
 	HuntingAnalyser = {
+		xpGain = 0,
+		rawXPGain = 0,
+		startExp = 0,
+		session = 0,
+		launchTime = 0,
 		healingHour = 0,
 		healing = 0,
 		damageHour = 0,
@@ -11,22 +14,15 @@ if not HuntingAnalyser then
 		loot = 0,
 		rawXpHour = 0,
 		xpHour = 0,
-		xpGain = 0,
-		rawXPGain = 0,
-		startExp = 0,
-		session = 0,
-		launchTime = 0,
 		killedMonsters = {},
 		lootedItems = {},
 		suppliesItems = {},
-		healingTicks = {},
-		damageTicks = {},
 		lootedItemsName = {}
 	}
 	HuntingAnalyser.__index = HuntingAnalyser
 end
 
-function HuntingAnalyser:create()
+function HuntingAnalyser.create(unusedArgument)
 	HuntingAnalyser.launchTime = 0
 	HuntingAnalyser.session = 0
 	HuntingAnalyser.startExp = 0
@@ -44,8 +40,6 @@ function HuntingAnalyser:create()
 	HuntingAnalyser.killedMonsters = {}
 	HuntingAnalyser.lootedItems = {}
 	HuntingAnalyser.suppliesItems = {}
-	HuntingAnalyser.healingTicks = {}
-	HuntingAnalyser.damageTicks = {}
 	HuntingAnalyser.lootedItemsName = {}
 	HuntingAnalyser.window = openedWindows.huntingButton
 end
@@ -82,7 +76,7 @@ function onHuntingExtra(mousePosition)
 	return true
 end
 
-function HuntingAnalyser:reset()
+function HuntingAnalyser.reset(unusedArgument)
 	HuntingAnalyser.session = 0
 	HuntingAnalyser.startExp = 0
 	HuntingAnalyser.rawXPGain = 0
@@ -99,27 +93,23 @@ function HuntingAnalyser:reset()
 	HuntingAnalyser.killedMonsters = {}
 	HuntingAnalyser.lootedItems = {}
 	HuntingAnalyser.suppliesItems = {}
-	HuntingAnalyser.healingTicks = {}
-	HuntingAnalyser.damageTicks = {}
 	HuntingAnalyser.lootedItemsName = {}
 
 	HuntingAnalyser:updateWindow(true)
 end
 
-function HuntingAnalyser:setupStartExp(value)
+function HuntingAnalyser.setupStartExp(self, value)
 	if HuntingAnalyser.startExp == 0 then
 		HuntingAnalyser.startExp = value
 	end
 end
 
-function HuntingAnalyser:updateWindow(ignoreVisible)
+function HuntingAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	if not HuntingAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
 
-	local player = g_game.getLocalPlayer()
-
-	if not player then
+	if not g_game.getLocalPlayer() then
 		return
 	end
 
@@ -309,159 +299,143 @@ function HuntingAnalyser:updateWindow(ignoreVisible)
 	end
 end
 
-function HuntingAnalyser:getLaunchTime()
+function HuntingAnalyser.getLaunchTime(self)
 	return HuntingAnalyser.launchTime
 end
 
-function HuntingAnalyser:getSession()
+function HuntingAnalyser.getSession(self)
 	return HuntingAnalyser.session
 end
 
-function HuntingAnalyser:getStartExp()
+function HuntingAnalyser.getStartExp(self)
 	return HuntingAnalyser.startExp
 end
 
-function HuntingAnalyser:getRawXPGain()
+function HuntingAnalyser.getRawXPGain(self)
 	return HuntingAnalyser.rawXPGain
 end
 
-function HuntingAnalyser:getXpGain()
+function HuntingAnalyser.getXpGain(self)
 	return HuntingAnalyser.xpGain
 end
 
-function HuntingAnalyser:getXpHour()
+function HuntingAnalyser.getXpHour(self)
 	return HuntingAnalyser.xpHour
 end
 
-function HuntingAnalyser:getLoot()
+function HuntingAnalyser.getLoot(self)
 	return HuntingAnalyser.loot
 end
 
-function HuntingAnalyser:getSupplies()
+function HuntingAnalyser.getSupplies(self)
 	return HuntingAnalyser.supplies
 end
 
-function HuntingAnalyser:getBalance()
+function HuntingAnalyser.getBalance(self)
 	return HuntingAnalyser.balance
 end
 
-function HuntingAnalyser:getDamage()
+function HuntingAnalyser.getDamage(self)
 	return HuntingAnalyser.damage
 end
 
-function HuntingAnalyser:getDamageHour()
+function HuntingAnalyser.getDamageHour(self)
 	return HuntingAnalyser.damageHour
 end
 
-function HuntingAnalyser:getHealing()
+function HuntingAnalyser.getHealing(self)
 	return HuntingAnalyser.healing
 end
 
-function HuntingAnalyser:getHealingHour()
+function HuntingAnalyser.getHealingHour(self)
 	return HuntingAnalyser.healingHour
 end
 
-function HuntingAnalyser:getKilledMonsters()
+function HuntingAnalyser.getKilledMonsters(self)
 	return HuntingAnalyser.killedMonsters
 end
 
-function HuntingAnalyser:getLootedItems()
+function HuntingAnalyser.getLootedItems(self)
 	return HuntingAnalyser.lootedItems
 end
 
-function HuntingAnalyser:getSuppliesItems()
+function HuntingAnalyser.getSuppliesItems(self)
 	return HuntingAnalyser.suppliesItems
 end
 
-function HuntingAnalyser:getHealingTicks()
-	return HuntingAnalyser.healingTicks
-end
-
-function HuntingAnalyser:getDamageTicks()
-	return HuntingAnalyser.damageTicks
-end
-
-function HuntingAnalyser:setLaunchTime(value)
+function HuntingAnalyser.setLaunchTime(self, value)
 	HuntingAnalyser.launchTime = value
 end
 
-function HuntingAnalyser:setSession(value)
+function HuntingAnalyser.setSession(self, value)
 	HuntingAnalyser.session = value
 end
 
-function HuntingAnalyser:setStartExp(value)
+function HuntingAnalyser.setStartExp(self, value)
 	HuntingAnalyser.startExp = value
 end
 
-function HuntingAnalyser:setRawXPGain(value)
+function HuntingAnalyser.setRawXPGain(self, value)
 	HuntingAnalyser.rawXPGain = value
 end
 
-function HuntingAnalyser:setXpGain(value)
+function HuntingAnalyser.setXpGain(self, value)
 	HuntingAnalyser.xpGain = value
 end
 
-function HuntingAnalyser:setXpHour(value)
+function HuntingAnalyser.setXpHour(self, value)
 	HuntingAnalyser.xpHour = value
 end
 
-function HuntingAnalyser:setLoot(value)
+function HuntingAnalyser.setLoot(self, value)
 	HuntingAnalyser.loot = value
 end
 
-function HuntingAnalyser:setSupplies(value)
+function HuntingAnalyser.setSupplies(self, value)
 	HuntingAnalyser.supplies = value
 end
 
-function HuntingAnalyser:setBalance(value)
+function HuntingAnalyser.setBalance(self, value)
 	HuntingAnalyser.balance = value
 end
 
-function HuntingAnalyser:setDamage(value)
+function HuntingAnalyser.setDamage(self, value)
 	HuntingAnalyser.damage = value
 end
 
-function HuntingAnalyser:setDamageHour(value)
+function HuntingAnalyser.setDamageHour(self, value)
 	HuntingAnalyser.damageHour = value
 end
 
-function HuntingAnalyser:setHealing(value)
+function HuntingAnalyser.setHealing(self, value)
 	HuntingAnalyser.healing = value
 end
 
-function HuntingAnalyser:setHealingHour(value)
+function HuntingAnalyser.setHealingHour(self, value)
 	HuntingAnalyser.healingHour = value
 end
 
-function HuntingAnalyser:setKilledMonsters(value)
+function HuntingAnalyser.setKilledMonsters(self, value)
 	HuntingAnalyser.killedMonsters = value
 end
 
-function HuntingAnalyser:setLootedItems(value)
+function HuntingAnalyser.setLootedItems(self, value)
 	HuntingAnalyser.lootedItems = value
 end
 
-function HuntingAnalyser:setSuppliesItems(value)
+function HuntingAnalyser.setSuppliesItems(self, value)
 	HuntingAnalyser.suppliesItems = value
 end
 
-function HuntingAnalyser:setHealingTicks(value)
-	HuntingAnalyser.healingTicks = value
-end
-
-function HuntingAnalyser:setDamageTicks(value)
-	HuntingAnalyser.damageTicks = value
-end
-
-function HuntingAnalyser:addRawXPGain(value)
+function HuntingAnalyser.addRawXPGain(self, value)
 	HuntingAnalyser.rawXPGain = HuntingAnalyser.rawXPGain + value
 end
 
-function HuntingAnalyser:addXpGain(value)
+function HuntingAnalyser.addXpGain(self, value)
 	HuntingAnalyser.xpGain = HuntingAnalyser.xpGain + value
 end
 
-function HuntingAnalyser:addLootedItems(item, name)
+function HuntingAnalyser.addLootedItems(self, item, name)
 	local itemId = item:getId()
 	local count = item:getCount()
 	local data = HuntingAnalyser.lootedItems[itemId]
@@ -488,7 +462,7 @@ function HuntingAnalyser:addLootedItems(item, name)
 	HuntingAnalyser.lootedItemsName[name] = HuntingAnalyser.lootedItemsName[name] + count
 end
 
-function HuntingAnalyser:addSuppliesItems(itemId)
+function HuntingAnalyser.addSuppliesItems(self, itemId)
 	local supplyItemInfo = HuntingAnalyser.suppliesItems[itemId]
 
 	if not HuntingAnalyser.suppliesItems[itemId] then
@@ -505,7 +479,7 @@ function HuntingAnalyser:addSuppliesItems(itemId)
 	HuntingAnalyser.supplies = HuntingAnalyser.supplies + supplyItemInfo.price
 end
 
-function HuntingAnalyser:updateLootedItemValue(itemId, newPrice)
+function HuntingAnalyser.updateLootedItemValue(self, itemId, newPrice)
 	local itemData = HuntingAnalyser.lootedItems[itemId]
 
 	if not itemData then
@@ -519,27 +493,19 @@ function HuntingAnalyser:updateLootedItemValue(itemId, newPrice)
 	itemData.price = newPrice
 end
 
-function HuntingAnalyser:checkBalance()
+function HuntingAnalyser.checkBalance(self)
 	HuntingAnalyser.balance = HuntingAnalyser.loot + HuntingAnalyser.supplies * -1
 end
 
-function HuntingAnalyser:addHealing(value)
+function HuntingAnalyser.addHealing(unusedArgument, value)
 	HuntingAnalyser.healing = HuntingAnalyser.healing + value
-	HuntingAnalyser.healingTicks[#HuntingAnalyser.healingTicks + 1] = {
-		amount = value,
-		tick = g_clock.millis()
-	}
 end
 
-function HuntingAnalyser:addDealDamage(value)
+function HuntingAnalyser.addDealDamage(unusedArgument, value)
 	HuntingAnalyser.damage = HuntingAnalyser.damage + value
-	HuntingAnalyser.damageTicks[#HuntingAnalyser.damageTicks + 1] = {
-		amount = value,
-		tick = g_clock.millis()
-	}
 end
 
-function HuntingAnalyser:addMonsterKilled(monsterName)
+function HuntingAnalyser.addMonsterKilled(self, monsterName)
 	if not HuntingAnalyser.killedMonsters[monsterName] then
 		HuntingAnalyser.killedMonsters[monsterName] = 0
 	end
@@ -594,11 +560,11 @@ local function generateSessionText()
 	return table.concat(lines, "\n")
 end
 
-function HuntingAnalyser:clipboardData()
+function HuntingAnalyser.clipboardData(self)
 	g_window.setClipboardText(generateSessionText())
 end
 
-function HuntingAnalyser:saveToFile()
+function HuntingAnalyser.saveToFile(self)
 	local text = generateSessionText()
 	local filename = "Hunting_Session_" .. os.date("%Y-%m-%d", AnalyserSession.startUnix) .. "_" .. AnalyserSession.startUnix .. ".txt"
 
@@ -606,15 +572,15 @@ function HuntingAnalyser:saveToFile()
 	modules.game_textmessage.displayStatusMessage(tr("Hunting Session data has been saved to location '%s'", filename))
 end
 
-function HuntingAnalyser:saveToJson()
-	local huntingData = {}
-
-	huntingData.Balance = formatMoney(HuntingAnalyser.balance, ",")
-	huntingData.Damage = formatMoney(HuntingAnalyser.damage, ",")
-	huntingData.DamageHour = formatMoney(HuntingAnalyser.damageHour, ",")
-	huntingData.Healing = formatMoney(HuntingAnalyser.healing, ",")
-	huntingData.HealingHour = formatMoney(HuntingAnalyser.healingHour, ",")
-	huntingData.KilledMonsters = {}
+function HuntingAnalyser.saveToJson(unusedArgument)
+	local huntingData = {
+		Balance = formatMoney(HuntingAnalyser.balance, ","),
+		Damage = formatMoney(HuntingAnalyser.damage, ","),
+		DamageHour = formatMoney(HuntingAnalyser.damageHour, ","),
+		Healing = formatMoney(HuntingAnalyser.healing, ","),
+		HealingHour = formatMoney(HuntingAnalyser.healingHour, ","),
+		KilledMonsters = {}
+	}
 
 	if not table.empty(HuntingAnalyser.killedMonsters) then
 		for monster, count in pairs(HuntingAnalyser.killedMonsters) do
@@ -668,7 +634,7 @@ function HuntingAnalyser:saveToJson()
 	modules.game_textmessage.displayStatusMessage(tr("Hunting Session data has been saved to location '%s'", filename))
 end
 
-function HuntingAnalyser:setShowBaseXp(value)
+function HuntingAnalyser.setShowBaseXp(self, value)
 	HuntingAnalyser.window.contentsPanel.rawXpLabel:setVisible(value)
 	HuntingAnalyser.window.contentsPanel.rawXpGain:setVisible(value)
 
@@ -694,7 +660,7 @@ function HuntingAnalyser:setShowBaseXp(value)
 	end
 end
 
-function HuntingAnalyser:loadConfigJson()
+function HuntingAnalyser.loadConfigJson(self)
 	local player = g_game.getLocalPlayer()
 
 	if not player then
@@ -720,7 +686,7 @@ function HuntingAnalyser:loadConfigJson()
 	HuntingAnalyser:setShowBaseXp(HuntingAnalyser.showBaseXp)
 end
 
-function HuntingAnalyser:saveConfigJson()
+function HuntingAnalyser.saveConfigJson(self)
 	local config = {
 		showBaseXp = HuntingAnalyser.showBaseXp
 	}

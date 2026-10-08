@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_spelllist/spelllist.lua
-
-t_spelllist = nil
+﻿t_spelllist = nil
 
 local function getSpellListToggleButton()
 	if modules.game_mainpanel and modules.game_mainpanel.getButton then
@@ -43,12 +41,16 @@ local function syncSpellListButton()
 end
 
 local spellListData = {}
-local rootPanel, lastHighlightWidget, spellDragPreview, spellDragContext
+local rootPanel
+local lastHighlightWidget
+local spellDragPreview
+local spellDragContext
 local spellListConfig = {}
 local player
 local searchFilterText = ""
 local spellListSearchActive = false
-local spellListSearchOutsideHandler, selectedSpellData
+local spellListSearchOutsideHandler
+local selectedSpellData
 local dropInWidgetsPatterns = {
 	"^item$",
 	"^spellButton%d*$",
@@ -303,7 +305,7 @@ local function cleanupSpellDrag()
 end
 
 local function setupSpellDragHandlers(dragImage, listRowWidget)
-	function dragImage:onDragEnter(mousePos)
+	function dragImage.onDragEnter(self, mousePos)
 		spellDragContext = {
 			source = self,
 			listRow = listRowWidget,
@@ -323,14 +325,14 @@ local function setupSpellDragHandlers(dragImage, listRowWidget)
 		return true
 	end
 
-	function dragImage:onDragMove(mousePos)
+	function dragImage.onDragMove(self, mousePos)
 		updateSpellDragPreviewPosition(mousePos)
 		updateSpellDropHighlight(mousePos)
 
 		return true
 	end
 
-	function dragImage:onDragLeave(droppedWidget, mousePos)
+	function dragImage.onDragLeave(self, droppedWidget, mousePos)
 		local words = spellDragContext and spellDragContext.words or self.words
 		local dropTarget = lastHighlightWidget
 
@@ -477,9 +479,8 @@ local function applySpellListSearchFocus(moveCursorToEnd)
 	end
 
 	local parent = t_spelllist:getParent()
-	local dockedInSidebar = parent and not parent:isDestroyed() and parent:getClassName() == "UIMiniWindowContainer"
 
-	if not dockedInSidebar then
+	if not (parent and not parent:isDestroyed() and parent:getClassName() == "UIMiniWindowContainer") then
 		t_spelllist:raise()
 	end
 
@@ -535,7 +536,7 @@ local function setupSearchField()
 	local clearBtn = t_spelllist:recursiveGetChildById("searchClearButton")
 
 	if search then
-		function search:onMousePress(mousePos, button)
+		function search.onMousePress(self, mousePos, button)
 			if button == MouseLeftButton then
 				focusSpellListSearch(false)
 			end
@@ -580,10 +581,18 @@ function init()
 	modules.game_spelllist.toggle = toggle
 	modules.game_spelllist.refreshVirtueYellowBorders = refreshVirtueYellowBorders
 
+	Keybind.new("Windows", "Show/hide spell list", "Alt+L", "")
+	Keybind.bind("Windows", "Show/hide spell list", {
+		{
+			type = KEY_DOWN,
+			callback = toggle
+		}
+	})
 	syncSpellListButton()
 end
 
 function terminate()
+	Keybind.delete("Windows", "Show/hide spell list")
 	cleanupSpellDrag()
 	resetSpellDropHighlight()
 	blurSpellListSearch()
@@ -637,15 +646,12 @@ local function ensureSpellListDocked()
 
 	local root = g_ui.getRootWidget()
 	local parent = t_spelllist:getParent()
-	local docked = parent and parent ~= root and parent:getClassName() == "UIMiniWindowContainer"
 
-	if docked then
+	if parent and parent ~= root and parent:getClassName() == "UIMiniWindowContainer" then
 		return
 	end
 
-	local panel = modules.game_interface.findContentPanelAvailable(t_spelllist, spellListMinHeightForPanel())
-
-	panel = panel or modules.game_interface.getRightPanel()
+	local panel = modules.game_interface.findContentPanelAvailable(t_spelllist, spellListMinHeightForPanel()) or modules.game_interface.getRightPanel()
 
 	if not panel then
 		return
@@ -667,12 +673,9 @@ function toggle()
 
 		local parent = t_spelllist:getParent()
 		local root = g_ui.getRootWidget()
-		local docked = parent and parent ~= root and parent:getClassName() == "UIMiniWindowContainer"
 
-		if not docked then
-			local panel = modules.game_interface.findContentPanelAvailable(t_spelllist, spellListMinHeightForPanel())
-
-			panel = panel or modules.game_interface.getRightPanel()
+		if not (parent and parent ~= root and parent:getClassName() == "UIMiniWindowContainer") then
+			local panel = modules.game_interface.findContentPanelAvailable(t_spelllist, spellListMinHeightForPanel()) or modules.game_interface.getRightPanel()
 
 			if not panel then
 				return
@@ -704,19 +707,19 @@ function online()
 	end
 
 	local defaults = {
-		showRuneSpells = true,
-		showUnkownSpells = true,
-		showSupportSpellGroup = true,
-		showMonkSpells = true,
-		showSorcererSpells = true,
-		showPaladinSpells = true,
 		showOnlyCurrentVocation = false,
 		showOnlyCurrentLevel = false,
 		showKnightSpells = true,
 		showHealingSpellGroup = true,
 		showDruidSpells = true,
 		showAttackSpellGroup = true,
-		showInstantSpells = true
+		showInstantSpells = true,
+		showRuneSpells = true,
+		showUnkownSpells = true,
+		showSupportSpellGroup = true,
+		showMonkSpells = true,
+		showSorcererSpells = true,
+		showPaladinSpells = true
 	}
 
 	for k, v in pairs(defaults) do
@@ -847,9 +850,7 @@ function onUpdateSpellListLevel()
 	local list = t_spelllist:recursiveGetChildById("contentsPanel")
 
 	for _, widget in pairs(list:getChildren()) do
-		local disabled = widget:recursiveGetChildById("gray")
-
-		disabled:setVisible(player:getLevel() < widget.spellData.level)
+		widget:recursiveGetChildById("gray"):setVisible(player:getLevel() < widget.spellData.level)
 	end
 end
 
@@ -1031,7 +1032,7 @@ function onSelectedSpell(list, focused, oldFocus)
 		t_spelllist:recursiveGetChildById("cooldown"):setTooltip(cooldownDesc)
 	end
 
-	groupDesc = string.sub(groupDesc, 1, -3)
+	local groupDesc = string.sub(groupDesc, 1, -3)
 
 	t_spelllist:recursiveGetChildById("group"):setTooltip("")
 	t_spelllist:recursiveGetChildById("group"):setText(short_text(groupDesc, 9))
@@ -1050,7 +1051,7 @@ function onSelectedSpell(list, focused, oldFocus)
 		end
 	end
 
-	vocationDesc = string.sub(vocationDesc, 1, -3)
+	local vocationDesc = string.sub(vocationDesc, 1, -3)
 
 	if #focused.spellData.vocations == 8 then
 		vocationDesc = "All"

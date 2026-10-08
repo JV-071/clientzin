@@ -1,18 +1,25 @@
 GameBannerPanel < UIWidget
-  size: 355 105
+  size: 355 128
   phantom: true
   focusable: false
   visible: false
   clipping: false
+  opacity-composite: true
+  drop-shadow: true
+  drop-shadow-offset: 8 8
+  drop-shadow-opacity: 0.35
 
   UIWidget
     id: bannerIcon
     size: 72 75
     anchors.left: parent.left
-    anchors.verticalCenter: parent.verticalCenter
+    anchors.top: parent.top
+    margin-left: 2
+    margin-top: 22
     clipping: false
     image-smooth: true
     image-fixed-ratio: true
+    phantom: true
 
     UIWidget
       id: bannerIconSpell
@@ -35,6 +42,30 @@ GameBannerPanel < UIWidget
       phantom: true
       visible: false
 
+    UIItem
+      id: bannerIconItem
+      size: 64 64
+      image-size: 64 64
+      fixed-item-size: true
+      virtual: true
+      phantom: true
+      visible: false
+      show-count: false
+      always-show-count: false
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+      margin-top: -1
+
+    UIWidget
+      id: bannerIconPicture
+      size: 72 75
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+      image-smooth: true
+      image-fixed-ratio: true
+      phantom: true
+      visible: false
+
   UICreature
     id: bannerIconCreature
     size: 64 64
@@ -50,15 +81,24 @@ GameBannerPanel < UIWidget
     phantom: true
     visible: false
 
+  UIWidget
+    id: bannerIconOverlay
+    size: 72 75
+    anchors.left: bannerIcon.left
+    anchors.top: bannerIcon.top
+    image-smooth: true
+    image-fixed-ratio: true
+    phantom: true
+    visible: false
+
   Panel
     id: bannerClipPanel
-    height: 88
-    width: 0
+    size: 289 88
     anchors.left: bannerIcon.right
-    anchors.verticalCenter: bannerIcon.verticalCenter
+    anchors.top: bannerIcon.top
     margin-left: -74
-    margin-top: 23
-    clipping: true
+    margin-top: 17
+    clipping: false
     phantom: true
     visible: false
 
@@ -69,96 +109,96 @@ GameBannerPanel < UIWidget
       anchors.top: parent.top
       image-source: /images/game/banners/backdrop-infobanner-bottom
       image-smooth: true
-      image-fixed-ratio: true
+      image-fixed-ratio: false
+      phantom: true
 
-  UIWidget
-    id: backdropBottom
-    size: 289 88
-    anchors.left: bannerIcon.right
-    anchors.verticalCenter: bannerIcon.verticalCenter
-    margin-left: -74
-    margin-top: 23
-    image-source: /images/game/banners/backdrop-infobanner-bottom
-    image-smooth: true
-    image-fixed-ratio: true
-    visible: false
+    // Texto sempre na posicao final (289); o clip cresce L->R e so revela
+    Panel
+      id: bannerTextClip
+      size: 289 88
+      anchors.left: parent.left
+      anchors.top: parent.top
+      clipping: true
+      phantom: true
+
+      UIWidget
+        id: bannerContentLayer
+        size: 289 88
+        anchors.left: parent.left
+        anchors.top: parent.top
+        phantom: true
+        clipping: false
+
+        Label
+          id: bannerTitle
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.top: parent.top
+          margin-top: 10
+          font: Verdana-14px-banner
+          text-align: center
+          color: #ffffff
+          text-auto-resize: true
+          text-offset: 29 4
+          visible: true
+          phantom: true
+
+        Panel
+          id: textPanel
+          anchors.top: bannerTitle.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: 13
+          margin-left: 73
+          margin-right: 16
+          height: 24
+          clipping: true
+          phantom: true
+          visible: true
+
+          Label
+            id: bannerDescription
+            anchors.fill: parent
+            font: $var-cip-font-new
+            text-align: top
+            padding-top: 3
+            color: #c0c0c0
+            text-auto-resize: false
+            text-wrap: true
+            phantom: true
 
   UIWidget
     id: backdropMid
     size: 11 40
-    anchors.left: backdropBottom.left
-    anchors.top: backdropBottom.top
+    anchors.left: bannerClipPanel.left
+    anchors.top: bannerClipPanel.top
     margin-top: -6
     image-source: /images/game/banners/backdrop-infobanner-mid
     image-smooth: true
     image-fixed-ratio: true
     visible: false
+    phantom: true
 
   UIWidget
     id: backdropTop
     size: 10 25
-    anchors.left: backdropBottom.left
-    anchors.bottom: backdropBottom.bottom
+    anchors.left: bannerClipPanel.left
+    anchors.bottom: bannerClipPanel.bottom
     margin-left: 47
     margin-bottom: 19
     image-source: /images/game/banners/backdrop-infobanner-top
     image-smooth: true
     image-fixed-ratio: true
     visible: false
-
-  UIWidget
-    id: backdropOrnaments
-    size: 130 38
-    anchors.horizontalCenter: backdropBottom.horizontalCenter
-    anchors.top: backdropBottom.top
-    margin-top: 6
-    image-source: /images/game/banners/backdrop-infobanner-ornaments
-    image-smooth: true
-    image-fixed-ratio: true
-    visible: false
-
-  Label
-    id: bannerTitle
-    anchors.horizontalCenter: backdropOrnaments.horizontalCenter
-    anchors.verticalCenter: backdropOrnaments.verticalCenter
-    font: terminus-14px-bold
-    text-align: center
-    color: #ffe1b5
-    text-auto-resize: true
-    text-offset: 25 4
-    opacity: 0
-    visible: false
-
-  Panel
-    id: textPanel
-    anchors.verticalCenter: backdropBottom.verticalCenter
-    anchors.left: backdropBottom.left
-    anchors.right: backdropBottom.right
-    margin-top: 13
-    margin-left: 76
-    margin-right: 16
-    height: 24
-    clipping: true
     phantom: true
-    opacity: 0
-    visible: false
-
-    Label
-      id: bannerDescription
-      anchors.fill: parent
-      font: $var-cip-font-new
-      text-align: center
-      color: #c0c0c0
-      text-auto-resize: false
-      text-wrap: true
 
   UIWidget
     id: rollAnim
     size: 21 105
     anchors.left: bannerIcon.right
-    anchors.verticalCenter: bannerIcon.verticalCenter
-    margin-left: -95
-    margin-top: 23
+    anchors.top: parent.top
+    margin-left: 0
+    margin-top: 21
     image-smooth: true
     image-fixed-ratio: true
     visible: false
+    phantom: true

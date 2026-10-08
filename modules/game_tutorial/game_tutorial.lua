@@ -1,30 +1,31 @@
-﻿-- chunkname: @/game_tutorial/game_tutorial.lua
-
-tutorialHintWindow = nil
+﻿tutorialHintWindow = nil
 tutorialVocationWindow = nil
 tutorialMainlandWindow = nil
 tutorialStartWindow = nil
 
 local lockedTutorialWindow
-local TUTORIAL_HINT_BASE_PATH = "/images/game/tutorial/"
+local TUTORIAL_HINT_BASE_PATH
+local var_0_2 = "/images/game/tutorial/"
 local WORLD_MAP = {
+	OFFSET_Y = 256,
+	OFFSET_X = 129,
+	ORIGIN_Y = 30976,
+	ORIGIN_X = 31744,
 	MAX_ZOOM = 1,
 	MIN_ZOOM = 0.25,
 	PIN_HEIGHT = 41,
 	PIN_WIDTH = 126,
 	PIN_TIP_Y = 15,
 	PIN_TIP_X = 64,
-	OFFSET_Y = 256,
-	OFFSET_X = 129,
-	ORIGIN_Y = 30976,
-	ORIGIN_X = 31744,
-	IMAGE = TUTORIAL_HINT_BASE_PATH .. "global-map-tutorial"
+	IMAGE = var_0_2 .. "global-map-tutorial"
 }
-local mainlandPositionConn, mainlandMapWidgets, mainlandWorldMapPinUpdater
+local mainlandPositionConn
+local mainlandMapWidgets
+local mainlandWorldMapPinUpdater
 
 TutorialWorldMapView = extends(UIImageView, "TutorialWorldMapView")
 
-function TutorialWorldMapView:move(x, y, centerX, centerY)
+function TutorialWorldMapView.move(self, x, y, centerX, centerY)
 	UIImageView.move(self, x, y, centerX, centerY)
 
 	if mainlandWorldMapPinUpdater then
@@ -32,7 +33,7 @@ function TutorialWorldMapView:move(x, y, centerX, centerY)
 	end
 end
 
-function TutorialWorldMapView:setZoom(zoom, x, y)
+function TutorialWorldMapView.setZoom(self, zoom, x, y)
 	UIImageView.setZoom(self, zoom, x, y)
 
 	if mainlandWorldMapPinUpdater then
@@ -43,9 +44,9 @@ end
 _G.TutorialWorldMapView = TutorialWorldMapView
 
 local TUTORIAL_TYPE = {
-	VOCATION = "vocation",
-	MAINLAND = "mainland",
 	HINT = "hint",
+	MAINLAND = "mainland",
+	VOCATION = "vocation",
 	START = "start"
 }
 local VOCATION_STAGE_SIZES = {
@@ -68,15 +69,16 @@ local VOCATION_BUTTON_SIZE = "108 20"
 local VOCATION_BORDER_SIZE = "120 33"
 local VOCATION_BUTTON_MARGIN_LEFT = 6
 local VOCATION_BUTTON_MARGIN_BOTTOM = 7
-local VOCATION_CLIENT_IDS = {
+local var_0_19 = {
+	monk = 5,
 	druid = 4,
 	sorcerer = 3,
 	paladin = 2,
-	knight = 1,
-	monk = 5
+	knight = 1
 }
 local VOCATION_HOVER_ENTRIES = {
 	{
+		containerId = "vocationKnightHover",
 		highlightId = "vocationKnightHighlight",
 		backgroundId = "vocationKnightBackground",
 		slotId = "vocationKnight",
@@ -84,10 +86,10 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationKnightConfirmBorder",
 		selectButtonId = "buttonSelectKnight",
 		selectBorderId = "vocationKnightSelectBorder",
-		containerId = "vocationKnightHover",
-		clientVocationId = VOCATION_CLIENT_IDS.knight
+		clientVocationId = var_0_19.knight
 	},
 	{
+		containerId = "vocationSorcererHover",
 		highlightId = "vocationSorcererHighlight",
 		backgroundId = "vocationSorcererBackground",
 		slotId = "vocationSorcerer",
@@ -95,10 +97,10 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationSorcererConfirmBorder",
 		selectButtonId = "buttonSelectSorcerer",
 		selectBorderId = "vocationSorcererSelectBorder",
-		containerId = "vocationSorcererHover",
-		clientVocationId = VOCATION_CLIENT_IDS.sorcerer
+		clientVocationId = var_0_19.sorcerer
 	},
 	{
+		containerId = "vocationDruidHover",
 		highlightId = "vocationDruidHighlight",
 		backgroundId = "vocationDruidBackground",
 		slotId = "vocationDruid",
@@ -106,10 +108,10 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationDruidConfirmBorder",
 		selectButtonId = "buttonSelectDruid",
 		selectBorderId = "vocationDruidSelectBorder",
-		containerId = "vocationDruidHover",
-		clientVocationId = VOCATION_CLIENT_IDS.druid
+		clientVocationId = var_0_19.druid
 	},
 	{
+		containerId = "vocationPaladinHover",
 		highlightId = "vocationPaladinHighlight",
 		backgroundId = "vocationPaladinBackground",
 		slotId = "vocationPaladin",
@@ -117,10 +119,10 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationPaladinConfirmBorder",
 		selectButtonId = "buttonSelectPaladin",
 		selectBorderId = "vocationPaladinSelectBorder",
-		containerId = "vocationPaladinHover",
-		clientVocationId = VOCATION_CLIENT_IDS.paladin
+		clientVocationId = var_0_19.paladin
 	},
 	{
+		containerId = "vocationMonkHover",
 		highlightId = "vocationMonkHighlight",
 		backgroundId = "vocationMonkBackground",
 		slotId = "vocationMonk",
@@ -128,24 +130,24 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationMonkConfirmBorder",
 		selectButtonId = "buttonSelectMonk",
 		selectBorderId = "vocationMonkSelectBorder",
-		containerId = "vocationMonkHover",
-		clientVocationId = VOCATION_CLIENT_IDS.monk
+		clientVocationId = var_0_19.monk
 	}
 }
 local VOCATION_INFO_SLIDE = {
+	STEP_MS = 10,
 	DURATION_MS_DOWN = 150,
 	DURATION_MS_UP = 500,
 	MARGIN_HIDDEN = -227,
-	MARGIN_VISIBLE = 0,
-	STEP_MS = 10
+	MARGIN_VISIBLE = 0
 }
-local activeVocationHoverEntry, selectedVocationEntry
+local activeVocationHoverEntry
+local selectedVocationEntry
 
 local function makeArrivalInThaisTutorial()
 	return {
 		title = "Arrival in Thais",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_07_arrivalmain.png",
+		image = var_0_2 .. "hint_07_arrivalmain.png",
 		size = {
 			582,
 			487
@@ -161,7 +163,7 @@ local TUTORIALS = {
 	{
 		title = "Alternative Controls",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_01_alternativecontrols.png",
+		image = var_0_2 .. "hint_01_alternativecontrols.png",
 		size = {
 			432,
 			427
@@ -182,7 +184,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_03_vocationknight.png",
+		image = var_0_2 .. "hint_03_vocationknight.png",
 		size = {
 			432,
 			487
@@ -195,7 +197,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_04_vocationpaladin.png",
+		image = var_0_2 .. "hint_04_vocationpaladin.png",
 		size = {
 			432,
 			487
@@ -208,7 +210,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_05_vocationsorcerer.png",
+		image = var_0_2 .. "hint_05_vocationsorcerer.png",
 		size = {
 			432,
 			487
@@ -221,7 +223,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_06_vocationdruid.png",
+		image = var_0_2 .. "hint_06_vocationdruid.png",
 		size = {
 			432,
 			487
@@ -238,7 +240,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = TUTORIAL_HINT_BASE_PATH .. "hint_11_vocationmonk.png",
+		image = var_0_2 .. "hint_11_vocationmonk.png",
 		size = {
 			432,
 			487
@@ -262,6 +264,21 @@ local TUTORIALS = {
 		size = {
 			886,
 			419
+		}
+	},
+	[200] = {
+		windowStyle = "TutorialImageOverlay",
+		title = "Action Bar Helper Hotkey",
+		passiveOverlay = true,
+		type = TUTORIAL_TYPE.HINT,
+		image = var_0_2 .. "hint_helper_actionbar.png",
+		size = {
+			582,
+			487
+		},
+		imageSize = {
+			550,
+			400
 		}
 	}
 }
@@ -294,7 +311,7 @@ local function applyHintImage(hintImage, imagePath, imageSize)
 end
 
 local function resolveHintImagePath(hintKey)
-	local directoryPath = TUTORIAL_HINT_BASE_PATH .. hintKey
+	local directoryPath = var_0_2 .. hintKey
 
 	if g_resources.directoryExists(directoryPath) then
 		local files = g_resources.listDirectoryFiles(directoryPath)
@@ -316,15 +333,17 @@ local function resolveHintImagePath(hintKey)
 end
 
 local function unlockTutorialModal(window)
+	local var_8_0 = lockedTutorialWindow == window
+
 	if window and not window:isDestroyed() then
-		if g_modalManager then
+		if var_8_0 and g_modalManager then
 			g_modalManager.hide(window)
 		end
 
 		window:hide()
 	end
 
-	if lockedTutorialWindow == window then
+	if var_8_0 then
 		lockedTutorialWindow = nil
 
 		g_client.setInputLockWidget(nil)
@@ -418,9 +437,7 @@ local function animateVocationInfoSlide(infoContainer, show)
 		elapsed = elapsed + VOCATION_INFO_SLIDE.STEP_MS
 
 		local progress = math.min(elapsed / duration, 1)
-
-		progress = 1 - (1 - progress) * (1 - progress)
-
+		local progress = 1 - (1 - progress) * (1 - progress)
 		local margin = math.floor(fromMargin + (toMargin - fromMargin) * progress)
 
 		infoContainer:setMarginBottom(margin)
@@ -1109,11 +1126,23 @@ local function showTutorialHint(tutorialId)
 		return
 	end
 
-	if not tutorialHintWindow or tutorialHintWindow:isDestroyed() then
-		tutorialHintWindow = g_ui.createWidget("TutorialPopupWindow", rootWidget)
+	local var_50_2 = config.windowStyle or "TutorialPopupWindow"
+
+	if tutorialHintWindow and not tutorialHintWindow:isDestroyed() and TUTORIAL_HINT_BASE_PATH ~= var_50_2 then
+		hideTutorialHintWindow()
+		tutorialHintWindow:destroy()
+
+		tutorialHintWindow = nil
 	end
 
-	tutorialHintWindow:setText(tr(config.title))
+	if not tutorialHintWindow or tutorialHintWindow:isDestroyed() then
+		tutorialHintWindow = g_ui.createWidget(var_50_2, rootWidget)
+		TUTORIAL_HINT_BASE_PATH = var_50_2
+	end
+
+	if config.title then
+		tutorialHintWindow:setText(tr(config.title))
+	end
 
 	if config.size then
 		tutorialHintWindow:setSize(string.format("%d %d", config.size[1], config.size[2]))
@@ -1125,7 +1154,12 @@ local function showTutorialHint(tutorialId)
 		applyHintImage(hintImage, imagePath, config.imageSize)
 	end
 
-	lockTutorialModal(tutorialHintWindow)
+	if config.passiveOverlay then
+		tutorialHintWindow:raise()
+		tutorialHintWindow:show()
+	else
+		lockTutorialModal(tutorialHintWindow)
+	end
 end
 
 function hide()
@@ -1199,6 +1233,7 @@ function terminate()
 	end
 
 	tutorialHintWindow = nil
+	TUTORIAL_HINT_BASE_PATH = nil
 	tutorialVocationWindow = nil
 	tutorialMainlandWindow = nil
 	tutorialStartWindow = nil

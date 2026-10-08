@@ -1,27 +1,108 @@
 WhiteDoveBox < CombatBox
-  image-source: /images/game/combatmodes/whitedovemode
+  image-source: /images/inventory/button-combat-dovemode-up
+  image-clip: 0 0 20 20
+
+  $checked:
+    image-source: /images/inventory/button-combat-dovemode-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-combat-dovemode-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-combat-dovemode-down
+    image-clip: 0 0 20 20
 WhiteHandBox < CombatBox
-  image-source: /images/game/combatmodes/whitehandmode
+  image-source: /images/inventory/button-combat-whitehandmode-up
+  image-clip: 0 0 20 20
+
+  $checked:
+    image-source: /images/inventory/button-combat-whitehandmode-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-combat-whitehandmode-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-combat-whitehandmode-down
+    image-clip: 0 0 20 20
 YellowHandBox < CombatBox
-  image-source: /images/game/combatmodes/yellowhandmode
+  image-source: /images/inventory/button-combat-yellowhandmode-up
+  image-clip: 0 0 20 20
+
+  $checked:
+    image-source: /images/inventory/button-combat-yellowhandmode-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-combat-yellowhandmode-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-combat-yellowhandmode-down
+    image-clip: 0 0 20 20
 RedFistBox < CombatBox
-  image-source: /images/game/combatmodes/redfistmode
+  image-source: /images/inventory/button-combat-redfistmode-up
+  image-clip: 0 0 20 20
+
+  $checked:
+    image-source: /images/inventory/button-combat-redfistmode-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-combat-redfistmode-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-combat-redfistmode-down
+    image-clip: 0 0 20 20
 SafeFightBox < CombatBox
-  image-source: /images/game/combatmodes/safefight
+  image-source: /images/inventory/button-combat-pvp-small-up
+  image-clip: 0 0 20 20
+
+  $checked:
+    image-source: /images/inventory/button-combat-pvp-small-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-combat-pvp-small-down
+    image-clip: 0 0 20 20
 
 StandModeBox < UICheckBox
   size: 20 20
-  image-source: /images/inventory/buttons_general
+  image-source: /images/inventory/button-stand-up
   image-clip: 0 0 20 20
+
   $checked:
-    image-clip: 20 0 20 20
+    image-source: /images/inventory/button-stand-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-stand-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-stand-down
+    image-clip: 0 0 20 20
 
 ChaseModeBox < UICheckBox
   size: 20 20
-  image-source: /images/inventory/buttons_general
-  image-clip: 0 20 20 20
+  image-source: /images/inventory/button-follow-up
+  image-clip: 0 0 20 20
+
   $checked:
-    image-clip: 20 20 20 20
+    image-source: /images/inventory/button-follow-down
+    image-clip: 0 0 20 20
+
+  $!checked pressed:
+    image-source: /images/inventory/button-follow-down
+    image-clip: 0 0 20 20
+
+  $checked pressed:
+    image-source: /images/inventory/button-follow-down
+    image-clip: 0 0 20 20
 
 ConditionWidget < UIWidget
   size: 9 9
@@ -38,15 +119,15 @@ PhantomMiniWindow
   on: true
 
   $!on:
-    &panelHeight: 68
-    height: 68
+    &panelHeight: 61
+    height: 61
 
   UIWidget
     id: onPanel
     anchors.fill: parent
     phantom: true
 
-    Button 
+    UIButton
       id: changeSize
       image-source: /images/inventory/min_button_small
       image-clip: 0 0 12 12
@@ -69,7 +150,7 @@ PhantomMiniWindow
       margin-left: 3
       size: 12 12
       @onClick: modules.game_blessing.toggle()
-      
+
       $pressed !disabled:
         image-clip: 12 0 12 12
 
@@ -78,7 +159,7 @@ PhantomMiniWindow
       image-source: /images/inventory/purse
       !tooltip: tr('Open the Store inbox')
       anchors.left: backpack.left
-      anchors.bottom: backpack.top   
+      anchors.bottom: backpack.top
       size: 34 12
       image-clip: 0 0 34 12
       margin-bottom: 3
@@ -95,29 +176,32 @@ PhantomMiniWindow
 
     TopToggleButton
       id: standPosture
-      image-source: /images/inventory/buttons_general
+      image-source: /images/inventory/button-stand-up
       image-clip: 0 0 20 20
       anchors.right: parent.right
       anchors.top: changeSize.top
-      margin-right: 32
+      margin-right: 30
       size: 20 20
       !tooltip: tr('Stand while fighting')
       @onClick: |
         selectPosture('stand')
 
       $on:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
       $pressed !disabled:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
       $disabled:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
     TopToggleButton
       id: followPosture
-      image-source: /images/inventory/buttons_general
-      image-clip: 0 20 20 20
+      image-source: /images/inventory/button-follow-up
+      image-clip: 0 0 20 20
       anchors.right: standPosture.right
       anchors.top: standPosture.bottom
       margin-top: 4
@@ -127,13 +211,16 @@ PhantomMiniWindow
         selectPosture('follow')
 
       $on:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
       $pressed !disabled:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
       $disabled:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
     UICheckBox
       id: expert
@@ -148,69 +235,82 @@ PhantomMiniWindow
       $checked:
         image-source: /assets/images/inventory/button-expert-down
 
+      $!checked pressed:
+        image-source: /assets/images/inventory/button-expert-down
+
       $disabled:
         image-source: /assets/images/inventory/button-expert-disabled
 
     UICheckBox
       id: pvp
-      image-source: /images/game/combatmodes/onPanel
+      image-source: /images/inventory/button-combat-pvp-large-up
       size: 42 20
       image-clip: 0 0 42 20
       anchors.right: parent.right
       anchors.top: expert.bottom
       margin-top: 7
-      margin-right: 10
+      margin-right: 8
       phantom: false
       size: 42 20
       !tooltip: tr('Secure Mode On: You are able to attack only those players\nyour expert mode allows. You risk skulls and protection zone\nblocks depending on your active expert mode.')
 
       $checked:
-        image-clip: 0 20 42 20
+        image-source: /images/inventory/button-combat-pvp-large-down
+        image-clip: 0 0 42 20
         !tooltip: tr('Secure Mode Off: You are able to attack someone by targeting,\nregardless of your expert mode. You risk white, red and black\nskulls as well as a protection zone block.')
+
+      $!checked pressed:
+        image-source: /images/inventory/button-combat-pvp-large-down
+        image-clip: 0 0 42 20
 
     WhiteHandBox
       id: whiteHandBox
       anchors.right: parent.right
       anchors.top: pvp.bottom
-      margin-top: 7
-      margin-right: 9
+      margin-top: 8
+      margin-right: 8
+
     RedFistBox
       id: redFistBox
       anchors.right: whiteHandBox.right
       anchors.top: whiteHandBox.bottom
-      margin-right: -1
       margin-right: 0
+      margin-top: 4
 
     WhiteDoveBox
       id: whiteDoveBox
       anchors.right: whiteHandBox.left
       anchors.top: whiteHandBox.top
       margin-top: 0
+      margin-right: 3
 
     YellowHandBox
       id: yellowHandBox
-      anchors.right: whiteDoveBox.right
-      anchors.top: whiteDoveBox.bottom
-      margin-right: 0
+      anchors.right: redFistBox.left
+      anchors.top: redFistBox.top
+      margin-top: 0
+      margin-right: 3
 
     UIButton
       id: stop
-      image-source: /images/game/combatmodes/stop
+      image-source: /images/inventory/button-stop-up
       image-clip: 0 0 42 13
       !tooltip: tr('Stop current action') .. ' (Esc)'
       anchors.right: parent.right
       anchors.bottom: parent.bottom
       margin-bottom: 2
-      margin-right: 9
+      margin-right: 8
       size: 42 13
       @onClick: |
         g_game.stop()
         g_game.getLocalPlayer():stopAutoWalk()
 
       $pressed !disabled:
-        image-clip: 0 13 42 13
+        image-source: /images/inventory/button-stop-down
+        image-clip: 0 0 42 13
 
       $disabled:
+        image-source: /images/inventory/button-stop-up
         image-clip: 0 0 42 13
 
     Panel
@@ -342,14 +442,14 @@ PhantomMiniWindow
     anchors.fill: parent
     phantom: true
 
-    Button
+    UIButton
       id: changeSize
       image-source: /images/inventory/max_button_small
       image-clip: 0 0 12 12
       anchors.top: parent.top
       anchors.left: parent.left
       margin-left: 8
-      margin-top: 5
+      margin-top: 2
       size: 12 12
       @onClick: changeInventorySize()
 
@@ -389,30 +489,33 @@ PhantomMiniWindow
 
     TopToggleButton
       id: standPosture
-      image-source: /images/inventory/buttons_general
+      image-source: /images/inventory/button-stand-up
       image-clip: 0 0 20 20
       anchors.left: parent.left
       anchors.top: changeSize.top
       margin-top: 0
-      margin-left: 55
+      margin-left: 56
       size: 20 20
       !tooltip: tr('Stand while fighting')
       @onClick: |
         selectPosture('stand')
 
       $on:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
       $pressed !disabled:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
       $disabled:
-        image-clip: 20 0 20 20
+        image-source: /images/inventory/button-stand-down
+        image-clip: 0 0 20 20
 
     TopToggleButton
       id: followPosture
-      image-source: /images/inventory/buttons_general
-      image-clip: 0 20 20 20
+      image-source: /images/inventory/button-follow-up
+      image-clip: 0 0 20 20
       anchors.left: standPosture.right
       anchors.top: standPosture.top
       margin-left: 1
@@ -422,13 +525,16 @@ PhantomMiniWindow
         selectPosture('follow')
 
       $on:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
       $pressed !disabled:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
       $disabled:
-        image-clip: 20 20 20 20
+        image-source: /images/inventory/button-follow-down
+        image-clip: 0 0 20 20
 
     SafeFightBox
       id: pvp
@@ -440,7 +546,6 @@ PhantomMiniWindow
       !tooltip: tr('Secure Mode On: You are able to attack only those players\nyour expert mode allows. You risk skulls and protection zone\nblocks depending on your active expert mode.')
 
       $checked:
-        image-clip: 0 20 20 20
         !tooltip: tr('Secure Mode Off: You are able to attack someone by targeting,\nregardless of your expert mode. You risk white, red and black\nskulls as well as a protection zone block.')
 
     UICheckBox
@@ -453,6 +558,9 @@ PhantomMiniWindow
       !tooltip: tr('Toggle expert pvp settings')
 
       $checked:
+        image-source: /assets/images/inventory/button-expert-small-down
+
+      $!checked pressed:
         image-source: /assets/images/inventory/button-expert-small-down
 
       $disabled:
@@ -486,52 +594,54 @@ PhantomMiniWindow
 
     UIButton
       id: stop
-      image-source: /images/game/combatmodes/stop
+      image-source: /images/inventory/button-stop-up
       image-clip: 0 0 42 13
       !tooltip: tr('Stop current action') .. ' (Esc)'
       anchors.right: parent.right
       anchors.top: icons.top
-      margin-top: 1
-      margin-right: 7
+      margin-top: 0
+      margin-right: 8
       size: 42 13
       @onClick: |
         g_game.stop()
         g_game.getLocalPlayer():stopAutoWalk()
 
       $pressed !disabled:
-        image-clip: 0 13 42 13
-
-      $disabled:
+        image-source: /images/inventory/button-stop-down
         image-clip: 0 0 42 13
 
-    WhiteDoveBox
-      id: whiteDoveBox
-      anchors.left: stop.left
-      anchors.top: attack.top
-      margin-left: 0
-      margin-top: 1
-      visible: false
+      $disabled:
+        image-source: /images/inventory/button-stop-up
+        image-clip: 0 0 42 13
 
     WhiteHandBox
       id: whiteHandBox
-      anchors.left: whiteDoveBox.right
-      anchors.top: whiteDoveBox.top
-      margin-left: 3
+      anchors.right: stop.right
+      anchors.top: standPosture.top
       margin-top: 0
-      visible: false
-
-    YellowHandBox
-      id: yellowHandBox
-      anchors.left: whiteDoveBox.left
-      anchors.top: whiteDoveBox.bottom
-      margin-left: 0
-      margin-top: 6
+      margin-right: 0
       visible: false
 
     RedFistBox
       id: redFistBox
-      anchors.left: whiteHandBox.left
-      anchors.top: yellowHandBox.top
+      anchors.right: whiteHandBox.right
+      anchors.top: whiteHandBox.bottom
+      margin-right: 0
+      margin-top: 4
+      visible: false
+
+    WhiteDoveBox
+      id: whiteDoveBox
+      anchors.right: whiteHandBox.left
+      anchors.top: whiteHandBox.top
       margin-top: 0
-      margin-left: 0
+      margin-right: 3
+      visible: false
+
+    YellowHandBox
+      id: yellowHandBox
+      anchors.right: redFistBox.left
+      anchors.top: redFistBox.top
+      margin-top: 0
+      margin-right: 3
       visible: false

@@ -71,11 +71,9 @@ UIWidget
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.top: parent.top
-      color: #707070
       margin-top: -1
       margin-left: 0
       text-offset: 16 0
-      enabled: false
 
     UIWidget
       id: animatedMouseCursorHelp
@@ -84,7 +82,7 @@ UIWidget
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
       margin-right: 1
-      !tooltip: tr('If this option is enabled, your mouse cursor will turn into:\n\n- legs: if you mouse over a field you can walk on\n- a hand: if you mouse over a field with an item you can use\n- an eye: if you mouse over a field with an item you can view\n- a box: if you mouse over a field with a container\n- a sword: if you mouse over a field with a creature you can\nattack\n- a mouth: if you mouse over an NPC\n- a bag: if you mouse over a creature or item you can quick\nloot')
+      !tooltip: tr('If this option is enabled, your mouse cursor will change and animate\nto represent the action available under it, such as walking, looking,\nattacking or talking to an NPC.')
 
   OnePixelDownFrame
     anchors.left: parent.left

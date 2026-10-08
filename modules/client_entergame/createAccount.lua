@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_entergame/createAccount.lua
-
-local MainWindowsCreateAccount
+﻿local MainWindowsCreateAccount
 local UIwidgetImagen = {}
 local UIComboBox = {}
 local UITextEdit = {}
@@ -9,11 +7,11 @@ local iconsCreateCharacter = {}
 local UITextList = {}
 local UIlabel = {}
 local globalInfo = {
-	email = "",
-	selectedWorld = "",
 	characterSex = "",
-	characterName = "",
-	password = ""
+	selectedWorld = "",
+	password = "",
+	email = "",
+	characterName = ""
 }
 local toolstips = {}
 local auxWidgets = {}
@@ -319,9 +317,7 @@ local function behavioronTextChange()
 			return
 		end
 
-		local passwordRepeat = widget:getText()
-
-		if #passwordRepeat == 0 then
+		if #widget:getText() == 0 then
 			toolstips.allExceptPassword:getChildById("textEditRepeatPassword"):setVisible(false)
 
 			return

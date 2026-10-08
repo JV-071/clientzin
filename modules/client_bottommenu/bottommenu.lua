@@ -1,12 +1,29 @@
-﻿-- chunkname: @/client_bottommenu/bottommenu.lua
-
-local bottomMenu, calendarWindow, activeScheduleEvent, upcomingScheduleEvent, eventSchedulerYears, calendarCurrentMonth, calendarPrevButton, calendarNextButton, calendarCurrentDate, showOffWindow, eventSchedulerTimestamp, eventSchedulerCalendar, eventSchedulerCalendarYearIndex, eventSchedulerCalendarMonth, boostedWindow, monsterOutfit, monsterImage, bossOutfit, bossImage, eventScheduleButton
+﻿local bottomMenu
+local calendarWindow
+local activeScheduleEvent
+local upcomingScheduleEvent
+local eventSchedulerYears
+local calendarCurrentMonth
+local calendarPrevButton
+local calendarNextButton
+local calendarCurrentDate
+local showOffWindow
+local eventSchedulerTimestamp
+local eventSchedulerCalendar
+local eventSchedulerCalendarYearIndex
+local eventSchedulerCalendarMonth
+local boostedWindow
+local monsterOutfit
+local monsterImage
+local bossOutfit
+local bossImage
+local eventScheduleButton
 local BOOSTED_WALK_SPEED = 1000
 local default_info = {
 	{
 		description = "If you have checked 'Ask Before Buying Products', a confirmation dialog will open up whenever you try to buy something via the Store.\nIf you uncheck that box, a click on 'Buy Now' will get you the selected product without any delay.",
-		Title = "General Game Options",
-		image = "images/randomhint"
+		image = "images/randomhint",
+		Title = "General Game Options"
 	}
 }
 
@@ -136,7 +153,9 @@ function terminate()
 	})
 
 	if eventScheduleButton then
-		eventScheduleButton:destroy()
+		if not eventScheduleButton:isDestroyed() then
+			eventScheduleButton:destroy()
+		end
 
 		eventScheduleButton = nil
 	end
@@ -477,7 +496,8 @@ function reloadEventsSchedulerCalender()
 	end
 
 	local now = os.time()
-	local upcomingWindow = 432000
+	local upcomingWindow = 1209600
+	local var_17_4 = 4
 	local activeEvents = {}
 	local upcomingEvents = {}
 
@@ -488,32 +508,38 @@ function reloadEventsSchedulerCalender()
 		if not startTimestamp or not endTimestamp then
 			-- block empty
 		else
+			local var_17_9 = info.colorlight or "#585858"
+			local var_17_10 = info.colordark or "#414141"
+			local numericValue = tonumber(info.displaypriority) or 0
 			local eventData = {
 				lastDay = false,
 				firstDay = false,
-				active = info.colorlight .. "ff",
-				inactive = info.colordark .. "ff",
+				active = var_17_9 .. "ff",
+				inactive = var_17_10 .. "ff",
 				description = info.description,
-				priority = info.displaypriority,
+				priority = numericValue,
 				season = info.isseasonal,
 				name = info.name,
-				special = info.specialevent
+				special = info.specialevent,
+				startTimestamp = startTimestamp
 			}
 
-			if startTimestamp <= now and now <= endTimestamp then
-				table.insert(activeEvents, eventData)
-			elseif now < startTimestamp and startTimestamp <= now + upcomingWindow then
-				table.insert(upcomingEvents, eventData)
+			if numericValue > 0 then
+				if startTimestamp <= now and now <= endTimestamp then
+					table.insert(activeEvents, eventData)
+				elseif now < startTimestamp and upcomingWindow >= startTimestamp - now then
+					table.insert(upcomingEvents, eventData)
+				end
 			end
 
 			local days = getCalendarDays(startTimestamp, endTimestamp)
 
 			for index, day in ipairs(days) do
 				table.insert(day, {
-					active = info.colorlight .. "ff",
-					inactive = info.colordark .. "ff",
+					active = var_17_9 .. "ff",
+					inactive = var_17_10 .. "ff",
 					description = info.description,
-					priority = info.displaypriority,
+					priority = numericValue,
 					season = info.isseasonal,
 					name = info.name,
 					special = info.specialevent,
@@ -523,6 +549,21 @@ function reloadEventsSchedulerCalender()
 				})
 			end
 		end
+	end
+
+	table.sort(activeEvents, function(a, b)
+		return (a.startTimestamp or 0) < (b.startTimestamp or 0)
+	end)
+	table.sort(upcomingEvents, function(a, b)
+		return (a.startTimestamp or 0) < (b.startTimestamp or 0)
+	end)
+
+	while var_17_4 < #upcomingEvents do
+		table.remove(upcomingEvents)
+	end
+
+	while var_17_4 < #activeEvents do
+		table.remove(activeEvents)
 	end
 
 	for _, yearCalendar in ipairs(eventSchedulerYears) do
@@ -682,9 +723,8 @@ function getDayOfWeek(day, month, year)
 		month = month,
 		day = day
 	})
-	local weekday = tonumber(os.date("%w", timestamp))
 
-	return weekday
+	return (tonumber(os.date("%w", timestamp)))
 end
 
 function onClickOnPreviousCalendar()

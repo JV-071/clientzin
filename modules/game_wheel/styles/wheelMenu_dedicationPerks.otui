@@ -1,0 +1,142 @@
+WheelMenuDedicationPerksPanel < Panel
+  size: 213 87
+  anchors.top: parent.top
+  anchors.right: parent.right
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+  Button
+    id: summaryButton
+    size: 14 14
+    tooltip: Show a summary in which all values are added up and displayed, regardless of their source.
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 2
+    margin-top: 2
+    image-source: /images/game/wheel/summary
+    image-clip: 0 0 14 14
+    $pressed:
+      image-clip: 0 14 14 14
+    $hover:
+      image-clip: 0 0 14 14
+    @onClick: toggleSummary()
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Dedication Perks')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+  Panel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 22
+    margin-left: 6
+    margin-right: 6
+    margin-bottom: 4
+    Panel
+      id: hitPoints
+      anchors.top: parent.top
+      anchors.left: parent.left
+      size: 200 16
+      Label
+        id: perk
+        !text: tr('Hit Points')
+        width: 100
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('0')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    Panel
+      id: manaPoints
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      Label
+        id: perk
+        !text: tr('Mana')
+        width: 100
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('0')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    Panel
+      id: capPoints
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      Label
+        id: perk
+        !text: tr('Capacity')
+        width: 100
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('0')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    Panel
+      id: mitigationPoints
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      Label
+        id: perk
+        !text: tr('Mitigation Mult.')
+        width: 102
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('0%%')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+      UIWidget
+        id: info
+        size: 12 12
+        anchors.top: prev.top
+        anchors.right: parent.right
+        margin-top: 2
+        image-source: /images/icons/show_gui_help_grey
+        !tooltip: tr('Increase your mitigation multiplicatively.')

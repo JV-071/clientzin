@@ -1,20 +1,18 @@
-﻿-- chunkname: @/game_interface/sidebar_panels_persistence.lua
-
-SidebarPanelsPersistence = {}
+﻿SidebarPanelsPersistence = {}
 
 local SECTION_PANELS_ORDER = "sidebarPanelsMangerOptions"
 local SECTION_PANELS_OPTIONS = "sidebarPanelsOptions"
 local PANEL_TYPE_BY_WIDGET_ID = {
-	mainhealthmanapanel = "hitpointManabar",
 	mainmappanel = "minimap",
-	maininventorypanel = "inventoryStatus",
-	mainoptionspanel = "buttons"
+	mainhealthmanapanel = "hitpointManabar",
+	mainoptionspanel = "buttons",
+	maininventorypanel = "inventoryStatus"
 }
-local WIDGET_ID_BY_PANEL_TYPE = {
-	minimap = "mainmappanel",
+local unusedValue = {
 	hitpointManabar = "mainhealthmanapanel",
 	buttons = "mainoptionspanel",
-	inventoryStatus = "maininventorypanel"
+	inventoryStatus = "maininventorypanel",
+	minimap = "mainmappanel"
 }
 local applyScheduled = false
 
@@ -121,14 +119,6 @@ function SidebarPanelsPersistence.collectPanelsOptions()
 		end
 	end
 
-	if modules.game_mainpanel and modules.game_mainpanel.getShortcutOrder then
-		local shortcutOrder = modules.game_mainpanel.getShortcutOrder()
-
-		if type(shortcutOrder) == "table" then
-			options.shortcutOrder = shortcutOrder
-		end
-	end
-
 	if table.empty(options) then
 		return nil
 	end
@@ -155,10 +145,6 @@ function SidebarPanelsPersistence.applyPanelsOptions(section)
 
 	if type(section.minimapZoomLevel) == "number" and modules.game_minimap and modules.game_minimap.setMinimapZoomLevel then
 		modules.game_minimap.setMinimapZoomLevel(section.minimapZoomLevel)
-	end
-
-	if type(section.shortcutOrder) == "table" and modules.game_mainpanel and modules.game_mainpanel.applyShortcutOrder then
-		modules.game_mainpanel.applyShortcutOrder(section.shortcutOrder)
 	end
 end
 

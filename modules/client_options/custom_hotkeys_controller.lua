@@ -1,13 +1,19 @@
-﻿-- chunkname: @/client_options/custom_hotkeys_controller.lua
-
-CustomHotkeys = {}
+﻿CustomHotkeys = {}
 
 local ACTION_NAME_LIMIT = 39
 local HELPER_SLOT_ID = "customHotkeyAssignHelper"
-local pendingPreset, pendingAutoSwitch, presetWindow, keyEditWindow, keyEditOverlay, chatModeGroup, actionSearchEvent, assignHelperSlotWidget
+local pendingPreset
+local pendingAutoSwitch
+local presetWindow
+local keyEditWindow
+local keyEditOverlay
+local chatModeGroup
+local actionSearchEvent
+local assignHelperSlotWidget
 local refreshRetryCount = 0
 local activeAssignSession
 local _syncingPreset = false
+local hotkeysPanelDirty = false
 local USE_TYPE_TO_ACTION = {
 	useOnSelf = HOTKEY_ACTION.USE_YOURSELF,
 	useOnTarget = HOTKEY_ACTION.USE_TARGET,
@@ -229,9 +235,7 @@ local function objectSlotToHotkeyAction(slot)
 		data.useAtCursor = true
 	end
 
-	local action = USE_TYPE_TO_ACTION[useType] or HOTKEY_ACTION.USE
-
-	return action, data
+	return USE_TYPE_TO_ACTION[useType] or HOTKEY_ACTION.USE, data
 end
 
 local function hotkeyToUseType(hotkey)
@@ -266,7 +270,8 @@ end
 
 local function parseTextAssignPayload(text, autoSend)
 	local checkForParameter = text:split(" \"")
-	local name, parameter
+	local name
+	local parameter
 
 	if #checkForParameter == 2 then
 		name = checkForParameter[1]
@@ -285,9 +290,7 @@ local function parseTextAssignPayload(text, autoSend)
 		}
 	end
 
-	local action = autoSend and HOTKEY_ACTION.TEXT_AUTO or HOTKEY_ACTION.TEXT
-
-	return action, {
+	return autoSend and HOTKEY_ACTION.TEXT_AUTO or HOTKEY_ACTION.TEXT, {
 		text = text
 	}
 end
@@ -707,8 +710,8 @@ local function addHotkeyRow(hotkey, hotkeyId, preset, chatMode)
 
 	local keys = CustomHotkeyManager.getHotkeyKeys(hotkeyId, preset, chatMode)
 	local firstColumn = {
-		style = "EditableCustomHotkeysTableColumn",
-		width = 288
+		width = 288,
+		style = "EditableCustomHotkeysTableColumn"
 	}
 
 	if display.coloredText then
@@ -778,15 +781,15 @@ local function addHotkeyRow(hotkey, hotkeyId, preset, chatMode)
 
 				actionColumn.item:setVisible(true)
 				actionColumn:setTextOffset({
-					y = 2,
-					x = 21
+					x = 21,
+					y = 2
 				})
 			else
 				actionColumn.item:setItem(nil)
 				actionColumn.item:setVisible(false)
 				actionColumn:setTextOffset({
-					y = 2,
-					x = 2
+					x = 2,
+					y = 2
 				})
 			end
 		end
@@ -814,6 +817,20 @@ local function addHotkeyRow(hotkey, hotkeyId, preset, chatMode)
 	end
 end
 
+function CustomHotkeys.markPanelDirty()
+	hotkeysPanelDirty = true
+end
+
+function CustomHotkeys.refreshPanelIfNeeded()
+	if not hotkeysPanelDirty then
+		return
+	end
+
+	hotkeysPanelDirty = false
+
+	CustomHotkeys.refreshPanel()
+end
+
 function CustomHotkeys.refreshPanel()
 	local p = panel()
 	local tableRef = tableWidget()
@@ -837,6 +854,7 @@ function CustomHotkeys.refreshPanel()
 	end
 
 	refreshRetryCount = 0
+	hotkeysPanelDirty = false
 
 	if keyEditWindow and keyEditWindow:isVisible() then
 		closeKeyEditWindow()
@@ -857,11 +875,10 @@ function CustomHotkeys.refreshPanel()
 end
 
 function CustomHotkeys.showHotkeyActionMenu(button)
-	local row = button:getParent():getParent()
-	local hotkeyId = row.hotkeyId
+	local parent = button:getParent():getParent().hotkeyId
 	local preset = getCurrentPresetName()
 	local chatMode = getChatMode()
-	local hotkey = getDisplayHotkey(hotkeyId, preset, chatMode)
+	local hotkey = getDisplayHotkey(parent, preset, chatMode)
 	local menu = g_ui.createWidget("PopupMenu")
 
 	menu:setGameMenu(true)
@@ -870,17 +887,17 @@ function CustomHotkeys.showHotkeyActionMenu(button)
 	local hasObject = isObjectHotkey(hotkey)
 
 	menu:addOption(hasSpell and tr("Edit Spell") or tr("Assign Spell"), function()
-		CustomHotkeys.assignSpell(hotkeyId, false)
+		CustomHotkeys.assignSpell(parent, false)
 	end)
 	menu:addOption(hasObject and tr("Edit Object") or tr("Assign Object"), function()
-		CustomHotkeys.assignObject(hotkeyId, false)
+		CustomHotkeys.assignObject(parent, false)
 	end)
 	menu:addOption(tr("Assign Text"), function()
-		CustomHotkeys.assignText(hotkeyId, false)
+		CustomHotkeys.assignText(parent, false)
 	end)
 	menu:addSeparator()
 	menu:addOption(tr("Clear Action"), function()
-		CustomHotkeys.clearHotkeyAction(hotkeyId)
+		CustomHotkeys.clearHotkeyAction(parent)
 	end)
 	menu:display(g_window.getMousePosition())
 end
@@ -991,9 +1008,7 @@ function CustomHotkeys.assignObject(hotkeyId, isNew)
 		end
 	end
 
-	local hasExistingObject = hotkey and hotkey.data and hotkey.data.itemId and hotkey.data.itemId > 100
-
-	if hasExistingObject then
+	if hotkey and hotkey.data and hotkey.data.itemId and hotkey.data.itemId > 100 then
 		ab.openObjectAssignWindow()
 
 		local item = Item.create(hotkey.data.itemId)
@@ -1358,9 +1373,7 @@ function CustomHotkeys.revertPending()
 end
 
 function CustomHotkeys.applyPending()
-	local p = panel()
-
-	if not p then
+	if not panel() then
 		return
 	end
 
@@ -1443,7 +1456,11 @@ function CustomHotkeys.syncPresetFromGeneral(presetName)
 			p.presets.list:setCurrentOption(presetName, true)
 		end
 
-		CustomHotkeys.refreshPanel()
+		if controller and controller.ui and controller.ui:isVisible() then
+			CustomHotkeys.refreshPanel()
+		else
+			CustomHotkeys.markPanelDirty()
+		end
 	end)
 
 	_syncingPreset = false

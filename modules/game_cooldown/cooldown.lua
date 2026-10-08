@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cooldown/cooldown.lua
-
-local ProgressCallback = {
+﻿local ProgressCallback = {
 	finish = 2,
 	update = 1
 }
@@ -49,6 +47,18 @@ local function releaseProgressRect(progressRect)
 	cancelCooldownEvent(progressRect)
 
 	progressRect.icon = nil
+end
+
+local function var_0_6(progressRect)
+	if not progressRect or progressRect:isDestroyed() then
+		return
+	end
+
+	for unusedValue, child in ipairs(progressRect:getChildren()) do
+		releaseProgressRect(child)
+	end
+
+	progressRect:hide()
 end
 
 local function isCooldownActive(progressRect)
@@ -293,9 +303,7 @@ function offline()
 
 	if cooldownPanel then
 		for _, icon in ipairs(cooldownPanel:getChildren()) do
-			for _, child in ipairs(icon:getChildren()) do
-				releaseProgressRect(child)
-			end
+			var_0_6(icon)
 		end
 	end
 
@@ -325,10 +333,7 @@ function removeCooldown(progressRect)
 	local icon = progressRect.icon
 
 	releaseProgressRect(progressRect)
-
-	if icon and not icon:isDestroyed() then
-		icon:destroy()
-	end
+	var_0_6(icon)
 end
 
 function turnOffCooldown(progressRect)
@@ -374,8 +379,7 @@ function updateCooldownBar(progressRect)
 		return
 	end
 
-	local percent = progressRect:getPercent()
-	local remainingPercent = 100 - percent
+	local remainingPercent = 100 - progressRect:getPercent()
 
 	if remainingPercent <= 0.01 then
 		resetCooldownFillBar(progressRect)
@@ -385,8 +389,7 @@ function updateCooldownBar(progressRect)
 
 	local width = math.max(progressRect:getWidth() - 2, 0)
 	local barWidth = math.floor(width * remainingPercent / 100 + 0.0001)
-
-	barWidth = math.max(0, math.min(width, barWidth))
+	local barWidth = math.max(0, math.min(width, barWidth))
 
 	if barWidth <= 0 then
 		resetCooldownFillBar(progressRect)
@@ -484,6 +487,7 @@ function onSpellCooldown(iconId, duration)
 	end
 
 	icon:setParent(cooldownPanel)
+	icon:show()
 
 	local progressRect = icon:getChildById(iconId)
 
@@ -491,14 +495,13 @@ function onSpellCooldown(iconId, duration)
 		progressRect = g_ui.createWidget("SpellProgressRect", icon)
 
 		progressRect:setId(iconId)
-
-		progressRect.icon = icon
-
 		progressRect:fill("parent")
 	else
 		cancelCooldownEvent(progressRect)
 		progressRect:setPercent(0)
 	end
+
+	progressRect.icon = icon
 
 	local function updateFunc()
 		local rect = icon:getChildById(iconId)
@@ -509,13 +512,7 @@ function onSpellCooldown(iconId, duration)
 	end
 
 	local function finishFunc()
-		local rect = icon:getChildById(iconId)
-
-		if rect and not rect:isDestroyed() then
-			removeCooldown(rect)
-		elseif icon and not icon:isDestroyed() then
-			icon:destroy()
-		end
+		var_0_6(icon)
 
 		cooldown[iconId] = false
 	end

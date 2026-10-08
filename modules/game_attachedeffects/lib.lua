@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_attachedeffects/lib.lua
-
-local __EFFECTS = {}
+﻿local __EFFECTS = {}
 local __THING_CONFIG = {}
 
 local function executeConfig(attachedEffect, config)
@@ -147,7 +145,8 @@ AttachedEffectManager = {
 		end
 
 		local thingConfig = __THING_CONFIG[category][thingId]
-		local methods = {
+
+		return {
 			set = function(self, id, config)
 				local effect = AttachedEffectManager.get(id)
 
@@ -173,17 +172,15 @@ AttachedEffectManager = {
 				end
 			end
 		}
-
-		return methods
 	end,
 	getConfig = function(id, category, thingId)
 		local config = __THING_CONFIG[category]
 
 		if config then
-			config = config[thingId]
+			local config = config[thingId]
 
 			if config then
-				config = config[id]
+				local config = config[id]
 
 				if config then
 					return config

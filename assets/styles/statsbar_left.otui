@@ -1,10 +1,403 @@
 // =============================================================================
-// statsbar_left.otui ? placement LEFT (reservado)
+// statsbar_left.otui ? placement LEFT (coluna entre sidebar e actionbar)
 // Depende de: 30-statsbar-common.otui
-//
-// Quando existir HUD lateral, agrupar por tipo:
-//   // --- Large ---
-//   // --- Parallel ---
-//   // --- Default ---
-//   // --- Compact ---
+// Textos das barras: rotation -90 (mesmo string horizontal, lido na vertical).
 // =============================================================================
+
+// --- Linha de skill (valor rodado + icone + barra vertical) ---
+
+LeftStatsSkillElement < UIWidget
+  width: 19
+
+  Panel
+    id: statsbarXpBoostSlot
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: 0
+    height: 0
+    margin-top: 4
+    margin-left: -2
+
+    UIWidget
+      id: statsbarXpBoostButton
+      size: 14 76
+      fixed-size: true
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      visible: false
+      image-source: /images/ui/button-storexp-noborder-left-idle
+      !tooltip: tr('Purchase XP Boost')
+      tooltip-delayed: true
+      @onClick: modules.game_store.openPremiumBoost()
+      $pressed:
+        image-source: /images/ui/button-storexp-noborder-left-pressed
+
+  Panel
+    id: levelSlot
+    size: 20 40
+    fixed-size: true
+    clipping: false
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-left: -2
+    margin-bottom: 1
+
+    Label
+      id: level
+      !text: '999'
+      font: $var-cip-font-new
+      color: #c0c0c0
+      text-align: right
+      text-auto-resize: false
+      size: 40 20
+      fixed-size: true
+      rotation: -90
+      clipping: false
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+      margin-top: 4
+
+  UIWidget
+    id: icon
+    size: 9 9
+    anchors.bottom: levelSlot.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-left: -2
+    margin-bottom: 5
+
+  StatsBarLeftSkill
+    id: bar
+    anchors.top: statsbarXpBoostSlot.bottom
+    anchors.bottom: icon.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    !statsbar-size: 'tiny'
+    !statsbar-orientation: 'vertical'
+    statsbar-text: false
+    margin-top: 6
+    margin-bottom: 6
+    margin-left: -2
+    width: 5
+
+LeftStatsBarChromeColumn < Panel
+  anchors.top: parent.top
+  anchors.bottom: parent.bottom
+  width: 15
+  phantom: true
+  focusable: false
+
+  Panel
+    id: topBarProficiencyRowInner
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 14
+    phantom: true
+    layout:
+      type: verticalBox
+      fit-children: true
+
+    StatsBarMonkComboSereneVertical
+      id: topBarMonkComboSerene
+      margin-top: 9
+      margin-bottom: 5
+
+    Panel
+      id: icons
+      image-border: 3
+      image-source: /images/ui/button-verydarkgrey-down
+      size: 13 103
+      fixed-size: true
+      padding-top: 2
+      &verticalIcons: true
+      layout:
+        type: verticalBox
+
+    StatsBarProficiencyPanelVertical
+      id: proficiencyPanel
+      margin-top: 4
+
+    StatsBarProficiencyButtonDefault
+      id: proficiencyButtonColumn
+      margin-top: 5
+
+// --- Large ---
+
+LeftStatsBarLargeOnLeft < UIWidget
+  StatsBarLeftWithShrink
+    anchors.fill: parent
+
+  Panel
+    id: barsColumn
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    width: 27
+    margin-left: 11
+    margin-top: 4
+    margin-bottom: 4
+
+    StatsBarLeft
+      id: health
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.bottom: largeTopCenterRow.top
+      width: 27
+      !statsbar-type: 'health'
+      !statsbar-size: 'large'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-bottom: 6
+
+    Panel
+      id: largeTopCenterRow
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: parent.left
+      width: 27
+      phantom: true
+      clipping: false
+      focusable: false
+      layout:
+        type: verticalBox
+        fit-children: true
+
+      StatsBarMonkComboSereneVertical
+        id: topBarMonkComboSereneLarge
+        margin-bottom: 5
+
+      Panel
+        id: icons
+        image-border: 3
+        image-source: /images/ui/button-verydarkgrey-down
+        size: 27 53
+        fixed-size: true
+        padding-top: 2
+        &verticalIcons: true
+        layout:
+          type: verticalBox
+
+      StatsBarProficiencyButtonLarge
+        id: proficiencyButtonLargeWrap
+        margin-top: 5
+
+    StatsBarLeftMana
+      id: mana
+      anchors.top: largeTopCenterRow.bottom
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      width: 27
+      !statsbar-type: 'mana'
+      !statsbar-size: 'large'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-top: 6
+
+  Panel
+    id: skills
+    anchors.left: barsColumn.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    margin-left: 4
+    width: 0
+
+// --- Parallel ---
+
+LeftStatsBarParallelOnLeft < UIWidget
+  StatsBarLeftWithShrink
+    anchors.fill: parent
+
+  StatsBarLeft
+    id: health
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    width: 14
+    !statsbar-type: 'health'
+    !statsbar-size: 'small'
+    !statsbar-orientation: 'vertical'
+    statsbar-text: true
+    margin-left: 11
+    margin-top: 4
+    margin-bottom: 4
+
+  StatsBarLeftMana
+    id: mana
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: health.right
+    width: 14
+    !statsbar-type: 'mana'
+    !statsbar-size: 'small'
+    !statsbar-orientation: 'vertical'
+    statsbar-text: true
+    margin-left: 3
+    margin-top: 4
+    margin-bottom: 4
+
+  Panel
+    id: skills
+    anchors.left: mana.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    margin-left: 4
+    width: 0
+
+  LeftStatsBarChromeColumn
+    id: leftBarProficiencyColumn
+    anchors.left: skills.right
+
+// --- Default ---
+
+LeftStatsBarDefaultOnLeft < UIWidget
+  StatsBarLeftWithShrink
+    anchors.fill: parent
+
+  Panel
+    id: barsColumn
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    width: 14
+    margin-left: 11
+    margin-top: 4
+    margin-bottom: 4
+
+    StatsBarLeft
+      id: health
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.verticalCenter
+      !statsbar-type: 'health'
+      !statsbar-size: 'small'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-bottom: 3
+
+    StatsBarLeftMana
+      id: mana
+      anchors.top: parent.verticalCenter
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      !statsbar-type: 'mana'
+      !statsbar-size: 'small'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-top: 2
+
+  Panel
+    id: skills
+    anchors.left: barsColumn.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    margin-left: 4
+    width: 0
+
+  LeftStatsBarChromeColumn
+    id: leftBarProficiencyColumn
+    anchors.left: skills.right
+
+// --- Compact ---
+
+LeftStatsBarCompactOnLeft < UIWidget
+  StatsBarLeftWithShrink
+    anchors.fill: parent
+
+  Panel
+    id: barsColumn
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    width: 15
+    margin-left: 11
+    margin-top: 4
+    margin-bottom: 4
+
+    StatsBarLeft
+      id: health
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.bottom: compactTopCenterRow.top
+      width: 14
+      !statsbar-type: 'health'
+      !statsbar-size: 'small'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-bottom: 6
+
+    Panel
+      id: compactTopCenterRow
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.left: parent.left
+      width: 15
+      phantom: true
+      clipping: false
+      focusable: false
+      layout:
+        type: verticalBox
+        fit-children: true
+
+      StatsBarMonkComboSereneVertical
+        id: topBarMonkComboSereneCompact
+        margin-bottom: 5
+
+      Panel
+        id: icons
+        image-border: 3
+        image-source: /images/ui/button-verydarkgrey-down
+        size: 14 103
+        fixed-size: true
+        padding-top: 2
+        &verticalIcons: true
+        layout:
+          type: verticalBox
+
+      StatsBarProficiencyButtonCompact
+        id: proficiencyButtonCompactWrap
+        margin-top: 5
+
+    StatsBarLeftMana
+      id: mana
+      anchors.top: compactTopCenterRow.bottom
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      width: 14
+      !statsbar-type: 'mana'
+      !statsbar-size: 'small'
+      !statsbar-orientation: 'vertical'
+      statsbar-text: true
+      margin-top: 6
+
+  Panel
+    id: skills
+    anchors.left: barsColumn.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    margin-left: 3
+    width: 0
+
+// --- Agregador LeftStatsBar ---
+
+LeftStatsBar < UIWidget
+  LeftStatsBarLargeOnLeft
+    id: largeOnLeft
+    anchors.fill: parent
+    visible: false
+    phantom: true
+
+  LeftStatsBarParallelOnLeft
+    id: parallelOnLeft
+    anchors.fill: parent
+    visible: false
+    phantom: true
+
+  LeftStatsBarDefaultOnLeft
+    id: defaultOnLeft
+    anchors.fill: parent
+    visible: false
+    phantom: true
+
+  LeftStatsBarCompactOnLeft
+    id: compactOnLeft
+    anchors.fill: parent
+    visible: false
+    phantom: true

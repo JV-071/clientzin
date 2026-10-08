@@ -1,11 +1,45 @@
-﻿-- chunkname: @/game_skills/skills.lua
-
-skillsWindow = nil
+﻿skillsWindow = nil
 skillsButton = nil
 skillsSettings = nil
 
 local ExpRating = {}
-local updateExperienceRate, lastDefenseInfo, lastForgeInfo, lastAbsorbValues, lastMagicLevelBonuses, syncSkillsMainPanelButton
+local updateExperienceRate
+local lastDefenseInfo
+local var_0_3
+local var_0_4
+local magicLevelBonuses
+local lastMagicLevelBonuses
+local var_0_7
+local var_0_8 = "#44ad25"
+local var_0_9 = "#c0c0c0"
+local var_0_10 = {
+	amplification = true,
+	transcendence = true,
+	momentum = true,
+	dodge = true,
+	mitigation = true,
+	onslaught = true
+}
+
+local function var_0_11(arg_1_0)
+	if not var_0_10[arg_1_0] then
+		return nil
+	end
+
+	if ItemsDatabase and ItemsDatabase.isOverlordActive and ItemsDatabase.isOverlordActive() then
+		return var_0_8
+	end
+
+	return var_0_9
+end
+
+local function handleOtcToggle(arg_2_0)
+	if OtcOpCode and arg_2_0 == OtcOpCode.OVERLORD_ACTIVE and var_0_7 then
+		var_0_7()
+	end
+end
+
+local syncSkillsMainPanelButton
 local OFFENCE_BAR_STATS_IDS = {
 	"skillId7",
 	"skillId8",
@@ -34,7 +68,7 @@ local function hideOffenceStatsInSkillsBar()
 end
 
 local function syncOffenceExtraSkillRows()
-	if g_game.getClientVersion() < 1412 or not skillsWindow then
+	if not skillsWindow then
 		return
 	end
 
@@ -72,7 +106,8 @@ function init()
 	})
 	connect(g_game, {
 		onGameStart = online,
-		onGameEnd = offline
+		onGameEnd = offline,
+		onOtcToggle = handleOtcToggle
 	})
 	g_ui.importStyle("skills_widgets")
 
@@ -80,8 +115,8 @@ function init()
 	skillsWindow = g_ui.loadUI("skills")
 
 	skillsWindow:setContentMinimumHeight(80)
-	Keybind.new("Windows", "Show/hide skills windows", "Alt+S", "")
-	Keybind.bind("Windows", "Show/hide skills windows", {
+	Keybind.new("Windows", "Show/hide skills window", "Alt+S", "")
+	Keybind.bind("Windows", "Show/hide skills window", {
 		{
 			type = KEY_DOWN,
 			callback = toggle
@@ -173,9 +208,10 @@ function terminate()
 	})
 	disconnect(g_game, {
 		onGameStart = online,
-		onGameEnd = offline
+		onGameEnd = offline,
+		onOtcToggle = handleOtcToggle
 	})
-	Keybind.delete("Windows", "Show/hide skills windows")
+	Keybind.delete("Windows", "Show/hide skills window")
 	skillsWindow:destroy()
 	skillsButton:destroy()
 
@@ -193,39 +229,6 @@ function showSkillsContextMenu(widget, mousePos, mouseButton)
 
 		if offlineTrainingOption then
 			offlineTrainingOption:setVisible(false)
-		end
-	end
-
-	if g_game.getClientVersion() < 1412 then
-		local offenceStatsOption = menu:getChildById("showOffenceStats")
-
-		if offenceStatsOption then
-			offenceStatsOption:setVisible(false)
-		end
-
-		local defenceStatsOption = menu:getChildById("showDefenceStats")
-
-		if defenceStatsOption then
-			defenceStatsOption:setVisible(false)
-		end
-
-		local miscStatsOption = menu:getChildById("showMiscStats")
-
-		if miscStatsOption then
-			miscStatsOption:setVisible(false)
-		end
-
-		local children = menu:getChildren()
-		local separatorCount = 0
-
-		for i, child in ipairs(children) do
-			if child:getClassName() == "HorizontalSeparator" or child:getId() == "HorizontalSeparator" then
-				separatorCount = separatorCount + 1
-
-				if separatorCount > 1 then
-					child:setVisible(false)
-				end
-			end
 		end
 	end
 
@@ -420,9 +423,7 @@ function toggleSkillVisibility(skillId)
 end
 
 function resetExperienceCounter()
-	local player = g_game.getLocalPlayer()
-
-	if player then
+	if g_game.getLocalPlayer() then
 		modules.game_textmessage.displayGameMessage("Experience counter has been reset.")
 	end
 end
@@ -528,8 +529,8 @@ function toggleDefenceStatsVisibility()
 			onDefenseInfoChange(player, lastDefenseInfo[1], lastDefenseInfo[2], lastDefenseInfo[3], lastDefenseInfo[4], lastDefenseInfo[5])
 		end
 
-		if player and lastAbsorbValues then
-			onCombatAbsorbValuesChange(player, lastAbsorbValues)
+		if player and var_0_4 then
+			onCombatAbsorbValuesChange(player, var_0_4)
 		end
 	else
 		for _, skillId in pairs(allDefenceWidgets) do
@@ -777,9 +778,7 @@ local function updateExperienceTooltip(localPlayer)
 			if expNeeded and expNeeded > 0 then
 				local hoursLeft = expNeeded / expPerHour
 				local minutesLeft = math.floor((hoursLeft - math.floor(hoursLeft)) * 60)
-
-				hoursLeft = math.floor(hoursLeft)
-
+				local hoursLeft = math.floor(hoursLeft)
 				local expText = tr("%s of experience per hour", comma_value(expPerHour)) .. "\n" .. tr("Next level in %d hours and %d minutes", hoursLeft, minutesLeft)
 
 				if progressTooltip then
@@ -951,10 +950,7 @@ local function buildLoyaltySkillTooltip(value, baseValue, loyaltyField, rawPerce
 end
 
 function resetSkillColor(id)
-	local skill = skillsWindow:recursiveGetChildById(id)
-	local widget = skill:getChildById("value")
-
-	widget:setColor("#c0c0c0")
+	skillsWindow:recursiveGetChildById(id):getChildById("value"):setColor("#c0c0c0")
 end
 
 function toggleSkill(id, state)
@@ -990,7 +986,7 @@ function setSkillBase(id, value, baseValue, loyaltyField)
 
 	if isLoyaltySkillWidgetId(id) then
 		local itemBonus = select(1, resolveSkillBonuses(value, baseValue, loyaltyField))
-		local magicLevelBonuses = id == "magiclevel" and lastMagicLevelBonuses or nil
+		local magicLevelBonuses = id == "magiclevel" and magicLevelBonuses or nil
 		local tooltip = buildLoyaltySkillTooltip(value, baseValue, loyaltyField, rawPercent, magicLevelBonuses)
 
 		if itemBonus > 0 then
@@ -1068,9 +1064,7 @@ function setSkillColor(id, value)
 	local skill = skillsWindow:recursiveGetChildById(id)
 
 	if skill then
-		local widget = skill:getChildById("value")
-
-		widget:setColor(value)
+		skill:getChildById("value"):setColor(value)
 	end
 end
 
@@ -1205,10 +1199,6 @@ function online()
 
 	local newWindowButton = skillsWindow:recursiveGetChildById("newWindowButton")
 
-	if g_game.getClientVersion() < 1310 then
-		newWindowButton:hide()
-	end
-
 	if newWindowButton then
 		function newWindowButton.onClick()
 			if modules.game_cyclopedia then
@@ -1247,7 +1237,7 @@ function refresh()
 	onMagicLevelChange(player, player:getMagicLevel(), player:getMagicLevelPercent())
 
 	if player.getMagicLevelBonuses then
-		lastMagicLevelBonuses = player:getMagicLevelBonuses()
+		magicLevelBonuses = player:getMagicLevelBonuses()
 	end
 
 	onOfflineTrainingChange(player, player:getOfflineTrainingTime())
@@ -1264,15 +1254,9 @@ function refresh()
 			local ativedAdditionalSkills = hasAdditionalSkills
 
 			if ativedAdditionalSkills then
-				if g_game.getClientVersion() >= 1281 then
-					if i == Skill.LifeLeechAmount or i == Skill.ManaLeechAmount then
-						ativedAdditionalSkills = false
-					elseif g_game.getClientVersion() < 1332 and Skill.Transcendence then
-						ativedAdditionalSkills = false
-					elseif i >= Skill.Fatal and player:getSkillLevel(i) <= 0 then
-						ativedAdditionalSkills = false
-					end
-				elseif g_game.getClientVersion() < 1281 and i >= Skill.Fatal then
+				if i == Skill.LifeLeechAmount or i == Skill.ManaLeechAmount then
+					ativedAdditionalSkills = false
+				elseif i >= Skill.Fatal and player:getSkillLevel(i) <= 0 then
 					ativedAdditionalSkills = false
 				end
 			end
@@ -1284,124 +1268,8 @@ function refresh()
 	updateExperienceRate(player)
 	update()
 	updateHeight()
-
-	if g_game.getClientVersion() < 1412 then
-		local offenceStats = {
-			"skillId7",
-			"skillId8",
-			"skillId9",
-			"skillId10",
-			"skillId11",
-			"skillId12",
-			"skillId13",
-			"skillId14",
-			"skillId15",
-			"skillId16"
-		}
-
-		for _, skillId in pairs(offenceStats) do
-			local skill = skillsWindow:recursiveGetChildById(skillId)
-
-			if skill then
-				skill:hide()
-			end
-		end
-
-		local defenceStats = {
-			"physicalResist",
-			"fireResist",
-			"earthResist",
-			"energyResist",
-			"IceResist",
-			"HolyResist",
-			"deathResist",
-			"HealingResist",
-			"drowResist",
-			"lifedrainResist",
-			"manadRainResist",
-			"defenceValue",
-			"armorValue",
-			"mitigation",
-			"dodge",
-			"damageReflection",
-			"separadorOnDefenseInfoChange"
-		}
-
-		for _, skillId in pairs(defenceStats) do
-			local skill = skillsWindow:recursiveGetChildById(skillId)
-
-			if skill then
-				skill:hide()
-			end
-		end
-
-		local miscStats = {
-			"momentum",
-			"transcendence",
-			"amplification",
-			"separadorOnForgeBonusesChange"
-		}
-
-		for _, skillId in pairs(miscStats) do
-			local skill = skillsWindow:recursiveGetChildById(skillId)
-
-			if skill then
-				skill:hide()
-			end
-		end
-
-		local additionalSeparators = {
-			"criticalHit",
-			"damageHealing",
-			"attackValue",
-			"convertedDamage",
-			"convertedElement",
-			"lifeLeech",
-			"manaLeech",
-			"criticalChance",
-			"criticalExtraDamage",
-			"onslaught"
-		}
-
-		for _, separatorId in pairs(additionalSeparators) do
-			local separator = skillsWindow:recursiveGetChildById(separatorId)
-
-			if separator then
-				separator:hide()
-			end
-		end
-
-		local function hideUnnamedSeparators(widget)
-			if not widget then
-				return
-			end
-
-			local children = widget:getChildren()
-
-			for _, child in pairs(children) do
-				if child:getClassName() == "HorizontalSeparator" and (not child:getId() or child:getId() == "") then
-					child:hide()
-				elseif child:getClassName() == "UIWidget" and (not child:getId() or child:getId() == "") then
-					local childHeight = child:getHeight()
-					local childChildrenCount = #child:getChildren()
-
-					if childHeight <= 15 and childChildrenCount == 0 then
-						child:hide()
-					end
-				end
-
-				hideUnnamedSeparators(child)
-			end
-		end
-
-		hideUnnamedSeparators(skillsWindow)
-	end
-
 	loadSkillsVisibilitySettings()
-
-	if g_game.getClientVersion() >= 1412 then
-		syncOffenceExtraSkillRows()
-	end
+	syncOffenceExtraSkillRows()
 end
 
 function loadSkillsVisibilitySettings()
@@ -1453,62 +1321,56 @@ function loadSkillsVisibilitySettings()
 		end
 	end
 
-	if g_game.getClientVersion() >= 1412 then
-		hideOffenceStatsInSkillsBar()
+	hideOffenceStatsInSkillsBar()
 
-		if settings.defenceStats_visible ~= nil then
-			local defGroup = settings.defenceStats_visible
+	if settings.defenceStats_visible ~= nil and not settings.defenceStats_visible then
+		local allDefenceWidgets = {
+			"physicalResist",
+			"fireResist",
+			"earthResist",
+			"energyResist",
+			"IceResist",
+			"HolyResist",
+			"deathResist",
+			"HealingResist",
+			"drowResist",
+			"lifedrainResist",
+			"manadRainResist",
+			"defenceValue",
+			"armorValue",
+			"mitigation",
+			"dodge",
+			"damageReflection",
+			"separadorOnDefenseInfoChange"
+		}
 
-			if not defGroup then
-				local allDefenceWidgets = {
-					"physicalResist",
-					"fireResist",
-					"earthResist",
-					"energyResist",
-					"IceResist",
-					"HolyResist",
-					"deathResist",
-					"HealingResist",
-					"drowResist",
-					"lifedrainResist",
-					"manadRainResist",
-					"defenceValue",
-					"armorValue",
-					"mitigation",
-					"dodge",
-					"damageReflection",
-					"separadorOnDefenseInfoChange"
-				}
+		for _, id in pairs(allDefenceWidgets) do
+			local w = skillsWindow:recursiveGetChildById(id)
 
-				for _, id in pairs(allDefenceWidgets) do
-					local w = skillsWindow:recursiveGetChildById(id)
-
-					if w then
-						w:setVisible(false)
-					end
-				end
+			if w then
+				w:setVisible(false)
 			end
 		end
+	end
 
-		if settings.miscStats_visible ~= nil then
-			local mGroup = settings.miscStats_visible
-			local sep = skillsWindow:recursiveGetChildById("separadorOnForgeBonusesChange")
+	if settings.miscStats_visible ~= nil then
+		local mGroup = settings.miscStats_visible
+		local sep = skillsWindow:recursiveGetChildById("separadorOnForgeBonusesChange")
 
-			if sep then
-				sep:setVisible(mGroup)
-			end
+		if sep then
+			sep:setVisible(mGroup)
+		end
 
-			if not mGroup then
-				for _, id in pairs({
-					"momentum",
-					"transcendence",
-					"amplification"
-				}) do
-					local w = skillsWindow:recursiveGetChildById(id)
+		if not mGroup then
+			for _, id in pairs({
+				"momentum",
+				"transcendence",
+				"amplification"
+			}) do
+				local w = skillsWindow:recursiveGetChildById(id)
 
-					if w then
-						w:setVisible(false)
-					end
+				if w then
+					w:setVisible(false)
 				end
 			end
 		end
@@ -1690,8 +1552,9 @@ local function resetExtendedStats()
 	ExpRating = {}
 	skillRawPercents = {}
 	lastDefenseInfo = nil
-	lastForgeInfo = nil
-	lastAbsorbValues = nil
+	var_0_3 = nil
+	var_0_4 = nil
+	magicLevelBonuses = nil
 	lastMagicLevelBonuses = nil
 end
 
@@ -1923,7 +1786,7 @@ function onStaminaChange(localPlayer, stamina)
 
 	local rowTooltip
 
-	if stamina > 2340 and g_game.getClientVersion() >= 1038 and localPlayer:isPremium() then
+	if stamina > 2340 and localPlayer:isPremium() then
 		rowTooltip = tr("You have %s hours and %s minutes left and receive 50%% more experience", tooltipHours, tooltipMinutes)
 	else
 		rowTooltip = tr("You have %s hours and %s minutes left", tooltipHours, tooltipMinutes)
@@ -1931,18 +1794,14 @@ function onStaminaChange(localPlayer, stamina)
 
 	setSkillTooltip("stamina", rowTooltip)
 
-	if stamina > 2340 and g_game.getClientVersion() >= 1038 and localPlayer:isPremium() then
+	if stamina > 2340 and localPlayer:isPremium() then
 		local text = tr("You have %s hours and %s minutes left", hours, minutes) .. "\n" .. tr("Now you will gain 50%% more experience")
 
 		setSkillPercent("stamina", rawPercent, text, "green")
-	elseif stamina > 2340 and g_game.getClientVersion() >= 1038 and not localPlayer:isPremium() then
+	elseif stamina > 2340 and not localPlayer:isPremium() then
 		local text = tr("You have %s hours and %s minutes left", hours, minutes) .. "\n" .. tr("You will not gain 50%% more experience because you aren't premium player, now you receive only 1x experience points")
 
 		setSkillPercent("stamina", rawPercent, text, "#C06000")
-	elseif stamina > 2340 and g_game.getClientVersion() < 1038 then
-		local text = tr("You have %s hours and %s minutes left", hours, minutes) .. "\n" .. tr("If you are premium player, you will gain 50%% more experience")
-
-		setSkillPercent("stamina", rawPercent, text, "green")
 	elseif stamina <= 840 then
 		setSkillPercent("stamina", rawPercent, rowTooltip, "#C00000")
 	else
@@ -2035,7 +1894,7 @@ function onSkillChange(localPlayer, id, level, percent)
 		toggleSkill("skillId" .. id, level > 0)
 	end
 
-	if id >= Skill.Fatal and id <= Skill.Transcendence and g_game.getClientVersion() >= 1412 then
+	if id >= Skill.Fatal and id <= Skill.Transcendence then
 		syncOffenceExtraSkillRows()
 	end
 end
@@ -2063,14 +1922,11 @@ function updateXpGainRateWidgetFromData(xpGainRateWidget, rates, context)
 	local baseRate = rates.base or 100
 	local expRateTotal = baseRate + (rates.lowLevel or 0) + (rates.xpBoost or 0) + (rates.voucher or 0)
 	local staminaMultiplier = rates.staminaMultiplier or 100
-
-	expRateTotal = expRateTotal * staminaMultiplier / 100
+	local expRateTotal = expRateTotal * staminaMultiplier / 100
 
 	widget:setText(math.floor(expRateTotal) .. "%")
 
-	local tooltip = string.format("Your current XP gain rate amounts to %d%%.", math.floor(expRateTotal))
-
-	tooltip = tooltip .. string.format("\nYour XP gain rate is calculated as follows:\n- Base XP gain rate %d%%", baseRate)
+	local tooltip = string.format("Your current XP gain rate amounts to %d%%.", math.floor(expRateTotal)) .. string.format("\nYour XP gain rate is calculated as follows:\n- Base XP gain rate %d%%", baseRate)
 
 	if (rates.voucher or 0) > 0 then
 		tooltip = tooltip .. string.format("\n- Voucher: %d%%", rates.voucher)
@@ -2168,48 +2024,6 @@ local function setSkillValueWithTooltips(id, value, tooltip, showPercentage, col
 		return
 	end
 
-	if g_game.getClientVersion() < 1412 then
-		local statsToHide = {
-			"skillId7",
-			"skillId8",
-			"skillId9",
-			"skillId10",
-			"skillId11",
-			"skillId12",
-			"skillId13",
-			"skillId14",
-			"skillId15",
-			"skillId16",
-			"physicalResist",
-			"fireResist",
-			"earthResist",
-			"energyResist",
-			"IceResist",
-			"HolyResist",
-			"deathResist",
-			"HealingResist",
-			"drowResist",
-			"lifedrainResist",
-			"manadRainResist",
-			"defenceValue",
-			"armorValue",
-			"mitigation",
-			"dodge",
-			"damageReflection",
-			"momentum",
-			"transcendence",
-			"amplification"
-		}
-
-		for _, statId in pairs(statsToHide) do
-			if id == statId then
-				skill:hide()
-
-				return
-			end
-		end
-	end
-
 	local alwaysShow = id == "attackValue" or id == "defenceValue" or id == "armorValue"
 
 	if alwaysShow or value ~= nil and value ~= 0 then
@@ -2220,6 +2034,8 @@ local function setSkillValueWithTooltips(id, value, tooltip, showPercentage, col
 		if not widget then
 			return
 		end
+
+		local color = color or var_0_11(id)
 
 		if color then
 			widget:setColor(color)
@@ -2252,10 +2068,6 @@ local function setSkillValueWithTooltips(id, value, tooltip, showPercentage, col
 end
 
 function onFlatDamageHealingChange(localPlayer, flatBonus)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
 	local tooltips = "This flat bonus is the main source of your character's power, added to most of the damage and healing values you cause."
 
 	setSkillValueWithTooltips("damageHealing", flatBonus, tooltips, false)
@@ -2263,10 +2075,6 @@ function onFlatDamageHealingChange(localPlayer, flatBonus)
 end
 
 function onAttackInfoChange(localPlayer, attackValue, attackElement)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
 	local tooltips = "This is your character's basic attack power whenever you enter a fight with a weapon or your fists. It does not apply to any spells you cast. The attack value is calculated from the weapon's attack value, the corresponding weapon skill, the bonus received from the Revelation Perks and the player's level. The value represents the average damage you would inflict on a creature which had no kind of defence or protection."
 
 	setSkillValueWithTooltips("attackValue", attackValue, tooltips, false)
@@ -2300,10 +2108,6 @@ function onAttackInfoChange(localPlayer, attackValue, attackElement)
 end
 
 function onConvertedDamageChange(localPlayer, convertedDamage, convertedElement)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
 	setSkillValueWithTooltips("convertedDamage", convertedDamage, false, true)
 
 	local skill = skillsWindow:recursiveGetChildById("convertedDamage")
@@ -2334,9 +2138,13 @@ function onConvertedDamageChange(localPlayer, convertedDamage, convertedElement)
 end
 
 function onImbuementsChange(localPlayer, lifeLeech, manaLeech, critChance, critDamage, onslaught)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
+	lastMagicLevelBonuses = {
+		lifeLeech,
+		manaLeech,
+		critChance,
+		critDamage,
+		onslaught
+	}
 
 	local lifeLeechTooltips = "You have a +11.4% chance to trigger Onslaught, granting you 60% increased damage for all attacks."
 	local manaLeechTooltips = "You have a +1% chance to cause +1% extra damage."
@@ -2373,7 +2181,7 @@ local combatIdToWidgetId = {
 }
 
 function onMagicLevelBonusesChange(localPlayer, bonuses)
-	lastMagicLevelBonuses = bonuses
+	magicLevelBonuses = bonuses
 
 	if localPlayer then
 		onBaseMagicLevelChange(localPlayer, localPlayer:getBaseMagicLevel())
@@ -2381,11 +2189,7 @@ function onMagicLevelBonusesChange(localPlayer, bonuses)
 end
 
 function onCombatAbsorbValuesChange(localPlayer, absorbValues)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
-	lastAbsorbValues = absorbValues
+	var_0_4 = absorbValues
 
 	for id, widgetId in pairs(combatIdToWidgetId) do
 		local skill = skillsWindow:recursiveGetChildById(widgetId)
@@ -2444,10 +2248,6 @@ function updateDefenceSeparatorVisibility()
 end
 
 function onDefenseInfoChange(localPlayer, defense, armor, mitigation, dodge, damageReflection)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
 	lastDefenseInfo = {
 		defense,
 		armor,
@@ -2471,11 +2271,7 @@ function onDefenseInfoChange(localPlayer, defense, armor, mitigation, dodge, dam
 end
 
 function onForgeBonusesChange(localPlayer, momentum, transcendence, amplification)
-	if g_game.getClientVersion() < 1412 then
-		return
-	end
-
-	lastForgeInfo = {
+	var_0_3 = {
 		momentum,
 		transcendence,
 		amplification
@@ -2491,6 +2287,23 @@ function onForgeBonusesChange(localPlayer, momentum, transcendence, amplificatio
 	setSkillValueWithTooltips("transcendence", transcendence, transcendenceTooltip, true)
 	setSkillValueWithTooltips("amplification", amplification, amplificationTooltip, true)
 	updateHeight()
+end
+
+function var_0_7()
+	if not skillsWindow then
+		return
+	end
+
+	local var_105_0 = ItemsDatabase and ItemsDatabase.isOverlordActive and ItemsDatabase.isOverlordActive() and var_0_8 or var_0_9
+
+	for iter_105_0 in pairs(var_0_10) do
+		local var_105_1 = skillsWindow:recursiveGetChildById(iter_105_0)
+		local value = var_105_1 and var_105_1:getChildById("value")
+
+		if value then
+			value:setColor(var_105_0)
+		end
+	end
 end
 
 function resolveSkillBonusesForDisplay(total, base, loyaltyField)

@@ -1,0 +1,74 @@
+PerksPanel < Panel
+  size: 200 16
+  UIWidget
+    id: icon
+    size: 12 12
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 1
+    phantom: true
+    visible: false
+  Label
+    id: perk
+    !text: tr('Healing Link')
+    width: 102
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-align: topleft
+    font: $var-cip-font-new
+    color: #c0c0c0
+    text-auto-resize: true
+  Label
+    id: value
+    !text: tr('0%%')
+    width: 88
+    anchors.top: parent.top
+    anchors.right: parent.right
+    text-align: topright
+    font: $var-cip-font-new
+    color: #c0c0c0
+    margin-right: 15
+  UIWidget
+    id: info
+    size: 12 12
+    anchors.top: prev.top
+    anchors.right: parent.right
+    margin-top: 2
+    image-source: /images/icons/show_gui_help_grey
+    !tooltip: tr('Increase your mitigation multiplicatively.')
+    visible: false
+
+PresetLabel < Panel
+  size: 207 16
+  background-color: #484848
+
+  $focus:
+    background-color: #585858
+
+  Label
+    id: name
+    size: 157 16
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-align: left
+    font: $var-cip-font-new
+    color: #c0c0c0
+    text-offset: 1 0
+
+  VerticalSeparator
+    id: sep
+    anchors.top: parent.top
+    anchors.left: prev.right
+    height: 16
+    margin-left: 1
+
+  Label
+    id: points
+    size: 48 16
+    anchors.top: parent.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    text-align: right
+    font: $var-cip-font-new
+    color: #c0c0c0
+    margin-right: 6

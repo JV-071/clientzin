@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_blessing/blessing.lua
-
-blessingWindow = nil
+﻿blessingWindow = nil
 historyWindow = nil
 
 local openedFromCyclopedia = false
@@ -15,6 +13,15 @@ local blessingIcons = {
 	["32"] = 4,
 	["16"] = 2,
 	["8"] = 5
+}
+local var_0_4 = {
+	[8] = 5,
+	[4] = 4,
+	[16] = 6,
+	[64] = 8,
+	[128] = 9,
+	[256] = 10,
+	[32] = 7
 }
 
 local function isAlive(widget)
@@ -197,8 +204,14 @@ function closeBlessing(restoreCyclopedia)
 	restoreCyclopediaIfNeeded()
 end
 
-function openStoreFromBlessings()
+function openStoreFromBlessings(arg_18_0)
 	closeBlessing(false)
+
+	if arg_18_0 and modules.game_store and modules.game_store.openUsefulThings then
+		modules.game_store.openUsefulThings(arg_18_0)
+
+		return
+	end
 
 	if modules.game_store and modules.game_store.openStoreCategory then
 		modules.game_store.openStoreCategory("Blessings")
@@ -273,6 +286,12 @@ function onBlessingDialog(data)
 		end
 
 		widget.containerCount:setText(string.format("%d (%d)", bless.playerBlessCount, bless.store))
+
+		local var_23_3 = var_0_4[bless.blessBitwise]
+
+		function widget.storeButton.onClick()
+			openStoreFromBlessings(var_23_3)
+		end
 
 		if bless.playerBlessCount < 1 then
 			widget.containerCount:setVisible(false)

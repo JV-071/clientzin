@@ -239,14 +239,9 @@ storeCategory < UIWidget
       size: 13 13
       anchors.left: parent.left
       anchors.verticalCenter: parent.verticalCenter
-      margin-left: 10
+      margin-left: 6
+      margin-top: 0
       phantom: true
-      $checked:
-        margin-left: 8
-        margin-top: 2
-      $!checked:
-        margin-left: 6
-        margin-top: 0
 
     Label
       id: Title
@@ -259,12 +254,6 @@ storeCategory < UIWidget
       !text: tr('General Stats')
       font: $var-cip-font
       color: $var-text-cip-color
-      $pressed:
-        text-offset: 7 2
-      $checked:
-        text-offset: 7 2
-      $!checked:
-        text-offset: 0 1
 
     UIWidget
       id: Arrow

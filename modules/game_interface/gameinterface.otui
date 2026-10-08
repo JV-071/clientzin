@@ -1,5 +1,5 @@
 GameSidePanel < UIMiniWindowContainer
-  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-source: /images/ui/2pixel-up-frame-borderimage
   image-border: 2
   padding-top: 2
   width: 178
@@ -8,7 +8,7 @@ GameSidePanel < UIMiniWindowContainer
     //spacing: 1
 
 GameTopHorizontalPanel < UIMiniWindowContainer
-  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-source: /images/ui/2pixel-up-frame-borderimage
   image-border: 2
   height: 200
   width: 353
@@ -100,9 +100,18 @@ UIWidget
       height: 0
       visible: false
 
+  LeftStatsBar
+    id: gameLeftStatsBarPanel
+    anchors.left: gameLeftExtraPanel.right
+    anchors.top: parent.top
+    anchors.bottom: gameBottomPanel.top
+    margin-bottom: 1
+    width: 0
+    focusable: false
+
   UIWidget
     id: gameActionBarLeftPanel
-    anchors.left: gameLeftExtraPanel.right
+    anchors.left: gameLeftStatsBarPanel.right
     anchors.top: gameLeftTopPanel.bottom
     anchors.bottom: gameBottomPanel.top
     margin-top: 0
@@ -113,9 +122,18 @@ UIWidget
       type: horizontalBox
       spacing: 0
 
+  RightStatsBar
+    id: gameRightStatsBarPanel
+    anchors.right: gameRightExtraPanel.left
+    anchors.top: parent.top
+    anchors.bottom: gameBottomPanel.top
+    margin-bottom: 1
+    width: 0
+    focusable: false
+
   UIWidget
     id: gameActionBarRightPanel
-    anchors.right: gameRightExtraPanel.left
+    anchors.right: gameRightStatsBarPanel.left
     anchors.top: parent.top
     anchors.bottom: gameBottomPanel.top
     margin-top: 0

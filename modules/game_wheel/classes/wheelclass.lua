@@ -1,9 +1,7 @@
-﻿-- chunkname: @/game_wheel/classes/wheelclass.lua
-
-WheelOfDestiny = {}
+﻿WheelOfDestiny = {}
 WheelOfDestiny.__index = WheelOfDestiny
 WheelOfDestiny.pointInvested = {}
-WheelOfDestiny.clickIndex = {}
+WheelOfDestiny.clickIndex = 0
 WheelOfDestiny.equipedGems = {}
 WheelOfDestiny.atelierGems = {}
 WheelOfDestiny.basicModsUpgrade = {}
@@ -14,6 +12,10 @@ WheelOfDestiny.isPreview = false
 WheelOfDestiny.lastSelectedGemVessel = nil
 WheelOfDestiny.extraGemPoints = 0
 WheelOfDestiny.fromAchievementType = 0
+WheelOfDestiny.activeState = {
+	ready = false
+}
+WheelOfDestiny.backgroundRequestPending = false
 WheelOfDestiny.passivePoints = {}
 WheelOfDestiny.extraPassivePoints = {}
 WheelOfDestiny.basicModCount = {}
@@ -24,219 +26,302 @@ WheelOfDestiny.externalPreset = {}
 WheelOfDestiny.internalPreset = {}
 WheelOfDestiny.currentPreset = {}
 WheelOfDestiny.mouseIndex = 0
+WheelOfDestiny.mousePassiveDomain = 0
 WheelOfDestiny.revealedGems = {}
 
-local openWheel, lastSelectedGemVessel
-local defaultExportString = {
-	[0] = "",
-	"K0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-	"P0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-	"S0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-	"D0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-	"M0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+local var_0_0 = false
+local var_0_1 = {}
+local var_0_2
+local t = {}
+local var_0_4 = 1
+local var_0_5 = 0.29
+local var_0_6 = 0.20392156862745098
+local var_0_7 = {
+	r = 255,
+	a = 255,
+	b = 255,
+	g = 255
 }
 
-local function emptyPointInvested()
-	local t = {}
-
-	for i = 1, 36 do
-		t[i] = 0
+local function var_0_8(arg_1_0)
+	if type(arg_1_0) == "table" then
+		return arg_1_0
 	end
 
-	return t
+	if type(arg_1_0) == "string" and arg_1_0:sub(1, 1) == "#" then
+		local var_1_0 = arg_1_0:sub(2)
+		local var_1_1 = #var_1_0
+
+		if var_1_1 == 6 or var_1_1 == 8 then
+			local numericValue = tonumber(var_1_0:sub(1, 2), 16)
+			local var_1_3 = tonumber(var_1_0:sub(3, 4), 16)
+			local var_1_4 = tonumber(var_1_0:sub(5, 6), 16)
+			local var_1_5 = 255
+
+			if var_1_1 == 8 then
+				var_1_5 = tonumber(var_1_0:sub(7, 8), 16)
+			end
+
+			if numericValue ~= nil and var_1_3 ~= nil and var_1_4 ~= nil and var_1_5 ~= nil then
+				return {
+					r = numericValue,
+					g = var_1_3,
+					b = var_1_4,
+					a = var_1_5
+				}
+			end
+		end
+	end
+
+	return var_0_7
 end
 
-function WheelOfDestiny.setPreviewMode(enabled)
-	WheelOfDestiny.isPreview = enabled
+local function var_0_9(arg_2_0, arg_2_1)
+	if not arg_2_0 or not wheelPanel then
+		return nil
+	end
 
-	if not wheelWindow then
+	local parent = arg_2_0:getParent() or wheelPanel
+	local childIndex = parent:getChildIndex(arg_2_0)
+	local numericValue = tonumber(arg_2_1:match("%d+")) or 0
+
+	arg_2_0:destroy()
+
+	local var_2_3 = "WheelSliceFill"
+
+	if arg_2_1:find("fullColorWheel", 1, true) then
+		var_2_3 = "WheelSliceFillAvailable"
+	end
+
+	local var_2_4 = g_ui.createWidget(var_2_3)
+
+	var_2_4:setId(arg_2_1)
+	var_2_4:setSize(tosize("522 522"))
+
+	local sliceArcParams = WheelButtons.getSliceArcParams(numericValue, 1)
+
+	if sliceArcParams then
+		var_2_4:setStartAngle(sliceArcParams.startAngle)
+		var_2_4:setFullSpan(sliceArcParams.fullSpan)
+		var_2_4:setThickness(sliceArcParams.thickness)
+		var_2_4:setRadialInset(sliceArcParams.radialInset)
+	end
+
+	var_2_4:setFillColor(var_0_8(WheelButtons.getSliceFillColor(numericValue)))
+
+	if var_2_4.setCompositionModeName then
+		var_2_4:setCompositionModeName("additive")
+	end
+
+	var_2_4:setPercent(100)
+	var_2_4:setVisible(false)
+	parent:insertChild(childIndex, var_2_4)
+	var_2_4:addAnchor(AnchorTop, "parent", AnchorTop)
+	var_2_4:addAnchor(AnchorLeft, "parent", AnchorLeft)
+
+	return var_2_4
+end
+
+local function var_0_10(arg_3_0, arg_3_1, arg_3_2, arg_3_3, arg_3_4)
+	local sliceArcParams = WheelButtons.getSliceArcParams(arg_3_1, arg_3_2, arg_3_3)
+
+	if not sliceArcParams or not arg_3_0 then
 		return
 	end
 
-	if enabled then
-		wheelWindow:setText(tr("Wheel of Destiny - Preview"))
-	else
-		wheelWindow:setText(tr("Wheel Of Destiny"))
+	local sliceFillColor = arg_3_4
+
+	if sliceFillColor == nil then
+		sliceFillColor = WheelButtons.getSliceFillColor(arg_3_1)
 	end
 
-	if wheelWindow.reset then
-		wheelWindow.reset:setVisible(not enabled)
+	local var_3_2 = var_0_8(sliceFillColor)
+	local var_3_3 = t[arg_3_0]
+
+	if not var_3_3 then
+		var_3_3 = {}
+		t[arg_3_0] = var_3_3
 	end
 
-	if wheelWindow.apply then
-		wheelWindow.apply:setVisible(not enabled)
+	if var_3_3.startAngle ~= sliceArcParams.startAngle then
+		arg_3_0:setStartAngle(sliceArcParams.startAngle)
+
+		var_3_3.startAngle = sliceArcParams.startAngle
 	end
 
-	if wheelWindow.ok then
-		wheelWindow.ok:setVisible(not enabled)
+	if var_3_3.fullSpan ~= sliceArcParams.fullSpan then
+		arg_3_0:setFullSpan(sliceArcParams.fullSpan)
+
+		var_3_3.fullSpan = sliceArcParams.fullSpan
 	end
 
-	if wheelWindow.close then
-		wheelWindow.close:setText(tr("Close"))
+	if var_3_3.thickness ~= sliceArcParams.thickness then
+		arg_3_0:setThickness(sliceArcParams.thickness)
+
+		var_3_3.thickness = sliceArcParams.thickness
+	end
+
+	if var_3_3.radialInset ~= sliceArcParams.radialInset then
+		arg_3_0:setRadialInset(sliceArcParams.radialInset)
+
+		var_3_3.radialInset = sliceArcParams.radialInset
+	end
+
+	if var_3_3.fillColor ~= var_3_2 then
+		arg_3_0:setFillColor(var_3_2)
+
+		var_3_3.fillColor = var_3_2
+	end
+
+	if var_3_3.percent ~= 100 then
+		arg_3_0:setPercent(100)
+
+		var_3_3.percent = 100
 	end
 end
 
-local function normalizeEquipedGems(equipedGems)
-	if type(equipedGems) ~= "table" then
-		return {
-			-1,
-			-1,
-			-1,
-			-1
+function WheelOfDestiny.initSliceFills()
+	if var_0_0 or not wheelPanel then
+		return
+	end
+
+	var_0_1 = {}
+	t = {}
+
+	for i = 1, 36 do
+		local fullColorWheel = wheelPanel:getChildById("fullColorWheel_" .. i)
+		local colorWheel = wheelPanel:getChildById("colorWheel_" .. i)
+
+		if fullColorWheel and fullColorWheel.getPercent == nil then
+			fullColorWheel = var_0_9(fullColorWheel, "fullColorWheel_" .. i)
+		end
+
+		if colorWheel and colorWheel.getPercent == nil then
+			colorWheel = var_0_9(colorWheel, "colorWheel_" .. i)
+		end
+
+		var_0_1[i] = {
+			color = colorWheel,
+			full = fullColorWheel
 		}
-	end
 
-	local normalized = {}
-	local hasStruct = false
+		if colorWheel then
+			var_0_10(colorWheel, i, 0, 1)
+			colorWheel:setVisible(false)
+			colorWheel:setOpacity(var_0_4)
+		end
 
-	for _, value in pairs(equipedGems) do
-		if type(value) == "table" and value.gemID ~= nil then
-			hasStruct = true
-
-			break
+		if fullColorWheel then
+			var_0_10(fullColorWheel, i, 0, 1, WheelButtons.getSliceAvailableColor(i))
+			fullColorWheel:setVisible(false)
+			fullColorWheel:setOpacity(var_0_5)
 		end
 	end
 
-	if hasStruct then
-		local domains = {
-			GemDomains.GREEN,
-			GemDomains.RED,
-			GemDomains.ACQUA,
-			GemDomains.PURPLE
-		}
+	var_0_2 = wheelPanel:getChildById("focusSelectedWheel") or wheelPanel.focusSelectedWheel
 
-		for _, domain in ipairs(domains) do
-			local entry = equipedGems[domain]
-			local gemId = type(entry) == "table" and tonumber(entry.gemID) or tonumber(entry)
+	if not var_0_2 then
+		var_0_2 = g_ui.createWidget("WheelSliceFill", wheelPanel)
 
-			table.insert(normalized, gemId or -1)
-		end
-	else
-		for _, value in ipairs(equipedGems) do
-			local gemId = tonumber(value)
+		var_0_2:setId("focusSelectedWheel")
+		var_0_2:setSize(tosize("522 522"))
+		var_0_2:addAnchor(AnchorTop, "parent", AnchorTop)
+		var_0_2:addAnchor(AnchorLeft, "parent", AnchorLeft)
+		var_0_2:setVisible(false)
 
-			table.insert(normalized, gemId or -1)
-		end
-
-		if #normalized == 0 then
-			for _, value in pairs(equipedGems) do
-				local gemId = tonumber(value)
-
-				table.insert(normalized, gemId or -1)
-			end
+		if var_0_2.setCompositionModeName then
+			var_0_2:setCompositionModeName("additive")
 		end
 	end
 
-	while #normalized < 4 do
-		table.insert(normalized, -1)
+	local wheelBackground = wheelPanel:getChildById("wheelBackground")
+
+	if wheelBackground and var_0_2 then
+		local childIndex = wheelPanel:getChildIndex(wheelBackground) + 1
+
+		if wheelPanel:getChildIndex(var_0_2) ~= childIndex then
+			wheelPanel:removeChild(var_0_2)
+			wheelPanel:insertChild(childIndex, var_0_2)
+		end
+
+		wheelPanel.focusSelectedWheel = var_0_2
 	end
 
-	return normalized
+	local var_4_4 = {
+		"socketBackground0",
+		"revelationBgTL",
+		"revelationPerkTL",
+		"backdropLight1",
+		"focusPassive1",
+		"wheelPassive1",
+		"selectPassive1",
+		"socketBackground1",
+		"revelationBgTR",
+		"revelationPerkTR",
+		"backdropLight2",
+		"focusPassive2",
+		"wheelPassive2",
+		"selectPassive2",
+		"socketBackground2",
+		"revelationBgBL",
+		"revelationPerkBL",
+		"backdropLight3",
+		"focusPassive3",
+		"wheelPassive3",
+		"selectPassive3",
+		"socketBackground3",
+		"revelationBgBR",
+		"revelationPerkBR",
+		"backdropLight4",
+		"focusPassive4",
+		"wheelPassive4",
+		"selectPassive4",
+		"vocationWheel",
+		"borderSelectedWheel",
+		"selectVessel0",
+		"selectVessel1",
+		"selectVessel2",
+		"selectVessel3"
+	}
+
+	for unusedValue, entry in ipairs(var_4_4) do
+		local childById = wheelPanel:getChildById(entry)
+
+		if childById then
+			childById:raise()
+		end
+	end
+
+	var_0_0 = true
 end
 
-function WheelOfDestiny.getSliceIndex(position)
-	local x = centerReferencePoint:getX()
-	local y = centerReferencePoint:getY()
-	local wheelClick = WheelSettings.topLeft
-
-	if x >= position.x then
-		if y < position.y then
-			wheelClick = WheelSettings.bottomLeft
-		else
-			wheelClick = WheelSettings.topLeft
-		end
-	elseif y < position.y then
-		wheelClick = WheelSettings.bottomRight
-	else
-		wheelClick = WheelSettings.topRight
+local function var_0_11(arg_5_0)
+	if not var_0_0 then
+		WheelOfDestiny.initSliceFills()
 	end
 
-	local bigLargeCircle = Circle.new(x, y, BIG_LARGE_CIRCLE)
-	local largeCircle = Circle.new(x, y, LARGE_CIRCLE)
-	local bigMediumCircle = Circle.new(x, y, BIG_MEDIUM_CIRCLE)
-	local mediumCircle = Circle.new(x, y, MEDIUM_CIRCLE)
-	local smallCircle = Circle.new(x, y, SMALL_CIRCLE)
-
-	for _, index in pairs(wheelClick) do
-		if WheelButtons[index] then
-			local radius = WheelButtons[index].radius
-			local circle = Circle.new(x, y, radius)
-
-			if radius == BIG_LARGE_CIRCLE and (largeCircle:inArea(position) or bigMediumCircle:inArea(position) or mediumCircle:inArea(position) or smallCircle:inArea(position)) then
-				goto label_4_0
-			elseif radius == BIG_LARGE_CIRCLE then
-				circle = bigLargeCircle
-			elseif radius == LARGE_CIRCLE and (bigMediumCircle:inArea(position) or mediumCircle:inArea(position) or smallCircle:inArea(position)) then
-				goto label_4_0
-			elseif radius == LARGE_CIRCLE then
-				circle = largeCircle
-			elseif radius == BIG_MEDIUM_CIRCLE and (mediumCircle:inArea(position) or smallCircle:inArea(position)) then
-				goto label_4_0
-			elseif radius == BIG_MEDIUM_CIRCLE then
-				circle = bigMediumCircle
-			elseif radius == MEDIUM_CIRCLE and smallCircle:inArea(position) then
-				goto label_4_0
-			elseif radius == MEDIUM_CIRCLE then
-				circle = mediumCircle
-			elseif radius == SMALL_CIRCLE then
-				circle = smallCircle
-			end
-
-			if circle:inArea(position) and circle:isPointInSlice(position, WheelButtons[index].slice, WheelButtons[index].totalSlice) then
-				return index
-			end
-		end
-
-		::label_4_0::
-	end
-
-	return 0
+	return var_0_1[arg_5_0]
 end
 
-function WheelOfDestiny.canAddPoints(index, ignoreMaxPoint)
-	if WheelOfDestiny.isPreview then
-		return false
-	end
+function WheelOfDestiny.getSlicePair(arg_6_0)
+	return var_0_11(arg_6_0)
+end
 
-	if WheelOfDestiny.vocationId == 0 then
-		return false
-	end
-
-	if ignoreMaxPoint == nil then
-		ignoreMaxPoint = false
-	end
-
-	local bonus = WheelBonus[index - 1]
-
-	if not ignoreMaxPoint and WheelOfDestiny.pointInvested[index] >= bonus.maxPoints then
-		return false
-	end
-
-	if not WheelOfDestiny.points then
-		WheelOfDestiny.points = 0
-	end
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	if not ignoreMaxPoint and totalPoints - WheelOfDestiny.usedPoints <= 0 then
-		return false
-	end
-
-	if bonus.maxPoints == 50 then
+local function var_0_12(arg_7_0)
+	if arg_7_0 == 15 or arg_7_0 == 16 or arg_7_0 == 21 or arg_7_0 == 22 then
 		return true
 	end
 
-	local iconInfo = WheelNodes[index]
+	local var_7_0 = WheelNodes[arg_7_0]
 
-	if #iconInfo.connecteds == 0 then
-		return true
+	if not var_7_0 then
+		return false
 	end
 
-	for _, id in pairs(iconInfo.connecteds) do
-		local bonus = WheelBonus[id - 1]
-		local pointInvested = WheelOfDestiny.pointInvested[id]
+	for unusedValue, entry in ipairs(var_7_0.connecteds or {}) do
+		local var_7_1 = WheelBonus[entry - 1]
 
-		if pointInvested >= bonus.maxPoints then
+		if var_7_1 and (WheelOfDestiny.pointInvested[entry] or 0) >= var_7_1.maxPoints then
 			return true
 		end
 	end
@@ -244,950 +329,107 @@ function WheelOfDestiny.canAddPoints(index, ignoreMaxPoint)
 	return false
 end
 
-function WheelOfDestiny.canRemovePoints(index)
-	if WheelOfDestiny.isPreview then
-		return false
-	end
-
-	if not WheelOfDestiny.isLit(index) then
-		return false
-	end
-
-	if WheelOfDestiny.changeState ~= 1 then
-		return false
-	end
-
-	if WheelButtons[index].radius == BIG_LARGE_CIRCLE then
-		return true
-	end
-
-	local iconInfo = WheelNodes[index]
-
-	if not iconInfo.connections or #iconInfo.connections == 0 then
-		return true
-	end
-
-	local c = WheelNodes[index].connections
-
-	for _, id in pairs(c) do
-		if WheelOfDestiny.isLit(id) and not canReachRootNodeFromNode(id, index) then
-			return false
-		end
-	end
-
-	return true
-end
-
-function WheelOfDestiny.isLit(index)
-	return WheelOfDestiny.pointInvested[index] > 0
-end
-
-function WheelOfDestiny.isLitFull(index)
-	return WheelOfDestiny.pointInvested[index] == WheelBonus[index - 1].maxPoints
-end
-
-function WheelOfDestiny.insertUnlockedThe(index)
-	local iconInfo = WheelNodes[index]
-
-	if #iconInfo.connections == 0 then
-		return false
-	end
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested < bonus.maxPoints then
-		return false
-	end
-
-	for _, id in pairs(iconInfo.connections) do
-		local widgetFull = wheelPanel:recursiveGetChildById("fullColorWheel_" .. id)
-
-		widgetFull:setVisible(true)
-		widgetFull:setOpacity(0.2)
-	end
-end
-
-function WheelOfDestiny.removeUnlockedThe(index)
-	local iconInfo = WheelNodes[index]
-
-	if #iconInfo.connections == 0 then
-		return false
-	end
-
-	for _, unlocked_point in pairs(iconInfo.connections) do
-		local skipUnlock = {}
-
-		for _alternative, alternative_unlocker in ipairs(WheelNodes[unlocked_point].connecteds) do
-			if alternative_unlocker ~= index and WheelOfDestiny.isLit(alternative_unlocker) then
-				skipUnlock[#skipUnlock + 1] = unlocked_point
-			end
-		end
-
-		if not table.isIn(skipUnlock, unlocked_point) then
-			local widgetFull = wheelPanel:recursiveGetChildById("fullColorWheel_" .. unlocked_point)
-
-			widgetFull:setVisible(false)
-			widgetFull:setOpacity(0.2)
-		end
-	end
-end
-
-function WheelOfDestiny.onWheelClick(position)
-	local index = WheelOfDestiny.getSliceIndex(position)
-
-	if index == 0 then
-		return
-	end
-
-	WheelOfDestiny.resetPassiveFocus()
-
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if not pointInvested then
-		return
-	end
-
-	if WheelOfDestiny.lastSelectedGemVessel then
-		WheelOfDestiny.lastSelectedGemVessel:setVisible(false)
-	end
-
-	if wheelOfDestinyWindow.selection.gemContent:isVisible() then
-		wheelOfDestinyWindow.selection.gemContent:setVisible(false)
-		wheelOfDestinyWindow.selection.tabContent:setVisible(true)
-	end
-
-	if not wheelWindow:recursiveGetChildById("tabContent"):isVisible() then
-		wheelWindow:recursiveGetChildById("tabContent"):setVisible(true)
-	end
-
-	WheelOfDestiny.clickIndex = index
-
-	wheelPanel.borderSelectedWheel:setVisible(true)
-	wheelPanel.borderSelectedWheel:setImageSource(WheelButtons[index].borderImageBase)
-
+function WheelOfDestiny.updateSliceFill(index, arg_8_1)
+	local var_8_0 = var_0_11(index)
 	local bonus = WheelBonus[index - 1]
 
-	wheelOfDestinyWindow.selection.tabContent.information1:setTooltip(ConvictionTooltip)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(pointInvested, 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(pointInvested .. " / " .. bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationTitle:setText("Dedication Perk")
-	wheelOfDestinyWindow.selection.tabContent.convictionTitle:setText("Conviction Perk")
-	wheelOfDestinyWindow.selection.tabContent.convictionTitle:setTextAlign(AlignCenter)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-end
-
-function WheelOfDestiny.onRemoveClick()
-	if WheelOfDestiny.lastSelectedGemVessel then
-		WheelOfDestiny.lastSelectedGemVessel:setVisible(false)
+	if not var_8_0 or not var_8_0.color or not var_8_0.full or not bonus then
+		return
 	end
 
-	if wheelOfDestinyWindow.selection.gemContent:isVisible() then
-		wheelOfDestinyWindow.selection.gemContent:setVisible(false)
-		wheelOfDestinyWindow.selection.tabContent:setVisible(true)
-	end
+	local color = var_8_0.color
+	local full = var_8_0.full
 
-	WheelOfDestiny.clickIndex = 0
+	if arg_8_1 <= 0 then
+		color:setVisible(false)
 
-	wheelPanel.borderSelectedWheel:setVisible(false)
-	wheelOfDestinyWindow:recursiveGetChildById("addMax"):setVisible(false)
-	wheelOfDestinyWindow:recursiveGetChildById("addOne"):setVisible(false)
-	wheelOfDestinyWindow:recursiveGetChildById("rmvMax"):setVisible(false)
-	wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setVisible(false)
-end
-
-function WheelOfDestiny.checkManagerPointsButtons(index)
-	if WheelOfDestiny.isPreview then
-		wheelOfDestinyWindow:recursiveGetChildById("addMax"):setVisible(false)
-		wheelOfDestinyWindow:recursiveGetChildById("addOne"):setVisible(false)
-		wheelOfDestinyWindow:recursiveGetChildById("rmvMax"):setVisible(false)
-		wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setVisible(false)
+		if var_0_12(index) then
+			var_0_10(full, index, 0, 1, WheelButtons.getSliceAvailableColor(index))
+			full:setVisible(true)
+			full:setOpacity(var_0_5)
+		else
+			full:setVisible(false)
+		end
 
 		return
 	end
 
-	wheelOfDestinyWindow:recursiveGetChildById("addMax"):setVisible(true)
-	wheelOfDestinyWindow:recursiveGetChildById("addOne"):setVisible(true)
-	wheelOfDestinyWindow:recursiveGetChildById("rmvMax"):setVisible(true)
-	wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setVisible(true)
+	local var_8_4 = math.min(1, arg_8_1 / math.max(bonus.maxPoints, 1))
 
-	if WheelOfDestiny.canAddPoints(index) then
-		wheelOfDestinyWindow:recursiveGetChildById("addMax"):setEnabled(true)
-		wheelOfDestinyWindow:recursiveGetChildById("addOne"):setEnabled(true)
+	var_0_10(color, index, 0, math.max(var_8_4, 0.001))
+	color:setVisible(true)
+	color:setOpacity(var_0_4)
+
+	if var_8_4 < 0.999 then
+		var_0_10(full, index, var_8_4, 1, WheelButtons.getSliceAvailableColor(index))
+		full:setVisible(true)
+		full:setOpacity(var_0_5)
 	else
-		wheelOfDestinyWindow:recursiveGetChildById("addMax"):setEnabled(false)
-		wheelOfDestinyWindow:recursiveGetChildById("addOne"):setEnabled(false)
-	end
-
-	if WheelOfDestiny.canRemovePoints(index) then
-		wheelOfDestinyWindow:recursiveGetChildById("rmvMax"):setEnabled(true)
-		wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setEnabled(true)
-	else
-		wheelOfDestinyWindow:recursiveGetChildById("rmvMax"):setEnabled(false)
-		wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setEnabled(false)
+		full:setVisible(false)
 	end
 end
 
-function WheelOfDestiny:onMouseRelease(mousePosition, mouseButton)
-	if mouseButton ~= MouseRightButton then
+function WheelOfDestiny.showUnlockedPreview(arg_9_0)
+	local var_9_0 = var_0_11(arg_9_0)
+	local var_9_1 = var_9_0 and var_9_0.full
+
+	if not var_9_1 then
 		return
 	end
 
-	local index = WheelOfDestiny.getSliceIndex(mousePosition)
-
-	if index == 0 then
+	if (WheelOfDestiny.pointInvested[arg_9_0] or 0) > 0 then
 		return
 	end
 
-	local countByModifier = 0
-
-	if g_keyboard.getModifiers() == KeyboardAltModifier then
-		countByModifier = 1
-	elseif g_keyboard.getModifiers() == KeyboardShiftModifier then
-		countByModifier = 50
-	elseif g_keyboard.getModifiers() == KeyboardCtrlModifier then
-		countByModifier = 100
-	end
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested > bonus.maxPoints then
-		if not WheelOfDestiny.canRemovePoints(index) then
-			return
-		end
-
-		onRmvMax(index)
-		WheelOfDestiny.checkManagerPointsButtons(index)
-		WheelOfDestiny.onWheelClick(mousePosition)
-	else
-		if not WheelOfDestiny.canAddPoints(index) then
-			if WheelOfDestiny.canRemovePoints(index) then
-				onRmvMax(index)
-				WheelOfDestiny.checkManagerPointsButtons(index)
-				WheelOfDestiny.onWheelClick(mousePosition)
-			end
-
-			return
-		end
-
-		if countByModifier ~= 0 then
-			onAddCustom(index, countByModifier)
-		else
-			onAddMax(index)
-		end
-
-		WheelOfDestiny.checkManagerPointsButtons(index)
-	end
-
-	WheelOfDestiny.onWheelClick(mousePosition)
-
-	return true
+	var_0_10(var_9_1, arg_9_0, 0, 1, WheelButtons.getSliceAvailableColor(arg_9_0))
+	var_9_1:setVisible(true)
+	var_9_1:setOpacity(var_0_5)
 end
 
-function WheelOfDestiny.onMouseMove(widget, position, offset)
-	local index = WheelOfDestiny.getSliceIndex(position)
+function WheelOfDestiny.applySliceFocus(arg_10_0)
+	local focusSelectedWheel = var_0_2 or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
 
-	if index == 0 then
-		wheelPanel.focusSelectedWheel:setVisible(false)
-
+	if not focusSelectedWheel then
 		return
 	end
 
-	if WheelOfDestiny.mouseIndex == index then
-		return
-	end
-
-	WheelOfDestiny.mouseIndex = index
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if not pointInvested then
-		wheelPanel.focusSelectedWheel:setVisible(false)
-
-		return
-	end
-
-	local bar = wheelOfDestinyWindow.info.tabContent.information.tabContent.dedicationPB2
-
-	bar:setValue(pointInvested, 0, bonus.maxPoints)
-	bar:setText(pointInvested .. " / " .. bonus.maxPoints)
-	bar:setImageSource("/images/game/wheel/progressBar")
-	bar:setPercent(pointInvested * 100 / bonus.maxPoints)
-	wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setText(getDedicationBonus(index))
-
-	if WheelOfDestiny.pointInvested[index] > 0 then
-		wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor("#c0c0c0")
-	else
-		wheelOfDestinyWindow.info.tabContent.information.tabContent.dedication2:setColor("#707070")
-	end
-
-	local conviction = getConvictionBonus(index, true)
-
-	if type(conviction) == "string" then
-		wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setText(conviction)
-
-		if WheelOfDestiny.pointInvested[index] >= bonus.maxPoints then
-			wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor("#c0c0c0")
-		else
-			wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColor("#707070")
-		end
-	elseif type(conviction) == "table" then
-		wheelOfDestinyWindow.info.tabContent.information.tabContent.conviction2:setColoredText(conviction)
-	end
-
-	wheelPanel.focusSelectedWheel:setVisible(true)
-	wheelPanel.focusSelectedWheel:setOpacity(0.3)
-	wheelPanel.focusSelectedWheel:setImageSource(WheelButtons[index].focusImageBase)
+	var_0_10(focusSelectedWheel, arg_10_0, 0, 1, "#FFFFFFFF")
+	focusSelectedWheel:setOpacity(var_0_6)
+	focusSelectedWheel:setVisible(true)
 end
 
-function WheelOfDestiny.insertPoint(index, points)
-	local bonus = WheelBonus[index - 1]
-
-	if points > 0 then
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(true)
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setOpacity(0.2)
-		wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(true)
-
-		local button = WheelButtons[index]
-
-		if points >= bonus.maxPoints then
-			local maxcolor = 20
-
-			if button.radius == BIG_LARGE_CIRCLE then
-				maxcolor = 20
-			elseif button.radius == LARGE_CIRCLE then
-				maxcolor = 15
-			elseif button.radius == BIG_MEDIUM_CIRCLE then
-				maxcolor = 10
-			elseif button.radius == MEDIUM_CIRCLE then
-				maxcolor = 8
-			elseif button.radius == SMALL_CIRCLE then
-				maxcolor = 5
-			end
-
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setImageSource(button.colorImageBase .. maxcolor)
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setOpacity(0.6)
-			WheelOfDestiny.insertUnlockedThe(index)
-
-			local widget = wheelPanel:recursiveGetChildById("icon" .. index)
-			local modIcon = widget:recursiveGetChildById("modIcon" .. index)
-			local iconInfo = WheelIcons[WheelOfDestiny.vocationId][index]
-
-			if bonus and table.contains(VesselIndex[bonus.domain - 1], index - 1) then
-				local gem = GemAtelier.getEquipedGem(bonus.domain - 1)
-
-				if gem then
-					local enabled = WheelOfDestiny.vesselEnabled[bonus.domain - 1]
-
-					if #enabled == 0 and gem.lesserBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-						widget:setImageClip(30 * gem.lesserBonus .. " 0 30 30")
-						modIcon:setVisible(true)
-
-						WheelOfDestiny.equipedGemBonuses[index] = {
-							supreme = false,
-							bonusID = gem.lesserBonus,
-							gemID = gem.gemID
-						}
-
-						table.insert(WheelOfDestiny.vesselEnabled[bonus.domain - 1], index)
-					elseif #enabled == 1 and gem.regularBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-						widget:setImageClip(30 * gem.regularBonus .. " 0 30 30")
-						modIcon:setVisible(true)
-
-						WheelOfDestiny.equipedGemBonuses[index] = {
-							supreme = false,
-							bonusID = gem.regularBonus,
-							gemID = gem.gemID
-						}
-
-						table.insert(WheelOfDestiny.vesselEnabled[bonus.domain - 1], index)
-					elseif #enabled == 2 and gem.supremeBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-suprememods")
-						widget:setImageClip(getSupremeModIconClip(gem.supremeBonus))
-						widget:setSize(tosize("35 35"))
-						modIcon:setVisible(true)
-
-						WheelOfDestiny.equipedGemBonuses[index] = {
-							supreme = false,
-							bonusID = gem.supremeBonus,
-							gemID = gem.gemID
-						}
-
-						table.insert(WheelOfDestiny.vesselEnabled[bonus.domain - 1], index)
-					end
-				else
-					widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-					widget:setImageClip(iconInfo.iconRect)
-					modIcon:setVisible(false)
-				end
-			else
-				widget:setImageClip(iconInfo.iconRect)
-			end
-		else
-			local maxcolor = math.floor(points / 10) + 1
-
-			if maxcolor > 0 then
-				wheelPanel:recursiveGetChildById("colorWheel_" .. index):setImageSource(button.colorImageBase .. maxcolor)
-				wheelPanel:recursiveGetChildById("colorWheel_" .. index):setOpacity(0.6)
-			end
-		end
-	elseif index ~= 15 and index ~= 16 and index ~= 21 and index ~= 22 then
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(false)
-		wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(false)
-	end
-
-	WheelOfDestiny.checkFilledVessels(index)
-end
-
-function WheelOfDestiny.checkFilledVessels(originalIndex)
-	local bonus = WheelBonus[originalIndex - 1]
-	local order = WheelDomainOrder[bonus.domain - 1]
-
-	local function findIndex(value)
-		for i, v in ipairs(order) do
-			if v == value then
-				return i
-			end
-		end
-
-		return nil
-	end
-
-	local function customSort(a, b)
-		local indexA = findIndex(a)
-		local indexB = findIndex(b)
-
-		return indexA < indexB
-	end
-
-	table.sort(WheelOfDestiny.vesselEnabled[bonus.domain - 1], customSort)
-
-	local lastModInserted = 0
-
-	for _, id in pairs(WheelOfDestiny.vesselEnabled[bonus.domain - 1]) do
-		local widget = wheelPanel:recursiveGetChildById("icon" .. id)
-		local modIcon = widget:recursiveGetChildById("modIcon" .. id)
-		local iconInfo = WheelIcons[WheelOfDestiny.vocationId][id]
-
-		bonus = WheelBonus[id - 1]
-
-		local gem = GemAtelier.getEquipedGem(bonus.domain - 1)
-
-		if not gem then
-			-- block empty
-		else
-			widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-			widget:setImageClip(iconInfo.iconRect)
-			widget:setSize(tosize("30 30"))
-
-			if lastModInserted == 0 and gem.lesserBonus > -1 then
-				widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-				widget:setImageClip(30 * gem.lesserBonus .. " 0 30 30")
-				modIcon:setVisible(true)
-
-				WheelOfDestiny.equipedGemBonuses[id] = {
-					supreme = false,
-					bonusID = gem.lesserBonus,
-					gemID = gem.gemID
-				}
-				lastModInserted = 1
-			elseif lastModInserted == 1 and gem.regularBonus > -1 then
-				widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-				widget:setImageClip(30 * gem.regularBonus .. " 0 30 30")
-				modIcon:setVisible(true)
-
-				WheelOfDestiny.equipedGemBonuses[id] = {
-					supreme = false,
-					bonusID = gem.regularBonus,
-					gemID = gem.gemID
-				}
-				lastModInserted = 2
-			elseif lastModInserted == 2 and gem.supremeBonus > -1 then
-				widget:setImageSource("/images/game/wheel/icons-skillwheel-suprememods")
-				widget:setImageClip(getSupremeModIconClip(gem.supremeBonus))
-				widget:setSize(tosize("35 35"))
-				modIcon:setVisible(true)
-
-				WheelOfDestiny.equipedGemBonuses[id] = {
-					supreme = true,
-					bonusID = gem.supremeBonus,
-					gemID = gem.gemID
-				}
-				lastModInserted = 3
-			end
-		end
-	end
-end
-
-function WheelOfDestiny.removePoint(index, points)
-	local bonus = WheelBonus[index - 1]
-
-	if points > 0 then
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(true)
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setOpacity(0.2)
-		wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(true)
-
-		local button = WheelButtons[index]
-
-		if points >= bonus.maxPoints then
-			local maxcolor = 20
-
-			if button.radius == BIG_LARGE_CIRCLE then
-				maxcolor = 20
-			elseif button.radius == LARGE_CIRCLE then
-				maxcolor = 15
-			elseif button.radius == BIG_MEDIUM_CIRCLE then
-				maxcolor = 10
-			elseif button.radius == MEDIUM_CIRCLE then
-				maxcolor = 8
-			elseif button.radius == SMALL_CIRCLE then
-				maxcolor = 5
-			end
-
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setImageSource(button.colorImageBase .. maxcolor)
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setOpacity(0.6)
-			WheelOfDestiny.insertUnlockedThe(index)
-		else
-			if table.contains(VesselIndex[bonus.domain - 1], index - 1) then
-				local widget = wheelPanel:recursiveGetChildById("icon" .. index)
-				local modIcon = widget:recursiveGetChildById("modIcon" .. index)
-				local iconInfo = WheelIcons[WheelOfDestiny.vocationId][index]
-
-				widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-				widget:setImageClip(iconInfo.iconRect)
-				widget:setSize(tosize("30 30"))
-				modIcon:setVisible(false)
-
-				WheelOfDestiny.equipedGemBonuses[index] = {
-					bonusID = -1,
-					gemID = 0,
-					supreme = false
-				}
-
-				local removeIndex = 0
-
-				for k, id in pairs(WheelOfDestiny.vesselEnabled[bonus.domain - 1]) do
-					if id == index then
-						removeIndex = k
-					end
-				end
-
-				table.remove(WheelOfDestiny.vesselEnabled[bonus.domain - 1], removeIndex)
-				WheelOfDestiny.checkFilledVessels(index)
-			end
-
-			local maxcolor = math.floor(points / 10) + 1
-
-			if maxcolor > 0 then
-				wheelPanel:recursiveGetChildById("colorWheel_" .. index):setImageSource(button.colorImageBase .. maxcolor)
-				wheelPanel:recursiveGetChildById("colorWheel_" .. index):setOpacity(0.6)
-			end
-		end
-	else
-		if table.contains(VesselIndex[bonus.domain - 1], index - 1) then
-			local widget = wheelPanel:recursiveGetChildById("icon" .. index)
-			local modIcon = widget:recursiveGetChildById("modIcon" .. index)
-			local iconInfo = WheelIcons[WheelOfDestiny.vocationId][index]
-
-			widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-			widget:setImageClip(iconInfo.iconRect)
-			widget:setSize(tosize("30 30"))
-			modIcon:setVisible(false)
-
-			WheelOfDestiny.equipedGemBonuses[index] = {
-				bonusID = -1,
-				gemID = 0,
-				supreme = false
-			}
-
-			local removeIndex = 0
-
-			for k, id in pairs(WheelOfDestiny.vesselEnabled[bonus.domain - 1]) do
-				if id == index then
-					removeIndex = k
-				end
-			end
-
-			table.remove(WheelOfDestiny.vesselEnabled[bonus.domain - 1], removeIndex)
-			WheelOfDestiny.checkFilledVessels(index)
-		end
-
-		wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(true)
-		wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(false)
-	end
-end
-
-function WheelOfDestiny.openPreviewWheel(playerId, vocationId)
-	WheelOfDestiny.setPreviewMode(true)
-
-	local changeState = 0
-	local canView = 0
-	local points = 0
-	local scrollPoints = 0
-	local pointInvested = emptyPointInvested()
-	local usedPromotionScrolls = {}
-	local equipedGems = {
-		-1,
-		-1,
-		-1,
-		-1
-	}
-	local atelierGems = {}
-	local basicUpgraded = {}
-	local supremeUpgraded = {}
-	local earnedFromAchievements = 0
-
-	if table.empty(WheelOfDestiny.internalPreset) then
-		WheelOfDestiny.loadWheelPresets()
-	end
-
-	if not wheelWindow:isVisible() then
-		showWheelWindow()
-		WheelOfDestiny.resetPassiveFocus()
-	end
-
-	resetWheel(true)
-
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		hide()
-
-		return
-	end
-
-	local bankMoney = player:getResourceBalance(ResourceTypes.BANK_BALANCE)
-	local characterMoney = player:getResourceBalance(ResourceTypes.GOLD_EQUIPPED)
-	local lesserFragment = player:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
-	local greaterFragment = player:getResourceBalance(ResourceTypes.GREATER_FRAGMENTS)
-	local value = bankMoney + characterMoney
-
-	wheelWindow.moneyPanel.gold:setText(formatMoney(value, ","))
-	wheelWindow.lesserFragmentPanel.gold:setText(lesserFragment)
-	wheelWindow.greaterFragmentPanel.gold:setText(greaterFragment)
-	WheelOfDestiny.create(playerId, canView, changeState, vocationId, points, scrollPoints, pointInvested, usedPromotionScrolls, equipedGems, atelierGems, basicUpgraded, supremeUpgraded, earnedFromAchievements)
-
-	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
-		GemAtelier.setupVesselPanel()
-	end
-
-	wheelPanel.onMouseRelease = WheelOfDestiny.onMouseRelease
-
-	local presetEnabled = changeState == 1
-	local managePresetsButton = wheelWindow.mainPanel.wheelMenu.info.presetTabBar:getChildById("managePresetsButton")
-
-	if not presetEnabled then
-		toggleTabBarButtons("informationButton")
-	end
-
-	managePresetsButton:setEnabled(presetEnabled)
-	refreshPresetTabBarButtons()
-
-	if vocationId == 1 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_knight")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("34 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("68 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("102 0 34 34")
-	elseif vocationId == 2 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_paladin")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("136 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("170 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("204 0 34 34")
-	elseif vocationId == 3 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_sorcerer")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("238 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("272 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("306 0 34 34")
-	elseif vocationId == 4 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_druid")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("374 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("340 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("408 0 34 34")
-	elseif vocationId == 5 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_monk")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("442 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("476 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("510 0 34 34")
-	end
-
-	WheelOfDestiny.onCreate(vocationId)
-	WheelOfDestiny.checkApplyButton()
-	WheelOfDestiny.determinateCurrentPreset()
-	WheelOfDestiny.updateCurrentPreset()
-	WheelOfDestiny.configureVessels()
-
-	if wheelButton then
-		wheelButton:setOn(true)
-	end
-end
-
-function WheelOfDestiny.onDestinyWheel(playerId, canView, changeState, vocationId, points, scrollPoints, pointInvested, usedPromotionScrolls, equipedGems, atelierGems, basicUpgraded, supremeUpgraded, earnedFromAchievements)
-	local isPreviewRequest = canView == 0 or not table.isIn({
-		1,
-		2,
-		3,
-		4,
-		5
-	}, vocationId)
-
-	if isPreviewRequest then
-		local player = g_game.getLocalPlayer()
-
-		if not player then
-			hide()
-
-			return
-		end
-
-		vocationId = translateWheelVocation(player:getVocation())
-
-		if vocationId == 0 then
-			local function onDismiss()
-				if openWheel then
-					openWheel:destroy()
-
-					openWheel = nil
-				end
-
-				hide()
-			end
-
-			if not openWheel then
-				openWheel = displayGeneralBox(tr("Info"), tr("To be able to use the Wheel of Destiny, a character must be at least level 51, be promoted and have active\nPremium Time."), {
-					{
-						text = tr("Ok"),
-						callback = onDismiss
-					}
-				}, onDismiss)
-			end
-
-			return
-		end
-
-		if not openWheel then
-			local previewMessage = tr("To be able to use the Wheel of Destiny, a character must be at least level 51, be promoted and have active\nPremium Time.\n\nClick on \"Ok\" to see a preview of the Wheel of Destiny for your vocation.")
-
-			local function onDismiss()
-				if openWheel then
-					openWheel:destroy()
-
-					openWheel = nil
-				end
-
-				hide()
-			end
-
-			local function onConfirm()
-				if openWheel then
-					openWheel:destroy()
-
-					openWheel = nil
-				end
-
-				WheelOfDestiny.openPreviewWheel(playerId, vocationId)
-			end
-
-			openWheel = displayGeneralBox(tr("Info"), previewMessage, {
-				{
-					text = tr("Cancel"),
-					callback = onDismiss
-				},
-				{
-					text = tr("Ok"),
-					callback = onConfirm
-				}
-			}, onConfirm, onDismiss)
-		end
-
-		return
-	end
-
-	WheelOfDestiny.setPreviewMode(false)
-
-	if table.empty(WheelOfDestiny.internalPreset) then
-		WheelOfDestiny.loadWheelPresets()
-	end
-
-	if not wheelWindow:isVisible() then
-		showWheelWindow()
-		WheelOfDestiny.resetPassiveFocus()
-	end
-
-	resetWheel(true)
-
-	local player = g_game.getLocalPlayer()
-	local bankMoney = player:getResourceBalance(ResourceTypes.BANK_BALANCE)
-	local characterMoney = player:getResourceBalance(ResourceTypes.GOLD_EQUIPPED)
-	local lesserFragment = player:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
-	local greaterFragment = player:getResourceBalance(ResourceTypes.GREATER_FRAGMENTS)
-	local value = bankMoney + characterMoney
-
-	wheelWindow.moneyPanel.gold:setText(formatMoney(value, ","))
-	wheelWindow.lesserFragmentPanel.gold:setText(lesserFragment)
-	wheelWindow.greaterFragmentPanel.gold:setText(greaterFragment)
-	WheelOfDestiny.create(playerId, canView, changeState, vocationId, points, scrollPoints, pointInvested, usedPromotionScrolls, equipedGems, atelierGems, basicUpgraded, supremeUpgraded, earnedFromAchievements)
-
-	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
-		GemAtelier.setupVesselPanel()
-	end
-
-	wheelPanel.onMouseRelease = WheelOfDestiny.onMouseRelease
-
-	local presetEnabled = changeState == 1
-	local managePresetsButton = wheelWindow.mainPanel.wheelMenu.info.presetTabBar:getChildById("managePresetsButton")
-
-	if not presetEnabled then
-		toggleTabBarButtons("informationButton")
-	end
-
-	managePresetsButton:setEnabled(presetEnabled)
-	refreshPresetTabBarButtons()
-
-	if vocationId == 1 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_knight")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("34 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("68 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("102 0 34 34")
-	elseif vocationId == 2 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_paladin")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("136 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("170 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("204 0 34 34")
-	elseif vocationId == 3 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_sorcerer")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("238 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("272 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("306 0 34 34")
-	elseif vocationId == 4 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_druid")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("374 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("340 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("408 0 34 34")
-	elseif vocationId == 5 then
-		wheelPanel.vocationWheel:setImageSource("/images/game/wheel/wheel-vocations/backdrop_skillwheel_monk")
-		wheelPanel:recursiveGetChildById("perkIconTopLeft"):setImageClip("0 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconTopRight"):setImageClip("442 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomLeft"):setImageClip("476 0 34 34")
-		wheelPanel:recursiveGetChildById("perkIconBottomRight"):setImageClip("510 0 34 34")
-	end
-
-	if not WheelOfDestiny.isPreview then
-		if WheelOfDestiny.changeState == 1 then
-			wheelWindow.reset:setEnabled(true)
-			wheelWindow.apply:setEnabled(true)
-			wheelWindow.ok:setEnabled(true)
-		elseif WheelOfDestiny.changeState == 2 then
-			wheelWindow.reset:setEnabled(false)
-			wheelWindow.apply:setEnabled(true)
-			wheelWindow.ok:setEnabled(true)
-		else
-			wheelWindow.reset:setEnabled(false)
-			wheelWindow.apply:setEnabled(false)
-			wheelWindow.ok:setEnabled(true)
-		end
-	end
-
-	WheelOfDestiny.onCreate(vocationId)
-	WheelOfDestiny.checkApplyButton()
-	WheelOfDestiny.determinateCurrentPreset()
-	WheelOfDestiny.updateCurrentPreset()
-	WheelOfDestiny.configureVessels()
-
-	if wheelButton then
-		wheelButton:setOn(true)
+function WheelOfDestiny.hideSliceFocus()
+	local focusSelectedWheel = var_0_2 or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
+
+	if focusSelectedWheel then
+		focusSelectedWheel:setVisible(false)
 	end
 end
 
 function WheelOfDestiny.onCreate(vocationId)
-	for id, iconInfo in pairs(WheelIcons[vocationId]) do
-		local widget = wheelPanel:recursiveGetChildById("icon" .. id)
-		local modIcon = widget:recursiveGetChildById("modIcon" .. id)
+	for key, entry in pairs(WheelIcons[vocationId]) do
+		local icon = wheelPanel:recursiveGetChildById("icon" .. key)
 
-		if widget then
-			local pointInvested = WheelOfDestiny.pointInvested[id]
-			local bonus = WheelBonus[id - 1]
-
-			if bonus and table.contains(VesselIndex[bonus.domain - 1], id - 1) then
-				local gem = GemAtelier.getEquipedGem(bonus.domain - 1)
-
-				if gem and pointInvested >= bonus.maxPoints then
-					if bonus.modType == 0 and gem.lesserBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-						widget:setImageClip(30 * gem.lesserBonus .. " 0 30 30")
-						modIcon:setVisible(true)
-					elseif bonus.modType == 1 and gem.regularBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-basicmods")
-						widget:setImageClip(30 * gem.regularBonus .. " 0 30 30")
-						modIcon:setVisible(true)
-					elseif bonus.modType == 2 and gem.supremeBonus > -1 then
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-suprememods")
-						widget:setImageClip(getSupremeModIconClip(gem.supremeBonus))
-						widget:setSize(tosize("35 35"))
-						modIcon:setVisible(true)
-					else
-						widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-						widget:setImageClip(iconInfo.iconRect)
-						widget:setSize(tosize("30 30"))
-						modIcon:setVisible(false)
-					end
-				else
-					widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-					widget:setImageClip(iconInfo.iconRect)
-					widget:setSize(tosize("30 30"))
-
-					if modIcon then
-						modIcon:setVisible(false)
-					end
-				end
-			else
-				widget:setImageClip(iconInfo.iconRect)
-			end
+		if icon and not WheelOfDestiny.isVesselSlice(key) then
+			icon:setImageClip(entry.iconRect)
 		end
 
-		local widget = wheelPanel:recursiveGetChildById("smallicon" .. id)
+		local smallicon = wheelPanel:recursiveGetChildById("smallicon" .. key)
 
-		if widget then
-			widget:setImageClip(iconInfo.miniIconRect)
+		if smallicon then
+			smallicon:setImageClip(entry.miniIconRect)
 		end
 	end
 
-	for i = 1, 4 do
-		WheelOfDestiny.vesselEnabled[i - 1] = {}
-
-		for _, index in pairs(WheelDomainOrder[i - 1]) do
-			local bonus = WheelBonus[index - 1]
-			local pointInvested = WheelOfDestiny.pointInvested[index]
-
-			if pointInvested >= bonus.maxPoints and bonus.conviction == "vessel" then
-				table.insert(WheelOfDestiny.vesselEnabled[bonus.domain - 1], index)
-				WheelOfDestiny.checkFilledVessels(index + 1)
-			end
-		end
-	end
+	WheelOfDestiny.refreshAllVesselDomains()
 
 	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	wheelPanel:recursiveGetChildById("fullColorWheel_15"):setVisible(true)
-	wheelPanel:recursiveGetChildById("fullColorWheel_16"):setVisible(true)
-	wheelPanel:recursiveGetChildById("fullColorWheel_21"):setVisible(true)
-	wheelPanel:recursiveGetChildById("fullColorWheel_22"):setVisible(true)
+	wheelOfDestinyWindow.selection.points:setText(comma_value(totalPoints - WheelOfDestiny.usedPoints) .. " / " .. comma_value(totalPoints))
+	WheelOfDestiny.showUnlockedPreview(15)
+	WheelOfDestiny.showUnlockedPreview(16)
+	WheelOfDestiny.showUnlockedPreview(21)
+	WheelOfDestiny.showUnlockedPreview(22)
 	WheelOfDestiny.configureDedicationPerk()
 	WheelOfDestiny.configureConvictionPerk()
 	WheelOfDestiny.configureVessels()
@@ -1205,519 +447,46 @@ function WheelOfDestiny.onCreate(vocationId)
 
 		Workshop.showFragmentList(false, false, true, currentSearch)
 	end
-end
 
-function onAddMax(index)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local index = index and index or WheelOfDestiny.clickIndex
-
-	if index == 0 then
-		return
-	end
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested >= bonus.maxPoints then
-		return
-	end
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-	local pointToInvest = math.max(totalPoints - WheelOfDestiny.usedPoints, 0)
-
-	if pointToInvest == 1 then
-		return onAddOne(index)
-	end
-
-	local maxPoints = math.max(bonus.maxPoints, 0)
-
-	if not WheelOfDestiny.canAddPoints(index, true) then
-		return
-	end
-
-	WheelOfDestiny.pointInvested[index] = math.min(pointInvested + pointToInvest, maxPoints)
-
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(WheelOfDestiny.pointInvested[index], 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(WheelOfDestiny.pointInvested[index] .. " / " .. bonus.maxPoints)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.insertPoint(index, WheelOfDestiny.pointInvested[index])
-	WheelOfDestiny.insertUnlockedThe(index)
-
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	local usedPoints = 0
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		usedPoints = usedPoints + _points
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + _points
-	end
-
-	WheelOfDestiny.usedPoints = usedPoints
-
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-
-	if WheelOfDestiny.changeState == 0 or WheelOfDestiny.changeState == 2 then
-		onWheelOfDestinyApply(false, false)
-	end
-
-	WheelOfDestiny.checkApplyButton()
-end
-
-function onAddOne(index)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local index = index and index or WheelOfDestiny.clickIndex
-
-	if index == 0 then
-		return
-	end
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested >= bonus.maxPoints then
-		return
-	end
-
-	if not WheelOfDestiny.canAddPoints(index, true) then
-		return
-	end
-
-	WheelOfDestiny.pointInvested[index] = pointInvested + 1
-
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(WheelOfDestiny.pointInvested[index], 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(WheelOfDestiny.pointInvested[index] .. " / " .. bonus.maxPoints)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.insertPoint(index, WheelOfDestiny.pointInvested[index])
-	WheelOfDestiny.insertUnlockedThe(index)
-
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	local usedPoints = 0
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		usedPoints = usedPoints + _points
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + _points
-	end
-
-	WheelOfDestiny.usedPoints = usedPoints
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-
-	if WheelOfDestiny.changeState == 0 or WheelOfDestiny.changeState == 2 then
-		onWheelOfDestinyApply(false, false)
-	end
-
-	WheelOfDestiny.checkApplyButton()
-end
-
-function onAddCustom(index, count)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local index = index and index or WheelOfDestiny.clickIndex
-
-	if index == 0 then
-		return
-	end
-
-	local bonus = WheelBonus[index - 1]
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested >= bonus.maxPoints then
-		return
-	end
-
-	if not WheelOfDestiny.canAddPoints(index, true) then
-		return
-	end
-
-	local customCount = math.min(bonus.maxPoints, pointInvested + count)
-
-	WheelOfDestiny.pointInvested[index] = customCount
-
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(WheelOfDestiny.pointInvested[index], 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(WheelOfDestiny.pointInvested[index] .. " / " .. bonus.maxPoints)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.insertPoint(index, WheelOfDestiny.pointInvested[index])
-	WheelOfDestiny.insertUnlockedThe(index)
-
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	local usedPoints = 0
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		usedPoints = usedPoints + _points
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + _points
-	end
-
-	WheelOfDestiny.usedPoints = usedPoints
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-
-	if WheelOfDestiny.changeState == 0 or WheelOfDestiny.changeState == 2 then
-		onWheelOfDestinyApply(false, false)
-	end
-
-	WheelOfDestiny.checkApplyButton()
-end
-
-function onRmvMax(index)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local index = index and index or WheelOfDestiny.clickIndex
-
-	if index == 0 then
-		return
-	end
-
-	if WheelOfDestiny.changeState ~= 1 then
-		return false
-	end
-
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested == 0 then
-		return
-	end
-
-	if not WheelOfDestiny.canRemovePoints(index) then
-		return
-	end
-
-	local bonus = WheelBonus[index - 1]
-
-	WheelOfDestiny.pointInvested[index] = 0
-
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(WheelOfDestiny.pointInvested[index], 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(WheelOfDestiny.pointInvested[index] .. " / " .. bonus.maxPoints)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.removePoint(index, WheelOfDestiny.pointInvested[index])
-	WheelOfDestiny.removeUnlockedThe(index)
-
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	local usedPoints = 0
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		usedPoints = usedPoints + _points
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + _points
-	end
-
-	WheelOfDestiny.usedPoints = usedPoints
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-	WheelOfDestiny.checkApplyButton()
-end
-
-function onRmvOne(index)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local index = index and index or WheelOfDestiny.clickIndex
-
-	if index == 0 then
-		return
-	end
-
-	if not WheelOfDestiny.canRemovePoints(index) then
-		return
-	end
-
-	if WheelOfDestiny.changeState ~= 1 then
-		return false
-	end
-
-	local pointInvested = WheelOfDestiny.pointInvested[index]
-
-	if pointInvested == 0 then
-		return
-	end
-
-	local bonus = WheelBonus[index - 1]
-
-	WheelOfDestiny.pointInvested[index] = pointInvested - 1
-
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(WheelOfDestiny.pointInvested[index], 0, bonus.maxPoints)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(WheelOfDestiny.pointInvested[index] .. " / " .. bonus.maxPoints)
-	WheelOfDestiny.configureDedication(index)
-	WheelOfDestiny.configureConviction(index)
-	WheelOfDestiny.removePoint(index, WheelOfDestiny.pointInvested[index])
-	WheelOfDestiny.removeUnlockedThe(index)
-
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	local usedPoints = 0
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		usedPoints = usedPoints + _points
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + _points
-	end
-
-	WheelOfDestiny.usedPoints = usedPoints
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	wheelOfDestinyWindow.selection.points:setText(totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-	WheelOfDestiny.checkManagerPointsButtons(index)
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-	WheelOfDestiny.checkApplyButton()
-end
-
-function resetWheel(ignoreprotocol)
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	for index, connection in ipairs(WheelNodes) do
-		if WheelOfDestiny.vocationId ~= 0 then
-			local widget = wheelPanel:recursiveGetChildById("icon" .. index)
-			local modIcon = widget:recursiveGetChildById("modIcon" .. index)
-			local iconInfo = WheelIcons[WheelOfDestiny.vocationId][index]
-
-			widget:setImageSource("/images/game/wheel/icons-skillwheel-mediumperks")
-			widget:setImageClip(iconInfo.iconRect)
-			widget:setSize(tosize("30 30"))
-
-			if modIcon then
-				modIcon:setVisible(false)
-			end
-		end
-
-		if WheelButtons[index].radius == SMALL_CIRCLE then
-			wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(true)
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(false)
-		else
-			wheelPanel:recursiveGetChildById("fullColorWheel_" .. index):setVisible(false)
-			wheelPanel:recursiveGetChildById("colorWheel_" .. index):setVisible(false)
-		end
-
-		WheelOfDestiny.pointInvested[index] = 0
-	end
-
-	for i = 0, 3 do
-		WheelOfDestiny.vesselEnabled[i] = {}
-	end
-
-	WheelOfDestiny.equipedGemBonuses = {}
-	WheelOfDestiny.equipedGems = {
-		-1,
-		-1,
-		-1,
-		-1
-	}
-
-	WheelOfDestiny.configureDedicationPerk()
-	WheelOfDestiny.configureConvictionPerk()
-	WheelOfDestiny.configureVessels()
-	WheelOfDestiny.configureSummary()
-	WheelOfDestiny.configurePassives()
-	onWheelOfDestinyApply(false, ignoreprotocol)
-end
-
-function WheelOfDestiny.configureDedication(index)
-	wheelOfDestinyWindow.selection.tabContent.dedication:setWidth("185")
-	wheelOfDestinyWindow.selection.tabContent.dedication:setHeight("29")
-	wheelOfDestinyWindow.selection.tabContent.dedication:setText(getDedicationBonus(index))
-	wheelOfDestinyWindow.selection.tabContent.information:setTooltip(getDedicationTooltip(index))
-
-	if WheelOfDestiny.pointInvested[index] > 0 then
-		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
-	else
-		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
-	end
-end
-
-function WheelOfDestiny.configureConviction(index)
-	local bonus = WheelBonus[index - 1]
-	local conviction = getConvictionBonus(index)
-	local tooltip = getConvictionBonusTooltip(index)
-
-	if type(conviction) == "string" then
-		wheelOfDestinyWindow.selection.tabContent.conviction:setTooltip(tooltip)
-		wheelOfDestinyWindow.selection.tabContent.conviction:setText(conviction)
-
-		if WheelOfDestiny.pointInvested[index] >= bonus.maxPoints then
-			wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#c0c0c0")
-		else
-			wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#707070")
-		end
-	elseif type(conviction) == "table" then
-		wheelOfDestinyWindow.selection.tabContent.conviction:setTooltip(tooltip)
-		wheelOfDestinyWindow.selection.tabContent.conviction:setColoredText(conviction)
-	end
-end
-
-function WheelOfDestiny.configureDedicationPerk()
-	local health = 0
-	local mana = 0
-	local cap = 0
-	local mitigation = 0
-	local vocation = WheelOfDestiny.vocationId
-
-	for id, bonus in pairs(WheelBonus) do
-		local index = id + 1
-
-		if not WheelOfDestiny.isLit(index) then
-			-- block empty
-		else
-			local points = WheelOfDestiny.pointInvested[index]
-			local attribute = WheelConsts[bonus.dedication]
-
-			if bonus.dedication == "capacity" then
-				cap = cap + points * attribute[vocation]
-			elseif bonus.dedication == "mana" then
-				mana = mana + points * attribute[vocation]
-			elseif bonus.dedication == "health" then
-				health = health + points * attribute[vocation]
-			elseif bonus.dedication == "mitigation" then
-				mitigation = mitigation + points * attribute
-			elseif bonus.dedication == "lifemana" then
-				health = health + points * attribute.life[vocation]
-				mana = mana + points * attribute.mana[vocation]
-			end
-		end
-	end
-
-	wheelOfDestinyWindow.dedicationPerks.tabContent.hitPoints.value:setText((health > 0 and "+" or "") .. health)
-	wheelOfDestinyWindow.dedicationPerks.tabContent.manaPoints.value:setText((mana > 0 and "+" or "") .. mana)
-	wheelOfDestinyWindow.dedicationPerks.tabContent.capPoints.value:setText((cap > 0 and "+" or "") .. cap)
-	wheelOfDestinyWindow.dedicationPerks.tabContent.mitigationPoints.value:setText(string.format("%.2f%%", mitigation))
-end
-
-function WheelOfDestiny.configureConvictionPerk()
-	wheelOfDestinyWindow.convictionPerks.tabContent:destroyChildren()
-	wheelOfDestinyWindow.convictionPerks.tabContentScroll:setVisible(false)
-
-	local convictions = getConvictionPerks()
-
-	if #convictions > 8 then
-		wheelOfDestinyWindow.convictionPerks.tabContentScroll:setVisible(true)
-	end
-
-	for _, i in pairs(convictions) do
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.convictionPerks.tabContent)
-
-		widget.perk:setText(i.perk)
-
-		if i.stringPoint then
-			widget.value:setText(i.stringPoint)
-		else
-			widget.value:setVisible(false)
-		end
-
-		if i.tooltip then
-			widget.info:setTooltip(i.tooltip)
-		else
-			widget.info:setVisible(false)
-		end
-	end
+	WheelOfDestiny.showInformationDefault()
 end
 
 function WheelOfDestiny.configureVessels()
-	local container = wheelOfDestinyWindow.vessels.tabContent
+	local tabContent = wheelOfDestinyWindow.vessels.tabContent
 	local scrollBar = wheelOfDestinyWindow.vessels.tabContentScroll
 
-	container:destroyChildren()
+	tabContent:destroyChildren()
 	scrollBar:setVisible(false)
 
-	local bonus = getVesselBonus()
+	local width = tabContent:getWidth()
 
-	for i, data in ipairs(bonus) do
-		local widget = g_ui.createWidget("PerksPanel", container)
+	for index, connection in ipairs(getVesselBonus()) do
+		local perksPanelWidget = g_ui.createWidget("PerksPanel", tabContent)
 
-		widget:setHeight(20)
-
-		if not data.text or data.text == "" then
-			data.text = "(Unknown)"
+		if connection.icon then
+			perksPanelWidget.icon:setImageSource(connection.icon)
+			perksPanelWidget.icon:setVisible(true)
+			perksPanelWidget.perk:setMarginLeft(16)
+		elseif connection.indent then
+			perksPanelWidget.perk:setMarginLeft(10)
 		end
 
-		widget.perk:setText(data.text)
-
-		if data.value == -1 then
-			widget.value:setVisible(false)
+		if connection.value == -1 then
+			perksPanelWidget.value:setVisible(false)
 		else
-			local value = tostring(data.value)
-
-			if not value:match("[+-I]") then
-				if data.value and tonumber(data.value) < 15 then
-					widget.value:setText("+" .. value .. "%")
-				else
-					widget.value:setText("+" .. value)
-				end
-			elseif data.text:find("RM") then
-				widget.value:setText("+" .. value)
-			elseif data.bonusType == "augment" or data.bonusType == "mitigation" then
-				widget.value:setText("+" .. value .. "%")
-			else
-				widget.value:setText(data.value)
-			end
+			perksPanelWidget.value:setText(tostring(connection.value))
 		end
 
-		if data.tooltip then
-			widget.info:setVisible(true)
-			widget.info:setTooltip(data.tooltip)
+		if connection.tooltip and connection.tooltip ~= "" then
+			perksPanelWidget.info:setVisible(true)
+			perksPanelWidget.info:setTooltip(connection.tooltip)
 		end
+
+		local var_13_4 = connection.text and connection.text ~= "" and connection.text or "(Unknown)"
+
+		WheelOfDestiny.fitPerkName(perksPanelWidget.perk, {
+			var_13_4
+		}, width, perksPanelWidget.value)
 	end
 
 	if scrollBar:getMaximum() > 0 then
@@ -1725,736 +494,41 @@ function WheelOfDestiny.configureVessels()
 	end
 end
 
-function WheelOfDestiny.configureSummary()
-	if not wheelOfDestinyWindow.summary.tabContent:isVisible() then
-		return
-	end
-
-	wheelOfDestinyWindow.summary.tabContent:destroyChildren()
-
-	local health = 0
-	local mana = 0
-	local cap = 0
-	local mitigation = 0
-	local vocation = WheelOfDestiny.vocationId
-
-	for id, bonus in pairs(WheelBonus) do
-		local index = id + 1
-
-		if not WheelOfDestiny.isLit(index) then
-			-- block empty
-		else
-			local points = WheelOfDestiny.pointInvested[index]
-			local attribute = WheelConsts[bonus.dedication]
-
-			if bonus.dedication == "capacity" then
-				cap = cap + points * attribute[vocation]
-			elseif bonus.dedication == "mana" then
-				mana = mana + points * attribute[vocation]
-			elseif bonus.dedication == "health" then
-				health = health + points * attribute[vocation]
-			elseif bonus.dedication == "mitigation" then
-				mitigation = mitigation + points * attribute
-			elseif bonus.dedication == "lifemana" then
-				health = health + points * attribute.life[vocation]
-				mana = mana + points * attribute.mana[vocation]
-			end
-		end
-	end
-
-	for i, k in pairs(WheelOfDestiny.equipedGemBonuses) do
-		if k.bonusID == -1 then
-			-- block empty
-		else
-			local bonus = k.supreme and SupremeGemDescription[k.bonusID] or RegularGemDescription[k.bonusID]
-
-			if not k.supreme then
-				if bonus.type1 == "life" or bonus.type2 == "life" then
-					local type1 = getValueByVocation(bonus.type1, bonus.step)
-					local type2 = getValueByVocation(bonus.type2, bonus.step)
-
-					health = health + (type1 + type2)
-				end
-
-				if bonus.type1 == "capacity" or bonus.type2 == "capacity" then
-					local type1 = getValueByVocation(bonus.type1, bonus.step)
-					local type2 = getValueByVocation(bonus.type2, bonus.step)
-
-					cap = cap + (type1 + type2)
-				end
-
-				if bonus.type1 == "mana" or bonus.type2 == "mana" then
-					local type1 = getValueByVocation(bonus.type1, bonus.step)
-					local type2 = getValueByVocation(bonus.type2, bonus.step)
-
-					mana = mana + (type1 + type2)
-				end
-
-				if bonus.type1 == "mitigation" or bonus.type2 == "mitigation" then
-					local type1 = getValueByVocation(bonus.type1, bonus.step)
-					local type2 = getValueByVocation(bonus.type2, bonus.step)
-
-					mitigation = mitigation + (type1 + type2)
-				end
-			end
-		end
-	end
-
-	local damage = 0
-
-	for _, points in ipairs(WheelOfDestiny.passivePoints) do
-		if points >= 1000 then
-			damage = damage + 20
-		elseif points >= 500 then
-			damage = damage + 9
-		elseif points >= 250 then
-			damage = damage + 4
-		end
-	end
-
-	damage = damage + GemAtelier:getDamageAndHealing()
-
-	if damage > 0 then
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-		widget.perk:setText("Damage and Healing")
-		widget.value:setText("+" .. damage)
-		widget.info:setVisible(false)
-		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-	end
-
-	local f_table = {
-		"Hit Points",
-		"Mana",
-		"Capacity",
-		"Mitigation Mult.",
-		"Life Leech",
-		"Mana Leech"
-	}
-	local convictions = getConvictionPerks()
-
-	for _, t in ipairs(f_table) do
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-		widget.perk:setText(t)
-		widget.info:setVisible(false)
-
-		if t == "Hit Points" then
-			widget.value:setText((health > 0 and "+" or "") .. health)
-		elseif t == "Mana" then
-			widget.value:setText((mana > 0 and "+" or "") .. mana)
-		elseif t == "Capacity" then
-			widget.value:setText((cap > 0 and "+" or "") .. cap)
-		elseif t == "Mitigation Mult." then
-			widget.value:setText(string.format("%.2f%%", mitigation))
-			widget.info:setTooltip("Increase your mitigation multiplicatively.")
-			widget.info:setVisible(true)
-		elseif t == "Life Leech" then
-			local lifeleech = convictions[4]
-
-			if not lifeleech or lifeleech.points == 0 then
-				widget:destroy()
-			else
-				widget.value:setText(lifeleech.stringPoint)
-				widget.info:setVisible(false)
-			end
-		elseif t == "Mana Leech" then
-			local manaleech = convictions[5]
-
-			if not manaleech or manaleech.points == 0 then
-				widget:destroy()
-			else
-				widget.value:setText(manaleech.stringPoint)
-				widget.info:setVisible(false)
-			end
-		else
-			widget:destroy()
-		end
-	end
-
-	g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-
-	local f_table = {
-		"special_1",
-		"special_2",
-		"skill"
-	}
-	local hasCreated = false
-
-	for _, t in pairs(f_table) do
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-		if t == "special_1" then
-			local c = convictions[1]
-
-			if not c then
-				widget:destroy()
-			else
-				widget.perk:setText(c.perk)
-				widget.value:setVisible(false)
-				widget.info:setVisible(true)
-				widget.info:setTooltip(c.tooltip)
-
-				hasCreated = true
-			end
-		elseif t == "special_2" then
-			local c = convictions[2]
-
-			if not c then
-				widget:destroy()
-			else
-				widget.perk:setText(c.perk)
-				widget.value:setVisible(false)
-				widget.info:setVisible(true)
-				widget.info:setTooltip(c.tooltip)
-
-				hasCreated = true
-			end
-		elseif t == "skill" then
-			local c = convictions[3]
-
-			if not c then
-				widget:destroy()
-			else
-				widget.perk:setText(c.perk)
-				widget.value:setText(c.stringPoint)
-				widget.info:setVisible(true)
-				widget.info:setTooltip(c.tooltip)
-
-				hasCreated = true
-			end
-		end
-	end
-
-	if hasCreated then
-		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-	end
-
-	local f_table = {
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		"spell_1",
-		"spell_2",
-		"spell_3",
-		[9] = "spell_4",
-		[10] = "spell_5"
-	}
-	local hasCreated = false
-
-	for _, t in pairs(f_table) do
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-		local c = convictions[_]
-
-		if not c then
-			widget:destroy()
-		else
-			widget.perk:setText(c.perk)
-			widget.value:setText(c.stringPoint)
-			widget.info:setTooltip(c.tooltip)
-			widget.info:setVisible(true)
-
-			hasCreated = true
-		end
-	end
-
-	local bonus = getVesselBonus()
-
-	for _, data in pairs(bonus) do
-		if data.bonusType ~= "augment" then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-			widget.perk:setText(data.text)
-
-			if data.value == -1 then
-				widget.value:setVisible(false)
-			end
-
-			if data.tooltip then
-				widget.info:setVisible(true)
-				widget.info:setTooltip(data.tooltip)
-			end
-
-			local value = tostring(data.value)
-
-			if not value:match("[+-I]") then
-				if tonumber(data.value) < 15 then
-					widget.value:setText("+" .. value .. "%")
-				else
-					widget.value:setText("+" .. value)
-				end
-			else
-				widget.value:setText(data.value)
-			end
-
-			hasCreated = true
-		end
-	end
-
-	if hasCreated then
-		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-	end
-
-	local avatarName = getRevelationDisplayName(4)
-	local spell1 = getRevelationDisplayName(2)
-	local spell2 = getRevelationDisplayName(3)
-	local m1, m2 = getPassiveInfo(4)
-	local passive = WheelOfDestiny.passivePoints[4]
-	local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-	widget.perk:setText(avatarName)
-
-	if passive >= 1000 then
-		widget.value:setText("Stage 3")
-	elseif passive >= 500 then
-		widget.value:setText("Stage 2")
-	elseif passive >= 250 then
-		widget.value:setText("Stage 1")
-	else
-		widget.value:setText("Locked")
-	end
-
-	widget.info:setTooltip(m2)
-
-	local m1, m2 = getPassiveInfo(2)
-	local passive = WheelOfDestiny.passivePoints[2]
-	local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-	widget.perk:setText(spell1)
-	widget.perk:setTooltip(spell1)
-
-	if passive >= 1000 then
-		widget.value:setText("Stage 3")
-	elseif passive >= 500 then
-		widget.value:setText("Stage 2")
-	elseif passive >= 250 then
-		widget.value:setText("Stage 1")
-	else
-		widget.value:setText("Locked")
-	end
-
-	widget.info:setTooltip(m2)
-
-	local m1, m2 = getPassiveInfo(1)
-	local passive = WheelOfDestiny.passivePoints[1]
-	local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-	widget.perk:setText("Gift of Life")
-
-	if passive >= 1000 then
-		widget.value:setText("Stage 3")
-	elseif passive >= 500 then
-		widget.value:setText("Stage 2")
-	elseif passive >= 250 then
-		widget.value:setText("Stage 1")
-	else
-		widget.value:setText("Locked")
-	end
-
-	widget.info:setTooltip(m2)
-
-	local m1, m2 = getPassiveInfo(3)
-	local passive = WheelOfDestiny.passivePoints[3]
-	local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-	widget.perk:setText(spell2)
-	widget.perk:setTooltip(spell2)
-
-	if passive >= 1000 then
-		widget.value:setText("Stage 3")
-	elseif passive >= 500 then
-		widget.value:setText("Stage 2")
-	elseif passive >= 250 then
-		widget.value:setText("Stage 1")
-	else
-		widget.value:setText("Locked")
-	end
-
-	widget.info:setTooltip(m2)
-
-	local bonus = getVesselBonus()
-
-	for _, data in pairs(bonus) do
-		if data.bonusType ~= "revelation" then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-			widget.perk:setText(data.text)
-
-			if data.value == -1 then
-				widget.value:setVisible(false)
-			end
-
-			if data.tooltip then
-				widget.info:setVisible(true)
-				widget.info:setTooltip(data.tooltip)
-			end
-
-			local value = tostring(data.value)
-
-			if not value:match("[+-I]") then
-				if tonumber(data.value) < 15 then
-					widget.value:setText("+" .. value .. "%")
-				else
-					widget.value:setText("+" .. value)
-				end
-			else
-				widget.value:setText(data.value)
-			end
-		end
-	end
-
-	g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-
-	local hasDefense = false
-	local bonus = getVesselBonus()
-
-	for _, data in pairs(bonus) do
-		if data.bonusType ~= "defense" then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-
-			widget.perk:setText(data.text)
-
-			if data.value == -1 then
-				widget.value:setVisible(false)
-			end
-
-			if data.tooltip then
-				widget.info:setVisible(true)
-				widget.info:setTooltip(data.tooltip)
-			end
-
-			local value = tostring(data.value)
-
-			if not value:match("[+-I]") then
-				if tonumber(data.value) < 15 then
-					widget.value:setText("+" .. value .. "%")
-				else
-					widget.value:setText("+" .. value)
-				end
-			else
-				widget.value:setText(data.value)
-			end
-
-			hasDefense = true
-		end
-	end
-
-	if hasDefense then
-		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-	end
-
-	local f_table = {
-		[12] = "vessel.2",
-		[14] = "vessel.4",
-		[13] = "vessel.3",
-		[11] = "vessel.1"
-	}
-	local hasCreated = false
-
-	for _, t in pairs(f_table) do
-		local widget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-		local c = convictions[_]
-
-		if not c then
-			widget:destroy()
-		else
-			widget.perk:setText(c.perk)
-			widget.value:setText(c.stringPoint)
-			widget.info:setTooltip(c.tooltip)
-			widget.info:setVisible(true)
-
-			hasCreated = true
-		end
-	end
-
-	if hasCreated then
-		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
-	end
-end
-
-function WheelOfDestiny.create(playerId, canView, changeState, vocationId, points, scrollPoints, pointInvested, usedPromotionScrolls, equipedGems, atelierGems, basicUpgraded, supremeUpgraded, earnedFromAchievements)
-	WheelOfDestiny.playerId = playerId
-	WheelOfDestiny.canView = canView
-	WheelOfDestiny.changeState = changeState
-	WheelOfDestiny.vocationId = vocationId
-	WheelOfDestiny.points = points
-	WheelOfDestiny.levelPoints = points
-	WheelOfDestiny.scrollPoints = scrollPoints
-	WheelOfDestiny.usedPromotionScrolls = usedPromotionScrolls
-	WheelOfDestiny.equipedGems = normalizeEquipedGems(equipedGems)
-	WheelOfDestiny.atelierGems = atelierGems
-	WheelOfDestiny.basicModsUpgrade = basicUpgraded
-	WheelOfDestiny.supremeModsUpgrade = supremeUpgraded
-	WheelOfDestiny.extraGemPoints = 0
-	WheelOfDestiny.fromAchievementType = earnedFromAchievements
-	WheelOfDestiny.passivePoints = table.reserve(4, 0)
-
-	if WheelOfDestiny.vocationId == 0 then
-		local player = g_game.getLocalPlayer()
-
-		if player then
-			WheelOfDestiny.vocationId = translateWheelVocation[player:getVocation()]
-		end
-	end
-
-	local orderned = {
-		15,
-		9,
-		14,
-		3,
-		8,
-		13,
-		2,
-		7,
-		1,
-		16,
-		10,
-		17,
-		4,
-		11,
-		18,
-		5,
-		12,
-		6,
-		22,
-		23,
-		28,
-		24,
-		29,
-		34,
-		30,
-		35,
-		36,
-		21,
-		20,
-		27,
-		19,
-		26,
-		33,
-		25,
-		32,
-		31
-	}
-
-	for _, tier in pairs(WheelOfDestiny.basicModsUpgrade) do
-		if tier == 3 then
-			WheelOfDestiny.extraGemPoints = WheelOfDestiny.extraGemPoints + 1
-		end
-	end
-
-	for _, tier in pairs(WheelOfDestiny.supremeModsUpgrade) do
-		if tier == 3 then
-			WheelOfDestiny.extraGemPoints = WheelOfDestiny.extraGemPoints + 1
-		end
-	end
-
-	WheelOfDestiny.setupPointsTooltip()
-
-	local a = 0
-
-	for k, v in pairs(pointInvested) do
-		a = a + v
-	end
-
-	WheelOfDestiny.usedPoints = 0
-
-	for _, id in pairs(orderned) do
-		_points = pointInvested[id]
-
-		local bonus = WheelBonus[id - 1]
-
-		WheelOfDestiny.pointInvested[id] = 0
-
-		for i = 1, _points do
-			WheelOfDestiny.usedPoints = WheelOfDestiny.usedPoints + 1
-			WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] + 1
-			WheelOfDestiny.pointInvested[id] = WheelOfDestiny.pointInvested[id] + 1
-		end
-	end
-
-	local b = 0
-
-	for k, v in pairs(WheelOfDestiny.pointInvested) do
-		b = b + v
-	end
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		if not WheelOfDestiny.canAddPoints(id, true) and _points > 0 then
-			local bonus = WheelBonus[id - 1]
-
-			WheelOfDestiny.usedPoints = WheelOfDestiny.usedPoints - _points
-			WheelOfDestiny.passivePoints[bonus.domain] = WheelOfDestiny.passivePoints[bonus.domain] - _points
-			_points = 0
-		end
-	end
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		WheelOfDestiny.insertPoint(id, _points)
-	end
-
-	for id, _points in pairs(WheelOfDestiny.pointInvested) do
-		local bonus = WheelBonus[id - 1]
-
-		if _points >= bonus.maxPoints then
-			WheelOfDestiny.insertUnlockedThe(id)
-		end
-	end
-
-	local function incrementBonusCount(bonus, bonusType)
-		if type(bonus) ~= "number" or bonus <= 0 then
-			return
-		end
-
-		local key = tostring(bonus)
-
-		bonusType[key] = (bonusType[key] or 0) + 1
-	end
-
-	WheelOfDestiny.basicModCount = {}
-	WheelOfDestiny.supremeModCount = {}
-
-	for _, info in pairs(WheelOfDestiny.atelierGems) do
-		local function dumpCounts(title, t)
-			return
-		end
-
-		dumpCounts("basicModCount", WheelOfDestiny.basicModCount)
-		dumpCounts("supremeModCount", WheelOfDestiny.supremeModCount)
-		incrementBonusCount(info.lesserBonus, WheelOfDestiny.basicModCount)
-		incrementBonusCount(info.regularBonus, WheelOfDestiny.basicModCount)
-		incrementBonusCount(info.supremeBonus, WheelOfDestiny.supremeModCount)
-	end
-
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	wheelOfDestinyWindow.selection.points:setText("[7]" .. totalPoints - WheelOfDestiny.usedPoints .. " / " .. totalPoints)
-
-	wheelPanel:recursiveGetChildById("perkIconTopLeft").onClick = function()
-		WheelOfDestiny.onWheelPassiveClick(1)
-	end
-	wheelPanel:recursiveGetChildById("perkIconTopRight").onClick = function()
-		WheelOfDestiny.onWheelPassiveClick(2)
-	end
-	wheelPanel:recursiveGetChildById("perkIconBottomLeft").onClick = function()
-		WheelOfDestiny.onWheelPassiveClick(3)
-	end
-	wheelPanel:recursiveGetChildById("perkIconBottomRight").onClick = function()
-		WheelOfDestiny.onWheelPassiveClick(4)
-	end
-
-	WheelOfDestiny.onCreate(vocationId)
-end
-
 function WheelOfDestiny.resetPassiveFocus()
+	WheelOfDestiny.mousePassiveDomain = 0
+
 	for i = 1, 4 do
 		local widget = wheelPanel:recursiveGetChildById("selectPassive" .. i)
 
 		if widget then
 			widget:setVisible(false)
 		end
+
+		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. i)
+
+		if focusPassive then
+			focusPassive:setVisible(false)
+		end
 	end
 end
 
-local function getGemStruct(preset)
-	local struct = {
-		[GemDomains.GREEN] = {
-			gemID = -1
-		},
-		[GemDomains.RED] = {
-			gemID = -1
-		},
-		[GemDomains.ACQUA] = {
-			gemID = -1
-		},
-		[GemDomains.PURPLE] = {
-			gemID = -1
-		}
-	}
-	local source = preset ~= nil and preset.equipedGems or WheelOfDestiny.equipedGems
+function WheelOfDestiny.applyPassiveFocus(arg_15_0)
+	for iter_15_0 = 1, 4 do
+		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. iter_15_0)
 
-	for _, id in pairs(source) do
-		local domain = GemAtelier.getGemDomainById(id)
-
-		if domain ~= -1 then
-			struct[domain].hasGem = true
-			struct[domain].gemID = id
+		if focusPassive then
+			focusPassive:setVisible(iter_15_0 == arg_15_0)
 		end
 	end
-
-	return struct
 end
 
-local function getLocalGemStruct()
-	local struct = {
-		-1,
-		-1,
-		-1,
-		-1
-	}
+function WheelOfDestiny.hidePassiveFocus()
+	for iter_16_0 = 1, 4 do
+		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. iter_16_0)
 
-	for _, id in pairs(WheelOfDestiny.equipedGems) do
-		local domain = GemAtelier.getGemDomainById(id)
-
-		if domain == -1 then
-			-- block empty
-		else
-			struct[domain + 1] = id
+		if focusPassive then
+			focusPassive:setVisible(false)
 		end
-	end
-
-	return struct
-end
-
-function onWheelOfDestinyApply(close, ignoreprotocol)
-	if WheelOfDestiny.changeState == 0 then
-		if close then
-			hide()
-		end
-
-		return
-	end
-
-	local struct = getGemStruct()
-
-	if not ignoreprotocol then
-		local function gemIndex(id)
-			if id == nil or id < 0 then
-				return 65535
-			end
-
-			return id
-		end
-
-		local g = gemIndex(struct[GemDomains.GREEN].gemID)
-		local r = gemIndex(struct[GemDomains.RED].gemID)
-		local a = gemIndex(struct[GemDomains.ACQUA].gemID)
-		local p = gemIndex(struct[GemDomains.PURPLE].gemID)
-
-		if WheelOfDestiny.currentPreset then
-			WheelOfDestiny.currentPreset.equipedGems = normalizeEquipedGems(struct)
-		end
-
-		g_logger.debug(string.format("[WheelApply] Sending gems -> GREEN:%d  RED:%d  ACQUA:%d  PURPLE:%d", g, r, a, p))
-		g_game.sendApplyWheelPoints(WheelOfDestiny.pointInvested, g, r, a, p)
-	end
-
-	local player = g_game.getLocalPlayer()
-
-	if player then
-		WheelOfDestiny.updateCurrentPreset()
-		WheelOfDestiny.saveWheelPresets()
-	end
-
-	if close then
-		hide()
 	end
 end
 
@@ -2495,9 +569,7 @@ function WheelOfDestiny.configurePassives()
 			passivel = "BR"
 		end
 
-		local extraPoints = WheelOfDestiny.extraPassivePoints[domain] or 0
-
-		points = points + extraPoints
+		points = points + (WheelOfDestiny.extraPassivePoints[domain] or 0)
 
 		local widget = wheelPanel:recursiveGetChildById("wheelPassive" .. domain)
 		local widgetPercent = wheelPanel:recursiveGetChildById("revelationPerk" .. passivel)
@@ -2544,24 +616,22 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
 
 	local passive = WheelOfDestiny.passivePoints[domain]
 	local maximum = 250
-	local extraPoints = WheelOfDestiny.extraPassivePoints[domain] or 0
+	local var_18_2 = passive + (WheelOfDestiny.extraPassivePoints[domain] or 0)
 
-	passive = passive + extraPoints
-
-	if passive >= 1000 then
+	if var_18_2 >= 1000 then
 		maximum = 1000
-	elseif passive >= 500 then
+	elseif var_18_2 >= 500 then
 		maximum = 1000
-	elseif passive >= 250 then
+	elseif var_18_2 >= 250 then
 		maximum = 500
 	end
 
-	if passive < 0 then
-		passive = 0
+	if var_18_2 < 0 then
+		var_18_2 = 0
 	end
 
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(passive, 0, maximum)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(passive .. " / " .. maximum)
+	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(var_18_2, 0, maximum)
+	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(var_18_2 .. " / " .. maximum)
 	wheelPanel.borderSelectedWheel:setVisible(false)
 	wheelOfDestinyWindow:recursiveGetChildById("addMax"):setVisible(false)
 	wheelOfDestinyWindow:recursiveGetChildById("addOne"):setVisible(false)
@@ -2569,38 +639,47 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
 	wheelOfDestinyWindow:recursiveGetChildById("rmvOne"):setVisible(false)
 
 	local m1, m2 = getPassiveInfo(domain)
-	local panelHeight = WheelDedicationHeight[WheelOfDestiny.vocationId] or {}
-	local height = panelHeight[domain] or 0
+	local height = (WheelDedicationHeight[WheelOfDestiny.vocationId] or {})[domain] or 0
 
 	wheelOfDestinyWindow.selection.tabContent.dedication:setHeight(height)
 	wheelOfDestinyWindow.selection.tabContent.dedication:setText(m1)
 	wheelOfDestinyWindow.selection.tabContent.information1:setTooltip(m2)
 
-	if passive == 1000 then
+	if var_18_2 == 1000 then
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
 	else
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
 	end
 
-	wheelOfDestinyWindow.selection.tabContent.conviction:setText("Locked")
-	wheelOfDestinyWindow.selection.tabContent.conviction:setColor("#c0c0c0")
+	local tabContent = wheelOfDestinyWindow.selection.tabContent
 
-	if passive >= 1000 then
-		wheelOfDestinyWindow.selection.tabContent.conviction:setText("Stage 3")
-	elseif passive >= 500 then
-		wheelOfDestinyWindow.selection.tabContent.conviction:setText("Stage 2")
-	elseif passive >= 250 then
-		wheelOfDestinyWindow.selection.tabContent.conviction:setText("Stage 1")
+	tabContent.convictionName:setText("Locked")
+	tabContent.convictionName:setColor("#c0c0c0")
+	tabContent.conviction:setVisible(false)
+	tabContent.conviction:setText("")
+
+	local convictionBody = tabContent.convictionBody or tabContent:getChildById("convictionBody")
+
+	if convictionBody then
+		convictionBody:destroyChildren()
+		convictionBody:setVisible(false)
+	end
+
+	if var_18_2 >= 1000 then
+		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 3")
+	elseif var_18_2 >= 500 then
+		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 2")
+	elseif var_18_2 >= 250 then
+		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 1")
 	end
 end
 
 function WheelOfDestiny.configureRevelationPerks()
+	local tabContent = wheelOfDestinyWindow.revelationPerks.tabContent
 	local damage = 0
 
 	for domain, points in ipairs(WheelOfDestiny.passivePoints) do
-		local extraPoints = WheelOfDestiny.extraPassivePoints[domain] or 0
-
-		points = points + extraPoints
+		points = points + (WheelOfDestiny.extraPassivePoints[domain] or 0)
 
 		if points >= 1000 then
 			damage = damage + 20
@@ -2611,1473 +690,56 @@ function WheelOfDestiny.configureRevelationPerks()
 		end
 	end
 
-	wheelOfDestinyWindow.revelationPerks.tabContent.damage.value:setText("+" .. damage)
+	tabContent.damage.value:setText("+" .. damage)
 
-	local m1, m2 = getPassiveInfo(1)
-	local passive = WheelOfDestiny.passivePoints[1]
-	local extraPoints = WheelOfDestiny.extraPassivePoints[1] or 0
-
-	passive = passive + extraPoints
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell2.value:setText("Locked")
-
-	if passive >= 1000 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell2.value:setText("Stage 3")
-	elseif passive >= 500 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell2.value:setText("Stage 2")
-	elseif passive >= 250 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell2.value:setText("Stage 1")
-	end
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.infoSpell2:setTooltip(m1)
-
-	local avatarName = getRevelationDisplayName(4)
-	local spell1 = getRevelationDisplayName(2)
-	local spell2 = getRevelationDisplayName(3)
-	local m1, m2 = getPassiveInfo(4)
-	local passive = WheelOfDestiny.passivePoints[4]
-	local extraPoints = WheelOfDestiny.extraPassivePoints[4] or 0
-
-	passive = passive + extraPoints
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.avatar.perk1:setText(avatarName)
-	wheelOfDestinyWindow.revelationPerks.tabContent.avatar.value:setText("Locked")
-
-	if passive >= 1000 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.avatar.value:setText("Stage 3")
-	elseif passive >= 500 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.avatar.value:setText("Stage 2")
-	elseif passive >= 250 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.avatar.value:setText("Stage 1")
-	end
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.infoAvatar:setTooltip(m1)
-
-	local m1, m2 = getPassiveInfo(2)
-	local passive = WheelOfDestiny.passivePoints[2]
-	local extraPoints = WheelOfDestiny.extraPassivePoints[2] or 0
-
-	passive = passive + extraPoints
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell1.perk2:setText(spell1)
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell1.perk2:setTooltip(spell1)
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell1.value:setText("Locked")
-
-	if passive >= 1000 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell1.value:setText("Stage 3")
-	elseif passive >= 500 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell1.value:setText("Stage 2")
-	elseif passive >= 250 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell1.value:setText("Stage 1")
-	end
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.infoSpell1:setTooltip(m1)
-
-	local m1, m2 = getPassiveInfo(3)
-	local passive = WheelOfDestiny.passivePoints[3]
-	local extraPoints = WheelOfDestiny.extraPassivePoints[3] or 0
-
-	passive = passive + extraPoints
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell3.perk4:setText(spell2)
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell3.perk4:setTooltip(spell2)
-	wheelOfDestinyWindow.revelationPerks.tabContent.spell3.value:setText("Locked")
-
-	if passive >= 1000 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell3.value:setText("Stage 3")
-	elseif passive >= 500 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell3.value:setText("Stage 2")
-	elseif passive >= 250 then
-		wheelOfDestinyWindow.revelationPerks.tabContent.spell3.value:setText("Stage 1")
-	end
-
-	wheelOfDestinyWindow.revelationPerks.tabContent.infoSpell3:setTooltip(m1)
-end
-
-local function checkValidName(text)
-	for _, data in pairs(WheelOfDestiny.internalPreset) do
-		if data.presetName == text then
-			return false
-		end
-	end
-
-	return #text > 1
-end
-
-function WheelOfDestiny.showNewPreset(createPreset)
-	hideWheelWindow()
-	newPresetWindow:show()
-
-	if not createPreset then
-		selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.import)
-	else
-		selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.useEmpty)
-	end
-
-	newPresetWindow.contentPanel.presetName:clearText()
-	newPresetWindow.contentPanel.presetCode:clearText()
-	newPresetWindow.contentPanel.copyPreset:setText(string.format("Copy preset '%s'", WheelOfDestiny.currentPreset.presetName))
-end
-
-function WheelOfDestiny.onImportConfig(base64Data)
-	if not base64Data or base64Data == "" then
-		return {}
-	end
-
-	base64Data = base64Data:gsub("-", "+"):gsub("_", "/")
-
-	local remainder = #base64Data % 4
-
-	if remainder > 0 then
-		base64Data = base64Data .. string.rep("=", 4 - remainder)
-	end
-
-	if not base64.isValidBase64(base64Data) then
-		g_logger.debug(string.format("[WheelOfDestiny.onImportConfig]: Invalid base64 string: %s", base64Data))
-
-		return {}
-	end
-
-	local decodedData = base64.decode(base64Data)
-	local points = string.unpack_custom("I2", decodedData)
-	local pointInvested = {}
-	local equipedGems = {}
-	local index = 3
-	local usedPoints = 0
-	local totalPoints = WheelOfDestiny.points
-	local importMap = {
-		15,
-		14,
-		9,
-		13,
-		8,
-		3,
-		7,
-		2,
-		1,
-		16,
-		17,
-		10,
-		18,
-		11,
-		4,
-		12,
-		5,
-		6,
-		22,
-		23,
-		28,
-		24,
-		29,
-		34,
-		30,
-		35,
-		36,
-		21,
-		20,
-		27,
-		19,
-		26,
-		33,
-		32,
-		25,
-		31
-	}
-	local unsortedPoints = {}
-
-	while index <= #decodedData do
-		local value = string.unpack_custom("I1", decodedData:sub(index, index))
-
-		if totalPoints and totalPoints < usedPoints + value then
-			value = totalPoints - usedPoints
-
-			if value < 0 then
-				value = 0
-			end
-		end
-
-		table.insert(unsortedPoints, value)
-
-		usedPoints = usedPoints + value
-		index = index + 1
-
-		if index >= 39 then
-			break
-		end
-	end
-
-	for i = 1, 36 do
-		pointInvested[i] = 0
-	end
-
-	for i, value in ipairs(unsortedPoints) do
-		if importMap[i] then
-			pointInvested[importMap[i]] = value
-		end
-	end
-
-	while index <= #decodedData do
-		local value = string.unpack_custom("I1", decodedData:sub(index, index))
-
-		if value == 255 then
-			value = -1
-		end
-
-		table.insert(equipedGems, value)
-
-		index = index + 1
-	end
-
-	while #equipedGems < 4 do
-		table.insert(equipedGems, -1)
-	end
-
-	if points < usedPoints then
-		return {}
-	end
-
-	return {
-		maxPoints = points,
-		usedPoints = usedPoints,
-		pointInvested = pointInvested,
-		equipedGems = equipedGems
-	}
-end
-
-function WheelOfDestiny.onImportPreset()
-	WheelOfDestiny.showNewPreset(false)
-	newPresetWindow.contentPanel.presetCode:focus()
-end
-
-function WheelOfDestiny.onExportPreset()
-	if exportCodeWindow then
-		exportCodeWindow:destroy()
-
-		exportCodeWindow = nil
-	end
-
-	hideWheelWindow()
-
-	local function codeButton()
-		if exportCodeWindow then
-			exportCodeWindow:destroy()
-
-			exportCodeWindow = nil
-		end
-
-		showWheelWindow()
-
-		local exportCode = WheelOfDestiny.getExportCode(WheelOfDestiny.currentPreset)
-
-		if exportCode and exportCode ~= "" then
-			g_window.setClipboardText(exportCode)
-			g_logger.debug(string.format("[WheelOfDestiny] Export code copied to clipboard: %s", exportCode))
-		else
-			g_logger.debug("[WheelOfDestiny] Failed to generate export code")
-		end
-
-		return true
-	end
-
-	local function urlButton()
-		g_logger.debug("[WheelOfDestiny] URL export - TODO: Not yet implemented")
-
-		return true
-	end
-
-	local function cancelButton()
-		if exportCodeWindow then
-			exportCodeWindow:destroy()
-
-			exportCodeWindow = nil
-		end
-
-		showWheelWindow()
-
-		return false
-	end
-
-	exportCodeWindow = displayGeneralBox("Copy to Clipboard", tr("Copy export code or URL of the planner to clipboard."), {
+	local pointInvested = {
 		{
-			text = tr("Code"),
-			callback = codeButton
+			domain = 4,
+			label = "perk1",
+			panel = tabContent.avatar,
+			info = tabContent.infoAvatar
 		},
 		{
-			text = tr("URL"),
-			callback = urlButton
+			domain = 2,
+			label = "perk2",
+			panel = tabContent.spell1,
+			info = tabContent.infoSpell1
 		},
 		{
-			text = tr("Cancel"),
-			callback = cancelButton
+			domain = 1,
+			label = "perk3",
+			panel = tabContent.spell2,
+			info = tabContent.infoSpell2
+		},
+		{
+			domain = 3,
+			label = "perk4",
+			panel = tabContent.spell3,
+			info = tabContent.infoSpell3
 		}
-	})
-end
-
-function WheelOfDestiny.onExportConfig()
-	local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-	local pointInvested = WheelOfDestiny.pointInvested or {}
-	local equipedGems = WheelOfDestiny.equipedGems or {}
-	local dataParts = {}
-	local packedHeader = string.pack_custom("I2", totalPoints)
-
-	if not packedHeader or packedHeader == "" then
-		return ""
-	end
-
-	table.insert(dataParts, packedHeader)
+	}
 
 	for _, value in ipairs(pointInvested) do
-		local packedValue = string.pack_custom("I1", value)
+		local packedValue = (WheelOfDestiny.passivePoints[value.domain] or 0) + (WheelOfDestiny.extraPassivePoints[value.domain] or 0)
+		local var_19_4 = "Locked"
 
-		if packedValue and packedValue ~= "" then
-			table.insert(dataParts, packedValue)
-		end
-	end
-
-	local gems = getGemStruct()
-	local gemOrder = {
-		GemDomains.GREEN,
-		GemDomains.RED,
-		GemDomains.ACQUA,
-		GemDomains.PURPLE
-	}
-
-	for _, domain in ipairs(gemOrder) do
-		local gemData = gems[domain]
-		local gemID = gemData and gemData.gemID or -1
-		local packedValue = string.pack_custom("I1", gemID < 0 and 255 or gemID)
-
-		if packedValue and packedValue ~= "" then
-			table.insert(dataParts, packedValue)
-		end
-	end
-
-	local data = table.concat(dataParts)
-
-	if not data or data == "" then
-		return ""
-	end
-
-	local base64Data = base64.encode(data)
-	local formatedString = string.format("%s%s", getVocationSt(WheelOfDestiny.vocationId), base64Data)
-
-	g_window.setClipboardText(formatedString)
-end
-
-function WheelOfDestiny.getExportCode(preset)
-	if not preset or table.empty(preset) then
-		return ""
-	end
-
-	local points = preset.availablePoints
-	local pointInvested = preset.pointInvested or {}
-	local equipedGems = preset.equipedGems or {}
-	local dataParts = {}
-	local packedHeader = string.pack_custom("I2", points)
-
-	if not packedHeader or packedHeader == "" then
-		return ""
-	end
-
-	table.insert(dataParts, packedHeader)
-
-	local exportMap = {
-		15,
-		14,
-		9,
-		13,
-		8,
-		3,
-		7,
-		2,
-		1,
-		16,
-		17,
-		10,
-		18,
-		11,
-		4,
-		12,
-		5,
-		6,
-		22,
-		23,
-		28,
-		24,
-		29,
-		34,
-		30,
-		35,
-		36,
-		21,
-		20,
-		27,
-		19,
-		26,
-		33,
-		32,
-		25,
-		31
-	}
-	local exportPoints = {}
-
-	for i = 1, 36 do
-		exportPoints[i] = 0
-	end
-
-	for exportIndex, internalIndex in ipairs(exportMap) do
-		exportPoints[exportIndex] = pointInvested[internalIndex] or 0
-	end
-
-	for _, value in ipairs(exportPoints) do
-		local packedValue = string.pack_custom("I1", value)
-
-		if packedValue and packedValue ~= "" then
-			table.insert(dataParts, packedValue)
-		end
-	end
-
-	local gems = getGemStruct(preset)
-	local gemOrder = {
-		GemDomains.GREEN,
-		GemDomains.RED,
-		GemDomains.ACQUA,
-		GemDomains.PURPLE
-	}
-
-	for _, domain in ipairs(gemOrder) do
-		local gemData = gems[domain]
-		local gemID = gemData and gemData.gemID or -1
-		local packedValue = string.pack_custom("I1", gemID < 0 and 255 or gemID)
-
-		if packedValue and packedValue ~= "" then
-			table.insert(dataParts, packedValue)
-		end
-	end
-
-	local data = table.concat(dataParts)
-
-	if not data or data == "" then
-		return ""
-	end
-
-	local base64Data = base64.encode(data)
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		return ""
-	end
-
-	local currentVocation = translateWheelVocation(player:getVocation())
-
-	return string.format("%s%s", getVocationSt(currentVocation), base64Data)
-end
-
-function WheelOfDestiny.onCancelConfig()
-	showWheelWindow()
-	newPresetWindow:hide()
-end
-
-function WheelOfDestiny.validadeImportCode(code)
-	if not code or code == "" or #code < 3 then
-		return "Export code does not match a valid Wheel of Destiny."
-	end
-
-	local vocationString = code:sub(1, 2)
-	local base64Data = code:sub(3)
-
-	if vocationString ~= getVocationSt(WheelOfDestiny.vocationId) then
-		return "Export code does not match the character's vocation."
-	end
-
-	if not base64Data or base64Data == "" then
-		return "Export code does not match a valid Wheel of Destiny."
-	end
-
-	local importResult = WheelOfDestiny.onImportConfig(base64Data)
-
-	if not importResult or table.empty(importResult) then
-		return "Export code does not match a valid Wheel of Destiny."
-	end
-
-	return ""
-end
-
-function WheelOfDestiny.onEditCode(text)
-	selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.import)
-
-	local validate = WheelOfDestiny.validadeImportCode(text)
-
-	if not string.empty(validate) then
-		newPresetWindow.contentPanel.importTooltip:setVisible(true)
-		newPresetWindow.contentPanel.importTooltip:setTooltip(validate)
-		newPresetWindow.contentPanel.ok:setEnabled(false)
-
-		return
-	end
-
-	newPresetWindow.contentPanel.importTooltip:setVisible(false)
-
-	local presetName = newPresetWindow.contentPanel.presetName:getText()
-	local nameValid = checkValidName(presetName)
-
-	newPresetWindow.contentPanel.ok:setEnabled(nameValid)
-end
-
-function WheelOfDestiny.onEditName(text)
-	newPresetWindow.contentPanel.presetNameTooltip:setVisible(not checkValidName(text))
-
-	local checkName = checkValidName(text)
-	local checkCode = string.empty(WheelOfDestiny.validadeImportCode(newPresetWindow.contentPanel.presetCode:getText()))
-	local selectedOption = selectedNewPresetRadio:getSelectedWidget()
-
-	if selectedOption == newPresetWindow.contentPanel.import then
-		newPresetWindow.contentPanel.ok:setEnabled(checkName and checkCode)
-
-		return
-	end
-
-	newPresetWindow.contentPanel.ok:setEnabled(checkName)
-end
-
-function WheelOfDestiny.onNewPresetSelectionChange()
-	local selectedOption = selectedNewPresetRadio:getSelectedWidget()
-
-	if not selectedOption then
-		return true
-	end
-
-	local presetName = newPresetWindow.contentPanel.presetName:getText()
-	local checkName = checkValidName(presetName)
-
-	if selectedOption == newPresetWindow.contentPanel.import then
-		local presetCode = newPresetWindow.contentPanel.presetCode:getText()
-		local checkCode = string.empty(WheelOfDestiny.validadeImportCode(presetCode))
-
-		newPresetWindow.contentPanel.ok:setEnabled(checkName and checkCode)
-
-		return
-	end
-
-	newPresetWindow.contentPanel.ok:setEnabled(checkName)
-end
-
-function WheelOfDestiny.onConfirmCreatePreset()
-	local selectedOption = selectedNewPresetRadio:getSelectedWidget()
-
-	if not selectedOption then
-		return true
-	end
-
-	local presetName = newPresetWindow.contentPanel.presetName:getText()
-
-	if not checkValidName(presetName) then
-		return
-	end
-
-	local dataCopy
-
-	if selectedOption == newPresetWindow.contentPanel.import then
-		local presetCode = newPresetWindow.contentPanel.presetCode:getText()
-		local vocationString = presetCode:sub(1, 2)
-
-		if vocationString ~= getVocationSt(WheelOfDestiny.vocationId) then
-			return
+		if packedValue >= 1000 then
+			var_19_4 = "Stage 3"
+		elseif packedValue >= 500 then
+			var_19_4 = "Stage 2"
+		elseif packedValue >= 250 then
+			var_19_4 = "Stage 1"
 		end
 
-		local base64Data = presetCode:sub(3)
-		local loadedResult = WheelOfDestiny.onImportConfig(base64Data)
+		value.panel.value:setText(var_19_4)
 
-		if table.empty(loadedResult) then
-			return
-		end
+		local var_19_5 = getRevelationDisplayName(value.domain)
+		local var_19_6 = value.panel[value.label]
 
-		dataCopy = {
-			presetName = presetName,
-			availablePoints = loadedResult.maxPoints,
-			usedPoints = loadedResult.usedPoints,
-			pointInvested = loadedResult.pointInvested,
-			equipedGems = loadedResult.equipedGems
-		}
-	elseif selectedOption == newPresetWindow.contentPanel.copyPreset then
-		dataCopy = table.copy(WheelOfDestiny.currentPreset)
-		dataCopy.presetName = presetName
-	elseif selectedOption == newPresetWindow.contentPanel.useEmpty then
-		local totalPoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-		dataCopy = {
-			usedPoints = 0,
-			presetName = presetName,
-			availablePoints = totalPoints,
-			pointInvested = table.reserve(36, 0),
-			equipedGems = {
-				-1,
-				-1,
-				-1,
-				-1
-			}
-		}
-	else
-		return
+		var_19_6:setTooltip(var_19_5)
+		WheelOfDestiny.fitPerkName(var_19_6, {
+			var_19_5
+		}, value.panel:getWidth(), value.panel.value)
+		value.info:setTooltip((getPassiveInfo(value.domain)))
 	end
-
-	showWheelWindow()
-	newPresetWindow:hide()
-
-	local currentEquipedGems = table.copy(WheelOfDestiny.equipedGems)
-	local currentAtelierGems = WheelOfDestiny.atelierGems
-	local currentBasicMods = WheelOfDestiny.basicModsUpgrade
-	local currentSupremeMods = WheelOfDestiny.supremeModsUpgrade
-
-	if selectedOption == newPresetWindow.contentPanel.import then
-		dataCopy.equipedGems = currentEquipedGems
-	end
-
-	WheelOfDestiny.createPreset(presetName, dataCopy)
-	WheelOfDestiny.saveWheelPresets()
-
-	local oldPoints = table.copy(dataCopy.pointInvested)
-	local oldGems = table.copy(dataCopy.equipedGems)
-
-	resetWheel(true)
-
-	WheelOfDestiny.currentPreset.pointInvested = oldPoints
-	WheelOfDestiny.currentPreset.equipedGems = oldGems
-
-	local basePoints = WheelOfDestiny.levelPoints or WheelOfDestiny.points or 0
-	local pointsInvested = dataCopy.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, basePoints, WheelOfDestiny.scrollPoints, dataCopy.pointInvested, WheelOfDestiny.usedPromotionScrolls, dataCopy.equipedGems, currentAtelierGems, currentBasicMods, currentSupremeMods)
-
-	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
-		GemAtelier.setupVesselPanel()
-	end
-
-	local presetLabel = wheelWindow:recursiveGetChildById("presetLabel")
-
-	if presetLabel then
-		presetLabel:setText(string.format("Current Preset: %s", presetName))
-	end
-
-	local presetHotCopy = wheelWindow:recursiveGetChildById("hotCopy")
-
-	if presetHotCopy then
-		function presetHotCopy.onClick()
-			WheelOfDestiny.onExportConfig()
-		end
-	end
-
-	local managePanel = wheelWindow:recursiveGetChildById("manage")
-
-	if managePanel then
-		managePanel.applyPresetChanges:setEnabled(false)
-		managePanel.renamePreset:setEnabled(true)
-	end
-
-	toggleTabBarButtons("managePresetsButton")
-	scheduleEvent(function()
-		WheelOfDestiny.configurePresets()
-
-		local presetPanel = wheelWindow:recursiveGetChildById("presetList")
-
-		if presetPanel then
-			for _, widget in ipairs(presetPanel:getChildren()) do
-				if widget.presetData and widget.presetData.presetName == presetName then
-					presetPanel:focusChild(widget)
-
-					break
-				end
-			end
-		end
-	end, 100)
-end
-
-function WheelOfDestiny.createPreset(presetName, dataCopy)
-	WheelOfDestiny.currentPreset = dataCopy
-
-	table.insert(WheelOfDestiny.internalPreset, dataCopy)
-end
-
-function WheelOfDestiny.changePresetName(newName)
-	for _, data in pairs(WheelOfDestiny.internalPreset) do
-		if data.presetName == WheelOfDestiny.currentPreset.presetName then
-			data.presetName = newName
-		end
-	end
-end
-
-function WheelOfDestiny.onRenamePreset()
-	hideWheelWindow()
-	renamePresetWindow:show()
-	renamePresetWindow.contentPanel.presetName:setText(WheelOfDestiny.currentPreset.presetName)
-	renamePresetWindow:grabMouse()
-	renamePresetWindow:grabKeyboard()
-end
-
-function WheelOfDestiny.onPresetNameChange(text)
-	local checkName = checkValidName(text)
-	local selectedOption = selectedNewPresetRadio:getSelectedWidget()
-
-	renamePresetWindow.contentPanel.presetNameTooltip:setVisible(not checkName)
-	renamePresetWindow.contentPanel.ok:setEnabled(checkName)
-end
-
-function WheelOfDestiny.onConfirmRenamePreset(cancel)
-	if cancel then
-		renamePresetWindow:hide()
-		showWheelWindow()
-
-		return
-	end
-
-	local newName = renamePresetWindow.contentPanel.presetName:getText()
-
-	if not checkValidName(newName) then
-		return
-	end
-
-	WheelOfDestiny.changePresetName(newName)
-
-	WheelOfDestiny.currentPreset.presetName = newName
-
-	renamePresetWindow:hide()
-	showWheelWindow()
-	WheelOfDestiny.configurePresets()
-	WheelOfDestiny.saveWheelPresets()
-end
-
-function WheelOfDestiny.onDeletePreset()
-	if deletePresetWindow then
-		deletePresetWindow:destroy()
-	end
-
-	hideWheelWindow()
-
-	local function noOption()
-		deletePresetWindow:destroy()
-
-		deletePresetWindow = nil
-
-		showWheelWindow()
-	end
-
-	local function yesOption()
-		WheelOfDestiny.deletePreset()
-		showWheelWindow()
-		deletePresetWindow:destroy()
-
-		deletePresetWindow = nil
-
-		WheelOfDestiny.configurePresets()
-		WheelOfDestiny.saveWheelPresets()
-	end
-
-	local message = string.format("Do you really  want to delete the preset '%s'?", WheelOfDestiny.currentPreset.presetName)
-
-	deletePresetWindow = displayGeneralBox("Delete Preset", message, {
-		{
-			text = "Yes",
-			callback = yesOption
-		},
-		{
-			text = "No",
-			callback = noOption
-		}
-	})
-end
-
-function WheelOfDestiny.deletePreset()
-	local currentPreset = WheelOfDestiny.currentPreset
-
-	for i, data in pairs(WheelOfDestiny.internalPreset) do
-		if data.presetName == currentPreset.presetName then
-			table.remove(WheelOfDestiny.internalPreset, i)
-
-			break
-		end
-	end
-
-	WheelOfDestiny.currentPreset = WheelOfDestiny.internalPreset[1]
-end
-
-local configuringPresets = false
-
-function WheelOfDestiny.configurePresets()
-	if configuringPresets then
-		return
-	end
-
-	configuringPresets = true
-
-	local status, err = pcall(function()
-		local presetPanel = wheelWindow:recursiveGetChildById("presetList")
-
-		if not presetPanel then
-			configuringPresets = false
-
-			return
-		end
-
-		if not presetPanel:isVisible() then
-			configuringPresets = false
-
-			return
-		end
-
-		if table.empty(WheelOfDestiny.internalPreset) then
-			WheelOfDestiny.loadWheelPresets()
-		end
-
-		presetPanel:destroyChildren()
-
-		function presetPanel:onChildFocusChange(selection, oldSelection)
-			WheelOfDestiny.onPreparePresetClick(self, selection, oldSelection)
-		end
-
-		if table.empty(WheelOfDestiny.internalPreset) then
-			configuringPresets = false
-
-			return
-		end
-
-		table.sort(WheelOfDestiny.internalPreset, function(a, b)
-			if not a or not a.presetName then
-				return false
-			end
-
-			if not b or not b.presetName then
-				return true
-			end
-
-			return a.presetName:lower() < b.presetName:lower()
-		end)
-
-		for i, data in pairs(WheelOfDestiny.internalPreset) do
-			local widgetStatus, widgetErr = pcall(function()
-				local widget = g_ui.createWidget("PresetLabel", presetPanel)
-
-				if not widget then
-					return
-				end
-
-				local nameLabel = widget:getChildById("name")
-				local pointsLabel = widget:getChildById("points")
-
-				if nameLabel then
-					nameLabel:setText(data.presetName or "Unknown")
-				end
-
-				if pointsLabel then
-					local pointsText = tostring((data.availablePoints or 0) - (data.usedPoints or 0))
-
-					pointsLabel:setText(pointsText)
-				end
-
-				widget:setBackgroundColor(i % 2 == 0 and "#484848" or "#414141")
-
-				widget.presetData = data
-
-				if WheelOfDestiny.currentPreset and WheelOfDestiny.currentPreset.presetName == data.presetName then
-					presetPanel:focusChild(widget)
-				end
-			end)
-
-			if not widgetStatus then
-				-- block empty
-			end
-		end
-
-		local deletePreset = wheelWindow:recursiveGetChildById("deletePreset")
-
-		if deletePreset then
-			deletePreset:setEnabled(#WheelOfDestiny.internalPreset > 1)
-		end
-	end)
-
-	configuringPresets = false
-
-	if not status then
-		-- block empty
-	end
-end
-
-function WheelOfDestiny.onPreparePresetClick(list, selection, oldSelection)
-	if not selection or not selection.presetData then
-		return
-	end
-
-	if not oldSelection or not oldSelection.presetData then
-		WheelOfDestiny.onPresetClick(list, selection, oldSelection)
-
-		return
-	end
-
-	local pointsArray = oldSelection.presetData.pointInvested or {}
-	local isEqual = table.compare(pointsArray, WheelOfDestiny.pointInvested)
-
-	if isEqual then
-		WheelOfDestiny.onPresetClick(list, selection, oldSelection)
-
-		return
-	end
-
-	if checkSavePresetWindow then
-		checkSavePresetWindow:destroy()
-	end
-
-	hideWheelWindow()
-
-	local function yesOption()
-		if checkSavePresetWindow then
-			checkSavePresetWindow:destroy()
-
-			checkSavePresetWindow = nil
-		end
-
-		showWheelWindow()
-		onWheelOfDestinyApply(false, false)
-		WheelOfDestiny.updateCurrentPreset()
-
-		return true
-	end
-
-	local function noOption()
-		if checkSavePresetWindow then
-			checkSavePresetWindow:destroy()
-
-			checkSavePresetWindow = nil
-		end
-
-		showWheelWindow()
-		WheelOfDestiny.onPresetClick(list, selection, oldSelection)
-
-		return false
-	end
-
-	local message = string.format("You have not saved the changes you made to preset '%s'.\nDo you want to save your current changes and active the preset?", WheelOfDestiny.currentPreset.presetName)
-
-	checkSavePresetWindow = displayGeneralBox("Save?", message, {
-		{
-			text = "Yes",
-			callback = yesOption
-		},
-		{
-			text = "No",
-			callback = noOption
-		}
-	})
-end
-
-function WheelOfDestiny.onPresetClick(list, selection, oldSelection)
-	if not selection then
-		return
-	end
-
-	if not selection.presetData then
-		return
-	end
-
-	local presetData = selection.presetData
-
-	if oldSelection then
-		local widgetIndex = list:getChildIndex(oldSelection)
-
-		oldSelection:setBackgroundColor(widgetIndex % 2 == 0 and "#484848" or "#414141")
-		oldSelection.name:setColor("#c0c0c0")
-		oldSelection.points:setColor("#c0c0c0")
-	end
-
-	local player = g_game.getLocalPlayer()
-
-	if player and not player:hasState(PlayerStates.Pz) then
-		local managePresetsButton = wheelWindow.mainPanel.wheelMenu.info.presetTabBar:getChildById("managePresetsButton")
-
-		toggleTabBarButtons("informationButton")
-		managePresetsButton:setEnabled(false)
-		refreshPresetTabBarButtons()
-
-		return
-	end
-
-	selection.name:setColor("#f4f4f4")
-	selection.points:setColor("#f4f4f4")
-
-	WheelOfDestiny.currentPreset = presetData
-
-	local presetLabel = wheelWindow:recursiveGetChildById("presetLabel")
-
-	presetLabel:setText(string.format("Current Preset: %s", presetData.presetName))
-
-	local presetHotCopy = wheelWindow:recursiveGetChildById("hotCopy")
-
-	function presetHotCopy.onClick()
-		WheelOfDestiny.onExportConfig()
-	end
-
-	local managePanel = wheelWindow:recursiveGetChildById("manage")
-
-	managePanel.applyPresetChanges:setEnabled(false)
-	managePanel.renamePreset:setEnabled(true)
-
-	local deletePreset = wheelWindow:recursiveGetChildById("deletePreset")
-
-	deletePreset:setEnabled(#WheelOfDestiny.internalPreset > 1)
-
-	local oldPoints = table.copy(WheelOfDestiny.currentPreset.pointInvested)
-	local oldGems = table.copy(WheelOfDestiny.currentPreset.equipedGems)
-
-	resetWheel(true)
-
-	WheelOfDestiny.currentPreset.pointInvested = oldPoints
-	WheelOfDestiny.currentPreset.equipedGems = oldGems
-
-	local pointsInvested = presetData.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-
-	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, pointsInvested, WheelOfDestiny.scrollPoints, presetData.pointInvested, WheelOfDestiny.usedPromotionScrolls, presetData.equipedGems, WheelOfDestiny.atelierGems, WheelOfDestiny.basicModsUpgrade, WheelOfDestiny.supremeModsUpgrade)
-
-	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
-		GemAtelier.setupVesselPanel()
-	end
-end
-
-function WheelOfDestiny.determinateCurrentPreset()
-	local localGems = getLocalGemStruct()
-
-	for i, data in pairs(WheelOfDestiny.internalPreset) do
-		local pointsArray = data.pointInvested
-		local gemsArray = data.equipedGems
-
-		if table.compare(pointsArray, WheelOfDestiny.pointInvested) and table.compare(gemsArray, localGems) then
-			WheelOfDestiny.currentPreset = data
-
-			local presetLabel = wheelWindow:recursiveGetChildById("presetLabel")
-
-			presetLabel:setText(string.format("Current Preset: %s", data.presetName))
-
-			local presetHotCopy = wheelWindow:recursiveGetChildById("hotCopy")
-
-			function presetHotCopy.onClick()
-				WheelOfDestiny.onExportConfig()
-			end
-
-			return
-		end
-	end
-
-	if (not WheelOfDestiny.currentPreset or table.empty(WheelOfDestiny.currentPreset)) and not table.empty(WheelOfDestiny.internalPreset) then
-		WheelOfDestiny.currentPreset = WheelOfDestiny.internalPreset[1]
-
-		local presetLabel = wheelWindow:recursiveGetChildById("presetLabel")
-
-		if presetLabel then
-			presetLabel:setText(string.format("Current Preset: %s", WheelOfDestiny.currentPreset.presetName))
-		end
-	end
-end
-
-function WheelOfDestiny.updateCurrentPreset()
-	if not WheelOfDestiny.currentPreset then
-		return
-	end
-
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		return
-	end
-
-	WheelOfDestiny.currentPreset.pointInvested = WheelOfDestiny.pointInvested or {}
-	WheelOfDestiny.currentPreset.equipedGems = getLocalGemStruct()
-	WheelOfDestiny.currentPreset.usedPoints = WheelOfDestiny.usedPoints or 0
-
-	local points = WheelOfDestiny.points or 0
-	local extraGemPoints = WheelOfDestiny.extraGemPoints or 0
-	local scrollPoints = WheelOfDestiny.scrollPoints or 0
-	local totalPoints = points + (extraGemPoints + scrollPoints)
-
-	WheelOfDestiny.currentPreset.availablePoints = totalPoints
-	WheelOfDestiny.currentPreset.extraGemPoints = extraGemPoints
-	WheelOfDestiny.currentPreset.presetName = WheelOfDestiny.currentPreset.presetName or "Default-Preset"
-
-	for i, data in pairs(WheelOfDestiny.internalPreset) do
-		if data.presetName == WheelOfDestiny.currentPreset.presetName then
-			WheelOfDestiny.internalPreset[i] = WheelOfDestiny.currentPreset
-
-			break
-		end
-	end
-
-	WheelOfDestiny.configurePresets()
-end
-
-function WheelOfDestiny.checkApplyButton()
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	local pointsArray = WheelOfDestiny.currentPreset.pointInvested or {}
-	local presetMatches = table.compare(pointsArray, WheelOfDestiny.pointInvested)
-	local managePanel = wheelWindow:recursiveGetChildById("manage")
-
-	managePanel.applyPresetChanges:setEnabled(not presetMatches)
-	managePanel.renamePreset:setEnabled(presetMatches)
-
-	local closeButton = wheelWindow:recursiveGetChildById("close")
-	local okButton = wheelWindow:recursiveGetChildById("ok")
-
-	closeButton:setText(presetMatches and "Close" or "Cancel")
-	okButton:setEnabled(true)
-end
-
-function WheelOfDestiny.loadWheelPresets()
-	WheelOfDestiny.externalPreset = {}
-	WheelOfDestiny.internalPreset = {}
-
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		return false
-	end
-
-	local playerVocation = translateWheelVocation(player:getVocation())
-	local defaultData = {
-		presets = {
-			{
-				name = "Default-Preset",
-				exportString = defaultExportString[playerVocation]
-			}
-		}
-	}
-	local file = "/characterdata/" .. player:getId() .. "/wheelOfDestiny.json"
-
-	if g_resources.fileExists(file) then
-		local status, result = pcall(function()
-			return json.decode(g_resources.readFileContents(file))
-		end)
-
-		if not status then
-			WheelOfDestiny.externalPreset = defaultData
-
-			WheelOfDestiny.generateInternalPreset()
-
-			return false
-		end
-
-		if result.presets == nil or #result.presets == 0 then
-			WheelOfDestiny.externalPreset = defaultData
-		else
-			WheelOfDestiny.externalPreset = result
-		end
-	else
-		WheelOfDestiny.externalPreset = defaultData
-	end
-
-	WheelOfDestiny.generateInternalPreset()
-
-	return true
-end
-
-function WheelOfDestiny.generateInternalPreset()
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		return
-	end
-
-	local playerVocation = translateWheelVocation(player:getVocation())
-
-	for k, v in pairs(WheelOfDestiny.externalPreset.presets) do
-		local codeString = v.exportString
-		local vocationString = codeString:sub(1, 2)
-		local base64Data = codeString:sub(3)
-		local data = WheelOfDestiny.onImportConfig(base64Data)
-
-		if table.empty(data) or vocationString ~= getVocationSt(playerVocation) then
-			table.remove(WheelOfDestiny.externalPreset.presets, k)
-		else
-			g_logger.debug(string.format("[WheelPresets] Adding preset '%s' with %d points", v.name, data.maxPoints))
-			table.insert(WheelOfDestiny.internalPreset, {
-				presetName = v.name,
-				availablePoints = data.maxPoints,
-				usedPoints = data.usedPoints,
-				pointInvested = data.pointInvested,
-				equipedGems = data.equipedGems
-			})
-		end
-	end
-end
-
-function WheelOfDestiny.saveWheelPresets()
-	local player = g_game.getLocalPlayer()
-
-	if not player then
-		return false
-	end
-
-	if table.empty(WheelOfDestiny.internalPreset) then
-		return false
-	end
-
-	local savedData = {}
-
-	savedData.presets = {}
-
-	for _, preset in pairs(WheelOfDestiny.internalPreset) do
-		local exportStr = WheelOfDestiny.getExportCode(preset)
-
-		if not string.empty(exportStr) and #exportStr < 10 then
-			exportStr = defaultExportString[translateWheelVocation(player:getVocation())]
-		end
-
-		if not string.empty(exportStr) then
-			table.insert(savedData.presets, {
-				exportString = exportStr,
-				name = preset.presetName
-			})
-		end
-	end
-
-	local directory = "/characterdata/" .. player:getId()
-	local file = directory .. "/wheelOfDestiny.json"
-
-	if not g_resources.directoryExists(directory) then
-		local success = g_resources.makeDir(directory)
-	end
-
-	local status, result = pcall(function()
-		return json.encode(savedData, 2)
-	end)
-
-	if not status then
-		return false
-	end
-
-	if result:len() > 104857600 then
-		return false
-	end
-
-	g_resources.writeFileContents(file, result)
-
-	return true
-end
-
-function WheelOfDestiny.configureEquippedGems()
-	for i = 0, 3 do
-		local data = GemAtelier.getEquipedGem(i)
-		local background = wheelPanel:recursiveGetChildById("socketBackground" .. i)
-		local socket = wheelPanel:recursiveGetChildById("gemSocket" .. i)
-		local gemIcon = socket:recursiveGetChildById("gemIcon" .. i)
-		local filledCount = GemAtelier.getFilledVesselCount(i)
-		local backGroundImage = filledCount == 0 and "backdrop_skillwheel_largebonus_socketdisabled_" .. i or "backdrop_skillwheel_largebonus_socketenabled_" .. i
-
-		background:setImageSource("/images/game/wheel/" .. backGroundImage)
-
-		local showSocket = filledCount > 0
-
-		socket:setVisible(showSocket)
-
-		if showSocket then
-			local startPos = 442
-
-			if data and filledCount == data.gemType + 1 then
-				startPos = 34
-			end
-
-			local domainOffset = startPos + 102 * i
-			local modOffset = 34 * math.max(0, filledCount - 1)
-
-			socket:setImageClip(domainOffset + modOffset .. " 0 34 34")
-		end
-
-		socket:setVisible(true)
-		gemIcon:setVisible(data ~= nil)
-
-		if data then
-			local typeOffset = data.gemType * 32
-			local domainOffet = data.gemDomain * 96
-			local vocationOffset = (WheelOfDestiny.vocationId - 1) * 384
-			local gemOffset = vocationOffset + domainOffet + typeOffset
-
-			gemIcon:setImageClip(gemOffset .. " 0 32 32")
-			socket:setImageSource("/images/game/wheel/icons-skillwheel-sockets")
-			socket:setVisible(true)
-
-			if not showSocket then
-				socket:setImageClip("0 0 34 34")
-			end
-		else
-			socket:setImageSource("/images/game/wheel/backdrop_skillwheel_socket_inactive.png")
-			socket:setImageClip("0 0 34 34")
-		end
-	end
-end
-
-function WheelOfDestiny.onGemVesselClick(domain)
-	if WheelOfDestiny.lastSelectedGemVessel then
-		WheelOfDestiny.lastSelectedGemVessel:setVisible(false)
-	end
-
-	WheelOfDestiny.resetPassiveFocus()
-	wheelPanel.borderSelectedWheel:setVisible(false)
-
-	local widget = wheelPanel:recursiveGetChildById("selectVessel" .. domain)
-
-	WheelOfDestiny.lastSelectedGemVessel = widget
-
-	WheelOfDestiny.lastSelectedGemVessel:setVisible(true)
-	wheelOfDestinyWindow.selection.tabContent:setVisible(false)
-	wheelOfDestinyWindow.selection.gemContent:setVisible(true)
-
-	local filledCount = GemAtelier.getFilledVesselCount(domain)
-	local data = GemAtelier.getEquipedGem(domain)
-
-	if not data then
-		wheelOfDestinyWindow.selection.gemContent.gemName:setText("Vessel contains no gem")
-	end
-
-	local romanLetter = {
-		"I",
-		"II",
-		"III"
-	}
-	local vesselStatus = "Sealed"
-
-	if filledCount == 1 then
-		vesselStatus = "Dormant"
-	elseif filledCount == 2 then
-		vesselStatus = "Awakened"
-	elseif filledCount == 3 then
-		vesselStatus = "Radiant"
-	end
-
-	wheelOfDestinyWindow.selection.gemContent.sealedInfo:setText(tr("%s Vessel (VR %s)", vesselStatus, filledCount == 0 and "0" or romanLetter[filledCount]))
-	wheelOfDestinyWindow.selection.gemContent.VRBonus:setText("")
-	wheelOfDestinyWindow.selection.gemContent.modification0:setText("")
-	wheelOfDestinyWindow.selection.gemContent.modification1:setText("")
-	wheelOfDestinyWindow.selection.gemContent.modification2:setText("")
-
-	if data then
-		local formatedName = GemVocations[WheelOfDestiny.vocationId][data.gemType].name:gsub(" %(x 0%)", "")
-		local gemSlot1, gemSlot2, gemSlot3 = 0
-		local decription = "(Unkown)"
-
-		if data.gemType == 0 then
-			local text = {}
-
-			decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-
-			setStringColor(text, decription, filledCount >= 1 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
-		elseif data.gemType == 1 then
-			local text = {}
-
-			decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-
-			setStringColor(text, decription, filledCount >= 1 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
-
-			text = {}
-			decription, gemSlot2 = Workshop.getGemInformationByBonus(data.regularBonus, false, data.gemID, 1)
-
-			setStringColor(text, decription, filledCount >= 2 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification1:setColoredText(text)
-		elseif data.gemType == 2 then
-			local text = {}
-
-			decription, gemSlot1 = Workshop.getGemInformationByBonus(data.lesserBonus, false, data.gemID, 0)
-
-			setStringColor(text, decription, filledCount >= 1 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification0:setColoredText(text)
-
-			text = {}
-			decription, gemSlot2 = Workshop.getGemInformationByBonus(data.regularBonus, false, data.gemID, 1)
-
-			setStringColor(text, decription, filledCount >= 2 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification1:setColoredText(text)
-
-			text = {}
-			decription, gemSlot3 = Workshop.getGemInformationByBonus(data.supremeBonus, true, data.gemID, 2)
-
-			setStringColor(text, decription, filledCount == 3 and "#c0c0c0" or "#707070")
-			wheelOfDestinyWindow.selection.gemContent.modification2:setColoredText(text)
-		end
-
-		local text = {}
-
-		setStringColor(text, tr("+%s Damage and Healing", data.gemType == 2 and 2 or 1), filledCount == 3 and "#c0c0c0" or "#707070")
-		wheelOfDestinyWindow.selection.gemContent.VRBonus:setColoredText(text)
-
-		local replaceStr = {
-			[0] = "�",
-			"�",
-			"�",
-			"�"
-		}
-		local coloredStr = {}
-
-		setStringColor(coloredStr, formatedName .. " ", "#c0c0c0")
-
-		if data then
-			setStringColor(coloredStr, replaceStr[gemSlot1], "white")
-
-			if data.gemType >= 1 then
-				setStringColor(coloredStr, replaceStr[gemSlot2], "white")
-			end
-
-			if data.gemType >= 2 then
-				setStringColor(coloredStr, replaceStr[gemSlot3], "white")
-			end
-		end
-
-		wheelOfDestinyWindow.selection.gemContent.gemName:setColoredText(coloredStr)
-	end
-end
-
-function WheelOfDestiny.onChangeGemButton(domain)
-	if wheelOfDestinyWindow:isVisible() then
-		wheelOfDestinyWindow:hide()
-	end
-
-	local wheelMenuButton = wheelWindow.optionsTabBar:getChildById("wheelMenu")
-	local gemMenuButton = wheelWindow.optionsTabBar:getChildById("gemMenu")
-
-	wheelMenuButton:setChecked(false)
-	gemMenuButton:setChecked(true)
-	gemAtelierWindow:show(true)
-	wheelMenuButton:setChecked(false)
-	gemMenuButton:setChecked(true)
-
-	local currentDomain = WheelOfDestiny.lastSelectedGemVessel and WheelOfDestiny.lastSelectedGemVessel:getId():gsub("selectVessel", "") or 0
-	local data = GemAtelier.getEquipedGem(tonumber(currentDomain))
-
-	if data then
-		GemAtelier.redirectToGem(data)
-	else
-		GemAtelier.resetFields()
-		GemAtelier.showGems(true)
-	end
-end
-
-function WheelOfDestiny.setupPointsTooltip()
-	local tooltip = tr(WheelPointTooltip, WheelOfDestiny.levelPoints, WheelOfDestiny.extraGemPoints, WheelOfDestiny.scrollPoints)
-
-	if WheelOfDestiny.scrollPoints > 0 then
-		tooltip = tooltip .. "\nYou have received bonus promotion points by using the following items: "
-
-		for k, v in pairs(WheelOfDestiny.usedPromotionScrolls) do
-			local item = Item.create(k)
-			local marketData = item:getMarketData()
-
-			if marketData then
-				tooltip = tooltip .. "\n" .. string.format("%s (%s points)", marketData.name, v)
-			end
-		end
-	end
-
-	if WheelOfDestiny.fromAchievementType and WheelOfDestiny.fromAchievementType > 0 then
-		tooltip = tooltip .. "\nYou were rewarded 10 bonus promotion points for earning the achievement \"Path of Insight\"."
-	end
-
-	wheelOfDestinyWindow.selection.pointsDesc:setTooltip(tooltip)
-	wheelOfDestinyWindow.selection.points:setTooltip(tooltip)
 end

@@ -1,0 +1,299 @@
+WheelMenuSelectionPanel < Panel
+  size: 213 250
+  anchors.left: parent.left
+  anchors.top: parent.top
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+  padding-right: 1
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Selection')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+    margin-left: -1
+
+  Panel
+    id: gemContent
+    size: 209 193
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 17
+    margin-left: 2
+    visible: false
+
+    UILabel
+      id: gemName
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 4
+      margin-right: 4
+      font: $var-cip-font-new
+      color: #c0c0c0
+      !text: tr('Vessel contains no gem')
+      text-align: center
+      text-auto-resize: true
+    UIWidget
+      size: 12 12
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-top: 6
+      margin-right: 5
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Gems can be revealed within the Gem Atelier. Different gem\nqualities yield different amounts of mods:\n* Lesser gem: one basic mod\n* Regular gem: two basic mods\n* Greater gem: two basic mods and one supreme mod')
+
+    UILabel
+      id: modification0
+      width: 198
+      anchors.top: gemName.bottom
+      anchors.left: parent.left
+      margin-left: 4
+      margin-top: 2
+      font: $var-cip-font-new
+      color: #707070
+      text-wrap: true
+      text-auto-resize: true
+
+    UILabel
+      id: modification1
+      width: 198
+      anchors.top: modification0.bottom
+      anchors.left: parent.left
+      margin-left: 4
+      margin-top: 4
+      font: $var-cip-font-new
+      color: #707070
+      text-wrap: true
+      text-auto-resize: true
+
+    UILabel
+      id: modification2
+      width: 198
+      anchors.top: modification1.bottom
+      anchors.left: parent.left
+      margin-left: 4
+      margin-top: 4
+      font: $var-cip-font-new
+      color: #707070
+      text-auto-resize: true
+      text-wrap: true
+
+    UILabel
+      id: sealedInfo
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 134
+      margin-right: 1
+      font: $var-cip-font-new
+      color: #c0c0c0
+      !text: tr('Sealed Vessel (VR 0)')
+      text-auto-resize: true
+      text-align: center
+    UIWidget
+      size: 12 12
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-top: 136
+      margin-right: 5
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('')
+
+    UILabel
+      id: VRBonus
+      anchors.top: sealedInfo.bottom
+      anchors.left: parent.left
+      margin-left: 4
+      margin-top: 2
+      font: $var-cip-font-new
+      color: #707070
+      text-auto-resize: true
+
+    UIButton
+      id: changeGem
+      size: 86 20
+      anchors.top: VRBonus.top
+      anchors.left: parent.left
+      margin-top: 19
+      image-source: /images/game/wheel/change-button
+      anchors.horizontalCenter: parent.horizontalCenter
+      image-clip: 0 0 86 20
+      @onClick: modules.game_wheel.WheelOfDestiny.onChangeGemButton(0)
+      $pressed:
+        image-clip: 0 20 86 20
+
+  Panel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: next.top
+    margin-top: 22
+    margin-left: 6
+    margin-right: 6
+    margin-bottom: 2
+
+    UIWidget
+      image-source: /images/game/wheel/progressBg
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-left: 1
+
+    ProgressBarSD
+      id: dedicationPb
+      size: 199 14
+      !text: tr('0 / 0')
+      font: $var-cip-font-new
+      color: #c0c0c0
+      image-source: /images/game/wheel/progressBar
+      anchors.top: prev.top
+      anchors.left: prev.left
+      anchors.right: prev.right
+      anchors.bottom: prev.bottom
+
+    Label
+      id: dedicationTitle
+      size: 200 12
+      !text: tr('Dedication Perk')
+      font: $var-cip-font-new
+      text-align: center
+      color: #c0c0c0
+      anchors.top: prev.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 6
+
+    UIWidget
+      id: information
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 1
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('toDo')
+
+    Label
+      id: dedication
+      size: 185 29
+      text-align: topleft
+      font: $var-cip-font-new
+      color: #c0c0c0
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 3
+
+    Label
+      id: convictionTitle
+      size: 200 19
+      !text: tr('Conviction Perk')
+      font: $var-cip-font-new
+      color: #c0c0c0
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+
+    UIWidget
+      id: information1
+      size: 12 12
+      anchors.top: convictionTitle.top
+      anchors.right: parent.right
+      margin-top: 4
+      image-source: /images/icons/show_gui_help_grey
+
+    Label
+      id: convictionName
+      size: 185 13
+      text-align: topleft
+      font: $var-cip-font-new
+      color: #c0c0c0
+      anchors.top: convictionTitle.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+
+    Label
+      id: conviction
+      size: 185 60
+      text-align: topleft
+      font: $var-cip-font-new
+      color: #c0c0c0
+      anchors.top: convictionName.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      text-wrap: true
+      text-auto-resize: true
+      tooltip-delayed: true
+      margin-top: 3
+
+    Button
+      id: addMax
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      !text: tr('+Max')
+      text-offset: 0 0
+      size: 34 20
+      margin-bottom: 4
+      enabled: false
+      @onClick: modules.game_wheel.WheelOfDestiny.onAddMax()
+
+    Button
+      id: addOne
+      anchors.bottom: addMax.bottom
+      anchors.right: prev.left
+      !text: tr('+1')
+      text-offset: 0 0
+      size: 34 20
+      margin-right: 3
+      enabled: false
+
+    Button
+      id: rmvMax
+      anchors.bottom: addMax.bottom
+      anchors.left: parent.left
+      !text: tr('-Max')
+      text-offset: 0 0
+      size: 34 20
+      margin-left: 1
+      enabled: false
+      @onClick: modules.game_wheel.onRmvMax()
+
+    Button
+      id: rmvOne
+      anchors.bottom: addMax.bottom
+      anchors.left: prev.right
+      !text: tr('-1')
+      text-offset: 0 0
+      size: 34 20
+      margin-left: 3
+      enabled: false
+
+  HorizontalSeparator
+    id: selectionSeparator
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-bottom: 38
+    margin-left: 7
+    margin-right: 7
+
+  UIWidget
+    id: pointsDesc
+    anchors.top: prev.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+    !text: tr('Available Promotion Points')
+    text-auto-resize: true
+    font: $var-cip-font-new
+    color: #c0c0c0
+    tooltip-delayed: true
+
+  UIWidget
+    id: points
+    anchors.top: prev.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-right: 1
+    margin-top: 1
+    !text: tr('0 / 0')
+    text-auto-resize: true
+    font: $var-cip-font-new
+    color: #c0c0c0
+    tooltip-delayed: true

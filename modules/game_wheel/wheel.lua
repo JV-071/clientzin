@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_wheel/wheel.lua
-
-wheelWindow = nil
+﻿wheelWindow = nil
 wheelOfDestinyWindow = nil
 gemAtelierWindow = nil
 fragmentWindow = nil
@@ -13,36 +11,65 @@ selectedNewPresetRadio = nil
 
 local summaryVisible = false
 local presetTabSelection = "informationButton"
+local var_0_2
 
 wheelPanel = nil
 centerReferencePoint = nil
 
-if not SkillwheelStringsLibrary then
-	SkillwheelStringsLibrary = {}
-end
-
 local function onGameStart()
-	if g_game.getClientVersion() >= 1310 then
-		local ret = WheelOfDestiny.loadWheelPresets()
+	if var_0_2 then
+		removeEvent(var_0_2)
 
-		if not ret then
-			print("[wheel] Error loading wheel presets")
-		end
-	else
-		scheduleEvent(function()
-			g_modules.getModule("game_wheel"):unload()
-		end, 100)
+		var_0_2 = nil
 	end
+
+	WheelOfDestiny.cancelActiveStateRequest()
+	WheelOfDestiny.clearActiveState()
+
+	if not WheelOfDestiny.loadWheelPresets() then
+		print("[wheel] Error loading wheel presets")
+	end
+
+	var_0_2 = scheduleEvent(function()
+		var_0_2 = nil
+
+		WheelOfDestiny.requestActiveState()
+	end, 250)
 end
 
 function init()
 	wheelWindow = g_ui.displayUI("wheel")
 	mainPanel = wheelWindow:getChildById("mainPanel")
+
+	g_ui.importStyle("styles/wheelSlice")
+	g_ui.importStyle("styles/wheelMenu_widgets")
+	g_ui.importStyle("styles/wheelMenu_selection")
+	g_ui.importStyle("styles/wheelMenu_info")
+	g_ui.importStyle("styles/wheelMenu_summary")
+	g_ui.importStyle("styles/wheelMenu_dedicationPerks")
+	g_ui.importStyle("styles/wheelMenu_convictionPerks")
+	g_ui.importStyle("styles/wheelMenu_vessels")
+	g_ui.importStyle("styles/wheelMenu_revelationPerks")
+	g_ui.importStyle("styles/wheelMenu_wheelPanel")
+	g_ui.importStyle("styles/gemMenu_widgets")
+
 	wheelOfDestinyWindow = g_ui.loadUI("styles/wheelMenu", mainPanel)
+
+	if not wheelOfDestinyWindow then
+		error("failed to load styles/wheelMenu")
+	end
 
 	wheelOfDestinyWindow:hide()
 
+	wheelPanel = wheelOfDestinyWindow:getChildById("wheelPanel")
+
+	WheelOfDestiny.initSliceFills()
+
 	gemAtelierWindow = g_ui.loadUI("styles/gemMenu", mainPanel)
+
+	if not gemAtelierWindow then
+		error("failed to load styles/gemMenu")
+	end
 
 	gemAtelierWindow:hide()
 
@@ -76,7 +103,6 @@ function init()
 	renamePresetWindow = g_ui.displayUI("styles/renamePreset")
 
 	renamePresetWindow:hide()
-	loadConfigJson()
 
 	selectedNewPresetRadio = UIRadioGroup.create()
 
@@ -111,9 +137,31 @@ function init()
 
 		wheelButton:setOn(false)
 	end
+
+	Keybind.new("Dialogs", "Open Wheel of Destiny", "", "")
+	Keybind.bind("Dialogs", "Open Wheel of Destiny", {
+		{
+			type = KEY_DOWN,
+			callback = toggle
+		}
+	}, modules.game_interface.getRootPanel())
+
+	if g_game.isOnline() then
+		onGameStart()
+	end
 end
 
 function terminate()
+	Keybind.delete("Dialogs", "Open Wheel of Destiny")
+
+	if var_0_2 then
+		removeEvent(var_0_2)
+
+		var_0_2 = nil
+	end
+
+	WheelOfDestiny.cancelActiveStateRequest()
+	WheelOfDestiny.clearActiveState()
 	disconnect(g_game, {
 		onGameEnd = onGameEnd,
 		onGameStart = onGameStart,
@@ -159,6 +207,12 @@ function hideWheelWindow()
 	wheelWindow:hide()
 end
 
+local function var_0_4(arg_11_0)
+	WheelOfDestiny.cancelActiveStateRequest()
+	setWheelButtonOn(true)
+	g_game.openWheel(arg_11_0)
+end
+
 function toggle()
 	if wheelWindow:isVisible() then
 		hide()
@@ -174,7 +228,7 @@ function toggle()
 			fragmentWindow:hide()
 		end
 
-		g_game.openWheel(g_game.getLocalPlayer():getId())
+		var_0_4(g_game.getLocalPlayer():getId())
 		wheelWindow:recursiveGetChildById("tabContent"):setVisible(false)
 		WheelOfDestiny.onRemoveClick()
 	end
@@ -184,6 +238,10 @@ function setWheelButtonOn(on)
 	if wheelButton then
 		wheelButton:setOn(on)
 	end
+end
+
+function getActiveWheelState()
+	return WheelOfDestiny.getActiveState()
 end
 
 function hide()
@@ -196,6 +254,14 @@ function hide()
 end
 
 function onGameEnd()
+	if var_0_2 then
+		removeEvent(var_0_2)
+
+		var_0_2 = nil
+	end
+
+	WheelOfDestiny.cancelActiveStateRequest()
+	WheelOfDestiny.clearActiveState()
 	hide()
 	WheelOfDestiny.saveWheelPresets()
 	newPresetWindow:hide()
@@ -223,7 +289,7 @@ function onGameEnd()
 end
 
 function show()
-	g_game.openWheel(g_game.getLocalPlayer():getId())
+	var_0_4(g_game.getLocalPlayer():getId())
 end
 
 function openForPlayer(playerId)
@@ -254,7 +320,7 @@ function openForPlayer(playerId)
 		fragmentWindow:hide()
 	end
 
-	g_game.openWheel(id)
+	var_0_4(id)
 	wheelWindow:recursiveGetChildById("tabContent"):setVisible(false)
 	WheelOfDestiny.onRemoveClick()
 end
@@ -280,9 +346,9 @@ function loadMenu(menuId)
 		fragmentWindow:hide()
 	end
 
-	wheelMenuButton = wheelWindow.optionsTabBar:getChildById("wheelMenu")
-	gemMenuButton = wheelWindow.optionsTabBar:getChildById("gemMenu")
-	fragmentMenuButton = wheelWindow.optionsTabBar:getChildById("fragmentMenu")
+	wheelMenuButton = wheelWindow.menus:getChildById("wheelMenu")
+	gemMenuButton = wheelWindow.menus:getChildById("gemMenu")
+	fragmentMenuButton = wheelWindow.menus:getChildById("fragmentMenu")
 
 	if menuId == "wheelMenu" then
 		gemAtelierWindow:hide()
@@ -376,7 +442,7 @@ local function refreshPresetTabButtonClip(button)
 	end
 
 	if isSmall then
-		local clipY = button:isHovered() and 34 or 0
+		local clipY = button:isPressed() and 34 or 0
 
 		button:setImageClip(torect(string.format("0 %d 34 34", clipY)))
 	else
@@ -384,9 +450,11 @@ local function refreshPresetTabButtonClip(button)
 	end
 end
 
-function onPresetTabButtonHoverChange(button, hovered)
-	refreshPresetTabButtonClip(button)
+function onPresetTabButtonPressChange(arg_28_0)
+	refreshPresetTabButtonClip(arg_28_0)
+end
 
+function onPresetTabButtonHoverChange(button, hovered)
 	if g_tooltip and g_tooltip.onWidgetHoverChange then
 		g_tooltip.onWidgetHoverChange(button, hovered)
 	end
@@ -408,16 +476,16 @@ function toggleTabBarButtons(selectedButtonId)
 
 	if selectedButtonId == "informationButton" then
 		informationButton:setSize(tosize("174 34"))
-		informationButton:setImageSource("/images/game/wheel/informationSelection")
+		informationButton:setImageSource("/images/game/wheel/buttons/button-information-selected")
 		managePresetsButton:setSize(tosize("34 34"))
-		managePresetsButton:setImageSource("/images/game/wheel/small_manage_button")
+		managePresetsButton:setImageSource("/images/game/wheel/buttons/button-manage-unselected")
 		tabContent.manage:setVisible(false)
 		tabContent.information:setVisible(true)
 	elseif selectedButtonId == "managePresetsButton" then
 		informationButton:setSize(tosize("34 34"))
-		informationButton:setImageSource("/images/game/wheel/small_information_button")
+		informationButton:setImageSource("/images/game/wheel/buttons/button-information-unselected")
 		managePresetsButton:setSize(tosize("174 34"))
-		managePresetsButton:setImageSource("/images/game/wheel/manageSelect")
+		managePresetsButton:setImageSource("/images/game/wheel/buttons/button-manage-selected")
 		tabContent.information:setVisible(false)
 		tabContent.manage:setVisible(true)
 	end
@@ -441,20 +509,4 @@ function onResourceBalance()
 	wheelWindow.moneyPanel.gold:setText(formatMoney(value, ","))
 	wheelWindow.lesserFragmentPanel.gold:setText(lesserFragment)
 	wheelWindow.greaterFragmentPanel.gold:setText(greaterFragment)
-end
-
-function loadConfigJson()
-	local file = "/json/SkillwheelStringsJsonLibrary.json"
-
-	if g_resources.fileExists(file) then
-		local status, result = pcall(function()
-			return json.decode(g_resources.readFileContents(file))
-		end)
-
-		if not status then
-			return g_logger.debug("Error while reading characterdata file. Details: " .. result)
-		end
-
-		SkillwheelStringsLibrary = result
-	end
 end

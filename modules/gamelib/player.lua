@@ -1,20 +1,4 @@
-﻿-- chunkname: @/gamelib/player.lua
-
-PlayerStates = {
-	PartyBuff = 4096,
-	Cursed = 2048,
-	Dazzled = 1024,
-	Freezing = 512,
-	Drowning = 256,
-	Swords = 128,
-	Haste = 64,
-	Paralyze = 32,
-	ManaShield = 16,
-	Drunk = 8,
-	Energy = 4,
-	Burn = 2,
-	Poison = 1,
-	None = 0,
+﻿PlayerStates = {
 	Rewards = 30,
 	Mentor = 536870912,
 	Powerless = 268435456,
@@ -30,12 +14,25 @@ PlayerStates = {
 	GreaterHex = 262144,
 	IntenseHex = 131072,
 	LesserHex = 65536,
-	Hungry = 65536,
 	Bleeding = 32768,
 	Pigeon = 16384,
 	Pz = 16384,
 	PzBlock = 8192,
-	RedSwords = 8192
+	RedSwords = 8192,
+	PartyBuff = 4096,
+	Cursed = 2048,
+	Dazzled = 1024,
+	Freezing = 512,
+	Drowning = 256,
+	Swords = 128,
+	Haste = 64,
+	Paralyze = 32,
+	ManaShield = 16,
+	Drunk = 8,
+	Energy = 4,
+	Burn = 2,
+	Poison = 1,
+	None = 0
 }
 Icons = {}
 Icons[PlayerStates.Poison] = {
@@ -189,15 +186,15 @@ Icons[PlayerStates.Mentor] = {
 	tooltip = tr("You are Mentor")
 }
 Icons[PlayerStates.Rewards] = {
-	clipRect = "0 0 9 9",
-	id = "condition_Rewards",
 	image = "/images/game/creatures/player-state-flags-client",
+	id = "condition_Rewards",
+	clipRect = "0 0 9 9",
 	tooltip = tr("Rewards")
 }
-Icons[PlayerStates.Hungry] = {
-	clipRect = "18 0 9 9",
-	id = "condition_hungry",
+Icons.hungry = {
 	image = "/images/game/creatures/player-state-flags-client",
+	id = "condition_hungry",
+	clipRect = "18 0 9 9",
 	tooltip = tr("You are hungry")
 }
 PlayerStateFlagsImage = "/images/game/creatures/player-state-flags"
@@ -207,279 +204,280 @@ PlayerStatePlayerKillerFlagsImage = "/images/game/creatures/player-state-playerk
 PlayerStateFlagGuildImage = "/images/game/creatures/hud/flags/guild"
 SpecialConditionExtraIcons = {
 	condition_restingarea = {
-		clipRect = "0 0 9 9",
 		id = "condition_restingarea",
+		clipRect = "0 0 9 9",
 		image = PlayerStateFlagsClientImage,
 		tooltip = tr("You are within a resting area")
 	},
-	condition_LesserHex = {
-		id = "condition_LesserHex",
-		clip = 17,
-		tooltip = tr("You are LesserHex")
+	condition_hungry = {
+		id = "condition_hungry",
+		clipRect = "18 0 9 9",
+		image = PlayerStateFlagsClientImage,
+		tooltip = tr("You are hungry")
 	},
 	condition_goshnar_taint = {
-		id = "condition_goshnar_taint",
 		clip = 26,
+		id = "condition_goshnar_taint",
 		tooltip = tr("You are Goshnar's Taint")
 	},
 	condition_bakragore_taint = {
-		clipRect = "72 0 9 9",
 		id = "condition_bakragore_taint",
+		clipRect = "72 0 9 9",
 		image = PlayerStateFlagsRottenBloodImage,
 		tooltip = tr("You are Bakragore's Taint")
 	},
 	skullyellow = {
-		clipRect = "0 0 9 9",
 		id = "skullyellow",
+		clipRect = "0 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You have a yellow skull")
 	},
 	skullgreen = {
-		clipRect = "9 0 9 9",
 		id = "skullgreen",
+		clipRect = "9 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You are in party mode")
 	},
 	skullwhite = {
-		clipRect = "18 0 9 9",
 		id = "skullwhite",
+		clipRect = "18 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You have a white skull")
 	},
 	skullred = {
-		clipRect = "27 0 9 9",
 		id = "skullred",
+		clipRect = "27 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You have a red skull")
 	},
 	skullblack = {
-		clipRect = "36 0 9 9",
 		id = "skullblack",
+		clipRect = "36 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You have a black skull")
 	},
 	skullorange = {
-		clipRect = "45 0 9 9",
 		id = "skullorange",
+		clipRect = "45 0 9 9",
 		image = PlayerStatePlayerKillerFlagsImage,
 		tooltip = tr("You have an orange skull")
 	},
 	guildWar = {
-		clipRect = "0 0 11 11",
 		id = "guildWar",
+		clipRect = "0 0 11 11",
 		image = PlayerStateFlagGuildImage,
 		tooltip = tr("You are in a guild war")
 	}
 }
 SpecialConditions = {
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Poison,
 		label = tr("Poisoned")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Burn,
 		label = tr("Burning")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Energy,
 		label = tr("Electrified")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Bleeding,
 		label = tr("Bleeding")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Agony,
 		label = tr("Agony")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Powerless,
 		label = tr("Powerless")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Rooted,
 		label = tr("Rooted")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Feared,
 		label = tr("Feared")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Drunk,
 		label = tr("Drunk")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.NewManaShield,
 		label = tr("Magic Shield")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Paralyze,
 		label = tr("Slowed")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Haste,
 		label = tr("Haste")
 	},
 	{
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		state = PlayerStates.Swords,
 		label = tr("Logout Block")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Drowning,
 		label = tr("Drowning")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Freezing,
 		label = tr("Freezing")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Dazzled,
 		label = tr("Dazzled")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.Cursed,
 		label = tr("Cursed")
 	},
 	{
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		state = PlayerStates.Mentor,
 		label = tr("Mentor Other")
 	},
 	{
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		state = PlayerStates.PartyBuff,
 		label = tr("Strengthened")
 	},
 	{
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		state = PlayerStates.RedSwords,
 		label = tr("Protection Zone Block")
 	},
 	{
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		state = PlayerStates.Pigeon,
 		label = tr("In Protection Zone")
 	},
 	{
 		id = "condition_restingarea",
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		label = tr("Resting Area")
 	},
 	{
-		id = "condition_LesserHex",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
+		state = PlayerStates.LesserHex,
 		label = tr("Lesser Hex")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.IntenseHex,
 		label = tr("Intense Hex")
 	},
 	{
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		state = PlayerStates.GreaterHex,
 		label = tr("Greater Hex")
 	},
 	{
 		id = "condition_goshnar_taint",
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		label = tr("Goshnar's Taint")
 	},
 	{
 		id = "condition_bakragore_taint",
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		label = tr("Bakragore's Taint")
 	},
 	{
 		id = "skullyellow",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("Yellow Skull")
 	},
 	{
 		id = "skullgreen",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("Party Mode")
 	},
 	{
 		id = "skullwhite",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("White Skull")
 	},
 	{
 		id = "skullred",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("Red Skull")
 	},
 	{
 		id = "skullblack",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("Black Skull")
 	},
 	{
 		id = "skullorange",
-		defaultHud = true,
 		defaultBar = true,
+		defaultHud = true,
 		label = tr("Orange Skull")
 	},
 	{
 		id = "guildWar",
-		defaultHud = false,
 		defaultBar = true,
+		defaultHud = false,
 		label = tr("In Guild War")
 	},
 	{
-		defaultHud = false,
+		id = "condition_hungry",
 		defaultBar = true,
-		state = PlayerStates.Hungry,
+		defaultHud = false,
 		label = tr("Hungry")
 	}
 }
@@ -524,7 +522,7 @@ function isPlayerHungryConditionActive(player)
 		return false
 	end
 
-	return isPlayerHungry(player) or bit.band(player:getStates(), PlayerStates.Hungry) ~= 0
+	return isPlayerHungry(player)
 end
 
 function buildFoodRegenerationTooltip(regenerationTime)
@@ -693,63 +691,102 @@ function applyPlayerStateIcon(widget, info, variant)
 	widget:setImageClip(getPlayerStateIconClip(info, variant))
 end
 
+local var_0_11 = 9
+
+function getBakragoreTaintIconInfo(numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	if numericValue <= 0 then
+		return nil
+	end
+
+	if numericValue > var_0_11 then
+		numericValue = var_0_11
+	end
+
+	local var_20_0 = numericValue
+	local var_20_1 = false
+
+	if numericValue >= 5 then
+		var_20_1 = true
+		var_20_0 = numericValue - 5
+	end
+
+	local var_20_2
+
+	if var_20_1 and var_20_0 == 0 then
+		var_20_2 = tr("Bakragore's Final Taint\nEnhanced experience and loot, without the regular penalties.")
+	elseif var_20_1 then
+		var_20_2 = tr("Bakragore's Taint (%d) and Final Taint", var_20_0)
+	else
+		var_20_2 = tr("Bakragore's Taint (%d)", var_20_0)
+	end
+
+	return {
+		id = "condition_bakragore_taint",
+		image = PlayerStateFlagsRottenBloodImage,
+		clipRect = (numericValue - 1) * 9 .. " 0 9 9",
+		tooltip = var_20_2
+	}
+end
+
 combatStates = {
+	CLIENT_COMBAT_ICE = 4,
+	CLIENT_COMBAT_ENERGY = 3,
+	CLIENT_COMBAT_EARTH = 2,
+	CLIENT_COMBAT_FIRE = 1,
+	CLIENT_COMBAT_PHYSICAL = 0,
 	CLIENT_COMBAT_MANADRAIN = 10,
 	CLIENT_COMBAT_LIFEDRAIN = 9,
 	CLIENT_COMBAT_DROWN = 8,
 	CLIENT_COMBAT_HEALING = 7,
 	CLIENT_COMBAT_DEATH = 6,
-	CLIENT_COMBAT_HOLY = 5,
-	CLIENT_COMBAT_ICE = 4,
-	CLIENT_COMBAT_ENERGY = 3,
-	CLIENT_COMBAT_EARTH = 2,
-	CLIENT_COMBAT_FIRE = 1,
-	CLIENT_COMBAT_PHYSICAL = 0
+	CLIENT_COMBAT_HOLY = 5
 }
 clientCombat = {}
 clientCombat[combatStates.CLIENT_COMBAT_PHYSICAL] = {
-	id = "Physical",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-physical-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-physical-resist",
+	id = "Physical"
 }
 clientCombat[combatStates.CLIENT_COMBAT_FIRE] = {
-	id = "Fire",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-fire-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-fire-resist",
+	id = "Fire"
 }
 clientCombat[combatStates.CLIENT_COMBAT_EARTH] = {
-	id = "Earth",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-earth-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-earth-resist",
+	id = "Earth"
 }
 clientCombat[combatStates.CLIENT_COMBAT_ENERGY] = {
-	id = "Energy",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-energy-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-energy-resist",
+	id = "Energy"
 }
 clientCombat[combatStates.CLIENT_COMBAT_ICE] = {
-	id = "Ice",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-ice-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-ice-resist",
+	id = "Ice"
 }
 clientCombat[combatStates.CLIENT_COMBAT_HOLY] = {
-	id = "Holy",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-holy-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-holy-resist",
+	id = "Holy"
 }
 clientCombat[combatStates.CLIENT_COMBAT_DEATH] = {
-	id = "Death",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-death-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-death-resist",
+	id = "Death"
 }
 clientCombat[combatStates.CLIENT_COMBAT_HEALING] = {
-	id = "Healing",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-healing-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-healing-resist",
+	id = "Healing"
 }
 clientCombat[combatStates.CLIENT_COMBAT_DROWN] = {
-	id = "Drown",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-drowning-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-drowning-resist",
+	id = "Drown"
 }
 clientCombat[combatStates.CLIENT_COMBAT_LIFEDRAIN] = {
-	id = "Lifedrain ",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-lifedrain-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-lifedrain-resist",
+	id = "Lifedrain "
 }
 clientCombat[combatStates.CLIENT_COMBAT_MANADRAIN] = {
-	id = "Manadrain",
-	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-manadrain-resist"
+	path = "/game_cyclopedia/images/bestiary/icons/monster-icon-manadrain-resist",
+	id = "Manadrain"
 }
 
 function getClientCombatElementName(combatType)
@@ -811,33 +848,33 @@ vocationNamesByClientId = {
 	"Exalted Monk"
 }
 
-function Player:isPartyLeader()
+function Player.isPartyLeader(self)
 	local shield = self:getShield()
 
 	return shield == ShieldWhiteYellow or shield == ShieldYellow or shield == ShieldYellowSharedExp or shield == ShieldYellowNoSharedExpBlink or shield == ShieldYellowNoSharedExp
 end
 
-function Player:isPartyMember()
+function Player.isPartyMember(self)
 	local shield = self:getShield()
 
 	return shield == ShieldWhiteYellow or shield == ShieldYellow or shield == ShieldYellowSharedExp or shield == ShieldYellowNoSharedExpBlink or shield == ShieldYellowNoSharedExp or shield == ShieldBlueSharedExp or shield == ShieldBlueNoSharedExpBlink or shield == ShieldBlueNoSharedExp or shield == ShieldBlue
 end
 
-function Player:isPartySharedExperienceActive()
+function Player.isPartySharedExperienceActive(self)
 	local shield = self:getShield()
 
 	return shield == ShieldYellowSharedExp or shield == ShieldYellowNoSharedExpBlink or shield == ShieldYellowNoSharedExp or shield == ShieldBlueSharedExp or shield == ShieldBlueNoSharedExpBlink or shield == ShieldBlueNoSharedExp
 end
 
-function Player:hasCondition(condition)
+function Player.hasCondition(self, condition)
 	return bit.band(self:getStates(), condition) > 0
 end
 
-function Player:isInProtectionZone()
+function Player.isInProtectionZone(self)
 	return self:hasCondition(PlayerStates.Pz)
 end
 
-function Player:hasVip(creatureName)
+function Player.hasVip(self, creatureName)
 	for id, vip in pairs(g_game.getVips()) do
 		if vip[1] == creatureName then
 			return true
@@ -847,52 +884,59 @@ function Player:hasVip(creatureName)
 	return false
 end
 
-function Player:isMounted()
+function Player.isMounted(self)
 	local outfit = self:getOutfit()
 
 	return outfit.mount ~= nil and outfit.mount > 0
 end
 
-function Player:toggleMount()
+function Player.toggleMount(self)
 	if g_game.getFeature(GamePlayerMounts) then
 		g_game.mount(not self:isMounted())
 	end
 end
 
-function Player:mount()
+function Player.mount(self)
 	if g_game.getFeature(GamePlayerMounts) then
 		g_game.mount(true)
 	end
 end
 
-function Player:dismount()
+function Player.dismount(self)
 	if g_game.getFeature(GamePlayerMounts) then
 		g_game.mount(false)
 	end
 end
 
-function Player:getItem(itemId, subType)
+function Player.getItem(self, itemId, subType)
 	return g_game.findPlayerItem(itemId, subType or -1)
 end
 
-function Player:getItems(itemId, subType)
+function Player.getItems(self, itemId, subType)
 	local subType = subType or -1
 	local items = {}
 
 	for i = InventorySlotFirst, InventorySlotLast do
 		local item = self:getInventoryItem(i)
+		local var_33_3 = type(item)
 
-		if item and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
+		if (var_33_3 == "userdata" or var_33_3 == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
 			table.insert(items, item)
 		end
 	end
 
 	for i, container in pairs(g_game.getContainers()) do
-		for j, item in pairs(container:getItems()) do
-			if item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
-				item.container = container
+		local var_33_4 = type(container)
 
-				table.insert(items, item)
+		if var_33_4 == "userdata" or var_33_4 == "table" then
+			for j, item in pairs(container:getItems()) do
+				local var_33_5 = type(item)
+
+				if (var_33_5 == "userdata" or var_33_5 == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
+					item.container = container
+
+					table.insert(items, item)
+				end
 			end
 		end
 	end
@@ -900,8 +944,9 @@ function Player:getItems(itemId, subType)
 	return items
 end
 
-function Player:getItemsCount(itemId)
-	local items, count = self:getItems(itemId), 0
+function Player.getItemsCount(self, itemId)
+	local items = self:getItems(itemId)
+	local count = 0
 
 	for i = 1, #items do
 		count = count + items[i]:getCount()
@@ -910,7 +955,7 @@ function Player:getItemsCount(itemId)
 	return count
 end
 
-function Player:hasState(state, states)
+function Player.hasState(self, state, states)
 	states = states or self:getStates()
 
 	for i = 1, 32 do
@@ -920,9 +965,7 @@ function Player:hasState(state, states)
 			break
 		end
 
-		local states = bit.band(states, pow)
-
-		if states == state then
+		if bit.band(states, pow) == state then
 			return true
 		end
 	end
@@ -930,11 +973,11 @@ function Player:hasState(state, states)
 	return false
 end
 
-function Player:getVocationNameByClientId()
+function Player.getVocationNameByClientId(self)
 	return vocationNamesByClientId[self:getVocation()] or "Unknown Vocation"
 end
 
-function Player:isPromoted()
+function Player.isPromoted(self)
 	local promoted = {
 		11,
 		12,
@@ -950,7 +993,7 @@ function Player:isPromoted()
 	return false
 end
 
-function Player:getBlessingStatus()
+function Player.getBlessingStatus(self)
 	local blessings = self:getBlessings()
 	local status = 1
 

@@ -593,6 +593,7 @@ UIMiniWindow
   image-border-bottom: 4
   &minimizedHeight: 19
   icon-offset-y: -2
+  &moveOnlyToSideBars: true
   @onEscape: modules.game_search_locker.onSearchLockerEscape()
 
   $on:

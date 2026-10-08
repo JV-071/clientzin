@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_analysers/menus/SupplyAnalyser.lua
-
-if not SupplyAnalyser then
+﻿if not SupplyAnalyser then
 	SupplyAnalyser = {
 		graphVisible = true,
 		gaugeVisible = true,
@@ -9,12 +7,101 @@ if not SupplyAnalyser then
 		goldValue = 0,
 		session = 0,
 		launchTime = 0,
+		listDirty = false,
 		items = {}
 	}
 	SupplyAnalyser.__index = SupplyAnalyser
 end
 
 local targetMaxMargin = 142
+local var_0_1 = 3600000
+local var_0_2 = 4096
+
+local function var_0_3()
+	return {
+		first = 1,
+		last = 0,
+		entries = {}
+	}
+end
+
+local function var_0_4(arg_2_0, arg_2_1)
+	local supplyEvents = SupplyAnalyser.supplyEvents
+	local var_2_1 = g_clock.millis()
+	local var_2_2 = supplyEvents.entries[supplyEvents.last]
+
+	if var_2_2 and var_2_2.itemId == arg_2_0 and var_2_2.value == arg_2_1 and math.floor(var_2_2.tick / 1000) == math.floor(var_2_1 / 1000) then
+		var_2_2.count = (var_2_2.count or 1) + 1
+		var_2_2.tick = var_2_1
+
+		return
+	end
+
+	supplyEvents.last = supplyEvents.last + 1
+	supplyEvents.entries[supplyEvents.last] = {
+		count = 1,
+		itemId = arg_2_0,
+		value = arg_2_1,
+		tick = var_2_1
+	}
+end
+
+local function var_0_5()
+	local supplyEvents = SupplyAnalyser.supplyEvents
+
+	if not supplyEvents then
+		return false
+	end
+
+	local var_3_1 = g_clock.millis() - var_0_1
+	local var_3_2 = false
+
+	while supplyEvents.first <= supplyEvents.last do
+		local var_3_3 = supplyEvents.entries[supplyEvents.first]
+
+		if not var_3_3 or var_3_1 < var_3_3.tick then
+			break
+		end
+
+		local numericValue = tonumber(SupplyAnalyser.items[var_3_3.itemId]) or 0
+		local var_3_5 = math.min(numericValue, tonumber(var_3_3.count) or 1)
+
+		if var_3_5 > 0 then
+			local var_3_6 = numericValue - var_3_5
+
+			if var_3_6 > 0 then
+				SupplyAnalyser.items[var_3_3.itemId] = var_3_6
+			else
+				SupplyAnalyser.items[var_3_3.itemId] = nil
+			end
+
+			SupplyAnalyser.goldValue = math.max(0, SupplyAnalyser.goldValue - (tonumber(var_3_3.value) or 0) * var_3_5)
+			var_3_2 = true
+		end
+
+		supplyEvents.entries[supplyEvents.first] = nil
+		supplyEvents.first = supplyEvents.first + 1
+	end
+
+	if supplyEvents.first > supplyEvents.last then
+		SupplyAnalyser.supplyEvents = var_0_3()
+	elseif supplyEvents.first > var_0_2 and supplyEvents.first > math.floor(supplyEvents.last / 2) then
+		local var_3_7 = var_0_3()
+
+		for iter_3_0 = supplyEvents.first, supplyEvents.last do
+			var_3_7.last = var_3_7.last + 1
+			var_3_7.entries[var_3_7.last] = supplyEvents.entries[iter_3_0]
+		end
+
+		SupplyAnalyser.supplyEvents = var_3_7
+	end
+
+	if var_3_2 then
+		SupplyAnalyser.listDirty = true
+	end
+
+	return var_3_2
+end
 
 local function updateSupplyTargetArrow()
 	local supplyTargetBG = SupplyAnalyser.window and SupplyAnalyser.window.contentsPanel and SupplyAnalyser.window.contentsPanel.supplyTargetBG
@@ -49,8 +136,8 @@ local function updateSupplyTargetArrow()
 	arrow:setMarginLeft(marginLeft)
 end
 
-function SupplyAnalyser:create()
-	SupplyAnalyser.launchTime = 0
+function SupplyAnalyser.create(unusedArgument)
+	SupplyAnalyser.launchTime = g_clock.millis()
 	SupplyAnalyser.session = 0
 	SupplyAnalyser.goldValue = 0
 	SupplyAnalyser.goldHour = 0
@@ -58,6 +145,8 @@ function SupplyAnalyser:create()
 	SupplyAnalyser.gaugeVisible = true
 	SupplyAnalyser.graphVisible = true
 	SupplyAnalyser.items = {}
+	SupplyAnalyser.supplyEvents = var_0_3()
+	SupplyAnalyser.listDirty = false
 	SupplyAnalyser.forceUpdateBalance = false
 	SupplyAnalyser.updateBalance = true
 	SupplyAnalyser.window = openedWindows.supplyButton
@@ -131,12 +220,15 @@ function onSupplyExtra(mousePosition, mode)
 	return true
 end
 
-function SupplyAnalyser:reset()
+function SupplyAnalyser.reset(unusedArgument)
+	SupplyAnalyser.launchTime = g_clock.millis()
 	SupplyAnalyser.session = 0
 	SupplyAnalyser.goldValue = 0
 	SupplyAnalyser.goldHour = 0
 	SupplyAnalyser.target = 0
 	SupplyAnalyser.items = {}
+	SupplyAnalyser.supplyEvents = var_0_3()
+	SupplyAnalyser.listDirty = false
 	SupplyAnalyser.forceUpdateBalance = false
 	SupplyAnalyser.updateBalance = true
 
@@ -148,12 +240,14 @@ function SupplyAnalyser:reset()
 	SupplyAnalyser:updateWindow(true, true)
 end
 
-function SupplyAnalyser:updateWindow(updateScroll, ignoreVisible)
+function SupplyAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible)
 	if not SupplyAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
 
-	SupplyAnalyser:refreshGoldHour()
+	local var_17_0 = SupplyAnalyser:refreshGoldHour()
+
+	updateScroll = SupplyAnalyser.listDirty or var_17_0 or updateScroll
 
 	local target = SupplyAnalyser.target or 0
 	local goldHour = SupplyAnalyser.goldHour or 0
@@ -170,34 +264,56 @@ function SupplyAnalyser:updateWindow(updateScroll, ignoreVisible)
 		return
 	end
 
-	local numOfItems = 0
-	local numOfLines = 0
+	for _, iter_17_1 in pairs(contentsPanel.lootedItems:getChildren()) do
+		iter_17_1.toBeRemoved = true
+	end
 
-	for _, __ in pairs(contentsPanel.lootedItems:getChildren()) do
-		numOfItems = numOfItems + 1
+	for key, unusedValue in pairs(SupplyAnalyser.items) do
+		SupplyAnalyser:updateWidget(key)
 
-		if numOfItems == 4 then
-			numOfItems = 0
-			numOfLines = numOfLines + 1
+		local childById = contentsPanel.lootedItems:getChildById(tostring(key))
+
+		if childById then
+			childById.toBeRemoved = false
 		end
+	end
+
+	for unusedValue, child in pairs(contentsPanel.lootedItems:getChildren()) do
+		if child.toBeRemoved then
+			child:destroy()
+		end
+	end
+
+	local numOfItems = 0
+
+	for iter_17_6, iter_17_7 in pairs(SupplyAnalyser.items) do
+		numOfItems = numOfItems + 1
 	end
 
 	if numOfItems > 0 then
 		contentsPanel.lootedItems:setVisible(true)
 		contentsPanel.separatorLootedItems:setVisible(true)
 		SupplyAnalyser.window.contentsPanel.targetLabel:addAnchor(AnchorTop, "separatorLootedItems", AnchorBottom)
+	else
+		contentsPanel.lootedItems:setVisible(false)
+		contentsPanel.separatorLootedItems:setVisible(false)
+		SupplyAnalyser.window.contentsPanel.targetLabel:addAnchor(AnchorTop, "separator", AnchorBottom)
 	end
 
-	numOfLines = not table.empty(SupplyAnalyser.items) and numOfLines + 1 or 0
+	contentsPanel.lootedItems:setHeight(35 * math.ceil(numOfItems / 4))
 
-	contentsPanel.lootedItems:setHeight(35 * numOfLines)
+	SupplyAnalyser.listDirty = false
 end
 
-function SupplyAnalyser:refreshGoldHour()
-	SupplyAnalyser.goldHour = AnalyserSession:perHourFromTotal(SupplyAnalyser.goldValue)
+function SupplyAnalyser.refreshGoldHour(unusedArgument)
+	local var_18_0 = var_0_5()
+
+	SupplyAnalyser.goldHour = AnalyserSession:perHourFromTotal(SupplyAnalyser.goldValue, SupplyAnalyser.launchTime, var_0_1)
+
+	return var_18_0
 end
 
-function SupplyAnalyser:updateGraphics()
+function SupplyAnalyser.updateGraphics(self)
 	SupplyAnalyser:refreshGoldHour()
 
 	if SupplyAnalyser.window and SupplyAnalyser.window.contentsPanel then
@@ -205,7 +321,7 @@ function SupplyAnalyser:updateGraphics()
 	end
 end
 
-function SupplyAnalyser:getItemCount(itemId)
+function SupplyAnalyser.getItemCount(self, itemId)
 	local c = SupplyAnalyser.items[itemId]
 
 	if c == nil and itemId ~= nil then
@@ -219,7 +335,7 @@ function SupplyAnalyser:getItemCount(itemId)
 	return tonumber(c) or 0
 end
 
-function SupplyAnalyser:updateWidget(itemId)
+function SupplyAnalyser.updateWidget(self, itemId)
 	local contentsPanel = SupplyAnalyser.window.contentsPanel
 	local idStr = tostring(itemId)
 	local widget = contentsPanel.lootedItems:getChildById(idStr)
@@ -249,7 +365,7 @@ function SupplyAnalyser:updateWidget(itemId)
 	widget:setTooltip(string.format("%s ×%d (Value: %sgp, Sum: %sgp)", getItemServerName(itemId), count, formatMoney(value, ","), formatMoney(value * count, ",")))
 end
 
-function SupplyAnalyser:addSuppliesItems(itemId)
+function SupplyAnalyser.addSuppliesItems(unusedArgument, itemId)
 	if SupplyAnalyser.items[itemId] then
 		SupplyAnalyser.items[itemId] = SupplyAnalyser.items[itemId] + 1
 	else
@@ -258,15 +374,16 @@ function SupplyAnalyser:addSuppliesItems(itemId)
 
 	local value = getCurrentPrice(itemId)
 
+	var_0_4(itemId, value)
+
 	SupplyAnalyser.goldValue = SupplyAnalyser.goldValue + value
 	SupplyAnalyser.updateBalance = true
 
 	SupplyAnalyser:updateWidget(itemId)
-	SupplyAnalyser:updateGraphics()
 	SupplyAnalyser:updateWindow(true, true)
 end
 
-function SupplyAnalyser:setSupplyPerHourGauge(value)
+function SupplyAnalyser.setSupplyPerHourGauge(self, value)
 	SupplyAnalyser.window.contentsPanel.targetLabel:setVisible(value)
 	SupplyAnalyser.window.contentsPanel.goldLabelIcon:setVisible(value)
 	SupplyAnalyser.window.contentsPanel.goldTarget:setVisible(value)
@@ -282,26 +399,26 @@ function SupplyAnalyser:setSupplyPerHourGauge(value)
 	end
 end
 
-function SupplyAnalyser:setSupplyPerHourGraph(value)
+function SupplyAnalyser.setSupplyPerHourGraph(self, value)
 	SupplyAnalyser.window.contentsPanel.graphPanel:setVisible(value)
 	SupplyAnalyser.window.contentsPanel.graphHorizontal:setVisible(value)
 
 	SupplyAnalyser.graphVisible = value
 end
 
-function SupplyAnalyser:gaugeIsVisible()
+function SupplyAnalyser.gaugeIsVisible(self)
 	return SupplyAnalyser.gaugeVisible
 end
 
-function SupplyAnalyser:graphIsVisible()
+function SupplyAnalyser.graphIsVisible(self)
 	return SupplyAnalyser.graphVisible
 end
 
-function SupplyAnalyser:getTarget()
+function SupplyAnalyser.getTarget(self)
 	return SupplyAnalyser.target
 end
 
-function SupplyAnalyser:setTarget(value)
+function SupplyAnalyser.setTarget(self, value)
 	SupplyAnalyser.target = tonumber(value) or 0
 
 	if SupplyAnalyser.window and SupplyAnalyser.window.contentsPanel then
@@ -311,7 +428,7 @@ function SupplyAnalyser:setTarget(value)
 	SupplyAnalyser:updateWindow(true, true)
 end
 
-function SupplyAnalyser:openTargetConfig()
+function SupplyAnalyser.openTargetConfig(self)
 	local window = configPopupWindow.supplyButton
 
 	if not window then

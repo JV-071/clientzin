@@ -1,6 +1,5 @@
-﻿-- chunkname: @/game_cyclopedia/tab/character/character.lua
-
-local characterPanel, UI
+﻿local characterPanel
+local UI
 local CATEGORY_BASE_HEIGHT = 22
 local SUBCATEGORY_HEIGHT = 20
 local SUBCATEGORY_ARROW_MARGIN_RIGHT = 5
@@ -21,12 +20,12 @@ local TITLE_SELECTED_NAME_COLOR = "#F4F4F4"
 local TITLE_SELECTED_ROW_COLOR = "#585858"
 local CHARACTER_BUTTON_ICON_OFFSET = {
 	player = {
-		pressed = "1 1",
-		idle = "0 0"
+		idle = "0 0",
+		pressed = "1 1"
 	},
 	outfit = {
-		pressed = "0 1",
-		idle = "-1 0"
+		idle = "-1 0",
+		pressed = "0 1"
 	}
 }
 
@@ -48,7 +47,7 @@ local function bindCharacterButtonIcon(widget)
 
 	refreshCharacterButtonIconOffset(widget, false)
 
-	function widget:onMousePress(mousePos, mouseButton)
+	function widget.onMousePress(self, mousePos, mouseButton)
 		if mouseButton == MouseLeftButton then
 			refreshCharacterButtonIconOffset(self, true)
 		end
@@ -56,7 +55,7 @@ local function bindCharacterButtonIcon(widget)
 		return false
 	end
 
-	function widget:onMouseRelease(mousePos, mouseButton)
+	function widget.onMouseRelease(self, mousePos, mouseButton)
 		if mouseButton == MouseLeftButton then
 			refreshCharacterButtonIconOffset(self, false)
 		end
@@ -71,8 +70,8 @@ local function applyCharacterOutfitPreview(spriteWidget)
 	end
 
 	spriteWidget:setSize({
-		width = 128,
-		height = 128
+		height = 128,
+		width = 128
 	})
 	spriteWidget:setCenter(true)
 	spriteWidget:setFixedCreatureSize(true)
@@ -151,7 +150,7 @@ end
 local function bindSubcategoryButtonHandlers(button)
 	button.Arrow:setMarginRight(SUBCATEGORY_ARROW_MARGIN_RIGHT)
 
-	function button:onMousePress()
+	function button.onMousePress(self)
 		self.Icon:setMarginLeft(7)
 		self.Icon:setMarginTop(1)
 		self.Title:setTextOffset("1 1")
@@ -161,7 +160,7 @@ local function bindSubcategoryButtonHandlers(button)
 		end
 	end
 
-	function button:onMouseRelease()
+	function button.onMouseRelease(self)
 		if not self:isChecked() then
 			self.Icon:setMarginLeft(6)
 			self.Icon:setMarginTop(0)
@@ -269,20 +268,7 @@ function showCharacter()
 		UI.InfoBase.InspectLabel:setText(tr("You are inspecting") .. ": " .. player:getName())
 
 		for i = InventorySlotFirst, InventorySlotPurse do
-			local item = player:getInventoryItem(i)
-			local itemWidget = UI.InfoBase.inventoryPanel["slot" .. i]
-
-			if itemWidget then
-				if item then
-					itemWidget:setStyle("InventoryItemCyclopedia")
-					itemWidget:setItem(item)
-					itemWidget:setIcon("")
-				else
-					itemWidget:setStyle(Cyclopedia.InventorySlotStyles[i].name)
-					itemWidget:setIcon(Cyclopedia.InventorySlotStyles[i].icon)
-					itemWidget:setItem(nil)
-				end
-			end
+			Cyclopedia.applyCharacterEquipmentSlot(i, player:getInventoryItem(i))
 		end
 
 		Cyclopedia.bindCharacterInventorySlots()
@@ -307,44 +293,44 @@ Cyclopedia.Character = {}
 Cyclopedia.Character.Achievements = {}
 Cyclopedia.InventorySlotStyles = {
 	[InventorySlotHead] = {
-		icon = "/images/inventory/inventory_head",
-		name = "HeadSlot"
+		name = "HeadSlot",
+		icon = "/images/inventory/inventory_head"
 	},
 	[InventorySlotNeck] = {
-		icon = "/images/inventory/inventory_neck",
-		name = "NeckSlot"
+		name = "NeckSlot",
+		icon = "/images/inventory/inventory_neck"
 	},
 	[InventorySlotBack] = {
-		icon = "/images/inventory/inventory_back",
-		name = "BackSlot"
+		name = "BackSlot",
+		icon = "/images/inventory/inventory_back"
 	},
 	[InventorySlotBody] = {
-		icon = "/images/inventory/inventory_torso",
-		name = "BodySlot"
+		name = "BodySlot",
+		icon = "/images/inventory/inventory_torso"
 	},
 	[InventorySlotRight] = {
-		icon = "/images/inventory/inventory_right_hand",
-		name = "RightSlot"
+		name = "RightSlot",
+		icon = "/images/inventory/inventory_right_hand"
 	},
 	[InventorySlotLeft] = {
-		icon = "/images/inventory/inventory_left_hand",
-		name = "LeftSlot"
+		name = "LeftSlot",
+		icon = "/images/inventory/inventory_left_hand"
 	},
 	[InventorySlotLeg] = {
-		icon = "/images/inventory/inventory_legs",
-		name = "LegSlot"
+		name = "LegSlot",
+		icon = "/images/inventory/inventory_legs"
 	},
 	[InventorySlotFeet] = {
-		icon = "/images/inventory/inventory_feet",
-		name = "FeetSlot"
+		name = "FeetSlot",
+		icon = "/images/inventory/inventory_feet"
 	},
 	[InventorySlotFinger] = {
-		icon = "/images/inventory/inventory_finger",
-		name = "FingerSlot"
+		name = "FingerSlot",
+		icon = "/images/inventory/inventory_finger"
 	},
 	[InventorySlotAmmo] = {
-		icon = "/images/inventory/inventory_hip",
-		name = "AmmoSlot"
+		name = "AmmoSlot",
+		icon = "/images/inventory/inventory_hip"
 	}
 }
 
@@ -608,7 +594,7 @@ function Cyclopedia.loadCharacterAppearances(color, outfits, mounts, familiars)
 
 	Cyclopedia.Character.OutfitNamesByLookType = Cyclopedia.Character.OutfitNamesByLookType or {}
 
-	local function cacheOutfitNames(container)
+	;(function(container)
 		if not container then
 			return
 		end
@@ -624,9 +610,7 @@ function Cyclopedia.loadCharacterAppearances(color, outfits, mounts, familiars)
 				end
 			end
 		end
-	end
-
-	cacheOutfitNames(outfits)
+	end)(outfits)
 
 	local function insert(value, type)
 		local lookData = value.lookType
@@ -692,11 +676,11 @@ function Cyclopedia.loadCharacterAppearances(color, outfits, mounts, familiars)
 end
 
 local CHARACTER_ITEMS_DEFAULT_FILTERS = {
-	inventory = true,
 	store = false,
 	inbox = false,
 	stash = false,
-	depot = false
+	depot = false,
+	inventory = true
 }
 
 function Cyclopedia.resetCharacterItemsFiltersUI()
@@ -817,7 +801,8 @@ function Cyclopedia.reloadCharacterItems()
 	local colorIndex = 1
 
 	for _, item in ipairs(Cyclopedia.Character.Items) do
-		local itemId, data = item.itemId, item.data
+		local itemId = item.itemId
+		local data = item.data
 
 		if data.visible then
 			local listItem = g_ui.createWidget("CharacterListItem", UI.CharacterItems.ListBase.list)
@@ -851,14 +836,13 @@ function Cyclopedia.loadCharacterItems(data)
 			return
 		end
 
-		local thing = g_things.getThingType(data.itemId, ThingCategoryItem)
-		local name = thing:getMarketData().name:lower()
+		local thing = g_things.getThingType(data.itemId, ThingCategoryItem):getMarketData().name:lower()
 
-		name = name ~= "" and name or "?"
+		thing = thing ~= "" and thing or "?"
 
 		local data_t = {
 			visible = false,
-			name = name,
+			name = thing,
 			amount = data.amount,
 			type = type
 		}
@@ -1073,8 +1057,8 @@ function Cyclopedia.buildAchievementEntry(id, playerEntry)
 		end
 
 		return {
-			secret = true,
 			accomplished = true,
+			secret = true,
 			id = id,
 			name = playerEntry.name or "?",
 			description = playerEntry.description or "",
@@ -1408,7 +1392,7 @@ function Cyclopedia.loadCharacterRecentKills(data)
 
 			color = color == "#484848" and "#414141" or "#484848"
 
-			function widget:onClick()
+			function widget.onClick(self)
 				local parent = widget:getParent()
 
 				for y = 1, parent:getChildCount() do
@@ -1423,7 +1407,7 @@ function Cyclopedia.loadCharacterRecentKills(data)
 				self:setChecked(not self:isChecked())
 			end
 
-			function widget:onCheckChange()
+			function widget.onCheckChange(self)
 				if self:isChecked() then
 					self:setBackgroundColor("#585858")
 				else
@@ -1464,7 +1448,7 @@ function Cyclopedia.loadCharacterRecentDeaths(data)
 
 			color = color == "#484848" and "#414141" or "#484848"
 
-			function widget:onClick()
+			function widget.onClick(self)
 				local parent = widget:getParent()
 
 				for y = 1, parent:getChildCount() do
@@ -1478,7 +1462,7 @@ function Cyclopedia.loadCharacterRecentDeaths(data)
 				self:setChecked(not self:isChecked())
 			end
 
-			function widget:onCheckChange()
+			function widget.onCheckChange(self)
 				if self:isChecked() then
 					self:setBackgroundColor("#585858")
 				else
@@ -1544,8 +1528,8 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 			if element then
 				widget.icon:setImageSource(element.path)
 				widget.icon:setImageSize({
-					width = 9,
-					height = 9
+					height = 9,
+					width = 9
 				})
 			else
 				print(string.format("WARNING: Element not found for combat array index %d with key %s.", i, tostring(combatsArray[i][1])))
@@ -1553,16 +1537,15 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 
 			local valor = combatsArray[i][2]
 			local porcentaje = valor / 100
-			local diferencia = 65535 - valor
-			local porcentaje_negativo = diferencia / 100
+			local var_76_5 = (65535 - valor) / 100
 			local resultado
 
-			if porcentaje <= porcentaje_negativo then
+			if porcentaje <= var_76_5 then
 				resultado = string.format("+%.2f%%", porcentaje)
 
 				widget.value:setColor("green")
 			else
-				resultado = string.format("-%.2f%%", porcentaje_negativo)
+				resultado = string.format("-%.2f%%", var_76_5)
 
 				widget.value:setColor("red")
 			end
@@ -1602,19 +1585,17 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 		[Skill.LifeLeechAmount] = 3,
 		[Skill.ManaLeechAmount] = 4
 	}
-	local skillIndex = skillsIndexes[Skill.CriticalChance]
-	local skill = additionalSkillsArray[skillIndex][2]
+	local skillIndex = additionalSkillsArray[skillsIndexes[Skill.CriticalChance]][2]
 
-	UI.CombatStats.criticalChance.value:setText(string.format("%.2f%%", skill / 100))
+	UI.CombatStats.criticalChance.value:setText(string.format("%.2f%%", skillIndex / 100))
 
-	if skill > 0 then
+	if skillIndex > 0 then
 		UI.CombatStats.criticalChance.value:setColor("#44AD25")
 	else
 		UI.CombatStats.criticalChance.value:setColor("#C0C0C0")
 	end
 
-	skillIndex = skillsIndexes[Skill.CriticalDamage]
-	skill = additionalSkillsArray[skillIndex][2]
+	local skill = additionalSkillsArray[skillsIndexes[Skill.CriticalDamage]][2]
 
 	UI.CombatStats.criticalDamage.value:setText(string.format("%.2f%%", skill / 100))
 
@@ -1624,8 +1605,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 		UI.CombatStats.criticalDamage.value:setColor("#C0C0C0")
 	end
 
-	skillIndex = skillsIndexes[Skill.LifeLeechAmount]
-	skill = additionalSkillsArray[skillIndex][2]
+	local skill = additionalSkillsArray[skillsIndexes[Skill.LifeLeechAmount]][2]
 
 	if skill > 0 then
 		UI.CombatStats.lifeLeech.value:setColor("#44AD25")
@@ -1635,8 +1615,7 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 		UI.CombatStats.lifeLeech.value:setText(string.format("%d%%", skill))
 	end
 
-	skillIndex = skillsIndexes[Skill.ManaLeechAmount]
-	skill = additionalSkillsArray[skillIndex][2]
+	local skill = additionalSkillsArray[skillsIndexes[Skill.ManaLeechAmount]][2]
 
 	if skill > 0 then
 		UI.CombatStats.manaLeech.value:setColor("#44AD25")
@@ -1819,7 +1798,7 @@ function Cyclopedia.loadCharacterGeneralStats(data, skills, combats)
 
 	local staminaRowTooltip
 
-	if data.staminaMinutes > 2340 and g_game.getClientVersion() >= 1038 and player:isPremium() then
+	if data.staminaMinutes > 2340 and player:isPremium() then
 		staminaRowTooltip = tr("You have %s hours and %s minutes left and receive 50%% more experience", staminaTooltipHours, staminaTooltipMinutes)
 	else
 		staminaRowTooltip = tr("You have %s hours and %s minutes left", staminaTooltipHours, staminaTooltipMinutes)
@@ -1827,18 +1806,14 @@ function Cyclopedia.loadCharacterGeneralStats(data, skills, combats)
 
 	Cyclopedia.setCharacterSkillTooltip("stamina", staminaRowTooltip)
 
-	if data.staminaMinutes > 2340 and g_game.getClientVersion() >= 1038 and player:isPremium() then
+	if data.staminaMinutes > 2340 and player:isPremium() then
 		local text = tr("You have %s hours and %s minutes left", staminaHours, staminaMinutes) .. "\n" .. tr("Now you will gain 50%% more experience")
 
 		Cyclopedia.setCharacterSkillPercent("stamina", staminaPercent, text, "green")
-	elseif data.staminaMinutes > 2340 and g_game.getClientVersion() >= 1038 and not player:isPremium() then
+	elseif data.staminaMinutes > 2340 and not player:isPremium() then
 		local text = tr("You have %s hours and %s minutes left", staminaHours, staminaMinutes) .. "\n" .. tr("You will not gain 50%% more experience because you aren't premium player, now you receive only 1x experience points")
 
 		Cyclopedia.setCharacterSkillPercent("stamina", staminaPercent, text, "#C06000")
-	elseif data.staminaMinutes > 2340 and g_game.getClientVersion() < 1038 then
-		local text = tr("You have %s hours and %s minutes left", staminaHours, staminaMinutes) .. "\n" .. tr("If you are premium player, you will gain 50%% more experience")
-
-		Cyclopedia.setCharacterSkillPercent("stamina", staminaPercent, text, "green")
 	elseif data.staminaMinutes <= 840 then
 		Cyclopedia.setCharacterSkillPercent("stamina", staminaPercent, staminaRowTooltip, "#C00000")
 	else
@@ -1895,26 +1870,24 @@ function Cyclopedia.setCharacterSkillTooltip(id, tooltip)
 end
 
 function Cyclopedia.setCharacterSkillValue(id, value, color)
-	local skill = UI.CharacterStats:recursiveGetChildById(id)
-	local widget = skill:getChildById("value")
+	local var_82_0 = UI.CharacterStats:recursiveGetChildById(id):getChildById("value")
 
-	widget:setText(value)
-	widget:setColor(color or "#C0C0C0")
+	var_82_0:setText(value)
+	var_82_0:setColor(color or "#C0C0C0")
 end
 
 function Cyclopedia.setCharacterSkillPercent(id, percent, tooltip, color)
-	local skill = UI.CharacterStats:recursiveGetChildById(id)
-	local widget = skill:getChildById("percent")
+	local var_83_0 = UI.CharacterStats:recursiveGetChildById(id):getChildById("percent")
 
-	if widget then
-		widget:setPercent(math.floor((percent or 0) / 100))
+	if var_83_0 then
+		var_83_0:setPercent(math.floor((percent or 0) / 100))
 
 		if tooltip then
-			widget:setTooltip(tooltip)
+			var_83_0:setTooltip(tooltip)
 		end
 
 		if color then
-			widget:setBackgroundColor(color)
+			var_83_0:setBackgroundColor(color)
 		end
 	end
 end
@@ -1947,9 +1920,7 @@ function Cyclopedia.buildCharacterSkillTooltip(value, baseValue, loyaltyField, r
 	local tooltip
 
 	if itemBonus > 0 or loyaltyBonus > 0 then
-		local breakdown = skillsModule.buildLoyaltySkillTooltipLineForDisplay(value, baseValue, loyaltyField or 0)
-
-		tooltip = breakdown .. "\n" .. percentLine
+		tooltip = skillsModule.buildLoyaltySkillTooltipLineForDisplay(value, baseValue, loyaltyField or 0) .. "\n" .. percentLine
 	else
 		tooltip = percentLine
 	end
@@ -2072,84 +2043,76 @@ function Cyclopedia.configureCharacterCategories()
 
 	local buttons = {
 		{
-			icon = "/images/icons/icon-character-generalstats",
 			text = "General Stats",
+			icon = "/images/icons/icon-character-generalstats",
 			subCategories = function()
-				local categories = {
+				local var_90_0 = {
 					{
+						text = "Character Stats",
 						open = "CharacterStats",
-						icon = "/images/icons/icon-character-generalstats-overview",
-						text = "Character Stats"
+						icon = "/images/icons/icon-character-generalstats-overview"
 					}
 				}
 
-				if g_game.getClientVersion() < 1410 then
-					table.insert(categories, {
-						open = "CombatStats",
-						icon = "/images/icons/icon-character-generalstats-offence",
-						text = "Combat Stats"
-					})
-				else
-					table.insert(categories, {
-						open = "OffenceStats",
-						icon = "/images/icons/icon-character-generalstats-offence",
-						text = "Offence Stats"
-					})
-					table.insert(categories, {
-						open = "DeffenceStats",
-						icon = "/images/icons/icon-character-generalstats-defence",
-						text = "Deffence Stats"
-					})
-					table.insert(categories, {
-						open = "MiscStats",
-						icon = "/images/icons/icon-character-generalstats-misc",
-						text = "Misc. Stats"
-					})
-				end
+				table.insert(var_90_0, {
+					text = "Offence Stats",
+					open = "OffenceStats",
+					icon = "/images/icons/icon-character-generalstats-offence"
+				})
+				table.insert(var_90_0, {
+					text = "Deffence Stats",
+					open = "DeffenceStats",
+					icon = "/images/icons/icon-character-generalstats-defence"
+				})
+				table.insert(var_90_0, {
+					text = "Misc. Stats",
+					open = "MiscStats",
+					icon = "/images/icons/icon-character-generalstats-misc"
+				})
 
-				return categories
+				return var_90_0
 			end
 		},
 		{
-			icon = "/images/icons/icon-character-battleresults",
 			text = "Battle Results",
+			icon = "/images/icons/icon-character-battleresults",
 			subCategories = {
 				{
+					text = "Recent Deaths",
 					open = "RecentDeaths",
-					icon = "/images/icons/icon-character-battleresults-recentdeaths",
-					text = "Recent Deaths"
+					icon = "/images/icons/icon-character-battleresults-recentdeaths"
 				},
 				{
+					text = "Recent PvP Kills",
 					open = "RecentKills",
-					icon = "/images/icons/icon-character-battleresults-recentpvpkills",
-					text = "Recent PvP Kills"
+					icon = "/images/icons/icon-character-battleresults-recentpvpkills"
 				}
 			}
 		},
 		{
+			text = "Achievements",
 			open = "CharacterAchievements",
-			icon = "/images/icons/icon-character-achievement",
-			text = "Achievements"
+			icon = "/images/icons/icon-character-achievement"
 		},
 		{
+			text = "Item Summary",
 			open = "CharacterItems",
-			icon = "/images/icons/icon-character-items",
-			text = "Item Summary"
+			icon = "/images/icons/icon-character-items"
 		},
 		{
+			text = "Appearances",
 			open = "CharacterAppearances",
-			icon = "/images/icons/icon-character-outfitsmounts",
-			text = "Appearances"
+			icon = "/images/icons/icon-character-outfitsmounts"
 		},
 		{
+			text = "Store Summary",
 			open = "StoreSummary",
-			icon = "/images/icons/icon-character-store",
-			text = "Store Summary"
+			icon = "/images/icons/icon-character-store"
 		},
 		{
+			text = "Character Titles",
 			open = "CharacterTitles",
-			icon = "/images/icons/icon-character-titles",
-			text = "Character Titles"
+			icon = "/images/icons/icon-character-titles"
 		}
 	}
 
@@ -2197,7 +2160,7 @@ function Cyclopedia.configureCharacterCategories()
 				subWidget:setHeight(SUBCATEGORY_HEIGHT)
 				bindSubcategoryButtonHandlers(subWidget.Button)
 
-				function subWidget.Button:onClick(test)
+				function subWidget.Button.onClick(self, test)
 					local selectedOption = UI.selectedOption
 
 					Cyclopedia.closeCharacterButtons()
@@ -2616,6 +2579,57 @@ function Cyclopedia.onCharacterInventorySlotClick(slot, widget)
 	g_game.inspectionObject(3, item:getId(), math.max(1, item:getCount()))
 end
 
+function Cyclopedia.applyCharacterEquipmentSlot(arg_110_0, arg_110_1)
+	if not UI or not UI.InfoBase or not UI.InfoBase.inventoryPanel then
+		return
+	end
+
+	local itemWidget = UI.InfoBase.inventoryPanel["slot" .. arg_110_0]
+	local var_110_1 = Cyclopedia.InventorySlotStyles[arg_110_0]
+
+	if not itemWidget or not var_110_1 then
+		return
+	end
+
+	if arg_110_1 then
+		itemWidget:setStyle("InventoryItemCyclopedia")
+		itemWidget:setItem(arg_110_1)
+		itemWidget:setIcon("")
+
+		local var_110_2 = ItemsDatabase.OVERLORD_TIER_SLOTS[arg_110_0] and ItemsDatabase.isOverlordActive()
+
+		ItemsDatabase.setTier(itemWidget, arg_110_1, var_110_2)
+	else
+		itemWidget:setStyle(var_110_1.name)
+		itemWidget:setIcon(var_110_1.icon)
+		itemWidget:setItem(nil)
+		ItemsDatabase.setTier(itemWidget, 0)
+	end
+end
+
+function Cyclopedia.refreshOverlordTiers()
+	if not Cyclopedia.isCharacterInfoBaseActive() then
+		return
+	end
+
+	local localPlayer = g_game.getLocalPlayer()
+
+	if not localPlayer then
+		return
+	end
+
+	local var_111_1 = ItemsDatabase.isOverlordActive()
+
+	for selectedSlot in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
+		local widget = UI.InfoBase.inventoryPanel["slot" .. selectedSlot]
+		local item = localPlayer:getInventoryItem(selectedSlot)
+
+		if widget and item then
+			ItemsDatabase.setTier(widget, item, var_111_1)
+		end
+	end
+end
+
 function Cyclopedia.bindCharacterInventorySlots()
 	if not UI or not UI.InfoBase or not UI.InfoBase.inventoryPanel then
 		return
@@ -2691,7 +2705,9 @@ function Cyclopedia.loadCharacterInspection(data)
 		return
 	end
 
-	local level, vocation, outfit
+	local level
+	local vocation
+	local outfit
 	local preyRows = {}
 
 	for _, desc in ipairs(data.playerDescriptions) do
@@ -2959,7 +2975,7 @@ function Cyclopedia.refreshCharacterTitles(currentTitle)
 				characterTitlesCurrentDescription = titleDescription
 			end
 
-			function row:onClick()
+			function row.onClick(self)
 				selectCharacterTitleRow(self)
 
 				if not self.isUnlocked then
@@ -3049,10 +3065,10 @@ function Cyclopedia.characterTitlesFilter(widget)
 
 	local mode = widget:getId() or "all"
 	local validModes = {
-		temporary = true,
 		locked = true,
-		unlocked = true,
 		all = true,
+		unlocked = true,
+		temporary = true,
 		permanent = true
 	}
 
@@ -3150,9 +3166,8 @@ function getImageClip(elementIndex)
 	local elementsPerRow = 21
 	local y = 0
 	local x = (elementIndex - 1) * elementSize
-	local imageClip = string.format("%d %d %d %d", x, y, elementSize, elementSize)
 
-	return imageClip
+	return (string.format("%d %d %d %d", x, y, elementSize, elementSize))
 end
 
 local HIRELING_JOB_NAMES = {
@@ -3472,7 +3487,7 @@ function Cyclopedia.onParseCyclopediaStoreSummary(xpBoostTime, dailyRewardXpBoos
 end
 
 local function getWeaponSkillName(skillType)
-	local skillNames = {
+	return ({
 		[0] = "Fist Fighting",
 		"Club Fighting",
 		"Sword Fighting",
@@ -3484,13 +3499,11 @@ local function getWeaponSkillName(skillType)
 		"Critical Hits",
 		"Life Leech",
 		"Mana Leech"
-	}
-
-	return skillNames[skillType] or "Fighting Skill"
+	})[skillType] or "Fighting Skill"
 end
 
 local function getOffenceWeaponSkillDescription(weaponSkillType)
-	local descriptions = {
+	return ({
 		nil,
 		nil,
 		nil,
@@ -3502,9 +3515,7 @@ local function getOffenceWeaponSkillDescription(weaponSkillType)
 		"from Club Fighting",
 		"from Axe Fighting",
 		"from Fist Fighting"
-	}
-
-	return descriptions[weaponSkillType] or "from Fist Fighting"
+	})[weaponSkillType] or "from Fist Fighting"
 end
 
 local function getOffenceElementName(elementId)
@@ -3546,16 +3557,16 @@ local function buildCriticalChanceTypeItems(data)
 
 	if (data.critChanceOffensiveRunes or 0) > 0 then
 		table.insert(items, {
-			percent = true,
 			description = "for Offensive Runes",
+			percent = true,
 			value = data.critChanceOffensiveRunes
 		})
 	end
 
 	if (data.critChanceAutoAttack or 0) > 0 then
 		table.insert(items, {
-			percent = true,
 			description = "for Auto-Attack",
+			percent = true,
 			value = data.critChanceAutoAttack
 		})
 	end
@@ -3580,16 +3591,16 @@ local function buildCriticalDamageTypeItems(data)
 
 	if (data.critDamageOffensiveRunes or 0) > 0 then
 		table.insert(items, {
-			percent = true,
 			description = "for Offensive Runes",
+			percent = true,
 			value = data.critDamageOffensiveRunes
 		})
 	end
 
 	if (data.critDamageAutoAttack or 0) > 0 then
 		table.insert(items, {
-			percent = true,
 			description = "for Auto-Attack",
+			percent = true,
 			value = data.critDamageAutoAttack
 		})
 	end
@@ -3598,7 +3609,7 @@ local function buildCriticalDamageTypeItems(data)
 end
 
 local function getOffenceProficiencySkillName(skillId)
-	local skillNames = {
+	return ({
 		"Magic Level",
 		nil,
 		nil,
@@ -3612,9 +3623,7 @@ local function getOffenceProficiencySkillName(skillId)
 		"Fist Fighting",
 		nil,
 		"Fishing"
-	}
-
-	return skillNames[skillId] or "Skill"
+	})[skillId] or "Skill"
 end
 
 local function buildProficiencySkillBonusBlock(entries, blockName)
@@ -3644,8 +3653,8 @@ local function buildProficiencySkillBonusBlock(entries, blockName)
 
 	return {
 		principal = {
-			marginTop = 5,
 			valueMarginRight = -2,
+			marginTop = 5,
 			name = blockName,
 			value = total
 		},
@@ -3663,8 +3672,8 @@ local function buildDamageAgainstTargetsBlock(data)
 
 	if powerfulFoesValue > 0 then
 		table.insert(items, {
-			percent = true,
 			description = "against powerful foes",
+			percent = true,
 			marginTop = 3,
 			value = powerfulFoesValue
 		})
@@ -3702,12 +3711,12 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 
 	local leftPanel = UI.OffenceStats.leftPanel
 	local rightPanel = UI.OffenceStats.rightPanel
-	local leftBlocks = {
+	local var_159_2 = {
 		{
 			principal = {
-				marginTop = 1,
 				valueMarginRight = -2,
 				name = "Flat Damage and Healing",
+				marginTop = 1,
 				value = data.flatDamage
 			},
 			items = {
@@ -3723,8 +3732,8 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 		},
 		{
 			principal = {
-				marginTop = 5,
 				name = "Attack Value",
+				marginTop = 5,
 				value = data.weaponAttack,
 				element = data.weaponElement
 			},
@@ -3750,149 +3759,149 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	}
 
 	if (data.weaponElementDamage or 0) > 0 then
-		table.insert(leftBlocks, {
+		table.insert(var_159_2, {
 			principal = {
-				marginTop = 5,
-				percent = true,
 				name = "Converted Damage",
+				percent = true,
+				marginTop = 5,
 				value = data.weaponElementDamage,
 				element = data.weaponElementType
 			}
 		})
 	end
 
-	table.insert(leftBlocks, {
+	table.insert(var_159_2, {
 		principal = {
-			marginTop = 5,
 			percent = true,
 			name = "Onslaught",
 			valueMarginRight = -2,
+			marginTop = 5,
 			value = data.onslaught
 		},
 		items = {
 			{
-				percent = true,
 				description = "from Equipment",
+				percent = true,
 				value = data.onslaughtBase
 			},
 			{
-				percent = true,
 				description = "from Event Bonus",
+				percent = true,
 				value = data.onslaughtEvent
 			}
 		}
 	})
-	table.insert(leftBlocks, {
+	table.insert(var_159_2, {
 		principal = {
-			marginTop = 5,
 			percent = true,
 			name = "Life Leech",
 			valueMarginRight = -2,
+			marginTop = 5,
 			value = data.lifeLeech
 		},
 		items = {
 			{
-				percent = true,
 				description = "from Equipment",
+				percent = true,
 				value = data.lifeLeechBase
 			},
 			{
-				percent = true,
 				description = "from Imbuement",
+				percent = true,
 				value = data.lifeLeechImbuement
 			},
 			{
-				percent = true,
 				description = "from Wheel of Destiny",
+				percent = true,
 				value = data.lifeLeechWheel
 			},
 			{
-				percent = true,
 				description = "from Event Bonus",
+				percent = true,
 				value = data.lifeLeechEventBonus
 			}
 		}
 	})
 
 	if (data.lifeGainOnHit or 0) > 0 then
-		table.insert(leftBlocks, {
+		table.insert(var_159_2, {
 			principal = {
-				marginTop = 5,
 				valueMarginRight = -2,
 				name = "Life Gain on Hit",
+				marginTop = 5,
 				value = data.lifeGainOnHit
 			}
 		})
 	end
 
-	table.insert(leftBlocks, {
+	table.insert(var_159_2, {
 		principal = {
-			marginTop = 5,
 			percent = true,
 			name = "Mana Leech",
 			valueMarginRight = -2,
+			marginTop = 5,
 			value = data.manaLeech
 		},
 		items = {
 			{
-				percent = true,
 				description = "from Equipment",
+				percent = true,
 				value = data.manaLeechBase
 			},
 			{
-				percent = true,
 				description = "from Imbuement",
+				percent = true,
 				value = data.manaLeechImbuement
 			},
 			{
-				percent = true,
 				description = "from Wheel of Destiny",
+				percent = true,
 				value = data.manaLeechWheel
 			},
 			{
-				percent = true,
 				description = "from Event Bonus",
+				percent = true,
 				value = data.manaLeechEventBonus
 			}
 		}
 	})
 
 	if (data.manaGainOnKill or 0) > 0 then
-		table.insert(leftBlocks, {
+		table.insert(var_159_2, {
 			principal = {
-				marginTop = 5,
 				valueMarginRight = -2,
 				name = "Mana Gain on Kill",
+				marginTop = 5,
 				value = data.manaGainOnKill
 			}
 		})
 	end
 
-	local damageAgainstBlock = buildDamageAgainstTargetsBlock(data)
+	local damageBlock = buildDamageAgainstTargetsBlock(data)
 
-	if damageAgainstBlock then
-		table.insert(leftBlocks, damageAgainstBlock)
+	if damageBlock then
+		table.insert(var_159_2, damageBlock)
 	end
 
-	local autoAttackExtraDamageBlock = buildProficiencySkillBonusBlock(data.autoAttackExtraDamage, "Auto-Attack Extra Damage")
+	local damageBlock = buildProficiencySkillBonusBlock(data.autoAttackExtraDamage, "Auto-Attack Extra Damage")
 
-	if autoAttackExtraDamageBlock then
-		table.insert(leftBlocks, autoAttackExtraDamageBlock)
+	if damageBlock then
+		table.insert(var_159_2, damageBlock)
 	end
 
-	local extraSpellDamageBlock = buildProficiencySkillBonusBlock(data.extraSpellDamage, "Extra Spell Damage")
+	local var_159_5 = buildProficiencySkillBonusBlock(data.extraSpellDamage, "Extra Spell Damage")
 
-	if extraSpellDamageBlock then
-		table.insert(leftBlocks, extraSpellDamageBlock)
+	if var_159_5 then
+		table.insert(var_159_2, var_159_5)
 	end
 
-	local extraSpellHealingBlock = buildProficiencySkillBonusBlock(data.extraSpellHealing, "Extra Spell Healing")
+	local var_159_6 = buildProficiencySkillBonusBlock(data.extraSpellHealing, "Extra Spell Healing")
 
-	if extraSpellHealingBlock then
-		table.insert(leftBlocks, extraSpellHealingBlock)
+	if var_159_6 then
+		table.insert(var_159_2, var_159_6)
 	end
 
-	table.insert(leftBlocks, {
+	table.insert(var_159_2, {
 		principal = {
 			percent = true,
 			name = "Cleave",
@@ -3901,118 +3910,117 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	})
 
 	local rightBlocks = {}
-	local chanceTypeItems = buildCriticalChanceTypeItems(data)
-	local damageTypeItems = buildCriticalDamageTypeItems(data)
-	local hasCriticalStats = (data.critChance or 0) > 0 or (data.critDamage or 0) > 0 or (data.critChanceFlat or 0) > 0 or (data.critChanceEquipament or 0) > 0 or (data.critChanceImbuement or 0) > 0 or (data.critChanceWheel or 0) > 0 or (data.critChanceConcoction or 0) > 0 or (data.critDamageFlat or 0) > 0 or (data.critDamageBase or 0) > 0 or (data.critDamageImbuement or 0) > 0 or (data.critDamageWheel or 0) > 0 or (data.critDamageConcoction or 0) > 0 or #chanceTypeItems > 0 or #damageTypeItems > 0
+	local var_159_8 = buildCriticalChanceTypeItems(data)
+	local var_159_9 = buildCriticalDamageTypeItems(data)
 
-	if hasCriticalStats then
+	if (data.critChance or 0) > 0 or (data.critDamage or 0) > 0 or (data.critChanceFlat or 0) > 0 or (data.critChanceEquipament or 0) > 0 or (data.critChanceImbuement or 0) > 0 or (data.critChanceWheel or 0) > 0 or (data.critChanceConcoction or 0) > 0 or (data.critDamageFlat or 0) > 0 or (data.critDamageBase or 0) > 0 or (data.critDamageImbuement or 0) > 0 or (data.critDamageWheel or 0) > 0 or (data.critDamageConcoction or 0) > 0 or #var_159_8 > 0 or #var_159_9 > 0 then
 		table.insert(rightBlocks, {
 			header = "Critical Hit:"
 		})
 
-		local chanceBlock = {
+		local var_159_10 = {
 			principal = {
 				marginLeft = 20,
-				marginTop = 8,
-				percent = true,
 				name = "Chance",
+				percent = true,
 				valueMarginRight = 2,
+				marginTop = 8,
 				value = data.critChance
 			},
 			items = {
 				{
-					percent = true,
 					description = "from Base",
+					percent = true,
 					value = data.critChanceFlat
 				},
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.critChanceEquipament
 				},
 				{
-					percent = true,
 					description = "from Imbuement",
+					percent = true,
 					value = data.critChanceImbuement
 				},
 				{
-					percent = true,
 					description = "from Wheel of Destiny",
+					percent = true,
 					value = data.critChanceWheel
 				},
 				{
-					percent = true,
 					description = "from Concoction",
+					percent = true,
 					value = data.critChanceConcoction
 				}
 			}
 		}
 
-		if #chanceTypeItems > 0 then
-			chanceBlock.typeSections = {
+		if #var_159_8 > 0 then
+			var_159_10.typeSections = {
 				{
 					itemMarginTop = 3,
 					itemMarginLeft = 58,
-					marginTop = 5,
 					subheader = "Critical Chance by Type",
-					items = chanceTypeItems
+					marginTop = 5,
+					items = var_159_8
 				}
 			}
 		end
 
-		table.insert(rightBlocks, chanceBlock)
+		table.insert(rightBlocks, var_159_10)
 
-		local damageBlock = {
+		local var_159_11 = {
 			principal = {
 				marginLeft = 20,
-				marginTop = 5,
-				percent = true,
 				name = "Extra Damage",
+				percent = true,
 				valueMarginRight = 2,
+				marginTop = 5,
 				value = data.critDamage
 			},
 			items = {
 				{
-					percent = true,
 					description = "from Base",
+					percent = true,
 					value = data.critDamageFlat
 				},
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.critDamageBase
 				},
 				{
-					percent = true,
 					description = "from Imbuement",
+					percent = true,
 					value = data.critDamageImbuement
 				},
 				{
-					percent = true,
 					description = "from Wheel of Destiny",
+					percent = true,
 					value = data.critDamageWheel
 				},
 				{
-					percent = true,
 					description = "from Concoction",
+					percent = true,
 					value = data.critDamageConcoction
 				}
 			}
 		}
 
-		if #damageTypeItems > 0 then
-			damageBlock.typeSections = {
+		if #var_159_9 > 0 then
+			var_159_11.typeSections = {
 				{
-					marginTop = 5,
 					itemMarginTop = 3,
 					itemMarginLeft = 56,
 					subheader = "Critical Damage by Type",
-					items = damageTypeItems
+					marginTop = 5,
+					items = var_159_9
 				}
 			}
 		end
 
-		table.insert(rightBlocks, damageBlock)
+		table.insert(rightBlocks, var_159_11)
 	end
 
 	if data.perfectShotDamage then
@@ -4029,8 +4037,8 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 
 			if damage and damage > 0 then
 				table.insert(perfectShotItems, {
-					marginLeft = 36,
 					marginTop = 3,
+					marginLeft = 36,
 					value = damage,
 					description = "from Range " .. i,
 					valueText = "+" .. damage
@@ -4045,7 +4053,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 		end
 	end
 
-	for _, block in ipairs(leftBlocks) do
+	for _, block in ipairs(var_159_2) do
 		Cyclopedia.renderOffenceStatBlock(leftPanel, block)
 	end
 
@@ -4062,7 +4070,7 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	local rightPanel = UI.DeffenceStats.rightPanel
 
 	local function getDefenceSkillDescription(skillType)
-		local descriptions = {
+		return ({
 			[0] = "from Fist Fighting",
 			"from Club Fighting",
 			"from Sword Fighting",
@@ -4070,9 +4078,7 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 			"from Distance Fighting",
 			"from Shielding",
 			"from Shielding"
-		}
-
-		return descriptions[skillType] or "from Shielding"
+		})[skillType] or "from Shielding"
 	end
 
 	local function getBreakdownItems(candidates)
@@ -4094,10 +4100,10 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	local leftBlocks = {
 		{
 			principal = {
-				showZero = true,
-				marginTop = 1,
 				name = "Defence Value",
+				showZero = true,
 				valueMarginRight = -2,
+				marginTop = 1,
 				value = data.defense
 			},
 			items = getBreakdownItems({
@@ -4117,46 +4123,46 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 		},
 		{
 			principal = {
-				showZero = true,
-				marginTop = 5,
 				name = "Armor Value",
+				showZero = true,
 				valueMarginRight = -2,
+				marginTop = 5,
 				value = data.armor
 			}
 		},
 		{
 			principal = {
-				showZero = true,
-				marginTop = 5,
 				percent = true,
 				name = "Mitigation",
+				showZero = true,
 				valueMarginRight = -2,
+				marginTop = 5,
 				value = data.mitigation
 			},
 			items = getBreakdownItems({
 				{
-					percent = true,
 					description = "from Base",
+					percent = true,
 					value = data.mitigationBase
 				},
 				{
-					percent = true,
 					description = "from Defence",
+					percent = true,
 					value = data.mitigationEquipment
 				},
 				{
-					percent = true,
 					description = "from Shielding",
+					percent = true,
 					value = data.mitigationShield
 				},
 				{
-					percent = true,
 					description = "from Wheel of Destiny",
+					percent = true,
 					value = data.mitigationWheel
 				},
 				{
-					percent = true,
 					description = "from Combat Tactics",
+					percent = true,
 					value = data.mitigationCombatTactics
 				}
 			})
@@ -4166,9 +4172,9 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	if (data.mantra or 0) > 0 then
 		table.insert(leftBlocks, 3, {
 			principal = {
-				marginTop = 5,
 				valueMarginRight = -2,
 				name = "Mantra Value",
+				marginTop = 5,
 				value = data.mantra
 			}
 		})
@@ -4177,10 +4183,10 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	if (data.magicShieldCapacity or 0) > 0 or (data.magicShieldCapacityFlat or 0) > 0 or (data.magicShieldCapacityPercent or 0) > 0 then
 		table.insert(leftBlocks, {
 			principal = {
-				showZero = true,
-				marginTop = 5,
 				name = "Magic Shield Capacity",
+				showZero = true,
 				valueMarginRight = -2,
+				marginTop = 5,
 				value = data.magicShieldCapacity
 			},
 			items = getBreakdownItems({
@@ -4189,8 +4195,8 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 					value = data.magicShieldCapacityFlat
 				},
 				{
-					percent = true,
 					description = "from Percent Bonus",
+					percent = true,
 					value = data.magicShieldCapacityPercent
 				}
 			})
@@ -4200,26 +4206,26 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	if (data.dodgeTotal or 0) > 0 or (data.dodgeBase or 0) > 0 or (data.dodgeBonus or 0) > 0 or (data.dodgeWheel or 0) > 0 then
 		table.insert(leftBlocks, {
 			principal = {
-				marginTop = 5,
 				percent = true,
 				name = "Dodge",
 				valueMarginRight = -2,
+				marginTop = 5,
 				value = data.dodgeTotal
 			},
 			items = getBreakdownItems({
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.dodgeBase
 				},
 				{
-					percent = true,
 					description = "from Amplification",
+					percent = true,
 					value = data.dodgeBonus
 				},
 				{
-					percent = true,
 					description = "from Wheel of Destiny",
+					percent = true,
 					value = data.dodgeWheel
 				}
 			})
@@ -4229,9 +4235,9 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	if (data.reflectPhysical or 0) > 0 then
 		table.insert(leftBlocks, {
 			principal = {
-				marginTop = 5,
 				valueMarginRight = -2,
 				name = "Damage Reflection Amount",
+				marginTop = 5,
 				value = data.reflectPhysical
 			}
 		})
@@ -4256,16 +4262,16 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 	}
 	local optionalResistanceOrder = {
 		{
-			name = "Life Drain",
-			id = 9
+			id = 9,
+			name = "Life Drain"
 		},
 		{
-			name = "Mana Drain",
-			id = 10
+			id = 10,
+			name = "Mana Drain"
 		},
 		{
-			name = "Drowning",
-			id = 8
+			id = 8,
+			name = "Drowning"
 		}
 	}
 	local rightBlocks = {
@@ -4313,12 +4319,12 @@ function Cyclopedia.onCyclopediaCharacterDefenceStats(data)
 
 		table.insert(rightBlocks, {
 			principal = {
-				showZero = true,
-				iconMarginRight = -4,
-				height = 18,
 				percent = true,
-				marginLeft = 20,
+				iconMarginRight = -4,
 				valueMarginRight = 2,
+				marginLeft = 20,
+				height = 18,
+				showZero = true,
 				name = displayName or elementInfo.id,
 				value = value,
 				element = elementId,
@@ -4382,26 +4388,26 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 	if (data.momentumTotal or 0) > 0 or (data.momentumBase or 0) > 0 or (data.momentumBonus or 0) > 0 or (data.momentumWheel or 0) > 0 then
 		table.insert(leftBlocks, {
 			principal = {
-				marginTop = 1,
 				percent = true,
 				name = "Momentum",
 				valueMarginRight = 10,
+				marginTop = 1,
 				value = data.momentumTotal
 			},
 			items = getBreakdownItems({
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.momentumBase
 				},
 				{
-					percent = true,
 					description = "from Amplification",
+					percent = true,
 					value = data.momentumBonus
 				},
 				{
-					percent = true,
 					description = "from Wheel of Destiny",
+					percent = true,
 					value = data.momentumWheel
 				}
 			})
@@ -4419,18 +4425,18 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 			},
 			items = getBreakdownItems({
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.dodgeBase
 				},
 				{
-					percent = true,
 					description = "from Amplification",
+					percent = true,
 					value = data.dodgeBonus
 				},
 				{
-					percent = true,
 					description = "from Event Bonus",
+					percent = true,
 					value = data.dodgeWheel
 				}
 			})
@@ -4448,13 +4454,13 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 			},
 			items = getBreakdownItems({
 				{
-					percent = true,
 					description = "from Equipment",
+					percent = true,
 					value = data.damageReflectionBase
 				},
 				{
-					percent = true,
 					description = "from Bonus",
+					percent = true,
 					value = data.damageReflectionBonus
 				}
 			})
@@ -4463,12 +4469,12 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 
 	table.insert(leftBlocks, {
 		principal = {
+			name = "Blessings",
+			value = 1,
 			blessButtonGap = 6,
 			blessButtonMarginTop = 1,
-			name = "Blessings",
 			blessButtonMarginRight = 4,
 			blessButton = true,
-			value = 1,
 			marginTop = #leftBlocks > 0 and 5 or 1,
 			valueText = (data.haveBlesses or 0) .. "/" .. (data.totalBlesses or 0)
 		}
@@ -4477,57 +4483,57 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 	local augmentTypes = {
 		{
 			sign = "+",
-			percent = false,
-			name = "Mana Cost"
+			name = "Mana Cost",
+			percent = false
 		},
 		{
 			sign = "+",
-			percent = true,
-			name = "Base Damage"
+			name = "Base Damage",
+			percent = true
 		},
 		{
 			sign = "+",
-			percent = true,
-			name = "Healing"
+			name = "Healing",
+			percent = true
 		},
 		{
-			suffix = "s",
 			sign = "+",
+			name = "Duration",
 			percent = false,
-			name = "Duration"
+			suffix = "s"
 		},
 		{
-			integer = true,
 			sign = "+",
+			name = "Additional Targets",
 			percent = false,
-			name = "Additional Targets"
-		},
-		{
-			suffix = "s",
-			percent = false,
-			name = "Cooldown",
-			sign = "-",
 			integer = true
+		},
+		{
+			sign = "-",
+			name = "Cooldown",
+			percent = false,
+			integer = true,
+			suffix = "s"
 		},
 		[14] = {
 			sign = "+",
-			percent = true,
-			name = "Life Leech"
+			name = "Life Leech",
+			percent = true
 		},
 		[15] = {
 			sign = "+",
-			percent = true,
-			name = "Mana Leech"
+			name = "Mana Leech",
+			percent = true
 		},
 		[16] = {
 			sign = "+",
-			percent = true,
-			name = "Critical Extra Damage"
+			name = "Critical Extra Damage",
+			percent = true
 		},
 		[17] = {
 			sign = "+",
-			percent = true,
-			name = "Critical Hit Chance"
+			name = "Critical Hit Chance",
+			percent = true
 		}
 	}
 
@@ -4590,9 +4596,9 @@ function Cyclopedia.onCyclopediaCharacterMiscStats(data)
 			end
 
 			table.insert(section.items, {
-				showZero = true,
-				marginLeft = 48,
 				value = 1,
+				marginLeft = 48,
+				showZero = true,
 				valueText = formatAugmentValue(augment, typeInfo),
 				description = typeInfo.name,
 				marginTop = #section.items == 0 and 3 or 0

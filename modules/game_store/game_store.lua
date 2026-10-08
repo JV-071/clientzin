@@ -1,6 +1,10 @@
-﻿-- chunkname: @/game_store/game_store.lua
-
-local acceptWindow, changeNameWindow, worldTransferWindow, hirelingNameWindow, transferPointsWindow, processingWindow, messageBox
+local acceptWindow
+local changeNameWindow
+local worldTransferWindow
+local hirelingNameWindow
+local transferPointsWindow
+local processingWindow
+local messageBox
 local oldProtocol = false
 local a0xF2 = true
 local offerDescriptions = {}
@@ -15,6 +19,63 @@ local waitingInitialHome = false
 local pendingStoreRedirect
 local storeRedirectAwaitingOffers = false
 local pendingStoreFocusOfferId
+local var_0_21
+local var_0_22 = 0
+local var_0_23 = false
+local var_0_24
+local var_0_25
+local subOffers = {}
+local var_0_27
+local var_0_28
+local var_0_29 = 0
+local row
+local var_0_31 = {}
+local var_0_32 = false
+local var_0_33 = 6
+local var_0_34 = 12
+local var_0_35 = 120
+local var_0_36 = 80
+local var_0_37 = 4
+
+local function var_0_38(arg_1_0, arg_1_1)
+	if not var_0_32 then
+		return
+	end
+
+	g_logger.info(string.format("[game_store perf] %s: %dms", arg_1_0, g_clock.millis() - arg_1_1))
+end
+
+local function var_0_39()
+	if var_0_21 then
+		removeEvent(var_0_21)
+
+		var_0_21 = nil
+	end
+end
+
+local function var_0_40()
+	subOffers = {}
+
+	if var_0_25 then
+		removeEvent(var_0_25)
+
+		var_0_25 = nil
+	end
+end
+
+local function var_0_41()
+	var_0_22 = var_0_22 + 1
+	var_0_23 = false
+	var_0_27 = nil
+
+	var_0_40()
+
+	if var_0_24 then
+		removeEvent(var_0_24)
+
+		var_0_24 = nil
+	end
+end
 
 local function normalizeStoreOfferId(offerId)
 	offerId = tonumber(offerId) or 0
@@ -191,6 +252,12 @@ end
 
 local STORE_ROW_AVAILABLE = "StoreOfferRowAvailable"
 local STORE_ROW_UNAVAILABLE = "StoreOfferRowUnavailable"
+local var_0_59 = {
+	detailLargePreview = true
+}
+local var_0_60 = {
+	packagePreview = true
+}
 
 GameStore = {}
 GameStore.website = {
@@ -202,13 +269,13 @@ GameStore.CoinType = {
 	Coin = 0
 }
 GameStore.ClientOfferTypes = {
-	CLIENT_STORE_OFFER_OTHER = 0,
-	CLIENT_STORE_OFFER_CONFIRM = 6,
-	CLIENT_STORE_OFFER_TOURNAMENT = 5,
 	CLIENT_STORE_OFFER_CHARACTER = 4,
 	CLIENT_STORE_OFFER_HIRELING = 3,
 	CLIENT_STORE_OFFER_WORLD_TRANSFER = 2,
-	CLIENT_STORE_OFFER_NAMECHANGE = 1
+	CLIENT_STORE_OFFER_NAMECHANGE = 1,
+	CLIENT_STORE_OFFER_OTHER = 0,
+	CLIENT_STORE_OFFER_CONFIRM = 6,
+	CLIENT_STORE_OFFER_TOURNAMENT = 5
 }
 GameStore.States = {
 	STATE_NONE = 0,
@@ -217,24 +284,24 @@ GameStore.States = {
 	STATE_NEW = 1
 }
 GameStore.SendingPackets = {
-	S_CoinBalanceUpdating = 242,
-	S_RequestPurchaseData = 225,
-	S_StoreError = 224,
-	S_CoinBalance = 223,
 	S_CompletePurchase = 254,
 	S_OpenTransactionHistory = 253,
 	S_StoreOffers = 252,
-	S_OpenStore = 251
+	S_OpenStore = 251,
+	S_CoinBalanceUpdating = 242,
+	S_RequestPurchaseData = 225,
+	S_StoreError = 224,
+	S_CoinBalance = 223
 }
 GameStore.RecivedPackets = {
-	C_ParseHirelingName = 236,
-	C_TransferCoins = 239,
-	C_RequestOfferDescription = 232,
-	C_RequestTransactionHistory = 254,
-	C_OpenTransactionHistory = 253,
 	C_BuyStoreOffer = 252,
 	C_RequestStoreOffers = 251,
-	C_OpenStore = 250
+	C_OpenStore = 250,
+	C_ParseHirelingName = 236,
+	C_RequestTransactionHistory = 254,
+	C_TransferCoins = 239,
+	C_RequestOfferDescription = 232,
+	C_OpenTransactionHistory = 253
 }
 
 local function showPanel(panel)
@@ -427,219 +494,219 @@ local function showStoreProcessingModal()
 end
 
 local function getPageLabelHistory()
-	local text = controllerShop.ui.transferHistory.lblPage:getText()
-	local currentPage, pageCount = text:match("Page (%d+)/(%d+)")
+	local currentPage, pageCount = controllerShop.ui.transferHistory.lblPage:getText():match("Page (%d+)/(%d+)")
 
 	return tonumber(currentPage), tonumber(pageCount)
 end
 
 local pendingHttpWidgets = {}
 local pendingHttpId = 0
-local STORE_DESC_FONT = "Verdana-11px-lowspace"
-local STORE_DESC_ITALIC_FONT = "Verdana-11px-lowspace-italic"
-local STORE_DESC_UNDERLINE_FONT = "Verdana-11px-lowspace-underline"
-local STORE_DESC_COLOR = "#f4f4f4"
-local STORE_INLINE_ICON_SHEET = "/images/icons/store-icons-inline"
-local STORE_DESC_ITALIC_ON = string.char(1)
-local STORE_DESC_ITALIC_OFF = string.char(2)
-local STORE_DESC_UNDERLINE_ON = string.char(3)
-local STORE_DESC_UNDERLINE_OFF = string.char(4)
-local STORE_INLINE_ICONS = {
-	["{vocationlevelcheckicon}"] = "104 0 13 13",
-	["{info}"] = "0 0 13 13",
-	["{speedboosticon}"] = "117 0 13 13",
-	["{backtoinboxicon}"] = "91 0 13 13",
-	["{activatedicon}"] = "130 0 13 13",
-	["{limiticon}"] = "78 0 13 13",
-	["{battlesignicon}"] = "143 0 13 13",
+local STORE_DESC_FONT = {}
+local var_0_75 = {}
+local var_0_76 = 0
+local var_0_77 = "Verdana Bold-11px-new"
+local var_0_78 = "Verdana-11px-lowspace-italic"
+local var_0_79 = "Verdana-11px-lowspace-underline"
+local var_0_80 = "#f4f4f4"
+local var_0_81 = "/images/icons/store-icons-inline"
+local var_0_82 = string.char(1)
+local var_0_83 = string.char(2)
+local var_0_84 = string.char(3)
+local var_0_85 = string.char(4)
+local var_0_86 = {
 	["{houseicon}"] = "65 0 13 13",
-	["{capacityicon}"] = "156 0 13 13",
+	["{vocationlevelcheckicon}"] = "104 0 13 13",
 	["{storeinboxicon}"] = "52 0 13 13",
-	["{useicon}"] = "169 0 13 13",
+	["{speedboosticon}"] = "117 0 13 13",
 	["{boxicon}"] = "39 0 13 13",
-	["{transferablepriceicon}"] = "182 0 13 13",
+	["{activatedicon}"] = "130 0 13 13",
 	["{usablebyallicon}"] = "26 0 13 13",
-	["{accounticon}"] = "195 0 13 13",
-	["{charactericon}"] = "13 0 13 13"
+	["{battlesignicon}"] = "143 0 13 13",
+	["{charactericon}"] = "13 0 13 13",
+	["{capacityicon}"] = "156 0 13 13",
+	["{info}"] = "0 0 13 13",
+	["{useicon}"] = "169 0 13 13",
+	["{backtoinboxicon}"] = "91 0 13 13",
+	["{transferablepriceicon}"] = "182 0 13 13",
+	["{limiticon}"] = "78 0 13 13",
+	["{accounticon}"] = "195 0 13 13"
 }
-local STORE_DESCRIPTION_HINTS = {
+local htmlToStoreDescriptionLines = {
 	{
-		keyword = "character",
 		text = "only usable by purchasing character",
+		keyword = "character",
 		icon = "{charactericon}"
 	},
 	{
-		keyword = "usablebyall",
 		text = "can be used by all characters that have access to the house",
+		keyword = "usablebyall",
 		icon = "{usablebyallicon}"
 	},
 	{
-		keyword = "box",
 		text = "comes in a box which can only be unwrapped by purchasing character",
+		keyword = "box",
 		icon = "{boxicon}"
 	},
 	{
-		keyword = "storeinbox",
 		text = "will be sent to your Store inbox and can only be stored there and in depot box",
+		keyword = "storeinbox",
 		icon = "{storeinboxicon}"
 	},
 	{
-		keyword = "house",
 		text = "can only be unwrapped in a house owned by the purchasing character",
+		keyword = "house",
 		icon = "{houseicon}"
 	},
 	{
-		keyword = "limit",
 		text = "maximum amount that can be owned by character: %s",
-		icon = "{limiticon}",
-		dynamic = true
+		keyword = "limit",
+		dynamic = true,
+		icon = "{limiticon}"
 	},
 	{
-		keyword = "backtoinbox",
 		text = "will be wrapped back and sent to inbox if the purchasing character is no longer the house owner",
+		keyword = "backtoinbox",
 		icon = "{backtoinboxicon}"
 	},
 	{
-		keyword = "vocationlevelcheck",
 		text = "only buyable if fitting vocation and level of purchasing character",
+		keyword = "vocationlevelcheck",
 		icon = "{vocationlevelcheckicon}"
 	},
 	{
-		keyword = "speedboost",
 		text = "provides character with a speed boost",
+		keyword = "speedboost",
 		icon = "{speedboosticon}"
 	},
 	{
-		keyword = "activated",
 		text = "activated at purchase",
+		keyword = "activated",
 		icon = "{activatedicon}"
 	},
 	{
-		keyword = "battlesign",
 		text = "cannot be purchased by characters with protection zone block or battle sign",
+		keyword = "battlesign",
 		icon = "{battlesignicon}"
 	},
 	{
-		keyword = "capacity",
 		text = "cannot be purchased if capacity is exceeded",
+		keyword = "capacity",
 		icon = "{capacityicon}"
 	},
 	{
-		keyword = "transferableprice",
 		text = "can only be purchased with transferable Clientzin Coins",
+		keyword = "transferableprice",
 		icon = "{transferablepriceicon}"
 	},
 	{
-		keyword = "account",
 		text = "usable by all characters of the account",
+		keyword = "account",
 		icon = "{accounticon}"
 	}
 }
-local STORE_DESCRIPTION_HINTS_BY_KEYWORD = {}
-local STORE_DESCRIPTION_HINTS_BY_TEXT = {}
+local var_0_88 = {}
+local parts = {}
 
-for _, hint in ipairs(STORE_DESCRIPTION_HINTS) do
-	STORE_DESCRIPTION_HINTS_BY_KEYWORD[hint.keyword] = hint
+for _, line in ipairs(htmlToStoreDescriptionLines) do
+	var_0_88[line.keyword] = line
 
-	if not hint.dynamic then
-		STORE_DESCRIPTION_HINTS_BY_TEXT[hint.text:lower()] = hint
+	if not line.dynamic then
+		parts[line.text:lower()] = line
 	end
 end
 
-local function decodeStoreDescriptionEntities(text)
-	text = text:gsub("&nbsp;", " ")
-	text = text:gsub("&lt;", "<")
-	text = text:gsub("&gt;", ">")
-	text = text:gsub("&quot;", "\"")
-	text = text:gsub("&amp;", "&")
+local function var_0_90(arg_32_0)
+	arg_32_0 = arg_32_0:gsub("&nbsp;", " ")
+	arg_32_0 = arg_32_0:gsub("&lt;", "<")
+	arg_32_0 = arg_32_0:gsub("&gt;", ">")
+	arg_32_0 = arg_32_0:gsub("&quot;", "\"")
+	arg_32_0 = arg_32_0:gsub("&amp;", "&")
 
-	return text
+	return arg_32_0
 end
 
-local function matchStoreDescriptionIconTag(text, pos)
-	if text:byte(pos) ~= 123 then
+local function var_0_91(lineText, nextPos)
+	if lineText:byte(nextPos) ~= 123 then
 		return nil
 	end
 
-	local tail = text:sub(pos)
-	local limitTag = tail:match("^(%{limit|%d+%})")
+	local textAfterIcon = lineText:sub(nextPos):match("^(%{limit|%d+%})")
 
-	if limitTag then
-		return "{limiticon}", STORE_INLINE_ICONS["{limiticon}"], pos + #limitTag
+	if textAfterIcon then
+		return "{limiticon}", var_0_86["{limiticon}"], nextPos + #textAfterIcon
 	end
 
-	local close = text:find("}", pos + 1, true)
+	local panel = lineText:find("}", nextPos + 1, true)
 
-	if not close then
+	if not panel then
 		return nil
 	end
 
-	local tag = text:sub(pos, close)
-	local clip = STORE_INLINE_ICONS[tag]
+	local var_33_2 = lineText:sub(nextPos, panel)
+	local var_33_3 = var_0_86[var_33_2]
 
-	if clip then
-		return tag, clip, close + 1
+	if var_33_3 then
+		return var_33_2, var_33_3, panel + 1
 	end
 
 	return nil
 end
 
-local function lineStartsWithStoreIconTag(line)
-	local content = line:match("^%s*(.*)$") or line
+local function var_0_92(arg_34_0)
+	local var_34_0 = arg_34_0:match("^%s*(.*)$") or arg_34_0
 
-	if content == "" then
+	if var_34_0 == "" then
 		return false
 	end
 
-	return matchStoreDescriptionIconTag(content, 1) ~= nil
+	return var_0_91(var_34_0, 1) ~= nil
 end
 
-local function enrichStoreDescriptionLine(line)
-	if not line or not line:match("%S") then
-		return line
+local function var_0_93(arg_35_0)
+	if not arg_35_0 or not arg_35_0:match("%S") then
+		return arg_35_0
 	end
 
-	if lineStartsWithStoreIconTag(line) then
-		return line
+	if var_0_92(arg_35_0) then
+		return arg_35_0
 	end
 
-	local content = line:match("^%s*(.-)%s*$") or line
-	local plain = content:gsub("^%-%s*", "")
-	local tagBody = plain:match("^%{([^}]+)}%s*$") or plain:match("^%{([^}]+)}%s+")
+	local var_35_0 = (arg_35_0:match("^%s*(.-)%s*$") or arg_35_0):gsub("^%-%s*", "")
+	local var_35_1 = var_35_0:match("^%{([^}]+)}%s*$") or var_35_0:match("^%{([^}]+)}%s+")
 
-	if tagBody then
-		local keyword, amount = tagBody:match("^([^|]+)|(%d+)$")
+	if var_35_1 then
+		local var_35_2, var_35_3 = var_35_1:match("^([^|]+)|(%d+)$")
 
-		keyword = keyword or tagBody
-		keyword = keyword:lower()
+		var_35_2 = var_35_2 or var_35_1
 
-		local hint = STORE_DESCRIPTION_HINTS_BY_KEYWORD[keyword]
+		local var_35_4 = var_35_2:lower()
+		local var_35_5 = var_0_88[var_35_4]
 
-		if hint then
-			if hint.dynamic and amount then
-				local text = string.format(hint.text, amount)
+		if var_35_5 then
+			if var_35_5.dynamic and var_35_3 then
+				local formattedText = string.format(var_35_5.text, var_35_3)
 
-				return "{limit|" .. amount .. "} " .. text
-			elseif not hint.dynamic then
-				return hint.icon .. " " .. hint.text
+				return "{limit|" .. var_35_3 .. "} " .. formattedText
+			elseif not var_35_5.dynamic then
+				return var_35_5.icon .. " " .. var_35_5.text
 			end
 		end
 	end
 
-	local normalized = plain:lower()
-	local limitAmount = normalized:match("^maximum amount that can be owned by character: (%d+)$")
+	local var_35_7 = var_35_0:lower()
+	local var_35_8 = var_35_7:match("^maximum amount that can be owned by character: (%d+)$")
 
-	if limitAmount then
-		return "{limit|" .. limitAmount .. "} maximum amount that can be owned by character: " .. limitAmount
+	if var_35_8 then
+		return "{limit|" .. var_35_8 .. "} maximum amount that can be owned by character: " .. var_35_8
 	end
 
-	local hint = STORE_DESCRIPTION_HINTS_BY_TEXT[normalized]
+	local var_35_9 = parts[var_35_7]
 
-	if hint then
-		return hint.icon .. " " .. hint.text
+	if var_35_9 then
+		return var_35_9.icon .. " " .. var_35_9.text
 	end
 
-	return line
+	return arg_35_0
 end
 
 local function htmlToStoreDescriptionLines(html)
@@ -647,7 +714,7 @@ local function htmlToStoreDescriptionLines(html)
 		return {}
 	end
 
-	html = decodeStoreDescriptionEntities(html:gsub("\r", ""))
+	html = var_0_90(html:gsub("\r", ""))
 	html = html:gsub("<[bB][rR]%s*/?>", "\n")
 	html = html:gsub("<[lL][iI]>%s*", "- ")
 	html = html:gsub("</[lL][iI]>%s*", "\n")
@@ -657,194 +724,189 @@ local function htmlToStoreDescriptionLines(html)
 	html = html:gsub("</[pP]>%s*", "\n")
 	html = html:gsub("</?[bB]>", "")
 
-	local lines = {}
-	local from = 1
+	local var_36_0 = {}
+	local var_36_1 = 1
 
-	for i = 1, #html do
-		if html:byte(i) == 10 then
-			table.insert(lines, html:sub(from, i - 1))
+	for iter_36_0 = 1, #html do
+		if html:byte(iter_36_0) == 10 then
+			table.insert(var_36_0, html:sub(var_36_1, iter_36_0 - 1))
 
-			from = i + 1
+			var_36_1 = iter_36_0 + 1
 		end
 	end
 
-	if from <= #html then
-		table.insert(lines, html:sub(from))
+	if var_36_1 <= #html then
+		table.insert(var_36_0, html:sub(var_36_1))
 	end
 
-	for i = 1, #lines do
-		lines[i] = enrichStoreDescriptionLine(lines[i])
+	for iter_36_1 = 1, #var_36_0 do
+		var_36_0[iter_36_1] = var_0_93(var_36_0[iter_36_1])
 	end
 
-	return lines
+	return var_36_0
 end
 
-local function stripStoreDescriptionTags(text)
-	local trimmed = text:match("^%s*(.-)%s*$") or text
-
-	return trimmed:gsub("<i>", ""):gsub("</i>", ""):gsub("<I>", ""):gsub("</I>", ""):gsub("<u>", ""):gsub("</u>", ""):gsub("<U>", ""):gsub("</U>", ""):gsub("<[^>]+>", "")
+local function var_0_95(arg_37_0)
+	return (arg_37_0:match("^%s*(.-)%s*$") or arg_37_0):gsub("<i>", ""):gsub("</i>", ""):gsub("<I>", ""):gsub("</I>", ""):gsub("<u>", ""):gsub("</u>", ""):gsub("<U>", ""):gsub("</U>", ""):gsub("<[^>]+>", "")
 end
 
-local STORE_DESC_ICON_GAP = 17
-local storeDescMeasureLabel
+local var_0_96 = 17
+local labelWidget
 
-local function getStoreDescriptionFont(lineText)
-	local trimmed = lineText:match("^%s*(.-)%s*$") or lineText
+local function var_0_98(arg_38_0)
+	local var_38_0 = arg_38_0:match("^%s*(.-)%s*$") or arg_38_0
 
-	if trimmed:find("<i>") or trimmed:find("<I>") then
-		return STORE_DESC_ITALIC_FONT
+	if var_38_0:find("<i>") or var_38_0:find("<I>") then
+		return var_0_78
 	end
 
-	if trimmed:find("<u>") or trimmed:find("<U>") then
-		return STORE_DESC_UNDERLINE_FONT
+	if var_38_0:find("<u>") or var_38_0:find("<U>") then
+		return var_0_79
 	end
 
-	return STORE_DESC_FONT
+	return var_0_77
 end
 
-local function measureStoreDescriptionText(text, fontName)
-	if not text or text == "" then
+local function var_0_99(arg_39_0, arg_39_1)
+	if not arg_39_0 or arg_39_0 == "" then
 		return 0
 	end
 
-	if not storeDescMeasureLabel then
-		storeDescMeasureLabel = g_ui.createWidget("Label", g_ui.getRootWidget())
+	if not labelWidget then
+		labelWidget = g_ui.createWidget("Label", g_ui.getRootWidget())
 
-		storeDescMeasureLabel:setVisible(false)
-		storeDescMeasureLabel:setPhantom(true)
+		labelWidget:setVisible(false)
+		labelWidget:setPhantom(true)
 	end
 
-	storeDescMeasureLabel:setFont(fontName)
-	storeDescMeasureLabel:setTextWrap(false)
-	storeDescMeasureLabel:setText(text, true)
+	labelWidget:setFont(arg_39_1)
+	labelWidget:setTextWrap(false)
+	labelWidget:setText(arg_39_0, true)
 
-	return storeDescMeasureLabel:getTextSize().width
+	return labelWidget:getTextSize().width
 end
 
-local function getStoreDescriptionScrollWidth(scroll)
-	if not scroll then
+local function var_0_100(arg_40_0)
+	if not arg_40_0 then
 		return 200
 	end
 
-	local width = scroll:getWidth() - scroll:getPaddingLeft() - scroll:getPaddingRight()
+	local width = arg_40_0:getWidth() - arg_40_0:getPaddingLeft() - arg_40_0:getPaddingRight()
 
 	return math.max(1, width)
 end
 
-local function wrapStoreDescriptionPlainText(plainText, fontName, totalWidth, firstLineWidth)
-	if not plainText or plainText == "" then
+local function var_0_101(arg_41_0, arg_41_1, arg_41_2, arg_41_3)
+	if not arg_41_0 or arg_41_0 == "" then
 		return {
 			""
 		}
 	end
 
-	local lines = {}
-	local currentLine = ""
-	local maxWidth = firstLineWidth
+	local var_41_0 = {}
+	local var_41_1 = ""
+	local var_41_2 = arg_41_3
 
-	for word in plainText:gmatch("%S+") do
-		local candidate = currentLine == "" and word or currentLine .. " " .. word
+	for iter_41_0 in arg_41_0:gmatch("%S+") do
+		local var_41_3 = var_41_1 == "" and iter_41_0 or var_41_1 .. " " .. iter_41_0
 
-		if maxWidth >= measureStoreDescriptionText(candidate, fontName) then
-			currentLine = candidate
-		elseif currentLine == "" then
-			table.insert(lines, word)
+		if var_41_2 >= var_0_99(var_41_3, arg_41_1) then
+			var_41_1 = var_41_3
+		elseif var_41_1 == "" then
+			table.insert(var_41_0, iter_41_0)
 
-			currentLine = ""
-			maxWidth = totalWidth
+			var_41_1 = ""
+			var_41_2 = arg_41_2
 		else
-			table.insert(lines, currentLine)
+			table.insert(var_41_0, var_41_1)
 
-			currentLine = word
-			maxWidth = totalWidth
+			var_41_1 = iter_41_0
+			var_41_2 = arg_41_2
 		end
 	end
 
-	if currentLine ~= "" then
-		table.insert(lines, currentLine)
+	if var_41_1 ~= "" then
+		table.insert(var_41_0, var_41_1)
 	end
 
-	if #lines == 0 then
-		table.insert(lines, plainText)
+	if #var_41_0 == 0 then
+		table.insert(var_41_0, arg_41_0)
 	end
 
-	return lines
+	return var_41_0
 end
 
-local function formatStoreDescription(html)
-	local parts = {}
+local function unusedValue(html)
+	local textParts = {}
 
 	for _, line in ipairs(htmlToStoreDescriptionLines(html)) do
-		local plain = line:gsub("<i>", STORE_DESC_ITALIC_ON):gsub("</i>", STORE_DESC_ITALIC_OFF)
+		local plain = line:gsub("<i>", var_0_82):gsub("</i>", var_0_83):gsub("<u>", var_0_84):gsub("</u>", var_0_85):gsub("<[^>]+>", "")
 
-		plain = plain:gsub("<u>", STORE_DESC_UNDERLINE_ON):gsub("</u>", STORE_DESC_UNDERLINE_OFF)
-		plain = plain:gsub("<[^>]+>", "")
-
-		table.insert(parts, plain)
+		table.insert(textParts, plain)
 	end
 
-	return table.concat(parts, "\n")
+	return table.concat(textParts, "\n")
 end
 
-local function applyStoreDescriptionLineText(textWidget, lineText, color)
-	local trimmed = lineText:match("^%s*(.-)%s*$") or lineText
-	local hasItalic = trimmed:find("<i>") or trimmed:find("<I>")
-	local hasUnderline = trimmed:find("<u>") or trimmed:find("<U>")
-	local plainText = stripStoreDescriptionTags(trimmed)
+local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
+	local var_43_0 = arg_43_1:match("^%s*(.-)%s*$") or arg_43_1
+	local var_43_1 = var_43_0:find("<i>") or var_43_0:find("<I>")
+	local var_43_2 = var_43_0:find("<u>") or var_43_0:find("<U>")
+	local var_43_3 = var_0_95(var_43_0)
 
-	if plainText == "" then
-		textWidget:setText("")
+	if var_43_3 == "" then
+		arg_43_0:setText("")
 
 		return
 	end
 
-	if hasItalic then
-		textWidget:setFont(STORE_DESC_ITALIC_FONT)
-	elseif hasUnderline then
-		textWidget:setFont(STORE_DESC_UNDERLINE_FONT)
+	if var_43_1 then
+		arg_43_0:setFont(var_0_78)
+	elseif var_43_2 then
+		arg_43_0:setFont(var_0_79)
 	else
-		textWidget:setFont(STORE_DESC_FONT)
+		arg_43_0:setFont(var_0_77)
 	end
 
-	textWidget:setText(plainText)
-	textWidget:setColor(color or STORE_DESC_COLOR)
+	arg_43_0:setText(var_43_3)
+	arg_43_0:setColor(arg_43_2 or var_0_80)
 end
 
-local function renderStoreDescriptionLineWidget(container, lineText, color, iconClip)
-	local widget = g_ui.createWidget("StoreDescriptionLine", container)
+local function var_0_104(arg_44_0, arg_44_1, arg_44_2, arg_44_3)
+	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", arg_44_0)
 
-	if not widget then
+	if not storeDescriptionLineWidget then
 		return false
 	end
 
-	local iconWidget = widget.icon or widget:getChildById("icon")
-	local textWidget = widget.text or widget:getChildById("text")
+	local icon = storeDescriptionLineWidget.icon or storeDescriptionLineWidget:getChildById("icon")
+	local text = storeDescriptionLineWidget.text or storeDescriptionLineWidget:getChildById("text")
 
-	if not textWidget then
-		widget:destroy()
+	if not text then
+		storeDescriptionLineWidget:destroy()
 
 		return false
 	end
 
-	if iconClip and iconWidget then
-		iconWidget:setVisible(true)
-		iconWidget:setImageSource(STORE_INLINE_ICON_SHEET)
-		iconWidget:setImageClip(iconClip)
-		textWidget:setMarginLeft(STORE_DESC_ICON_GAP)
-		textWidget:setTextWrap(false)
+	if arg_44_3 and icon then
+		icon:setVisible(true)
+		icon:setImageSource(var_0_81)
+		icon:setImageClip(arg_44_3)
+		text:setMarginLeft(var_0_96)
+		text:setTextWrap(false)
 	else
-		if iconWidget then
-			iconWidget:setVisible(false)
+		if icon then
+			icon:setVisible(false)
 		end
 
-		textWidget:setMarginLeft(0)
-		textWidget:setTextWrap(true)
+		text:setMarginLeft(0)
+		text:setTextWrap(true)
 	end
 
-	applyStoreDescriptionLineText(textWidget, lineText, color)
-	widget:setHeight(math.max(14, textWidget:getTextSize().height + 2))
+	var_0_103(text, arg_44_1, arg_44_2)
+	storeDescriptionLineWidget:setHeight(math.max(14, text:getTextSize().height + 2))
 
-	return textWidget:getText() ~= "" or iconClip ~= nil
+	return text:getText() ~= "" or arg_44_3 ~= nil
 end
 
 local function addStoreDescriptionLine(container, lineText, color)
@@ -853,61 +915,64 @@ local function addStoreDescriptionLine(container, lineText, color)
 	end
 
 	if not lineText:match("%S") then
-		local widget = g_ui.createWidget("StoreDescriptionLine", container)
+		local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", container)
 
-		if not widget then
+		if not storeDescriptionLineWidget then
 			return false
 		end
 
-		local iconWidget = widget.icon or widget:getChildById("icon")
-		local textWidget = widget.text or widget:getChildById("text")
+		local icon = storeDescriptionLineWidget.icon or storeDescriptionLineWidget:getChildById("icon")
+		local text = storeDescriptionLineWidget.text or storeDescriptionLineWidget:getChildById("text")
 
-		if iconWidget then
-			iconWidget:setVisible(false)
+		if icon then
+			icon:setVisible(false)
 		end
 
-		if textWidget then
-			textWidget:setMarginLeft(0)
-			textWidget:setText("")
+		if text then
+			text:setMarginLeft(0)
+			text:setText("")
 		end
 
-		widget:setHeight(8)
+		storeDescriptionLineWidget:setHeight(8)
 
 		return true
 	end
 
-	local _, clip, nextPos = matchStoreDescriptionIconTag(lineText, 1)
+	local unusedValue, var_45_4, var_45_5 = var_0_91(lineText, 1)
 
-	if clip then
-		local textAfterIcon = lineText:sub(nextPos)
-		local fontName = getStoreDescriptionFont(textAfterIcon)
-		local plainText = stripStoreDescriptionTags(textAfterIcon:match("^%s*(.-)%s*$") or textAfterIcon)
-		local totalWidth = getStoreDescriptionScrollWidth(container)
-		local firstLineWidth = math.max(1, totalWidth - STORE_DESC_ICON_GAP)
-		local segments = wrapStoreDescriptionPlainText(plainText, fontName, totalWidth, firstLineWidth)
-		local hasItalic = textAfterIcon:find("<i>") or textAfterIcon:find("<I>")
-		local hasUnderline = textAfterIcon:find("<u>") or textAfterIcon:find("<U>")
-		local added = false
+	if var_45_4 then
+		local var_45_6 = lineText:sub(var_45_5)
+		local var_45_7 = var_0_98(var_45_6)
+		local var_45_8 = var_0_95(var_45_6:match("^%s*(.-)%s*$") or var_45_6)
+		local var_45_9 = var_0_100(container)
+		local var_45_10 = math.max(1, var_45_9 - var_0_96)
+		local var_45_11 = var_0_101(var_45_8, var_45_7, var_45_9, var_45_10)
+		local var_45_12 = var_45_6:find("<i>") or var_45_6:find("<I>")
+		local var_45_13 = var_45_6:find("<u>") or var_45_6:find("<U>")
+		local var_45_14 = false
 
-		for index, segment in ipairs(segments) do
-			local segmentText = segment
+		for index, entry in ipairs(var_45_11) do
+			local var_45_15 = entry
 
-			if hasItalic then
-				segmentText = "<i>" .. segment .. "</i>"
-			elseif hasUnderline then
-				segmentText = "<u>" .. segment .. "</u>"
+			if var_45_12 then
+				var_45_15 = "<i>" .. entry .. "</i>"
+			elseif var_45_13 then
+				var_45_15 = "<u>" .. entry .. "</u>"
 			end
 
-			if renderStoreDescriptionLineWidget(container, segmentText, color, index == 1 and clip or nil) then
-				added = true
+			if var_0_104(container, var_45_15, color, index == 1 and var_45_4 or nil) then
+				var_45_14 = true
 			end
 		end
 
-		return added
+		return var_45_14
 	end
 
-	return renderStoreDescriptionLineWidget(container, lineText, color, nil)
+	return var_0_104(container, lineText, color, nil)
 end
+
+local var_0_106
+local var_0_107
 
 local function getPanelItemDetailsContent(panel)
 	if not panel then
@@ -917,24 +982,50 @@ local function getPanelItemDetailsContent(panel)
 	return panel.detailsContentPanel or panel:getChildById("detailsContentPanel")
 end
 
-local function getPanelItemDescriptionScroll(panel)
-	local detail = getPanelItemDetailsContent(panel)
-
-	if not detail then
-		return nil
-	end
-
-	return detail.descriptionScroll or detail:getChildById("descriptionScroll")
+local function var_0_109()
+	var_0_106 = nil
+	var_0_107 = nil
 end
 
-local function getPanelItemDescriptionLabel(panel)
-	local scroll = getPanelItemDescriptionScroll(panel)
+local function var_0_110(arg_48_0)
+	if not arg_48_0 or arg_48_0:isDestroyed() then
+		var_0_109()
 
-	if not scroll then
 		return nil
 	end
 
-	return scroll.lblDescription or scroll:getChildById("lblDescription")
+	if var_0_107 and var_0_106 == arg_48_0 then
+		return var_0_107
+	end
+
+	var_0_106 = arg_48_0
+	var_0_107 = {
+		lblName = arg_48_0:getChildById("lblName"),
+		image = arg_48_0:getChildById("image"),
+		StackOffers = arg_48_0:getChildById("StackOffers")
+	}
+
+	return var_0_107
+end
+
+local function getPanelItemDescriptionScroll(panel)
+	local var_49_0 = getPanelItemDetailsContent(panel)
+
+	if not var_49_0 then
+		return nil
+	end
+
+	return var_49_0.descriptionScroll or var_49_0:getChildById("descriptionScroll")
+end
+
+local function unusedValue(arg_50_0)
+	local var_50_0 = getPanelItemDescriptionScroll(arg_50_0)
+
+	if not var_50_0 then
+		return nil
+	end
+
+	return var_50_0.lblDescription or var_50_0:getChildById("lblDescription")
 end
 
 local function clearStoreDescriptionLines(scroll)
@@ -942,112 +1033,112 @@ local function clearStoreDescriptionLines(scroll)
 		return
 	end
 
-	for i = scroll:getChildCount(), 1, -1 do
-		local child = scroll:getChildByIndex(i)
+	for iter_51_0 = scroll:getChildCount(), 1, -1 do
+		local childByIndex = scroll:getChildByIndex(iter_51_0)
 
-		if child and child:getId() ~= "lblDescription" then
-			child:destroy()
+		if childByIndex and childByIndex:getId() ~= "lblDescription" then
+			childByIndex:destroy()
 		end
 	end
 end
 
 local function showStoreDescriptionFallback(scroll, html, errorText)
-	local label = scroll.lblDescription or scroll:getChildById("lblDescription")
+	local lblDescription = scroll.lblDescription or scroll:getChildById("lblDescription")
 
-	if not label then
+	if not lblDescription then
 		return
 	end
 
 	clearStoreDescriptionLines(scroll)
-	label:setVisible(true)
+	lblDescription:setVisible(true)
 
-	local textParts = {}
+	local var_52_1 = {}
 
-	for _, line in ipairs(htmlToStoreDescriptionLines(html or "")) do
-		local plain = stripStoreDescriptionTags(line):gsub("%{%w+%}", "")
+	for unusedValue, entry in ipairs(htmlToStoreDescriptionLines(html or "")) do
+		local var_52_2 = var_0_95(entry):gsub("%{%w+%}", "")
 
-		table.insert(textParts, plain)
+		table.insert(var_52_1, var_52_2)
 	end
 
-	local text = table.concat(textParts, "\n")
+	local var_52_3 = table.concat(var_52_1, "\n")
 
 	if errorText and errorText ~= "" then
-		text = errorText .. (text ~= "" and "\n\n" .. text or "")
+		var_52_3 = errorText .. (var_52_3 ~= "" and "\n\n" .. var_52_3 or "")
 	end
 
-	label:setFont(STORE_DESC_FONT)
-	label:setColor(STORE_DESC_COLOR)
-	label:setText(text)
+	lblDescription:setFont(var_0_77)
+	lblDescription:setColor(var_0_80)
+	lblDescription:setText(var_52_3)
 end
 
 local createProductImage
 
 local function getPackageContents(product)
-	local capacity = tonumber(product and product.productsCapacity) or 0
+	local numericValue = tonumber(product and product.productsCapacity) or 0
 
-	if capacity <= 0 then
+	if numericValue <= 0 then
 		return {}
 	end
 
-	local subOffers = product.subOffers or {}
-	local startIndex = #subOffers - capacity + 1
+	local capacity = product.subOffers or {}
+	local var_53_2 = #capacity - numericValue + 1
 
-	if startIndex < 1 then
+	if var_53_2 < 1 then
 		return {}
-	end
-
-	local contents = {}
-
-	for i = startIndex, #subOffers do
-		table.insert(contents, subOffers[i])
-	end
-
-	return contents
-end
-
-local function getPurchasableSubOffers(product)
-	local subOffers = product and product.subOffers or {}
-	local capacity = tonumber(product and product.productsCapacity) or 0
-
-	if capacity <= 0 or capacity >= #subOffers then
-		return subOffers
 	end
 
 	local purchasable = {}
 
-	for i = 1, #subOffers - capacity do
-		table.insert(purchasable, subOffers[i])
+	for i = var_53_2, #capacity do
+		table.insert(purchasable, capacity[i])
 	end
 
 	return purchasable
 end
 
 local function getProductOutfitColors(source)
-	if not source then
+	local var_54_0 = source and source.subOffers or {}
+	local numericValue = tonumber(source and source.productsCapacity) or 0
+
+	if numericValue <= 0 or numericValue >= #var_54_0 then
+		return var_54_0
+	end
+
+	local var_54_2 = {}
+
+	for iter_54_0 = 1, #var_54_0 - numericValue do
+		table.insert(var_54_2, var_54_0[iter_54_0])
+	end
+
+	return var_54_2
+end
+
+local function var_0_118(arg_55_0)
+	if not arg_55_0 then
 		return 0, 0, 0, 0
 	end
 
-	local function readColors(from)
-		if from.outfit then
-			return from.outfit.lookHead or from.outfit.head or 0, from.outfit.lookBody or from.outfit.body or 0, from.outfit.lookLegs or from.outfit.legs or 0, from.outfit.lookFeet or from.outfit.feet or 0
+	local function var_55_0(arg_56_0)
+		if arg_56_0.outfit then
+			return arg_56_0.outfit.lookHead or arg_56_0.outfit.head or 0, arg_56_0.outfit.lookBody or arg_56_0.outfit.body or 0, arg_56_0.outfit.lookLegs or arg_56_0.outfit.legs or 0, arg_56_0.outfit.lookFeet or arg_56_0.outfit.feet or 0
 		end
 
-		return from.outfitHead or 0, from.outfitBody or 0, from.outfitLegs or 0, from.outfitFeet or 0
+		return arg_56_0.outfitHead or 0, arg_56_0.outfitBody or 0, arg_56_0.outfitLegs or 0, arg_56_0.outfitFeet or 0
 	end
 
-	local head, body, legs, feet = readColors(source)
+	local var_55_1, var_55_2, var_55_3, var_55_4 = var_55_0(arg_55_0)
 
-	if source.outfitHead ~= nil or source.outfitBody ~= nil or source.outfitLegs ~= nil or source.outfitFeet ~= nil then
-		return head, body, legs, feet
+	if arg_55_0.outfitHead ~= nil or arg_55_0.outfitBody ~= nil or arg_55_0.outfitLegs ~= nil or arg_55_0.outfitFeet ~= nil then
+		return var_55_1, var_55_2, var_55_3, var_55_4
 	end
 
-	for _, subOffer in ipairs(source.subOffers or {}) do
+	for _, subOffer in ipairs(arg_55_0.subOffers or {}) do
 		if subOffer.outfitHead ~= nil or subOffer.outfitBody ~= nil or subOffer.outfitLegs ~= nil or subOffer.outfitFeet ~= nil then
-			return readColors(subOffer)
+			return var_55_0(subOffer)
 		end
 	end
 
-	return head, body, legs, feet
+	return var_55_1, var_55_2, var_55_3, var_55_4
 end
 
 local function buildHirelingProductData(source, outfitId)
@@ -1055,7 +1146,7 @@ local function buildHirelingProductData(source, outfitId)
 		return nil
 	end
 
-	local head, body, legs, feet = getProductOutfitColors(source)
+	local var_57_0, var_57_1, var_57_2, var_57_3 = var_0_118(source)
 
 	return {
 		VALOR = "outfitId",
@@ -1064,38 +1155,38 @@ local function buildHirelingProductData(source, outfitId)
 		outfit = {
 			addons = 3,
 			type = outfitId,
-			head = head,
-			body = body,
-			legs = legs,
-			feet = feet
+			head = var_57_0,
+			body = var_57_1,
+			legs = var_57_2,
+			feet = var_57_3
 		}
 	}
 end
 
-local function toPositiveNumber(value)
-	local n = tonumber(value)
+local function var_0_120(arg_58_0)
+	local numericValue = tonumber(arg_58_0)
 
-	if n and n > 0 then
-		return n
+	if numericValue and numericValue > 0 then
+		return numericValue
 	end
 
 	return nil
 end
 
 local function findHirelingOutfitIds(product)
-	local male = toPositiveNumber(product.maleOutfitId)
-	local female = toPositiveNumber(product.femaleOutfitId)
+	local var_59_0 = var_0_120(product.maleOutfitId)
+	local var_59_1 = var_0_120(product.femaleOutfitId)
 
-	if male or female then
-		return male, female
+	if var_59_0 or var_59_1 then
+		return var_59_0, var_59_1
 	end
 
-	for _, subOffer in ipairs(product.subOffers or {}) do
-		male = male or toPositiveNumber(subOffer.maleOutfitId)
-		female = female or toPositiveNumber(subOffer.femaleOutfitId)
+	for unusedValue, entry in ipairs(product.subOffers or {}) do
+		var_59_0 = var_59_0 or var_0_120(entry.maleOutfitId)
+		var_59_1 = var_59_1 or var_0_120(entry.femaleOutfitId)
 	end
 
-	return male, female
+	return var_59_0, var_59_1
 end
 
 local function resolveHirelingOutfitId(sex, maleOutfitId, femaleOutfitId)
@@ -1103,9 +1194,7 @@ local function resolveHirelingOutfitId(sex, maleOutfitId, femaleOutfitId)
 		sex = 1
 	end
 
-	local outfitId = sex == 0 and femaleOutfitId or maleOutfitId
-
-	return outfitId or maleOutfitId or femaleOutfitId
+	return sex == 0 and femaleOutfitId or maleOutfitId or maleOutfitId or femaleOutfitId
 end
 
 local function findHirelingSex(product)
@@ -1200,9 +1289,7 @@ local function renderStorePackageContents(scroll, product, opts)
 
 			if preview and data and createProductImage then
 				preview:destroyChildren()
-				createProductImage(preview, data, {
-					packagePreview = true
-				})
+				createProductImage(preview, data, var_0_60)
 			end
 		end
 	end
@@ -1211,6 +1298,7 @@ local function renderStorePackageContents(scroll, product, opts)
 end
 
 local function renderStoreDescription(panel, html, errorText, product)
+	local var_64_0 = var_0_32 and g_clock.millis() or nil
 	local scroll = getPanelItemDescriptionScroll(panel)
 
 	if not scroll then
@@ -1252,10 +1340,18 @@ local function renderStoreDescription(panel, html, errorText, product)
 	if lineCount == 0 and not hasPackage then
 		showStoreDescriptionFallback(scroll, html, errorText)
 
+		if var_64_0 then
+			var_0_38("renderStoreDescription fallback", var_64_0)
+		end
+
 		return
 	end
 
 	scroll:updateLayout()
+
+	if var_64_0 then
+		var_0_38("renderStoreDescription", var_64_0)
+	end
 end
 
 local function clearPendingHttpForChildren(parent)
@@ -1263,14 +1359,94 @@ local function clearPendingHttpForChildren(parent)
 		return
 	end
 
+	local var_65_0
+
 	for i = 1, parent:getChildCount() do
 		local child = parent:getChildByIndex(i)
 
 		if child and child._httpId then
 			pendingHttpWidgets[child._httpId] = nil
 			child._httpId = nil
+			var_65_0 = var_65_0 or {}
+			var_65_0[child] = true
 		end
 	end
+
+	if not var_65_0 then
+		return
+	end
+
+	for unusedValue, homeProductos in pairs(STORE_DESC_FONT) do
+		for _, row in ipairs(homeProductos) do
+			if row.widget and var_65_0[row.widget] then
+				row.widget = nil
+			end
+		end
+	end
+end
+
+local function var_0_128()
+	for key, entry in pairs(STORE_DESC_FONT) do
+		local var_66_0
+
+		for unusedValue, entry in ipairs(entry) do
+			local widget = entry.widget
+
+			if entry.persistent and widget and not widget:isDestroyed() then
+				var_66_0 = var_66_0 or {}
+				var_66_0[#var_66_0 + 1] = entry
+			else
+				pendingHttpWidgets[entry.httpId] = nil
+
+				if widget then
+					widget._httpId = nil
+					entry.widget = nil
+				end
+			end
+		end
+
+		STORE_DESC_FONT[key] = var_66_0
+	end
+
+	local var_66_2 = {}
+
+	for unusedValue, entry in ipairs(var_0_75) do
+		if STORE_DESC_FONT[entry.url] then
+			var_66_2[#var_66_2 + 1] = entry
+		end
+	end
+
+	var_0_75 = var_66_2
+end
+
+GameStore.luaGc = {
+	intervalMs = 16,
+	stepSize = 256,
+	passes = 0
+}
+
+function GameStore.requestIncrementalGC()
+	local luaGc = GameStore.luaGc
+
+	luaGc.passes = math.max(luaGc.passes, 2)
+
+	if luaGc.event then
+		return
+	end
+
+	local function var_67_1()
+		luaGc.event = nil
+
+		if collectgarbage("step", luaGc.stepSize) then
+			luaGc.passes = luaGc.passes - 1
+		end
+
+		if luaGc.passes > 0 then
+			luaGc.event = scheduleEvent(var_67_1, luaGc.intervalMs)
+		end
+	end
+
+	luaGc.event = scheduleEvent(var_67_1, luaGc.intervalMs)
 end
 
 local function clearHomeProducts()
@@ -1278,66 +1454,83 @@ local function clearHomeProducts()
 		return
 	end
 
-	local homeProductos = controllerShop.ui.HomePanel.HomeRecentlyAdded.HomeProductos
+	local HomeProductos = controllerShop.ui.HomePanel.HomeRecentlyAdded.HomeProductos
 
-	for i = 1, homeProductos:getChildCount() do
-		local row = homeProductos:getChildByIndex(i)
+	for iter_69_0 = 1, HomeProductos:getChildCount() do
+		local childByIndex = HomeProductos:getChildByIndex(iter_69_0)
 
-		if row then
-			clearPendingHttpForChildren(row:getChildById("image"))
+		if childByIndex then
+			clearPendingHttpForChildren(childByIndex:getChildById("image"))
 		end
 	end
 
-	homeProductos:destroyChildren()
+	HomeProductos:destroyChildren()
+
+	row = nil
 end
 
 local function refreshRowHoverBorder(row)
-	local hoverBorder = row:getChildById("hoverBorder")
+	local _hoverBorder = row._hoverBorder
 
-	if not hoverBorder then
+	if not _hoverBorder then
 		return
 	end
 
-	hoverBorder:setVisible(row._isHovered == true or row._isFocused == true)
+	_hoverBorder:setVisible(row._isHovered == true or row._isFocused == true)
 end
 
-local function bindRowHoverBorder(row, enableHover, keepFocusBorder)
-	row._isHovered = false
-	row._isFocused = false
+local function var_0_131(arg_71_0, arg_71_1, arg_71_2)
+	arg_71_0._isHovered = false
+	arg_71_0._isFocused = false
+	arg_71_0._hoverBorder = arg_71_0:getChildById("hoverBorder")
 
-	if keepFocusBorder ~= false then
-		function row.onFocusChange(widget, focused)
-			widget._isFocused = focused
+	if arg_71_2 ~= false then
+		function arg_71_0.onFocusChange(arg_72_0, arg_72_1)
+			arg_72_0._isFocused = arg_72_1
 
-			refreshRowHoverBorder(widget)
+			refreshRowHoverBorder(arg_72_0)
 		end
 	end
 
-	if enableHover then
-		function row.onHoverChange(widget, hovered)
-			widget._isHovered = hovered
+	if arg_71_1 then
+		function arg_71_0.onHoverChange(arg_73_0, arg_73_1)
+			arg_73_0._isHovered = arg_73_1
 
-			refreshRowHoverBorder(widget)
+			refreshRowHoverBorder(arg_73_0)
 		end
 	end
 end
 
 local function updateHomeHoveredRow(homeProductos, mousePos)
-	local hoveredRow
+	local var_74_0
 
-	for _, row in ipairs(homeProductos:getChildren()) do
-		local isHovered = row:containsPoint(mousePos)
+	for unusedValue, child in ipairs(homeProductos:getChildren()) do
+		if child:containsPoint(mousePos) then
+			var_74_0 = child
 
-		row._isHovered = isHovered
-
-		if isHovered then
-			hoveredRow = row
+			break
 		end
+	end
+
+	if var_74_0 == row then
+		return var_74_0
+	end
+
+	if row and not row:isDestroyed() then
+		row._isHovered = false
 
 		refreshRowHoverBorder(row)
 	end
 
-	return hoveredRow
+	if var_74_0 then
+		var_74_0._isHovered = true
+
+		refreshRowHoverBorder(var_74_0)
+	end
+
+	row = var_74_0
+
+	return var_74_0
 end
 
 local function getHomeBannerWidget()
@@ -1345,54 +1538,125 @@ local function getHomeBannerWidget()
 		return nil
 	end
 
-	local frame = controllerShop.ui.HomePanel:getChildById("HomeImagenFrame")
+	local homeImagenFrame = controllerShop.ui.HomePanel:getChildById("HomeImagenFrame")
 
-	if not frame then
+	if not homeImagenFrame then
 		return nil
 	end
 
-	return frame:getChildById("HomeImagen")
+	return homeImagenFrame:getChildById("HomeImagen")
 end
 
-local function setImagenHttp(widget, url, isIcon)
-	local base = GameStore.website.IMAGES_URL
+local function var_0_134(arg_76_0, arg_76_1, arg_76_2, arg_76_3, arg_76_4)
+	if not arg_76_0 or arg_76_0:isDestroyed() then
+		return
+	end
 
-	if base and base ~= "" then
-		pendingHttpId = pendingHttpId + 1
+	if arg_76_3 then
+		g_logger.warning("HTTP error: " .. arg_76_3 .. " - " .. arg_76_4)
 
-		local myId = pendingHttpId
+		if arg_76_1 then
+			arg_76_0:setIcon("/game_store/images/dynamic-image-error")
+		else
+			arg_76_0:setImageSource("/game_store/images/dynamic-image-error")
+			arg_76_0:setImageFixedRatio(false)
+		end
 
-		pendingHttpWidgets[myId] = widget
-		widget._httpId = myId
+		return
+	end
 
-		HTTP.downloadImage(base .. url, function(path, err)
-			local w = pendingHttpWidgets[myId]
+	if arg_76_1 then
+		arg_76_0:setIcon(arg_76_2)
+	else
+		arg_76_0:setImageSource(arg_76_2)
+	end
+end
 
-			pendingHttpWidgets[myId] = nil
+local function var_0_135()
+	while var_0_76 < var_0_37 and #var_0_75 > 0 do
+		local var_77_0 = table.remove(var_0_75, 1)
 
-			if not w or w:isDestroyed() then
-				return
-			end
+		if not STORE_DESC_FONT[var_77_0.url] then
+			-- block empty
+		else
+			var_0_76 = var_0_76 + 1
 
-			if err then
-				g_logger.warning("HTTP error: " .. err .. " - " .. base .. url)
+			if HTTP.downloadImage(var_77_0.url, function(arg_78_0, arg_78_1)
+				var_0_76 = var_0_76 - 1
 
-				if isIcon then
-					w:setIcon("/game_store/images/dynamic-image-error")
-				else
-					w:setImageSource("/game_store/images/dynamic-image-error")
-					w:setImageFixedRatio(false)
+				local var_78_0 = STORE_DESC_FONT[var_77_0.url]
+
+				STORE_DESC_FONT[var_77_0.url] = nil
+
+				if var_78_0 then
+					for unusedValue, entry in ipairs(var_78_0) do
+						pendingHttpWidgets[entry.httpId] = nil
+
+						if entry.widget then
+							entry.widget._httpId = nil
+						end
+
+						var_0_134(entry.widget, entry.isIcon, arg_78_0, arg_78_1, var_77_0.url)
+					end
 				end
 
-				return
-			end
+				var_0_135()
+			end) == nil and STORE_DESC_FONT[var_77_0.url] then
+				var_0_76 = var_0_76 - 1
 
-			if isIcon then
-				w:setIcon(path)
-			else
-				w:setImageSource(path)
+				local var_77_1 = STORE_DESC_FONT[var_77_0.url]
+
+				STORE_DESC_FONT[var_77_0.url] = nil
+
+				if var_77_1 then
+					for unusedValue, entry in ipairs(var_77_1) do
+						pendingHttpWidgets[entry.httpId] = nil
+
+						if entry.widget then
+							entry.widget._httpId = nil
+						end
+
+						var_0_134(entry.widget, entry.isIcon, nil, "invalid url", var_77_0.url)
+					end
+				end
 			end
-		end)
+		end
+	end
+end
+
+local function setImagenHttp(widget, url, arg_79_2, arg_79_3)
+	local IMAGES_URL = GameStore.website.IMAGES_URL
+
+	if IMAGES_URL and IMAGES_URL ~= "" then
+		pendingHttpId = pendingHttpId + 1
+
+		local var_79_1 = pendingHttpId
+
+		pendingHttpWidgets[var_79_1] = widget
+		widget._httpId = var_79_1
+
+		local var_79_2 = IMAGES_URL .. url
+		local var_79_3 = {
+			widget = widget,
+			isIcon = arg_79_2,
+			httpId = var_79_1,
+			persistent = arg_79_3 == true
+		}
+
+		if STORE_DESC_FONT[var_79_2] then
+			table.insert(STORE_DESC_FONT[var_79_2], var_79_3)
+
+			return
+		end
+
+		STORE_DESC_FONT[var_79_2] = {
+			var_79_3
+		}
+
+		table.insert(var_0_75, {
+			url = var_79_2
+		})
+		var_0_135()
 	else
 		local rel = url:gsub("^/+", "")
 		local localPath = "/game_store/images/" .. rel
@@ -1411,10 +1675,7 @@ local function formatNumberWithCommas(value)
 
 	value = math.abs(value)
 
-	local formattedValue = string.format("%d", value)
-
-	formattedValue = formattedValue:reverse():gsub("(%d%d%d)", "%1,")
-	formattedValue = formattedValue:reverse():gsub("^,", "")
+	local formattedValue = string.format("%d", value):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 
 	return sign .. formattedValue
 end
@@ -1519,9 +1780,7 @@ function updateAuctionCharacterTransferableBalance()
 end
 
 local function convert_timestamp(timestamp)
-	local fecha_hora = os.date("%Y-%m-%d, %H:%M:%S", timestamp)
-
-	return fecha_hora
+	return (os.date("%Y-%m-%d, %H:%M:%S", timestamp))
 end
 
 local function getProductData(product)
@@ -1542,7 +1801,7 @@ local function getProductData(product)
 	end
 
 	local productType = tonumber(product.type) or 0
-	local subOffers = getPurchasableSubOffers(product)
+	local subOffers = getProductOutfitColors(product)
 
 	local function findNumber(fieldName)
 		local direct = toPositiveNumber(product[fieldName])
@@ -1722,6 +1981,41 @@ local function applyOfferStateVisuals(row, product)
 	end
 end
 
+local var_0_147 = 10
+local var_0_148 = 50
+
+local function var_0_149(itemWidget, arg_95_1, arg_95_2)
+	if not itemWidget or itemWidget:isDestroyed() then
+		return
+	end
+
+	arg_95_2 = arg_95_2 or 0
+
+	local exactSize = g_gameConfig.getSpriteSize()
+	local itemThing = false
+	local item = itemWidget:getItem()
+
+	if item then
+		local var_95_3 = item:getExactSize()
+
+		if var_95_3 and var_95_3 > 0 then
+			itemThing = true
+			exactSize = math.max(exactSize, var_95_3)
+		end
+	end
+
+	itemWidget:setSize({
+		width = exactSize * arg_95_1,
+		height = exactSize * arg_95_1
+	})
+
+	if not itemThing and arg_95_2 < var_0_147 then
+		scheduleEvent(function()
+			var_0_149(itemWidget, arg_95_1, arg_95_2 + 1)
+		end, var_0_148)
+	end
+end
+
 function createProductImage(imageParent, data, opts)
 	opts = opts or {}
 
@@ -1746,33 +2040,11 @@ function createProductImage(imageParent, data, opts)
 		if detailLargePreview then
 			itemWidget:setFixedItemSize(false)
 			itemWidget:setPadding(0)
-
-			local exactSize = g_gameConfig.getSpriteSize()
-			local itemThing = itemWidget:getItem()
-
-			if itemThing then
-				exactSize = math.max(exactSize, itemThing:getExactSize())
-			end
-
-			itemWidget:setSize({
-				width = exactSize * 2,
-				height = exactSize * 2
-			})
+			var_0_149(itemWidget, 2)
 		elseif packagePreview then
 			itemWidget:setFixedItemSize(false)
 			itemWidget:setPadding(0)
-
-			local exactSize = g_gameConfig.getSpriteSize()
-			local itemThing = itemWidget:getItem()
-
-			if itemThing then
-				exactSize = math.max(exactSize, itemThing:getExactSize())
-			end
-
-			itemWidget:setSize({
-				width = exactSize,
-				height = exactSize
-			})
+			var_0_149(itemWidget, 1)
 		else
 			itemWidget:setFixedItemSize(true)
 			itemWidget:setSize({
@@ -1784,21 +2056,21 @@ function createProductImage(imageParent, data, opts)
 		itemWidget:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
 		itemWidget:addAnchor(AnchorVerticalCenter, "parent", AnchorVerticalCenter)
 	elseif data.VALOR == "icon" then
-		local widget = g_ui.createWidget("UIWidget", imageParent)
+		local itemWidget = g_ui.createWidget("UIWidget", imageParent)
 
-		widget:setId("storeIcon_" .. data.ID)
-		setImagenHttp(widget, "/64/" .. data.ID, false)
-		widget:setSize({
+		itemWidget:setId("storeIcon_" .. data.ID)
+		setImagenHttp(itemWidget, "/64/" .. data.ID, false)
+		itemWidget:setSize({
 			width = previewSize,
 			height = previewSize
 		})
 
 		if detailLargePreview then
-			widget:setImageFixedRatio(false)
+			itemWidget:setImageFixedRatio(false)
 		end
 
-		widget:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
-		widget:addAnchor(AnchorVerticalCenter, "parent", AnchorVerticalCenter)
+		itemWidget:addAnchor(AnchorHorizontalCenter, "parent", AnchorHorizontalCenter)
+		itemWidget:addAnchor(AnchorVerticalCenter, "parent", AnchorVerticalCenter)
 	elseif data.VALOR == "mountId" or data.VALOR:find("outfitId") then
 		local creature = g_ui.createWidget("StorePreviewCreature", imageParent)
 
@@ -1861,7 +2133,7 @@ local function configureTopCategoryFilter(comboBox, menuFilter)
 		comboBox._storeFilterMousePressPatched = true
 		comboBox._storeFilterBaseOnMousePress = comboBox.onMousePress
 
-		function comboBox:onMousePress(mousePos, mouseButton)
+		function comboBox.onMousePress(self, mousePos, mouseButton)
 			if self._showAllOnly then
 				return true
 			end
@@ -1878,9 +2150,7 @@ local function configureTopCategoryFilter(comboBox, menuFilter)
 	comboBox:addOption("Show All", -1)
 	comboBox:setCurrentOption("Show All", true)
 
-	local hasExtraCategories = type(menuFilter) == "table" and #menuFilter > 0
-
-	if hasExtraCategories then
+	if type(menuFilter) == "table" and #menuFilter > 0 then
 		local hasPreviousOption = previousText == "Show All"
 
 		for index, categoryName in ipairs(menuFilter) do
@@ -2005,7 +2275,23 @@ local function normalizeStoreFilterToken(token)
 	return token
 end
 
-local function productMatchesSubCategoryFilter(product, selectedSubCategory)
+local function productMatchesSubCategoryFilter(product)
+	if not product._sortName then
+		product._sortName = tostring(product.name or ""):lower()
+	end
+
+	return product._sortName
+end
+
+local function var_0_156(arg_105_0)
+	if not arg_105_0._filterHaystack then
+		arg_105_0._filterHaystack = string.format("%s %s", productMatchesSubCategoryFilter(arg_105_0), tostring(arg_105_0.description or ""):lower())
+	end
+
+	return arg_105_0._filterHaystack
+end
+
+local function var_0_157(product, selectedSubCategory, arg_106_2)
 	if not selectedSubCategory or selectedSubCategory == "" then
 		return true
 	end
@@ -2017,15 +2303,16 @@ local function productMatchesSubCategoryFilter(product, selectedSubCategory)
 		return true
 	end
 
-	local haystack = string.format("%s %s", tostring(product.name or ""):lower(), tostring(product.description or ""):lower())
+	local haystack = var_0_156(product)
+	local var_106_3 = arg_106_2 or selectedSubCategory:lower()
 
-	if haystack:find(selectedSubCategory:lower(), 1, true) then
+	if haystack:find(var_106_3, 1, true) then
 		return true
 	end
 
 	local hasAnyToken = false
 
-	for token in tostring(selectedSubCategory):lower():gmatch("[%w]+") do
+	for token in var_106_3:gmatch("[%w]+") do
 		if #token > 2 then
 			hasAnyToken = true
 
@@ -2041,7 +2328,17 @@ local function productMatchesSubCategoryFilter(product, selectedSubCategory)
 end
 
 local function getNewestRankForProduct(product)
-	return tonumber(product.stateNewUntil) or 0
+	local _newestRank = product._newestRank
+
+	if _newestRank ~= nil then
+		return _newestRank
+	end
+
+	local numericValue = tonumber(product.stateNewUntil) or 0
+
+	product._newestRank = numericValue
+
+	return numericValue
 end
 
 local function applyClientSideOfferFilters(offers, selectedSubCategory, sortOrder)
@@ -2054,42 +2351,61 @@ local function applyClientSideOfferFilters(offers, selectedSubCategory, sortOrde
 	end
 
 	local filtered = {}
+	local var_108_2 = 0
+	local var_108_3 = hasFilter and selectedSubCategory:lower() or nil
 
 	if hasFilter then
-		for _, product in ipairs(offers) do
-			if productMatchesSubCategoryFilter(product, selectedSubCategory) then
-				table.insert(filtered, product)
+		for iter_108_0 = 1, #offers do
+			local var_108_4 = offers[iter_108_0]
+
+			if var_0_157(var_108_4, selectedSubCategory, var_108_3) then
+				var_108_2 = var_108_2 + 1
+				filtered[var_108_2] = var_108_4
 			end
 		end
 	else
-		for _, product in ipairs(offers) do
-			table.insert(filtered, product)
+		for iter_108_1 = 1, #offers do
+			var_108_2 = var_108_2 + 1
+			filtered[var_108_2] = offers[iter_108_1]
 		end
 	end
 
 	if sortOrder == 1 then
 		table.sort(filtered, function(a, b)
-			return tostring(a.name or ""):lower() < tostring(b.name or ""):lower()
+			return productMatchesSubCategoryFilter(a) < productMatchesSubCategoryFilter(b)
 		end)
 	elseif sortOrder == 2 then
 		table.sort(filtered, function(a, b)
-			local newestA, newestB = getNewestRankForProduct(a), getNewestRankForProduct(b)
+			local newestA = getNewestRankForProduct(a)
+			local newestB = getNewestRankForProduct(b)
 
 			if newestA ~= newestB then
 				return newestB < newestA
 			end
 
-			return tostring(a.name or ""):lower() < tostring(b.name or ""):lower()
+			return productMatchesSubCategoryFilter(a) < productMatchesSubCategoryFilter(b)
 		end)
 	else
 		table.sort(filtered, function(a, b)
-			local popA, popB = tonumber(a.popularityScore) or 0, tonumber(b.popularityScore) or 0
+			local _popScore = a._popScore
 
-			if popA ~= popB then
-				return popB < popA
+			if _popScore == nil then
+				_popScore = tonumber(a.popularityScore) or 0
+				a._popScore = _popScore
 			end
 
-			return tostring(a.name or ""):lower() < tostring(b.name or ""):lower()
+			local popB = b._popScore
+
+			if popB == nil then
+				popB = tonumber(b.popularityScore) or 0
+				b._popScore = popB
+			end
+
+			if _popScore ~= popB then
+				return popB < _popScore
+			end
+
+			return productMatchesSubCategoryFilter(a) < productMatchesSubCategoryFilter(b)
 		end)
 	end
 
@@ -2133,21 +2449,21 @@ local function disableAllButtons()
 			end
 		end
 	end
-
-	offerDescriptions = {}
 end
 
 local updateSelectedCategoryTextColor
 
 local function setCategoryButtonVisualState(widget, isSelected)
-	if not widget or not widget.Button then
+	local var_113_0 = widget and widget.Button or widget
+
+	if not var_113_0 then
 		return
 	end
 
-	local title = widget.Button.Title
-	local icon = widget.Button.Icon
+	local icon = var_113_0.Icon
+	local title = var_113_0.Title
 
-	if not title or not icon then
+	if not icon or not title then
 		return
 	end
 
@@ -2159,6 +2475,28 @@ local function setCategoryButtonVisualState(widget, isSelected)
 		icon:setMarginLeft(6)
 		icon:setMarginTop(0)
 		title:setTextOffset(topoint("0 1"))
+	end
+end
+
+local function var_0_163(arg_114_0)
+	if not arg_114_0 then
+		return
+	end
+
+	function arg_114_0.onMousePress(arg_115_0, unusedArgument, arg_115_2)
+		if arg_115_2 ~= MouseLeftButton then
+			return
+		end
+
+		setCategoryButtonVisualState(arg_115_0, true)
+	end
+
+	function arg_114_0.onMouseRelease(arg_116_0, unusedArgument, arg_116_2)
+		if arg_116_2 ~= MouseLeftButton then
+			return
+		end
+
+		setCategoryButtonVisualState(arg_116_0, arg_116_0:isChecked())
 	end
 end
 
@@ -2196,7 +2534,7 @@ function updateSelectedCategoryTextColor(selectedCategory, selectedSubCategory)
 
 		if widget and widget.Button and widget.Button.Title then
 			widget.Button.Title:setColor("#c0c0c0")
-			setCategoryButtonVisualState(widget, false)
+			setCategoryButtonVisualState(widget, widget.Button:isChecked())
 		end
 
 		if widget and widget.subCategories then
@@ -2205,7 +2543,7 @@ function updateSelectedCategoryTextColor(selectedCategory, selectedSubCategory)
 
 				if subWidget and subWidget.Button and subWidget.Button.Title then
 					subWidget.Button.Title:setColor("#c0c0c0")
-					setCategoryButtonVisualState(subWidget, false)
+					setCategoryButtonVisualState(subWidget, subWidget.Button:isChecked())
 				end
 			end
 		end
@@ -2338,10 +2676,31 @@ local function clearSelectedStoreCategory()
 	updateSelectedCategoryTextColor(nil, nil)
 end
 
+local function var_0_170()
+	if not controllerShop.ui or not controllerShop.ui.SearchEdit then
+		return
+	end
+
+	local SearchEdit = controllerShop.ui.SearchEdit
+
+	if (SearchEdit:getText() or "") ~= "" then
+		SearchEdit:setText("")
+	end
+end
+
 local function resetStoreUiOnClose()
 	if not controllerShop.ui then
 		return
 	end
+
+	var_0_39()
+	var_0_41()
+	var_0_128()
+
+	var_0_28 = nil
+	row = nil
+
+	var_0_170()
 
 	controllerShop.ui.openedCategory = nil
 	controllerShop.ui.openedSubCategory = nil
@@ -2364,6 +2723,7 @@ local function resetStoreUiOnClose()
 	end
 
 	clearHomeProducts()
+	GameStore.requestIncrementalGC()
 
 	local detail = getPanelItemDetailsContent(controllerShop.ui.panelItem)
 
@@ -2385,6 +2745,11 @@ local function resetStoreUiOnClose()
 	if controllerShop.ui.listCategory then
 		controllerShop.ui.listCategory:destroyChildren()
 	end
+
+	offerDescriptions = {}
+	var_0_31 = {}
+
+	var_0_109()
 end
 
 local function syncSelectedCategoryByName(categoryName)
@@ -2396,7 +2761,8 @@ local function syncSelectedCategoryByName(categoryName)
 		return
 	end
 
-	local targetCategory, targetSubCategory
+	local targetCategory
+	local targetSubCategory
 
 	for i = 1, controllerShop.ui.listCategory:getChildCount() do
 		local categoryWidget = controllerShop.ui.listCategory:getChildByIndex(i)
@@ -2494,9 +2860,8 @@ function showStoreAfterAuction()
 	restoreStoreAfterOverlay()
 
 	local openedCategory = controllerShop.ui.openedCategory
-	local isHomeCategory = openedCategory and (openedCategory:getId() == "Home" or openedCategory.open == "Home")
 
-	if isHomeCategory then
+	if openedCategory and (openedCategory:getId() == "Home" or openedCategory.open == "Home") then
 		syncSelectedCategoryByName("Home")
 		showPanel("HomePanel")
 
@@ -2520,7 +2885,7 @@ local function createSubWidget(parent, subId, subButton)
 	subWidget:setId(subId)
 	subWidget:setImageSource("")
 	subWidget:setSize("152 22")
-	setImagenHttp(subWidget.Button.Icon, subButton.icon, true)
+	setImagenHttp(subWidget.Button.Icon, subButton.icon, true, true)
 	subWidget.Button.Title:setText(subButton.text)
 	subWidget:setVisible(false)
 
@@ -2533,23 +2898,25 @@ local function createSubWidget(parent, subId, subButton)
 	subWidget.Button:setMarginRight(0)
 	subWidget.Button:setMarginLeft(0)
 	subWidget.Button.Arrow:setVisible(false)
+	var_0_163(subWidget.Button)
 
-	local arrow = g_ui.createWidget("UIWidget", parent)
+	local uIWidgetWidget = g_ui.createWidget("UIWidget", parent)
 
-	arrow:setId("arrow_" .. subId)
-	arrow:setSize("7 7")
-	arrow:setPhantom(true)
-	arrow:setImageSource("/images/ui/icon-arrow7x7-right")
-	arrow:setVisible(false)
-	arrow:addAnchor(AnchorVerticalCenter, tostring(subId), AnchorVerticalCenter)
-	arrow:addAnchor(AnchorLeft, "parent", AnchorLeft)
-	arrow:setMarginLeft(3)
+	uIWidgetWidget:setId("arrow_" .. subId)
+	uIWidgetWidget:setSize("7 7")
+	uIWidgetWidget:setPhantom(true)
+	uIWidgetWidget:setImageSource("/images/ui/icon-arrow7x7-right")
+	uIWidgetWidget:setVisible(false)
+	uIWidgetWidget:addAnchor(AnchorVerticalCenter, tostring(subId), AnchorVerticalCenter)
+	uIWidgetWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	uIWidgetWidget:setMarginLeft(3)
 
-	subWidget.ExternalArrow = arrow
+	subWidget.ExternalArrow = uIWidgetWidget
 
 	function subWidget.Button.onClick()
 		waitingInitialHome = false
 
+		var_0_170()
 		disableAllButtons()
 		resetStoreFilterDefaults()
 
@@ -2638,7 +3005,7 @@ g_ui.importStyle("style/ui.otui")
 g_ui.importStyle("style/auctioncharacter.otui")
 controllerShop:setUI("game_store")
 
-function controllerShop:onInit()
+function controllerShop.onInit(unusedArgument)
 	controllerShop.ui:hide()
 
 	for k, v in pairs({
@@ -2675,16 +3042,50 @@ function controllerShop:onInit()
 	end
 
 	controllerShop.ui.transferPoints.onClick = transferPoints
-	controllerShop.ui.panelItem.listProduct.onChildFocusChange = chooseOffert
-	controllerShop.ui.HomePanel.HomeRecentlyAdded.HomeProductos.onChildFocusChange = chooseHome
 
-	local homeBanner = getHomeBannerWidget()
+	function controllerShop.ui.panelItem.listProduct.onChildFocusChange(arg_135_0, anim)
+		if var_0_23 then
+			return
+		end
 
-	if homeBanner then
-		homeBanner.onClick = onClickHomeBanner
+		if var_0_27 and anim then
+			var_0_27.userFocused = true
+		end
+
+		var_0_39()
+
+		if g_clock.millis() - var_0_29 >= var_0_35 then
+			if anim and not anim:isDestroyed() then
+				chooseOffert(arg_135_0, anim)
+			end
+
+			return
+		end
+
+		var_0_21 = scheduleEvent(function()
+			var_0_21 = nil
+
+			if var_0_23 then
+				return
+			end
+
+			if not anim or anim:isDestroyed() then
+				return
+			end
+
+			chooseOffert(arg_135_0, anim)
+		end, var_0_36)
 	end
 
-	function controllerShop.ui.SearchEdit.onKeyDown(widget, keyCode, keyboardModifiers)
+	controllerShop.ui.HomePanel.HomeRecentlyAdded.HomeProductos.onChildFocusChange = chooseHome
+
+	local var_132_0 = getHomeBannerWidget()
+
+	if var_132_0 then
+		var_132_0.onClick = onClickHomeBanner
+	end
+
+	function controllerShop.ui.SearchEdit.onKeyDown(unusedArgument, keyCode, unusedArgument)
 		if g_keyboard.isEnterKey(keyCode) then
 			search()
 
@@ -2698,32 +3099,30 @@ function controllerShop:onInit()
 		updateSearchClearButtonVisual()
 	end
 
-	do
-		local btn = controllerShop.ui.SearchClearButton
+	local SearchClearButton = controllerShop.ui.SearchClearButton
 
-		function btn.onMousePress(widget, mousePos, mouseButton)
-			if not widget:isEnabled() then
-				return
-			end
-
-			if mouseButton == MouseLeftButton then
-				widget:setImageClip("0 20 20 20")
-			end
+	function SearchClearButton.onMousePress(arg_139_0, unusedArgument, arg_139_2)
+		if not arg_139_0:isEnabled() then
+			return
 		end
 
-		function btn.onMouseRelease(widget, mousePos, mouseButton)
-			updateSearchClearButtonVisual()
+		if arg_139_2 == MouseLeftButton then
+			arg_139_0:setImageClip("0 20 20 20")
+		end
+	end
+
+	function SearchClearButton.onMouseRelease(unusedArgument, unusedArgument, unusedArgument)
+		updateSearchClearButtonVisual()
+	end
+
+	function SearchClearButton.onClick()
+		if not SearchClearButton:isEnabled() then
+			return
 		end
 
-		function btn.onClick()
-			if not btn:isEnabled() then
-				return
-			end
-
-			controllerShop.ui.SearchEdit:setText("")
-			search()
-			updateSearchClearButtonVisual()
-		end
+		controllerShop.ui.SearchEdit:setText("")
+		search()
+		updateSearchClearButtonVisual()
 	end
 
 	updateSearchClearButtonVisual()
@@ -2746,11 +3145,11 @@ function controllerShop:onInit()
 	})
 end
 
-function controllerShop:onGameStart()
-	oldProtocol = g_game.getClientVersion() < 1310
+function controllerShop.onGameStart(unusedArgument)
+	oldProtocol = false
 end
 
-function controllerShop:onGameEnd()
+function controllerShop.onGameEnd(unusedArgument)
 	if controllerShop.ui then
 		hide()
 	end
@@ -2782,7 +3181,7 @@ function controllerShop:onGameEnd()
 	auctionCharacterWindowStep = 0
 end
 
-function controllerShop:onTerminate()
+function controllerShop.onTerminate(unusedArgument)
 	destroyWindow({
 		transferPointsWindow,
 		changeNameWindow,
@@ -2800,7 +3199,7 @@ function controllerShop:onTerminate()
 	auctionCharacterWindowStep = 0
 end
 
-function onStoreInit(url, coinsPacketSize)
+function onStoreInit(url, unusedArgument)
 	GameStore.website.IMAGES_URL = url
 end
 
@@ -2813,22 +3212,34 @@ function onParseStoreGetCoin(getTibiaCoins, getTransferableCoins)
 end
 
 function onParseStoreOfferDescriptions(offerId, description)
+	var_0_31[offerId] = nil
+	var_0_31[normalizeStoreOfferId(offerId)] = nil
+
 	cacheOfferDescription(offerId, description)
 	addEvent(function()
 		if not controllerShop.ui or not controllerShop.ui.panelItem then
 			return
 		end
 
-		local listProduct = controllerShop.ui.panelItem.listProduct
+		local var_148_0 = var_0_28
 
-		if not listProduct then
-			return
-		end
+		if var_148_0 and offerIdBelongsToProduct(var_148_0, offerId) then
+			local var_148_1 = false
+			local subOffers = var_148_0.subOffers or {
+				var_148_0
+			}
 
-		local focusedChild = listProduct:getFocusedChild()
+			for _, so in ipairs(subOffers) do
+				if so.disabled then
+					var_148_1 = true
 
-		if focusedChild and focusedChild.product and offerIdBelongsToProduct(focusedChild.product, offerId) then
-			chooseOffert(listProduct, focusedChild)
+					break
+				end
+			end
+
+			local var_148_3 = var_148_1 and "The product is currently not available for this character. See the buy button tooltip for details." or nil
+
+			renderStoreDescription(controllerShop.ui.panelItem, description, var_148_3, var_148_0)
 		end
 	end)
 end
@@ -2849,26 +3260,26 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
 		return
 	end
 
-	local statusText = purchaseStatus
+	local var_149_0 = purchaseStatus
 
-	if not statusText or statusText == "" then
-		statusText = tr("Purchase completed successfully.")
+	if not var_149_0 or var_149_0 == "" then
+		var_149_0 = tr("Purchase completed successfully.")
 	end
 
-	local boxLabel = messageBox:recursiveGetChildById("Box")
+	local box = messageBox:recursiveGetChildById("Box")
 
-	if boxLabel then
-		boxLabel:setTextAutoResize(true)
-		boxLabel:setTextWrap(true)
-		boxLabel:setWidth(192)
-		boxLabel:setText(statusText)
+	if box then
+		box:setTextAutoResize(true)
+		box:setTextWrap(true)
+		box:setWidth(192)
+		box:setText(var_149_0)
 
-		if boxLabel.resizeToText then
-			boxLabel:resizeToText()
+		if box.resizeToText then
+			box:resizeToText()
 		end
 
-		if boxLabel.setTextAlign then
-			boxLabel:setTextAlign(AlignTopLeft)
+		if box.setTextAlign then
+			box:setTextAlign(AlignTopLeft)
 		end
 	end
 
@@ -2881,55 +3292,436 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
 	g_modalManager.show(messageBox)
 
 	function messageBox.onEscape()
+		clearPurchaseCompleteModalEvents(messageBox)
 		closePurchaseSuccessModal(messageBox)
 	end
+
+	local function var_149_3()
+		if not messageBox or messageBox:isDestroyed() or messageBox._purchaseClosing then
+			return
+		end
+
+		messageBox._purchaseClosing = true
+
+		local buttonAnimation = messageBox:recursiveGetChildById("buttonAnimation")
+
+		if buttonAnimation and not buttonAnimation:isDestroyed() then
+			buttonAnimation:disable()
+
+			local animation = buttonAnimation:getChildById("animation")
+
+			if animation and not animation:isDestroyed() then
+				animation:setImageSource("/images/animations/animation-purchasecomplete-pressed")
+			end
+		end
+
+		if messageBox._closeEvent then
+			removeEvent(messageBox._closeEvent)
+		end
+
+		messageBox._closeEvent = controllerShop:scheduleEvent(function()
+			messageBox._closeEvent = nil
+
+			closePurchaseSuccessModal(messageBox)
+		end, 2000)
+	end
+
+	messageBox.onEnter = var_149_3
 
 	local buttonAnimation = messageBox:recursiveGetChildById("buttonAnimation")
 
 	if buttonAnimation then
-		function buttonAnimation.onClick()
-			if not messageBox or messageBox:isDestroyed() then
-				return
-			end
-
-			buttonAnimation:disable()
-
-			local anim = buttonAnimation:getChildById("animation")
-
-			if anim and not anim:isDestroyed() then
-				anim:setImageSource("/images/animations/animation-purchasecomplete-pressed")
-			end
-
-			if messageBox._closeEvent then
-				removeEvent(messageBox._closeEvent)
-			end
-
-			messageBox._closeEvent = controllerShop:scheduleEvent(function()
-				messageBox._closeEvent = nil
-
-				closePurchaseSuccessModal(messageBox)
-			end, 2000)
-		end
+		buttonAnimation.onClick = var_149_3
 	end
 end
 
-function onParseStoreCreateProducts(storeProducts)
-	local windowType = tonumber(storeProducts.windowType) or storeProducts.categoryName == "Search" and 2 or 0
+local var_0_176 = {
+	skipPreview = true
+}
+local var_0_177 = {}
 
-	if windowType == 3 then
-		return onParseStoreCreateHome(storeProducts)
-	end
-
-	if waitingInitialHome and windowType == 0 and not storeRedirectAwaitingOffers then
+local function var_0_178(arg_153_0, arg_153_1, arg_153_2)
+	if not arg_153_0 or not arg_153_1 then
 		return
 	end
 
-	if storeRedirectAwaitingOffers and (windowType == 0 or windowType == 2) then
+	arg_153_2 = arg_153_2 or var_0_177
+
+	local subOffers = arg_153_1.subOffers or {
+		arg_153_1
+	}
+	local var_153_1 = false
+
+	for i, subOffer in ipairs(subOffers) do
+		if subOffer.disabled then
+			var_153_1 = true
+
+			break
+		end
+	end
+
+	local var_153_2 = g_ui.createWidget(var_153_1 and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, arg_153_0)
+
+	if not var_153_2 then
+		return
+	end
+
+	var_0_131(var_153_2, false)
+
+	var_153_2.product, var_153_2.type = arg_153_1, arg_153_1.type
+
+	local lblName = var_153_2:getChildById("lblName")
+
+	if lblName then
+		lblName:setText(arg_153_1.name)
+		lblName:setTextAlign(AlignTopLeft)
+		lblName:setMarginRight(4)
+		lblName:setHeight(34)
+	end
+
+	applyOfferStateVisuals(var_153_2, arg_153_1)
+
+	local var_153_4 = arg_153_1.subOffers or {
+		arg_153_1
+	}
+	local validSubOffers = 0
+
+	for unusedValue, entry in ipairs(var_153_4) do
+		if not entry.id or entry.id ~= 0 then
+			validSubOffers = validSubOffers + 1
+		end
+	end
+
+	local row = var_153_2:getChildById("StackOffers")
+
+	if row then
+		for unusedValue, subOffer in ipairs(var_153_4) do
+			if subOffer.id and subOffer.id == 0 then
+				-- block empty
+			else
+				local offerI = g_ui.createWidget("stackOfferPanel", row)
+
+				if not offerI then
+					-- block empty
+				else
+					offerI.offerId = subOffer.id
+
+					if subOffer.disabled then
+						offerI:disable()
+					end
+
+					local priceLabel = offerI:getChildById("lblPrice")
+
+					if priceLabel then
+						priceLabel:setText(formatNumberWithCommas(tonumber(subOffer.price) or 0))
+						priceLabel:setColor("#c0c0c0")
+
+						if subOffer.coinType == GameStore.CoinType.Transferable then
+							priceLabel:setIcon("/images/icons/icon-tibiacointransferable")
+						end
+					end
+
+					local shouldShowCount = validSubOffers > 1 or (subOffer.count or 1) > 1
+					local offerI = offerI:getChildById("count")
+
+					if offerI then
+						if shouldShowCount and subOffer.count and subOffer.count > 0 then
+							offerI:setText(subOffer.count .. "x")
+						else
+							offerI:setText("")
+						end
+					end
+				end
+			end
+		end
+	end
+
+	var_153_2._previewData = arg_153_1._cachedProductData
+
+	if var_153_2._previewData == nil then
+		var_153_2._previewData = getProductData(arg_153_1)
+		arg_153_1._cachedProductData = var_153_2._previewData
+	end
+
+	if not arg_153_2.skipPreview and var_153_2._previewData then
+		createProductImage(var_153_2:getChildById("image"), var_153_2._previewData)
+
+		var_153_2._previewReady = true
+	end
+
+	return var_153_2
+end
+
+local function var_0_179(arg_154_0, arg_154_1)
+	if not arg_154_0 or not arg_154_1 or arg_154_1:isDestroyed() then
+		return false
+	end
+
+	local y = arg_154_0:getY()
+	local height = arg_154_0:getHeight()
+	local var_154_2 = arg_154_1:getY()
+
+	return y < var_154_2 + arg_154_1:getHeight() and var_154_2 < y + height
+end
+
+local function var_0_180(arg_155_0)
+	if not arg_155_0 or arg_155_0._previewReady or not arg_155_0._previewData then
+		return
+	end
+
+	table.insert(subOffers, arg_155_0)
+end
+
+local function var_0_181(arg_156_0)
+	if arg_156_0 ~= var_0_22 then
+		subOffers = {}
+
+		return
+	end
+
+	local var_156_0 = controllerShop.ui and controllerShop.ui.panelItem and controllerShop.ui.panelItem.listProduct
+
+	if not var_156_0 or var_156_0:isDestroyed() then
+		subOffers = {}
+
+		return
+	end
+
+	local var_156_1 = {}
+	local validSubOffers = {}
+
+	for _, subOffer in ipairs(subOffers) do
+		if subOffer and not subOffer:isDestroyed() and not subOffer._previewReady and subOffer._previewData then
+			if var_0_179(var_156_0, subOffer) then
+				table.insert(var_156_1, subOffer)
+			else
+				table.insert(validSubOffers, subOffer)
+			end
+		end
+	end
+
+	local var_156_3 = g_clock.millis()
+	local var_156_4 = {}
+
+	local function var_156_5(validSubOffers)
+		for _, subOffer in ipairs(validSubOffers) do
+			if g_clock.millis() - var_156_3 >= var_0_33 then
+				table.insert(var_156_4, subOffer)
+			elseif not subOffer:isDestroyed() and not subOffer._previewReady and subOffer._previewData then
+				createProductImage(subOffer:getChildById("image"), subOffer._previewData)
+
+				subOffer._previewReady = true
+			end
+		end
+	end
+
+	var_156_5(var_156_1)
+	var_156_5(validSubOffers)
+
+	subOffers = var_156_4
+
+	var_0_38("previewBatch", var_156_3)
+
+	if #subOffers > 0 then
+		var_0_25 = scheduleEvent(function()
+			var_0_25 = nil
+
+			var_0_181(arg_156_0)
+		end, 1)
+	end
+end
+
+local function var_0_182(arg_159_0)
+	if var_0_25 or #subOffers == 0 then
+		return
+	end
+
+	var_0_25 = scheduleEvent(function()
+		var_0_25 = nil
+
+		var_0_181(arg_159_0)
+	end, 1)
+end
+
+local function var_0_183(arg_161_0, arg_161_1)
+	local var_161_0 = {
+		tonumber(pendingStoreFocusOfferId) or 0,
+		tonumber(arg_161_1 and arg_161_1.redirectId) or 0
+	}
+
+	for unusedValue, entry in ipairs(var_161_0) do
+		if entry > 0 then
+			local var_161_1 = normalizeStoreOfferId(entry)
+
+			for unusedValue, entry in ipairs(arg_161_0) do
+				for unusedValue, iter_161_5 in ipairs(entry.subOffers or {
+					entry
+				}) do
+					if normalizeStoreOfferId(iter_161_5.id) == var_161_1 then
+						return entry
+					end
+				end
+			end
+		end
+	end
+
+	return arg_161_0[1]
+end
+
+local function var_0_184(arg_162_0, arg_162_1, arg_162_2)
+	if arg_162_0.focused or arg_162_0.userFocused or not arg_162_2 or arg_162_2:isDestroyed() then
+		return
+	end
+
+	arg_162_0.focused = true
+	var_0_23 = true
+
+	arg_162_1:updateLayout()
+	arg_162_1:focusChild(arg_162_2)
+	arg_162_1:ensureChildVisible(arg_162_2)
+
+	var_0_23 = false
+end
+
+local function var_0_185(arg_163_0)
+	if not arg_163_0 or arg_163_0:isDestroyed() then
+		return
+	end
+
+	local scrollSpacer = arg_163_0:getChildById("_scrollSpacer")
+
+	if scrollSpacer then
+		scrollSpacer:destroy()
+	end
+end
+
+local function var_0_186(arg_164_0, arg_164_1)
+	var_0_23 = false
+
+	enableAllButtons()
+	var_0_185(arg_164_1)
+
+	if arg_164_0 ~= var_0_22 then
+		var_0_27 = nil
+
+		return
+	end
+
+	if not controllerShop.ui or not arg_164_1 or arg_164_1:isDestroyed() then
+		var_0_27 = nil
+
+		return
+	end
+
+	showPanel("panelItem")
+	fixServerNoSend0xF2()
+
+	if var_0_32 and var_0_27 and var_0_27.startedAt then
+		var_0_38("listRender complete", var_0_27.startedAt)
+	end
+
+	var_0_27 = nil
+
+	GameStore.requestIncrementalGC()
+end
+
+local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
+	if arg_165_0 ~= var_0_22 then
+		var_0_23 = false
+
+		return
+	end
+
+	if not controllerShop.ui or not arg_165_3 or arg_165_3:isDestroyed() then
+		var_0_23 = false
+		var_0_27 = nil
+
+		if controllerShop.ui then
+			enableAllButtons()
+		end
+
+		return
+	end
+
+	var_0_185(arg_165_3)
+
+	local var_165_0 = g_clock.millis()
+	local var_165_1 = 0
+	local var_165_2 = arg_165_4
+	local var_165_3 = arg_165_4 == 1 and var_0_34 or 1
+
+	var_0_23 = true
+
+	while var_165_2 <= #arg_165_2 do
+		local var_165_4 = arg_165_2[var_165_2]
+		local var_165_5, var_165_6 = pcall(var_0_178, arg_165_3, var_165_4, var_0_176)
+
+		if not var_165_5 then
+			g_logger.warning("[game_store] Failed to render offer row: " .. tostring(var_165_6))
+		elseif var_165_6 then
+			var_0_180(var_165_6)
+
+			if var_165_4 == arg_165_1.initialProduct then
+				var_0_184(arg_165_1, arg_165_3, var_165_6)
+			end
+		end
+
+		var_165_2 = var_165_2 + 1
+		var_165_1 = var_165_1 + 1
+
+		if var_165_3 <= var_165_1 and g_clock.millis() - var_165_0 >= var_0_33 then
+			break
+		end
+	end
+
+	var_0_23 = false
+
+	var_0_38(string.format("rowBatch start=%d count=%d", arg_165_4, var_165_1), var_165_0)
+	var_0_182(arg_165_0)
+
+	if var_165_2 <= #arg_165_2 then
+		local var_165_7 = #arg_165_2 - (var_165_2 - 1)
+
+		if var_165_7 > 0 then
+			local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_165_3)
+
+			if uIWidgetWidget then
+				uIWidgetWidget:setId("_scrollSpacer")
+				uIWidgetWidget:setPhantom(true)
+				uIWidgetWidget:setFocusable(false)
+				uIWidgetWidget:setHeight(var_165_7 * 82)
+			end
+		end
+
+		var_0_24 = scheduleEvent(function()
+			var_0_24 = nil
+
+			var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, var_165_2)
+		end, 1)
+
+		return
+	end
+
+	var_0_24 = nil
+
+	var_0_186(arg_165_0, arg_165_3)
+end
+
+function onParseStoreCreateProducts(storeProducts)
+	local numericValue = tonumber(storeProducts.windowType) or storeProducts.categoryName == "Search" and 2 or 0
+
+	if numericValue == 3 then
+		return onParseStoreCreateHome(storeProducts)
+	end
+
+	if waitingInitialHome and numericValue == 0 and not storeRedirectAwaitingOffers then
+		return
+	end
+
+	if storeRedirectAwaitingOffers and (numericValue == 0 or numericValue == 2) then
 		waitingInitialHome = false
 
-		local redirectId = tonumber(storeProducts.redirectId) or 0
-
-		if redirectId <= 0 and storeProducts.categoryName == "Exclusive Offers" then
+		if (tonumber(storeProducts.redirectId) or 0) <= 0 and storeProducts.categoryName == "Exclusive Offers" then
 			return
 		end
 
@@ -2938,23 +3730,17 @@ function onParseStoreCreateProducts(storeProducts)
 		showPanel("panelItem")
 	end
 
-	local comboBox = controllerShop.ui.panelItem.storeFilterBar.comboBoxContainer.showAll
+	local showAll = controllerShop.ui.panelItem.storeFilterBar.comboBoxContainer.showAll
 
-	configureTopCategoryFilter(comboBox, storeProducts.menuFilter)
+	configureTopCategoryFilter(showAll, storeProducts.menuFilter)
 
 	reasonCategory = storeProducts.disableReasons
 
 	syncSelectedCategoryByName(storeProducts.categoryName)
+	var_0_41()
+	var_0_128()
 
 	local listProduct = controllerShop.ui.panelItem.listProduct
-
-	for i = 1, listProduct:getChildCount() do
-		local row = listProduct:getChildByIndex(i)
-
-		if row then
-			clearPendingHttpForChildren(row:getChildById("image"))
-		end
-	end
 
 	listProduct:destroyChildren()
 
@@ -2962,125 +3748,47 @@ function onParseStoreCreateProducts(storeProducts)
 		return
 	end
 
-	local showAllCombo = controllerShop.ui.panelItem.storeFilterBar.comboBoxContainer.showAll
-	local selectedOption = showAllCombo and showAllCombo:getCurrentOption() or nil
-	local selectedFilterText = selectedOption and selectedOption.text or "Show All"
-	local selectedSubCategory = selectedFilterText ~= "Show All" and selectedFilterText or ""
-	local sortOrder = getStoreSortOrderFromUi()
-	local productsToRender = applyClientSideOfferFilters(storeProducts.offers, selectedSubCategory, sortOrder)
+	local showAll = controllerShop.ui.panelItem.storeFilterBar.comboBoxContainer.showAll
+	local currentOption = showAll and showAll:getCurrentOption() or nil
+	local var_167_5 = currentOption and currentOption.text or "Show All"
+	local var_167_6 = var_167_5 ~= "Show All" and var_167_5 or ""
+	local var_167_7 = getStoreSortOrderFromUi()
+	local var_167_8 = applyClientSideOfferFilters(storeProducts.offers, var_167_6, var_167_7)
+	local var_167_9 = 82
+	local var_167_10 = #var_167_8
 
-	for _, product in ipairs(productsToRender) do
-		local subOffersProbe = product.subOffers or {
-			product
-		}
-		local rowDisabled = false
+	if var_167_10 > 0 then
+		local uIWidgetWidget = g_ui.createWidget("UIWidget", listProduct)
 
-		for _, so in ipairs(subOffersProbe) do
-			if so.disabled then
-				rowDisabled = true
-
-				break
-			end
-		end
-
-		local row = g_ui.createWidget(rowDisabled and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, listProduct)
-
-		bindRowHoverBorder(row, false)
-
-		row.product, row.type = product, product.type
-
-		local nameLabel = row:getChildById("lblName")
-
-		nameLabel:setText(product.name)
-		nameLabel:setTextAlign(AlignTopLeft)
-		nameLabel:setMarginRight(4)
-		nameLabel:setHeight(34)
-		applyOfferStateVisuals(row, product)
-
-		local subOffers = product.subOffers or {
-			product
-		}
-		local validSubOffers = {}
-
-		for _, so in ipairs(subOffers) do
-			if not so.id or so.id ~= 0 then
-				table.insert(validSubOffers, so)
-			end
-		end
-
-		for i, subOffer in ipairs(subOffers) do
-			if subOffer.id and subOffer.id == 0 then
-				-- block empty
-			else
-				local offerI = g_ui.createWidget("stackOfferPanel", row:getChildById("StackOffers"))
-
-				offerI.offerId = subOffer.id
-
-				if subOffer.disabled then
-					offerI:disable()
-				end
-
-				local priceLabel = offerI:getChildById("lblPrice")
-
-				priceLabel:setText(formatNumberWithCommas(tonumber(subOffer.price) or 0))
-
-				local shouldShowCount = #validSubOffers > 1 or (subOffer.count or 1) > 1
-
-				if shouldShowCount and subOffer.count and subOffer.count > 0 then
-					offerI:getChildById("count"):setText(subOffer.count .. "x")
-				else
-					offerI:getChildById("count"):setText("")
-				end
-
-				fixServerNoSend0xF2()
-
-				local coinsBalance2, coinsBalance1 = getCoinsBalance()
-				local isTransferable = subOffer.coinType == GameStore.CoinType.Transferable
-				local price = subOffer.price
-				local balance = isTransferable and coinsBalance1 or coinsBalance2
-
-				priceLabel:setColor("#c0c0c0")
-
-				if isTransferable then
-					priceLabel:setIcon("/images/icons/icon-tibiacointransferable")
-				end
-			end
-		end
-
-		local data = getProductData(product)
-
-		if data then
-			createProductImage(row:getChildById("image"), data)
+		if uIWidgetWidget then
+			uIWidgetWidget:setId("_scrollSpacer")
+			uIWidgetWidget:setPhantom(true)
+			uIWidgetWidget:setFocusable(false)
+			uIWidgetWidget:setHeight(var_167_10 * var_167_9)
 		end
 	end
 
-	controllerShop:scheduleEvent(function()
-		local focusId = pendingStoreFocusOfferId or storeProducts.redirectId
+	local var_167_12 = var_0_22
+	local var_167_13 = {
+		userFocused = false,
+		focused = false,
+		initialProduct = var_0_183(var_167_8, storeProducts),
+		startedAt = g_clock.millis()
+	}
 
-		if focusStoreOffer(listProduct, focusId) then
-			pendingStoreFocusOfferId = nil
-		elseif storeProducts.redirectId and storeProducts.redirectId ~= 0 then
-			focusStoreOffer(listProduct, storeProducts.redirectId)
+	var_0_27 = var_167_13
+	pendingStoreFocusOfferId = nil
 
-			pendingStoreFocusOfferId = nil
-		else
-			local firstChild = listProduct:getFirstChild()
-
-			if firstChild and firstChild:isEnabled() then
-				listProduct:focusChild(firstChild)
-				listProduct:ensureChildVisible(firstChild)
-			end
-		end
-
-		local focusedChild = listProduct:getFocusedChild()
-
-		if focusedChild then
-			chooseOffert(listProduct, focusedChild)
-		end
-	end, 300, "onParseStoreOfferDescriptionsSafeDelay")
-	enableAllButtons()
 	showPanel("panelItem")
-	fixServerNoSend0xF2()
+	enableAllButtons()
+
+	if var_167_13.initialProduct then
+		chooseOffert(listProduct, {
+			product = var_167_13.initialProduct
+		})
+	end
+
+	var_0_187(var_167_12, var_167_13, var_167_8, listProduct, 1)
 end
 
 function onParseStoreCreateHome(offer)
@@ -3101,26 +3809,26 @@ function onParseStoreCreateHome(offer)
 
 	clearHomeProducts()
 
-	for i, product in ipairs(offer.offers) do
-		local subOffersProbe = product.subOffers or {
-			product
+	for index, offer in ipairs(offer.offers) do
+		local var_168_1 = offer.subOffers or {
+			offer
 		}
-		local rowDisabled = false
+		local var_168_2 = false
 
-		for _, so in ipairs(subOffersProbe) do
-			if so.disabled then
-				rowDisabled = true
+		for unusedValue, entry in ipairs(var_168_1) do
+			if entry.disabled then
+				var_168_2 = true
 
 				break
 			end
 		end
 
-		local row = g_ui.createWidget(rowDisabled and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, homeProductos)
+		local row = g_ui.createWidget(var_168_2 and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, homeProductos)
 
-		bindRowHoverBorder(row, false, false)
+		var_0_131(row, false, false)
 		row:setSize("250 78")
 
-		if i % 2 == 1 then
+		if index % 2 == 1 then
 			row:setMarginLeft(2)
 			row:setMarginTop(2)
 			row:setMarginRight(5)
@@ -3131,40 +3839,38 @@ function onParseStoreCreateHome(offer)
 			row:setMarginBottom(2)
 		end
 
-		row.product, row.type = product, product.type
+		row.product, row.type = offer, offer.type
 
-		local nameLabel = row:getChildById("lblName")
+		local lblName = row:getChildById("lblName")
 
-		nameLabel:setText(product.name)
-		nameLabel:setTextAlign(AlignTopLeft)
-		nameLabel:setMarginRight(10)
-		applyOfferStateVisuals(row, product)
+		lblName:setText(offer.name)
+		lblName:setTextAlign(AlignTopLeft)
+		lblName:setMarginRight(10)
+		applyOfferStateVisuals(row, offer)
 
 		local stackOffers = row:getChildById("StackOffers")
 
 		stackOffers:destroyChildren()
 
-		local subOffers = product.subOffers or {
-			product
+		local var_168_6 = offer.subOffers or {
+			offer
 		}
 		local validSubOffers = {}
 
-		for _, subOffer in ipairs(subOffers) do
-			if not subOffer.id or subOffer.id ~= 0 then
-				table.insert(validSubOffers, subOffer)
+		for unusedValue, entry in ipairs(var_168_6) do
+			if not entry.id or entry.id ~= 0 then
+				table.insert(validSubOffers, entry)
 			end
 		end
 
 		local visibleSubOffers = 0
 
-		for _, subOffer in ipairs(validSubOffers) do
+		for unusedValue, subOffer in ipairs(validSubOffers) do
 			local subOfferWidget = g_ui.createWidget("stackOfferPanel", stackOffers)
 
 			subOfferWidget.lblPrice:setText(formatNumberWithCommas(tonumber(subOffer.price) or 0))
 
-			local shouldShowCount = #validSubOffers > 1 or (subOffer.count or 1) > 1
-
-			if shouldShowCount and subOffer.count and subOffer.count > 0 then
+			if (#validSubOffers > 1 or (subOffer.count or 1) > 1) and subOffer.count and subOffer.count > 0 then
 				subOfferWidget.count:setText(subOffer.count .. "x")
 			else
 				subOfferWidget.count:setText("")
@@ -3181,7 +3887,12 @@ function onParseStoreCreateHome(offer)
 
 		stackOffers:setHeight(math.max(20, visibleSubOffers * 24))
 
-		local data = getProductData(product)
+		local data = offer._cachedProductData
+
+		if data == nil then
+			data = getProductData(offer)
+			offer._cachedProductData = data
+		end
 
 		if data then
 			createProductImage(row:getChildById("image"), data)
@@ -3201,26 +3912,16 @@ function onParseStoreCreateHome(offer)
 			return
 		end
 
-		for _, row in ipairs(widget:getChildren()) do
+		if row and not row:isDestroyed() then
 			row._isHovered = false
 
 			refreshRowHoverBorder(row)
 		end
+
+		row = nil
 	end
 
-	bannersHome = table.copy(offer.banners or {})
-	currentIndex = 1
-
-	for _, id in ipairs({"prevImagen", "nextImagen"}) do
-		local button = controllerShop.ui.HomePanel:getChildById(id)
-		if button then
-			button:setEnabled(#bannersHome > 1)
-		end
-	end
-	local bannerWidget = getHomeBannerWidget()
-	if bannerWidget then
-		bannerWidget:setVisible(#bannersHome > 0)
-	end
+	bannersHome = offer.banners or {}
 
 	if #bannersHome > 0 then
 		currentIndex = math.random(1, #bannersHome)
@@ -3228,7 +3929,7 @@ function onParseStoreCreateHome(offer)
 		local homeBanner = getHomeBannerWidget()
 
 		if homeBanner then
-			setImagenHttp(homeBanner, bannersHome[currentIndex].image, false)
+			setImagenHttp(homeBanner, bannersHome[currentIndex].image, false, true)
 		end
 	end
 
@@ -3296,7 +3997,7 @@ function onParseStoreGetCategories(buttons)
 	local categoryOrder = {}
 
 	if not oldProtocol then
-		local homeCategory = {
+		categories.Home = {
 			state = 0,
 			name = "Home",
 			subCategories = {},
@@ -3304,8 +4005,6 @@ function onParseStoreGetCategories(buttons)
 				[1] = "icon-store-home.png"
 			}
 		}
-
-		categories.Home = homeCategory
 
 		table.insert(categoryOrder, "Home")
 	end
@@ -3338,12 +4037,14 @@ function onParseStoreGetCategories(buttons)
 		if category.icons[1] == "icon-store-home.png" then
 			widget.Button.Icon:setIcon("/game_store/images/icon-store-home")
 		else
-			setImagenHttp(widget.Button.Icon, "/13/" .. category.icons[1], true)
+			setImagenHttp(widget.Button.Icon, "/13/" .. category.icons[1], true, true)
 		end
 
 		widget.Button.Title:setText(category.name)
 
 		widget.open = category.name
+
+		var_0_163(widget.Button)
 
 		if #category.subCategories > 0 then
 			widget.subCategories = category.subCategories
@@ -3366,6 +4067,7 @@ function onParseStoreGetCategories(buttons)
 		function widget.Button.onClick()
 			waitingInitialHome = false
 
+			var_0_170()
 			disableAllButtons()
 			resetStoreFilterDefaults()
 
@@ -3513,9 +4215,7 @@ function toggle()
 	recoverStoreOpenEnvironment()
 
 	if controllerShop.ui:isVisible() then
-		local isModal = g_modalManager.isModal(controllerShop.ui)
-
-		if isModal and not storeHiddenForOverlay then
+		if g_modalManager.isModal(controllerShop.ui) and not storeHiddenForOverlay then
 			return hide()
 		end
 
@@ -3663,6 +4363,18 @@ function openUsefulThings(offerId)
 	end, nil, USEFUL_THINGS_FOCUS_OFFERS[offerId])
 end
 
+function openStoreByRedirect(numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	if numericValue <= 0 then
+		return
+	end
+
+	openStoreRedirect("redirect:" .. tostring(numericValue), function()
+		g_game.sendRequestUsefulThings(numericValue)
+	end)
+end
+
 function openWeeklyTaskExpansion()
 	openUsefulThings(StoreConst.WeeklyTaskExpansion)
 end
@@ -3705,6 +4417,7 @@ function toggleTransferHistory()
 			showPanel("panelItem")
 		end
 	else
+		var_0_170()
 		clearSelectedStoreCategory()
 		g_game.openTransactionHistory(HISTORY_ENTRIES_PER_PAGE)
 	end
@@ -3771,14 +4484,31 @@ function chooseOffert(self, focusedChild)
 	end
 
 	local product = focusedChild.product
-	local panel = controllerShop.ui.panelItem
-	local detail = getPanelItemDetailsContent(panel)
 
-	if not detail then
+	if not product then
 		return
 	end
 
-	local lblName = detail:getChildById("lblName")
+	var_0_29 = g_clock.millis()
+
+	local var_206_1 = var_0_32 and var_0_29 or nil
+
+	var_0_28 = product
+
+	local panel = controllerShop.ui.panelItem
+	local var_206_3 = getPanelItemDetailsContent(panel)
+
+	if not var_206_3 then
+		return
+	end
+
+	local var_206_4 = var_0_110(var_206_3)
+
+	if not var_206_4 then
+		return
+	end
+
+	local lblName = var_206_4.lblName
 
 	if lblName then
 		lblName:setText(product.name)
@@ -3797,15 +4527,23 @@ function chooseOffert(self, focusedChild)
 		end
 	end
 
-	if not oldProtocol and primaryOfferId > 0 and description == "" then
+	if not oldProtocol and primaryOfferId > 0 and description == "" and not var_0_31[primaryOfferId] then
+		var_0_31[primaryOfferId] = true
+
 		g_game.requestStoreOfferDescription(primaryOfferId)
 	end
 
 	renderStoreDescription(panel, description, nil, product)
 
 	local subOffers = product.subOffers or {}
-	local data = getProductData(product)
-	local imagePanel = detail:getChildById("image")
+	local data = product._cachedProductData
+
+	if data == nil then
+		data = getProductData(product)
+		product._cachedProductData = data
+	end
+
+	local imagePanel = var_206_4.image
 
 	clearPendingHttpForChildren(imagePanel)
 
@@ -3814,24 +4552,26 @@ function chooseOffert(self, focusedChild)
 		imagePanel:setImageSource("/images/ui/1pixel-down-frame")
 
 		if data then
-			createProductImage(imagePanel, data, {
-				detailLargePreview = true
-			})
+			createProductImage(imagePanel, data, var_0_59)
 		end
 	end
 
 	fixServerNoSend0xF2()
 
 	local coinsBalance2, coinsBalance1 = getCoinsBalance()
-	local offerStackPanel = detail:getChildById("StackOffers")
+	local offerStackPanel = var_206_4.StackOffers
 
 	if not offerStackPanel then
+		if var_206_1 then
+			var_0_38("chooseOffert no stack", var_206_1)
+		end
+
 		return
 	end
 
 	offerStackPanel:destroyChildren()
 
-	local offers = not table.empty(subOffers) and subOffers or {
+	local offers = #subOffers > 0 and subOffers or {
 		product
 	}
 	local validOffers = {}
@@ -3852,14 +4592,10 @@ function chooseOffert(self, focusedChild)
 
 			if isConfigurableOffer(product, offer) then
 				btnBuyWidget:setText(tr("Configure"))
+			elseif #validOffers > 1 or (offer.count or 1) > 1 then
+				btnBuyWidget:setText("Buy  " .. tostring(offer.count or 1))
 			else
-				local showBuyWithPrice = #validOffers > 1 or (offer.count or 1) > 1
-
-				if showBuyWithPrice then
-					btnBuyWidget:setText("Buy  " .. tostring(offer.count or 1))
-				else
-					btnBuyWidget:setText(tr("Buy"))
-				end
+				btnBuyWidget:setText(tr("Buy"))
 			end
 
 			setOfferPanelPriceRow(offerPanel, offer, coinsBalance2, coinsBalance1)
@@ -3958,9 +4694,8 @@ function chooseOffert(self, focusedChild)
 						fixServerNoSend0xF2()
 
 						local latestBalance2, latestBalance1 = getCoinsBalance()
-						local latestCurrentBalance = isTransferable and latestBalance1 or latestBalance2
 
-						if latestCurrentBalance >= offer.price then
+						if (isTransferable and latestBalance1 or latestBalance2) >= offer.price then
 							g_game.buyStoreOffer(offer.id, GameStore.ClientOfferTypes.CLIENT_STORE_OFFER_OTHER)
 							showStoreProcessingModal()
 						else
@@ -3980,7 +4715,12 @@ function chooseOffert(self, focusedChild)
 				local productLineText = string.format("%dx %s", offerCount, product.name)
 				local confirmationMessage = string.format("Do you want to buy the product \"%s\"?", productLineText)
 				local priceIcon = isTransferable and "/images/icons/icon-tibiacointransferable" or "/images/icons/icon-tibiacoin"
-				local data = getProductData(product)
+				local data = product._cachedProductData
+
+				if data == nil then
+					data = getProductData(product)
+					product._cachedProductData = data
+				end
 
 				if not shouldAskBeforeBuying() then
 					acceptFunc()
@@ -4012,6 +4752,30 @@ function chooseOffert(self, focusedChild)
 	if showDisabledDescription then
 		renderStoreDescription(panel, description, "The product is currently not available for this character. See the buy button tooltip for details.", product)
 	end
+
+	if var_206_1 then
+		var_0_38("chooseOffert", var_206_1)
+	end
+end
+
+function onHoverHomeBanner(arg_212_0)
+	if not arg_212_0 or arg_212_0:isDestroyed() then
+		return
+	end
+
+	local var_212_0 = arg_212_0:isHovered()
+
+	if var_212_0 == arg_212_0._bannerCursor then
+		return
+	end
+
+	arg_212_0._bannerCursor = var_212_0
+
+	if var_212_0 then
+		g_mouse.pushCursor("point")
+	else
+		g_mouse.popCursor("point")
+	end
 end
 
 function onClickHomeBanner()
@@ -4022,6 +4786,12 @@ function onClickHomeBanner()
 	local currentBanner = bannersHome[currentIndex]
 
 	if not currentBanner then
+		return
+	end
+
+	if currentBanner.openWebsite or currentBanner.unknownByte1 == 1 then
+		getCoinsWebsite()
+
 		return
 	end
 
@@ -4054,10 +4824,6 @@ function chooseHome(self, focusedChild)
 end
 
 function changeImagenHome(direction)
-	if #bannersHome == 0 then
-		return
-	end
-
 	if direction == "nextImagen" then
 		currentIndex = currentIndex + 1
 
@@ -4077,7 +4843,7 @@ function changeImagenHome(direction)
 	local homeBanner = getHomeBannerWidget()
 
 	if homeBanner then
-		setImagenHttp(homeBanner, imagePath, false)
+		setImagenHttp(homeBanner, imagePath, false, true)
 	end
 end
 
@@ -4805,12 +5571,9 @@ function transferPoints()
 			recipient = textEdit:getText()
 		end
 
-		recipient = (recipient or ""):trim()
+		local var_258_2 = (recipient or ""):trim():len() >= 1
 
-		local hasRecipient = recipient:len() >= 1
-		local giftButton = transferPointsWindow.buttonOk
-
-		giftButton:setEnabled(hasRecipient)
+		transferPointsWindow.buttonOk:setEnabled(var_258_2)
 	end
 
 	local function scheduleGiftTransferButtonState(recipientText)
@@ -4899,4 +5662,5 @@ function search()
 	local text = controllerShop.ui.SearchEdit:getText() or ""
 
 	g_game.sendRequestStoreSearch(text:trim(), 0, 1)
+	var_0_170()
 end

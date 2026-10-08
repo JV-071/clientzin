@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uiimageview.lua
-
-UIImageView = extends(UIWidget, "UIImageView")
+﻿UIImageView = extends(UIWidget, "UIImageView")
 
 function UIImageView.create()
 	local imageView = UIImageView.internalCreate()
@@ -14,7 +12,7 @@ function UIImageView.create()
 	return imageView
 end
 
-function UIImageView:getDefaultZoom()
+function UIImageView.getDefaultZoom(self)
 	local width = self:getWidth()
 	local height = self:getHeight()
 	local textureWidth = self:getImageTextureWidth()
@@ -25,7 +23,7 @@ function UIImageView:getDefaultZoom()
 	return math.min(zoomX, zoomY)
 end
 
-function UIImageView:getImagePosition(x, y)
+function UIImageView.getImagePosition(self, x, y)
 	x = x or self:getWidth() / 2
 	y = y or self:getHeight() / 2
 
@@ -37,7 +35,7 @@ function UIImageView:getImagePosition(x, y)
 	return posX, posY
 end
 
-function UIImageView:setImage(image)
+function UIImageView.setImage(self, image)
 	self:setImageSource(image)
 
 	local zoom = self:getDefaultZoom()
@@ -46,7 +44,7 @@ function UIImageView:setImage(image)
 	self:center()
 end
 
-function UIImageView:setZoom(zoom, x, y)
+function UIImageView.setZoom(self, zoom, x, y)
 	zoom = math.max(math.min(zoom, self.maxZoom), self.minZoom)
 
 	local posX, posY = self:getImagePosition(x, y)
@@ -63,23 +61,23 @@ function UIImageView:setZoom(zoom, x, y)
 	self:move(posX, posY, x, y)
 end
 
-function UIImageView:zoomIn(x, y)
+function UIImageView.zoomIn(self, x, y)
 	local zoom = self.zoom * 1.1
 
 	self:setZoom(zoom, x, y)
 end
 
-function UIImageView:zoomOut(x, y)
+function UIImageView.zoomOut(self, x, y)
 	local zoom = self.zoom / 1.1
 
 	self:setZoom(zoom, x, y)
 end
 
-function UIImageView:center()
+function UIImageView.center(self)
 	self:move(self:getImageTextureWidth() / 2, self:getImageTextureHeight() / 2)
 end
 
-function UIImageView:clampImageOffset(offsetX, offsetY)
+function UIImageView.clampImageOffset(self, offsetX, offsetY)
 	local viewportWidth = self:getWidth()
 	local viewportHeight = self:getHeight()
 	local imageWidth = self:getImageWidth()
@@ -112,7 +110,7 @@ function UIImageView:clampImageOffset(offsetX, offsetY)
 	return offsetX, offsetY
 end
 
-function UIImageView:move(x, y, centerX, centerY)
+function UIImageView.move(self, x, y, centerX, centerY)
 	local textureWidth = self:getImageTextureWidth()
 	local textureHeight = self:getImageTextureHeight()
 
@@ -127,20 +125,19 @@ function UIImageView:move(x, y, centerX, centerY)
 
 	local offsetX = centerX - x * self.zoom
 	local offsetY = centerY - y * self.zoom
-
-	offsetX, offsetY = self:clampImageOffset(offsetX, offsetY)
+	local var_10_4, var_10_5 = self:clampImageOffset(offsetX, offsetY)
 
 	self:setImageOffset({
-		x = offsetX,
-		y = offsetY
+		x = var_10_4,
+		y = var_10_5
 	})
 end
 
-function UIImageView:onDragEnter(pos)
+function UIImageView.onDragEnter(self, pos)
 	return true
 end
 
-function UIImageView:onDragMove(pos, moved)
+function UIImageView.onDragMove(self, pos, moved)
 	local posX, posY = self:getImagePosition()
 
 	self:move(posX - moved.x / self.zoom, posY - moved.y / self.zoom)
@@ -148,11 +145,11 @@ function UIImageView:onDragMove(pos, moved)
 	return true
 end
 
-function UIImageView:onDragLeave(widget, pos)
+function UIImageView.onDragLeave(self, widget, pos)
 	return true
 end
 
-function UIImageView:onMouseWheel(mousePos, direction)
+function UIImageView.onMouseWheel(self, mousePos, direction)
 	local x = mousePos.x - self:getX()
 	local y = mousePos.y - self:getY()
 

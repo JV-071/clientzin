@@ -124,8 +124,7 @@ ConversionWindow < Panel
     id: convertDustPanel
     anchors.top: parent.top
     anchors.left: parent.left
-    margin-top: 2
-    margin-left: -1
+    margin-top: 1
     text-offset: 0 1
 
     ForgeItem
@@ -357,7 +356,6 @@ ConversionWindow < Panel
     anchors.left: parent.left
     anchors.right: parent.right
     margin-bottom: 32
-    margin-left: -1
     height: 53
     @onHoverChange: modules.game_exaltationforge.Forge.Conversion.onWidgetHover(self, value)
 

@@ -1,6 +1,4 @@
-﻿-- chunkname: @/mods/client_profiles/profiles.lua
-
-local settings = {}
+﻿local settings = {}
 
 ChangedProfile = false
 
@@ -48,8 +46,8 @@ end
 
 function setProfileOption(index)
 	local currentProfile = g_settings.getNumber("profile")
+	local currentProfile = tostring(currentProfile)
 
-	currentProfile = tostring(currentProfile)
 	index = tostring(index)
 
 	if currentProfile ~= index then
@@ -65,9 +63,8 @@ function getProfileFromSettings()
 	end
 
 	local index = g_game.getCharacterName()
-	local savedData = settings[index]
 
-	return savedData
+	return settings[index]
 end
 
 function getProfileFromStartupArgument()

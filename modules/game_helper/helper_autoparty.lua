@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_helper/helper_autoparty.lua
-
-HelperAutoParty = HelperAutoParty or {}
+﻿HelperAutoParty = HelperAutoParty or {}
 
 local ctx
 local sendList = {
@@ -10,7 +8,8 @@ local sendList = {
 	""
 }
 local acceptLeader = ""
-local autoPartySettingsWindow, checkEvent
+local autoPartySettingsWindow
+local checkEvent
 local applyingFields = false
 local CHECK_INTERVAL_MS = 1500
 local SHIELD_INVITED_YOU = 1
@@ -93,9 +92,8 @@ local function onAutoPartyTextMessage(messageMode, message)
 
 	local msgClean = message:gsub("^%d+:%d+%s+", "")
 	local msgLower = msgClean:lower()
-	local isInvite = msgLower:find("invited you to") or msgLower:find("convidou você para") or msgLower:find("convidou voce para")
 
-	if not isInvite then
+	if not (msgLower:find("invited you to") or msgLower:find("convidou você para") or msgLower:find("convidou voce para")) then
 		return
 	end
 
@@ -115,7 +113,7 @@ local function onAutoPartyTextMessage(messageMode, message)
 		return
 	end
 
-	inviterName = trimString(inviterName)
+	local inviterName = trimString(inviterName)
 
 	if inviterName:lower() ~= leader:lower() then
 		return
@@ -177,16 +175,12 @@ local function runCheck()
 
 			if specs then
 				for _, creature in ipairs(specs) do
-					if creature and creature:isPlayer() and not creature:isLocalPlayer() and creature:getName():lower() == name:lower() then
-						local shield = creature:getShield()
-
-						if shield == 0 then
-							if g_game.partyInvite then
-								g_game.partyInvite(creature:getId())
-							end
-
-							return
+					if creature and creature:isPlayer() and not creature:isLocalPlayer() and creature:getName():lower() == name:lower() and creature:getShield() == 0 then
+						if g_game.partyInvite then
+							g_game.partyInvite(creature:getId())
 						end
+
+						return
 					end
 				end
 			end
@@ -355,13 +349,13 @@ function HelperAutoParty.loadFromConfig(config)
 	applyFieldsToWidgets()
 end
 
-function HelperAutoParty:onEnableChange(checked)
+function HelperAutoParty.onEnableChange(self, checked)
 	if ctx and ctx.saveConfig then
 		ctx.saveConfig()
 	end
 end
 
-function HelperAutoParty:onAcceptChange(checked)
+function HelperAutoParty.onAcceptChange(self, checked)
 	if ctx and ctx.saveConfig then
 		ctx.saveConfig()
 	end

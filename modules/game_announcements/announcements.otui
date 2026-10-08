@@ -135,7 +135,7 @@ AnnouncementsWindow < MainLogoWindow
     end
 
   UIWidget
-    id: tabBar
+    id: menus
     size: 905 36
     anchors.top: parent.top
     anchors.horizontalCenter: parent.horizontalCenter
@@ -151,8 +151,8 @@ AnnouncementsWindow < MainLogoWindow
       margin-left: 1
       margin-top: 1
       @onSetup: |
-        self:recursiveGetChildById('tabIcon'):setImageSource('/images/game/announcements/icon-ptc-updates')
-        self:recursiveGetChildById('tabTitle'):setText(tr('PTC Updates'))
+        self:recursiveGetChildById('tabIcon'):setImageSource('/images/game/announcements/icon-clientzin-updates')
+        self:recursiveGetChildById('tabTitle'):setText(tr('Clientzin Updates'))
 
     AnnouncementsTabButton
       id: tabServerUpdates
@@ -176,10 +176,10 @@ AnnouncementsWindow < MainLogoWindow
   UIWidget
     id: announcementsSidebar
     size: 195 510
-    anchors.top: tabBar.bottom
+    anchors.top: menus.bottom
     anchors.left: parent.left
     margin-top: 6
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-border: 5
     padding: 2 3 2 3
 
@@ -194,7 +194,7 @@ AnnouncementsWindow < MainLogoWindow
   UIWidget
     id: tabContent
     size: 705 510
-    anchors.top: tabBar.bottom
+    anchors.top: menus.bottom
     anchors.right: parent.right
     margin-top: 6
     image-source: /images/ui/popupwindow-sem-borda-interna

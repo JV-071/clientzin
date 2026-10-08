@@ -1,5 +1,3 @@
-﻿-- chunkname: @/game_ruleviolation/ruleviolation.lua
-
 rvreasons = {}
 rvreasons[1] = tr("1a) Offensive Name")
 rvreasons[2] = tr("1b) Invalid Name Format")
@@ -36,9 +34,9 @@ actionsTextList = nil
 playerReportWindow = nil
 pendingPlayerReport = nil
 ReportType = {
-	Statement = 1,
 	Name = 0,
-	Bot = 2
+	Bot = 2,
+	Statement = 1
 }
 BotReportReasons = {
 	{
@@ -254,10 +252,6 @@ function init()
 	reasonsTextList = ruleViolationWindow:getChildById("reasonList")
 	actionsTextList = ruleViolationWindow:getChildById("actionList")
 
-	g_keyboard.bindKeyDown("Ctrl+U", function()
-		show()
-	end)
-
 	if g_game.isOnline() then
 		loadReasons()
 	end
@@ -267,7 +261,6 @@ function terminate()
 	disconnect(g_game, {
 		onGMActions = loadReasons
 	})
-	g_keyboard.unbindKeyDown("Ctrl+U")
 	hidePlayerReportWindow()
 	ruleViolationWindow:destroy()
 end
@@ -455,7 +448,7 @@ local function attachPlayerReportEditableField(widget)
 
 	widget:setCursorVisible(false)
 
-	function widget:onMousePress(mousePos, button)
+	function widget.onMousePress(self, mousePos, button)
 		if button == MouseLeftButton then
 			focusPlayerReportEditableField(self)
 		end
@@ -463,7 +456,7 @@ local function attachPlayerReportEditableField(widget)
 		return false
 	end
 
-	function widget:onFocusChange(focused)
+	function widget.onFocusChange(self, focused)
 		if not focused then
 			self:setCursorVisible(false)
 		end
@@ -480,26 +473,17 @@ local function setupPlayerReportStep2Fields()
 end
 
 local STEP2_STATEMENT_LAYOUT = {
+	commentBlockHeight = 216,
+	statementTextHeight = 73,
 	statementBlockHeight = 91,
-	commentTextHeight = 73,
-	commentBlockHeight = 106,
-	translationTextHeight = 74,
-	translationBlockHeight = 110,
-	statementTextHeight = 73
+	commentTextHeight = 188
 }
-local STEP2_NAME_LAYOUT = {
-	statementBlockHeight = 0,
-	commentTextHeight = 121,
-	commentBlockHeight = 163,
-	translationTextHeight = 122,
-	translationBlockHeight = 158
-}
-local STEP2_BOT_LAYOUT = {
-	statementBlockHeight = 0,
-	commentTextHeight = 284,
+local var_0_12 = {
 	commentBlockHeight = 328,
+	statementBlockHeight = 0,
 	translationTextHeight = 0,
-	translationBlockHeight = 0
+	translationBlockHeight = 0,
+	commentTextHeight = 284
 }
 
 local function configurePlayerReportStep2Layout(reportType, targetName)
@@ -515,50 +499,31 @@ local function configurePlayerReportStep2Layout(reportType, targetName)
 	local commentText = getPlayerReportWidget("commentText")
 	local commentCaption = getPlayerReportWidget("commentCaption")
 	local step2Label = getPlayerReportWidget("step2Label")
-	local layout
-
-	if reportType == ReportType.Statement then
-		layout = STEP2_STATEMENT_LAYOUT
-	elseif reportType == ReportType.Bot then
-		layout = STEP2_BOT_LAYOUT
-	else
-		layout = STEP2_NAME_LAYOUT
-	end
+	local layout = reportType == ReportType.Statement and STEP2_STATEMENT_LAYOUT or var_0_12
 
 	if reportType == ReportType.Statement then
 		statementBlock:setVisible(true)
 		statementBlock:setHeight(layout.statementBlockHeight)
 		statementText:setHeight(layout.statementTextHeight)
-		translationBlock:setMarginTop(6)
-		translationBlock:setVisible(true)
+		translationBlock:setVisible(false)
+		translationBlock:setHeight(0)
 		step2Label:setText(tr("Step 2 of 3:\nAdd details on the statement report."))
-	elseif reportType == ReportType.Bot then
+	else
 		statementBlock:setVisible(false)
 		statementBlock:setHeight(0)
 		translationBlock:setVisible(false)
 		translationBlock:setHeight(0)
 		step2Label:setText(tr("Step 2 of 3:\nAdd details on the report of \"%s\".", targetName or ""))
-	else
-		statementBlock:setVisible(false)
-		statementBlock:setHeight(0)
-		translationBlock:setMarginTop(1)
-		translationBlock:setVisible(true)
-		step2Label:setText(tr("Step 2 of 3:\nAdd details on the report of \"%s\".", targetName or ""))
-	end
-
-	if reportType ~= ReportType.Bot then
-		translationBlock:setHeight(layout.translationBlockHeight)
-		translationText:setHeight(layout.translationTextHeight)
 	end
 
 	commentBlock:setHeight(layout.commentBlockHeight)
 	commentText:setHeight(layout.commentTextHeight)
 
 	if commentCaption then
-		if reportType == ReportType.Bot then
-			commentCaption:setMarginTop(-10)
+		if reportType == ReportType.Statement then
+			commentCaption:setMarginTop(-5)
 		else
-			commentCaption:setMarginTop(0)
+			commentCaption:setMarginTop(-10)
 		end
 	end
 end
@@ -680,72 +645,25 @@ local function setPlayerReportSummaryFieldText(field, text)
 	end)
 end
 
-local STEP3_STATEMENT_SUMMARY = {
-	translationBlockHeight = 92,
-	commentTextHeight = 89,
-	commentBlockHeight = 92,
-	translationTextHeight = 89,
-	translationMarginTop = 0
-}
-local STEP3_NAME_SUMMARY = {
-	translationBlockHeight = 138,
-	commentTextHeight = 134,
-	commentBlockHeight = 137,
-	translationTextHeight = 135,
-	translationMarginTop = 0
-}
-
-local function applyStep3SummaryLayout(reportType)
+local function var_0_19()
 	local translationBlock = getPlayerReportWidget("summaryTranslationBlock")
-	local translationText = getPlayerReportWidget("summaryTranslationText")
-	local commentBlock = getPlayerReportWidget("summaryCommentBlock")
-	local commentText = getPlayerReportWidget("summaryCommentText")
+	local var_31_1 = getPlayerReportWidget("summaryCommentBlock")
+	local var_31_2 = getPlayerReportWidget("summaryCommentText")
 
-	if not translationBlock or not translationText or not commentBlock or not commentText then
+	if not translationBlock or not var_31_1 or not var_31_2 then
 		return
 	end
 
-	local layout
-
-	if reportType == ReportType.Name then
-		layout = STEP3_NAME_SUMMARY
-	elseif reportType == ReportType.Bot then
-		layout = STEP3_NAME_SUMMARY
-	else
-		layout = STEP3_STATEMENT_SUMMARY
-	end
-
 	translationBlock:breakAnchors()
-
-	if reportType == ReportType.Name then
-		translationBlock:addAnchor(AnchorTop, "summaryReasonRow", AnchorBottom)
-	elseif reportType == ReportType.Bot then
-		translationBlock:setVisible(false)
-		translationBlock:setHeight(0)
-	else
-		translationBlock:addAnchor(AnchorTop, "summaryStatementBlock", AnchorBottom)
-	end
-
-	if reportType ~= ReportType.Bot then
-		translationBlock:addAnchor(AnchorLeft, "parent", AnchorLeft)
-		translationBlock:addAnchor(AnchorRight, "parent", AnchorRight)
-		translationBlock:setMarginTop(layout.translationMarginTop)
-		translationBlock:setHeight(layout.translationBlockHeight)
-		translationText:setHeight(layout.translationTextHeight)
-	end
-
-	if reportType == ReportType.Bot then
-		commentBlock:breakAnchors()
-		commentBlock:addAnchor(AnchorTop, "summaryReasonRow", AnchorBottom)
-		commentBlock:addAnchor(AnchorLeft, "parent", AnchorLeft)
-		commentBlock:addAnchor(AnchorRight, "parent", AnchorRight)
-		commentBlock:setMarginTop(0)
-		commentBlock:setHeight(275)
-		commentText:setHeight(271)
-	else
-		commentBlock:setHeight(layout.commentBlockHeight)
-		commentText:setHeight(layout.commentTextHeight)
-	end
+	translationBlock:setVisible(false)
+	translationBlock:setHeight(0)
+	var_31_1:breakAnchors()
+	var_31_1:addAnchor(AnchorTop, "summaryReasonRow", AnchorBottom)
+	var_31_1:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	var_31_1:addAnchor(AnchorRight, "parent", AnchorRight)
+	var_31_1:setMarginTop(0)
+	var_31_1:setHeight(275)
+	var_31_2:setHeight(271)
 end
 
 local function updatePlayerReportSummary()
@@ -758,28 +676,12 @@ local function updatePlayerReportSummary()
 
 	local statementBlock = getPlayerReportWidget("summaryStatementBlock")
 	local translationBlock = getPlayerReportWidget("summaryTranslationBlock")
-	local isStatementReport = pendingPlayerReport.reportType == ReportType.Statement
 
-	applyStep3SummaryLayout(pendingPlayerReport.reportType)
-
-	if isStatementReport then
-		statementBlock:setVisible(true)
-		statementBlock:setHeight(92)
-		translationBlock:setVisible(true)
-		setPlayerReportSummaryFieldText(getPlayerReportWidget("summaryStatementText"), getPlayerReportWidget("statementText"):getText())
-		setPlayerReportSummaryFieldText(getPlayerReportWidget("summaryTranslationText"), getPlayerReportWidget("translationText"):getText())
-	elseif pendingPlayerReport.reportType == ReportType.Bot then
-		statementBlock:setVisible(false)
-		statementBlock:setHeight(0)
-		translationBlock:setVisible(false)
-		translationBlock:setHeight(0)
-	else
-		statementBlock:setVisible(false)
-		statementBlock:setHeight(0)
-		translationBlock:setVisible(true)
-		setPlayerReportSummaryFieldText(getPlayerReportWidget("summaryTranslationText"), getPlayerReportWidget("translationText"):getText())
-	end
-
+	var_0_19()
+	statementBlock:setVisible(false)
+	statementBlock:setHeight(0)
+	translationBlock:setVisible(false)
+	translationBlock:setHeight(0)
 	setPlayerReportSummaryFieldText(getPlayerReportWidget("summaryCommentText"), getPlayerReportWidget("commentText"):getText())
 end
 
@@ -868,34 +770,21 @@ function nextPlayerReportStep()
 	local step = pendingPlayerReport.step or 1
 
 	if step == 1 then
-		local reasonList = getPlayerReportWidget("reasonList")
-		local reasonLabel = reasonList:getFocusedChild()
+		local focusedChild = getPlayerReportWidget("reasonList"):getFocusedChild()
 
-		if not reasonLabel then
+		if not focusedChild then
 			displayErrorBox(tr("Error"), tr("You must select a reason."))
 
 			return
 		end
 
-		pendingPlayerReport.reasonId = reasonLabel.reasonId
-		pendingPlayerReport.reasonText = reasonLabel:getText()
-		pendingPlayerReport.reasonDescription = reasonLabel.reasonDescription
-	elseif step == 2 then
-		local comment = getPlayerReportWidget("commentText"):getText()
+		pendingPlayerReport.reasonId = focusedChild.reasonId
+		pendingPlayerReport.reasonText = focusedChild:getText()
+		pendingPlayerReport.reasonDescription = focusedChild.reasonDescription
+	elseif step == 2 and getPlayerReportWidget("commentText"):getText() == "" then
+		displayErrorBox(tr("Error"), tr("You must enter a comment."))
 
-		if comment == "" then
-			displayErrorBox(tr("Error"), tr("You must enter a comment."))
-
-			return
-		end
-
-		local translation = getPlayerReportWidget("translationText"):getText()
-
-		if pendingPlayerReport.reportType == ReportType.Statement and translation == "" then
-			displayErrorBox(tr("Error"), tr("You must enter a translation."))
-
-			return
-		end
+		return
 	end
 
 	if step < 3 then
@@ -931,19 +820,6 @@ function submitPlayerReport()
 	end
 
 	local translation = ""
-
-	if pendingPlayerReport.reportType == ReportType.Statement then
-		translation = getPlayerReportWidget("translationText"):getText()
-
-		if translation == "" then
-			displayErrorBox(tr("Error"), tr("You must enter a translation."))
-
-			return
-		end
-	elseif pendingPlayerReport.reportType == ReportType.Name then
-		translation = getPlayerReportWidget("translationText"):getText()
-	end
-
 	local statementId = pendingPlayerReport.statementId or 0
 
 	if pendingPlayerReport.reportType == ReportType.Statement and statementId == 0 then

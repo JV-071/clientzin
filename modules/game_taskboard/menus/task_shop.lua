@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_taskboard/menus/task_shop.lua
-
-TaskBoard.TaskShop = {}
+﻿TaskBoard.TaskShop = {}
 
 local TaskShop = TaskBoard.TaskShop
 local TYPE_ITEM = 0
@@ -27,7 +25,7 @@ local STATUS_TOOLTIP = {
 	[STATUS_PURCHASED] = tr("Already purchased.")
 }
 
-function TaskShop:getListPanel()
+function TaskShop.getListPanel(self)
 	if not TaskBoard.taskShopPanel then
 		return nil
 	end
@@ -35,7 +33,7 @@ function TaskShop:getListPanel()
 	return TaskBoard.taskShopPanel:getChildById("shopItemList")
 end
 
-function TaskShop:clearShop()
+function TaskShop.clearShop(self)
 	local list = self:getListPanel()
 
 	if list then
@@ -55,20 +53,20 @@ function onShopTasks(offers)
 	end
 end
 
-function TaskShop:init()
+function TaskShop.init(self)
 	connect(g_game, {
 		onShopTasks = onShopTasks
 	})
 end
 
-function TaskShop:terminate()
+function TaskShop.terminate(self)
 	disconnect(g_game, {
 		onShopTasks = onShopTasks
 	})
 	self:clearShop()
 end
 
-function TaskShop:createCard(data)
+function TaskShop.createCard(self, data)
 	local list = self:getListPanel()
 
 	if not list then
@@ -91,7 +89,7 @@ function TaskShop:createCard(data)
 
 	if descLabel then
 		if data.offerType == TYPE_WHEEL_POINTS then
-			local purchased = data.points or 0
+			local purchased = math.max(0, (data.points or 1) - 1)
 
 			descLabel:setText(tr("Earn up to 50 Promotion Points to spend in your Wheel of Destiny.\nAlready purchased %d / 50.", purchased))
 
@@ -120,7 +118,7 @@ function TaskShop:createCard(data)
 	self:applyStatus(card, data)
 end
 
-function TaskShop:applyPrice(card, data)
+function TaskShop.applyPrice(self, card, data)
 	local pricePanel = card:getChildById("pricePanel")
 
 	if not pricePanel then
@@ -140,7 +138,7 @@ function TaskShop:applyPrice(card, data)
 	end
 end
 
-function TaskShop:applyIcon(card, data)
+function TaskShop.applyIcon(self, card, data)
 	local iconBox = card:getChildById("iconBox")
 
 	if not iconBox then
@@ -168,10 +166,10 @@ function TaskShop:applyIcon(card, data)
 	if offerType == TYPE_OUTFIT then
 		if outfitIcon and (data.lookType or 0) > 0 then
 			local outfit = {
+				body = 0,
 				mount = 0,
 				feet = 0,
 				legs = 0,
-				body = 0,
 				head = 0,
 				type = data.lookType or 0,
 				addons = data.addons or 0
@@ -183,10 +181,10 @@ function TaskShop:applyIcon(card, data)
 	elseif offerType == TYPE_MOUNT then
 		if outfitIcon and (data.clientId or 0) > 0 then
 			local outfit = {
+				body = 0,
 				mount = 0,
 				feet = 0,
 				legs = 0,
-				body = 0,
 				head = 0,
 				addons = 0,
 				type = data.clientId or 0
@@ -218,7 +216,7 @@ function TaskShop:applyIcon(card, data)
 	end
 end
 
-function TaskShop:applyStatus(card, data)
+function TaskShop.applyStatus(self, card, data)
 	local buyButton = card:getChildById("buyButton")
 	local boughtWidget = card:getChildById("boughtWidget")
 
@@ -256,7 +254,7 @@ function TaskShop:applyStatus(card, data)
 	end
 end
 
-function TaskShop:onBuyItem(data)
+function TaskShop.onBuyItem(self, data)
 	if not data then
 		return
 	end

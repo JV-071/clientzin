@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_stash/game_stash.lua
-
-stashWindow = nil
+﻿stashWindow = nil
 itemsPanel = nil
 stashSelectAmount = nil
 searchEdit = nil
@@ -8,14 +6,18 @@ stashItems = {}
 STASH_SLOT_BATCH_SIZE = 20
 STASH_CHUNKED_THRESHOLD = 20
 STASH_COMBO_DISPLAY_CHAR_LIMIT = 24
+STASH_AMOUNT_TYPING_TIMEOUT = 1000
 
 local stashRenderEvent
 local stashRenderGeneration = 0
 local stashPendingSearchFocus = false
 local stashOverlayReturn = false
+local var_0_4 = false
 local stashOverlayCyclopediaHide
 local stashOverlayMarketHooked = false
-local clearStashOverlayHooks, restoreStashFromOverlay, hideStashForOverlay
+local clearStashOverlayHooks
+local unusedValue
+local hideStashForOverlay
 
 local function cancelStashRender()
 	if stashRenderEvent then
@@ -214,19 +216,19 @@ local function setupStashComboDisplayTruncation(comboBox)
 
 	local baseSetCurrentOption = comboBox.setCurrentOption
 
-	function comboBox:setCurrentOption(text, dontSignal)
+	function comboBox.setCurrentOption(self, text, dontSignal)
 		baseSetCurrentOption(self, text, dontSignal)
 		refreshStashComboDisplay(self)
 	end
 
 	local baseSetCurrentIndex = comboBox.setCurrentIndex
 
-	function comboBox:setCurrentIndex(index)
+	function comboBox.setCurrentIndex(self, index)
 		baseSetCurrentIndex(self, index)
 		refreshStashComboDisplay(self)
 	end
 
-	function comboBox:onMousePress(mousePos, mouseButton)
+	function comboBox.onMousePress(self, mousePos, mouseButton)
 		openStashComboPopupMenu(self)
 
 		return true
@@ -367,6 +369,11 @@ local STASH_CATEGORY_ID_TO_KEY = {
 	[MarketCategory.FistWeapons] = "fist weapons"
 }
 local filterCategorys = {
+	containers = "Show Containers",
+	boots = "Show Boots",
+	armors = "Show Armors",
+	amulets = "Show Amulets",
+	["fist weapons"] = "Show Weapons: Fist",
 	["soul cores"] = "Show Soul Cores",
 	["creature products"] = "Show Creature Products",
 	["wands and rods"] = "Show Weapons: Wands",
@@ -386,12 +393,7 @@ local filterCategorys = {
 	legs = "Show Legs",
 	["helmets and hats"] = "Show Helmets and Hats",
 	food = "Show Food",
-	decoration = "Show Decoration",
-	containers = "Show Containers",
-	boots = "Show Boots",
-	armors = "Show Armors",
-	amulets = "Show Amulets",
-	["fist weapons"] = "Show Weapons: Fist"
+	decoration = "Show Decoration"
 }
 local weaponCategoryKeys = {
 	"ammunition",
@@ -416,6 +418,12 @@ local function getStashCategoryKey(categoryId)
 end
 
 local digitKeys = {
+	["8"] = true,
+	["7"] = true,
+	["6"] = true,
+	["5"] = true,
+	["4"] = true,
+	["3"] = true,
 	["2"] = true,
 	["1"] = true,
 	["0"] = true,
@@ -439,13 +447,7 @@ local digitKeys = {
 	["Num+2"] = "2",
 	["Num+1"] = "1",
 	["Num+0"] = "0",
-	["9"] = true,
-	["8"] = true,
-	["7"] = true,
-	["6"] = true,
-	["5"] = true,
-	["4"] = true,
-	["3"] = true
+	["9"] = true
 }
 
 local function getStashSlotItemWidget(slotWidget)
@@ -540,10 +542,8 @@ local otherOptions = {
 		func = function(a, b)
 			local thingTypeA = g_things.getThingType(a, 0)
 			local thingTypeB = g_things.getThingType(b, 0)
-			local nameA = thingTypeA and thingTypeA:getName():lower() or ""
-			local nameB = thingTypeB and thingTypeB:getName():lower() or ""
 
-			return nameA < nameB
+			return (thingTypeA and thingTypeA:getName():lower() or "") < (thingTypeB and thingTypeB:getName():lower() or "")
 		end
 	},
 	{
@@ -551,82 +551,56 @@ local otherOptions = {
 		func = function(a, b)
 			local thingTypeA = g_things.getThingType(a, 0)
 			local thingTypeB = g_things.getThingType(b, 0)
-			local nameA = thingTypeA and thingTypeA:getName():lower() or ""
-			local nameB = thingTypeB and thingTypeB:getName():lower() or ""
 
-			return nameB < nameA
+			return (thingTypeA and thingTypeA:getName():lower() or "") > (thingTypeB and thingTypeB:getName():lower() or "")
 		end
 	},
 	{
 		name = "Market Value (High to Low)",
 		func = function(a, b)
-			local valueA = getStashMarketValue(g_things.getThingType(a, 0))
-			local valueB = getStashMarketValue(g_things.getThingType(b, 0))
-
-			return valueB < valueA
+			return getStashMarketValue(g_things.getThingType(a, 0)) > getStashMarketValue(g_things.getThingType(b, 0))
 		end
 	},
 	{
 		name = "Market Value (Low to High)",
 		func = function(a, b)
-			local valueA = getStashMarketValue(g_things.getThingType(a, 0))
-			local valueB = getStashMarketValue(g_things.getThingType(b, 0))
-
-			return valueA < valueB
+			return getStashMarketValue(g_things.getThingType(a, 0)) < getStashMarketValue(g_things.getThingType(b, 0))
 		end
 	},
 	{
 		name = "Total Market Value (High to Low)",
 		func = function(a, b)
-			local valueA = getStashMarketValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0)
-			local valueB = getStashMarketValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
-
-			return valueB < valueA
+			return getStashMarketValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0) > getStashMarketValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
 		end
 	},
 	{
 		name = "Total Market Value (Low to High)",
 		func = function(a, b)
-			local valueA = getStashMarketValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0)
-			local valueB = getStashMarketValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
-
-			return valueA < valueB
+			return getStashMarketValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0) < getStashMarketValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
 		end
 	},
 	{
 		name = "Sell To Value (High to Low)",
 		func = function(a, b)
-			local valueA = getHighestNpcSaleValue(g_things.getThingType(a, 0))
-			local valueB = getHighestNpcSaleValue(g_things.getThingType(b, 0))
-
-			return valueB < valueA
+			return getHighestNpcSaleValue(g_things.getThingType(a, 0)) > getHighestNpcSaleValue(g_things.getThingType(b, 0))
 		end
 	},
 	{
 		name = "Sell To Value (Low to High)",
 		func = function(a, b)
-			local valueA = getHighestNpcSaleValue(g_things.getThingType(a, 0))
-			local valueB = getHighestNpcSaleValue(g_things.getThingType(b, 0))
-
-			return valueA < valueB
+			return getHighestNpcSaleValue(g_things.getThingType(a, 0)) < getHighestNpcSaleValue(g_things.getThingType(b, 0))
 		end
 	},
 	{
 		name = "Total Sell To Value (High to Low)",
 		func = function(a, b)
-			local valueA = getHighestNpcSaleValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0)
-			local valueB = getHighestNpcSaleValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
-
-			return valueB < valueA
+			return getHighestNpcSaleValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0) > getHighestNpcSaleValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
 		end
 	},
 	{
 		name = "Total Sell To Value (Low to High)",
 		func = function(a, b)
-			local valueA = getHighestNpcSaleValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0)
-			local valueB = getHighestNpcSaleValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
-
-			return valueA < valueB
+			return getHighestNpcSaleValue(g_things.getThingType(a, 0)) * (stashItems[a] or 0) < getHighestNpcSaleValue(g_things.getThingType(b, 0)) * (stashItems[b] or 0)
 		end
 	},
 	{
@@ -669,7 +643,7 @@ function init()
 
 	stashWindow:hide()
 
-	function stashWindow:onKeyDown(keyCode, keyboardModifiers)
+	function stashWindow.onKeyDown(unusedArgument, keyCode, keyboardModifiers)
 		if keyboardModifiers ~= KeyboardNoModifier then
 			return false
 		end
@@ -701,7 +675,7 @@ function terminate()
 		onPositionChange = onPositionChange
 	})
 
-	stashOverlayReturn = false
+	var_0_4 = false
 
 	clearStashOverlayHooks()
 	cancelStashRender()
@@ -715,6 +689,7 @@ end
 function onPositionChange(creature, newPos, oldPos)
 	if creature == g_game.getLocalPlayer() then
 		stashOverlayReturn = false
+		var_0_4 = false
 
 		clearStashOverlayHooks()
 		g_modalManager.hide(stashWindow)
@@ -805,7 +780,13 @@ local function resetStashFilters()
 end
 
 function openStash(items)
-	resetStashFilters()
+	local var_55_0 = not stashOverlayReturn
+
+	stashOverlayReturn = true
+
+	if var_55_0 then
+		resetStashFilters()
+	end
 
 	stashItems = {}
 
@@ -816,25 +797,27 @@ function openStash(items)
 		stashItems[itemId] = amount
 	end
 
-	rebuildFilterCategoryMap()
+	if var_55_0 then
+		rebuildFilterCategoryMap()
 
-	local filterOptions = {}
+		local filterOptions = {}
 
-	for _, v in ipairs(filterCategoryMap) do
-		filterOptions[#filterOptions + 1] = tr(v)
+		for _, v in ipairs(filterCategoryMap) do
+			filterOptions[#filterOptions + 1] = tr(v)
+		end
+
+		populateStashComboBoxSilently(stashWindow:recursiveGetChildById("showFilterComboBox"), filterOptions, tr("Show All"))
+
+		local organizeOptions = {}
+
+		for _, v in ipairs(otherOptions) do
+			organizeOptions[#organizeOptions + 1] = tr(v.name)
+		end
+
+		showOrganizeComboBox = stashWindow:recursiveGetChildById("showOrganize")
+
+		populateStashComboBoxSilently(showOrganizeComboBox, organizeOptions, tr("Name (A-Z)"))
 	end
-
-	populateStashComboBoxSilently(stashWindow:recursiveGetChildById("showFilterComboBox"), filterOptions, tr("Show All"))
-
-	local organizeOptions = {}
-
-	for _, v in ipairs(otherOptions) do
-		organizeOptions[#organizeOptions + 1] = tr(v.name)
-	end
-
-	showOrganizeComboBox = stashWindow:recursiveGetChildById("showOrganize")
-
-	populateStashComboBoxSilently(showOrganizeComboBox, organizeOptions, tr("Name (A-Z)"))
 
 	if stashWindow:isHidden() then
 		stashWindow:show()
@@ -924,6 +907,7 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 
 	local typedNumber = ""
 	local typingEvent
+	local var_59_5 = false
 
 	local function resetTypedNumber()
 		typedNumber = ""
@@ -944,7 +928,11 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 					val = itemAmount
 				end
 
+				var_59_5 = true
+
 				scrollbar:setValue(val)
+
+				var_59_5 = false
 			end
 
 			if typingEvent then
@@ -953,22 +941,25 @@ function prepareRetrieveAmount(itemId, itemAmount, onConfirm, options)
 
 			typingEvent = scheduleEvent(function()
 				typedNumber = ""
-			end, 250)
+			end, STASH_AMOUNT_TYPING_TIMEOUT)
 		end, stashSelectAmount)
 	end
 
-	function scrollbar:onIncrement()
+	function scrollbar.onIncrement(self)
 		resetTypedNumber()
 		self:setValue(self:getValue() + 1)
 	end
 
-	function scrollbar:onDecrement()
+	function scrollbar.onDecrement(self)
 		resetTypedNumber()
 		self:setValue(self:getValue() - 1)
 	end
 
-	function scrollbar:onValueChange(value)
-		resetTypedNumber()
+	function scrollbar.onValueChange(unusedArgument, value)
+		if not var_59_5 then
+			resetTypedNumber()
+		end
+
 		applyStashSlotVisuals(itemSlot, itemId, value)
 	end
 
@@ -1028,14 +1019,14 @@ function clearStashOverlayHooks()
 	end
 end
 
-function restoreStashFromOverlay()
-	if not stashOverlayReturn then
+local function restoreStashFromOverlay()
+	if not var_0_4 then
 		clearStashOverlayHooks()
 
 		return
 	end
 
-	stashOverlayReturn = false
+	var_0_4 = false
 
 	clearStashOverlayHooks()
 
@@ -1059,18 +1050,18 @@ function restoreStashFromOverlay()
 end
 
 function onStashOverlayMarketLeave()
-	if stashOverlayReturn then
+	if var_0_4 then
 		addEvent(restoreStashFromOverlay)
 	end
 end
 
-function hideStashForOverlay(target)
+local function hideStashForOverlay(target)
 	if stashWindow and not stashWindow:isDestroyed() and not stashWindow:isHidden() then
 		g_modalManager.hide(stashWindow)
 		stashWindow:hide()
 	end
 
-	stashOverlayReturn = true
+	var_0_4 = true
 
 	clearStashOverlayHooks()
 
@@ -1083,7 +1074,7 @@ function hideStashForOverlay(target)
 			function cyc.hide(...)
 				stashOverlayCyclopediaHide(...)
 
-				if stashOverlayReturn then
+				if var_0_4 then
 					addEvent(restoreStashFromOverlay)
 				end
 			end
@@ -1155,9 +1146,7 @@ local function openStashItemContextMenu(mousePos, slotInfo)
 		end)
 	end
 
-	local isMarketable = thingType and thingType.isMarketable and thingType:isMarketable()
-
-	if isMarketable and modules.game_market and modules.game_market.onRedirect then
+	if thingType and thingType.isMarketable and thingType:isMarketable() and modules.game_market and modules.game_market.onRedirect then
 		menu:addSeparator()
 		menu:addOption(tr("Show in Market"), function()
 			showStashItemInMarket(itemId)
@@ -1361,9 +1350,10 @@ function renderItems(filter)
 end
 
 function onSupplyStashClose()
+	stashOverlayReturn = false
 	stashItems = {}
 	stashPendingSearchFocus = false
-	stashOverlayReturn = false
+	var_0_4 = false
 
 	clearStashOverlayHooks()
 	resetStashFilters()
@@ -1387,9 +1377,7 @@ function onShowFilterOptionChange(option)
 		return
 	end
 
-	local filter = option:getCurrentOption().text
-
-	filterSearch = filter:lower()
+	filterSearch = option:getCurrentOption().text:lower()
 
 	renderItems(1)
 end
@@ -1399,9 +1387,7 @@ function onShowTraderNpcOptionChange(option)
 		return
 	end
 
-	local filter = option:getCurrentOption().text
-
-	filterTraderNpc = filter:lower()
+	filterTraderNpc = option:getCurrentOption().text:lower()
 
 	renderItems(2)
 end
@@ -1411,9 +1397,7 @@ function onShowOrganizeOptionChange(option)
 		return
 	end
 
-	local filter = option:getCurrentOption().text
-
-	filterOrganize = filter:lower()
+	filterOrganize = option:getCurrentOption().text:lower()
 
 	renderItems(3)
 end

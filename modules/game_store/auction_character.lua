@@ -1,10 +1,11 @@
-﻿-- chunkname: @/game_store/auction_character.lua
-
-local checksAuctionCharacterWindow, configAuctionCharacterWindow
+﻿local checksAuctionCharacterWindow
+local configAuctionCharacterWindow
 local auctionCharacterWindowStep = 0
 local auctionCharacterHeaderData
 local auctionCharacterConfigPanel = "none"
-local auctionCharacterItemsInventory, auctionCharacterItemsStore, auctionCharacterArguments
+local auctionCharacterItemsInventory
+local auctionCharacterItemsStore
+local var_0_7
 local auctionCharacterItemsSearchFilter = ""
 local auctionCharacterHeaderSlots = {}
 local auctionCharacterNextSlot = 1
@@ -18,13 +19,21 @@ local auctionCharacterListSelection
 local auctionCharacterLastItemClick = {
 	time = 0
 }
-local auctionCharacterItemsRefreshEvent, auctionCharacterSearchRefreshEvent
+local auctionCharacterItemsRefreshEvent
+local auctionCharacterSearchRefreshEvent
 local auctionCharacterItemNameCache = {}
 local auctionCharacterCalendarBaseTimestamp = 0
 local auctionCharacterCalendarMonthIndex = 0
-local auctionCharacterSelectedTimestamp, auctionCharacterCalendarDayCells, auctionCharacterCalendarGridCache
+local auctionCharacterSelectedTimestamp
+local auctionCharacterCalendarDayCells
+local auctionCharacterCalendarGridCache
 local auctionCharacterTimeComboSyncing = false
-local updateAuctionCharacterEndDateLabels, refreshAuctionCharacterItemsList, updateAuctionCharacterHeaderItemSlot, updateAllAuctionCharacterHeaderItemSlots, updateAllAuctionCharacterArgumentSlots, fillAuctionCharacterArguments
+local unusedValue
+local refreshAuctionCharacterItemsList
+local unusedValue
+local updateAllAuctionCharacterHeaderItemSlots
+local updateAllAuctionCharacterArgumentSlots
+local fillAuctionCharacterArguments
 local AUCTION_CALENDAR_CELL_COUNT = 42
 local AUCTION_CALENDAR_MONTH_NAMES = {
 	"Jan",
@@ -68,9 +77,9 @@ end
 local function getAuctionCharacterDaysInMonth(year, month)
 	if month == 12 then
 		return os.date("*t", os.time({
-			month = 1,
 			day = 0,
 			hour = 12,
+			month = 1,
 			year = year + 1
 		})).day
 	end
@@ -122,22 +131,21 @@ local function isAuctionCharacterDayInSelectableRange(year, month, day)
 
 	local dayStart = os.time({
 		hour = 0,
-		min = 0,
 		sec = 0,
-		year = year,
-		month = month,
-		day = day
-	})
-	local dayEnd = os.time({
-		hour = 23,
-		min = 59,
-		sec = 59,
+		min = 0,
 		year = year,
 		month = month,
 		day = day
 	})
 
-	return dataMin <= dayEnd and dayStart <= dataMax
+	return dataMin <= os.time({
+		hour = 23,
+		sec = 59,
+		min = 59,
+		year = year,
+		month = month,
+		day = day
+	}) and dayStart <= dataMax
 end
 
 local AUCTION_CHARACTER_MINUTE_OPTIONS = {
@@ -260,7 +268,7 @@ local function refreshAuctionCharacterHourCombo(dontSignal)
 
 	clampAuctionCharacterSelectedTimestamp()
 
-	parts = getAuctionCharacterSelectedDateParts()
+	local parts = getAuctionCharacterSelectedDateParts()
 
 	if not parts then
 		return
@@ -296,7 +304,7 @@ local function refreshAuctionCharacterMinuteCombo(dontSignal)
 
 	clampAuctionCharacterSelectedTimestamp()
 
-	parts = getAuctionCharacterSelectedDateParts()
+	local parts = getAuctionCharacterSelectedDateParts()
 
 	if not parts then
 		return
@@ -485,15 +493,14 @@ local function applyAuctionCharacterCalendarCellStyle(cell, data)
 
 	local selectable = isAuctionCharacterDayInSelectableRange(data.year, data.month, data.day)
 	local cellTimestamp = buildAuctionCharacterTimestampForDay(data.year, data.month, data.day, auctionCharacterSelectedTimestamp or auctionCharacterCalendarBaseTimestamp)
-	local selected = isSameAuctionCharacterCalendarDay(cellTimestamp, auctionCharacterSelectedTimestamp)
 
-	if selected then
+	if isSameAuctionCharacterCalendarDay(cellTimestamp, auctionCharacterSelectedTimestamp) then
 		dayLabel:setColor("#ffffff")
 
 		if selectionOverlay and not selectionOverlay:isDestroyed() then
 			selectionOverlay:setSize({
-				width = 33,
-				height = 24
+				height = 24,
+				width = 33
 			})
 			selectionOverlay:setMarginLeft(11)
 			selectionOverlay:setMarginTop(1)
@@ -654,7 +661,7 @@ local function updateAuctionCharacterDateConfigLabel()
 	label:setText(formatAuctionCharacterDateConfigRangeText(dataMin, dataMax))
 end
 
-function updateAuctionCharacterEndDateLabels()
+local function updateAuctionCharacterEndDateLabels()
 	if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
 		return
 	end
@@ -811,7 +818,7 @@ local function destroyAllAuctionCharacterWindows()
 	auctionCharacterArgumentListSelection = nil
 	auctionCharacterLastArgumentClick.row = nil
 	auctionCharacterLastArgumentClick.time = 0
-	auctionCharacterArguments = nil
+	var_0_7 = nil
 	auctionCharacterListSelection = nil
 	auctionCharacterLastItemClick.box = nil
 	auctionCharacterLastItemClick.time = 0
@@ -926,7 +933,7 @@ local function setupAuctionOffertPriceEdit()
 
 	edit:setValidCharacters("0123456789")
 
-	function edit:onTextChange(text, oldText)
+	function edit.onTextChange(self, text, oldText)
 		if text ~= "" and not tonumber(text) then
 			self:setText(oldText or "")
 
@@ -1378,468 +1385,550 @@ local function getAuctionCharacterSelectItemsPanel()
 	return panelSelectItem:recursiveGetChildById("selectItemsPanel")
 end
 
-do
-	local A = {
-		CLEAR_ICON = "/modules/game_store/images/clear-item",
-		SLOT_COUNT = 5,
-		SELECT_ICON = "/modules/game_store/images/select-item-12x12",
-		ROW_COLOR_SELECTED = "#585858",
-		LABEL_COLOR_EMPTY = "#c0c0c0",
-		ROW_COLOR_B = "#414141",
-		LABEL_COLOR_FILLED = "#FFFFFF",
-		ROW_COLOR_A = "#484848",
-		ICON_COUNT = 15,
-		ICON_SIZE = 10,
-		LABEL_COLOR_PANEL = "#707070",
-		HIGHLIGHTS_ICON = "/images/game/creatures/icons-charactertrade-highlights",
-		ENTRY_HEIGHT = 16,
-		ENTRIES_MARGIN = 2,
-		SEPARATOR_HEIGHT = 2,
-		TITLE_HEIGHT = 19
+local A = {
+	SLOT_COUNT = 5,
+	ROW_COLOR_A = "#484848",
+	ICON_COUNT = 15,
+	ICON_SIZE = 10,
+	LABEL_COLOR_EMPTY = "#c0c0c0",
+	HIGHLIGHTS_ICON = "/images/game/creatures/icons-charactertrade-highlights",
+	ENTRY_HEIGHT = 16,
+	ENTRIES_MARGIN = 3,
+	SEPARATOR_HEIGHT = 2,
+	TITLE_HEIGHT = 19,
+	CLEAR_ICON = "/modules/game_store/images/clear-item",
+	LABEL_COLOR_FILLED = "#FFFFFF",
+	SELECT_ICON = "/modules/game_store/images/select-item-12x12",
+	ROW_COLOR_SELECTED = "#585858",
+	LABEL_COLOR_PANEL = "#707070",
+	ROW_COLOR_B = "#414141"
+}
+local updateAuctionCharacterArgumentSlot
+
+local function getAuctionCharacterSelectArgumentsPanel()
+	if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
+		return nil
+	end
+
+	local panelSelectArgument = configAuctionCharacterWindow.panelSelectArgument
+
+	if not panelSelectArgument or panelSelectArgument:isDestroyed() then
+		return nil
+	end
+
+	return panelSelectArgument:recursiveGetChildById("selectArgumentsPanel")
+end
+
+local function isAuctionCharacterArgumentPanelActive()
+	return auctionCharacterConfigPanel == "argument" and configAuctionCharacterWindow and not configAuctionCharacterWindow:isDestroyed() and configAuctionCharacterWindow.panelSelectArgument and not configAuctionCharacterWindow.panelSelectArgument:isDestroyed() and configAuctionCharacterWindow.panelSelectArgument:isVisible()
+end
+
+local function getAuctionCharacterArgumentLabelColor(hasSlotData)
+	if auctionCharacterConfigPanel and auctionCharacterConfigPanel ~= "none" then
+		return A.LABEL_COLOR_PANEL
+	end
+
+	if hasSlotData then
+		return A.LABEL_COLOR_FILLED
+	end
+
+	return A.LABEL_COLOR_EMPTY
+end
+
+local function getAuctionCharacterArgumentIconIndex(argumentId)
+	local index = tonumber(argumentId) or 0
+
+	if index < 0 then
+		index = 0
+	elseif index >= A.ICON_COUNT then
+		index = 0
+	end
+
+	return index
+end
+
+local function getAuctionCharacterArgumentIconClip(argumentId)
+	local index = getAuctionCharacterArgumentIconIndex(argumentId)
+
+	return torect(string.format("%d 0 %d %d", index * A.ICON_SIZE, A.ICON_SIZE, A.ICON_SIZE))
+end
+
+local function applyAuctionCharacterArgumentIcon(widget, argumentId, displaySize)
+	if not widget or widget:isDestroyed() then
+		return
+	end
+
+	displaySize = displaySize or A.ICON_SIZE
+
+	widget:setImageFixedRatio(false)
+	widget:setImageSource(A.HIGHLIGHTS_ICON)
+	widget:setImageClip(getAuctionCharacterArgumentIconClip(argumentId))
+	widget:setSize({
+		width = displaySize,
+		height = displaySize
+	})
+	widget:setImageSize({
+		width = displaySize,
+		height = displaySize
+	})
+end
+
+local function getAuctionCharacterArgumentRowHeight(entryCount)
+	return A.TITLE_HEIGHT + A.SEPARATOR_HEIGHT + A.ENTRIES_MARGIN + entryCount * A.ENTRY_HEIGHT
+end
+
+local function applyAuctionCharacterArgumentEntryIcon(entryIcon, argumentId)
+	applyAuctionCharacterArgumentIcon(entryIcon, argumentId)
+end
+
+local function copyAuctionCharacterArgumentData(entryData)
+	if not entryData then
+		return nil
+	end
+
+	return {
+		argumentId = entryData.argumentId,
+		argumentTitle = entryData.argumentTitle,
+		entryIndex = entryData.entryIndex,
+		value = entryData.value,
+		storeItemId = entryData.storeItemId,
+		storeItemTier = entryData.storeItemTier,
+		storeItemCount = entryData.storeItemCount
 	}
-	local updateAuctionCharacterArgumentSlot
+end
 
-	local function getAuctionCharacterSelectArgumentsPanel()
-		if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
-			return nil
-		end
-
-		local panelSelectArgument = configAuctionCharacterWindow.panelSelectArgument
-
-		if not panelSelectArgument or panelSelectArgument:isDestroyed() then
-			return nil
-		end
-
-		return panelSelectArgument:recursiveGetChildById("selectArgumentsPanel")
-	end
-
-	local function isAuctionCharacterArgumentPanelActive()
-		return auctionCharacterConfigPanel == "argument" and configAuctionCharacterWindow and not configAuctionCharacterWindow:isDestroyed() and configAuctionCharacterWindow.panelSelectArgument and not configAuctionCharacterWindow.panelSelectArgument:isDestroyed() and configAuctionCharacterWindow.panelSelectArgument:isVisible()
-	end
-
-	local function getAuctionCharacterArgumentLabelColor(hasSlotData)
-		if auctionCharacterConfigPanel and auctionCharacterConfigPanel ~= "none" then
-			return A.LABEL_COLOR_PANEL
-		end
-
-		if hasSlotData then
-			return A.LABEL_COLOR_FILLED
-		end
-
-		return A.LABEL_COLOR_EMPTY
-	end
-
-	local function getAuctionCharacterArgumentIconIndex(argumentId)
-		local index = tonumber(argumentId) or 0
-
-		if index < 0 then
-			index = 0
-		elseif index >= A.ICON_COUNT then
-			index = 0
-		end
-
-		return index
-	end
-
-	local function getAuctionCharacterArgumentIconClip(argumentId)
-		local index = getAuctionCharacterArgumentIconIndex(argumentId)
-
-		return torect(string.format("%d 0 %d %d", index * A.ICON_SIZE, A.ICON_SIZE, A.ICON_SIZE))
-	end
-
-	local function applyAuctionCharacterArgumentIcon(widget, argumentId, displaySize)
-		if not widget or widget:isDestroyed() then
-			return
-		end
-
-		displaySize = displaySize or A.ICON_SIZE
-
-		widget:setImageFixedRatio(false)
-		widget:setImageSource(A.HIGHLIGHTS_ICON)
-		widget:setImageClip(getAuctionCharacterArgumentIconClip(argumentId))
-		widget:setSize({
-			width = displaySize,
-			height = displaySize
-		})
-		widget:setImageSize({
-			width = displaySize,
-			height = displaySize
-		})
-	end
-
-	local function getAuctionCharacterArgumentRowHeight(entryCount)
-		return A.TITLE_HEIGHT + A.SEPARATOR_HEIGHT + A.ENTRIES_MARGIN + entryCount * A.ENTRY_HEIGHT
-	end
-
-	local function applyAuctionCharacterArgumentEntryIcon(entryIcon, argumentId)
-		applyAuctionCharacterArgumentIcon(entryIcon, argumentId)
-	end
-
-	local function copyAuctionCharacterArgumentData(entryData)
-		if not entryData then
-			return nil
-		end
-
-		return {
-			argumentId = entryData.argumentId,
-			argumentTitle = entryData.argumentTitle,
-			entryIndex = entryData.entryIndex,
-			value = entryData.value
-		}
-	end
-
-	local function isSameAuctionCharacterArgumentEntry(a, b)
-		if not a or not b then
-			return false
-		end
-
-		return a.argumentId == b.argumentId and a.entryIndex == b.entryIndex
-	end
-
-	local function isAuctionCharacterArgumentEntryAssigned(entryData)
-		for slotIndex = 1, A.SLOT_COUNT do
-			if isSameAuctionCharacterArgumentEntry(auctionCharacterHeaderArgumentSlots[slotIndex], entryData) then
-				return true
-			end
-		end
-
+local function isSameAuctionCharacterArgumentEntry(a, b)
+	if not a or not b then
 		return false
 	end
 
-	local function getAuctionCharacterArgumentRowColor(rowIndex, selected)
-		if selected then
-			return A.ROW_COLOR_SELECTED
-		end
-
-		if rowIndex % 2 == 0 then
-			return A.ROW_COLOR_B
-		end
-
-		return A.ROW_COLOR_A
+	if a.storeItemId or b.storeItemId then
+		return a.storeItemId == b.storeItemId and (a.storeItemTier or 0) == (b.storeItemTier or 0)
 	end
 
-	local function setAuctionCharacterArgumentEntryRowSelected(entryRow, selected, rowIndex)
-		if not entryRow or entryRow:isDestroyed() then
-			return
-		end
+	return a.argumentId == b.argumentId and a.entryIndex == b.entryIndex
+end
 
-		entryRow:setBackgroundColor(getAuctionCharacterArgumentRowColor(rowIndex, selected))
+local function isAuctionCharacterArgumentEntryAssigned()
+	if type(auctionCharacterItemsStore) ~= "table" then
+		return
 	end
 
-	local function clearAuctionCharacterArgumentListSelection(argumentsPanel)
-		if not argumentsPanel or argumentsPanel:isDestroyed() then
-			return
+	local var_91_0
+
+	for _, groupRow in ipairs(var_0_7) do
+		if groupRow.id == 4 or groupRow.title == "Store Items" then
+			var_91_0 = groupRow
+
+			break
 		end
+	end
 
-		for _, groupRow in ipairs(argumentsPanel:getChildren()) do
-			local entriesPanel = groupRow:getChildById("argumentEntries")
+	if var_91_0 and type(var_91_0.entries) == "table" and #var_91_0.entries > 0 then
+		return
+	end
 
-			if entriesPanel and not entriesPanel:isDestroyed() then
-				for _, entryRow in ipairs(entriesPanel:getChildren()) do
-					setAuctionCharacterArgumentEntryRowSelected(entryRow, false, entryRow.argumentRowIndex or 1)
-				end
+	if not var_91_0 then
+		var_91_0 = {
+			title = "Store Items",
+			id = 4,
+			entries = {}
+		}
+
+		table.insert(var_0_7, var_91_0)
+	elseif not var_91_0.entries then
+		var_91_0.entries = {}
+	end
+
+	for _, entryRow in ipairs(auctionCharacterItemsStore) do
+		local var_91_1 = parseAuctionCharacterItemEntry(entryRow)
+
+		if var_91_1 then
+			local var_91_2 = getAuctionCharacterItemName(var_91_1.id)
+			local var_91_3 = math.max(1, tonumber(var_91_1.count) or 1)
+
+			if var_91_2 ~= "" then
+				table.insert(var_91_0.entries, {
+					value = var_91_3 .. "x " .. var_91_2 .. " (Store Item)",
+					storeItemId = var_91_1.id,
+					storeItemTier = var_91_1.tier or 0,
+					storeItemCount = var_91_3
+				})
 			end
 		end
 	end
 
-	local function selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
-		local argumentsPanel = getAuctionCharacterSelectArgumentsPanel()
+	table.sort(var_0_7, function(a, b)
+		local titleA = (a.title or ""):lower()
+		local titleB = (b.title or ""):lower()
 
-		clearAuctionCharacterArgumentListSelection(argumentsPanel)
-		setAuctionCharacterArgumentEntryRowSelected(entryRow, true, rowIndex)
+		if titleA == titleB then
+			return (a.id or 0) < (b.id or 0)
+		end
 
-		auctionCharacterArgumentListSelection = copyAuctionCharacterArgumentData(entryData)
+		return titleA < titleB
+	end)
+end
+
+local function var_0_116(arg_93_0)
+	for slotIndex = 1, A.SLOT_COUNT do
+		if isSameAuctionCharacterArgumentEntry(auctionCharacterHeaderArgumentSlots[slotIndex], arg_93_0) then
+			return true
+		end
 	end
 
-	local function syncAuctionCharacterNextArgumentSlot()
-		for slotIndex = 1, A.SLOT_COUNT do
-			if not auctionCharacterHeaderArgumentSlots[slotIndex] then
-				auctionCharacterNextArgumentSlot = slotIndex
+	return false
+end
 
-				return
+local function var_0_117(arg_94_0, arg_94_1)
+	if arg_94_1 then
+		return A.ROW_COLOR_SELECTED
+	end
+
+	if arg_94_0 % 2 == 0 then
+		return A.ROW_COLOR_B
+	end
+
+	return A.ROW_COLOR_A
+end
+
+local function setAuctionCharacterArgumentEntryRowSelected(configAuctionCharacterWindow, selected, slotIndex)
+	if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
+		return
+	end
+
+	configAuctionCharacterWindow:setBackgroundColor(var_0_117(slotIndex, selected))
+end
+
+local function var_0_119(headerWindow)
+	if not headerWindow or headerWindow:isDestroyed() then
+		return
+	end
+
+	for unusedValue, child in ipairs(headerWindow:getChildren()) do
+		local icon = child:getChildById("argumentEntries")
+
+		if icon and not icon:isDestroyed() then
+			for unusedValue, child in ipairs(icon:getChildren()) do
+				setAuctionCharacterArgumentEntryRowSelected(child, false, child.argumentRowIndex or 1)
 			end
 		end
-
-		auctionCharacterNextArgumentSlot = 1
 	end
+end
 
-	local function assignAuctionCharacterArgumentToNextSlot(entryData)
-		if not entryData then
-			return false
-		end
+local function selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
+	local var_97_0 = getAuctionCharacterSelectArgumentsPanel()
 
-		if isAuctionCharacterArgumentEntryAssigned(entryData) then
-			return false
-		end
+	var_0_119(var_97_0)
+	setAuctionCharacterArgumentEntryRowSelected(entryRow, true, rowIndex)
 
-		local slotIndex = auctionCharacterNextArgumentSlot
+	auctionCharacterArgumentListSelection = copyAuctionCharacterArgumentData(entryData)
+end
 
-		auctionCharacterHeaderArgumentSlots[slotIndex] = copyAuctionCharacterArgumentData(entryData)
+local function syncAuctionCharacterNextArgumentSlot()
+	for slotIndex = 1, A.SLOT_COUNT do
+		if not auctionCharacterHeaderArgumentSlots[slotIndex] then
+			auctionCharacterNextArgumentSlot = slotIndex
 
-		updateAuctionCharacterArgumentSlot(slotIndex)
-		syncAuctionCharacterNextArgumentSlot()
-
-		auctionCharacterArgumentListSelection = nil
-
-		showAuctionCharacterConfigPanel("none")
-
-		return true
-	end
-
-	local function confirmAuctionCharacterArgumentFromList(entryData)
-		if not entryData then
 			return
 		end
-
-		assignAuctionCharacterArgumentToNextSlot(entryData)
 	end
 
-	local function bindAuctionCharacterArgumentEntryRow(entryRow, entryData, rowIndex)
-		entryRow.argumentRowIndex = rowIndex
-		entryRow.argumentEntryData = copyAuctionCharacterArgumentData(entryData)
+	auctionCharacterNextArgumentSlot = 1
+end
 
-		setAuctionCharacterArgumentEntryRowSelected(entryRow, false, rowIndex)
-		g_mouse.bindPress(entryRow, function()
-			local now = g_clock.millis()
+local function var_0_122(arg_99_0)
+	if not arg_99_0 then
+		return false
+	end
 
-			if auctionCharacterLastArgumentClick.row == entryRow and now - auctionCharacterLastArgumentClick.time <= 350 then
-				auctionCharacterLastArgumentClick.row = nil
-				auctionCharacterLastArgumentClick.time = 0
+	if var_0_116(arg_99_0) then
+		return false
+	end
 
-				selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
-				confirmAuctionCharacterArgumentFromList(entryData)
+	local var_99_0 = auctionCharacterNextArgumentSlot
 
-				return
-			end
+	auctionCharacterHeaderArgumentSlots[var_99_0] = copyAuctionCharacterArgumentData(arg_99_0)
 
-			auctionCharacterLastArgumentClick.row = entryRow
-			auctionCharacterLastArgumentClick.time = now
+	updateAuctionCharacterArgumentSlot(var_99_0)
+	syncAuctionCharacterNextArgumentSlot()
+
+	auctionCharacterArgumentListSelection = nil
+
+	showAuctionCharacterConfigPanel("none")
+
+	return true
+end
+
+local function confirmAuctionCharacterArgumentFromList(entryData)
+	if not entryData then
+		return
+	end
+
+	var_0_122(entryData)
+end
+
+local function bindAuctionCharacterArgumentEntryRow(entryRow, entryData, rowIndex)
+	entryRow.argumentRowIndex = rowIndex
+	entryRow.argumentEntryData = copyAuctionCharacterArgumentData(entryData)
+
+	setAuctionCharacterArgumentEntryRowSelected(entryRow, false, rowIndex)
+	g_mouse.bindPress(entryRow, function()
+		local now = g_clock.millis()
+
+		if auctionCharacterLastArgumentClick.row == entryRow and now - auctionCharacterLastArgumentClick.time <= 350 then
+			auctionCharacterLastArgumentClick.row = nil
+			auctionCharacterLastArgumentClick.time = 0
 
 			selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
-		end, MouseLeftButton)
+			confirmAuctionCharacterArgumentFromList(entryData)
+
+			return
+		end
+
+		auctionCharacterLastArgumentClick.row = entryRow
+		auctionCharacterLastArgumentClick.time = now
+
+		selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
+	end, MouseLeftButton)
+end
+
+function updateAuctionCharacterArgumentSlot(slotIndex)
+	if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
+		return
 	end
 
-	function updateAuctionCharacterArgumentSlot(slotIndex)
-		if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
-			return
-		end
+	local headerWindow = configAuctionCharacterWindow.headerWindow
 
-		local headerWindow = configAuctionCharacterWindow.headerWindow
-
-		if not headerWindow or headerWindow:isDestroyed() then
-			return
-		end
-
-		local button = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex)
-		local icon = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Icon")
-		local label = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Label")
-
-		if not button or button:isDestroyed() then
-			return
-		end
-
-		local slotData = auctionCharacterHeaderArgumentSlots[slotIndex]
-
-		if slotData then
-			button:setImageSource(A.CLEAR_ICON)
-			button:setImageClip("0 0 12 12")
-
-			function button.onClick()
-				clearAuctionCharacterArgument(slotIndex)
-			end
-
-			button:setTooltip(tr("Remove argument"))
-
-			if icon and not icon:isDestroyed() then
-				icon:setVisible(true)
-				icon:setSize({
-					width = A.ICON_SIZE,
-					height = A.ICON_SIZE
-				})
-				applyAuctionCharacterArgumentIcon(icon, slotData.argumentId)
-			end
-
-			if label and not label:isDestroyed() then
-				label:setText(slotData.value or "")
-				label:setColor(getAuctionCharacterArgumentLabelColor(true))
-			end
-		else
-			button:setImageSource(A.SELECT_ICON)
-			button:setImageClip("0 0 12 12")
-
-			function button.onClick()
-				selectArgumentAuctionCharacter()
-			end
-
-			button:setTooltip(tr("Select an outstanding feature of your character"))
-
-			if icon and not icon:isDestroyed() then
-				icon:setVisible(false)
-				icon:setSize({
-					width = 0,
-					height = A.ICON_SIZE
-				})
-			end
-
-			if label and not label:isDestroyed() then
-				label:setText(tr("Add sales argument #%d", slotIndex))
-				label:setColor(getAuctionCharacterArgumentLabelColor(false))
-			end
-		end
+	if not headerWindow or headerWindow:isDestroyed() then
+		return
 	end
 
-	function updateAllAuctionCharacterArgumentSlots()
-		for slotIndex = 1, A.SLOT_COUNT do
-			updateAuctionCharacterArgumentSlot(slotIndex)
-		end
+	local selectArgument = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex)
+	local icon = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Icon")
+	local var_103_3 = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Label")
+
+	if not selectArgument or selectArgument:isDestroyed() then
+		return
 	end
 
-	function fillAuctionCharacterArguments()
-		if not isAuctionCharacterArgumentPanelActive() then
-			return
+	local slotData = auctionCharacterHeaderArgumentSlots[slotIndex]
+
+	if slotData then
+		selectArgument:setImageSource(A.CLEAR_ICON)
+		selectArgument:setImageClip("0 0 12 12")
+
+		function selectArgument.onClick()
+			clearAuctionCharacterArgument(slotIndex)
 		end
 
-		local argumentsPanel = getAuctionCharacterSelectArgumentsPanel()
+		selectArgument:setTooltip(tr("Remove argument"))
 
-		if not argumentsPanel or argumentsPanel:isDestroyed() then
-			return
+		if icon and not icon:isDestroyed() then
+			icon:setVisible(true)
+			icon:setSize({
+				width = A.ICON_SIZE,
+				height = A.ICON_SIZE
+			})
+			applyAuctionCharacterArgumentIcon(icon, slotData.argumentId)
 		end
 
-		argumentsPanel:destroyChildren()
+		if var_103_3 and not var_103_3:isDestroyed() then
+			var_103_3:setText(slotData.value or "")
+			var_103_3:setColor(getAuctionCharacterArgumentLabelColor(true))
+		end
+	else
+		selectArgument:setImageSource(A.SELECT_ICON)
+		selectArgument:setImageClip("0 0 12 12")
 
-		if type(auctionCharacterArguments) ~= "table" then
-			return
+		function selectArgument.onClick()
+			selectArgumentAuctionCharacter()
 		end
 
-		local listSelection = auctionCharacterArgumentListSelection
-		local globalRowIndex = 0
+		selectArgument:setTooltip(tr("Select an outstanding feature of your character"))
 
-		for _, argument in ipairs(auctionCharacterArguments) do
-			local entries = argument.entries or {}
-			local visibleEntries = {}
+		if icon and not icon:isDestroyed() then
+			icon:setVisible(false)
+			icon:setSize({
+				width = 0,
+				height = A.ICON_SIZE
+			})
+		end
 
-			for _, entry in ipairs(entries) do
-				local value = entry.value
+		if var_103_3 and not var_103_3:isDestroyed() then
+			var_103_3:setText(tr("Add sales argument #%d", slotIndex))
+			var_103_3:setColor(getAuctionCharacterArgumentLabelColor(false))
+		end
+	end
+end
 
-				if type(value) == "string" then
-					value = value:match("^%s*(.-)%s*$")
-				end
+function updateAllAuctionCharacterArgumentSlots()
+	for iter_106_0 = 1, A.SLOT_COUNT do
+		updateAuctionCharacterArgumentSlot(iter_106_0)
+	end
+end
 
-				if value and value ~= "" then
-					local entryData = {
-						argumentId = argument.id,
-						argumentTitle = argument.title,
-						entryIndex = entry.index,
-						value = value
-					}
+local function fillAuctionCharacterArguments()
+	if not isAuctionCharacterArgumentPanelActive() then
+		return
+	end
 
-					if not isAuctionCharacterArgumentEntryAssigned(entryData) then
-						visibleEntries[#visibleEntries + 1] = entryData
-					end
-				end
+	local argumentsPanel = getAuctionCharacterSelectArgumentsPanel()
+
+	if not argumentsPanel or argumentsPanel:isDestroyed() then
+		return
+	end
+
+	argumentsPanel:destroyChildren()
+
+	if type(var_0_7) ~= "table" then
+		return
+	end
+
+	isAuctionCharacterArgumentEntryAssigned()
+
+	local listSelection = auctionCharacterArgumentListSelection
+	local globalRowIndex = 0
+
+	for _, argument in ipairs(var_0_7) do
+		local entries = argument.entries or {}
+		local visibleEntries = {}
+
+		for _, entry in ipairs(entries) do
+			local value = entry.value
+
+			if type(value) == "string" then
+				value = value:match("^%s*(.-)%s*$")
 			end
 
-			if #visibleEntries > 0 then
-				local row = g_ui.createWidget("RowAuctionCharacterArgument", argumentsPanel)
+			if value and value ~= "" then
+				local entryData = {
+					argumentId = argument.id,
+					argumentTitle = argument.title,
+					entryIndex = entry.index,
+					value = value,
+					storeItemId = entry.storeItemId,
+					storeItemTier = entry.storeItemTier,
+					storeItemCount = entry.storeItemCount
+				}
 
-				if not row then
-					break
+				if not var_0_116(entryData) then
+					visibleEntries[#visibleEntries + 1] = entryData
 				end
+			end
+		end
 
-				local titleLabel = row:getChildById("argumentTitle")
+		if #visibleEntries > 0 then
+			local row = g_ui.createWidget("RowAuctionCharacterArgument", argumentsPanel)
 
-				if titleLabel then
-					titleLabel:setText(argument.title or "")
-				end
+			if not row then
+				break
+			end
 
-				local entriesPanel = row:getChildById("argumentEntries")
+			local titleLabel = row:getChildById("argumentTitle")
 
-				if entriesPanel then
-					entriesPanel:setHeight(#visibleEntries * A.ENTRY_HEIGHT)
+			if titleLabel then
+				titleLabel:setText(argument.title or "")
+			end
 
-					for _, entryData in ipairs(visibleEntries) do
-						globalRowIndex = globalRowIndex + 1
+			local entriesPanel = row:getChildById("argumentEntries")
 
-						local entryRow = g_ui.createWidget("RowAuctionCharacterArgumentEntry", entriesPanel)
+			if entriesPanel then
+				entriesPanel:setHeight(#visibleEntries * A.ENTRY_HEIGHT)
 
-						if entryRow then
-							local entryIcon = entryRow:getChildById("entryIcon")
-							local entryText = entryRow:getChildById("entryText")
+				for _, entryData in ipairs(visibleEntries) do
+					globalRowIndex = globalRowIndex + 1
 
-							applyAuctionCharacterArgumentEntryIcon(entryIcon, entryData.argumentId)
+					local entryRow = g_ui.createWidget("RowAuctionCharacterArgumentEntry", entriesPanel)
 
-							if entryText then
-								entryText:setText(entryData.value or "")
-							end
+					if entryRow then
+						local entryIcon = entryRow:getChildById("entryIcon")
+						local entryText = entryRow:getChildById("entryText")
 
-							bindAuctionCharacterArgumentEntryRow(entryRow, entryData, globalRowIndex)
+						applyAuctionCharacterArgumentEntryIcon(entryIcon, entryData.argumentId)
 
-							if listSelection and isSameAuctionCharacterArgumentEntry(listSelection, entryData) then
-								setAuctionCharacterArgumentEntryRowSelected(entryRow, true, globalRowIndex)
-							end
+						if entryText then
+							entryText:setText(entryData.value or "")
+						end
+
+						bindAuctionCharacterArgumentEntryRow(entryRow, entryData, globalRowIndex)
+
+						if listSelection and isSameAuctionCharacterArgumentEntry(listSelection, entryData) then
+							setAuctionCharacterArgumentEntryRowSelected(entryRow, true, globalRowIndex)
 						end
 					end
 				end
-
-				row:setHeight(getAuctionCharacterArgumentRowHeight(#visibleEntries))
 			end
+
+			row:setHeight(getAuctionCharacterArgumentRowHeight(#visibleEntries))
 		end
 	end
 
-	function clearAuctionCharacterArgument(slotIndex)
-		slotIndex = tonumber(slotIndex)
+	if #argumentsPanel:getChildren() > 0 then
+		local uIWidgetWidget = g_ui.createWidget("UIWidget", argumentsPanel)
 
-		if not slotIndex or slotIndex < 1 or slotIndex > A.SLOT_COUNT then
-			return
-		end
-
-		if not auctionCharacterHeaderArgumentSlots[slotIndex] then
-			return
-		end
-
-		for i = slotIndex, A.SLOT_COUNT - 1 do
-			auctionCharacterHeaderArgumentSlots[i] = auctionCharacterHeaderArgumentSlots[i + 1]
-		end
-
-		auctionCharacterHeaderArgumentSlots[A.SLOT_COUNT] = nil
-
-		updateAllAuctionCharacterArgumentSlots()
-		syncAuctionCharacterNextArgumentSlot()
-
-		if isAuctionCharacterArgumentPanelActive() then
-			fillAuctionCharacterArguments()
+		if uIWidgetWidget then
+			uIWidgetWidget:setId("argumentsListBottomSpacer")
+			uIWidgetWidget:setHeight(12)
+			uIWidgetWidget:setPhantom(true)
+			uIWidgetWidget:setFocusable(false)
 		end
 	end
+end
 
-	function selectArgumentAuctionCharacter()
-		showAuctionCharacterConfigPanel("argument")
+function clearAuctionCharacterArgument(slotIndex)
+	slotIndex = tonumber(slotIndex)
 
-		if auctionCharacterArguments then
-			fillAuctionCharacterArguments()
-		end
-	end
-
-	function confirmAuctionCharacterArgumentSelection()
-		if not auctionCharacterArgumentListSelection then
-			return
-		end
-
-		confirmAuctionCharacterArgumentFromList(auctionCharacterArgumentListSelection)
-	end
-
-	function selectArgument(index)
-		selectArgumentAuctionCharacter()
-	end
-
-	function searchArgumentsAuctionCharacter(text)
+	if not slotIndex or slotIndex < 1 or slotIndex > A.SLOT_COUNT then
 		return
 	end
+
+	if not auctionCharacterHeaderArgumentSlots[slotIndex] then
+		return
+	end
+
+	for i = slotIndex, A.SLOT_COUNT - 1 do
+		auctionCharacterHeaderArgumentSlots[i] = auctionCharacterHeaderArgumentSlots[i + 1]
+	end
+
+	auctionCharacterHeaderArgumentSlots[A.SLOT_COUNT] = nil
+
+	updateAllAuctionCharacterArgumentSlots()
+	syncAuctionCharacterNextArgumentSlot()
+
+	if isAuctionCharacterArgumentPanelActive() then
+		fillAuctionCharacterArguments()
+	end
+end
+
+function selectArgumentAuctionCharacter()
+	showAuctionCharacterConfigPanel("argument")
+
+	if var_0_7 then
+		fillAuctionCharacterArguments()
+	end
+end
+
+function confirmAuctionCharacterArgumentSelection()
+	if not auctionCharacterArgumentListSelection then
+		return
+	end
+
+	confirmAuctionCharacterArgumentFromList(auctionCharacterArgumentListSelection)
+end
+
+function selectArgument(index)
+	selectArgumentAuctionCharacter()
+end
+
+function searchArgumentsAuctionCharacter(text)
+	return
 end
 
 local function collectAuctionCharacterItems()
 	local merged = {}
 
-	local function appendList(list, source)
+	;(function(list, source)
 		if type(list) ~= "table" then
 			return
 		end
@@ -1852,10 +1941,7 @@ local function collectAuctionCharacterItems()
 				merged[#merged + 1] = item
 			end
 		end
-	end
-
-	appendList(auctionCharacterItemsInventory, "inventory")
-	appendList(auctionCharacterItemsStore, "store")
+	end)(auctionCharacterItemsInventory, "inventory")
 	table.sort(merged, function(a, b)
 		local nameA = getAuctionCharacterItemName(a.id):lower()
 		local nameB = getAuctionCharacterItemName(b.id):lower()
@@ -1958,7 +2044,7 @@ local function returnAuctionCharacterItemToPool(itemData)
 	})
 end
 
-function updateAuctionCharacterHeaderItemSlot(slotIndex)
+local function updateAuctionCharacterHeaderItemSlot(slotIndex)
 	if not configAuctionCharacterWindow or configAuctionCharacterWindow:isDestroyed() then
 		return
 	end
@@ -1980,26 +2066,23 @@ function updateAuctionCharacterHeaderItemSlot(slotIndex)
 	local itemData = auctionCharacterHeaderSlots[slotIndex]
 
 	if itemData and display and not display:isDestroyed() then
-		local item = Item.create(itemData.id)
+		local item = math.max(1, tonumber(itemData.count) or 1)
+		local var_120_6 = Item.create(itemData.id, item)
 
-		if item then
-			if itemData.tier and itemData.tier > 0 and item.setTier then
-				item:setTier(itemData.tier)
+		if var_120_6 then
+			if itemData.tier and itemData.tier > 0 and var_120_6.setTier then
+				var_120_6:setTier(itemData.tier)
 			end
 
-			if itemData.count and itemData.count > 1 and item.setCount then
-				item:setCount(itemData.count)
-			end
+			display:setItem(var_120_6)
 
-			display:setItem(item)
-
-			if itemData.count and itemData.count > 1 and display.setItemCount then
-				display:setItemCount(itemData.count)
+			if display.setItemCount then
+				display:setItemCount(item)
 			end
 
 			if ItemsDatabase then
-				ItemsDatabase.setRarityItem(display, item, nil, true)
-				ItemsDatabase.setTier(display, item)
+				ItemsDatabase.setRarityItem(display, var_120_6, nil, true)
+				ItemsDatabase.setTier(display, var_120_6)
 			end
 		end
 
@@ -2183,26 +2266,23 @@ function refreshAuctionCharacterItemsList(searchFilter)
 			local slotItem = itemBox:getChildById("item")
 
 			if slotItem then
-				local item = Item.create(itemData.id)
+				local item = math.max(1, tonumber(itemData.count) or 1)
+				local var_130_7 = Item.create(itemData.id, item)
 
-				if item then
-					if itemData.tier and itemData.tier > 0 and item.setTier then
-						item:setTier(itemData.tier)
+				if var_130_7 then
+					if itemData.tier and itemData.tier > 0 and var_130_7.setTier then
+						var_130_7:setTier(itemData.tier)
 					end
 
-					if itemData.count and itemData.count > 1 and item.setCount then
-						item:setCount(itemData.count)
-					end
+					slotItem:setItem(var_130_7)
 
-					slotItem:setItem(item)
-
-					if itemData.count and itemData.count > 1 and slotItem.setItemCount then
-						slotItem:setItemCount(itemData.count)
+					if slotItem.setItemCount then
+						slotItem:setItemCount(item)
 					end
 
 					if ItemsDatabase then
-						ItemsDatabase.setRarityItem(slotItem, item, nil, true)
-						ItemsDatabase.setTier(slotItem, item)
+						ItemsDatabase.setRarityItem(slotItem, var_130_7, nil, true)
+						ItemsDatabase.setTier(slotItem, var_130_7)
 					end
 				end
 			end
@@ -2241,7 +2321,7 @@ function onAuctionCharacterArguments(arguments)
 		local entryIndex = tonumber(entry[3])
 		local entryValue = entry[4]
 
-		if argumentId then
+		if argumentId ~= nil then
 			local argument = grouped[argumentId]
 
 			if not argument then
@@ -2260,16 +2340,16 @@ function onAuctionCharacterArguments(arguments)
 		end
 	end
 
-	auctionCharacterArguments = {}
+	var_0_7 = {}
 
 	for _, argument in pairs(grouped) do
 		table.sort(argument.entries, function(a, b)
 			return (a.index or 0) < (b.index or 0)
 		end)
-		table.insert(auctionCharacterArguments, argument)
+		table.insert(var_0_7, argument)
 	end
 
-	table.sort(auctionCharacterArguments, function(a, b)
+	table.sort(var_0_7, function(a, b)
 		local titleA = (a.title or ""):lower()
 		local titleB = (b.title or ""):lower()
 
@@ -2326,7 +2406,7 @@ end
 function selectItemAuctionCharacter()
 	showAuctionCharacterConfigPanel("item")
 
-	if auctionCharacterItemsInventory and auctionCharacterItemsStore then
+	if auctionCharacterItemsInventory then
 		scheduleAuctionCharacterItemsRefresh()
 	end
 end
@@ -2399,7 +2479,7 @@ function confirmAuctionCharacter()
 		return
 	end
 
-	local startBid = AUCTION_MIN_OFFER_PRICE
+	local var_144_0 = AUCTION_MIN_OFFER_PRICE
 
 	if configAuctionCharacterWindow and not configAuctionCharacterWindow:isDestroyed() then
 		if not configAuctionCharacterWindow.headerWindow then
@@ -2436,7 +2516,7 @@ function confirmAuctionCharacter()
 			return
 		end
 
-		startBid = value
+		var_144_0 = value
 	else
 		print("[Erro] Janela principal de configuração do leilão não está aberta ou foi destruída.")
 
@@ -2508,23 +2588,21 @@ function confirmAuctionCharacter()
 		local argumentData = auctionCharacterHeaderArgumentSlots[slotIndex]
 
 		if argumentData then
-			if not argumentData.entryIndex then
-				print("[Erro] Argumento de slot #" .. slotIndex .. " sem entryIndex.")
+			if argumentData.storeItemId then
+				storeItems[argumentData.storeItemId] = argumentData.storeItemTier or 0
+			else
+				if argumentData.entryIndex == nil then
+					print("[Erro] Argumento de slot #" .. slotIndex .. " sem entryIndex.")
 
-				return
+					return
+				end
+
+				table.insert(arguments, argumentData.entryIndex)
 			end
-
-			if argumentData.entryIndex == 0 then
-				print("[Erro] entryIndex do argumento de slot #" .. slotIndex .. " não pode ser zero.")
-
-				return
-			end
-
-			table.insert(arguments, argumentData.entryIndex)
 		end
 	end
 
-	if startBid == 0 then
+	if var_144_0 == 0 then
 		print("[Erro] startBid não pode ser zero.")
 
 		return
@@ -2537,7 +2615,7 @@ function confirmAuctionCharacter()
 	end
 
 	g_game.sendCharacterAuction({
-		startBid = startBid,
+		startBid = var_144_0,
 		endTimestamp = endTimestamp,
 		inventoryItems = inventoryItems,
 		storeItems = storeItems,

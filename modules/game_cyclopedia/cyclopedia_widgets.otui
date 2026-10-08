@@ -1369,7 +1369,7 @@ BestiaryCategory < UIWidget
     anchors.horizontalCenter: parent.horizontalCenter
     margin-top: 19
     size: 64 64
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-clip: 1 1 98 98
     image-border: 9
     $pressed:
@@ -1640,7 +1640,7 @@ BestiaryCreature < UIWidget
     anchors.horizontalCenter: parent.horizontalCenter
     margin-top: 19
     size: 66 66
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-clip: 1 1 98 98
     image-border: 9
     $pressed:
@@ -1798,6 +1798,19 @@ InventoryItemCyclopedia < Item
       icon:setVisible(false)
     end
 
+  UIWidget
+    id: tier
+    size: 9 8
+    image-source: /images/inventory/tiers-strip
+    image-clip: 0 0 9 8
+    image-size: 9 8
+    anchors.top: parent.top
+    anchors.right: parent.right
+    phantom: true
+    focusable: false
+    visible: false
+    image-smooth: true
+
 HeadSlot < InventoryItemCyclopedia
   id: slot1
 
@@ -1859,7 +1872,7 @@ RoundCheckBox < CheckBox
 
 TrackerButton < Panel
   height: 34
-  margin-bottom: 5
+  margin-bottom: 3
   phantom: false
   border-width: 1
   border-color: alpha
@@ -1870,7 +1883,14 @@ TrackerButton < Panel
     size: 16 16
     anchors.left: parent.left
     anchors.top: parent.top
+    margin-top: -1
     phantom: true
+    creature-center: true
+    center-by-bounding-box: true
+    fit-visible-bounds: true
+    fixed-creature-size: true
+    base-scale: false
+    creature-smooth: true
 
   UIWidget
     id: spacer
@@ -1882,9 +1902,22 @@ TrackerButton < Panel
     id: label
     anchors.left: spacer.right
     anchors.top: creature.top
+    anchors.right: parent.right
     text-auto-resize: true
     color: #888888
-    margin-left: 2
+    margin-left: 4
+    margin-top: 2
+    margin-right: 2
+
+  UIWidget
+    id: cooldownIcon
+    size: 10 15
+    anchors.top: creature.top
+    anchors.right: parent.right
+    margin-top: 1
+    margin-right: 4
+    image-smooth: false
+    visible: false
 
   Label
     id: kills
@@ -1909,7 +1942,7 @@ TrackerButton < Panel
     anchors.left: spacer.right
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.top: creature.bottom
-    margin-top: 2
+    margin-top: 3
     size: 52 14
 
   ProgressBackground
@@ -1984,6 +2017,15 @@ BestiaryTracker < MiniWindow
     height: 13
     color: #9d9d9dff
 
+  UIWidget
+    id: miniborder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    image-source: /images/ui/miniborder-bottom-left
+    size: 14 14
+    margin-left: 3
+    margin-bottom: 3
+
   MiniWindowContents
     id: contentsPanel
     anchors.top: miniwindowTopBar.bottom
@@ -1993,10 +2035,10 @@ BestiaryTracker < MiniWindow
     margin-left: 3
     margin-top: -2
     margin-right: 1
+    margin-bottom: 4
     vertical-scrollbar: miniwindowScrollBar
     padding-left: 1
     padding-right: 1
-    padding-bottom: 3
     layout: verticalBox 
 
 
@@ -2087,7 +2129,7 @@ RowStore2 < UIWidget
 
 HouseItemCard < UIWidget
   size: 221 74
-  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-source: /images/ui/2pixel-up-frame-borderimage
   image-border: 2
 
   UIWidget

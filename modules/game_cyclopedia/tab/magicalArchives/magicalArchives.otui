@@ -244,7 +244,7 @@ UIWidget
         anchors.left: parent.left
         size: 483 44
         margin-top: 5
-        image-source: /images/ui/2pixel_up_frame_borderimage
+        image-source: /images/ui/2pixel-up-frame-borderimage
         image-border: 2
 
         UIWidget
@@ -308,7 +308,7 @@ UIWidget
         anchors.left: parent.left
         margin-top: 6
         size: 483 339
-        image-source: /images/ui/2pixel_up_frame_borderimage
+        image-source: /images/ui/2pixel-up-frame-borderimage
         image-border: 2
         phantom: true
 

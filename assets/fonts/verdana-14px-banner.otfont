@@ -1,0 +1,7 @@
+Font
+  name: Verdana-14px-banner
+  texture: verdana-14px-banner
+  height: 18
+  glyph-size: 20 18
+  space-width: 8
+  spacing: -1 0

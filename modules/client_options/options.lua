@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_options/options.lua
-
-local options = dofile("data_options")
+﻿local options = dofile("data_options")
 local CATEGORY_BASE_HEIGHT = 22
 local SUBCATEGORY_HEIGHT = 20
 local ROTATE_HOLD_KEYS = {
@@ -31,7 +29,8 @@ local function normalizeRotateHoldOption(value)
 	return not not value
 end
 
-local hasAtLeastOneRotateHoldModifier, showRotateHoldWarning
+local hasAtLeastOneRotateHoldModifier
+local showRotateHoldWarning
 local UNUSED_EXPIRY_HELP_DEFAULT = tr("Check this box to see how much time or how many charges are left\non items that have not been used yet.")
 local UNUSED_EXPIRY_HELP_DISABLED = tr("This option is only available when \"Show Expiry In Containers\" is enabled.\n\nCheck this box to see how much time or how many charges are left\non items that have not been used yet.")
 
@@ -94,6 +93,34 @@ local OTHER_HUD_DEPENDENT_OPTIONS = {
 	"showOtherMarks",
 	"showOtherNpcIcons"
 }
+local var_0_24 = {
+	"showPrivateMessages",
+	"showPotionSoundEffects",
+	"showSpells",
+	"showSpellsOfOthers",
+	"showHotkeyUsageNotifications",
+	"showLootMessages",
+	"showBoostedCreature",
+	"showOfflineTrainingProgress",
+	"showStoreNotificationsInCombat"
+}
+
+function updateGameWindowMessageOptionsAvailability(arg_3_0, arg_3_1)
+	local var_3_0 = arg_3_0 or panels
+	local var_3_1 = var_3_0 and var_3_0.interfaceGameWindow
+
+	if not var_3_1 then
+		return
+	end
+
+	for unusedValue, entry in ipairs(var_0_24) do
+		local var_3_2 = var_3_1:recursiveGetChildById(entry)
+
+		if var_3_2 then
+			var_3_2:setEnabled(arg_3_1)
+		end
+	end
+end
 
 local function setHudDependentOptionState(panel, id, enabled)
 	if not panel then
@@ -410,30 +437,30 @@ panels = {}
 local simpleButtons = {
 	{
 		icon = "/images/icons/icon_interface",
-		text = "Options",
-		open = "optionsPanel"
+		open = "optionsPanel",
+		text = "Options"
 	},
 	{
 		icon = "/images/icons/icon_controls",
-		text = "Hotkeys",
-		open = "keybindsPanel"
+		open = "keybindsPanel",
+		text = "Hotkeys"
 	},
 	{
 		icon = "/images/icons/icon_interface",
-		text = "Shortcuts",
-		open = "shortcuts"
+		open = "shortcuts",
+		text = "Shortcuts"
 	},
 	{
 		icon = "/images/icons/icon_misc",
-		text = "Help",
-		open = "miscHelp"
+		open = "miscHelp",
+		text = "Help"
 	}
 }
 local advancedButtons = {
 	{
 		icon = "/images/icons/icon_controls",
-		text = "Controls",
 		open = "generalPanel",
+		text = "Controls",
 		subCategories = {
 			{
 				text = "General Hotkeys",
@@ -447,8 +474,8 @@ local advancedButtons = {
 	},
 	{
 		icon = "/images/icons/icon_interface",
-		text = "Interfaces",
 		open = "interface",
+		text = "Interfaces",
 		subCategories = {
 			{
 				text = "H U D",
@@ -474,8 +501,8 @@ local advancedButtons = {
 	},
 	{
 		icon = "/images/icons/icon_graphics",
-		text = "Graphics",
 		open = "graphicsPanel",
+		text = "Graphics",
 		subCategories = {
 			{
 				text = "Effects",
@@ -485,8 +512,8 @@ local advancedButtons = {
 	},
 	{
 		icon = "/images/icons/icon_sound",
-		text = "Sound",
 		open = "soundPanel",
+		text = "Sound",
 		subCategories = {
 			{
 				text = "Battle Sounds",
@@ -500,8 +527,8 @@ local advancedButtons = {
 	},
 	{
 		icon = "/images/icons/icon_misc",
-		text = "Misc.",
 		open = "misc",
+		text = "Misc.",
 		subCategories = {
 			{
 				text = "Game Play",
@@ -533,6 +560,7 @@ local function toggleDisplays()
 		setOption("showOwnHealth", false, true)
 		setOption("showOtherHealth", false, true)
 		setOption("showOwnMana", false, true)
+		setOption("showOwnHarmony", false, true)
 	elseif not namesEnabled and not healthEnabled then
 		setOption("showOwnName", true, true)
 		setOption("showOtherName", true, true)
@@ -540,6 +568,7 @@ local function toggleDisplays()
 		setOption("showOwnHealth", true, true)
 		setOption("showOtherHealth", true, true)
 		setOption("showOwnMana", true, true)
+		setOption("showOwnHarmony", true, true)
 	end
 end
 
@@ -639,7 +668,7 @@ local function setupComboBox()
 		end
 	end
 
-	local function setupArcsHudCombo(panel)
+	;(function(panel)
 		if not panel then
 			return
 		end
@@ -668,9 +697,7 @@ local function setupComboBox()
 				setOption("showArcsSize", comboBox:getCurrentOption().data)
 			end
 		end
-	end
-
-	setupArcsHudCombo(panels.interfaceHUD)
+	end)(panels.interfaceHUD)
 
 	if panels.optionsPanel then
 		setupMousePresetComboBoxes(panels.optionsPanel)
@@ -705,7 +732,8 @@ local function setupComboBox()
 			for k, t in ipairs({
 				"None",
 				"Antialiasing",
-				"Smooth Retro"
+				"Smooth Retro",
+				"High Definition"
 			}) do
 				antialiasingModeOptions:addOption(t, k - 1)
 			end
@@ -738,7 +766,8 @@ local function setupComboBox()
 		for k, t in ipairs({
 			"None",
 			"Antialiasing",
-			"Smooth Retro"
+			"Smooth Retro",
+			"High Definition"
 		}) do
 			antialiasingModeCombobox:addOption(t, k - 1)
 		end
@@ -805,13 +834,17 @@ local function setupComboBox()
 	end
 
 	panels.keybindsPanel.presets.list:setCurrentOption(Keybind.currentPreset)
+
+	if markKeybindsUiDirty then
+		markKeybindsUiDirty()
+	end
 end
 
 local function bindCheckbox(panel, id)
 	local widget = panel:recursiveGetChildById(id)
 
 	if widget then
-		function widget:onClick()
+		function widget.onClick(self)
 			self:setChecked(not self:isChecked())
 			setOption(id, self:isChecked())
 		end
@@ -944,7 +977,7 @@ local function updateDisplayedButtonsList(keepSelection)
 
 		label:setBackgroundColor(bgColor)
 
-		function label:onFocusChange(focused)
+		function label.onFocusChange(self, focused)
 			if focused then
 				self:setBackgroundColor("#585858")
 				self:setColor("#f4f4f4")
@@ -954,6 +987,13 @@ local function updateDisplayedButtonsList(keepSelection)
 			end
 
 			updateButtonStates()
+		end
+
+		function label.onDoubleClick(arg_42_0)
+			arg_42_0:focus()
+			moveToAvailable()
+
+			return true
 		end
 
 		if selectedId and buttonData.id == selectedId then
@@ -999,7 +1039,7 @@ local function updateAvailableButtonsList(keepSelection)
 
 		label:setBackgroundColor(bgColor)
 
-		function label:onFocusChange(focused)
+		function label.onFocusChange(self, focused)
 			if focused then
 				self:setBackgroundColor("#585858")
 				self:setColor("#f4f4f4")
@@ -1009,6 +1049,13 @@ local function updateAvailableButtonsList(keepSelection)
 			end
 
 			updateButtonStates()
+		end
+
+		function label.onDoubleClick(arg_45_0)
+			arg_45_0:focus()
+			moveToDisplayed()
+
+			return true
 		end
 
 		if selectedId and buttonData.id == selectedId then
@@ -1237,8 +1284,8 @@ local function getDefaultConditionsDisplaySettings()
 	end
 
 	return {
-		hudColumnEnabled = true,
 		barColumnEnabled = true,
+		hudColumnEnabled = true,
 		order = order,
 		entries = entries
 	}
@@ -1488,7 +1535,8 @@ local function updateConditionMoveButtons(panelsArg)
 	end
 
 	local focused = list:getFocusedChild()
-	local canMoveUp, canMoveDown = false, false
+	local canMoveUp = false
+	local canMoveDown = false
 
 	if focused then
 		local children = list:getChildren()
@@ -1517,8 +1565,8 @@ local function onConditionRowCheckChange(row, column, checked)
 
 	if not entry then
 		entry = {
-			hud = true,
-			bar = true
+			bar = true,
+			hud = true
 		}
 		settings.entries[row.conditionId] = entry
 	end
@@ -1621,7 +1669,7 @@ function refreshConditionsListUi(panelsArg, rawValue)
 			if hudCheck then
 				hudCheck:setChecked(entry.hud ~= false)
 
-				function hudCheck:onCheckChange(checked)
+				function hudCheck.onCheckChange(self, checked)
 					onConditionRowCheckChange(row, "hud", checked)
 				end
 			end
@@ -1629,7 +1677,7 @@ function refreshConditionsListUi(panelsArg, rawValue)
 			if barCheck then
 				barCheck:setChecked(entry.bar ~= false)
 
-				function barCheck:onCheckChange(checked)
+				function barCheck.onCheckChange(self, checked)
 					onConditionRowCheckChange(row, "bar", checked)
 				end
 			end
@@ -1638,7 +1686,7 @@ function refreshConditionsListUi(panelsArg, rawValue)
 
 			row:setBackgroundColor(bgColor)
 
-			function row:onFocusChange(focused)
+			function row.onFocusChange(self, focused)
 				onConditionRowFocusChange(self, focused, bgColor)
 			end
 
@@ -1680,9 +1728,7 @@ function onMasterConditionCheckChange(column, checked)
 end
 
 local function setupConditionsList()
-	local opt = options.conditionsDisplaySettings
-
-	if not opt then
+	if not options.conditionsDisplaySettings then
 		return
 	end
 
@@ -1793,11 +1839,8 @@ local function setupShortcuts()
 end
 
 local LEGACY_SCREENSHOT_KEY_MAP = {
-	LowHealth = "lowHealth",
-	HighestHealingDone = "highestHealing",
-	GiftOfLifeTriggered = "giftOfLife",
-	HighestDamageDealt = "highestDamage",
 	PlayerAttacking = "playerAttacking",
+	LowHealth = "lowHealth",
 	PlayerKillAssist = "playerKillAssist",
 	PlayerKill = "playerKill",
 	DeathPvP = "deathPvP",
@@ -1805,12 +1848,15 @@ local LEGACY_SCREENSHOT_KEY_MAP = {
 	BossDefeated = "bossDefeated",
 	ValuableLoot = "valuableLoot",
 	TreasureFound = "treasureFound",
+	GiftOfLifeTriggered = "giftOfLife",
 	BestiaryEntryCompleted = "bestiaryCompleted",
 	BestiaryEntryUnlocked = "bestiaryUnlocked",
 	Achievement = "achievement",
 	SkillUp = "skillUp",
 	LevelUp = "levelUp",
-	enableScreenshots = "enableAutoScreenshots"
+	enableScreenshots = "enableAutoScreenshots",
+	HighestHealingDone = "highestHealing",
+	HighestDamageDealt = "highestDamage"
 }
 
 local function migrateLegacyScreenshotSettings()
@@ -1838,23 +1884,23 @@ local function migrateGameWindowScreenMessageKeys()
 end
 
 local GAME_WINDOW_OPTION_DEFAULTS = {
-	showInfoBanner = true,
-	showMeleeAttackAnimation = true,
-	showPvPFrames = true,
-	showCombatFrames = true,
 	showStoreNotificationsInCombat = true,
+	showMessages = true,
+	showTextualEffects = true,
+	showMeleeAttackAnimation = true,
+	showLootHighlighting = true,
+	showInfoBanner = true,
+	markTargetVisually = "frameAndHighlight",
 	showOfflineTrainingProgress = true,
 	showBoostedCreature = true,
-	showLootHighlighting = true,
+	showLootMessages = true,
 	showHotkeyUsageNotifications = true,
 	showSpellsOfOthers = true,
 	showSpells = true,
 	showPotionSoundEffects = true,
-	showMessages = true,
-	showTextualEffects = true,
 	showPrivateMessages = true,
-	showLootMessages = true,
-	markTargetVisually = "frameAndHighlight"
+	showPvPFrames = true,
+	showCombatFrames = true
 }
 
 function resetGameWindowOptions()
@@ -1876,12 +1922,13 @@ local function setup()
 		local v = obj.value
 
 		if type(v) == "boolean" then
-			if k == "enableAudio" then
+			if k == "noFrameRateLimit" then
+				setOption(k, false, true)
+			elseif k == "enableAudio" then
 				g_settings.set("enableAudio", true)
 				setOption(k, true, true)
 			elseif k == "showCustomisableStatusBars" then
-				local dim = g_settings.getString("statsbar_dimension")
-				local visible = dim ~= "hide"
+				local visible = g_settings.getString("statsbar_dimension") ~= "hide"
 
 				syncShowCustomisableStatusBarsOption(visible)
 			elseif k == "showStatusBars" then
@@ -1906,6 +1953,12 @@ local function setup()
 				else
 					setOption(k, g_settings.getBoolean(k), true)
 				end
+			elseif k == "showAnimatedMouseCursor" then
+				if not g_settings:exists(k) then
+					g_settings.set(k, true)
+				end
+
+				setOption(k, g_settings.getBoolean(k), true)
 			else
 				setOption(k, g_settings.getBoolean(k), true)
 			end
@@ -1959,53 +2012,241 @@ function showPresetNotification(text)
 	end, 3000)
 end
 
-function cycleHotkeyPreset()
-	local presets = Keybind and Keybind.presets
+local var_0_71 = {
+	"Activate Lenshelp",
+	"Allow/disallow all characters to Exiva",
+	"Change Character",
+	"Clear oldest message from Game Window",
+	"Customise Character",
+	"Logout",
+	"Next Hotkey Preset",
+	"Previous Hotkey Preset",
+	"Take Screenshot"
+}
 
-	if not presets or #presets == 0 then
+local function var_0_72()
+	for unusedValue, entry in ipairs(Keybind.presets or {}) do
+		local var_86_0 = Keybind.configs.keybinds[entry]
+
+		if var_86_0 then
+			for unusedValue, entry in ipairs(var_0_71) do
+				local var_86_1 = "Misc_" .. entry
+				local var_86_2 = "Misc._" .. entry
+				local node = var_86_0:getNode(var_86_1)
+
+				if node then
+					var_86_0:setNode(var_86_2, node)
+					var_86_0:remove(var_86_1)
+				end
+			end
+
+			local var_86_4 = "UI_Switch Hotkey Preset"
+			local var_86_5 = "Misc._Next Hotkey Preset"
+			local node = var_86_0:getNode(var_86_4)
+
+			if node and not var_86_0:getNode(var_86_5) then
+				var_86_0:setNode(var_86_5, node)
+			end
+
+			if node then
+				var_86_0:remove(var_86_4)
+			end
+		end
+	end
+end
+
+local var_0_73 = {
+	{
+		newIndex = "Dialogs_Open Bugreport",
+		preserveEmpty = true,
+		oldIndex = "Dialogs_Open Bug Report"
+	},
+	{
+		newIndex = "Dialogs_Open Options - Custom Hotkeys",
+		preserveEmpty = true,
+		oldIndex = "UI_Open Custom Hotkeys"
+	},
+	{
+		newIndex = "Dialogs_Open Questlog",
+		preserveEmpty = false,
+		oldIndex = "Windows_Show/hide quest Log"
+	}
+}
+local var_0_74 = {
+	{
+		newIndex = "Windows_Show/hide skills window",
+		preserveEmpty = true,
+		oldIndex = "Windows_Show/hide skills windows"
+	},
+	{
+		newIndex = "Windows_Show/hide bestiary tracker",
+		preserveEmpty = true,
+		oldIndex = "Windows_Show/hide Bestiary Tracker"
+	},
+	{
+		newIndex = "Windows_Show/hide bosstiary tracker",
+		preserveEmpty = true,
+		oldIndex = "Windows_Show/hide Bosstiary Tracker"
+	}
+}
+
+local function var_0_75(options)
+	if type(options) ~= "table" then
+		return false
+	end
+
+	for k, obj in pairs(options) do
+		if type(obj) == "table" and (obj.primary and obj.primary ~= "" or obj.secondary and obj.secondary ~= "") then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function var_0_76(arg_88_0)
+	for unusedValue, entry in ipairs(Keybind.presets or {}) do
+		local var_88_0 = Keybind.configs.keybinds[entry]
+
+		if var_88_0 then
+			for unusedValue, entry in ipairs(arg_88_0) do
+				local node = var_88_0:getNode(entry.oldIndex)
+
+				if node and not var_88_0:getNode(entry.newIndex) and (entry.preserveEmpty or var_0_75(node)) then
+					var_88_0:setNode(entry.newIndex, node)
+				end
+
+				if node then
+					var_88_0:remove(entry.oldIndex)
+				end
+			end
+		end
+	end
+end
+
+local function var_0_77()
+	var_0_76(var_0_73)
+end
+
+local function var_0_78()
+	var_0_76(var_0_74)
+
+	local var_90_0 = "windowKeybindDefaultsMigrated"
+
+	if g_settings.getBoolean(var_90_0) then
 		return
 	end
 
-	local currentIdx = 1
+	for unusedValue, entry in ipairs(Keybind.presets or {}) do
+		local var_90_1 = Keybind.configs.keybinds[entry]
 
-	for i, p in ipairs(presets) do
-		if p == Keybind.currentPreset then
-			currentIdx = i
+		if var_90_1 then
+			local var_90_2 = "Windows_Show/hide party list"
+			local node = var_90_1:getNode(var_90_2)
+			local var_90_4 = false
+
+			if node then
+				for iter_90_2 = CHAT_MODE.ON, CHAT_MODE.OFF do
+					local var_90_5 = node[iter_90_2] or node[tostring(iter_90_2)]
+
+					if var_90_5 and var_90_5.primary == "Ctrl+Shift+P" then
+						var_90_5.primary = ""
+						var_90_4 = true
+					end
+				end
+			end
+
+			if var_90_4 then
+				var_90_1:setNode(var_90_2, node)
+			end
+		end
+	end
+
+	g_settings.set(var_90_0, true)
+end
+
+local function var_0_79()
+	local var_91_0 = "cyclopediaMapChatOffOnlyMigrated"
+
+	if g_settings.getBoolean(var_91_0) then
+		return
+	end
+
+	for unusedValue, entry in ipairs(Keybind.presets or {}) do
+		local var_91_1 = Keybind.configs.keybinds[entry]
+
+		if var_91_1 then
+			local var_91_2 = "Dialogs_Open Cyclopedia - Map"
+			local node = var_91_1:getNode(var_91_2)
+			local var_91_4 = node and (node[CHAT_MODE.ON] or node[tostring(CHAT_MODE.ON)])
+
+			if var_91_4 and var_91_4.primary == "M" then
+				var_91_4.primary = ""
+
+				var_91_1:setNode(var_91_2, node)
+			end
+		end
+	end
+
+	g_settings.set(var_91_0, true)
+end
+
+function cycleHotkeyPreset(arg_92_0)
+	local var_92_0 = Keybind and Keybind.presets
+
+	if not var_92_0 or #var_92_0 == 0 then
+		return
+	end
+
+	local var_92_1 = 1
+
+	for index, entry in ipairs(var_92_0) do
+		if entry == Keybind.currentPreset then
+			var_92_1 = index
 
 			break
 		end
 	end
 
-	local nextIdx = currentIdx % #presets + 1
-	local nextPreset = presets[nextIdx]
+	arg_92_0 = arg_92_0 or 1
 
-	if not nextPreset or nextPreset == Keybind.currentPreset then
+	local var_92_2 = var_92_0[(var_92_1 - 1 + arg_92_0) % #var_92_0 + 1]
+
+	if not var_92_2 or var_92_2 == Keybind.currentPreset then
 		return
 	end
 
-	Keybind.selectPreset(nextPreset)
+	Keybind.selectPreset(var_92_2)
+
+	local var_92_3 = controller and controller.ui and controller.ui:isVisible()
 
 	if panels and panels.keybindsPanel and panels.keybindsPanel.presets and panels.keybindsPanel.presets.list then
-		panels.keybindsPanel.presets.list:setCurrentOption(nextPreset, true)
+		panels.keybindsPanel.presets.list:setCurrentOption(var_92_2, true)
 
-		if updateKeybinds then
+		if var_92_3 and updateKeybinds then
 			updateKeybinds()
+		elseif markKeybindsUiDirty then
+			markKeybindsUiDirty()
 		end
 	end
 
 	if CustomHotkeys and CustomHotkeys.syncPresetFromGeneral then
-		CustomHotkeys.syncPresetFromGeneral(nextPreset)
+		CustomHotkeys.syncPresetFromGeneral(var_92_2)
 	end
 
-	showPresetNotification(string.format("Switched to hotkey preset '%s'", nextPreset))
+	showPresetNotification(string.format("Switched to hotkey preset '%s'", var_92_2))
 end
 
 controller = Controller:new()
 
 controller:setUI("options")
 
-function controller:onInit()
+function controller.onInit(self)
 	migrateLegacyScreenshotSettings()
+	var_0_72()
+	var_0_77()
+	var_0_78()
+	var_0_79()
 
 	for k, obj in pairs(options) do
 		if type(obj) ~= "table" then
@@ -2022,7 +2263,7 @@ function controller:onInit()
 		toggleOption("enableMusicSound")
 	end)
 	extraWidgets.optionsButton = modules.client_topmenu.addTopRightToggleButton("optionsButton", tr("Options"), "/images/topbuttons/button_options", toggle)
-	extraWidgets.logoutButton = modules.client_topmenu.addTopRightToggleButton("logoutButton", tr("Exit"), "/images/topbuttons/logout", toggle)
+	extraWidgets.logoutButton = modules.client_topmenu.addTopRightToggleButton("logoutButton", tr("Exit"), "/images/topbuttons/logout", exit)
 
 	local success, err = pcall(function()
 		panels.optionsPanel = g_ui.loadUI("styles/optionspanel", controller.ui.optionsTabContent)
@@ -2107,8 +2348,15 @@ function controller:onInit()
 			end
 		}
 	})
-	Keybind.new("UI", "Open Custom Hotkeys", "Ctrl+K", "")
-	Keybind.bind("UI", "Open Custom Hotkeys", {
+	Keybind.new("Dialogs", "Open Options", "", "")
+	Keybind.bind("Dialogs", "Open Options", {
+		{
+			type = KEY_DOWN,
+			callback = show
+		}
+	})
+	Keybind.new("Dialogs", "Open Options - Custom Hotkeys", "Ctrl+K", "")
+	Keybind.bind("Dialogs", "Open Options - Custom Hotkeys", {
 		{
 			type = KEY_DOWN,
 			callback = function()
@@ -2116,18 +2364,27 @@ function controller:onInit()
 			end
 		}
 	})
-	Keybind.new("UI", "Switch Hotkey Preset", "Ctrl+J", "")
-	Keybind.bind("UI", "Switch Hotkey Preset", {
+	Keybind.new("Misc.", "Next Hotkey Preset", "Ctrl+J", "")
+	Keybind.bind("Misc.", "Next Hotkey Preset", {
 		{
 			type = KEY_DOWN,
 			callback = function()
-				cycleHotkeyPreset()
+				cycleHotkeyPreset(1)
+			end
+		}
+	})
+	Keybind.new("Misc.", "Previous Hotkey Preset", "", "")
+	Keybind.bind("Misc.", "Previous Hotkey Preset", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				cycleHotkeyPreset(-1)
 			end
 		}
 	})
 end
 
-function controller:onTerminate()
+function controller.onTerminate(unusedArgument)
 	stopCurrentFrameRatePoll()
 	disconnect(g_app, {
 		onFps = updateCurrentFrameRateLabel
@@ -2143,23 +2400,37 @@ function controller:onTerminate()
 	Keybind.delete("UI", "Show/hide Creature Names and Bars")
 	Keybind.delete("UI", "Show/hide FPS / lag indicator")
 	Keybind.delete("Sound", "Mute/unmute music")
-	Keybind.delete("UI", "Open Custom Hotkeys")
-	Keybind.delete("UI", "Switch Hotkey Preset")
+	Keybind.delete("Dialogs", "Open Options")
+	Keybind.delete("Dialogs", "Open Options - Custom Hotkeys")
+	Keybind.delete("Misc.", "Next Hotkey Preset")
+	Keybind.delete("Misc.", "Previous Hotkey Preset")
 	terminate_custom_hotkeys()
 	terminate_binds()
 end
 
-function controller:onGameStart()
-	if g_settings.getBoolean("autoSwitchPreset") then
-		local name = g_game.getCharacterName()
+function syncSelectedHotkeyPreset(name)
+	if not name or not Keybind.presetToIndex[name] then
+		return
+	end
 
-		if name and name ~= "" and Keybind.presetToIndex[name] then
-			if panels and panels.keybindsPanel and panels.keybindsPanel.presets and panels.keybindsPanel.presets.list then
-				panels.keybindsPanel.presets.list:setCurrentOption(name, true)
-			end
+	if panels and panels.keybindsPanel and panels.keybindsPanel.presets and panels.keybindsPanel.presets.list then
+		panels.keybindsPanel.presets.list:setCurrentOption(name, true)
 
+		if controller and controller.ui and controller.ui:isVisible() then
 			updateKeybinds()
+		elseif markKeybindsUiDirty then
+			markKeybindsUiDirty()
 		end
+	end
+
+	if CustomHotkeys and CustomHotkeys.syncPresetFromGeneral then
+		CustomHotkeys.syncPresetFromGeneral(name)
+	end
+end
+
+function controller.onGameStart(unusedArgument)
+	if g_settings.getBoolean("autoSwitchPreset") then
+		syncSelectedHotkeyPreset(Keybind.currentPreset)
 	end
 
 	local allowInspectOption = options.allowInspect
@@ -2451,12 +2722,8 @@ function setOption(key, value, force)
 		value = 240
 	end
 
-	if key == "backgroundFrameRate" and not force then
-		local noLimitActive = getEffectiveOptionValue("noFrameRateLimit") == true
-
-		if noLimitActive then
-			return
-		end
+	if key == "backgroundFrameRate" and not force and getEffectiveOptionValue("noFrameRateLimit") == true then
+		return
 	end
 
 	if option.deferAction and not force then
@@ -2563,18 +2830,21 @@ function persistImportedOptions(optionMap)
 end
 
 function openManageShortcutsPage()
-	if not controller.ui:isVisible() then
+	local var_119_0 = controller.ui:isVisible()
+
+	if not var_119_0 then
 		show()
 	end
 
-	local opened = openOptionsCategory("Interfaces", "Shortcuts")
-
-	if not opened then
+	if not openOptionsCategory("Interfaces", "Shortcuts") then
 		openOptionsCategory("Shortcuts")
 	end
 
 	refreshShortcuts()
-	updateKeybinds()
+
+	if var_119_0 then
+		updateKeybinds()
+	end
 end
 
 function openManageShortcutsMenu(mousePos)
@@ -2627,8 +2897,19 @@ function getOption(key)
 		return 250
 	end
 
-	if (key == "walkTurnDelay" or key == "walkTeleportDelay" or key == "walkStairsDelay") and options.useDefaultWalkDelay and options.useDefaultWalkDelay.value then
-		return 100
+	if key == "walkTurnDelay" or key == "walkTeleportDelay" or key == "walkStairsDelay" then
+		if options.useDefaultWalkDelay and options.useDefaultWalkDelay.value then
+			return 100
+		end
+
+		local var_126_0 = options[key]
+		local value = var_126_0 and var_126_0.value
+
+		if type(value) == "table" and value.value ~= nil then
+			value = value.value
+		end
+
+		return tonumber(value) or 100
 	end
 
 	local entry = options[key]
@@ -2678,9 +2959,21 @@ function showRotateHoldWarning()
 end
 
 function show()
+	if not controller.ui:isVisible() and syncKeybindChatMode then
+		syncKeybindChatMode()
+	end
+
 	controller.ui:show()
 	g_modalManager.show(controller.ui)
 	startCurrentFrameRatePoll()
+
+	if refreshKeybindsUiIfNeeded then
+		refreshKeybindsUiIfNeeded()
+	end
+
+	if CustomHotkeys and CustomHotkeys.refreshPanelIfNeeded then
+		CustomHotkeys.refreshPanelIfNeeded()
+	end
 end
 
 function hide()
@@ -2726,7 +3019,6 @@ function toggle()
 	end
 
 	show()
-	updateKeybinds()
 end
 
 function addTab(name, panel, icon)
@@ -3178,10 +3470,9 @@ function setUISoundConsoleMessagesEnabled(state)
 end
 
 function setUIItemVolumeEnabled(state)
-	local itemVolume = panels.soundPanel:recursiveGetChildById("itemVolume")
-	local valueBar = itemVolume:getChildById("valueBar")
+	local itemVolume = panels.soundPanel:recursiveGetChildById("itemVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and itemVolume:getValue() == 0 then
 		return
 	end
 
@@ -3190,10 +3481,9 @@ function setUIItemVolumeEnabled(state)
 end
 
 function setUISoundsEnabled(state)
-	local uiVolume = panels.uiSoundsPanel:recursiveGetChildById("uiVolume")
-	local valueBar = uiVolume:getChildById("valueBar")
+	local uiVolume = panels.uiSoundsPanel:recursiveGetChildById("uiVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and uiVolume:getValue() == 0 then
 		return
 	end
 
@@ -3205,10 +3495,9 @@ function setUISoundsEnabled(state)
 end
 
 function setMusicVolumeEnabled(state)
-	local musicVolume = panels.soundPanel:recursiveGetChildById("musicVolume")
-	local valueBar = musicVolume:getChildById("valueBar")
+	local musicVolume = panels.soundPanel:recursiveGetChildById("musicVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and musicVolume:getValue() == 0 then
 		return
 	end
 
@@ -3216,10 +3505,9 @@ function setMusicVolumeEnabled(state)
 end
 
 function setOwnBattleSoundEnabled(state)
-	local ownBattleVolume = panels.battleSoundsPanel:recursiveGetChildById("ownBattleVolume")
-	local valueBar = ownBattleVolume:getChildById("valueBar")
+	local ownBattleVolume = panels.battleSoundsPanel:recursiveGetChildById("ownBattleVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and ownBattleVolume:getValue() == 0 then
 		return
 	end
 
@@ -3231,10 +3519,9 @@ function setOwnBattleSoundEnabled(state)
 end
 
 function setOtherPlayersBattleSoundEnabled(state)
-	local otherPlayersVolume = panels.battleSoundsPanel:recursiveGetChildById("otherPlayersVolume")
-	local valueBar = otherPlayersVolume:getChildById("valueBar")
+	local otherPlayersVolume = panels.battleSoundsPanel:recursiveGetChildById("otherPlayersVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and otherPlayersVolume:getValue() == 0 then
 		return
 	end
 
@@ -3246,10 +3533,9 @@ function setOtherPlayersBattleSoundEnabled(state)
 end
 
 function setCreatureBattleSoundEnabled(state)
-	local creaturesVolume = panels.battleSoundsPanel:recursiveGetChildById("creaturesVolume")
-	local valueBar = creaturesVolume:getChildById("valueBar")
+	local creaturesVolume = panels.battleSoundsPanel:recursiveGetChildById("creaturesVolume"):getChildById("valueBar")
 
-	if state == true and valueBar:getValue() == 0 then
+	if state == true and creaturesVolume:getValue() == 0 then
 		return
 	end
 

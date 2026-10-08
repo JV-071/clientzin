@@ -169,7 +169,7 @@ TabBarQtVertical < UITabBar
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 2 0 96 2
     height: 2
 
@@ -177,7 +177,7 @@ TabBarQtVertical < UITabBar
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 2 2 96
     width: 2
 
@@ -185,7 +185,7 @@ TabBarQtVertical < UITabBar
     anchors.bottom: parent.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 2 98 96 2
     height: 2
 
@@ -193,35 +193,35 @@ TabBarQtVertical < UITabBar
     anchors.right: parent.right
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 2 2 96
     width: 2
 
   UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 0 2 2
     size: 2 2
 
   UIWidget
     anchors.top: parent.top
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 0 2 2
     size: 2 2
 
   UIWidget
     anchors.bottom: parent.bottom
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 98 2 2
     size: 2 2
 
   UIWidget
     anchors.bottom: parent.bottom
     anchors.right: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 98 2 2
     size: 2 2
 

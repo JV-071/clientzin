@@ -3919,10 +3919,10 @@
       {
         "Perks": [
           {
-            "AugmentType": 6,
+            "AugmentType": 2,
             "SpellId": 293,
             "Type": 5,
-            "Value": -4.0
+            "Value": 0.05
           }
         ]
       },
@@ -3951,10 +3951,9 @@
             "Value": 0.025
           },
           {
-            "AugmentType": 6,
-            "SpellId": 293,
-            "Type": 5,
-            "Value": -8.0
+            "SkillId": 1,
+            "Type": 3,
+            "Value": 2
           },
           {
             "BestiaryId": 5,
@@ -3990,7 +3989,7 @@
     ],
     "Name": "Amber 2H Fist",
     "ProficiencyId": 43,
-    "Version": 4
+    "Version": 5
   },
   {
     "Levels": [

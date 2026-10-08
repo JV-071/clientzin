@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_analysers/menus/DropTrackerAnalyser.lua
-
-if not DropTrackerAnalyser then
+﻿if not DropTrackerAnalyser then
 	DropTrackerAnalyser = {
 		autoTrackAboveValue = 0,
 		session = 0,
@@ -91,7 +89,7 @@ local function bindItemPanelContextMenu(widget, itemId)
 	end
 end
 
-function DropTrackerAnalyser:create()
+function DropTrackerAnalyser.create(self)
 	DropTrackerAnalyser.window = openedWindows.dropButton
 	DropTrackerAnalyser.launchTime = g_clock.millis()
 	DropTrackerAnalyser.session = 0
@@ -99,7 +97,7 @@ function DropTrackerAnalyser:create()
 	DropTrackerAnalyser.trackedItems = {}
 end
 
-function DropTrackerAnalyser:checkTracker()
+function DropTrackerAnalyser.checkTracker(self)
 	local needUpdate = false
 
 	for itemId, config in pairs(DropTrackerAnalyser.trackedItems) do
@@ -120,7 +118,7 @@ function DropTrackerAnalyser:checkTracker()
 	end
 end
 
-function DropTrackerAnalyser:reset(resetAutoTrack)
+function DropTrackerAnalyser.reset(self, resetAutoTrack)
 	DropTrackerAnalyser.launchTime = g_clock.millis()
 	DropTrackerAnalyser.session = 0
 
@@ -137,7 +135,7 @@ function DropTrackerAnalyser:reset(resetAutoTrack)
 	DropTrackerAnalyser:updateWindow(true)
 end
 
-function DropTrackerAnalyser:updateWindow(ignoreVisible)
+function DropTrackerAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	if not DropTrackerAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
@@ -186,7 +184,7 @@ function DropTrackerAnalyser:updateWindow(ignoreVisible)
 
 			bindItemPanelContextMenu(widget, itemId)
 
-			local toBeRemoved = {}
+			local var_9_3 = {}
 
 			for id, monsterDrop in ipairs(config.monsterDrop) do
 				local monsterWidget = monsterDrop.widget
@@ -202,18 +200,18 @@ function DropTrackerAnalyser:updateWindow(ignoreVisible)
 						monsterDrop.widget = monsterWidget
 					end
 				elseif os.time() - monsterDrop.time > 45 then
-					table.insert(toBeRemoved, id)
+					table.insert(var_9_3, id)
 				else
 					monsterWidget.toBeRemoved = nil
 				end
 			end
 
-			if #toBeRemoved == 0 then
+			if #var_9_3 == 0 then
 				widget:updateItemPanelSize()
 			end
 
-			for _, id in ipairs(toBeRemoved) do
-				table.remove(config.monsterDrop, id)
+			for _ = #var_9_3, 1, -1 do
+				table.remove(config.monsterDrop, var_9_3[_])
 			end
 		end
 	end
@@ -241,7 +239,7 @@ function DropTrackerAnalyser:updateWindow(ignoreVisible)
 	end
 end
 
-function DropTrackerAnalyser:managerDropItem(itemId, checked)
+function DropTrackerAnalyser.managerDropItem(self, itemId, checked)
 	if checked then
 		if not DropTrackerAnalyser.trackedItems[itemId] then
 			DropTrackerAnalyser.trackedItems[itemId] = {
@@ -261,7 +259,7 @@ function DropTrackerAnalyser:managerDropItem(itemId, checked)
 	DropTrackerAnalyser:saveConfigJson()
 end
 
-function DropTrackerAnalyser:sendDropedItems(message)
+function DropTrackerAnalyser.sendDropedItems(self, message)
 	if modules.game_textmessage and modules.game_textmessage.messagesPanel and modules.game_textmessage.messagesPanel.statusLabel then
 		local sl = modules.game_textmessage.messagesPanel.statusLabel
 
@@ -287,7 +285,7 @@ function DropTrackerAnalyser:sendDropedItems(message)
 	end
 end
 
-function DropTrackerAnalyser:tryAddingMonsterDrop(item, monsterName, monsterOutfit, dropItems, dropedItems)
+function DropTrackerAnalyser.tryAddingMonsterDrop(self, item, monsterName, monsterOutfit, dropItems, dropedItems)
 	local itemId = item:getId()
 	local tracker = DropTrackerAnalyser.trackedItems[itemId]
 	local itemPrice = getDropTrackerItemPrice(itemId)
@@ -321,7 +319,7 @@ function DropTrackerAnalyser:tryAddingMonsterDrop(item, monsterName, monsterOutf
 	}
 end
 
-function DropTrackerAnalyser:checkMonsterKilled(monsterName, monsterOutfit, dropItems)
+function DropTrackerAnalyser.checkMonsterKilled(self, monsterName, monsterOutfit, dropItems)
 	if table.empty(DropTrackerAnalyser.trackedItems) and DropTrackerAnalyser.autoTrackAboveValue == 0 then
 		return true
 	end
@@ -351,13 +349,13 @@ function DropTrackerAnalyser:checkMonsterKilled(monsterName, monsterOutfit, drop
 	DropTrackerAnalyser:updateWindow(true)
 end
 
-function DropTrackerAnalyser:isInDropTracker(itemId)
+function DropTrackerAnalyser.isInDropTracker(self, itemId)
 	local tracker = DropTrackerAnalyser.trackedItems[itemId]
 
 	return tracker and tracker.persistent
 end
 
-function DropTrackerAnalyser:removeAllTrackedItems()
+function DropTrackerAnalyser.removeAllTrackedItems(self)
 	table.clear(DropTrackerAnalyser.trackedItems)
 	DropTrackerAnalyser:updateWindow(true)
 	DropTrackerAnalyser:saveConfigJson()
@@ -415,7 +413,7 @@ function onDropTrackerExtra(mousePosition)
 	end
 end
 
-function DropTrackerAnalyser:loadConfigJson()
+function DropTrackerAnalyser.loadConfigJson(self)
 	local config = {
 		autoTrackAboveValue = 0,
 		trackedItems = {}
@@ -455,7 +453,7 @@ function DropTrackerAnalyser:loadConfigJson()
 	DropTrackerAnalyser:updateWindow(true)
 end
 
-function DropTrackerAnalyser:saveConfigJson()
+function DropTrackerAnalyser.saveConfigJson(self)
 	local config = {
 		autoTrackAboveValue = DropTrackerAnalyser.autoTrackAboveValue,
 		trackedItems = {}

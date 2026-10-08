@@ -1,16 +1,18 @@
-﻿-- chunkname: @/game_customisepodium/game_customisepodium.lua
-
-customisePodiumWindow = nil
+﻿customisePodiumWindow = nil
 currentThing = nil
 selectedCreatureSlot = nil
 initialRaceId = 0
 creatureEntries = {}
 podiumProtocolData = nil
 
-local previewPodiumWidget, previewCreatureWidget, previewRow, previewFloor
+local previewPodiumWidget
+local previewCreatureWidget
+local previewRow
+local previewFloor
 local previewFloorTiles = {}
 local previewDirection = Directions.South
-local previewOutfit, previewItem
+local previewOutfit
+local previewItem
 local previewInitialized = false
 local SLOT_CREATURE_DIRECTION = Directions.South
 local showCreature = true
@@ -245,9 +247,7 @@ local function applyPreviewCreatureScale(spriteWidget)
 		return
 	end
 
-	local creature = spriteWidget:getCreature()
-
-	if not creature then
+	if not spriteWidget:getCreature() then
 		return
 	end
 
@@ -282,8 +282,8 @@ local function setupCreatureListScrollInsets()
 	end
 
 	local offset = panel.getVirtualOffset and panel:getVirtualOffset() or {
-		y = 0,
-		x = 0
+		x = 0,
+		y = 0
 	}
 
 	applyCreatureListScrollInsets(panel, offset.y, offset.x)
@@ -362,7 +362,6 @@ local function buildListThumbnailOutfit(outfit)
 
 	if lookType < 1 and (outfit.auxType or 0) > 0 then
 		return {
-			familiar = 0,
 			type = 0,
 			mount = 0,
 			addons = 0,
@@ -370,6 +369,7 @@ local function buildListThumbnailOutfit(outfit)
 			legs = 0,
 			body = 0,
 			head = 0,
+			familiar = 0,
 			auxType = outfit.auxType or 0
 		}
 	end
@@ -377,8 +377,8 @@ local function buildListThumbnailOutfit(outfit)
 	local head, body, legs, feet = getListThumbnailColors(lookType, outfit)
 
 	return {
-		familiar = 0,
 		mount = 0,
+		familiar = 0,
 		type = lookType,
 		auxType = outfit.auxType or 0,
 		head = head,

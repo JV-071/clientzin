@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_actionbar/logics/ActionBarPresetStorage.lua
-
-actionBarSettingsCache = nil
+﻿actionBarSettingsCache = nil
 
 local GLOBAL_ACTIONBAR_FILE = "/settings/actionbar_presets.json"
 local LEGACY_MIGRATION_FLAG = "/settings/.actionbar_presets_migrated"
@@ -119,6 +117,18 @@ local function actionBarSlotHasContent(slot)
 		return true
 	end
 
+	if type(slot.helperId) == "string" and slot.helperId ~= "" then
+		return true
+	end
+
+	if type(slot.multiHelper) == "table" then
+		for iter_10_0 = 1, 3 do
+			if type(slot.multiHelper[iter_10_0]) == "string" and slot.multiHelper[iter_10_0] ~= "" then
+				return true
+			end
+		end
+	end
+
 	if type(slot.multiActions) == "table" and not table.empty(slot.multiActions) then
 		return true
 	end
@@ -188,9 +198,7 @@ local function mergePresetDocument(target, source, sourceTime, presetNameOverrid
 			return
 		end
 
-		local lastTime = target._mergeTimes[presetName] or 0
-
-		if lastTime <= sourceTime then
+		if sourceTime >= (target._mergeTimes[presetName] or 0) then
 			target[presetName] = source
 			target._mergeTimes[presetName] = sourceTime
 		end
@@ -201,13 +209,9 @@ local function mergePresetDocument(target, source, sourceTime, presetNameOverrid
 	for presetName, slots in pairs(source) do
 		if presetName == "_mergeTimes" or type(slots) ~= "table" or table.empty(slots) or presetHasStoredContent(target, presetName) then
 			-- block empty
-		else
-			local lastTime = target._mergeTimes[presetName] or 0
-
-			if lastTime <= sourceTime then
-				target[presetName] = slots
-				target._mergeTimes[presetName] = sourceTime
-			end
+		elseif sourceTime >= (target._mergeTimes[presetName] or 0) then
+			target[presetName] = slots
+			target._mergeTimes[presetName] = sourceTime
 		end
 	end
 end
@@ -341,6 +345,105 @@ function endActionBarBatch()
 	end
 end
 
+local function var_0_17(arg_24_0)
+	if type(arg_24_0) ~= "string" then
+		return false
+	end
+
+	if arg_24_0 == "string" then
+		return true
+	end
+
+	if arg_24_0 == "number" then
+		return true
+	end
+
+	if arg_24_0 == "nil" then
+		return true
+	end
+
+	if arg_24_0 == "boolean" then
+		return true
+	end
+
+	if arg_24_0 == "table" then
+		return true
+	end
+
+	if arg_24_0 == "function" then
+		return true
+	end
+
+	if arg_24_0 == "userdata" then
+		return true
+	end
+
+	if arg_24_0 == "thread" then
+		return true
+	end
+
+	return false
+end
+
+local function var_0_18(arg_25_0)
+	if type(arg_25_0) ~= "string" then
+		return ""
+	end
+
+	local var_25_0 = arg_25_0:match("^slot(%d+)$")
+
+	if not var_25_0 then
+		return ""
+	end
+
+	local numericValue = tonumber(var_25_0)
+
+	if not numericValue then
+		return ""
+	end
+
+	if numericValue < 1 or numericValue > 12 then
+		return ""
+	end
+
+	return "F" .. tostring(numericValue)
+end
+
+local function var_0_19(arg_26_0)
+	if type(arg_26_0) ~= "table" then
+		return false
+	end
+
+	local var_26_0 = false
+
+	for key, entry in pairs(arg_26_0) do
+		if key ~= "_mergeTimes" and type(entry) == "table" then
+			for key, entry in pairs(entry) do
+				if type(entry) == "table" then
+					local var_26_1 = var_0_18(key)
+
+					if var_0_17(entry.hotkeyChatOn) then
+						entry.hotkeyChatOn = var_26_1
+						var_26_0 = true
+					end
+
+					if var_0_17(entry.hotkeyChatOff) then
+						entry.hotkeyChatOff = var_26_1
+						var_26_0 = true
+					end
+
+					if var_0_17(entry.hotkey) then
+						entry.hotkey = var_26_1
+						var_26_0 = true
+					end
+				end
+			end
+		end
+	end
+
+	return var_26_0
+end
+
 function readActionBarPresetsDocument()
 	runLegacyMigrationIfNeeded()
 
@@ -348,9 +451,12 @@ function readActionBarPresetsDocument()
 		return actionBarSettingsCache
 	end
 
-	local document = decodeJsonFile(GLOBAL_ACTIONBAR_FILE)
+	local document = decodeJsonFile(GLOBAL_ACTIONBAR_FILE) or {}
 
-	document = document or {}
+	if var_0_19(document) then
+		encodeAndWriteDocument(GLOBAL_ACTIONBAR_FILE, document)
+	end
+
 	actionBarSettingsCache = document
 
 	return document
@@ -362,6 +468,7 @@ function writeActionBarPresetsDocument(data)
 	end
 
 	stripMergeMetadata(data)
+	var_0_19(data)
 
 	if not encodeAndWriteDocument(GLOBAL_ACTIONBAR_FILE, data) then
 		return false
@@ -476,7 +583,9 @@ function renameActionBarPreset(oldName, newName)
 		document[newName] = document[oldName]
 		document[oldName] = nil
 
-		writeActionBarPresetsDocument(document)
+		if writeActionBarPresetsDocument(document) and actionBarPreparedPreset == oldName then
+			actionBarPreparedPreset = newName
+		end
 	end
 end
 
@@ -494,7 +603,9 @@ function removeActionBarPreset(presetName)
 	if document[presetName] then
 		document[presetName] = nil
 
-		writeActionBarPresetsDocument(document)
+		if writeActionBarPresetsDocument(document) and actionBarPreparedPreset == presetName then
+			actionBarPreparedPreset = nil
+		end
 	end
 end
 

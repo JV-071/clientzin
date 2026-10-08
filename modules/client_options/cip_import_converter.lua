@@ -1,9 +1,11 @@
-﻿-- chunkname: @/client_options/cip_import_converter.lua
-
 CipImportConverter = {}
 
 local function newStats()
 	return {
+		questTrackingBridge = 0,
+		whitelistNames = 0,
+		ignoreListNames = 0,
+		sidebarsConverted = 0,
 		characterFilesTotal = 0,
 		characterFolders = 0,
 		characterFiles = 0,
@@ -17,10 +19,6 @@ local function newStats()
 		optionsIgnored = 0,
 		optionsImported = 0,
 		outfitBridge = 0,
-		questTrackingBridge = 0,
-		whitelistNames = 0,
-		ignoreListNames = 0,
-		sidebarsConverted = 0,
 		warnings = {}
 	}
 end
@@ -49,6 +47,23 @@ function CipImportConverter.convertOptions(cipOptions, stats)
 				stats.optionsImported = stats.optionsImported + 1
 			end
 		end
+	end
+
+	local gameWindowShowTragetFrame = cipOptions.gameWindowShowTragetFrame
+	local gameWindowShowTargetHighlight = cipOptions.gameWindowShowTargetHighlight
+
+	if gameWindowShowTragetFrame ~= nil and gameWindowShowTargetHighlight ~= nil then
+		if gameWindowShowTragetFrame and gameWindowShowTargetHighlight then
+			result.markTargetVisually = "frameAndHighlight"
+		elseif gameWindowShowTragetFrame then
+			result.markTargetVisually = "frameOnly"
+		elseif gameWindowShowTargetHighlight then
+			result.markTargetVisually = "highlightOnly"
+		else
+			result.markTargetVisually = "none"
+		end
+
+		stats.optionsImported = stats.optionsImported + 1
 	end
 
 	return result, stats
@@ -411,7 +426,7 @@ function CipImportConverter.buildPreviewText(converted, stats)
 		tr("Outfit presets from CIP (apply on login): %s", tostring(stats.outfitBridge or 0)),
 		tr("Ignored entries: %s", tostring(stats.hotkeysIgnored + stats.optionsIgnored)),
 		"",
-		tr("PTC-only settings preserved (not modified):")
+		tr("Clientzin-only settings preserved (not modified):")
 	}
 	local preserved = CipImportMappings.OTCLIENT_PRESERVED_SETTINGS or {
 		"game_helper_data.json",

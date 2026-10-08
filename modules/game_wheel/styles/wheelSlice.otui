@@ -1,0 +1,31 @@
+WheelSliceFill < UIProgressArc
+  size: 522 522
+  arc-layout: centered
+  empty-track: false
+  arc-border: false
+  fill-soft-edge: false
+  track-color: #00000000
+  fill-color: #720D1DFF
+  composition-mode: additive
+  percent: 0
+  phantom: true
+  visible: false
+
+WheelSliceFillAvailable < WheelSliceFill
+
+WheelPassiveFocus < UIProgressArc
+  size: 48 48
+  arc-layout: centered
+  empty-track: false
+  arc-border: false
+  fill-soft-edge: false
+  start-angle: 0
+  total-span: 360
+  thickness: 24
+  track-color: #00000000
+  fill-color: #FFFFFFFF
+  composition-mode: additive
+  percent: 100
+  opacity: 0.204
+  phantom: true
+  visible: false

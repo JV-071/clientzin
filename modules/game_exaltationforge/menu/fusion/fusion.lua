@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_exaltationforge/menu/fusion/fusion.lua
-
-Forge.Fusion = {}
+﻿Forge.Fusion = {}
 
 local Fusion = Forge.Fusion
 
@@ -12,34 +10,41 @@ local BASE_FUSION_CHANCE = 50
 local IMPROVED_FUSION_CHANCE = 15
 local TIER_LOSS_REDUCTION = 50
 local DESCRIPTIONS = {
-	improveSuccess = "Improve your chances! Click here to raise your chance for a successful fusion from %d%% to %d%% at the cost of one exalted core.",
-	selectItemAbove = "Please select an item above to continue.",
-	improveSuccessActive = "Click here if you do not want to use the exalted core. This will reduce your chance from %d%% to %d%%.",
-	selectItems = "Select an item you want to fuse.",
-	reduceTierLoss = "Reduce your losses! Click here to pay one exalted core and with that get a %d%% chance of keeping the tier of the second item in case the fusion fails.",
-	selectAllIngredients = "Please select all required ingredients.",
-	reduceTierLossActive = "Click here if you do not want to use the exalted core. Note that you will lose the chance to keep the tier on the second item in case the fusion fails.",
-	notEnoughIngredients = "You do not have all the ingredients you need.",
 	fusionReady = "Click here to start a fusion attempt. This will consume or alter the required ingredients.",
+	improveSuccess = "Improve your chances! Click here to raise your chance for a successful fusion from %d%% to %d%% at the cost of one exalted core.",
 	convergence = "A Convergence fusion uses items of different types but the same classification.",
+	improveSuccessActive = "Click here if you do not want to use the exalted core. This will reduce your chance from %d%% to %d%%.",
 	dustRequirement = "A fusion requires %d dust. Be warned! The dust will be consumed even if the fusion fails.",
-	consumedItem = "You need %s with tier %d to fuse."
+	reduceTierLoss = "Reduce your losses! Click here to pay one exalted core and with that get a %d%% chance of keeping the tier of the second item in case the fusion fails.",
+	consumedItem = "You need %s with tier %d to fuse.",
+	reduceTierLossActive = "Click here if you do not want to use the exalted core. Note that you will lose the chance to keep the tier on the second item in case the fusion fails.",
+	selectItemAbove = "Please select an item above to continue.",
+	selectItems = "Select an item you want to fuse.",
+	selectAllIngredients = "Please select all required ingredients.",
+	notEnoughIngredients = "You do not have all the ingredients you need."
 }
 local REQUIREMENTS_SLOT_IDS = {
-	requiredDustHoverArea = "dust",
 	tierLossHoverArea = "tierLoss",
 	previewFusionHoverArea = "preview",
 	improveButton = "improve",
 	tierLossButton = "tierLoss",
 	improveHoverArea = "improve",
-	convergenceDustHoverArea = "dust"
+	convergenceDustHoverArea = "dust",
+	requiredDustHoverArea = "dust"
 }
 local FUSION_ACTION_WIDGET_IDS = {
-	fusionButtonProcced = true,
 	fusionButtonHoverArea = true,
-	fusionActionWrapper = true
+	fusionActionWrapper = true,
+	fusionButtonProcced = true
 }
 local TOOLTIP_RESET_IDS = {
+	convergenceHelpText1 = true,
+	convergenceHelpIcon1 = true,
+	convergenceHelpLine4 = true,
+	convergenceHelpLine3 = true,
+	convergenceHelpLine2 = true,
+	convergenceHelpLine1 = true,
+	fusionHelpIcon4 = true,
 	fusionHelpIcon3 = true,
 	fusionHelpIcon2 = true,
 	fusionHelpIcon1 = true,
@@ -53,14 +58,7 @@ local TOOLTIP_RESET_IDS = {
 	firstTooltip = true,
 	convergenceHelpText4 = true,
 	convergenceHelpText3 = true,
-	convergenceHelpText2 = true,
-	convergenceHelpText1 = true,
-	convergenceHelpIcon1 = true,
-	convergenceHelpLine4 = true,
-	convergenceHelpLine3 = true,
-	convergenceHelpLine2 = true,
-	convergenceHelpLine1 = true,
-	fusionHelpIcon4 = true
+	convergenceHelpText2 = true
 }
 local ws = {}
 local descriptionRefreshEvent
@@ -101,7 +99,7 @@ local function setWidgetsVisible(widgets, visible)
 	end
 end
 
-function Fusion:setDescription(text)
+function Fusion.setDescription(self, text)
 	if not text or text == "" then
 		self:resetDescription()
 
@@ -122,7 +120,7 @@ function Fusion:setDescription(text)
 	end
 end
 
-function Fusion:resetDescription()
+function Fusion.resetDescription(self)
 	if self.descriptionLabel then
 		self.descriptionLabel:setVisible(false)
 		self.descriptionLabel:setText("")
@@ -151,11 +149,11 @@ function Fusion:resetDescription()
 	end
 end
 
-function Fusion:isConvergenceFusion()
+function Fusion.isConvergenceFusion(self)
 	return self.convergenceWidget and self.convergenceWidget:isChecked()
 end
 
-function Fusion:getDustCost()
+function Fusion.getDustCost(self)
 	if self:isConvergenceFusion() then
 		return self.dustConvergenceFusion and self.dustConvergenceFusion > 0 and self.dustConvergenceFusion or DUST_CONVERGENCE_FUSION
 	end
@@ -163,7 +161,7 @@ function Fusion:getDustCost()
 	return self.dustNormalFusion and self.dustNormalFusion > 0 and self.dustNormalFusion or DUST_NORMAL_FUSION
 end
 
-function Fusion:describePreviewItemRequirement()
+function Fusion.describePreviewItemRequirement(self)
 	local item = ws.previewFusionItem2 and ws.previewFusionItem2:getItem()
 
 	if not item then
@@ -173,11 +171,11 @@ function Fusion:describePreviewItemRequirement()
 	return string.format(DESCRIPTIONS.consumedItem, getItemDisplayName(item), item:getTier())
 end
 
-function Fusion:describeDustRequirement()
+function Fusion.describeDustRequirement(self)
 	return string.format(DESCRIPTIONS.dustRequirement, self:getDustCost())
 end
 
-function Fusion:describeImproveSuccess()
+function Fusion.describeImproveSuccess(self)
 	if Fusion.improveClicked then
 		return string.format(DESCRIPTIONS.improveSuccessActive, self:getImprovedTotalChance(), self:getBaseChance())
 	end
@@ -185,7 +183,7 @@ function Fusion:describeImproveSuccess()
 	return string.format(DESCRIPTIONS.improveSuccess, self:getBaseChance(), self:getImprovedTotalChance())
 end
 
-function Fusion:describeReduceTierLoss()
+function Fusion.describeReduceTierLoss(self)
 	if Fusion.tierLossClicked then
 		return DESCRIPTIONS.reduceTierLossActive
 	end
@@ -193,11 +191,11 @@ function Fusion:describeReduceTierLoss()
 	return string.format(DESCRIPTIONS.reduceTierLoss, self:getTierLossReducedChance())
 end
 
-function Fusion:hasConvergenceFusionItemsSelected()
+function Fusion.hasConvergenceFusionItemsSelected(self)
 	return self.leftItemId and self.rightItemId and self.fusionTier
 end
 
-function Fusion:describeFusionAction()
+function Fusion.describeFusionAction(self)
 	if self:isConvergenceFusion() then
 		if not self:hasConvergenceFusionItemsSelected() then
 			return DESCRIPTIONS.selectAllIngredients
@@ -216,7 +214,7 @@ function Fusion:describeFusionAction()
 	return self:canProceedFusion() and DESCRIPTIONS.fusionReady or DESCRIPTIONS.notEnoughIngredients
 end
 
-function Fusion:proceedFusion()
+function Fusion.proceedFusion(self)
 	if Fusion.fusionClickLocked or not self:canProceedFusion() then
 		return
 	end
@@ -489,7 +487,7 @@ local function setupForgeAreaClearHover()
 	end
 
 	for _, widgetId in ipairs({
-		"headerPainel",
+		"menus",
 		"goldBalancePanel",
 		"dustBalancePanel",
 		"sliverBalancePanel",
@@ -501,11 +499,11 @@ local function setupForgeAreaClearHover()
 		"ConversionButton",
 		"HistoryButton"
 	}) do
-		clearOnEnter(forgeWindow:getChildById(widgetId))
+		clearOnEnter(forgeWindow:recursiveGetChildById(widgetId))
 	end
 end
 
-function Fusion:setupHovers()
+function Fusion.setupHovers(self)
 	setupForgeAreaClearHover()
 
 	local mainWindow = self.mainWindow
@@ -518,27 +516,27 @@ function Fusion:setupHovers()
 	bindRequirementsDefaultHover(ws.previewPanel2)
 end
 
-function Fusion:get()
+function Fusion.get(self)
 	return self
 end
 
-function Fusion:getBaseChance()
+function Fusion.getBaseChance(self)
 	return self.baseChance and self.baseChance > 0 and self.baseChance or BASE_FUSION_CHANCE
 end
 
-function Fusion:getImprovedChanceBonus()
+function Fusion.getImprovedChanceBonus(self)
 	return self.improvedChance and self.improvedChance > 0 and self.improvedChance or IMPROVED_FUSION_CHANCE
 end
 
-function Fusion:getImprovedTotalChance()
+function Fusion.getImprovedTotalChance(self)
 	return self:getBaseChance() + self:getImprovedChanceBonus()
 end
 
-function Fusion:getTierLossReducedChance()
+function Fusion.getTierLossReducedChance(self)
 	return self.tierLossReduction and self.tierLossReduction > 0 and self.tierLossReduction or TIER_LOSS_REDUCTION
 end
 
-function Fusion:refreshDustRequirementWidgets()
+function Fusion.refreshDustRequirementWidgets(self)
 	local dustCost = self:getDustCost()
 
 	if self:isConvergenceFusion() then
@@ -552,7 +550,7 @@ function Fusion:refreshDustRequirementWidgets()
 	end
 end
 
-function Fusion:refreshChanceWidgets()
+function Fusion.refreshChanceWidgets(self)
 	local ib = ws.improveButton
 	local tlb = ws.tierLossButton
 	local srv = ws.successRateValue
@@ -588,6 +586,8 @@ local function updateButtonPreviewSlot(itemWidget, questionMarkWidget, item)
 	end
 
 	if item then
+		local item = item:clone()
+
 		itemWidget:setVisible(true)
 		itemWidget:setItem(item)
 		ItemsDatabase.setTier(itemWidget, item)
@@ -613,12 +613,6 @@ local function clearPreviewFusionItem()
 		return
 	end
 
-	local item = w:getItem()
-
-	if item then
-		item:setTier(0)
-	end
-
 	ItemsDatabase.setTier(w, 0)
 	ItemsDatabase.setBigTier(w, 0)
 	w:setItem(nil)
@@ -630,12 +624,6 @@ local function clearPreviewFusionForgeItem()
 
 	if not w then
 		return
-	end
-
-	local item = w:getItem()
-
-	if item then
-		item:setTier(0)
 	end
 
 	ItemsDatabase.setTier(w, 0)
@@ -673,7 +661,7 @@ local function resetFusionUiState(self)
 	end
 end
 
-function Fusion:canProceedFusion()
+function Fusion.canProceedFusion(self)
 	local f1 = ws.fusionItem1 and ws.fusionItem1:getItem()
 	local f2 = ws.fusionItem2 and ws.fusionItem2:getItem()
 
@@ -703,7 +691,7 @@ function Fusion:canProceedFusion()
 	return true
 end
 
-function Fusion:refreshFusionProceedState()
+function Fusion.refreshFusionProceedState(self)
 	if not ws.fusionButtonProcced or Forge.preview then
 		return
 	end
@@ -727,10 +715,10 @@ function Fusion:refreshFusionProceedState()
 	end
 end
 
-function Fusion:createButton()
-	local buttonPanel = g_ui.createWidget("ForgeButton", Forge.mainWindow)
+function Fusion.createButton(self)
+	local buttonPanel = Forge.createTabPanel("ForgeButton", "FusionButton")
 
-	buttonPanel:setId("FusionButton")
+	buttonPanel:setMarginLeft(0)
 
 	self.buttonPanel = buttonPanel
 	self.mainButton = buttonPanel:getChildById("button")
@@ -742,10 +730,7 @@ function Fusion:createButton()
 	self.mainWindow = g_ui.createWidget("FusionWindow", Forge.mainWindow)
 
 	self.mainWindow:setVisible(false)
-	self.mainWindow:addAnchor(AnchorTop, "FusionButton", AnchorBottom)
-	self.mainWindow:addAnchor(AnchorLeft, "FusionButton", AnchorLeft)
-	self.mainWindow:addAnchor(AnchorRight, "parent", AnchorRight)
-	self.mainWindow:addAnchor(AnchorBottom, "parent", AnchorBottom)
+	Forge.anchorContentPanel(self.mainWindow)
 	self:init()
 
 	function self.mainButton.onClick()
@@ -753,28 +738,21 @@ function Fusion:createButton()
 	end
 end
 
-function Fusion:showWindowCore()
+function Fusion.showWindowCore(self)
 	if Forge.currentPanel then
 		Forge.currentPanel:setVisible(false)
 	end
 
-	if Forge.currentButton then
-		Forge.currentButton:setEnabled(true)
-		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
-	end
-
 	Forge.currentPanel = self.mainWindow
-	Forge.currentButton = self.mainButton
 
+	Forge.setActiveTabButton(self.mainButton)
 	Forge.firstTooltip:setVisible(false)
 	self.mainWindow:setVisible(true)
 	self.mainWindow:raise()
-	self.mainButton:setEnabled(false)
-	Forge.onTabButtonEnabled(nil, self.buttonPanel, false)
 	self:resetDescription()
 end
 
-function Fusion:refreshListView()
+function Fusion.refreshListView(self)
 	self.activePanels = nil
 	self.activePanelList = nil
 
@@ -793,7 +771,7 @@ function Fusion:refreshListView()
 	self:refreshFusionProceedState()
 end
 
-function Fusion:showWindow()
+function Fusion.showWindow(self)
 	self:showWindowCore()
 	self:refreshListView()
 end
@@ -829,7 +807,7 @@ local function toggleCoreOption(self, option)
 	refreshDescriptionFromMouse()
 end
 
-function Fusion:init()
+function Fusion.init(self)
 	self.data = nil
 	self.fusionClickLocked = false
 	self.dustNormalFusion = DUST_NORMAL_FUSION
@@ -978,7 +956,7 @@ function Fusion:init()
 	self:setupHovers()
 end
 
-function Fusion:resetConvergenceMode()
+function Fusion.resetConvergenceMode(self)
 	if not self.convergenceWidget or not self.convergenceWidget:isChecked() then
 		return
 	end
@@ -1017,7 +995,7 @@ local function getConvergencePanels()
 	}
 end
 
-function Fusion:updateWidgets()
+function Fusion.updateWidgets(self)
 	local isConvergence = self.convergenceWidget:isChecked()
 
 	setWidgetsVisible(getConventionalPanels(), not isConvergence)
@@ -1027,7 +1005,7 @@ function Fusion:updateWidgets()
 	self:refreshFusionProceedState()
 end
 
-function Fusion:setActiveItem(panel, id)
+function Fusion.setActiveItem(self, panel, id)
 	if not self.activePanels then
 		self.activePanels = {}
 	end
@@ -1117,7 +1095,7 @@ local function resetImproveReduceOptions(self)
 	end, 10)
 end
 
-function Fusion:displayItems()
+function Fusion.displayItems(self)
 	Forge:setWidget(ws.previewFusionItem2Value, "0/1", false)
 	self:updateWidgets()
 	resetImproveReduceOptions(self)
@@ -1129,13 +1107,14 @@ function Fusion:displayItems()
 
 	for i, v in ipairs(self.data.fusionItems) do
 		local id = tonumber(v.id)
-		local capturedItem, container
+		local capturedItem
+		local container
 
 		container, _, capturedItem = createFusionListItem(self.contentPanel, id, v.tier, v.count, i, function()
 			self:setActiveItem(container, container:getId())
 			ws.previewFusionQuestionMark:setVisible(false)
 			ws.previewFusionQuestionMark2:setVisible(false)
-			ws.previewFusionItem2:setItem(capturedItem)
+			ws.previewFusionItem2:setItem(capturedItem:clone())
 			ItemsDatabase.setBigTier(ws.previewFusionItem2, capturedItem)
 			Forge:setWidget(ws.previewFusionItem2Value, v.count .. "/1", true)
 
@@ -1162,7 +1141,7 @@ function Fusion:displayItems()
 	end
 end
 
-function Fusion:displayConvergence()
+function Fusion.displayConvergence(self)
 	self:updateWidgets()
 	Forge:setWidget(ws.fusionCost, "???", false)
 	self:refreshDustRequirementWidgets()
@@ -1234,7 +1213,7 @@ function Fusion:displayConvergence()
 	end
 end
 
-function Fusion:parseData(data)
+function Fusion.parseData(self, data)
 	self.data = data
 
 	if self.convergenceWidget:isChecked() then
@@ -1253,7 +1232,7 @@ function Fusion:parseData(data)
 	end
 end
 
-function Fusion:parseResourcesChange(data)
+function Fusion.parseResourcesChange(self, data)
 	self.classificationTable = data.classificationTable
 
 	local config = data.config
@@ -1272,7 +1251,7 @@ function Fusion:parseResourcesChange(data)
 	self:refreshDustRequirementWidgets()
 end
 
-function Fusion:parseResult(data)
+function Fusion.parseResult(self, data)
 	if self.mainWindow and self.mainWindow:isVisible() then
 		self.mainWindow:setVisible(false)
 	end
@@ -1368,7 +1347,7 @@ local function adjustConvergenceListItem(list, id, tier, delta)
 	return nil
 end
 
-function Fusion:applyFusionResult(data)
+function Fusion.applyFusionResult(self, data)
 	local ctx = self.lastFusionContext
 
 	if not ctx or not self.data then
@@ -1431,9 +1410,7 @@ function Fusion:applyFusionResult(data)
 		return
 	end
 
-	local sameItem = leftItemId == rightItemId
-
-	if sameItem then
+	if leftItemId == rightItemId then
 		adjustFusionListItem(list, leftItemId, fusionTier, -2)
 	else
 		adjustFusionListItem(list, leftItemId, fusionTier, -1)

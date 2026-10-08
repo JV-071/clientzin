@@ -3,6 +3,6 @@ Module
   description: Wheel of Destiny
   sandboxed: true
   autoload-priority: 1002
-  scripts: [ wheel, classes/geometry, classes/buttons, classes/wheelclass, classes/bonus, classes/icons, classes/gematelier, classes/workshop, classes/wheelnode ]
+  scripts: [ wheel, classes/geometry, classes/buttons, classes/wheelclass, classes/wheel_ui_selection, classes/wheel_ui_summary, classes/wheel_input, classes/wheel_protocol, classes/wheel_presets, classes/wheel_gems_bridge, data/wheel_slices, data/conviction_texts, data/dedication_texts, classes/bonus, classes/icons, classes/gem_actions, classes/gem_state, classes/mod_catalog, classes/mod_bonus_text, classes/gematelier, classes/workshop, classes/wheelnode ]
   @onLoad: init()
   @onUnload: terminate()

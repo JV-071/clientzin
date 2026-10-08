@@ -1,15 +1,37 @@
-﻿-- chunkname: @/client_topmenu/topmenu.lua
-
-local topMenu, rightButtonsPanel, leftButtonsPanel, rightGameButtonsPanel, topLeftTogglesPanel, topLeftButtonsPanel, topLeftOnlinePlayersLabel, topLeftTwitchViewersLabel, topLeftTwitchStreamersLabel, topLeftYoutubeViewersLabel, topLeftYoutubeStreamersLabel, fpsLabel, pingLabel, topLeftYoutubeLink, topLeftTwitchLink
+﻿local topMenu
+local rightButtonsPanel
+local leftButtonsPanel
+local rightGameButtonsPanel
+local topLeftTogglesPanel
+local topLeftButtonsPanel
+local topLeftOnlinePlayersLabel
+local topLeftTwitchViewersLabel
+local topLeftTwitchStreamersLabel
+local topLeftYoutubeViewersLabel
+local topLeftYoutubeStreamersLabel
+local fpsLabel
+local pingLabel
+local topLeftYoutubeLink
+local topLeftTwitchLink
 local url_discord = ""
 local url_youtube = ""
 local lastSyncValue = -1
 local fpsEvent
 local fpsMin = -1
 local fpsMax = -1
-local pingPanel, MainPingPanel, mainFpsPanel, fpsPanel2, PingWidget, pingImg, worldNameLabel, zoomInButton, zoomOutButton
+local pingPanel
+local MainPingPanel
+local mainFpsPanel
+local fpsPanel2
+local PingWidget
+local pingImg
+local worldNameLabel
+local zoomInButton
+local zoomOutButton
 local zoomLevel = 2
-local managerAccountsButton, managerClientsButton, lastUpdatesButton
+local managerAccountsButton
+local managerClientsButton
+local lastUpdatesButton
 local lastUpdatesHighlightActive = false
 
 function updateLastUpdatesHighlight(visible)
@@ -37,10 +59,7 @@ function updateLastUpdatesHighlight(visible)
 end
 
 local function addButton(id, description, icon, callback, panel, toggle, front, className)
-	local class = className
-
-	class = class or toggle and "MainToggleButton" or "Button"
-
+	local class = className or toggle and "MainToggleButton" or "Button"
 	local button = panel:getChildById(id)
 
 	if not button then
@@ -392,6 +411,7 @@ end
 function updatePing(ping)
 	if pingLabel:isVisible() then
 		local text = "Ping: "
+		local unusedValue
 		local color
 
 		if ping < 0 then
@@ -407,7 +427,9 @@ function updatePing(ping)
 	end
 
 	if pingPanel and pingPanel:isVisible() then
-		local text, imagen
+		local text
+		local unusedValue
+		local imagen
 
 		if ping < 0 then
 			text = "High lag (??)"
@@ -598,7 +620,8 @@ function reorderTopRightToggleButtons()
 		end
 	end
 
-	local out, used = {}, {}
+	local out = {}
+	local used = {}
 
 	for _, id in ipairs(orderIds) do
 		local w = byId[id]

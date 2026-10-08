@@ -34,6 +34,7 @@ MultiActionSubSlot < UIActionSlot
     phantom: true
     focusable: false
     visible: false
+    image-smooth: true
 
   UIWidget
     id: spellIcon
@@ -75,6 +76,18 @@ MultiActionSubSlot < UIActionSlot
     font: Verdana-8px-outline
     color: #ffffff
     visible: false
+
+  UIWidget
+    id: helperBorder
+    size: 34 34
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/actionbar/border_active_helper
+    image-size: 34 34
+    image-clip: 0 0 34 34
+    visible: false
+    phantom: true
+    focusable: false
 
   UIWidget
     id: activeSpell

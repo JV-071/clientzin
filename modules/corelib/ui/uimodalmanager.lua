@@ -1,12 +1,11 @@
-﻿-- chunkname: @/corelib/ui/uimodalmanager.lua
-
-g_modalManager = g_modalManager or {}
+﻿g_modalManager = g_modalManager or {}
 
 local DEFAULT_OVERLAY_COLOR = "#00000080"
 local TRANSPARENT_COLOR = "#00000000"
 local BLOCKER_ID = "modalBlocker"
 local modalStack = {}
-local MODAL_HOTKEY_BLOCK_SOURCE = "g_modal_manager"
+local MODAL_HOTKEY_BLOCK_SOURCE = {}
+local var_0_5 = "g_modal_manager"
 local modalHotkeyBlockId
 
 local function acquireModalHotkeyBlock()
@@ -15,7 +14,7 @@ local function acquireModalHotkeyBlock()
 	end
 
 	if HotkeyUtils and HotkeyUtils.disableHotkeys then
-		modalHotkeyBlockId = HotkeyUtils.disableHotkeys(MODAL_HOTKEY_BLOCK_SOURCE)
+		modalHotkeyBlockId = HotkeyUtils.disableHotkeys(var_0_5)
 	end
 
 	if modules.game_actionbar and modules.game_actionbar.pauseHotkeys then
@@ -39,14 +38,31 @@ local function releaseModalHotkeyBlock()
 	end
 end
 
+local function var_0_9(arg_3_0)
+	if not arg_3_0 then
+		return
+	end
+
+	local blocker = arg_3_0.blocker
+
+	arg_3_0.blocker = nil
+
+	if blocker and isWidgetAlive(blocker) then
+		pcall(function()
+			blocker:destroy()
+		end)
+	end
+end
+
 local function pruneStack()
 	for i = #modalStack, 1, -1 do
 		local entry = modalStack[i]
 
 		if not isWidgetAlive(entry.widget) then
-			if entry.blocker and isWidgetAlive(entry.blocker) then
-				entry.blocker:destroy()
-			end
+			var_0_9(entry)
+
+			entry.widget = nil
+			entry.opts = nil
 
 			table.remove(modalStack, i)
 		end
@@ -81,14 +97,76 @@ local function createBlocker(widget, opts)
 	return blocker
 end
 
+local function var_0_13()
+	for iter_8_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
+		if not isWidgetAlive(iter_8_0) then
+			MODAL_HOTKEY_BLOCK_SOURCE[iter_8_0] = nil
+		end
+	end
+end
+
+local function var_0_14()
+	var_0_13()
+
+	for iter_9_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
+		if iter_9_0:isVisible() then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function activateTop()
 	local top = modalStack[#modalStack]
 
-	if top and isWidgetAlive(top.widget) then
-		top.widget:raise()
-		top.widget:focus()
+	if not top or not isWidgetAlive(top.widget) then
+		return
+	end
+
+	top.widget:raise()
+	top.widget:focus()
+
+	if var_0_14() then
+		var_0_13()
+
+		for iter_10_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
+			if iter_10_0:isVisible() then
+				iter_10_0:raise()
+			end
+		end
+
+		return
+	end
+
+	top.widget:grabKeyboard()
+end
+
+function g_modalManager.addKeyboardKeeper(arg_11_0)
+	if isWidgetAlive(arg_11_0) then
+		MODAL_HOTKEY_BLOCK_SOURCE[arg_11_0] = true
+	end
+end
+
+function g_modalManager.removeKeyboardKeeper(arg_12_0)
+	if arg_12_0 then
+		MODAL_HOTKEY_BLOCK_SOURCE[arg_12_0] = nil
+	end
+end
+
+function g_modalManager.restoreKeyboard()
+	pruneStack()
+
+	local top = modalStack[#modalStack]
+
+	if top and isWidgetAlive(top.widget) and not var_0_14() then
 		top.widget:grabKeyboard()
 	end
+end
+
+function g_modalManager.reactivate()
+	pruneStack()
+	activateTop()
 end
 
 local function collectActiveBlockers()
@@ -117,7 +195,11 @@ local function pruneOrphanBlockersInWidget(widget, activeBlockers)
 	local children = widget:getChildren()
 
 	for i = 1, #children do
-		pruneOrphanBlockersInWidget(children[i], activeBlockers)
+		local var_16_1 = children[i]
+
+		children[i] = nil
+
+		pruneOrphanBlockersInWidget(var_16_1, activeBlockers)
 	end
 end
 
@@ -168,23 +250,216 @@ local function releaseModalEntry(entry, hideWidget, runCloseCallback)
 		invokeCloseCallback(entry)
 	end
 
-	if entry.blocker and isWidgetAlive(entry.blocker) then
-		pcall(function()
-			entry.blocker:destroy()
-		end)
-	end
+	var_0_9(entry)
 
-	if isWidgetAlive(entry.widget) then
+	local widget = entry.widget
+
+	entry.widget = nil
+	entry.opts = nil
+
+	if isWidgetAlive(widget) then
 		pcall(function()
-			entry.widget:ungrabKeyboard()
+			widget:ungrabKeyboard()
 		end)
 
 		if hideWidget then
 			pcall(function()
-				entry.widget:hide()
+				widget:hide()
 			end)
 		end
 	end
+end
+
+local function var_0_21(arg_24_0)
+	if not isWidgetAlive(arg_24_0) or not arg_24_0.getClassName then
+		return false
+	end
+
+	return arg_24_0:getClassName() == "UITextEditBox"
+end
+
+local function var_0_22(arg_25_0)
+	local focusedWidget = g_ui.getFocusedWidget and g_ui.getFocusedWidget()
+
+	if not var_0_21(focusedWidget) then
+		return false
+	end
+
+	local parent = focusedWidget
+
+	while parent do
+		if parent == arg_25_0 then
+			return true
+		end
+
+		parent = parent.getParent and parent:getParent()
+	end
+
+	return false
+end
+
+local function var_0_23(arg_26_0)
+	if not isWidgetAlive(arg_26_0) then
+		return nil
+	end
+
+	if arg_26_0.onClick then
+		return arg_26_0
+	end
+
+	local button = arg_26_0.getChildById and arg_26_0:getChildById("button")
+
+	if isWidgetAlive(button) and button.onClick then
+		return button
+	end
+
+	return nil
+end
+
+local function var_0_24(arg_27_0)
+	if not isWidgetAlive(arg_27_0) or not arg_27_0.recursiveGetChildById then
+		return nil
+	end
+
+	local menus = arg_27_0:recursiveGetChildById("menus")
+
+	if not isWidgetAlive(menus) or not menus.getChildren then
+		return nil
+	end
+
+	local var_27_1 = {}
+	local children = menus:getChildren()
+
+	for iter_27_0 = 1, #children do
+		local var_27_3 = var_0_23(children[iter_27_0])
+
+		if var_27_3 then
+			var_27_1[#var_27_1 + 1] = var_27_3
+		end
+	end
+
+	if #var_27_1 < 2 then
+		return nil
+	end
+
+	return var_27_1
+end
+
+local function var_0_25(arg_28_0, arg_28_1)
+	arg_28_1 = arg_28_1 or {}
+
+	if arg_28_1.tabs == false then
+		return nil
+	end
+
+	return var_0_24(arg_28_0)
+end
+
+local function var_0_26(arg_29_0)
+	if not isWidgetAlive(arg_29_0) then
+		return false
+	end
+
+	if arg_29_0.isOn and arg_29_0:isOn() then
+		return true
+	end
+
+	if arg_29_0.isChecked and arg_29_0:isChecked() then
+		return true
+	end
+
+	return false
+end
+
+local function var_0_27(arg_30_0)
+	for iter_30_0 = 1, #arg_30_0 do
+		if var_0_26(arg_30_0[iter_30_0]) then
+			return iter_30_0
+		end
+	end
+
+	return 1
+end
+
+local function var_0_28(arg_31_0)
+	if type(arg_31_0) == "function" then
+		arg_31_0()
+
+		return
+	end
+
+	if isWidgetAlive(arg_31_0) and arg_31_0.onClick then
+		signalcall(arg_31_0.onClick, arg_31_0)
+	end
+end
+
+function g_modalManager.handleTabKey(arg_32_0, arg_32_1)
+	if arg_32_0 ~= KeyTab then
+		return false
+	end
+
+	if arg_32_1 ~= KeyboardNoModifier and arg_32_1 ~= KeyboardShiftModifier then
+		return false
+	end
+
+	local var_32_0 = modalStack[#modalStack]
+
+	if not var_32_0 or not isWidgetAlive(var_32_0.widget) then
+		return false
+	end
+
+	if var_0_22(var_32_0.widget) then
+		return false
+	end
+
+	local var_32_1 = var_0_25(var_32_0.widget, var_32_0.opts)
+
+	if not var_32_1 or #var_32_1 < 2 then
+		return false
+	end
+
+	local var_32_2 = var_0_27(var_32_1) + (arg_32_1 == KeyboardShiftModifier and -1 or 1)
+
+	if var_32_2 < 1 then
+		var_32_2 = #var_32_1
+	elseif var_32_2 > #var_32_1 then
+		var_32_2 = 1
+	end
+
+	var_0_28(var_32_1[var_32_2])
+	activateTop()
+
+	return true
+end
+
+function g_modalManager.hookSearchEdit(arg_33_0)
+	if not isWidgetAlive(arg_33_0) or arg_33_0._modalSearchTabHooked then
+		return
+	end
+
+	arg_33_0._modalSearchTabHooked = true
+
+	connect(arg_33_0, {
+		onKeyDown = function(unusedArgument, arg_34_1, arg_34_2)
+			return g_modalManager.handleTabKey(arg_34_1, arg_34_2)
+		end
+	})
+end
+
+local function handleKeyDown(unusedArgument, arg_35_1, arg_35_2)
+	return g_modalManager.handleTabKey(arg_35_1, arg_35_2)
+end
+
+local function var_0_30(arg_36_0)
+	if arg_36_0._modalTabKeysConnected then
+		return
+	end
+
+	arg_36_0._modalTabKeysConnected = true
+
+	connect(arg_36_0, {
+		onKeyDown = handleKeyDown
+	})
 end
 
 local function suppressModalAutoRaise(widget)
@@ -195,6 +470,8 @@ local function suppressModalAutoRaise(widget)
 	widget._modalAutoRaiseSuppressed = true
 
 	function widget.onMousePress()
+		widget:grabKeyboard()
+
 		return false
 	end
 
@@ -218,17 +495,21 @@ function g_modalManager.show(widget, opts)
 
 	opts = opts or {}
 
-	local ok, blocker = pcall(createBlocker, widget, opts)
+	local var_40_0, var_40_1 = pcall(createBlocker, widget, opts)
 
-	if not ok or not blocker then
+	if not var_40_0 or not var_40_1 then
 		return
 	end
 
 	table.insert(modalStack, {
 		widget = widget,
-		blocker = blocker,
+		blocker = var_40_1,
 		opts = opts
 	})
+
+	if opts.tabs ~= false then
+		var_0_30(widget)
+	end
 
 	if #modalStack == 1 then
 		acquireModalHotkeyBlock()
@@ -349,16 +630,16 @@ function g_modalManager.dismissAll()
 		local entry = table.remove(modalStack)
 
 		invokeCloseCallback(entry)
+		var_0_9(entry)
 
-		if entry.blocker and isWidgetAlive(entry.blocker) then
-			pcall(function()
-				entry.blocker:destroy()
-			end)
-		end
+		local widget = entry.widget
 
-		if isWidgetAlive(entry.widget) then
+		entry.widget = nil
+		entry.opts = nil
+
+		if isWidgetAlive(widget) then
 			pcall(function()
-				entry.widget:ungrabKeyboard()
+				widget:ungrabKeyboard()
 			end)
 		end
 	end

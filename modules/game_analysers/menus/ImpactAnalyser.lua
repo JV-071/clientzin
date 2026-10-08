@@ -1,12 +1,6 @@
-﻿-- chunkname: @/game_analysers/menus/ImpactAnalyser.lua
-
-if not ImpactAnalyser then
+﻿if not ImpactAnalyser then
 	ImpactAnalyser = {
-		gaugeDps = 0,
 		dps = 0,
-		damageTotal = 0,
-		session = 0,
-		launchTime = 0,
 		maxHPS = 0,
 		healingTotal = 0,
 		targetHPS = 1,
@@ -18,21 +12,42 @@ if not ImpactAnalyser then
 		targetDPS = 1,
 		allTimeHightHps = 0,
 		allTimeHightDps = 0,
+		damageTotal = 0,
+		session = 0,
+		launchTime = 0,
 		maxDPS = 0,
 		gaugeHps = 0,
-		damageTicks = {},
-		healingTicks = {},
-		damageEffect = {}
+		gaugeDps = 0,
+		damageEffect = {},
+		damageEffectWindows = {}
 	}
 	ImpactAnalyser.__index = ImpactAnalyser
 end
 
 local targetMaxMargin = 142
+local var_0_1 = 3600000
+local var_0_2 = 10000
 
 local function updateSessionMaxRates()
-	ImpactAnalyser.gaugeDps = AnalyserSession:perHourFromTotal(ImpactAnalyser.damageTotal)
-	ImpactAnalyser.gaugeHps = AnalyserSession:perHourFromTotal(ImpactAnalyser.healingTotal)
+	local var_1_0 = g_clock.millis()
+
+	ImpactAnalyser.damageTotal = AnalyserSession:rollingTotal(ImpactAnalyser.damageWindow, var_1_0)
+	ImpactAnalyser.healingTotal = AnalyserSession:rollingTotal(ImpactAnalyser.healingWindow, var_1_0)
+	ImpactAnalyser.gaugeDps = AnalyserSession:rollingRate(ImpactAnalyser.damageWindow, var_0_2, 1000, var_1_0)
+	ImpactAnalyser.gaugeHps = AnalyserSession:rollingRate(ImpactAnalyser.healingWindow, var_0_2, 1000, var_1_0)
 	ImpactAnalyser.dps = ImpactAnalyser.gaugeDps
+
+	for key, damageEffectWindow in pairs(ImpactAnalyser.damageEffectWindows) do
+		local var_1_1 = AnalyserSession:rollingTotal(damageEffectWindow, var_1_0)
+
+		if var_1_1 > 0 then
+			ImpactAnalyser.damageEffect[key] = var_1_1
+		else
+			ImpactAnalyser.damageEffect[key] = nil
+			ImpactAnalyser.damageEffectWindows[key] = nil
+		end
+	end
+
 	ImpactAnalyser.maxDPS = math.max(tonumber(ImpactAnalyser.maxDPS) or 0, ImpactAnalyser.gaugeDps or 0)
 	ImpactAnalyser.maxHPS = math.max(tonumber(ImpactAnalyser.maxHPS) or 0, ImpactAnalyser.gaugeHps or 0)
 end
@@ -51,15 +66,15 @@ local function parseImpactTargetAmount(text)
 	return tonumber(digits) or 0
 end
 
-local function updateImpactTargetArrow(arrow, current, target)
+local function updateImpactTargetArrow(arrow, numericValue, target)
 	if not arrow then
 		return
 	end
 
-	current = tonumber(current) or 0
+	numericValue = tonumber(numericValue) or 0
 	target = tonumber(target) or 0
 
-	if target <= 0 and current <= 0 then
+	if target <= 0 and numericValue <= 0 then
 		arrow:setMarginLeft(math.floor(targetMaxMargin / 2))
 
 		return
@@ -71,16 +86,15 @@ local function updateImpactTargetArrow(arrow, current, target)
 		return
 	end
 
-	local targetValue = math.max(1, target)
-	local ratio = current / targetValue
+	local var_3_0 = numericValue / math.max(1, target)
 
-	if ratio < 0 then
-		ratio = 0
-	elseif ratio > 1 then
-		ratio = 1
+	if var_3_0 < 0 then
+		var_3_0 = 0
+	elseif var_3_0 > 1 then
+		var_3_0 = 1
 	end
 
-	arrow:setMarginLeft(math.floor(targetMaxMargin * ratio + 0.5))
+	arrow:setMarginLeft(math.floor(targetMaxMargin * var_3_0 + 0.5))
 end
 
 local imageDir = "/modules/game_cyclopedia/images/bestiary/icons/monster-icon-%s-resist"
@@ -100,15 +114,16 @@ local effectsFiles = {
 	"agony"
 }
 
-function ImpactAnalyser:create()
+function ImpactAnalyser.create(unusedArgument)
 	ImpactAnalyser.launchTime = 0
 	ImpactAnalyser.session = 0
 	ImpactAnalyser.damageTotal = 0
 	ImpactAnalyser.dps = 0
 	ImpactAnalyser.maxDPS = 0
-	ImpactAnalyser.damageTicks = {}
-	ImpactAnalyser.healingTicks = {}
+	ImpactAnalyser.damageWindow = AnalyserSession:newRollingWindow(var_0_1)
+	ImpactAnalyser.healingWindow = AnalyserSession:newRollingWindow(var_0_1)
 	ImpactAnalyser.damageEffect = {}
+	ImpactAnalyser.damageEffectWindows = {}
 	ImpactAnalyser.allTimeHightDps = 0
 	ImpactAnalyser.allTimeHightHps = 0
 	ImpactAnalyser.targetDPS = 1
@@ -156,7 +171,7 @@ function ImpactAnalyser:create()
 
 	local contentsPanel = ImpactAnalyser.window.contentsPanel
 
-	local function openDpsTargetOnLeftClick(widget, mousePosition, mouseButton)
+	local function handleMousePress(widget, mousePosition, mouseButton)
 		if mouseButton == MouseLeftButton then
 			ImpactAnalyser:openTargetConfig(true)
 
@@ -164,7 +179,7 @@ function ImpactAnalyser:create()
 		end
 	end
 
-	local function openHpsTargetOnLeftClick(widget, mousePosition, mouseButton)
+	local function var_4_2(widget, mousePosition, mouseButton)
 		if mouseButton == MouseLeftButton then
 			ImpactAnalyser:openTargetConfig(false)
 
@@ -172,13 +187,14 @@ function ImpactAnalyser:create()
 		end
 	end
 
-	contentsPanel.targetDpsLabel.onMousePress = openDpsTargetOnLeftClick
-	contentsPanel.targetDps.onMousePress = openDpsTargetOnLeftClick
-	contentsPanel.targetHpsLabel.onMousePress = openHpsTargetOnLeftClick
-	contentsPanel.targetHps.onMousePress = openHpsTargetOnLeftClick
+	contentsPanel.targetDpsLabel.onMousePress = handleMousePress
+	contentsPanel.targetDps.onMousePress = handleMousePress
+	contentsPanel.targetHpsLabel.onMousePress = var_4_2
+	contentsPanel.targetHps.onMousePress = var_4_2
 end
 
-function ImpactAnalyser:reset(allTimeDps, allTimeHps)
+function ImpactAnalyser.reset(unusedArgument, allTimeDps, allTimeHps)
+	ImpactAnalyser.launchTime = g_clock.millis()
 	ImpactAnalyser.session = 0
 	ImpactAnalyser.damageTotal = 0
 	ImpactAnalyser.dps = 0
@@ -195,9 +211,10 @@ function ImpactAnalyser:reset(allTimeDps, allTimeHps)
 		ImpactAnalyser.allTimeHightHps = 0
 	end
 
-	ImpactAnalyser.damageTicks = {}
-	ImpactAnalyser.healingTicks = {}
+	ImpactAnalyser.damageWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.damageWindow, var_0_1)
+	ImpactAnalyser.healingWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.healingWindow, var_0_1)
 	ImpactAnalyser.damageEffect = {}
+	ImpactAnalyser.damageEffectWindows = {}
 	ImpactAnalyser.healingTotal = 0
 
 	analyserUIGraphReset(ImpactAnalyser.window.contentsPanel.graphDpsPanel, nil, ANALYSER_GRAPH_CAPACITY_4_MIN)
@@ -205,24 +222,24 @@ function ImpactAnalyser:reset(allTimeDps, allTimeHps)
 	ImpactAnalyser:updateWindow(true)
 end
 
-function ImpactAnalyser:refreshGaugeRates()
+function ImpactAnalyser.refreshGaugeRates(unusedArgument)
 	updateSessionMaxRates()
 end
 
-function ImpactAnalyser:updateGraphics()
+function ImpactAnalyser.updateGraphics(unusedArgument)
 	updateSessionMaxRates()
 
-	local contentsPanel = ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel
+	local var_13_0 = ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel
 
-	if not contentsPanel then
+	if not var_13_0 then
 		return
 	end
 
-	analyserUIGraphPushValue(contentsPanel.graphDpsPanel, ImpactAnalyser.gaugeDps or 0)
-	analyserUIGraphPushValue(contentsPanel.graphHealPanel, ImpactAnalyser.gaugeHps or 0)
+	analyserUIGraphPushValue(var_13_0.graphDpsPanel, ImpactAnalyser.gaugeDps or 0)
+	analyserUIGraphPushValue(var_13_0.graphHealPanel, ImpactAnalyser.gaugeHps or 0)
 end
 
-function ImpactAnalyser:updateWindow(ignoreVisible)
+function ImpactAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	if not ImpactAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
@@ -235,26 +252,23 @@ function ImpactAnalyser:updateWindow(ignoreVisible)
 	contentsPanel.dmg:setText(formatMoney(ImpactAnalyser.damageTotal, ","))
 	contentsPanel.allTimeHigh:setText(formatMoney(ImpactAnalyser.allTimeHightDps, ","))
 
-	local sessionDps = ImpactAnalyser.gaugeDps or 0
-	local maxDps = math.max(tonumber(ImpactAnalyser.maxDPS) or 0, sessionDps)
+	local var_14_1 = ImpactAnalyser.gaugeDps or 0
+	local var_14_2 = math.max(tonumber(ImpactAnalyser.maxDPS) or 0, var_14_1)
 
-	contentsPanel.maxDps:setText(formatMoney(maxDps, ","))
-	contentsPanel.dps:setText(formatMoney(sessionDps, ","))
+	contentsPanel.maxDps:setText(formatMoney(var_14_2, ","))
+	contentsPanel.dps:setText(formatMoney(var_14_1, ","))
 	contentsPanel.targetDps:setText(formatMoney(ImpactAnalyser.targetDPS or 0, ","))
-	updateImpactTargetArrow(contentsPanel.dpsBG and contentsPanel.dpsBG.dpsArrow, sessionDps, ImpactAnalyser.targetDPS)
-	contentsPanel.dpsBG:setTooltip(string.format("Current: %d\nTarget: %d", sessionDps, ImpactAnalyser.targetDPS or 0))
+	updateImpactTargetArrow(contentsPanel.dpsBG and contentsPanel.dpsBG.dpsArrow, var_14_1, ImpactAnalyser.targetDPS)
+	contentsPanel.dpsBG:setTooltip(string.format("Current: %d\nTarget: %d", var_14_1, ImpactAnalyser.targetDPS or 0))
 
-	for _, child in pairs(contentsPanel.dmgTypes:getChildren()) do
-		child.toBeRemoved = true
+	local noData = contentsPanel.dmgTypes:getChildById("noData")
+	local var_14_4 = not table.empty(ImpactAnalyser.damageEffect)
+
+	for unusedValue, child in pairs(contentsPanel.dmgTypes:getChildren()) do
+		child.toBeRemoved = child:getId() ~= "noData"
 	end
 
-	if table.empty(ImpactAnalyser.damageEffect) then
-		if contentsPanel.dmgTypes:getChildCount() > 0 then
-			contentsPanel.dmgTypes:destroyChildren()
-		end
-
-		g_ui.createWidget("NoDataLabel", contentsPanel.dmgTypes)
-	else
+	if var_14_4 then
 		for effect, damage in pairs(ImpactAnalyser.damageEffect) do
 			local widget = contentsPanel.dmgTypes:getChildById("DamageEffect_" .. effect)
 
@@ -280,6 +294,16 @@ function ImpactAnalyser:updateWindow(ignoreVisible)
 		end
 	end
 
+	if not var_14_4 and not noData then
+		noData = g_ui.createWidget("NoDataLabel", contentsPanel.dmgTypes)
+
+		noData:setId("noData")
+	end
+
+	if noData then
+		noData:setVisible(not var_14_4)
+	end
+
 	contentsPanel.hpsTotal:setText(formatMoney(ImpactAnalyser.healingTotal, ","))
 	contentsPanel.allTimeHighHealing:setText(formatMoney(ImpactAnalyser.allTimeHightHps, ","))
 
@@ -293,38 +317,41 @@ function ImpactAnalyser:updateWindow(ignoreVisible)
 	contentsPanel.hpsBG:setTooltip(string.format("Current: %d\nTarget: %d", sessionHps, ImpactAnalyser.targetHPS or 0))
 end
 
-function ImpactAnalyser:addDealDamage(amount, effect)
+function ImpactAnalyser.addDealDamage(unusedArgument, amount, numericValue)
+	amount = tonumber(amount) or 0
+	numericValue = tonumber(numericValue) or 0
+
+	if amount <= 0 then
+		return
+	end
+
 	if amount > ImpactAnalyser.allTimeHightDps then
 		ImpactAnalyser.allTimeHightDps = amount
 	end
 
-	ImpactAnalyser.damageTotal = ImpactAnalyser.damageTotal + amount
-	ImpactAnalyser.damageTicks[#ImpactAnalyser.damageTicks + 1] = {
-		amount = amount,
-		tick = g_clock.millis()
-	}
+	AnalyserSession:addRollingValue(ImpactAnalyser.damageWindow, amount)
 
-	if not ImpactAnalyser.damageEffect[effect] then
-		ImpactAnalyser.damageEffect[effect] = 0
+	if not ImpactAnalyser.damageEffectWindows[numericValue] then
+		ImpactAnalyser.damageEffectWindows[numericValue] = AnalyserSession:newRollingWindow(var_0_1)
 	end
 
-	ImpactAnalyser.damageEffect[effect] = ImpactAnalyser.damageEffect[effect] + amount
-
+	AnalyserSession:addRollingValue(ImpactAnalyser.damageEffectWindows[numericValue], amount)
 	updateSessionMaxRates()
 	ImpactAnalyser:updateWindow(true)
 end
 
-function ImpactAnalyser:addHealing(amount)
+function ImpactAnalyser.addHealing(unusedArgument, amount)
+	amount = tonumber(amount) or 0
+
+	if amount <= 0 then
+		return
+	end
+
 	if amount > ImpactAnalyser.allTimeHightHps then
 		ImpactAnalyser.allTimeHightHps = amount
 	end
 
-	ImpactAnalyser.healingTotal = ImpactAnalyser.healingTotal + amount
-	ImpactAnalyser.healingTicks[#ImpactAnalyser.healingTicks + 1] = {
-		amount = amount,
-		tick = g_clock.millis()
-	}
-
+	AnalyserSession:addRollingValue(ImpactAnalyser.healingWindow, amount)
 	updateSessionMaxRates()
 	ImpactAnalyser:updateWindow(true)
 end
@@ -415,7 +442,7 @@ function onImpactExtra(mousePosition, mode)
 	return true
 end
 
-function ImpactAnalyser:setTargetDPS(value)
+function ImpactAnalyser.setTargetDPS(unusedArgument, value)
 	ImpactAnalyser.targetDPS = math.max(0, parseImpactTargetAmount(value))
 
 	if ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel then
@@ -425,7 +452,7 @@ function ImpactAnalyser:setTargetDPS(value)
 	ImpactAnalyser:updateWindow(true)
 end
 
-function ImpactAnalyser:setTargetHPS(value)
+function ImpactAnalyser.setTargetHPS(unusedArgument, value)
 	ImpactAnalyser.targetHPS = math.max(0, parseImpactTargetAmount(value))
 
 	if ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel then
@@ -435,7 +462,7 @@ function ImpactAnalyser:setTargetHPS(value)
 	ImpactAnalyser:updateWindow(true)
 end
 
-function ImpactAnalyser:openTargetConfig(isDps)
+function ImpactAnalyser.openTargetConfig(self, isDps)
 	local window = configPopupWindow.impactButton
 
 	if not window then
@@ -476,7 +503,7 @@ function ImpactAnalyser:openTargetConfig(isDps)
 	end
 end
 
-function ImpactAnalyser:setDPSGauge(value, check)
+function ImpactAnalyser.setDPSGauge(self, value, check)
 	ImpactAnalyser.window.contentsPanel.targetDpsLabel:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.targetDps:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.dpsBG:setVisible(value)
@@ -491,7 +518,7 @@ function ImpactAnalyser:setDPSGauge(value, check)
 	end
 end
 
-function ImpactAnalyser:setDPSGraph(value, check)
+function ImpactAnalyser.setDPSGraph(self, value, check)
 	ImpactAnalyser.window.contentsPanel.graphDpsPanel:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.graphHorizontal:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.separatorGraphHorizontalDps:setVisible(value)
@@ -503,7 +530,7 @@ function ImpactAnalyser:setDPSGraph(value, check)
 	end
 end
 
-function ImpactAnalyser:setDamageType(value, check)
+function ImpactAnalyser.setDamageType(self, value, check)
 	ImpactAnalyser.window.contentsPanel.damageTypeLabel:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.dmgTypes:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.separatorDmgType:setVisible(value)
@@ -515,7 +542,7 @@ function ImpactAnalyser:setDamageType(value, check)
 	end
 end
 
-function ImpactAnalyser:setHPSGauge(value, check)
+function ImpactAnalyser.setHPSGauge(self, value, check)
 	ImpactAnalyser.window.contentsPanel.targetHpsLabel:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.targetHps:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.hpsBG:setVisible(value)
@@ -530,7 +557,7 @@ function ImpactAnalyser:setHPSGauge(value, check)
 	end
 end
 
-function ImpactAnalyser:setHPSGraph(value, check)
+function ImpactAnalyser.setHPSGraph(self, value, check)
 	ImpactAnalyser.window.contentsPanel.graphHealPanel:setVisible(value)
 	ImpactAnalyser.window.contentsPanel.graphHPSHorizontal:setVisible(value)
 
@@ -541,7 +568,7 @@ function ImpactAnalyser:setHPSGraph(value, check)
 	end
 end
 
-function ImpactAnalyser:checkAnchos()
+function ImpactAnalyser.checkAnchos(self)
 	if ImpactAnalyser.window.contentsPanel.targetDpsLabel:isVisible() then
 		ImpactAnalyser.window.contentsPanel.graphDpsPanel:addAnchor(AnchorTop, "separatorDps", AnchorBottom)
 	else
@@ -573,40 +600,42 @@ function ImpactAnalyser:checkAnchos()
 	end
 end
 
-function ImpactAnalyser:getAllTimeHightDps()
+function ImpactAnalyser.getAllTimeHightDps(self)
 	return ImpactAnalyser.allTimeHightDps
 end
 
-function ImpactAnalyser:gaugeDPSIsVisible()
+function ImpactAnalyser.gaugeDPSIsVisible(self)
 	return ImpactAnalyser.gaugeDPSVisible
 end
 
-function ImpactAnalyser:graphDPSIsVisible()
+function ImpactAnalyser.graphDPSIsVisible(self)
 	return ImpactAnalyser.graphDPSVisible
 end
 
-function ImpactAnalyser:gaugeHPSIsVisible()
+function ImpactAnalyser.gaugeHPSIsVisible(self)
 	return ImpactAnalyser.gaugeHPSVisible
 end
 
-function ImpactAnalyser:graphHPSIsVisible()
+function ImpactAnalyser.graphHPSIsVisible(self)
 	return ImpactAnalyser.graphHPSVisible
 end
 
-function ImpactAnalyser:damageTypeIsVisible()
+function ImpactAnalyser.damageTypeIsVisible(self)
 	return ImpactAnalyser.damageTypeVisible
 end
 
-function ImpactAnalyser:setAllTimeHightDps(value)
+function ImpactAnalyser.setAllTimeHightDps(self, value)
 	ImpactAnalyser.allTimeHightDps = value
 end
 
-function ImpactAnalyser:setAllTimeHightHps(value)
+function ImpactAnalyser.setAllTimeHightHps(self, value)
 	ImpactAnalyser.allTimeHightHps = value
 end
 
-function ImpactAnalyser:loadConfigJson()
+function ImpactAnalyser.loadConfigJson(self)
 	local config = {
+		showSessionValues = true,
+		maxHealingImpact = 0,
 		maxDamageImpact = 0,
 		hpsGaugeTargetValue = 1,
 		dpsGaugeTargetValue = 1,
@@ -614,9 +643,7 @@ function ImpactAnalyser:loadConfigJson()
 		desiredHpsGaugeVisible = true,
 		desiredDpsGraphVisible = true,
 		desiredDpsGaugeVisible = true,
-		desiredDamageTypesVisible = true,
-		showSessionValues = true,
-		maxHealingImpact = 0
+		desiredDamageTypesVisible = true
 	}
 	local player = g_game.getLocalPlayer()
 	local file = "/characterdata/" .. player:getId() .. "/impactanalyser.json"
@@ -647,7 +674,7 @@ function ImpactAnalyser:loadConfigJson()
 	ImpactAnalyser:checkAnchos()
 end
 
-function ImpactAnalyser:saveConfigJson()
+function ImpactAnalyser.saveConfigJson(self)
 	local function checkFinite(value)
 		if value == math.huge or value == -math.huge or type(value) ~= "number" then
 			return 0

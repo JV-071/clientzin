@@ -1,8 +1,5 @@
-﻿-- chunkname: @/game_analysers/menus/PartyHuntAnalyser.lua
-
-if not PartyHuntAnalyser then
+﻿if not PartyHuntAnalyser then
 	PartyHuntAnalyser = {
-		leader = false,
 		balance = 0,
 		supplies = 0,
 		loot = 0,
@@ -10,6 +7,7 @@ if not PartyHuntAnalyser then
 		lootType = 0,
 		session = 0,
 		launchTime = 0,
+		leader = false,
 		membersData = {},
 		membersName = {}
 	}
@@ -33,7 +31,7 @@ function PartyHuntAnalyser.create()
 	PartyHuntAnalyser.window = openedWindows.partyButton
 end
 
-function PartyHuntAnalyser:startEvent()
+function PartyHuntAnalyser.startEvent(self)
 	PartyHuntAnalyser.session = 0
 
 	if PartyHuntAnalyser.event then
@@ -41,7 +39,7 @@ function PartyHuntAnalyser:startEvent()
 	end
 end
 
-function PartyHuntAnalyser:resetSessionData()
+function PartyHuntAnalyser.resetSessionData(self)
 	PartyHuntAnalyser.session = 0
 	PartyHuntAnalyser.loot = 0
 	PartyHuntAnalyser.supplies = 0
@@ -60,7 +58,7 @@ function PartyHuntAnalyser:resetSessionData()
 	PartyHuntAnalyser:updateWindow(true, true)
 end
 
-function PartyHuntAnalyser:removeStaleMemberWidgets()
+function PartyHuntAnalyser.removeStaleMemberWidgets(self)
 	if not PartyHuntAnalyser.window then
 		return
 	end
@@ -80,7 +78,7 @@ function PartyHuntAnalyser:removeStaleMemberWidgets()
 	end
 end
 
-function PartyHuntAnalyser:reset()
+function PartyHuntAnalyser.reset(unusedArgument)
 	PartyHuntAnalyser.launchTime = g_clock.millis()
 	PartyHuntAnalyser.session = 0
 	PartyHuntAnalyser.lootType = PriceTypeEnum.Market
@@ -96,13 +94,11 @@ function PartyHuntAnalyser:reset()
 		PartyHuntAnalyser.event:cancel()
 	end
 
-	local contentsPanel = PartyHuntAnalyser.window:getChildById("contentsPanel")
-
-	contentsPanel.party:destroyChildren()
+	PartyHuntAnalyser.window:getChildById("contentsPanel").party:destroyChildren()
 	PartyHuntAnalyser:updateWindow(true, true)
 end
 
-function PartyHuntAnalyser:updateWindow(updateMembers, ignoreVisible)
+function PartyHuntAnalyser.updateWindow(unusedArgument, updateMembers, ignoreVisible)
 	if not PartyHuntAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
@@ -142,9 +138,8 @@ function PartyHuntAnalyser:updateWindow(updateMembers, ignoreVisible)
 	for idx, member in ipairs(membersSorted) do
 		local id = member.id
 		local data = PartyHuntAnalyser.membersData[id]
-		local widget = contentsPanel.party:getChildById(id)
+		local widget = contentsPanel.party:getChildById(id) or g_ui.createWidget("Info", contentsPanel.party)
 
-		widget = widget or g_ui.createWidget("Info", contentsPanel.party)
 		c = c + 1
 		lootTotal = lootTotal + data[1]
 		supplyTotal = supplyTotal + data[2]
@@ -222,7 +217,7 @@ function PartyHuntAnalyser:updateWindow(updateMembers, ignoreVisible)
 	contentsPanel.balance:setColor(balance >= 0 and "$var-text-cip-color-green" or "$var-text-cip-color-orange")
 end
 
-function PartyHuntAnalyser:onPartyAnalyzer(startTime, leaderID, lootType, membersData, membersName)
+function PartyHuntAnalyser.onPartyAnalyzer(self, startTime, leaderID, lootType, membersData, membersName)
 	if membersName and next(membersName) then
 		PartyHuntAnalyser.membersName = membersName
 	end
@@ -470,11 +465,11 @@ local function generatePartyText()
 	return table.concat(lines, "\n")
 end
 
-function PartyHuntAnalyser:clipboardData()
+function PartyHuntAnalyser.clipboardData(self)
 	g_window.setClipboardText(generatePartyText())
 end
 
-function PartyHuntAnalyser:lootSplitter()
+function PartyHuntAnalyser.lootSplitter(self)
 	local text = generateLootSplitText()
 
 	if not text or text == "" then

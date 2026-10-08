@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uicombobox.lua
-
-UIComboBox = extends(UIWidget, "UIComboBox")
+﻿UIComboBox = extends(UIWidget, "UIComboBox")
 
 function UIComboBox.create()
 	local combobox = UIComboBox.internalCreate()
@@ -17,18 +15,18 @@ function UIComboBox.create()
 	return combobox
 end
 
-function UIComboBox:clear()
+function UIComboBox.clear(self)
 	return self:clearOptions()
 end
 
-function UIComboBox:clearOptions()
+function UIComboBox.clearOptions(self)
 	self.options = {}
 	self.currentIndex = -1
 
 	self:clearText()
 end
 
-function UIComboBox:isOption(text)
+function UIComboBox.isOption(self, text)
 	if not self.options then
 		return false
 	end
@@ -42,11 +40,11 @@ function UIComboBox:isOption(text)
 	return false
 end
 
-function UIComboBox:setOption(text, dontSignal)
+function UIComboBox.setOption(self, text, dontSignal)
 	self:setCurrentOption(text, dontSignal)
 end
 
-function UIComboBox:setCurrentOption(text, dontSignal)
+function UIComboBox.setCurrentOption(self, text, dontSignal)
 	if not self.options then
 		return
 	end
@@ -66,11 +64,11 @@ function UIComboBox:setCurrentOption(text, dontSignal)
 	end
 end
 
-function UIComboBox:getOptionsCount()
+function UIComboBox.getOptionsCount(self)
 	return #self.options
 end
 
-function UIComboBox:setCurrentOptionByData(data, dontSignal)
+function UIComboBox.setCurrentOptionByData(self, data, dontSignal)
 	if not self.options then
 		return
 	end
@@ -90,7 +88,7 @@ function UIComboBox:setCurrentOptionByData(data, dontSignal)
 	end
 end
 
-function UIComboBox:setCurrentIndex(index)
+function UIComboBox.setCurrentIndex(self, index)
 	if index >= 1 and index <= #self.options then
 		local v = self.options[index]
 
@@ -101,13 +99,13 @@ function UIComboBox:setCurrentIndex(index)
 	end
 end
 
-function UIComboBox:getCurrentOption()
+function UIComboBox.getCurrentOption(self)
 	if table.haskey(self.options, self.currentIndex) then
 		return self.options[self.currentIndex]
 	end
 end
 
-function UIComboBox:addOption(text, data)
+function UIComboBox.addOption(self, text, data)
 	table.insert(self.options, {
 		text = text,
 		data = data
@@ -122,7 +120,7 @@ function UIComboBox:addOption(text, data)
 	return index
 end
 
-function UIComboBox:removeOption(text)
+function UIComboBox.removeOption(self, text)
 	for i, v in ipairs(self.options) do
 		if v.text == text then
 			table.remove(self.options, i)
@@ -138,7 +136,7 @@ function UIComboBox:removeOption(text)
 	end
 end
 
-function UIComboBox:onMousePress(mousePos, mouseButton)
+function UIComboBox.onMousePress(self, mousePos, mouseButton)
 	local menu
 
 	if self.menuScroll then
@@ -176,7 +174,7 @@ function UIComboBox:onMousePress(mousePos, mouseButton)
 	return true
 end
 
-function UIComboBox:onMouseWheel(mousePos, direction)
+function UIComboBox.onMouseWheel(self, mousePos, direction)
 	if not self.mouseScroll then
 		return false
 	end
@@ -190,7 +188,7 @@ function UIComboBox:onMouseWheel(mousePos, direction)
 	return true
 end
 
-function UIComboBox:onStyleApply(styleName, styleNode)
+function UIComboBox.onStyleApply(self, styleName, styleNode)
 	if styleNode.options then
 		for k, option in pairs(styleNode.options) do
 			self:addOption(option)
@@ -220,27 +218,19 @@ function UIComboBox:onStyleApply(styleName, styleNode)
 	end
 end
 
-function UIComboBox:setMouseScroll(scroll)
+function UIComboBox.setMouseScroll(self, scroll)
 	self.mouseScroll = scroll
 end
 
-function UIComboBox:canMouseScroll()
+function UIComboBox.canMouseScroll(self)
 	return self.mouseScroll
 end
 
-function UIComboBox:HTML_onReadNodes(nodes)
-	for _, el in pairs(nodes) do
-		self:addOption(el:getcontent(), el.attributes.value)
-	end
-
-	return false
-end
-
-function UIComboBox:getCurrentIndex()
+function UIComboBox.getCurrentIndex(self)
 	return self.currentIndex
 end
 
-function UIComboBox:updateCurrentOption(newText)
+function UIComboBox.updateCurrentOption(self, newText)
 	self.options[self.currentIndex].text = newText
 
 	self:setText(newText)

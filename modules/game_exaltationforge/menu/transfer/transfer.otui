@@ -35,7 +35,7 @@ TransferWindow < Panel
   id: transferPanel
   visible: false
   anchors.top: fusionButton.bottom
-  margin-top: 5
+  margin-top: 4
   anchors.left: fusionButton.left
   anchors.right: historyButton.right
   anchors.bottom: prev.bottom
@@ -55,7 +55,6 @@ TransferWindow < Panel
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 2
-    margin-left: -1
     height: 111
 
     ScrollablePanel
@@ -467,7 +466,6 @@ TransferWindow < Panel
     anchors.left: parent.left
     anchors.right: parent.right
     margin-bottom: 32
-    margin-left: -1
     height: 75
     @onHoverChange: modules.game_exaltationforge.Forge.Transfer.onWidgetHover(self, value)
 

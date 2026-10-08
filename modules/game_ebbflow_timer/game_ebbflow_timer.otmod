@@ -1,0 +1,11 @@
+Module
+  name: game_ebbflow_timer
+  description: Ebb and Flow (piranhas) hunt countdown HUD
+  author: Clientzin
+  autoload: true
+  autoload-priority: 1100
+  sandboxed: true
+  dependencies: [ game_interface ]
+  scripts: [ ebbflow_timer ]
+  @onLoad: init()
+  @onUnload: terminate()

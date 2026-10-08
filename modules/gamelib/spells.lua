@@ -1,20 +1,18 @@
-﻿-- chunkname: @/gamelib/spells.lua
-
-SpelllistSettings = {
+﻿SpelllistSettings = {
 	Default = {
 		iconFile = "/images/game/spells/spell-icons-32x32",
 		iconSize = {
-			width = 32,
-			height = 32
+			height = 32,
+			width = 32
 		}
 	}
 }
 PassiveAbilities = {
 	{
+		exhaustion = 108000000,
 		type = "Passive",
 		name = "Gift of Life",
-		icon = "/images/game/spells/passiveability-icons-32x32",
-		exhaustion = 108000000
+		icon = "/images/game/spells/passiveability-icons-32x32"
 	}
 }
 
@@ -29,9 +27,7 @@ function PassiveAbilityUnlockedInWheel(passiveId)
 		return true
 	end
 
-	local topLeftPoints = WD.passivePoints[1] or 0
-
-	return topLeftPoints >= 250
+	return (WD.passivePoints[1] or 0) >= 250
 end
 
 SpellAreas = {
@@ -131,6 +127,85 @@ SpellAreas = {
 		},
 		{
 			3
+		}
+	},
+	AREA_WIDE_BEAM5 = {
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			0,
+			3,
+			0
+		}
+	},
+	AREA_WIDE_BEAM8 = {
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			0,
+			3,
+			0
 		}
 	},
 	AREA_SQUAREWAVE1 = {
@@ -278,6 +353,45 @@ SpellAreas = {
 			3,
 			0,
 			0
+		}
+	},
+	AREA_STRONG_ICE_WAVE = {
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			1,
+			1
+		},
+		{
+			0,
+			1,
+			0
+		},
+		{
+			0,
+			3,
+			0
+		}
+	},
+	AREA_AUGMENTED_FRONT_SWEEP = {
+		{
+			1,
+			1,
+			1
+		},
+		{
+			1,
+			3,
+			1
 		}
 	},
 	AREA_SQUARE2X2 = {
@@ -1013,6 +1127,113 @@ SpellAreas = {
 			1
 		}
 	},
+	AREA_BALANCED_BRAWL = {
+		{
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			1,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0
+		},
+		{
+			0,
+			0,
+			0,
+			0,
+			1,
+			1,
+			1,
+			1,
+			1,
+			0,
+			0,
+			0,
+			0
+		},
+		{
+			0,
+			0,
+			0,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			0,
+			0,
+			0
+		},
+		{
+			0,
+			0,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			0,
+			0
+		},
+		{
+			0,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			1,
+			0
+		},
+		{
+			0,
+			1,
+			1,
+			1,
+			1,
+			0,
+			0,
+			0,
+			1,
+			1,
+			1,
+			1,
+			0
+		},
+		{
+			1,
+			1,
+			1,
+			1,
+			1,
+			0,
+			3,
+			0,
+			1,
+			1,
+			1,
+			1,
+			1
+		}
+	},
 	AREA_FORKS = {
 		{
 			1,
@@ -1206,18 +1427,18 @@ SpellAreas = {
 SpellInfo = {
 	Default = {
 		["Light Healing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Light Healing",
 			soul = 0,
 			mana = 20,
 			level = 8,
-			needTarget = false,
-			words = "exura",
-			id = 1,
 			exhaustion = 1000,
-			name = "Light Healing",
-			premium = false,
-			range = 0,
+			id = 1,
+			words = "exura",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -1233,18 +1454,18 @@ SpellInfo = {
 			}
 		},
 		["Intense Healing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Intense Healing",
 			soul = 0,
 			mana = 70,
 			level = 20,
-			needTarget = false,
-			words = "exura gran",
-			id = 2,
 			exhaustion = 1000,
-			name = "Intense Healing",
-			premium = false,
-			range = 0,
+			id = 2,
+			words = "exura gran",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -1260,18 +1481,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Healing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Healing",
 			soul = 0,
 			mana = 160,
 			level = 30,
-			needTarget = false,
-			words = "exura vita",
-			id = 3,
 			exhaustion = 1000,
-			name = "Ultimate Healing",
-			premium = false,
-			range = 0,
+			id = 3,
+			words = "exura vita",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -1283,20 +1504,20 @@ SpellInfo = {
 			}
 		},
 		["Intense Healing Rune"] = {
-			maglevel = 1,
-			type = "Conjure",
+			id = 4,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Intense Healing Rune",
 			soul = 2,
 			mana = 120,
-			level = 15,
-			needTarget = false,
-			parameter = false,
-			words = "adura gran",
-			id = 4,
-			range = 0,
+			maglevel = 1,
 			exhaustion = 2000,
-			name = "Intense Healing Rune",
-			premium = false,
+			words = "adura gran",
+			type = "Conjure",
 			source = 3147,
+			level = 15,
 			group = {
 				[3] = 2000
 			},
@@ -1306,20 +1527,20 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Healing Rune"] = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 5,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Ultimate Healing Rune",
 			soul = 3,
 			mana = 400,
-			level = 24,
-			needTarget = false,
-			parameter = false,
-			words = "adura vita",
-			id = 5,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Ultimate Healing Rune",
-			premium = false,
+			words = "adura vita",
+			type = "Conjure",
 			source = 3147,
+			level = 24,
 			group = {
 				[3] = 2000
 			},
@@ -1329,19 +1550,19 @@ SpellInfo = {
 			}
 		},
 		Haste = {
+			id = 6,
+			premium = true,
+			duration = 33000,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Haste",
 			soul = 0,
 			mana = 60,
 			level = 14,
-			needTarget = false,
-			words = "utani hur",
-			id = 6,
-			duration = 33000,
 			exhaustion = 2000,
-			name = "Haste",
-			premium = true,
 			range = 0,
+			words = "utani hur",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -1359,20 +1580,20 @@ SpellInfo = {
 			}
 		},
 		["Light Magic Missile"] = {
-			maglevel = 0,
-			type = "Conjure",
+			id = 7,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Light Magic Missile",
 			soul = 1,
 			mana = 120,
-			level = 15,
-			needTarget = false,
-			parameter = false,
-			words = "adori min vis",
-			id = 7,
-			range = 0,
+			maglevel = 0,
 			exhaustion = 2000,
-			name = "Light Magic Missile",
-			premium = false,
+			words = "adori min vis",
+			type = "Conjure",
 			source = 3147,
+			level = 15,
 			group = {
 				[3] = 2000
 			},
@@ -1384,20 +1605,20 @@ SpellInfo = {
 			}
 		},
 		["Heavy Magic Missile"] = {
-			maglevel = 3,
-			type = "Conjure",
+			id = 8,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Heavy Magic Missile",
 			soul = 2,
 			mana = 350,
-			level = 25,
-			needTarget = false,
-			parameter = false,
-			words = "adori vis",
-			id = 8,
-			range = 0,
+			maglevel = 3,
 			exhaustion = 2000,
-			name = "Heavy Magic Missile",
-			premium = false,
+			words = "adori vis",
+			type = "Conjure",
 			source = 3147,
+			level = 25,
 			group = {
 				[3] = 2000
 			},
@@ -1409,19 +1630,19 @@ SpellInfo = {
 			}
 		},
 		["Summon Creature"] = {
+			premium = false,
+			range = 0,
 			parameter = true,
-			type = "Instant",
+			needTarget = false,
+			name = "Summon Creature",
 			soul = 0,
 			mana = 0,
 			level = 25,
-			needTarget = false,
+			exhaustion = 2000,
 			parameterPlaceholder = "creature",
 			words = "utevo res",
+			type = "Instant",
 			id = 9,
-			exhaustion = 2000,
-			name = "Summon Creature",
-			premium = false,
-			range = 0,
 			group = {
 				[3] = 2000
 			},
@@ -1433,18 +1654,18 @@ SpellInfo = {
 			}
 		},
 		Light = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Light",
 			soul = 0,
 			mana = 20,
 			level = 8,
-			needTarget = false,
-			words = "utevo lux",
-			id = 10,
 			exhaustion = 2000,
-			name = "Light",
-			premium = false,
-			range = 0,
+			id = 10,
+			words = "utevo lux",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -1462,18 +1683,18 @@ SpellInfo = {
 			}
 		},
 		["Great Light"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Great Light",
 			soul = 0,
 			mana = 60,
 			level = 13,
-			needTarget = false,
-			words = "utevo gran lux",
-			id = 11,
 			exhaustion = 2000,
-			name = "Great Light",
-			premium = false,
-			range = 0,
+			id = 11,
+			words = "utevo gran lux",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -1491,42 +1712,44 @@ SpellInfo = {
 			}
 		},
 		["Convince Creature"] = {
-			maglevel = 5,
-			type = "Conjure",
+			id = 12,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Convince Creature",
 			soul = 3,
 			mana = 200,
-			level = 16,
-			needTarget = false,
-			parameter = false,
-			words = "adeta sio",
-			id = 12,
-			range = 0,
+			maglevel = 5,
 			exhaustion = 2000,
-			name = "Convince Creature",
-			premium = false,
+			words = "adeta sio",
+			type = "Conjure",
 			source = 3147,
+			level = 16,
 			group = {
 				[3] = 2000
 			},
 			vocations = {
 				2,
-				6
+				6,
+				9,
+				10
 			}
 		},
 		["Energy Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Energy Wave",
 			soul = 0,
 			mana = 170,
 			level = 38,
-			needTarget = false,
-			directional = true,
-			words = "exevo vis hur",
-			id = 13,
 			exhaustion = 8000,
-			name = "Energy Wave",
 			premium = false,
-			range = 0,
+			words = "exevo vis hur",
+			type = "Instant",
+			id = 13,
 			group = {
 				[1] = 2000
 			},
@@ -1537,20 +1760,20 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE4
 		},
 		Chameleon = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 14,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Chameleon",
 			soul = 2,
 			mana = 600,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adevo ina",
-			id = 14,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Chameleon",
-			premium = false,
+			words = "adevo ina",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -1560,20 +1783,20 @@ SpellInfo = {
 			}
 		},
 		Fireball = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 15,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Fireball",
 			soul = 3,
 			mana = 460,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adori flam",
-			id = 15,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Fireball",
-			premium = true,
+			words = "adori flam",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -1583,20 +1806,20 @@ SpellInfo = {
 			}
 		},
 		["Great Fireball"] = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 16,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Great Fireball",
 			soul = 3,
 			mana = 530,
-			level = 30,
-			needTarget = false,
-			parameter = false,
-			words = "adori mas flam",
-			id = 16,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Great Fireball",
-			premium = false,
+			words = "adori mas flam",
+			type = "Conjure",
 			source = 3147,
+			level = 30,
 			group = {
 				[3] = 2000
 			},
@@ -1606,20 +1829,20 @@ SpellInfo = {
 			}
 		},
 		Firebomb = {
-			maglevel = 5,
-			type = "Conjure",
+			id = 17,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Fire Bomb Rune",
 			soul = 4,
 			mana = 600,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas flam",
-			id = 17,
-			range = 0,
+			maglevel = 5,
 			exhaustion = 2000,
-			name = "Fire Bomb Rune",
-			premium = false,
+			words = "adevo mas flam",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -1631,20 +1854,20 @@ SpellInfo = {
 			}
 		},
 		Explosion = {
-			maglevel = 6,
-			type = "Conjure",
+			id = 18,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Explosion",
 			soul = 4,
 			mana = 570,
-			level = 31,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas hur",
-			id = 18,
-			range = 0,
+			maglevel = 6,
 			exhaustion = 2000,
-			name = "Explosion",
-			premium = false,
+			words = "adevo mas hur",
+			type = "Conjure",
 			source = 3147,
+			level = 31,
 			group = {
 				[3] = 2000
 			},
@@ -1656,19 +1879,19 @@ SpellInfo = {
 			}
 		},
 		["Fire Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Fire Wave",
 			soul = 0,
 			mana = 25,
 			level = 18,
-			needTarget = false,
-			directional = true,
-			words = "exevo flam hur",
-			id = 19,
 			exhaustion = 3000,
-			name = "Fire Wave",
 			premium = false,
-			range = 0,
+			words = "exevo flam hur",
+			type = "Instant",
+			id = 19,
 			group = {
 				[1] = 2000
 			},
@@ -1679,19 +1902,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE5
 		},
 		["Find Person"] = {
+			premium = false,
+			range = 0,
 			parameter = true,
-			type = "Instant",
+			needTarget = false,
+			name = "Find Person",
 			soul = 0,
 			mana = 20,
 			level = 8,
-			needTarget = false,
+			exhaustion = 2000,
 			parameterPlaceholder = "name",
 			words = "exiva",
+			type = "Instant",
 			id = 20,
-			exhaustion = 2000,
-			name = "Find Person",
-			premium = false,
-			range = 0,
 			group = {
 				[3] = 2000
 			},
@@ -1709,20 +1932,20 @@ SpellInfo = {
 			}
 		},
 		["Sudden Death"] = {
-			maglevel = 15,
-			type = "Conjure",
+			id = 21,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Sudden Death",
 			soul = 5,
 			mana = 985,
-			level = 45,
-			needTarget = false,
-			parameter = false,
-			words = "adori gran mort",
-			id = 21,
-			range = 0,
+			maglevel = 15,
 			exhaustion = 2000,
-			name = "Sudden Death",
-			premium = false,
+			words = "adori gran mort",
+			type = "Conjure",
 			source = 3147,
+			level = 45,
 			group = {
 				[3] = 2000
 			},
@@ -1732,19 +1955,19 @@ SpellInfo = {
 			}
 		},
 		["Energy Beam"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Energy Beam",
 			soul = 0,
 			mana = 40,
 			level = 23,
-			needTarget = false,
-			directional = true,
-			words = "exevo vis lux",
-			id = 22,
 			exhaustion = 4000,
-			name = "Energy Beam",
 			premium = false,
-			range = 0,
+			words = "exevo vis lux",
+			type = "Instant",
+			id = 22,
 			group = {
 				[1] = 2000
 			},
@@ -1755,19 +1978,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_BEAM5
 		},
 		["Great Energy Beam"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Great Energy Beam",
 			soul = 0,
 			mana = 110,
 			level = 29,
-			needTarget = false,
-			directional = true,
-			words = "exevo gran vis lux",
-			id = 23,
 			exhaustion = 6000,
-			name = "Great Energy Beam",
 			premium = false,
-			range = 0,
+			words = "exevo gran vis lux",
+			type = "Instant",
+			id = 23,
 			group = {
 				[1] = 2000,
 				[9] = 6000
@@ -1779,18 +2002,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_BEAM8
 		},
 		["Hell's Core"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Hell's Core",
 			soul = 0,
 			mana = 1100,
 			level = 60,
-			needTarget = false,
-			words = "exevo gran mas flam",
-			id = 24,
 			exhaustion = 40000,
-			name = "Hell's Core",
-			premium = true,
-			range = 0,
+			id = 24,
+			words = "exevo gran mas flam",
+			type = "Instant",
 			group = {
 				[1] = 4000,
 				[7] = 40000
@@ -1802,20 +2025,20 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE5X5
 		},
 		["Fire Field"] = {
-			maglevel = 1,
-			type = "Conjure",
+			id = 25,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Fire Field Rune",
 			soul = 1,
 			mana = 240,
-			level = 15,
-			needTarget = false,
-			parameter = false,
-			words = "adevo grav flam",
-			id = 25,
-			range = 0,
+			maglevel = 1,
 			exhaustion = 2000,
-			name = "Fire Field Rune",
-			premium = false,
+			words = "adevo grav flam",
+			type = "Conjure",
 			source = 3147,
+			level = 15,
 			group = {
 				[3] = 2000
 			},
@@ -1827,20 +2050,20 @@ SpellInfo = {
 			}
 		},
 		["Poison Field"] = {
-			maglevel = 0,
-			type = "Conjure",
+			id = 26,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Poison Field Rune",
 			soul = 1,
 			mana = 200,
-			level = 14,
-			needTarget = false,
-			parameter = false,
-			words = "adevo grav pox",
-			id = 26,
-			range = 0,
+			maglevel = 0,
 			exhaustion = 2000,
-			name = "Poison Field Rune",
-			premium = false,
+			words = "adevo grav pox",
+			type = "Conjure",
 			source = 3147,
+			level = 14,
 			group = {
 				[3] = 2000
 			},
@@ -1852,20 +2075,20 @@ SpellInfo = {
 			}
 		},
 		["Energy Field"] = {
-			maglevel = 3,
-			type = "Conjure",
+			id = 27,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Energy Field Rune",
 			soul = 2,
 			mana = 320,
-			level = 18,
-			needTarget = false,
-			parameter = false,
-			words = "adevo grav vis",
-			id = 27,
-			range = 0,
+			maglevel = 3,
 			exhaustion = 2000,
-			name = "Energy Field Rune",
-			premium = false,
+			words = "adevo grav vis",
+			type = "Conjure",
 			source = 3147,
+			level = 18,
 			group = {
 				[3] = 2000
 			},
@@ -1877,20 +2100,20 @@ SpellInfo = {
 			}
 		},
 		["Fire Wall"] = {
-			maglevel = 6,
-			type = "Conjure",
+			id = 28,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Fire Wall Rune",
 			soul = 4,
 			mana = 780,
-			level = 33,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas grav flam",
-			id = 28,
-			range = 0,
+			maglevel = 6,
 			exhaustion = 2000,
-			name = "Fire Wall Rune",
-			premium = false,
+			words = "adevo mas grav flam",
+			type = "Conjure",
 			source = 3147,
+			level = 33,
 			group = {
 				[3] = 2000
 			},
@@ -1902,18 +2125,18 @@ SpellInfo = {
 			}
 		},
 		["Cure Poison"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cure Poison",
 			soul = 0,
 			mana = 30,
 			level = 10,
-			needTarget = false,
-			words = "exana pox",
-			id = 29,
 			exhaustion = 6000,
-			name = "Cure Poison",
-			premium = false,
-			range = 0,
+			id = 29,
+			words = "exana pox",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -1931,20 +2154,20 @@ SpellInfo = {
 			}
 		},
 		["Destroy Field"] = {
-			maglevel = 3,
-			type = "Conjure",
+			id = 30,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Destroy Field Rune",
 			soul = 2,
 			mana = 120,
-			level = 17,
-			needTarget = false,
-			parameter = false,
-			words = "adito grav",
-			id = 30,
-			range = 0,
+			maglevel = 3,
 			exhaustion = 2000,
-			name = "Destroy Field Rune",
-			premium = false,
+			words = "adito grav",
+			type = "Conjure",
 			source = 3147,
+			level = 17,
 			group = {
 				[3] = 2000
 			},
@@ -1960,20 +2183,20 @@ SpellInfo = {
 			}
 		},
 		["Cure Poison Rune"] = {
-			maglevel = 0,
-			type = "Conjure",
+			id = 31,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Cure Poison Rune",
 			soul = 1,
 			mana = 200,
-			level = 15,
-			needTarget = false,
-			parameter = false,
-			words = "adana pox",
-			id = 31,
-			range = 0,
+			maglevel = 0,
 			exhaustion = 2000,
-			name = "Cure Poison Rune",
-			premium = false,
+			words = "adana pox",
+			type = "Conjure",
 			source = 3147,
+			level = 15,
 			group = {
 				[3] = 2000
 			},
@@ -1983,20 +2206,20 @@ SpellInfo = {
 			}
 		},
 		["Poison Wall"] = {
-			maglevel = 5,
-			type = "Conjure",
+			id = 32,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Poison Wall Rune",
 			soul = 3,
 			mana = 640,
-			level = 29,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas grav pox",
-			id = 32,
-			range = 0,
+			maglevel = 5,
 			exhaustion = 2000,
-			name = "Poison Wall Rune",
-			premium = false,
+			words = "adevo mas grav pox",
+			type = "Conjure",
 			source = 3147,
+			level = 29,
 			group = {
 				[3] = 2000
 			},
@@ -2008,20 +2231,20 @@ SpellInfo = {
 			}
 		},
 		["Energy Wall"] = {
-			maglevel = 9,
-			type = "Conjure",
+			id = 33,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Energy Wall Rune",
 			soul = 5,
 			mana = 1000,
-			level = 41,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas grav vis",
-			id = 33,
-			range = 0,
+			maglevel = 9,
 			exhaustion = 2000,
-			name = "Energy Wall Rune",
-			premium = false,
+			words = "adevo mas grav vis",
+			type = "Conjure",
 			source = 3147,
+			level = 41,
 			group = {
 				[3] = 2000
 			},
@@ -2033,18 +2256,18 @@ SpellInfo = {
 			}
 		},
 		Salvation = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Salvation",
 			soul = 0,
 			mana = 210,
 			level = 60,
-			needTarget = false,
-			words = "exura gran san",
-			id = 36,
 			exhaustion = 1000,
-			name = "Salvation",
-			premium = true,
-			range = 0,
+			id = 36,
+			words = "exura gran san",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -2054,19 +2277,19 @@ SpellInfo = {
 			}
 		},
 		["Creature Illusion"] = {
+			premium = false,
+			range = 0,
 			parameter = true,
-			type = "Instant",
+			needTarget = false,
+			name = "Creature Illusion",
 			soul = 0,
 			mana = 100,
 			level = 23,
-			needTarget = false,
+			exhaustion = 2000,
 			parameterPlaceholder = "creature",
 			words = "utevo res ina",
+			type = "Instant",
 			id = 38,
-			exhaustion = 2000,
-			name = "Creature Illusion",
-			premium = false,
-			range = 0,
 			group = {
 				[3] = 2000
 			},
@@ -2078,19 +2301,19 @@ SpellInfo = {
 			}
 		},
 		["Strong Haste"] = {
+			id = 39,
+			premium = true,
+			duration = 22000,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Haste",
 			soul = 0,
 			mana = 100,
 			level = 20,
-			needTarget = false,
-			words = "utani gran hur",
-			id = 39,
-			duration = 22000,
 			exhaustion = 2000,
-			name = "Strong Haste",
-			premium = true,
 			range = 0,
+			words = "utani gran hur",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2104,18 +2327,18 @@ SpellInfo = {
 			}
 		},
 		Food = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Food",
 			soul = 1,
 			mana = 120,
 			level = 0,
-			needTarget = false,
-			words = "exevo pan",
-			id = 42,
 			exhaustion = 2000,
-			name = "Food",
-			premium = false,
-			range = 0,
+			id = 42,
+			words = "exevo pan",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2125,19 +2348,19 @@ SpellInfo = {
 			}
 		},
 		["Strong Ice Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Ice Wave",
 			soul = 0,
 			mana = 170,
 			level = 40,
-			needTarget = false,
-			directional = true,
-			words = "exevo gran frigo hur",
-			id = 43,
 			exhaustion = 8000,
-			name = "Strong Ice Wave",
 			premium = false,
-			range = 0,
+			words = "exevo gran frigo hur",
+			type = "Instant",
+			id = 43,
 			group = {
 				[1] = 2000
 			},
@@ -2145,21 +2368,21 @@ SpellInfo = {
 				2,
 				6
 			},
-			area = SpellAreas.AREA_SQUAREWAVE3
+			area = SpellAreas.AREA_STRONG_ICE_WAVE
 		},
 		["Magic Shield"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Magic Shield",
 			soul = 0,
 			mana = 50,
 			level = 14,
-			needTarget = false,
-			words = "utamo vita",
-			id = 44,
 			exhaustion = 14000,
-			name = "Magic Shield",
-			premium = false,
-			range = 0,
+			id = 44,
+			words = "utamo vita",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2171,18 +2394,18 @@ SpellInfo = {
 			}
 		},
 		Invisibility = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Invisibility",
 			soul = 0,
 			mana = 440,
 			level = 35,
-			needTarget = false,
-			words = "utana vid",
-			id = 45,
 			exhaustion = 2000,
-			name = "Invisibility",
-			premium = false,
-			range = 0,
+			id = 45,
+			words = "utana vid",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2194,18 +2417,18 @@ SpellInfo = {
 			}
 		},
 		["Conjure Explosive Arrow"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Conjure",
+			needTarget = false,
+			name = "Conjure Explosive Arrow",
 			soul = 3,
 			mana = 290,
 			level = 25,
-			needTarget = false,
-			words = "exevo con flam",
-			id = 49,
 			exhaustion = 2000,
-			name = "Conjure Explosive Arrow",
-			premium = false,
-			range = 0,
+			id = 49,
+			words = "exevo con flam",
+			type = "Conjure",
 			group = {
 				[3] = 2000
 			},
@@ -2215,20 +2438,20 @@ SpellInfo = {
 			}
 		},
 		Soulfire = {
-			maglevel = 7,
-			type = "Conjure",
+			id = 50,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Soulfire",
 			soul = 3,
 			mana = 420,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adevo res flam",
-			id = 50,
-			range = 0,
+			maglevel = 7,
 			exhaustion = 2000,
-			name = "Soulfire",
-			premium = true,
+			words = "adevo res flam",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -2239,19 +2462,44 @@ SpellInfo = {
 				6
 			}
 		},
-		["Conjure Arrow"] = {
+		["Blank Rune"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
+			needTarget = false,
+			name = "Blank Rune",
+			soul = 1,
+			mana = 50,
+			level = 20,
+			exhaustion = 2000,
+			id = 320,
+			words = "adori blank",
 			type = "Conjure",
+			group = {
+				[3] = 2000
+			},
+			vocations = {
+				1,
+				2,
+				3,
+				5,
+				6,
+				7
+			}
+		},
+		["Conjure Arrow"] = {
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Conjure Arrow",
 			soul = 1,
 			mana = 100,
 			level = 13,
-			needTarget = false,
-			words = "exevo con",
-			id = 51,
 			exhaustion = 2000,
-			name = "Conjure Arrow",
-			premium = false,
-			range = 0,
+			id = 51,
+			words = "exevo con",
+			type = "Conjure",
 			group = {
 				[3] = 2000
 			},
@@ -2261,20 +2509,20 @@ SpellInfo = {
 			}
 		},
 		Paralyze = {
-			maglevel = 18,
-			type = "Conjure",
+			id = 54,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Paralyze",
 			soul = 3,
 			mana = 1400,
-			level = 54,
-			needTarget = false,
-			parameter = false,
-			words = "adana ani",
-			id = 54,
-			range = 0,
+			maglevel = 18,
 			exhaustion = 2000,
-			name = "Paralyze",
-			premium = true,
+			words = "adana ani",
+			type = "Conjure",
 			source = 3147,
+			level = 54,
 			group = {
 				[3] = 2000
 			},
@@ -2284,20 +2532,20 @@ SpellInfo = {
 			}
 		},
 		Energybomb = {
-			maglevel = 10,
-			type = "Conjure",
+			id = 55,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Energy Bomb Rune",
 			soul = 5,
 			mana = 880,
-			level = 37,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas vis",
-			id = 55,
-			range = 0,
+			maglevel = 10,
 			exhaustion = 2000,
-			name = "Energy Bomb Rune",
-			premium = true,
+			words = "adevo mas vis",
+			type = "Conjure",
 			source = 3147,
+			level = 37,
 			group = {
 				[3] = 2000
 			},
@@ -2307,18 +2555,18 @@ SpellInfo = {
 			}
 		},
 		["Wrath of Nature"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Wrath of Nature",
 			soul = 0,
 			mana = 700,
 			level = 55,
-			needTarget = false,
-			words = "exevo gran mas tera",
-			id = 56,
 			exhaustion = 40000,
-			name = "Wrath of Nature",
-			premium = true,
-			range = 0,
+			id = 56,
+			words = "exevo gran mas tera",
+			type = "Instant",
 			group = {
 				[1] = 4000,
 				[7] = 40000
@@ -2330,18 +2578,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE6X6
 		},
 		["Strong Ethereal Spear"] = {
+			premium = true,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Strong Ethereal Spear",
 			soul = 0,
 			mana = 55,
 			level = 90,
-			needTarget = true,
-			words = "exori gran con",
-			id = 57,
 			exhaustion = 8000,
-			name = "Strong Ethereal Spear",
-			premium = true,
-			range = 7,
+			id = 57,
+			words = "exori gran con",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2351,19 +2599,19 @@ SpellInfo = {
 			}
 		},
 		["Front Sweep"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Front Sweep",
 			soul = 0,
 			mana = 200,
 			level = 70,
-			needTarget = false,
-			directional = true,
-			words = "exori min",
-			id = 59,
 			exhaustion = 6000,
-			name = "Front Sweep",
 			premium = true,
-			range = 0,
+			words = "exori min",
+			type = "Instant",
+			id = 59,
 			group = {
 				[1] = 2000
 			},
@@ -2374,18 +2622,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE1
 		},
 		["Brutal Strike"] = {
+			premium = true,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Brutal Strike",
 			soul = 0,
 			mana = 30,
 			level = 16,
-			needTarget = true,
-			words = "exori ico",
-			id = 61,
 			exhaustion = 6000,
-			name = "Brutal Strike",
-			premium = true,
-			range = 1,
+			id = 61,
+			words = "exori ico",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2395,18 +2643,18 @@ SpellInfo = {
 			}
 		},
 		Annihilation = {
+			premium = true,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Annihilation",
 			soul = 0,
 			mana = 300,
 			level = 110,
-			needTarget = true,
-			words = "exori gran ico",
-			id = 62,
 			exhaustion = 30000,
-			name = "Annihilation",
-			premium = true,
-			range = 1,
+			id = 62,
+			words = "exori gran ico",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2416,18 +2664,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Light"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Light",
 			soul = 0,
 			mana = 140,
 			level = 26,
-			needTarget = false,
-			words = "utevo vis lux",
-			id = 75,
 			exhaustion = 2000,
-			name = "Ultimate Light",
-			premium = true,
-			range = 0,
+			id = 75,
+			words = "utevo vis lux",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2439,18 +2687,18 @@ SpellInfo = {
 			}
 		},
 		["Magic Rope"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Magic Rope",
 			soul = 0,
 			mana = 20,
 			level = 9,
-			needTarget = false,
-			words = "exani tera",
-			id = 76,
 			exhaustion = 2000,
-			name = "Magic Rope",
-			premium = true,
-			range = 0,
+			id = 76,
+			words = "exani tera",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2468,20 +2716,20 @@ SpellInfo = {
 			}
 		},
 		Stalagmite = {
-			maglevel = 3,
-			type = "Conjure",
+			id = 77,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Stalagmite Rune",
 			soul = 2,
 			mana = 350,
-			level = 24,
-			needTarget = false,
-			parameter = false,
-			words = "adori tera",
-			id = 77,
-			range = 0,
+			maglevel = 3,
 			exhaustion = 2000,
-			name = "Stalagmite Rune",
-			premium = false,
+			words = "adori tera",
+			type = "Conjure",
 			source = 3147,
+			level = 24,
 			group = {
 				[3] = 2000
 			},
@@ -2493,20 +2741,20 @@ SpellInfo = {
 			}
 		},
 		Disintegrate = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 78,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Disintegrate Rune",
 			soul = 3,
 			mana = 200,
-			level = 21,
-			needTarget = false,
-			parameter = false,
-			words = "adito tera",
-			id = 78,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Disintegrate Rune",
-			premium = true,
+			words = "adito tera",
+			type = "Conjure",
 			source = 3147,
+			level = 21,
 			group = {
 				[3] = 2000
 			},
@@ -2522,18 +2770,18 @@ SpellInfo = {
 			}
 		},
 		Berserk = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Berserk",
 			soul = 0,
 			mana = 115,
 			level = 35,
-			needTarget = false,
-			words = "exori",
-			id = 80,
 			exhaustion = 4000,
-			name = "Berserk",
-			premium = true,
-			range = 0,
+			id = 80,
+			words = "exori",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2544,19 +2792,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE1X1
 		},
 		Levitate = {
+			premium = true,
+			range = 0,
 			parameter = true,
-			type = "Instant",
+			needTarget = false,
+			name = "Levitate",
 			soul = 0,
 			mana = 50,
 			level = 12,
-			needTarget = false,
+			exhaustion = 2000,
 			parameterPlaceholder = "up|down",
 			words = "exani hur",
+			type = "Instant",
 			id = 81,
-			exhaustion = 2000,
-			name = "Levitate",
-			premium = true,
-			range = 0,
 			group = {
 				[3] = 2000
 			},
@@ -2574,18 +2822,18 @@ SpellInfo = {
 			}
 		},
 		["Mass Healing"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Mass Healing",
 			soul = 0,
 			mana = 150,
 			level = 36,
-			needTarget = false,
-			words = "exura gran mas res",
-			id = 82,
 			exhaustion = 2000,
-			name = "Mass Healing",
-			premium = true,
-			range = 0,
+			id = 82,
+			words = "exura gran mas res",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -2595,20 +2843,20 @@ SpellInfo = {
 			}
 		},
 		["Animate Dead"] = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 83,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Animate Dead",
 			soul = 5,
 			mana = 600,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adana mort",
-			id = 83,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Animate Dead",
-			premium = true,
+			words = "adana mort",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -2620,19 +2868,19 @@ SpellInfo = {
 			}
 		},
 		["Heal Friend"] = {
+			premium = true,
+			range = 7,
 			parameter = true,
-			type = "Instant",
+			needTarget = true,
+			name = "Heal Friend",
 			soul = 0,
 			mana = 120,
 			level = 18,
-			needTarget = true,
+			exhaustion = 1000,
 			parameterPlaceholder = "name",
 			words = "exura sio",
+			type = "Instant",
 			id = 84,
-			exhaustion = 1000,
-			name = "Heal Friend",
-			premium = true,
-			range = 7,
 			group = {
 				[2] = 1000
 			},
@@ -2642,20 +2890,20 @@ SpellInfo = {
 			}
 		},
 		["Magic Wall"] = {
-			maglevel = 9,
-			type = "Conjure",
+			id = 86,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Magic Wall Rune",
 			soul = 5,
 			mana = 750,
-			level = 32,
-			needTarget = false,
-			parameter = false,
-			words = "adevo grav tera",
-			id = 86,
-			range = 0,
+			maglevel = 9,
 			exhaustion = 2000,
-			name = "Magic Wall Rune",
-			premium = true,
+			words = "adevo grav tera",
+			type = "Conjure",
 			source = 3147,
+			level = 32,
 			group = {
 				[3] = 2000
 			},
@@ -2665,18 +2913,18 @@ SpellInfo = {
 			}
 		},
 		["Death Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Death Strike",
 			soul = 0,
 			mana = 20,
 			level = 16,
-			needTarget = false,
-			words = "exori mort",
-			id = 87,
 			exhaustion = 2000,
-			name = "Death Strike",
-			premium = true,
-			range = 3,
+			id = 87,
+			words = "exori mort",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2686,18 +2934,18 @@ SpellInfo = {
 			}
 		},
 		["Energy Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Energy Strike",
 			soul = 0,
 			mana = 20,
 			level = 12,
-			needTarget = false,
-			words = "exori vis",
-			id = 88,
 			exhaustion = 2000,
-			name = "Energy Strike",
-			premium = true,
-			range = 3,
+			id = 88,
+			words = "exori vis",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2709,18 +2957,18 @@ SpellInfo = {
 			}
 		},
 		["Flame Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Flame Strike",
 			soul = 0,
 			mana = 20,
 			level = 14,
-			needTarget = false,
-			words = "exori flam",
-			id = 89,
 			exhaustion = 2000,
-			name = "Flame Strike",
-			premium = true,
-			range = 3,
+			id = 89,
+			words = "exori flam",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2732,18 +2980,18 @@ SpellInfo = {
 			}
 		},
 		["Cancel Invisibility"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cancel Invisibility",
 			soul = 0,
 			mana = 200,
 			level = 26,
-			needTarget = false,
-			words = "exana ina",
-			id = 90,
 			exhaustion = 2000,
-			name = "Cancel Invisibility",
-			premium = true,
-			range = 0,
+			id = 90,
+			words = "exana ina",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2753,20 +3001,20 @@ SpellInfo = {
 			}
 		},
 		Poisonbomb = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 91,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Poison Bomb Rune",
 			soul = 2,
 			mana = 520,
-			level = 25,
-			needTarget = false,
-			parameter = false,
-			words = "adevo mas pox",
-			id = 91,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Poison Bomb Rune",
-			premium = true,
+			words = "adevo mas pox",
+			type = "Conjure",
 			source = 3147,
+			level = 25,
 			group = {
 				[3] = 2000
 			},
@@ -2776,18 +3024,18 @@ SpellInfo = {
 			}
 		},
 		["Conjure Wand of Darkness"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Conjure",
+			needTarget = false,
+			name = "Conjure Wand of Darkness",
 			soul = 0,
 			mana = 250,
 			level = 41,
-			needTarget = false,
-			words = "exevo gran mort",
-			id = 92,
 			exhaustion = 1200000,
-			name = "Conjure Wand of Darkness",
-			premium = true,
-			range = 0,
+			id = 92,
+			words = "exevo gran mort",
+			type = "Conjure",
 			group = {
 				[3] = 2000
 			},
@@ -2797,18 +3045,18 @@ SpellInfo = {
 			}
 		},
 		Challenge = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Challenge",
 			soul = 0,
 			mana = 30,
 			level = 20,
-			needTarget = false,
-			words = "exeta res",
-			id = 93,
 			exhaustion = 2000,
-			name = "Challenge",
-			premium = true,
-			range = 0,
+			id = 93,
+			words = "exeta res",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -2817,20 +3065,20 @@ SpellInfo = {
 			}
 		},
 		["Wild Growth"] = {
-			maglevel = 8,
-			type = "Conjure",
+			id = 94,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Wild Growth",
 			soul = 5,
 			mana = 600,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adevo grav vita",
-			id = 94,
-			range = 0,
+			maglevel = 8,
 			exhaustion = 0,
-			name = "Wild Growth",
-			premium = true,
+			words = "adevo grav vita",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -2840,18 +3088,18 @@ SpellInfo = {
 			}
 		},
 		["Fierce Berserk"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Fierce Berserk",
 			soul = 0,
 			mana = 340,
 			level = 90,
-			needTarget = false,
-			words = "exori gran",
-			id = 105,
 			exhaustion = 6000,
-			name = "Fierce Berserk",
-			premium = true,
-			range = 0,
+			id = 105,
+			words = "exori gran",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2862,18 +3110,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE1X1
 		},
 		Groundshaker = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Groundshaker",
 			soul = 0,
 			mana = 160,
 			level = 33,
-			needTarget = false,
-			words = "exori mas",
-			id = 106,
 			exhaustion = 8000,
-			name = "Groundshaker",
-			premium = true,
-			range = 0,
+			id = 106,
+			words = "exori mas",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2884,18 +3132,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE3X3
 		},
 		["Whirlwind Throw"] = {
+			premium = true,
+			range = 5,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Whirlwind Throw",
 			soul = 0,
 			mana = 40,
 			level = 28,
-			needTarget = true,
-			words = "exori hur",
-			id = 107,
 			exhaustion = 6000,
-			name = "Whirlwind Throw",
-			premium = true,
-			range = 5,
+			id = 107,
+			words = "exori hur",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2905,19 +3153,19 @@ SpellInfo = {
 			}
 		},
 		["Enchant Spear"] = {
-			parameter = false,
-			type = "Conjure",
-			soul = 3,
-			mana = 350,
-			level = 45,
-			needTarget = false,
-			range = 0,
-			words = "exeta con",
 			id = 110,
-			exhaustion = 2000,
-			name = "Enchant Spear",
 			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Enchant Spear",
+			soul = 3,
 			source = 3277,
+			level = 45,
+			exhaustion = 2000,
+			words = "exeta con",
+			type = "Conjure",
+			mana = 350,
 			group = {
 				[3] = 2000
 			},
@@ -2927,18 +3175,18 @@ SpellInfo = {
 			}
 		},
 		["Ethereal Spear"] = {
+			premium = true,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Ethereal Spear",
 			soul = 0,
 			mana = 25,
 			level = 23,
-			needTarget = true,
-			words = "exori con",
-			id = 111,
 			exhaustion = 2000,
-			name = "Ethereal Spear",
-			premium = true,
-			range = 7,
+			id = 111,
+			words = "exori con",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2948,18 +3196,18 @@ SpellInfo = {
 			}
 		},
 		["Ice Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ice Strike",
 			soul = 0,
 			mana = 20,
 			level = 15,
-			needTarget = false,
-			words = "exori frigo",
-			id = 112,
 			exhaustion = 2000,
-			name = "Ice Strike",
-			premium = true,
-			range = 3,
+			id = 112,
+			words = "exori frigo",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2971,18 +3219,18 @@ SpellInfo = {
 			}
 		},
 		["Terra Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Terra Strike",
 			soul = 0,
 			mana = 20,
 			level = 13,
-			needTarget = false,
-			words = "exori tera",
-			id = 113,
 			exhaustion = 2000,
-			name = "Terra Strike",
-			premium = true,
-			range = 3,
+			id = 113,
+			words = "exori tera",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -2994,20 +3242,20 @@ SpellInfo = {
 			}
 		},
 		Icicle = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 114,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Icicle",
 			soul = 3,
 			mana = 460,
-			level = 28,
-			needTarget = false,
-			parameter = false,
-			words = "adori frigo",
-			id = 114,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Icicle",
-			premium = true,
+			words = "adori frigo",
+			type = "Conjure",
 			source = 3147,
+			level = 28,
 			group = {
 				[3] = 2000
 			},
@@ -3017,20 +3265,20 @@ SpellInfo = {
 			}
 		},
 		Avalanche = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 115,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Avalanche",
 			soul = 3,
 			mana = 530,
-			level = 30,
-			needTarget = false,
-			parameter = false,
-			words = "adori mas frigo",
-			id = 115,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Avalanche",
-			premium = false,
+			words = "adori mas frigo",
+			type = "Conjure",
 			source = 3147,
+			level = 30,
 			group = {
 				[3] = 2000
 			},
@@ -3040,20 +3288,20 @@ SpellInfo = {
 			}
 		},
 		["Stone Shower"] = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 116,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Stone Shower",
 			soul = 3,
 			mana = 430,
-			level = 28,
-			needTarget = false,
-			parameter = false,
-			words = "adori mas tera",
-			id = 116,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Stone Shower",
-			premium = true,
+			words = "adori mas tera",
+			type = "Conjure",
 			source = 3147,
+			level = 28,
 			group = {
 				[3] = 2000
 			},
@@ -3063,20 +3311,20 @@ SpellInfo = {
 			}
 		},
 		Thunderstorm = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 117,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Thunderstorm",
 			soul = 3,
 			mana = 430,
-			level = 28,
-			needTarget = false,
-			parameter = false,
-			words = "adori mas vis",
-			id = 117,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Thunderstorm",
-			premium = true,
+			words = "adori mas vis",
+			type = "Conjure",
 			source = 3147,
+			level = 28,
 			group = {
 				[3] = 2000
 			},
@@ -3086,18 +3334,18 @@ SpellInfo = {
 			}
 		},
 		["Eternal Winter"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Eternal Winter",
 			soul = 0,
 			mana = 1050,
 			level = 60,
-			needTarget = false,
-			words = "exevo gran mas frigo",
-			id = 118,
 			exhaustion = 40000,
-			name = "Eternal Winter",
-			premium = true,
-			range = 0,
+			id = 118,
+			words = "exevo gran mas frigo",
+			type = "Instant",
 			group = {
 				[1] = 4000,
 				[7] = 40000
@@ -3109,18 +3357,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE5X5
 		},
 		["Rage of the Skies"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Rage of the Skies",
 			soul = 0,
 			mana = 600,
 			level = 55,
-			needTarget = false,
-			words = "exevo gran mas vis",
-			id = 119,
 			exhaustion = 40000,
-			name = "Rage of the Skies",
-			premium = true,
-			range = 0,
+			id = 119,
+			words = "exevo gran mas vis",
+			type = "Instant",
 			group = {
 				[1] = 4000,
 				[7] = 40000
@@ -3132,19 +3380,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE5X5
 		},
 		["Terra Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Terra Wave",
 			soul = 0,
 			mana = 170,
 			level = 38,
-			needTarget = false,
-			directional = true,
-			words = "exevo tera hur",
-			id = 120,
 			exhaustion = 4000,
-			name = "Terra Wave",
 			premium = false,
-			range = 0,
+			words = "exevo tera hur",
+			type = "Instant",
+			id = 120,
 			group = {
 				[1] = 2000
 			},
@@ -3155,19 +3403,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE4
 		},
 		["Ice Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ice Wave",
 			soul = 0,
 			mana = 25,
 			level = 18,
-			needTarget = false,
-			directional = true,
-			words = "exevo frigo hur",
-			id = 121,
 			exhaustion = 3000,
-			name = "Ice Wave",
 			premium = false,
-			range = 0,
+			words = "exevo frigo hur",
+			type = "Instant",
+			id = 121,
 			group = {
 				[1] = 2000
 			},
@@ -3178,18 +3426,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE5
 		},
 		["Divine Missile"] = {
+			premium = true,
+			range = 4,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Missile",
 			soul = 0,
 			mana = 20,
 			level = 40,
-			needTarget = false,
-			words = "exori san",
-			id = 122,
 			exhaustion = 2000,
-			name = "Divine Missile",
-			premium = true,
-			range = 4,
+			id = 122,
+			words = "exori san",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3199,18 +3447,18 @@ SpellInfo = {
 			}
 		},
 		["Wound Cleansing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Wound Cleansing",
 			soul = 0,
 			mana = 40,
 			level = 8,
-			needTarget = false,
-			words = "exura ico",
-			id = 123,
 			exhaustion = 2000,
-			name = "Wound Cleansing",
-			premium = false,
-			range = 0,
+			id = 123,
+			words = "exura ico",
+			type = "Instant",
 			group = {
 				[2] = 2000
 			},
@@ -3220,18 +3468,18 @@ SpellInfo = {
 			}
 		},
 		["Divine Caldera"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Caldera",
 			soul = 0,
 			mana = 160,
 			level = 50,
-			needTarget = false,
-			words = "exevo mas san",
-			id = 124,
 			exhaustion = 4000,
-			name = "Divine Caldera",
-			premium = true,
-			range = 0,
+			id = 124,
+			words = "exevo mas san",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3242,18 +3490,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE3X3
 		},
 		["Divine Healing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Healing",
 			soul = 0,
 			mana = 160,
 			level = 35,
-			needTarget = false,
-			words = "exura san",
-			id = 125,
 			exhaustion = 1000,
-			name = "Divine Healing",
-			premium = false,
-			range = 0,
+			id = 125,
+			words = "exura san",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3263,18 +3511,18 @@ SpellInfo = {
 			}
 		},
 		["Train Party"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Train Party",
 			soul = 0,
 			mana = 60,
 			level = 32,
-			needTarget = false,
-			words = "utito mas sio",
-			id = 126,
 			exhaustion = 2000,
-			name = "Train Party",
-			premium = true,
-			range = 0,
+			id = 126,
+			words = "utito mas sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3284,18 +3532,18 @@ SpellInfo = {
 			}
 		},
 		["Protect Party"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Protect Party",
 			soul = 0,
 			mana = 90,
 			level = 32,
-			needTarget = false,
-			words = "utamo mas sio",
-			id = 127,
 			exhaustion = 2000,
-			name = "Protect Party",
-			premium = true,
-			range = 0,
+			id = 127,
+			words = "utamo mas sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3305,18 +3553,18 @@ SpellInfo = {
 			}
 		},
 		["Heal Party"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Heal Party",
 			soul = 0,
 			mana = 120,
 			level = 32,
-			needTarget = false,
-			words = "utura mas sio",
-			id = 128,
 			exhaustion = 2000,
-			name = "Heal Party",
-			premium = true,
-			range = 0,
+			id = 128,
+			words = "utura mas sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3326,18 +3574,18 @@ SpellInfo = {
 			}
 		},
 		["Enchant Party"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Enchant Party",
 			soul = 0,
 			mana = 120,
 			level = 32,
-			needTarget = false,
-			words = "utori mas sio",
-			id = 129,
 			exhaustion = 2000,
-			name = "Enchant Party",
-			premium = true,
-			range = 0,
+			id = 129,
+			words = "utori mas sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3347,20 +3595,20 @@ SpellInfo = {
 			}
 		},
 		["Holy Missile"] = {
-			maglevel = 4,
-			type = "Conjure",
+			id = 130,
+			premium = true,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Holy Missile",
 			soul = 3,
 			mana = 300,
-			level = 27,
-			needTarget = false,
-			parameter = false,
-			words = "adori san",
-			id = 130,
-			range = 0,
+			maglevel = 4,
 			exhaustion = 2000,
-			name = "Holy Missile",
-			premium = true,
+			words = "adori san",
+			type = "Conjure",
 			source = 3147,
+			level = 27,
 			group = {
 				[3] = 2000
 			},
@@ -3370,19 +3618,19 @@ SpellInfo = {
 			}
 		},
 		Charge = {
+			id = 131,
+			premium = true,
+			duration = 5000,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Charge",
 			soul = 0,
 			mana = 100,
 			level = 25,
-			needTarget = false,
-			words = "utani tempo hur",
-			id = 131,
-			duration = 5000,
 			exhaustion = 2000,
-			name = "Charge",
-			premium = true,
 			range = 0,
+			words = "utani tempo hur",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3392,18 +3640,18 @@ SpellInfo = {
 			}
 		},
 		Protector = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Protector",
 			soul = 0,
 			mana = 200,
 			level = 55,
-			needTarget = false,
-			words = "utamo tempo",
-			id = 132,
 			exhaustion = 2000,
-			name = "Protector",
-			premium = true,
-			range = 0,
+			id = 132,
+			words = "utamo tempo",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[7] = 2000
@@ -3414,18 +3662,18 @@ SpellInfo = {
 			}
 		},
 		["Blood Rage"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Blood Rage",
 			soul = 0,
 			mana = 290,
 			level = 60,
-			needTarget = false,
-			words = "utito tempo",
-			id = 133,
 			exhaustion = 2000,
-			name = "Blood Rage",
-			premium = true,
-			range = 0,
+			id = 133,
+			words = "utito tempo",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[7] = 2000
@@ -3436,19 +3684,19 @@ SpellInfo = {
 			}
 		},
 		["Swift Foot"] = {
+			id = 134,
+			premium = false,
+			duration = 10000,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Swift Foot",
 			soul = 0,
 			mana = 400,
 			level = 55,
-			needTarget = false,
-			words = "utamo tempo san",
-			id = 134,
-			duration = 10000,
 			exhaustion = 10000,
-			name = "Swift Foot",
-			premium = false,
 			range = 0,
+			words = "utamo tempo san",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[7] = 10000
@@ -3459,18 +3707,18 @@ SpellInfo = {
 			}
 		},
 		Sharpshooter = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Sharpshooter",
 			soul = 0,
 			mana = 250,
 			level = 20,
-			needTarget = false,
-			words = "utori con",
-			id = 313,
 			exhaustion = 10000,
-			name = "Sharpshooter",
-			premium = false,
-			range = 0,
+			id = 313,
+			words = "utori con",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -3480,18 +3728,18 @@ SpellInfo = {
 			}
 		},
 		Ignite = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Ignite",
 			soul = 0,
 			mana = 30,
 			level = 26,
-			needTarget = true,
-			words = "utori flam",
-			id = 138,
 			exhaustion = 30000,
-			name = "Ignite",
-			premium = false,
-			range = 3,
+			id = 138,
+			words = "utori flam",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3501,18 +3749,18 @@ SpellInfo = {
 			}
 		},
 		Curse = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Curse",
 			soul = 0,
 			mana = 30,
 			level = 75,
-			needTarget = true,
-			words = "utori mort",
-			id = 139,
 			exhaustion = 40000,
-			name = "Curse",
-			premium = false,
-			range = 3,
+			id = 139,
+			words = "utori mort",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3522,18 +3770,18 @@ SpellInfo = {
 			}
 		},
 		Electrify = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Electrify",
 			soul = 0,
 			mana = 30,
 			level = 34,
-			needTarget = true,
-			words = "utori vis",
-			id = 140,
 			exhaustion = 30000,
-			name = "Electrify",
-			premium = false,
-			range = 3,
+			id = 140,
+			words = "utori vis",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3543,18 +3791,18 @@ SpellInfo = {
 			}
 		},
 		["Inflict Wound"] = {
+			premium = false,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Inflict Wound",
 			soul = 0,
 			mana = 30,
 			level = 40,
-			needTarget = true,
-			words = "utori kor",
-			id = 141,
 			exhaustion = 30000,
-			name = "Inflict Wound",
-			premium = false,
-			range = 1,
+			id = 141,
+			words = "utori kor",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3565,18 +3813,18 @@ SpellInfo = {
 			}
 		},
 		Envenom = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Envenom",
 			soul = 0,
 			mana = 30,
 			level = 50,
-			needTarget = true,
-			words = "utori pox",
-			id = 142,
 			exhaustion = 40000,
-			name = "Envenom",
-			premium = false,
-			range = 3,
+			id = 142,
+			words = "utori pox",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3586,18 +3834,18 @@ SpellInfo = {
 			}
 		},
 		["Holy Flash"] = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Holy Flash",
 			soul = 0,
 			mana = 30,
 			level = 70,
-			needTarget = true,
-			words = "utori san",
-			id = 143,
 			exhaustion = 10000,
-			name = "Holy Flash",
-			premium = false,
-			range = 3,
+			id = 143,
+			words = "utori san",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3607,18 +3855,18 @@ SpellInfo = {
 			}
 		},
 		["Cure Bleeding"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cure Bleeding",
 			soul = 0,
 			mana = 30,
 			level = 45,
-			needTarget = false,
-			words = "exana kor",
-			id = 144,
 			exhaustion = 6000,
-			name = "Cure Bleeding",
-			premium = false,
-			range = 0,
+			id = 144,
+			words = "exana kor",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3630,18 +3878,18 @@ SpellInfo = {
 			}
 		},
 		["Cure Burning"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cure Burning",
 			soul = 0,
 			mana = 30,
 			level = 30,
-			needTarget = false,
-			words = "exana flam",
-			id = 145,
 			exhaustion = 6000,
-			name = "Cure Burning",
-			premium = false,
-			range = 0,
+			id = 145,
+			words = "exana flam",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3651,18 +3899,18 @@ SpellInfo = {
 			}
 		},
 		["Cure Electrification"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cure Electrification",
 			soul = 0,
 			mana = 30,
 			level = 22,
-			needTarget = false,
-			words = "exana vis",
-			id = 146,
 			exhaustion = 6000,
-			name = "Cure Electrification",
-			premium = false,
-			range = 0,
+			id = 146,
+			words = "exana vis",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3672,18 +3920,18 @@ SpellInfo = {
 			}
 		},
 		["Cure Curse"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cure Curse",
 			soul = 0,
 			mana = 40,
 			level = 80,
-			needTarget = false,
-			words = "exana mort",
-			id = 147,
 			exhaustion = 6000,
-			name = "Cure Curse",
-			premium = false,
-			range = 0,
+			id = 147,
+			words = "exana mort",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3693,18 +3941,18 @@ SpellInfo = {
 			}
 		},
 		["Physical Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Physical Strike",
 			soul = 0,
 			mana = 20,
 			level = 16,
-			needTarget = false,
-			words = "exori moe ico",
-			id = 148,
 			exhaustion = 2000,
-			name = "Physical Strike",
-			premium = true,
-			range = 3,
+			id = 148,
+			words = "exori moe ico",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -3714,18 +3962,18 @@ SpellInfo = {
 			}
 		},
 		Lightning = {
+			premium = true,
+			range = 4,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Lightning",
 			soul = 0,
 			mana = 60,
 			level = 55,
-			needTarget = false,
-			words = "exori amp vis",
-			id = 149,
 			exhaustion = 6000,
-			name = "Lightning",
-			premium = true,
-			range = 4,
+			id = 149,
+			words = "exori amp vis",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 8000
@@ -3736,18 +3984,18 @@ SpellInfo = {
 			}
 		},
 		["Strong Flame Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Flame Strike",
 			soul = 0,
 			mana = 60,
 			level = 70,
-			needTarget = false,
-			words = "exori gran flam",
-			id = 150,
 			exhaustion = 8000,
-			name = "Strong Flame Strike",
-			premium = true,
-			range = 3,
+			id = 150,
+			words = "exori gran flam",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 8000
@@ -3758,18 +4006,18 @@ SpellInfo = {
 			}
 		},
 		["Strong Energy Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Energy Strike",
 			soul = 0,
 			mana = 60,
 			level = 80,
-			needTarget = false,
-			words = "exori gran vis",
-			id = 151,
 			exhaustion = 8000,
-			name = "Strong Energy Strike",
-			premium = true,
-			range = 3,
+			id = 151,
+			words = "exori gran vis",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 8000
@@ -3780,18 +4028,18 @@ SpellInfo = {
 			}
 		},
 		["Strong Ice Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Ice Strike",
 			soul = 0,
 			mana = 60,
 			level = 80,
-			needTarget = false,
-			words = "exori gran frigo",
-			id = 152,
 			exhaustion = 8000,
-			name = "Strong Ice Strike",
-			premium = true,
-			range = 3,
+			id = 152,
+			words = "exori gran frigo",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 8000
@@ -3802,18 +4050,18 @@ SpellInfo = {
 			}
 		},
 		["Strong Terra Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Strong Terra Strike",
 			soul = 0,
 			mana = 60,
 			level = 70,
-			needTarget = false,
-			words = "exori gran tera",
-			id = 153,
 			exhaustion = 8000,
-			name = "Strong Terra Strike",
-			premium = true,
-			range = 3,
+			id = 153,
+			words = "exori gran tera",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 8000
@@ -3824,18 +4072,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Flame Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Flame Strike",
 			soul = 0,
 			mana = 100,
 			level = 90,
-			needTarget = false,
-			words = "exori max flam",
-			id = 154,
 			exhaustion = 30000,
-			name = "Ultimate Flame Strike",
-			premium = true,
-			range = 3,
+			id = 154,
+			words = "exori max flam",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[8] = 30000
@@ -3846,18 +4094,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Energy Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Energy Strike",
 			soul = 0,
 			mana = 100,
 			level = 100,
-			needTarget = false,
-			words = "exori max vis",
-			id = 155,
 			exhaustion = 30000,
-			name = "Ultimate Energy Strike",
-			premium = true,
-			range = 3,
+			id = 155,
+			words = "exori max vis",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[8] = 30000
@@ -3868,18 +4116,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Ice Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Ice Strike",
 			soul = 0,
 			mana = 100,
 			level = 100,
-			needTarget = false,
-			words = "exori max frigo",
-			id = 156,
 			exhaustion = 30000,
-			name = "Ultimate Ice Strike",
-			premium = true,
-			range = 3,
+			id = 156,
+			words = "exori max frigo",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[8] = 30000
@@ -3890,18 +4138,18 @@ SpellInfo = {
 			}
 		},
 		["Ultimate Terra Strike"] = {
+			premium = true,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ultimate Terra Strike",
 			soul = 0,
 			mana = 100,
 			level = 90,
-			needTarget = false,
-			words = "exori max tera",
-			id = 157,
 			exhaustion = 30000,
-			name = "Ultimate Terra Strike",
-			premium = true,
-			range = 3,
+			id = 157,
+			words = "exori max tera",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[8] = 30000
@@ -3912,18 +4160,18 @@ SpellInfo = {
 			}
 		},
 		["Intense Wound Cleansing"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Intense Wound Cleansing",
 			soul = 0,
 			mana = 200,
 			level = 80,
-			needTarget = false,
-			words = "exura gran ico",
-			id = 158,
 			exhaustion = 120000,
-			name = "Intense Wound Cleansing",
-			premium = true,
-			range = 0,
+			id = 158,
+			words = "exura gran ico",
+			type = "Instant",
 			group = {
 				[2] = 2000
 			},
@@ -3933,18 +4181,18 @@ SpellInfo = {
 			}
 		},
 		Recovery = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Recovery",
 			soul = 0,
 			mana = 75,
 			level = 50,
-			needTarget = false,
-			words = "utura",
-			id = 159,
 			exhaustion = 60000,
-			name = "Recovery",
-			premium = false,
-			range = 0,
+			id = 159,
+			words = "utura",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3956,18 +4204,18 @@ SpellInfo = {
 			}
 		},
 		["Intense Recovery"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Intense Recovery",
 			soul = 0,
 			mana = 165,
 			level = 100,
-			needTarget = false,
-			words = "utura gran",
-			id = 160,
 			exhaustion = 60000,
-			name = "Intense Recovery",
-			premium = false,
-			range = 0,
+			id = 160,
+			words = "utura gran",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3979,18 +4227,18 @@ SpellInfo = {
 			}
 		},
 		["Practise Healing"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Practise Healing",
 			soul = 0,
 			mana = 5,
 			level = 1,
-			needTarget = false,
-			words = "exura dis",
-			id = 166,
 			exhaustion = 1000,
-			name = "Practise Healing",
-			premium = false,
-			range = 0,
+			id = 166,
+			words = "exura dis",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -3999,19 +4247,19 @@ SpellInfo = {
 			}
 		},
 		["Practise Fire Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Practise Fire Wave",
 			soul = 0,
 			mana = 5,
 			level = 1,
-			needTarget = false,
-			directional = true,
-			words = "exevo dis flam hur",
-			id = 167,
 			exhaustion = 3000,
-			name = "Practise Fire Wave",
 			premium = false,
-			range = 0,
+			words = "exevo dis flam hur",
+			type = "Instant",
+			id = 167,
 			group = {
 				[1] = 2000
 			},
@@ -4020,19 +4268,104 @@ SpellInfo = {
 			},
 			area = SpellAreas.AREA_SQUAREWAVE5
 		},
-		["Apprentice's Strike"] = {
+		["Practise Magic Missile"] = {
+			id = 168,
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Practice Magic Missile Rune",
+			soul = 0,
+			mana = 5,
+			maglevel = 0,
+			exhaustion = 2000,
+			words = "adori dis min vis",
+			type = "Conjure",
+			source = 3147,
+			level = 1,
+			group = {
+				[3] = 2000
+			},
+			vocations = {
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10
+			}
+		},
+		["Lightest Missile"] = {
+			id = 179,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Lightest Missile Rune",
+			soul = 0,
+			mana = 6,
+			maglevel = 0,
+			exhaustion = 2000,
+			words = "adori infir vis",
+			type = "Conjure",
+			source = 3147,
+			level = 1,
+			group = {
+				[3] = 2000
+			},
+			vocations = {
+				1,
+				2,
+				3,
+				5,
+				6,
+				7
+			}
+		},
+		["Light Stone Shower"] = {
+			id = 180,
+			premium = false,
+			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Light Stone Shower Rune",
+			soul = 3,
+			mana = 6,
+			maglevel = 0,
+			exhaustion = 2000,
+			words = "adori infir mas tera",
+			type = "Conjure",
+			source = 3147,
+			level = 1,
+			group = {
+				[3] = 2000
+			},
+			vocations = {
+				1,
+				2,
+				3,
+				5,
+				6,
+				7
+			}
+		},
+		["Apprentice's Strike"] = {
+			premium = false,
+			range = 3,
+			parameter = false,
+			needTarget = false,
+			name = "Apprentice's Strike",
 			soul = 0,
 			mana = 6,
 			level = 8,
-			needTarget = false,
-			words = "exori min flam",
-			id = 169,
 			exhaustion = 2000,
-			name = "Apprentice's Strike",
-			premium = false,
-			range = 3,
+			id = 169,
+			words = "exori min flam",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -4044,18 +4377,18 @@ SpellInfo = {
 			}
 		},
 		["Bruise Bane"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Bruise Bane",
 			soul = 0,
 			mana = 10,
 			level = 1,
-			needTarget = false,
-			words = "exura infir ico",
-			id = 175,
 			exhaustion = 2000,
-			name = "Bruise Bane",
-			premium = false,
-			range = 0,
+			id = 175,
+			words = "exura infir ico",
+			type = "Instant",
 			group = {
 				[2] = 2000
 			},
@@ -4065,18 +4398,18 @@ SpellInfo = {
 			}
 		},
 		["Mud Attack"] = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Mud Attack",
 			soul = 0,
 			mana = 6,
 			level = 1,
-			needTarget = false,
-			words = "exori infir tera",
-			id = 172,
 			exhaustion = 2000,
-			name = "Mud Attack",
-			premium = false,
-			range = 3,
+			id = 172,
+			words = "exori infir tera",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -4086,19 +4419,19 @@ SpellInfo = {
 			}
 		},
 		["Chill Out"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Chill Out",
 			soul = 0,
 			mana = 8,
 			level = 1,
-			needTarget = false,
-			directional = true,
-			words = "exevo infir frigo hur",
-			id = 173,
 			exhaustion = 4000,
-			name = "Chill Out",
 			premium = false,
-			range = 0,
+			words = "exevo infir frigo hur",
+			type = "Instant",
+			id = 173,
 			group = {
 				[1] = 2000
 			},
@@ -4109,18 +4442,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE5
 		},
 		["Magic Patch"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Magic Patch",
 			soul = 0,
 			mana = 6,
 			level = 1,
-			needTarget = false,
-			words = "exura infir",
-			id = 174,
 			exhaustion = 1000,
-			name = "Magic Patch",
-			premium = false,
-			range = 0,
+			id = 174,
+			words = "exura infir",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -4136,18 +4469,18 @@ SpellInfo = {
 			}
 		},
 		["Arrow Call"] = {
-			parameter = false,
-			type = "Conjure",
-			soul = 1,
-			mana = 10,
-			level = 1,
-			needTarget = false,
-			words = "exevo infir con",
-			id = 176,
-			exhaustion = 2000,
-			name = "Arrow Call",
 			premium = false,
 			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Arrow Call",
+			soul = 1,
+			mana = 30,
+			level = 1,
+			exhaustion = 2000,
+			id = 176,
+			words = "exevo infir con",
+			type = "Conjure",
 			group = {
 				[3] = 2000
 			},
@@ -4157,18 +4490,18 @@ SpellInfo = {
 			}
 		},
 		Buzz = {
+			premium = false,
+			range = 3,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Buzz",
 			soul = 0,
 			mana = 6,
 			level = 1,
-			needTarget = false,
-			words = "exori infir vis",
-			id = 177,
 			exhaustion = 2000,
-			name = "Buzz",
-			premium = false,
-			range = 3,
+			id = 177,
+			words = "exori infir vis",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -4178,19 +4511,19 @@ SpellInfo = {
 			}
 		},
 		Scorch = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Scorch",
 			soul = 0,
 			mana = 8,
 			level = 1,
-			needTarget = false,
-			directional = true,
-			words = "exevo infir flam hur",
-			id = 178,
 			exhaustion = 3000,
-			name = "Scorch",
 			premium = false,
-			range = 0,
+			words = "exevo infir flam hur",
+			type = "Instant",
+			id = 178,
 			group = {
 				[1] = 2000
 			},
@@ -4201,18 +4534,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE5
 		},
 		["Summon Knight Familiar"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 2000,
-			level = 200,
-			needTarget = false,
-			words = "utevo gran res eq",
-			id = 194,
-			exhaustion = 1800000,
-			name = "Summon Knight Familiar",
 			premium = false,
 			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Summon Knight Familiar",
+			soul = 0,
+			mana = 1000,
+			level = 200,
+			exhaustion = 1800000,
+			id = 194,
+			words = "utevo gran res eq",
+			type = "Instant",
 			group = {
 				[3] = 4000
 			},
@@ -4221,18 +4554,18 @@ SpellInfo = {
 			}
 		},
 		["Summon Paladin Familiar"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Summon Paladin Familiar",
 			soul = 0,
 			mana = 2000,
 			level = 200,
-			needTarget = false,
-			words = "utevo gran res sac",
-			id = 195,
 			exhaustion = 1800000,
-			name = "Summon Paladin Familiar",
-			premium = false,
-			range = 0,
+			id = 195,
+			words = "utevo gran res sac",
+			type = "Instant",
 			group = {
 				[3] = 4000
 			},
@@ -4241,18 +4574,18 @@ SpellInfo = {
 			}
 		},
 		["Summon Sorcerer Familiar"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Summon Sorcerer Familiar",
 			soul = 0,
 			mana = 3000,
 			level = 200,
-			needTarget = false,
-			words = "utevo gran res ven",
-			id = 196,
 			exhaustion = 1800000,
-			name = "Summon Sorcerer Familiar",
-			premium = false,
-			range = 0,
+			id = 196,
+			words = "utevo gran res ven",
+			type = "Instant",
 			group = {
 				[3] = 4000
 			},
@@ -4261,18 +4594,18 @@ SpellInfo = {
 			}
 		},
 		["Summon Druid Familiar"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Summon Druid Familiar",
 			soul = 0,
 			mana = 3000,
 			level = 200,
-			needTarget = false,
-			words = "utevo gran res dru",
-			id = 197,
 			exhaustion = 1800000,
-			name = "Summon Druid Familiar",
-			premium = false,
-			range = 0,
+			id = 197,
+			words = "utevo gran res dru",
+			type = "Instant",
 			group = {
 				[3] = 4000
 			},
@@ -4281,18 +4614,18 @@ SpellInfo = {
 			}
 		},
 		["Chivalrous Challenge"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Chivalrous Challenge",
 			soul = 0,
 			mana = 80,
 			level = 150,
-			needTarget = false,
-			words = "exeta amp res",
-			id = 237,
 			exhaustion = 2000,
-			name = "Chivalrous Challenge",
-			premium = true,
-			range = 0,
+			id = 237,
+			words = "exeta amp res",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4302,18 +4635,18 @@ SpellInfo = {
 			}
 		},
 		["Divine Dazzle"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Dazzle",
 			soul = 0,
 			mana = 80,
 			level = 250,
-			needTarget = false,
-			words = "exana amp res",
-			id = 238,
 			exhaustion = 16000,
-			name = "Divine Dazzle",
-			premium = true,
-			range = 0,
+			id = 238,
+			words = "exana amp res",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4323,18 +4656,18 @@ SpellInfo = {
 			}
 		},
 		["Fair Wound Cleansing"] = {
+			premium = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Fair Wound Cleansing",
 			soul = 0,
 			mana = 90,
 			level = 300,
-			needTarget = false,
-			words = "exura med ico",
-			id = 239,
 			exhaustion = 2000,
-			name = "Fair Wound Cleansing",
-			premium = true,
-			range = 0,
+			id = 239,
+			words = "exura med ico",
+			type = "Instant",
 			group = {
 				[2] = 2000
 			},
@@ -4344,19 +4677,19 @@ SpellInfo = {
 			}
 		},
 		["Great Fire Wave"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Great Fire Wave",
 			soul = 0,
 			mana = 120,
 			level = 38,
-			needTarget = false,
-			directional = true,
-			words = "exevo gran flam hur",
-			id = 240,
 			exhaustion = 4000,
-			name = "Great Fire Wave",
 			premium = false,
-			range = 0,
+			words = "exevo gran flam hur",
+			type = "Instant",
+			id = 240,
 			group = {
 				[1] = 2000
 			},
@@ -4367,18 +4700,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE6
 		},
 		Restoration = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Restoration",
 			soul = 0,
 			mana = 260,
 			level = 300,
-			needTarget = false,
-			words = "exura max vita",
-			id = 241,
 			exhaustion = 6000,
-			name = "Restoration",
-			premium = false,
-			range = 0,
+			id = 241,
+			words = "exura max vita",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -4390,19 +4723,19 @@ SpellInfo = {
 			}
 		},
 		["Nature's Embrace"] = {
+			premium = true,
+			range = 0,
 			parameter = true,
-			type = "Instant",
+			needTarget = true,
+			name = "Nature's Embrace",
 			soul = 0,
 			mana = 400,
 			level = 275,
-			needTarget = true,
+			exhaustion = 60000,
 			parameterPlaceholder = "name",
 			words = "exura gran sio",
+			type = "Instant",
 			id = 242,
-			exhaustion = 60000,
-			name = "Nature's Embrace",
-			premium = true,
-			range = 0,
 			group = {
 				[2] = 1000
 			},
@@ -4411,19 +4744,19 @@ SpellInfo = {
 				6
 			}
 		},
-		["Aura of Exposed Weakness"] = {
+		["Aura of Sapped Strength"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Aura of Sapped Strength",
 			soul = 0,
 			mana = 1500,
 			level = 175,
-			needTarget = false,
-			words = "exori moe tempo",
-			id = 311,
 			exhaustion = 30000,
-			name = "Aura of Exposed Weakness",
-			premium = false,
-			range = 0,
+			id = 311,
+			words = "exori kor tempo",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[6] = 2000
@@ -4433,19 +4766,19 @@ SpellInfo = {
 				5
 			}
 		},
-		["Aura of Sapped Strength"] = {
+		["Aura of Exposed Weakness"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Aura of Exposed Weakness",
 			soul = 0,
 			mana = 1500,
 			level = 175,
-			needTarget = false,
-			words = "exori kor tempo",
-			id = 312,
 			exhaustion = 30000,
-			name = "Aura of Sapped Strength",
-			premium = false,
-			range = 0,
+			id = 312,
+			words = "exori moe tempo",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[6] = 2000
@@ -4456,18 +4789,18 @@ SpellInfo = {
 			}
 		},
 		["Cancel Magic Shield"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Cancel Magic Shield",
 			soul = 0,
 			mana = 50,
 			level = 14,
-			needTarget = false,
-			words = "exana vita",
-			id = 245,
 			exhaustion = 2000,
-			name = "Cancel Magic Shield",
-			premium = false,
-			range = 0,
+			id = 245,
+			words = "exana vita",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4479,18 +4812,18 @@ SpellInfo = {
 			}
 		},
 		["Find Fiend"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Find Fiend",
 			soul = 0,
 			mana = 20,
 			level = 25,
-			needTarget = false,
-			words = "exiva moe res",
-			id = 248,
 			exhaustion = 2000,
-			name = "Find Fiend",
-			premium = false,
-			range = 0,
+			id = 248,
+			words = "exiva moe res",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4509,19 +4842,19 @@ SpellInfo = {
 		},
 		["Divine Grenade"] = {
 			parameter = false,
-			needTarget = false,
+			premium = false,
+			range = 5,
 			special = true,
+			needTarget = false,
 			soul = 0,
 			mana = 160,
 			level = 0,
+			crossHairTarget = true,
 			words = "exevo tempo mas san",
 			id = 258,
-			crossHairTarget = true,
 			exhaustion = 26000,
 			name = "Divine Grenade",
 			type = "Instant",
-			premium = false,
-			range = 5,
 			group = {
 				[1] = 2000
 			},
@@ -4531,20 +4864,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE2X2
 		},
 		["Great Death Beam"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
 			needTarget = false,
-			special = true,
+			name = "Great Death Beam",
 			soul = 0,
 			mana = 140,
-			level = 0,
-			directional = true,
-			words = "exevo max mort",
-			id = 260,
+			level = 66,
 			exhaustion = 10000,
-			name = "Great Death Beam",
-			type = "Instant",
 			premium = false,
-			range = 0,
+			words = "exevo max mort",
+			type = "Instant",
+			id = 260,
 			group = {
 				[1] = 2000,
 				[9] = 6000
@@ -4555,19 +4887,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_BEAM8
 		},
 		["Executioner's Throw"] = {
+			premium = false,
+			range = 5,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Executioner's Throw",
 			soul = 0,
 			mana = 225,
 			level = 300,
-			needTarget = true,
-			words = "exori amp kor",
-			id = 261,
-			special = true,
 			exhaustion = 2000,
-			name = "Executioner's Throw",
-			premium = false,
-			range = 5,
+			id = 261,
+			words = "exori amp kor",
+			type = "Instant",
+			special = true,
 			group = {
 				[1] = 2000
 			},
@@ -4576,20 +4908,20 @@ SpellInfo = {
 				8
 			}
 		},
-		["Ice Burst"] = {
+		["Terra Burst"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Terra Burst",
 			soul = 0,
 			mana = 230,
 			level = 300,
-			needTarget = false,
-			words = "exevo ulus frigo",
-			id = 262,
-			special = true,
 			exhaustion = 2000,
-			name = "Ice Burst",
-			premium = false,
-			range = 0,
+			id = 262,
+			words = "exevo ulus tera",
+			type = "Instant",
+			special = true,
 			group = {
 				[1] = 2000,
 				[10] = 2000
@@ -4600,20 +4932,20 @@ SpellInfo = {
 			},
 			area = SpellAreas.AREA_RING_BURST3
 		},
-		["Terra Burst"] = {
+		["Ice Burst"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ice Burst",
 			soul = 0,
 			mana = 230,
 			level = 300,
-			needTarget = false,
-			words = "exevo ulus tera",
-			id = 263,
-			special = true,
 			exhaustion = 2000,
-			name = "Terra Burst",
-			premium = false,
-			range = 0,
+			id = 263,
+			words = "exevo ulus frigo",
+			type = "Instant",
+			special = true,
 			group = {
 				[1] = 2000,
 				[10] = 2000
@@ -4625,19 +4957,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_RING_BURST3
 		},
 		["Avatar of Steel"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Avatar of Steel",
 			soul = 0,
 			mana = 800,
 			level = 0,
-			needTarget = false,
-			words = "uteta res eq",
-			id = 264,
-			special = true,
 			exhaustion = 7200000,
-			name = "Avatar of Steel",
-			premium = false,
-			range = 0,
+			id = 264,
+			words = "uteta res eq",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4646,19 +4978,19 @@ SpellInfo = {
 			}
 		},
 		["Avatar of Light"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 800,
-			level = 0,
-			needTarget = false,
-			words = "uteta res sac",
-			id = 265,
-			special = true,
-			exhaustion = 7200000,
-			name = "Avatar of Light",
 			premium = false,
 			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Avatar of Light",
+			soul = 0,
+			mana = 1500,
+			level = 0,
+			exhaustion = 7200000,
+			id = 265,
+			words = "uteta res sac",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4667,19 +4999,19 @@ SpellInfo = {
 			}
 		},
 		["Avatar of Storm"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 800,
-			level = 0,
-			needTarget = false,
-			words = "uteta res ven",
-			id = 266,
-			special = true,
-			exhaustion = 7200000,
-			name = "Avatar of Storm",
 			premium = false,
 			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Avatar of Storm",
+			soul = 0,
+			mana = 2200,
+			level = 0,
+			exhaustion = 7200000,
+			id = 266,
+			words = "uteta res ven",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4688,19 +5020,19 @@ SpellInfo = {
 			}
 		},
 		["Avatar of Nature"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 800,
-			level = 0,
-			needTarget = false,
-			words = "uteta res dru",
-			id = 267,
-			special = true,
-			exhaustion = 7200000,
-			name = "Avatar of Nature",
 			premium = false,
 			range = 0,
+			parameter = false,
+			needTarget = false,
+			name = "Avatar of Nature",
+			soul = 0,
+			mana = 2200,
+			level = 0,
+			exhaustion = 7200000,
+			id = 267,
+			words = "uteta res dru",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4709,19 +5041,19 @@ SpellInfo = {
 			}
 		},
 		["Divine Empowerment"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Empowerment",
 			soul = 0,
 			mana = 500,
 			level = 0,
-			needTarget = false,
-			words = "utevo grav san",
-			id = 268,
-			special = true,
 			exhaustion = 32000,
-			name = "Divine Empowerment",
-			premium = false,
-			range = 0,
+			id = 268,
+			words = "utevo grav san",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4731,18 +5063,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE2X2
 		},
 		["Lesser Ethereal Spear"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Lesser Ethereal Spear",
 			soul = 0,
 			mana = 6,
 			level = 1,
-			needTarget = true,
-			words = "exori infir con",
-			id = 270,
 			exhaustion = 8000,
-			name = "Lesser Ethereal Spear",
-			premium = false,
-			range = 7,
+			id = 270,
+			words = "exori infir con",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -4752,18 +5084,18 @@ SpellInfo = {
 			}
 		},
 		["Lesser Front Sweep"] = {
+			premium = false,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Lesser Front Sweep",
 			soul = 0,
 			mana = 6,
 			level = 1,
-			needTarget = false,
-			words = "exori infir min",
-			id = 271,
 			exhaustion = 6000,
-			name = "Lesser Front Sweep",
-			premium = false,
-			range = 1,
+			id = 271,
+			words = "exori infir min",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -4774,18 +5106,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUAREWAVE1
 		},
 		["Spirit Mend"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Spirit Mend",
 			soul = 0,
 			mana = 210,
 			level = 80,
-			needTarget = false,
-			words = "exura gran tio",
-			id = 273,
 			exhaustion = 1000,
-			name = "Spirit Mend",
-			premium = false,
-			range = 0,
+			id = 273,
+			words = "exura gran tio",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -4795,18 +5127,18 @@ SpellInfo = {
 			}
 		},
 		["Virtue of Harmony"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Virtue of Harmony",
 			soul = 0,
 			mana = 210,
 			level = 20,
-			needTarget = false,
-			words = "utori virtu",
-			id = 274,
 			exhaustion = 10000,
-			name = "Virtue of Harmony",
-			premium = false,
-			range = 0,
+			id = 274,
+			words = "utori virtu",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[11] = 10000
@@ -4817,18 +5149,18 @@ SpellInfo = {
 			}
 		},
 		["Virtue of Justice"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Virtue of Justice",
 			soul = 0,
 			mana = 210,
 			level = 20,
-			needTarget = false,
-			words = "utito virtu",
-			id = 275,
 			exhaustion = 10000,
-			name = "Virtue of Justice",
-			premium = false,
-			range = 0,
+			id = 275,
+			words = "utito virtu",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[11] = 10000
@@ -4839,18 +5171,18 @@ SpellInfo = {
 			}
 		},
 		["Virtue of Sustain"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Virtue of Sustain",
 			soul = 0,
 			mana = 210,
 			level = 20,
-			needTarget = false,
-			words = "utura tio",
-			id = 276,
 			exhaustion = 10000,
-			name = "Virtue of Sustain",
-			premium = false,
-			range = 0,
+			id = 276,
+			words = "utura tio",
+			type = "Instant",
 			group = {
 				[3] = 2000,
 				[11] = 10000
@@ -4861,18 +5193,18 @@ SpellInfo = {
 			}
 		},
 		["Enlighten Party"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Enlighten Party",
 			soul = 0,
 			mana = 75,
 			level = 32,
-			needTarget = false,
-			words = "utevo mas sio",
-			id = 278,
 			exhaustion = 300000,
-			name = "Enlighten Party",
-			premium = false,
-			range = 0,
+			id = 278,
+			words = "utevo mas sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4882,19 +5214,19 @@ SpellInfo = {
 			}
 		},
 		["Focus Harmony"] = {
+			needLearn = true,
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Focus Harmony",
 			soul = 0,
 			mana = 500,
 			level = 275,
-			needTarget = false,
-			needLearn = true,
-			words = "utevo nia",
-			id = 279,
 			exhaustion = 120000,
-			name = "Focus Harmony",
-			premium = false,
-			range = 0,
+			words = "utevo nia",
+			type = "Instant",
+			id = 279,
 			group = {
 				[3] = 2000
 			},
@@ -4904,40 +5236,41 @@ SpellInfo = {
 			}
 		},
 		["Balanced Brawl"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Balanced Brawl",
 			soul = 0,
 			mana = 80,
 			level = 175,
-			needTarget = false,
-			directional = true,
-			words = "exori mas res",
-			id = 280,
 			exhaustion = 10000,
-			name = "Balanced Brawl",
-			premium = false,
-			range = 0,
+			premium = true,
+			words = "exori mas res",
+			type = "Instant",
+			id = 280,
 			group = {
 				[3] = 2000
 			},
 			vocations = {
 				9,
 				10
-			}
+			},
+			area = SpellAreas.AREA_BALANCED_BRAWL
 		},
 		["Focus Serenity"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Focus Serenity",
 			soul = 0,
 			mana = 500,
 			level = 150,
-			needTarget = false,
-			words = "utamo tio",
-			id = 281,
 			exhaustion = 600000,
-			name = "Focus Serenity",
-			premium = false,
-			range = 0,
+			id = 281,
+			words = "utamo tio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -4947,18 +5280,18 @@ SpellInfo = {
 			}
 		},
 		["Summon Monk Familiar"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Summon Monk Familiar",
 			soul = 0,
 			mana = 1500,
 			level = 200,
-			needTarget = false,
-			words = "utevo gran res tio",
-			id = 282,
 			exhaustion = 1800000,
-			name = "Summon Monk Familiar",
-			premium = false,
-			range = 0,
+			id = 282,
+			words = "utevo gran res tio",
+			type = "Instant",
 			group = {
 				[3] = 4000
 			},
@@ -4968,19 +5301,19 @@ SpellInfo = {
 			}
 		},
 		["Avatar of Balance"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Avatar of Balance",
 			soul = 0,
 			mana = 1200,
 			level = 0,
-			needTarget = false,
-			words = "uteta res tio",
-			id = 283,
-			special = true,
 			exhaustion = 7200000,
-			name = "Avatar of Balance",
-			premium = false,
-			range = 0,
+			id = 283,
+			words = "uteta res tio",
+			type = "Instant",
+			special = true,
 			group = {
 				[3] = 2000
 			},
@@ -4990,18 +5323,18 @@ SpellInfo = {
 			}
 		},
 		["Swift Jab"] = {
+			premium = true,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Swift Jab",
 			soul = 0,
 			mana = 3,
 			level = 0,
-			needTarget = true,
-			words = "exori infir pug",
-			id = 284,
 			exhaustion = 2000,
-			name = "Swift Jab",
-			premium = true,
-			range = 1,
+			id = 284,
+			words = "exori infir pug",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -5011,18 +5344,18 @@ SpellInfo = {
 			}
 		},
 		["Double Jab"] = {
+			premium = true,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Double Jab",
 			soul = 0,
 			mana = 35,
 			level = 14,
-			needTarget = true,
-			words = "exori pug",
-			id = 285,
 			exhaustion = 4000,
-			name = "Double Jab",
-			premium = true,
-			range = 1,
+			id = 285,
+			words = "exori pug",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -5032,19 +5365,19 @@ SpellInfo = {
 			}
 		},
 		["Forceful Uppercut"] = {
+			needLearn = true,
+			premium = true,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Forceful Uppercut",
 			soul = 0,
 			mana = 325,
 			level = 110,
-			needTarget = true,
-			needLearn = true,
-			words = "exori gran pug",
-			id = 286,
 			exhaustion = 60000,
-			name = "Forceful Uppercut",
-			premium = true,
-			range = 1,
+			words = "exori gran pug",
+			type = "Instant",
+			id = 286,
 			group = {
 				[1] = 2000
 			},
@@ -5054,19 +5387,19 @@ SpellInfo = {
 			}
 		},
 		["Flurry of Blows"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Flurry of Blows",
 			soul = 0,
 			mana = 125,
 			level = 35,
-			needTarget = false,
-			directional = true,
-			words = "exori mas pug",
-			id = 287,
 			exhaustion = 4000,
-			name = "Flurry of Blows",
 			premium = true,
-			range = 0,
+			words = "exori mas pug",
+			type = "Instant",
+			id = 287,
 			group = {
 				[1] = 2000
 			},
@@ -5077,18 +5410,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_FLURRYWAVE
 		},
 		["Chained Penance"] = {
+			premium = true,
+			range = 2,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Chained Penance",
 			soul = 0,
 			mana = 180,
 			level = 70,
-			needTarget = true,
-			words = "exori med pug",
-			id = 288,
 			exhaustion = 4000,
-			name = "Chained Penance",
-			premium = true,
-			range = 2,
+			id = 288,
+			words = "exori med pug",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -5098,19 +5431,19 @@ SpellInfo = {
 			}
 		},
 		["Greater Flurry of Blows"] = {
+			directional = true,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Greater Flurry of Blows",
 			soul = 0,
 			mana = 315,
 			level = 90,
-			needTarget = false,
-			directional = true,
-			words = "exori gran mas pug",
-			id = 289,
 			exhaustion = 16000,
-			name = "Greater Flurry of Blows",
 			premium = true,
-			range = 0,
+			words = "exori gran mas pug",
+			type = "Instant",
+			id = 289,
 			group = {
 				[1] = 2000
 			},
@@ -5121,19 +5454,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_GREATER_FLURRYWAVE
 		},
 		["Mystic Repulse"] = {
+			needLearn = true,
+			premium = true,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Mystic Repulse",
 			soul = 0,
 			mana = 175,
 			level = 30,
-			needTarget = true,
-			needLearn = true,
+			exhaustion = 8000,
 			words = "exori amp pug",
+			type = "Instant",
 			id = 290,
-			exhaustion = 20000,
-			name = "Mystic Repulse",
-			premium = true,
-			range = 7,
 			group = {
 				[1] = 2000
 			},
@@ -5143,20 +5476,20 @@ SpellInfo = {
 			}
 		},
 		["Tiger Clash"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 18,
-			level = 0,
-			needTarget = true,
-			exhaustion = 8000,
-			words = "exori infir nia",
 			id = 291,
-			useHarmony = true,
-			spender = true,
-			name = "Tiger Clash",
 			premium = true,
 			range = 1,
+			parameter = false,
+			needTarget = true,
+			name = "Tiger Clash",
+			spender = true,
+			mana = 18,
+			level = 0,
+			exhaustion = 8000,
+			words = "exori infir nia",
+			type = "Instant",
+			soul = 0,
+			useHarmony = true,
 			group = {
 				[1] = 2000
 			},
@@ -5166,20 +5499,20 @@ SpellInfo = {
 			}
 		},
 		["Greater Tiger Clash"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 50,
-			level = 18,
-			needTarget = true,
-			exhaustion = 8000,
-			words = "exori nia",
 			id = 292,
-			useHarmony = true,
-			spender = true,
-			name = "Greater Tiger Clash",
 			premium = true,
 			range = 1,
+			parameter = false,
+			needTarget = true,
+			name = "Greater Tiger Clash",
+			spender = true,
+			mana = 50,
+			level = 18,
+			exhaustion = 8000,
+			words = "exori nia",
+			type = "Instant",
+			soul = 0,
+			useHarmony = true,
 			group = {
 				[1] = 2000
 			},
@@ -5189,20 +5522,20 @@ SpellInfo = {
 			}
 		},
 		["Devastating Knockout"] = {
-			parameter = false,
-			type = "Instant",
-			soul = 0,
-			mana = 210,
-			level = 125,
-			needTarget = true,
-			exhaustion = 24000,
-			words = "exori gran nia",
 			id = 293,
-			useHarmony = true,
-			spender = true,
-			name = "Devastating Knockout",
 			premium = true,
 			range = 1,
+			parameter = false,
+			needTarget = true,
+			name = "Devastating Knockout",
+			spender = true,
+			mana = 210,
+			level = 125,
+			exhaustion = 24000,
+			words = "exori gran nia",
+			type = "Instant",
+			soul = 0,
+			useHarmony = true,
 			group = {
 				[1] = 2000
 			},
@@ -5212,21 +5545,21 @@ SpellInfo = {
 			}
 		},
 		["Sweeping Takedown"] = {
+			spender = true,
+			premium = true,
+			range = 0,
 			parameter = false,
 			needTarget = false,
 			soul = 0,
 			mana = 195,
 			level = 60,
+			useHarmony = true,
 			directional = true,
 			words = "exori mas nia",
 			id = 294,
 			exhaustion = 8000,
 			name = "Sweeping Takedown",
 			type = "Instant",
-			useHarmony = true,
-			spender = true,
-			premium = true,
-			range = 0,
 			group = {
 				[1] = 2000
 			},
@@ -5237,21 +5570,21 @@ SpellInfo = {
 			area = SpellAreas.AREA_SHORTWAVE4
 		},
 		["Spiritual Outburst"] = {
+			premium = true,
+			range = 2,
 			parameter = false,
 			needTarget = true,
+			useHarmony = true,
 			soul = 0,
 			mana = 425,
 			level = 0,
+			spender = true,
 			special = true,
 			words = "exori gran mas nia",
 			id = 295,
 			exhaustion = 24000,
 			name = "Spiritual Outburst",
 			type = "Instant",
-			useHarmony = true,
-			spender = true,
-			premium = true,
-			range = 2,
 			group = {
 				[1] = 2000
 			},
@@ -5261,18 +5594,18 @@ SpellInfo = {
 			}
 		},
 		["Mass Spirit Mend"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Mass Spirit Mend",
 			soul = 0,
 			mana = 250,
 			level = 150,
-			needTarget = false,
-			words = "exura mas nia",
-			id = 296,
 			exhaustion = 12000,
-			name = "Mass Spirit Mend",
-			premium = false,
-			range = 0,
+			id = 296,
+			words = "exura mas nia",
+			type = "Instant",
 			group = {
 				[2] = 1000
 			},
@@ -5282,19 +5615,19 @@ SpellInfo = {
 			}
 		},
 		["Restore Balance"] = {
+			premium = true,
+			range = 7,
 			parameter = true,
-			type = "Instant",
+			needTarget = true,
+			name = "Restore Balance",
 			soul = 0,
 			mana = 120,
 			level = 18,
-			needTarget = true,
+			exhaustion = 2000,
 			parameterPlaceholder = "name",
 			words = "exura tio sio",
+			type = "Instant",
 			id = 297,
-			exhaustion = 2000,
-			name = "Restore Balance",
-			premium = true,
-			range = 7,
 			group = {
 				[2] = 1000
 			},
@@ -5304,19 +5637,19 @@ SpellInfo = {
 			}
 		},
 		["Lesser Mystic Repulse"] = {
+			needLearn = true,
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Lesser Mystic Repulse",
 			soul = 0,
 			mana = 30,
 			level = 6,
-			needTarget = true,
-			needLearn = true,
-			words = "exori infir amp pug",
-			id = 298,
 			exhaustion = 20000,
-			name = "Lesser Mystic Repulse",
-			premium = false,
-			range = 7,
+			words = "exori infir amp pug",
+			type = "Instant",
+			id = 300,
 			group = {
 				[1] = 2000
 			},
@@ -5326,19 +5659,19 @@ SpellInfo = {
 			}
 		},
 		["Thousand Fist Blows"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Thousand Fist Blows",
 			soul = 0,
 			mana = 145,
 			level = 120,
-			needTarget = true,
-			words = "exori mas amp pug",
+			exhaustion = 8000,
 			id = 301,
-			exhaustion = 12000,
+			words = "exori mas amp pug",
+			type = "Instant",
 			crossHairTarget = true,
-			name = "Thousand Fist Blows",
-			premium = false,
-			range = 7,
 			group = {
 				[1] = 2000
 			},
@@ -5349,19 +5682,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE2X2
 		},
 		["Divine Barrage"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Barrage",
 			soul = 0,
 			mana = 175,
 			level = 70,
-			needTarget = false,
-			words = "exori dir san",
-			id = 302,
 			exhaustion = 4000,
+			id = 302,
+			words = "exori dir san",
+			type = "Instant",
 			crossHairTarget = true,
-			name = "Divine Barrage",
-			premium = false,
-			range = 7,
 			group = {
 				[1] = 2000
 			},
@@ -5372,19 +5705,19 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE2X2
 		},
 		["Ethereal Barrage"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Ethereal Barrage",
 			soul = 0,
 			mana = 135,
 			level = 60,
-			needTarget = false,
-			words = "exori dir moe",
-			id = 303,
 			exhaustion = 4000,
+			id = 303,
+			words = "exori dir moe",
+			type = "Instant",
 			crossHairTarget = true,
-			name = "Ethereal Barrage",
-			premium = false,
-			range = 7,
 			group = {
 				[1] = 2000
 			},
@@ -5395,18 +5728,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE2X2
 		},
 		["Master of Flames"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Master of Flames",
 			soul = 0,
 			mana = 400,
 			level = 20,
-			needTarget = false,
-			words = "uteta flam",
-			id = 304,
 			exhaustion = 30000,
-			name = "Master of Flames",
-			premium = false,
-			range = 0,
+			id = 304,
+			words = "uteta flam",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5415,18 +5748,18 @@ SpellInfo = {
 			}
 		},
 		["Master of Thunder"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Master of Thunder",
 			soul = 0,
 			mana = 400,
 			level = 20,
-			needTarget = false,
-			words = "uteta vis",
-			id = 305,
 			exhaustion = 30000,
-			name = "Master of Thunder",
-			premium = false,
-			range = 0,
+			id = 305,
+			words = "uteta vis",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5435,18 +5768,18 @@ SpellInfo = {
 			}
 		},
 		["Master of Decay"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Master of Decay",
 			soul = 0,
 			mana = 400,
 			level = 20,
-			needTarget = false,
-			words = "uteta mort",
-			id = 306,
 			exhaustion = 30000,
-			name = "Master of Decay",
-			premium = false,
-			range = 0,
+			id = 306,
+			words = "uteta mort",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5455,18 +5788,18 @@ SpellInfo = {
 			}
 		},
 		["Elemental Synthesis"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Elemental Synthesis",
 			soul = 0,
 			mana = 400,
 			level = 20,
-			needTarget = false,
-			words = "utito dru",
-			id = 319,
 			exhaustion = 10000,
-			name = "Elemental Synthesis",
-			premium = false,
-			range = 0,
+			id = 319,
+			words = "utito dru",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5475,18 +5808,18 @@ SpellInfo = {
 			}
 		},
 		["Shared Conservation"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Shared Conservation",
 			soul = 0,
 			mana = 400,
 			level = 20,
-			needTarget = false,
-			words = "utura sio",
-			id = 309,
 			exhaustion = 10000,
-			name = "Shared Conservation",
-			premium = false,
-			range = 0,
+			id = 309,
+			words = "utura sio",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5495,19 +5828,19 @@ SpellInfo = {
 			}
 		},
 		["Death Echo"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Death Echo",
 			soul = 0,
 			mana = 155,
 			level = 120,
-			needTarget = false,
-			words = "exevo mort ora",
-			id = 310,
 			exhaustion = 6000,
+			id = 310,
+			words = "exevo mort ora",
+			type = "Instant",
 			crossHairTarget = true,
-			name = "Death Echo",
-			premium = false,
-			range = 7,
 			group = {
 				[1] = 2000
 			},
@@ -5518,18 +5851,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_SQUARE2X2
 		},
 		["Divine Defiance"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Divine Defiance",
 			soul = 0,
 			mana = 250,
 			level = 20,
-			needTarget = false,
-			words = "utori hur",
-			id = 314,
 			exhaustion = 10000,
-			name = "Divine Defiance",
-			premium = false,
-			range = 0,
+			id = 314,
+			words = "utori hur",
+			type = "Instant",
 			group = {
 				[3] = 2000
 			},
@@ -5539,18 +5872,18 @@ SpellInfo = {
 			}
 		},
 		["Shield Bash"] = {
+			premium = false,
+			range = 1,
 			parameter = false,
-			type = "Instant",
+			needTarget = true,
+			name = "Shield Bash",
 			soul = 0,
 			mana = 30,
 			level = 18,
-			needTarget = true,
-			words = "exori ico scu",
-			id = 315,
 			exhaustion = 4000,
-			name = "Shield Bash",
-			premium = false,
-			range = 1,
+			id = 315,
+			words = "exori ico scu",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -5560,18 +5893,18 @@ SpellInfo = {
 			}
 		},
 		["Shield Slam"] = {
+			premium = false,
+			range = 0,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Shield Slam",
 			soul = 0,
 			mana = 110,
 			level = 30,
-			needTarget = false,
-			words = "exori scu",
-			id = 316,
 			exhaustion = 6000,
-			name = "Shield Slam",
-			premium = false,
-			range = 0,
+			id = 316,
+			words = "exori scu",
+			type = "Instant",
 			group = {
 				[1] = 2000
 			},
@@ -5582,18 +5915,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_CIRCLE1X1
 		},
 		["Forked Glacier"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Forked Glacier",
 			soul = 0,
 			mana = 180,
 			level = 90,
-			needTarget = false,
-			words = "exevo fur frigo",
-			id = 317,
 			exhaustion = 6000,
-			name = "Forked Glacier",
-			premium = false,
-			range = 7,
+			id = 317,
+			words = "exevo fur frigo",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 6000
@@ -5605,18 +5938,18 @@ SpellInfo = {
 			area = SpellAreas.AREA_FORKS
 		},
 		["Forked Thorns"] = {
+			premium = false,
+			range = 7,
 			parameter = false,
-			type = "Instant",
+			needTarget = false,
+			name = "Forked Thorns",
 			soul = 0,
 			mana = 180,
 			level = 80,
-			needTarget = false,
-			words = "exevo fur tera",
-			id = 318,
 			exhaustion = 6000,
-			name = "Forked Thorns",
-			premium = false,
-			range = 7,
+			id = 318,
+			words = "exevo fur tera",
+			type = "Instant",
 			group = {
 				[1] = 2000,
 				[4] = 6000
@@ -5808,8 +6141,8 @@ SpellIconsFirstIsZero = {
 	134,
 	129,
 	128,
-	nil,
-	nil,
+	72,
+	64,
 	nil,
 	nil,
 	nil,
@@ -5891,8 +6224,8 @@ SpellIconsFirstIsZero = {
 	nil,
 	154,
 	149,
-	150,
 	151,
+	150,
 	145,
 	147,
 	148,
@@ -5927,7 +6260,7 @@ SpellIconsFirstIsZero = {
 	180,
 	181,
 	182,
-	183,
+	nil,
 	nil,
 	183,
 	184,
@@ -5948,7 +6281,8 @@ SpellIconsFirstIsZero = {
 	196,
 	197,
 	198,
-	190
+	190,
+	73
 }
 SpellIcons = {}
 
@@ -5984,260 +6318,260 @@ SpellGroups = {
 }
 SpellGroupIconFile = "/images/game/spells/spellgroup-icons-20x20"
 SpellGroupIconSize = {
-	width = 20,
-	height = 20
+	height = 20,
+	width = 20
 }
 SpellRunesData = {
 	[3148] = {
-		groupExhaustion = 1500,
-		id = 30,
 		group = 3,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 30,
 		name = "destroy field rune"
 	},
 	[3149] = {
-		groupExhaustion = 1500,
-		id = 55,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 55,
 		name = "energybomb rune"
 	},
 	[3152] = {
-		groupExhaustion = 2000,
-		id = 4,
 		group = 2,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 4,
 		name = "intense healing rune"
 	},
 	[3153] = {
-		groupExhaustion = 2000,
-		id = 31,
 		group = 2,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 31,
 		name = "antidote rune"
 	},
 	[3155] = {
-		groupExhaustion = 2000,
-		id = 21,
 		group = 1,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 21,
 		name = "sudden death rune"
 	},
 	[3156] = {
-		groupExhaustion = 1500,
-		id = 94,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 94,
 		name = "Wild Growth Rune"
 	},
 	[3158] = {
-		groupExhaustion = 1500,
-		id = 114,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 114,
 		name = "icicle rune"
 	},
 	[3160] = {
-		groupExhaustion = 1500,
-		id = 5,
 		group = 2,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 5,
 		name = "ultimate healing rune"
 	},
 	[3161] = {
-		groupExhaustion = 1500,
-		id = 115,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 115,
 		name = "avalanche rune"
 	},
 	[3164] = {
-		groupExhaustion = 1500,
-		id = 27,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 27,
 		name = "energy field rune"
 	},
 	[3165] = {
-		groupExhaustion = 2000,
-		id = 54,
 		group = 3,
+		groupExhaustion = 2000,
 		exhaustion = 4000,
+		id = 54,
 		name = "paralyze rune"
 	},
 	[3166] = {
-		groupExhaustion = 1500,
-		id = 33,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 33,
 		name = "energy wall rune"
 	},
 	[3172] = {
-		groupExhaustion = 2000,
-		id = 26,
 		group = 1,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 26,
 		name = "poison field rune"
 	},
 	[3173] = {
-		groupExhaustion = 1500,
-		id = 91,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 91,
 		name = "poison bomb rune"
 	},
 	[3174] = {
-		groupExhaustion = 1500,
-		id = 7,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 7,
 		name = "light magic missile rune"
 	},
 	[3175] = {
-		groupExhaustion = 1500,
-		id = 116,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 116,
 		name = "stone shower rune"
 	},
 	[3176] = {
-		groupExhaustion = 1500,
-		id = 32,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 32,
 		name = "poison wall rune"
 	},
 	[3177] = {
-		groupExhaustion = 1500,
-		id = 12,
 		group = 3,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 12,
 		name = "convince creature rune"
 	},
 	[3178] = {
-		groupExhaustion = 1500,
-		id = 14,
 		group = 3,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 14,
 		name = "chameleon rune"
 	},
 	[3179] = {
-		groupExhaustion = 1500,
-		id = 77,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 77,
 		name = "stalagmite rune"
 	},
 	[3180] = {
-		groupExhaustion = 2000,
-		id = 86,
 		group = 1,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 86,
 		name = "Magic Wall Rune"
 	},
 	[3182] = {
-		groupExhaustion = 2000,
-		id = 130,
 		group = 1,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 130,
 		name = "holy missile rune"
 	},
 	[3188] = {
-		groupExhaustion = 1500,
-		id = 25,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 25,
 		name = "fire field rune"
 	},
 	[3189] = {
-		groupExhaustion = 1500,
-		id = 15,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 15,
 		name = "fireball rune"
 	},
 	[3190] = {
-		groupExhaustion = 1500,
-		id = 28,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 28,
 		name = "fire wall rune"
 	},
 	[3191] = {
-		groupExhaustion = 1500,
-		id = 16,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 16,
 		name = "great fireball rune"
 	},
 	[3192] = {
-		groupExhaustion = 1500,
-		id = 17,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 17,
 		name = "firebomb rune"
 	},
 	[3195] = {
-		groupExhaustion = 1500,
-		id = 50,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 50,
 		name = "soulfire rune"
 	},
 	[3197] = {
-		groupExhaustion = 2000,
-		id = 78,
 		group = 3,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 78,
 		name = "desintegrate rune"
 	},
 	[3198] = {
-		groupExhaustion = 1500,
-		id = 8,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 8,
 		name = "heavy magic missile rune"
 	},
 	[3200] = {
-		groupExhaustion = 1500,
-		id = 18,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 18,
 		name = "explosion rune"
 	},
 	[3202] = {
-		groupExhaustion = 1500,
-		id = 117,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 117,
 		name = "thunderstorm rune"
 	},
 	[3203] = {
-		groupExhaustion = 2000,
-		id = 83,
 		group = 3,
+		groupExhaustion = 2000,
 		exhaustion = 2000,
+		id = 83,
 		name = "animate dead rune"
 	},
 	[17512] = {
-		groupExhaustion = 1500,
-		id = 7,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 7,
 		name = "lightest magic missile rune"
 	},
 	[21351] = {
-		groupExhaustion = 1500,
-		id = 116,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 116,
 		name = "light stone shower rune"
 	},
 	[21352] = {
-		groupExhaustion = 1500,
-		id = 7,
 		group = 1,
+		groupExhaustion = 1500,
 		exhaustion = 2000,
+		id = 7,
 		name = "lightest missile rune"
 	}
 }
@@ -6316,9 +6650,7 @@ function Spells.getSpellNameByWords(words)
 end
 
 function Spells.getSpellByName(name)
-	local spell = resolveSpellByName(name)
-
-	return spell
+	return (resolveSpellByName(name))
 end
 
 local spellByIdCache = {}

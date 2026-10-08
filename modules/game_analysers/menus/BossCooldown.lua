@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_analysers/menus/BossCooldown.lua
-
-if not BossCooldown then
+﻿if not BossCooldown then
 	BossCooldown = {
 		search = "",
 		lastUiSecond = 0,
@@ -37,27 +35,35 @@ local function normalizeUntil(raw)
 end
 
 local function entryHasCooldown(entry, now)
-	return entry.untilTs > (now or os.time())
+	return (tonumber(entry and entry.untilTs) or 0) > (now or os.time())
 end
 
 local function sortBossEntries(entries)
-	local now = os.time()
+	if type(entries) ~= "table" or #entries < 2 then
+		return
+	end
 
-	table.sort(entries, function(a, b)
-		local aOnCd = entryHasCooldown(a, now)
-		local bOnCd = entryHasCooldown(b, now)
+	local var_5_0 = os.time()
 
-		if aOnCd ~= bOnCd then
-			return aOnCd
+	table.sort(entries, function(arg_6_0, arg_6_1)
+		arg_6_0 = arg_6_0 or {}
+		arg_6_1 = arg_6_1 or {}
+
+		local var_6_0 = entryHasCooldown(arg_6_0, var_5_0) and 0 or 1
+		local var_6_1 = entryHasCooldown(arg_6_1, var_5_0) and 0 or 1
+
+		if var_6_0 ~= var_6_1 then
+			return var_6_0 < var_6_1
 		end
 
-		local na, nb = a.name:lower(), b.name:lower()
+		local var_6_2 = string.lower(tostring(arg_6_0.name or ""))
+		local var_6_3 = string.lower(tostring(arg_6_1.name or ""))
 
-		if na ~= nb then
-			return na < nb
+		if var_6_2 ~= var_6_3 then
+			return var_6_2 < var_6_3
 		end
 
-		return a.bossId < b.bossId
+		return (tonumber(arg_6_0.bossId) or 0) < (tonumber(arg_6_1.bossId) or 0)
 	end)
 end
 
@@ -108,16 +114,18 @@ local function fitBossCreature(widget, outfit)
 		return
 	end
 
-	exactSize = tonumber(exactSize) or 0
+	local numericValue
+
+	numericValue = tonumber(exactSize) or 0
 
 	local visualSize = math.max(tonumber(bounds.width) or 0, tonumber(bounds.height) or 0)
 
-	if exactSize <= 0 or visualSize <= exactSize then
+	if numericValue <= 0 or visualSize <= numericValue then
 		return
 	end
 
 	local spriteSize = tonumber(g_gameConfig.getSpriteSize()) or 32
-	local percentageBase = math.max(exactSize, spriteSize * 2)
+	local percentageBase = math.max(numericValue, spriteSize * 2)
 
 	widget:setCreatureSize(math.min(255, math.ceil(visualSize * 100 / percentageBase)))
 end
@@ -126,7 +134,7 @@ function BossCooldown.create()
 	BossCooldown.window = openedWindows.bossButton
 end
 
-function BossCooldown:reset()
+function BossCooldown.reset(self)
 	self.search = ""
 	self.entries = {}
 	self.widgets = {}
@@ -134,7 +142,7 @@ function BossCooldown:reset()
 	self:rebuild()
 end
 
-function BossCooldown:setupCooldown(rows)
+function BossCooldown.setupCooldown(self, rows)
 	self.entries = {}
 
 	if type(rows) ~= "table" then
@@ -161,15 +169,14 @@ function BossCooldown:setupCooldown(rows)
 	self:rebuild()
 end
 
-function BossCooldown:rebuild()
+function BossCooldown.rebuild(self)
 	if not self.window or self.window:isDestroyed() then
 		return
 	end
 
-	local contents = self.window.contentsPanel
-	local bosses = contents.bosses
+	local contents = self.window.contentsPanel.bosses
 
-	bosses:destroyChildren()
+	contents:destroyChildren()
 
 	self.widgets = {}
 
@@ -179,7 +186,7 @@ function BossCooldown:rebuild()
 	local n = 0
 
 	for _, e in ipairs(self.entries) do
-		local w = g_ui.createWidget("BossInfo", bosses)
+		local w = g_ui.createWidget("BossInfo", contents)
 		local creatureW = w:getChildById("creature")
 
 		if creatureW then
@@ -216,11 +223,18 @@ function BossCooldown:rebuild()
 		w:setTooltip(e.name)
 
 		function w.onClick()
-			local B = modules.game_cyclopedia and modules.game_cyclopedia.Bosstiary
+			local B = modules.game_cyclopedia
+			local var_15_1 = B and B.Cyclopedia
 
-			if B and B.onSideButtonRedirect then
-				B.onSideButtonRedirect(e.name)
+			if not var_15_1 or not B.show then
+				return false
 			end
+
+			var_15_1._pendingBosstiaryRaceId = e.bossId
+
+			B.show("bosstiary")
+
+			return true
 		end
 
 		w.entry = e
@@ -238,27 +252,27 @@ function BossCooldown:rebuild()
 	end
 
 	for idx, w in ipairs(self.widgets) do
-		if w and bosses.moveChildToIndex then
-			bosses:moveChildToIndex(w, idx)
+		if w and contents.moveChildToIndex then
+			contents:moveChildToIndex(w, idx)
 		end
 	end
 
-	if bosses.updateLayout then
-		bosses:updateLayout()
+	if contents.updateLayout then
+		contents:updateLayout()
 	end
 
-	bosses:setHeight(math.max(40, 8 + n * 38))
+	contents:setHeight(math.max(40, 8 + n * 38))
 
 	self.lastUiSecond = -1
 
 	self:refreshTexts()
 end
 
-function BossCooldown:updateWindow()
+function BossCooldown.updateWindow(self)
 	self:rebuild()
 end
 
-function BossCooldown:checkTicks()
+function BossCooldown.checkTicks(self)
 	local t = os.time()
 
 	if t == self.lastUiSecond then
@@ -270,7 +284,7 @@ function BossCooldown:checkTicks()
 	self:refreshTexts()
 end
 
-function BossCooldown:reorderWidgets()
+function BossCooldown.reorderWidgets(self)
 	if not self.window or self.window:isDestroyed() then
 		return
 	end
@@ -294,7 +308,7 @@ function BossCooldown:reorderWidgets()
 	end
 end
 
-function BossCooldown:refreshTexts()
+function BossCooldown.refreshTexts(self)
 	self:reorderWidgets()
 
 	local q = (self.search or ""):lower()
@@ -337,7 +351,7 @@ function clearSearch()
 	BossCooldown:refreshTexts()
 end
 
-function BossCooldown:hasCooldown(raceId)
+function BossCooldown.hasCooldown(self, raceId)
 	for _, e in ipairs(self.entries) do
 		if e.bossId == raceId then
 			return e.name, e.untilTs
@@ -347,7 +361,7 @@ function BossCooldown:hasCooldown(raceId)
 	return "", -1
 end
 
-function BossCooldown:getCooldown(raceId)
+function BossCooldown.getCooldown(self, raceId)
 	for _, e in ipairs(self.entries) do
 		if e.bossId == raceId and e.untilTs > os.time() then
 			return select(1, formatRemain(e.untilTs - os.time()))

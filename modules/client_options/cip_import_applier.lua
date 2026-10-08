@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_options/cip_import_applier.lua
-
-CipImportApplier = {}
+﻿CipImportApplier = {}
 
 local EMPTY_HOTKEYS_OTML = "1:\n2:\n"
 local SKIP_SESSION_SAVE_KEY = "cip_import_skip_session_save"
@@ -170,10 +168,7 @@ local function persistKeybindKey(presetName, category, action, key, chatMode)
 
 	local config = g_configs.create("/controls/keybinds/" .. presetName .. ".otml")
 	local index = category .. "_" .. action
-	local keys = config:getNode(index)
-
-	keys = keys or table.recursivecopy(keybind.keys)
-
+	local keys = config:getNode(index) or table.recursivecopy(keybind.keys)
 	local modeKey = tostring(chatMode)
 
 	if not keys[modeKey] then

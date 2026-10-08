@@ -1,10 +1,9 @@
-﻿-- chunkname: @/game_helper/helper_conditions.lua
-
-HelperConditions = HelperConditions or {}
+﻿HelperConditions = HelperConditions or {}
 
 local ctx
 local conditionsUiLanguage = "en"
-local hasteSlot, manaTrainingSlot
+local hasteSlot
+local manaTrainingSlot
 local lastHasteCastMs = 0
 local lastManaTrainingCastMs = 0
 local conditionsTickEvent
@@ -13,28 +12,30 @@ local helperCooldowns = {
 	groups = {}
 }
 local cdConnected = false
-local cachedHasteSpell, cachedHasteWords, cachedManaTrainingSpell, cachedManaTrainingWords, cachedMainCheck
+local cachedHasteSpell
+local cachedHasteWords
+local cachedManaTrainingSpell
+local cachedManaTrainingWords
+local cachedMainCheck
 local CONDITIONS_UI_TEXT = {
 	en = {
-		clearAction = "Clear Action",
-		typeToSearch = "Type to search",
-		assignSpell = "Assign Spell",
 		haste = "Haste",
+		clearAction = "Clear Action",
+		assignSpell = "Assign Spell",
+		typeToSearch = "Type to search",
 		editSpell = "Edit Spell"
 	},
 	pt = {
-		clearAction = "Limpar Acao",
-		typeToSearch = "Digite para pesquisar",
-		assignSpell = "Selecionar Magia",
 		haste = "Acelerar",
+		clearAction = "Limpar Acao",
+		assignSpell = "Selecionar Magia",
+		typeToSearch = "Digite para pesquisar",
 		editSpell = "Editar Magia"
 	}
 }
 
 local function conditionsText(key)
-	local texts = CONDITIONS_UI_TEXT[conditionsUiLanguage] or CONDITIONS_UI_TEXT.en
-
-	return texts[key] or CONDITIONS_UI_TEXT.en[key] or key
+	return (CONDITIONS_UI_TEXT[conditionsUiLanguage] or CONDITIONS_UI_TEXT.en)[key] or CONDITIONS_UI_TEXT.en[key] or key
 end
 
 local function invalidateHasteSpellCache()
@@ -85,26 +86,76 @@ end
 
 local function getCachedHasteSpell(words)
 	local spell
+	local var_7_1, var_7_2, var_7_3 = getCachedSpell(words, cachedHasteWords, cachedHasteSpell)
 
-	spell, cachedHasteWords, cachedHasteSpell = getCachedSpell(words, cachedHasteWords, cachedHasteSpell)
+	cachedHasteSpell = var_7_3
+	cachedHasteWords = var_7_2
 
-	return spell
+	return var_7_1
 end
 
 local function getCachedManaTrainingSpell(words)
-	local spell
+	local unusedValue
+	local spell, var_8_2, var_8_3 = getCachedSpell(words, cachedManaTrainingWords, cachedManaTrainingSpell)
 
-	spell, cachedManaTrainingWords, cachedManaTrainingSpell = getCachedSpell(words, cachedManaTrainingWords, cachedManaTrainingSpell)
+	cachedManaTrainingSpell = var_8_3
+	cachedManaTrainingWords = var_8_2
 
 	return spell
 end
 
 local ACTION_SLOT_SPELL_ITEM_ID = 469
-local HASTE_SPELL_WORDS = {
-	["utani gran hur"] = true,
-	["utani hur"] = true,
+local HASTE_SPELL_WORDS = 3147
+local var_0_25 = {
 	["utamo tempo san"] = true,
-	["utani tempo hur"] = true
+	["utani tempo hur"] = true,
+	["utani gran hur"] = true,
+	["utani hur"] = true
+}
+local var_0_26 = {
+	["adori san"] = true,
+	["adori mas vis"] = true,
+	["adori infir mas tera"] = true,
+	["adori mas tera"] = true,
+	["adori mas frigo"] = true,
+	["adori frigo"] = true,
+	["adana ani"] = true,
+	["adevo grav vita"] = true,
+	["adevo grav tera"] = true,
+	["adito tera"] = true,
+	["adito grav"] = true,
+	["adevo ina"] = true,
+	["adana mort"] = true,
+	["adeta sio"] = true,
+	["adura vita"] = true,
+	["adura gran"] = true,
+	["adana pox"] = true,
+	["adori gran mort"] = true,
+	["adevo mas grav vis"] = true,
+	["adevo mas vis"] = true,
+	["adevo mas grav flam"] = true,
+	["adevo mas hur"] = true,
+	["adori dis min vis"] = true,
+	["adevo mas grav pox"] = true,
+	["adevo res flam"] = true,
+	["adevo mas flam"] = true,
+	["adevo mas pox"] = true,
+	["adori vis"] = true,
+	["adori mas flam"] = true,
+	["adori tera"] = true,
+	["adevo grav vis"] = true,
+	["adori flam"] = true,
+	["adevo grav flam"] = true,
+	["adori infir vis"] = true,
+	["adori min vis"] = true,
+	["adevo grav pox"] = true
+}
+local var_0_27 = {
+	["exeta con"] = true,
+	["exevo con flam"] = true,
+	["exevo infir con"] = true,
+	["exevo con"] = true,
+	["adori blank"] = true
 }
 
 local function actionbar()
@@ -347,23 +398,88 @@ local function restoreSlotData(slot, data)
 	refreshHasteLabel()
 end
 
-local function isHelperHasteSpell(_, spellData)
+local function isHelperHasteSpell(_)
+	if not _ or not next(_) then
+		return true
+	end
+
+	local spellData = g_game.getLocalPlayer()
+
 	if not spellData then
 		return false
 	end
 
-	local words = (spellData.words or ""):lower()
+	local words = spellData:getVocation()
+	local playerVoc = ctx and ctx.getPlayerVoc and ctx.getPlayerVoc() or 0
 
-	if not HASTE_SPELL_WORDS[words] then
+	for unusedValue, entry in ipairs(_) do
+		if entry == words or entry == playerVoc then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function var_0_42(arg_23_0)
+	return (arg_23_0 and arg_23_0.words or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+local function var_0_43(arg_24_0)
+	if not arg_24_0 then
 		return false
 	end
 
-	local voc = ctx.getPlayerVoc()
+	if tonumber(arg_24_0.source) == HASTE_SPELL_WORDS then
+		return true
+	end
 
-	return table.contains(spellData.vocations, voc)
+	return var_0_26[var_0_42(arg_24_0)] == true
 end
 
-local function isHelperManaTrainingSpell(_, spellData)
+local function var_0_44(arg_25_0)
+	if not arg_25_0 then
+		return false
+	end
+
+	return var_0_27[var_0_42(arg_25_0)] == true
+end
+
+local function var_0_45(arg_26_0)
+	if not arg_26_0 then
+		return false
+	end
+
+	if arg_26_0.getItemsCount and arg_26_0:getItemsCount(HASTE_SPELL_WORDS) > 0 then
+		return true
+	end
+
+	if arg_26_0.getInventoryCount and arg_26_0:getInventoryCount(HASTE_SPELL_WORDS, 0) > 0 then
+		return true
+	end
+
+	if g_game.findPlayerItem then
+		return g_game.findPlayerItem(HASTE_SPELL_WORDS, -1, 0) ~= nil
+	end
+
+	return false
+end
+
+local function var_0_46(unusedArgument, arg_27_1)
+	if not arg_27_1 then
+		return false
+	end
+
+	local var_27_0 = (arg_27_1.words or ""):lower()
+
+	if not var_0_25[var_27_0] then
+		return false
+	end
+
+	return isHelperHasteSpell(arg_27_1.vocations)
+end
+
+local function isHelperManaTrainingSpell(unusedArgument, spellData)
 	if not spellData then
 		return false
 	end
@@ -372,9 +488,13 @@ local function isHelperManaTrainingSpell(_, spellData)
 		return false
 	end
 
+	if var_0_43(spellData) or var_0_44(spellData) then
+		return isHelperHasteSpell(spellData.vocations)
+	end
+
 	local words = (spellData.words or ""):lower()
 
-	if HASTE_SPELL_WORDS[words] then
+	if var_0_25[words] then
 		return false
 	end
 
@@ -388,9 +508,7 @@ local function isHelperManaTrainingSpell(_, spellData)
 		return false
 	end
 
-	local voc = ctx.getPlayerVoc()
-
-	return table.contains(spellData.vocations, voc)
+	return isHelperHasteSpell(spellData.vocations)
 end
 
 local function openHelperSpellAssign(slot, filterFn)
@@ -442,7 +560,7 @@ local function openHasteSlotContextMenu(slot)
 
 	menu:setWidth(220)
 	menu:addOption(conditionsText("assignSpell"), function()
-		openHelperSpellAssign(slot, isHelperHasteSpell)
+		openHelperSpellAssign(slot, var_0_46)
 	end)
 	menu:addSeparator()
 	menu:addOption(conditionsText("clearAction"), function()
@@ -510,7 +628,7 @@ local function bindHasteSlot()
 	refreshHasteSlotFrame()
 	refreshHasteLabel()
 
-	function slot:onMouseRelease(mousePos, button)
+	function slot.onMouseRelease(self, mousePos, button)
 		if button == MouseRightButton then
 			openHasteSlotContextMenu(self)
 
@@ -518,7 +636,7 @@ local function bindHasteSlot()
 		end
 
 		if button == MouseLeftButton then
-			openHelperSpellAssign(self, isHelperHasteSpell)
+			openHelperSpellAssign(self, var_0_46)
 
 			return true
 		end
@@ -542,7 +660,7 @@ local function bindManaTrainingSlot()
 	prepareHelperActionSlot(slot)
 	refreshManaTrainingSlotFrame()
 
-	function slot:onMouseRelease(mousePos, button)
+	function slot.onMouseRelease(self, mousePos, button)
 		if button == MouseRightButton then
 			openManaTrainingSlotContextMenu(self)
 
@@ -648,6 +766,10 @@ local function isManaTrainingEnabled()
 end
 
 local function runAutoHaste()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return
+	end
+
 	if not isHasteEnabled() then
 		return
 	end
@@ -665,15 +787,18 @@ local function runAutoHaste()
 	end
 
 	local pzCastCheck = ctx and ctx.getWidget("toolsAutoHastePzCastCheckBox") or nil
-	local allowPzCast = pzCastCheck and pzCastCheck:isChecked() or false
 
-	if not allowPzCast and lp.isInProtectionZone and lp:isInProtectionZone() then
+	if not (pzCastCheck and pzCastCheck:isChecked() or false) and lp.isInProtectionZone and lp:isInProtectionZone() then
 		return
 	end
 
 	local spell = getCachedHasteSpell(words)
 
 	if not spell then
+		return
+	end
+
+	if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(lp, spell.mana) then
 		return
 	end
 
@@ -703,6 +828,10 @@ local function runAutoHaste()
 end
 
 local function runManaTraining()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return
+	end
+
 	if not isManaTrainingEnabled() then
 		return
 	end
@@ -725,15 +854,34 @@ local function runManaTraining()
 		return
 	end
 
+	if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(lp, spell.mana) then
+		return
+	end
+
+	if not isHelperHasteSpell(spell.vocations) then
+		return
+	end
+
+	local manaPercent = lp:getMana()
 	local maxMana = lp:getMaxMana()
 
 	if not maxMana or maxMana <= 0 then
 		return
 	end
 
-	local manaPercent = lp:getMana() / maxMana * 100
+	if manaPercent / maxMana * 100 <= getManaTrainingThreshold() then
+		return
+	end
 
-	if manaPercent <= getManaTrainingThreshold() then
+	if spell.mana and manaPercent < spell.mana then
+		return
+	end
+
+	if spell.soul and spell.soul > 0 and lp:getSoul() < spell.soul then
+		return
+	end
+
+	if var_0_43(spell) and not var_0_45(lp) then
 		return
 	end
 
@@ -929,6 +1077,8 @@ function HelperConditions.loadFromConfig(config)
 			restoreSlotData(hasteSlot, {
 				words = legacy.autoHasteSpell
 			})
+		else
+			clearSlotData(hasteSlot)
 		end
 	end
 
@@ -937,6 +1087,8 @@ function HelperConditions.loadFromConfig(config)
 
 		if slotData then
 			restoreSlotData(manaTrainingSlot, slotData)
+		else
+			clearSlotData(manaTrainingSlot)
 		end
 	end
 end

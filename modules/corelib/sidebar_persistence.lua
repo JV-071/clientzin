@@ -1,10 +1,8 @@
-﻿-- chunkname: @/corelib/sidebar_persistence.lua
-
-SidebarPersistence = {
+﻿SidebarPersistence = {
+	active = false,
 	FILE_NAME = "sidebars.json",
 	lastSessionActive = false,
 	savedOnLogout = false,
-	active = false,
 	providers = {},
 	document = {}
 }
@@ -173,10 +171,11 @@ function SidebarPersistence.saveNow()
 	for sectionKey, provider in pairs(SidebarPersistence.providers) do
 		if type(provider.collect) == "function" then
 			local section = copySection(document[sectionKey])
+			local var_12_2, var_12_3 = pcall(provider.collect, section)
 
-			provider.collect(section)
-
-			if type(section) == "table" and (not table.empty(section) or provider.alwaysInclude) then
+			if not var_12_2 then
+				g_logger.error("[SidebarPersistence] collect failed for " .. tostring(sectionKey) .. ": " .. tostring(var_12_3))
+			elseif type(section) == "table" and (not table.empty(section) or provider.alwaysInclude) then
 				document[sectionKey] = section
 			end
 		end

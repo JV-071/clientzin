@@ -31,23 +31,25 @@ MainWindowHigh
   !text: tr('Add Shooter')
   size: 288 171
   font: $var-cip-font-new
-  color: #909090
+  color: $var-text-cip-color-grey
   text-offset: 0 2
   padding-top: 0
   padding-right: 0
   @onEscape: modules.game_helper.closeShooterEntryWindow()
+  @onEnter: modules.game_helper.addShooterEntryOk()
 
   HelperSectionHelpIcon
     id: addShooterHelp
     anchors.top: parent.top
     anchors.right: parent.right
-    !tooltip: tr('Shooter entry conditions:<br><li>HP%%: target health percentage required to use this entry.</li><li>Creatures: minimum number of creatures needed for area spells or runes, unless force cast is enabled.</li><li>Use to: uses the selected spell or rune on the target, yourself, or the best position for area hits.</li><li>Harmony: minimum harmony required for spells that use harmony.</li>')
+    !tooltip: tr('Shooter entry conditions:<br><li>HP%%: target health percentage required to use this entry.</li><li>Creatures: minimum number needed for area spells, area runes, pulling spells, timed support spells, or exori amp kor. Exori amp kor counts nearby monsters scanned by the Shooter.</li><li>Cast with 1+: other single-target spells and runes only. Uncheck it to use the entry only when your target is the only monster on screen.</li><li>Timer (s): minimum time in seconds between timed-spell casts; server cooldown is always respected.</li><li>Use to: uses the selected spell or rune on the target, yourself, or the best position for area hits.</li><li>Harmony: minimum harmony required for spells that use harmony.</li>')
 
   Panel
     id: addShooterForm
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
+    // EXCEPTION: legacy Helper form clears the 29px title/help chrome.
     margin-top: 29
     margin-right: 13
     height: 95
@@ -61,19 +63,19 @@ MainWindowHigh
       margin-left: -2
 
       Label
+        width: 70
         !text: tr('HP%%:')
         font: $var-cip-font
         color: #c0c0c0
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        margin-top: 3
-        text-auto-resize: true
+        text-auto-resize: false
 
       QtComboBox
         id: addShooterHpMinEdit
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: prev.right
-        margin-left: 42
+        margin-left: 6
         size: 50 20
         color: #c0c0c0
         menu-scroll: true
@@ -118,19 +120,19 @@ MainWindowHigh
       margin-left: -2
 
       Label
+        width: 70
         !text: tr('Use to:')
         font: $var-cip-font
         color: #c0c0c0
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        margin-top: 3
-        text-auto-resize: true
+        text-auto-resize: false
 
       QtComboBox
         id: addShooterUseToCombo
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: prev.right
-        margin-left: 32
+        margin-left: 6
         size: 128 20
         color: #c0c0c0
         @onSetup: |
@@ -149,24 +151,86 @@ MainWindowHigh
       margin-left: -2
 
       Label
+        width: 70
         !text: tr('Creatures:')
         font: $var-cip-font
         color: #c0c0c0
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        margin-top: 3
-        text-auto-resize: true
+        text-auto-resize: false
 
       QtComboBox
         id: addShooterCreaturesCombo
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: prev.right
         margin-left: 6
         size: 50 20
         color: #c0c0c0
         @onSetup: |
-          for i = 1, 8 do self:addOption(tostring(i) .. '+') end
+          for i = 1, 12 do self:addOption(tostring(i) .. '+') end
           self:setCurrentOption('1+')
+
+      // Single-target spells and runes only; shown by refreshCastOnePlusRow.
+      Panel
+        id: addShooterCastOnePlusUnit
+        width: 110
+        height: 20
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: addShooterCreaturesCombo.right
+        margin-left: 10
+        visible: false
+
+        OptionCheckBox
+          id: addShooterCastOnePlusCheck
+          anchors.verticalCenter: parent.verticalCenter
+          anchors.left: parent.left
+          !tooltip: tr('Cast with 1+ (single-target spells and runes):<br><li>Checked (default): casts on your target no matter how many monsters are on screen.</li><li>Unchecked: casts only when your target is the only monster on screen. With 2 or more, this entry waits and leaves the attack cooldown free for the area spells in your list.</li>')
+
+        Label
+          id: addShooterCastOnePlusLabel
+          !text: tr('Cast with 1+')
+          font: $var-cip-font
+          color: #c0c0c0
+          anchors.verticalCenter: parent.verticalCenter
+          anchors.left: parent.left
+          text-offset: 18 0
+          text-auto-resize: true
+          phantom: true
+
+    Panel
+      id: addShooterIntervalRow
+      height: 0
+      visible: false
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 0
+      margin-left: -2
+
+      Label
+        width: 70
+        !text: tr('Timer (s)')
+        font: $var-cip-font
+        color: $var-text-cip-color
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        text-auto-resize: false
+        !tooltip: tr('Minimum time in seconds between automatic casts of this spell. The server cooldown is still respected.')
+
+      QtComboBox
+        id: addShooterIntervalCombo
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: prev.right
+        margin-left: 6
+        size: 50 20
+        color: $var-text-cip-color
+        menu-scroll: true
+        menu-height: 200
+        menu-scroll-step: 10
+        !tooltip: tr('Minimum time in seconds between automatic casts of this spell. The server cooldown is still respected.')
+        @onSetup: |
+          for i = 1, 60 do self:addOption(tostring(i)) end
+          self:setCurrentOption('2')
 
     Panel
       id: addShooterHarmonyRow
@@ -179,19 +243,19 @@ MainWindowHigh
       margin-left: -2
 
       Label
+        width: 70
         !text: tr('Harmony:')
         font: $var-cip-font
         color: #c0c0c0
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        margin-top: 3
-        text-auto-resize: true
+        text-auto-resize: false
 
       QtComboBox
         id: addShooterHarmonyCombo
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.left: prev.right
-        margin-left: 13
+        margin-left: 6
         size: 50 20
         color: #c0c0c0
         @onSetup: |
@@ -249,7 +313,7 @@ MainWindowHigh
     id: addShooterSeparator
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.bottom: addShooterOkButton.top
+    anchors.bottom: addShooterCancelButton.top
     margin-right: 16
     margin-bottom: 11
 
@@ -259,15 +323,16 @@ MainWindowHigh
     anchors.right: addShooterCancelButton.left
     margin-right: 6
     size: 43 20
-    text: OK
+    !text: tr('Ok')
     enabled: false
     @onClick: modules.game_helper.addShooterEntryOk()
 
   Button
     id: addShooterCancelButton
+    // EXCEPTION: requested legacy footer order keeps Cancel on the right.
     anchors.bottom: parent.bottom
     anchors.right: parent.right
     margin-right: 16
     size: 43 20
-    text: Cancel
+    !text: tr('Cancel')
     @onClick: modules.game_helper.closeShooterEntryWindow()

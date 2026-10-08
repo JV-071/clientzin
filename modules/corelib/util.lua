@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/util.lua
-
-function print(...)
+﻿function print(...)
 	local msg = ""
 	local args = {
 		...
@@ -38,6 +36,24 @@ function fatal(msg)
 	g_logger.log(LogFatal, msg)
 end
 
+local formatTraceback = type(debug) == "table" and debug.traceback or tostring
+
+function iscallable(callableValue)
+	local callableType = type(callableValue)
+
+	if callableType == "function" then
+		return true
+	end
+
+	if callableType == "userdata" or callableType == "table" then
+		local callableMetatable = getmetatable(callableValue)
+
+		return callableMetatable ~= nil and callableMetatable.__call ~= nil
+	end
+
+	return false
+end
+
 function exit()
 	g_app.exit()
 end
@@ -51,7 +67,8 @@ function connect(object, arg1, arg2, arg3)
 		return
 	end
 
-	local signalsAndSlots, pushFront
+	local signalsAndSlots
+	local pushFront
 
 	if type(arg1) == "string" then
 		signalsAndSlots = {
@@ -76,14 +93,14 @@ function connect(object, arg1, arg2, arg3)
 
 		if not object[signal] then
 			object[signal] = slot
-		elseif type(object[signal]) == "function" then
+		elseif iscallable(object[signal]) then
 			object[signal] = {
 				object[signal]
 			}
 		end
 
-		if type(slot) ~= "function" then
-			perror(debug.traceback("unable to connect a non function value"))
+		if not iscallable(slot) then
+			perror(formatTraceback("unable to connect a non function value"))
 		end
 
 		if type(object[signal]) == "table" then
@@ -112,13 +129,13 @@ function disconnect(object, arg1, arg2)
 	elseif type(arg1) == "table" then
 		signalsAndSlots = arg1
 	else
-		perror(debug.traceback("unable to disconnect"))
+		perror(formatTraceback("unable to disconnect"))
 	end
 
 	for signal, slot in pairs(signalsAndSlots) do
 		if not object[signal] then
 			-- block empty
-		elseif type(object[signal]) == "function" then
+		elseif iscallable(object[signal]) then
 			if object[signal] == slot then
 				object[signal] = nil
 			end
@@ -140,7 +157,7 @@ end
 
 function newclass(name)
 	if not name then
-		perror(debug.traceback("new class has no name."))
+		perror(formatTraceback("new class has no name."))
 	end
 
 	local class = {}
@@ -167,7 +184,7 @@ end
 
 function extends(base, name)
 	if not name then
-		perror(debug.traceback("extended class has no name."))
+		perror(formatTraceback("extended class has no name."))
 	end
 
 	local derived = {}
@@ -292,34 +309,35 @@ function unexport(key)
 	end
 end
 
-local _lua_debug = debug
+function getfsrcpath(unusedArgument)
+	local _lua_debug = _G.getCurrentSourcePath
 
-function getfsrcpath(depth)
-	depth = depth or 2
-
-	if type(_lua_debug) ~= "table" or type(_lua_debug.getinfo) ~= "function" then
+	if _lua_debug == nil then
 		return "/"
 	end
 
-	local info = _lua_debug.getinfo(1 + depth, "Sn")
+	local info = _lua_debug(0)
+	local path = info
 
-	if not info then
-		return "/"
+	if type(info) == "string" and info ~= "" then
+		for stackDepth = 1, 12 do
+			local frameSourcePath = _lua_debug(stackDepth)
+
+			if type(frameSourcePath) == "string" and frameSourcePath ~= "" and frameSourcePath ~= info then
+				path = frameSourcePath
+
+				break
+			end
+		end
+
+		if path:sub(1, 1) ~= "/" then
+			path = "/" .. path
+		end
+
+		return path
 	end
 
-	local path
-
-	if info.short_src then
-		path = info.short_src:match("(.*)/.*")
-	end
-
-	if not path then
-		path = "/"
-	elseif path:sub(1, 1) ~= "/" then
-		path = "/" .. path
-	end
-
-	return path
+	return "/"
 end
 
 function resolvepath(filePath, depth)
@@ -423,7 +441,7 @@ function isWidgetAlive(w)
 end
 
 function signalcall(param, ...)
-	if type(param) == "function" then
+	if iscallable(param) then
 		local status, ret = pcall(param, ...)
 
 		if status then
@@ -477,7 +495,9 @@ function makesingleton(obj)
 
 	if obj.getClassName then
 		for key, value in pairs(_G[obj:getClassName()]) do
-			if type(value) == "function" then
+			if iscallable(value) then
+				local value = value
+
 				singleton[key] = function(...)
 					return value(obj, ...)
 				end
@@ -536,11 +556,7 @@ function tdump(title, input)
 		title_fill = title_fill .. "="
 	end
 
-	local header_str = "\n====" .. title_fill .. "====\n"
-
-	header_str = header_str .. "=== " .. title .. " ===\n"
-	header_str = header_str .. "====" .. title_fill .. "====\n"
-
+	local header_str = (("\n====" .. title_fill .. "====\n") .. "=== " .. title .. " ===\n") .. "====" .. title_fill .. "====\n"
 	local dump_str = dump(input)
 	local footer_str = "\n====" .. title_fill .. "====\n"
 

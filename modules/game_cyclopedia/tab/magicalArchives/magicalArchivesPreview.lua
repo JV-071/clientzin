@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cyclopedia/tab/magicalArchives/magicalArchivesPreview.lua
-
-if Cyclopedia.MagicalArchivesPreview then
+﻿if Cyclopedia.MagicalArchivesPreview then
 	return
 end
 
@@ -23,7 +21,8 @@ local PREVIEW_CREATURE_RENDER_SIZE = 100
 local PREVIEW_MISSILE_STEP_DELAY = 10
 local PREVIEW_MISSILE_MS_PER_TILE = 50
 local previewEvents = {}
-local previewLoopEvent, previewState
+local previewLoopEvent
+local previewState
 
 local function getPreviewPosition(action, layout)
 	local x = tonumber(action.x) or 0
@@ -260,14 +259,12 @@ local function createPreviewItem(parent, itemId, action, layout)
 
 	placePreviewWidget(parent, item, action, layout)
 
-	local ok = pcall(function()
+	if not pcall(function()
 		item:setItemId(tonumber(itemId) or 0)
 		item:setShowCount(false)
 		item:setFixedItemSize(true)
 		item:setItemSmooth(layout.tileSize < PREVIEW_MAX_TILE_SIZE)
-	end)
-
-	if not ok then
+	end) then
 		item:destroy()
 
 		return nil
@@ -277,8 +274,13 @@ local function createPreviewItem(parent, itemId, action, layout)
 end
 
 local function getPreviewMetrics(preview)
-	local minX, maxX, minY, maxY = 0, 0, 0, 0
-	local sumX, sumY, count = 0, 0, 0
+	local minX = 0
+	local maxX = 0
+	local minY = 0
+	local maxY = 0
+	local sumX = 0
+	local sumY = 0
+	local count = 0
 	local maxTimestamp = 0
 	local hasObjects = false
 
@@ -326,9 +328,8 @@ local function getPreviewMetrics(preview)
 	local customMaxX = gridBounds and tonumber(gridBounds.maxX) or nil
 	local customMinY = gridBounds and tonumber(gridBounds.minY) or nil
 	local customMaxY = gridBounds and tonumber(gridBounds.maxY) or nil
-	local hasCustomBounds = customMinX and customMaxX and customMinY and customMaxY and customMinX <= customMaxX and customMinY <= customMaxY
 
-	if hasCustomBounds then
+	if customMinX and customMaxX and customMinY and customMaxY and customMinX <= customMaxX and customMinY <= customMaxY then
 		minX = math.floor(customMinX)
 		maxX = math.floor(customMaxX)
 		minY = math.floor(customMinY)
@@ -339,9 +340,7 @@ local function getPreviewMetrics(preview)
 		minY = math.min(minY, -1)
 		maxY = math.max(maxY, 1)
 
-		local yRadius = math.max(math.abs(minY), math.abs(maxY))
-
-		if yRadius <= 2 then
+		if math.max(math.abs(minY), math.abs(maxY)) <= 2 then
 			minY = minY - 1
 			maxY = maxY + 1
 		end
@@ -352,9 +351,7 @@ local function getPreviewMetrics(preview)
 	local availW = PREVIEW_MAX_WIDTH - PREVIEW_PADDING * 2
 	local availH = PREVIEW_MAX_HEIGHT - PREVIEW_PADDING * 2
 	local tileSize = math.min(PREVIEW_MAX_TILE_SIZE, math.floor(availW / columns), math.floor(availH / rows))
-
-	tileSize = math.max(12, tileSize)
-
+	local tileSize = math.max(12, tileSize)
 	local contentWidth = columns * tileSize
 	local contentHeight = rows * tileSize
 
@@ -496,14 +493,12 @@ local function drawPreviewBase(layout, preview)
 		local creature = g_ui.createWidget("UICreature", actorLayer)
 
 		if creature then
-			local ok = pcall(function()
+			if not pcall(function()
 				configurePreviewCreature(creature, {
 					x = 0,
 					y = 0
 				}, layout, player:getOutfit(), getPreviewPlayerDirection(layout))
-			end)
-
-			if not ok then
+			end) then
 				creature:destroy()
 			else
 				previewState.playerCreature = creature
@@ -530,13 +525,11 @@ local function addPreviewCreature(action)
 		return
 	end
 
-	local ok = pcall(function()
+	if not pcall(function()
 		configurePreviewCreature(creature, action, previewState.layout, {
 			type = lookType
 		}, tonumber(action.direction) or 2)
-	end)
-
-	if not ok then
+	end) then
 		creature:destroy()
 
 		return
@@ -650,8 +643,7 @@ local function addPreviewMissile(action)
 	local toPos = getPreviewPosition(action, layout)
 	local dx = math.abs(tonumber(action.x) or 0)
 	local dy = math.abs(tonumber(action.y) or 0)
-	local distance = math.max(1, math.max(dx, dy))
-	local totalDuration = distance * PREVIEW_MISSILE_MS_PER_TILE
+	local totalDuration = math.max(1, math.max(dx, dy)) * PREVIEW_MISSILE_MS_PER_TILE
 	local steps = math.max(1, math.floor(totalDuration / PREVIEW_MISSILE_STEP_DELAY))
 
 	placePreviewWidget(parent, missile, fromAction, layout)

@@ -1,6 +1,9 @@
-﻿-- chunkname: @/game_party/party.lua
-
-local partyWindow, partyButton, partyPanel, filterPanel, toggleFilterButton, hideButtons
+﻿local partyWindow
+local partyButton
+local partyPanel
+local filterPanel
+local toggleFilterButton
+local hideButtons
 local partyEventsConnected = false
 
 PartyListRegistry = {
@@ -19,35 +22,35 @@ local PARTY_HIDE_BUTTON_OPTIONS = {
 }
 local PARTY_FILTER_BUTTON_TOOLTIPS = {
 	hideParty = {
-		show = "Show Players",
-		hide = "Hide Players"
+		hide = "Hide Players",
+		show = "Show Players"
 	},
 	hideKnights = {
-		show = "Show Knight",
-		hide = "Hide Knight"
+		hide = "Hide Knight",
+		show = "Show Knight"
 	},
 	hidePaladins = {
-		show = "Show Paladin",
-		hide = "Hide Paladin"
+		hide = "Hide Paladin",
+		show = "Show Paladin"
 	},
 	hideDruids = {
-		show = "Show Druid",
-		hide = "Hide Druid"
+		hide = "Hide Druid",
+		show = "Show Druid"
 	},
 	hideSorcerers = {
-		show = "Show Sorcerer",
-		hide = "Hide Sorcerer"
+		hide = "Hide Sorcerer",
+		show = "Show Sorcerer"
 	},
 	hideMonks = {
-		show = "Show Monk",
-		hide = "Hide Monk"
+		hide = "Hide Monk",
+		show = "Show Monk"
 	},
 	hideSummons = {
-		show = "Show Summons",
-		hide = "Hide Summons"
+		hide = "Hide Summons",
+		show = "Show Summons"
 	}
 }
-local PARTY_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP = -3
+local PARTY_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP = 0
 local PARTY_LIST_FILTERS_HIDDEN_SCROLLBAR_MARGIN_TOP = 15
 
 local function getPartyListScrollbarMarginTopWithFilters(filterPanel)
@@ -64,7 +67,7 @@ local function setupPartyFilterPanelOverrides(instance)
 	local baseHideFilterPanel = CreatureList.Instance.hideFilterPanel
 	local baseShowFilterPanel = CreatureList.Instance.showFilterPanel
 
-	function instance:hideFilterPanel()
+	function instance.hideFilterPanel(self)
 		baseHideFilterPanel(self)
 
 		local contentsPanel = self.window:recursiveGetChildById("contentsPanel")
@@ -72,13 +75,13 @@ local function setupPartyFilterPanelOverrides(instance)
 		if contentsPanel then
 			contentsPanel:breakAnchors()
 			contentsPanel:addAnchor(AnchorTop, "miniwindowHeader", AnchorBottom)
-			contentsPanel:setMarginTop(2)
+			contentsPanel:setMarginTop(PARTY_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP)
 			contentsPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
 			contentsPanel:addAnchor(AnchorRight, "miniwindowScrollBar", AnchorLeft)
 			contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
 			contentsPanel:setMarginLeft(3)
 			contentsPanel:setMarginRight(1)
-			contentsPanel:setMarginBottom(3)
+			contentsPanel:setMarginBottom(4)
 		end
 
 		local scrollbar = self.window:getChildById("miniwindowScrollBar")
@@ -88,7 +91,7 @@ local function setupPartyFilterPanelOverrides(instance)
 		end
 	end
 
-	function instance:showFilterPanel()
+	function instance.showFilterPanel(self)
 		baseShowFilterPanel(self)
 
 		local contentsPanel = self.window:recursiveGetChildById("contentsPanel")
@@ -102,7 +105,7 @@ local function setupPartyFilterPanelOverrides(instance)
 			contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
 			contentsPanel:setMarginLeft(3)
 			contentsPanel:setMarginRight(1)
-			contentsPanel:setMarginBottom(3)
+			contentsPanel:setMarginBottom(4)
 		end
 
 		local scrollbar = self.window:getChildById("miniwindowScrollBar")
@@ -150,7 +153,7 @@ local function refreshAllPartyFilterButtonTooltips(instance)
 	end
 end
 
-function PartyListRegistry:add(creature)
+function PartyListRegistry.add(self, creature)
 	if not creature or not creature.getId then
 		return
 	end
@@ -160,7 +163,7 @@ function PartyListRegistry:add(creature)
 	self.byId[id] = creature
 end
 
-function PartyListRegistry:remove(creature)
+function PartyListRegistry.remove(self, creature)
 	if not creature then
 		return
 	end
@@ -168,7 +171,7 @@ function PartyListRegistry:remove(creature)
 	self.byId[creature:getId()] = nil
 end
 
-function PartyListRegistry:clear()
+function PartyListRegistry.clear(self)
 	self.byId = {}
 end
 
@@ -494,7 +497,7 @@ function init()
 	toggleFilterButton = partyWindow:recursiveGetChildById("toggleFilterButton")
 	mainInstance.toggleFilterButton = toggleFilterButton
 
-	Keybind.new("Windows", "Show/hide party list", "Ctrl+Shift+P", "")
+	Keybind.new("Windows", "Show/hide party list", "", "")
 	Keybind.bind("Windows", "Show/hide party list", {
 		{
 			type = KEY_DOWN,

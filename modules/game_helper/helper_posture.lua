@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_helper/helper_posture.lua
-
-HelperPosture = HelperPosture or {}
+﻿HelperPosture = HelperPosture or {}
 
 local ctx
 local STANCE_SELECTION_ORDER = {
@@ -30,8 +28,8 @@ local STANCE_VOCATION_KEYS = {
 local STANCE_DEFINITIONS = {
 	knight = {
 		{
-			key = "stance",
 			label = "Stance",
+			key = "stance",
 			names = {
 				"Blood Rage",
 				"Protector"
@@ -40,8 +38,8 @@ local STANCE_DEFINITIONS = {
 	},
 	paladin = {
 		{
-			key = "stance",
 			label = "Stance",
+			key = "stance",
 			names = {
 				"Sharpshooter",
 				"Divine Defiance"
@@ -50,8 +48,8 @@ local STANCE_DEFINITIONS = {
 	},
 	sorcerer = {
 		{
-			key = "elemental",
 			label = "Elemental",
+			key = "elemental",
 			names = {
 				"Master of Flames",
 				"Master of Thunder",
@@ -59,8 +57,8 @@ local STANCE_DEFINITIONS = {
 			}
 		},
 		{
-			key = "crippling",
 			label = "Crippling",
+			key = "crippling",
 			names = {
 				"Aura of Sapped Strength",
 				"Aura of Exposed Weakness"
@@ -69,8 +67,8 @@ local STANCE_DEFINITIONS = {
 	},
 	druid = {
 		{
-			key = "stance",
 			label = "Stance",
+			key = "stance",
 			names = {
 				"Elemental Synthesis",
 				"Shared Conservation"
@@ -79,8 +77,8 @@ local STANCE_DEFINITIONS = {
 	},
 	monk = {
 		{
-			key = "virtue",
 			label = "Virtue",
+			key = "virtue",
 			names = {
 				"Virtue of Harmony",
 				"Virtue of Justice",
@@ -139,11 +137,12 @@ local function resolvePlayerVocation(player)
 
 	if type(translateVocation) == "function" then
 		local ok, vocation = pcall(translateVocation, rawVocation)
+		local numericValue
 
-		vocation = tonumber(vocation) or 0
+		numericValue = tonumber(vocation) or 0
 
-		if ok and vocation > 0 then
-			return vocation, rawVocation
+		if ok and numericValue > 0 then
+			return numericValue, rawVocation
 		end
 	end
 

@@ -204,6 +204,7 @@ UIWidget
     height: 75
 
     Label
+      id: clearBottomActionBarsLabel
       !text: tr('Clear Bottom Action Bars:')
       anchors.left: parent.left
       anchors.top: parent.top
@@ -221,111 +222,85 @@ UIWidget
       margin-top: 5
       !tooltip: tr('Clear all assignments from bottom action bars')
 
-    QtButton
+    CipsoftButton
       id: clearBottomBar1
       !text: tr('Bar 1')
-      width: 60
-      height: 18
-      anchors.right: parent.right
+      anchors.left: clearBottomActionBarsLabel.right
       anchors.top: parent.top
-      margin-right: 130
+      margin-left: 8
       margin-top: 3
       @onClick: modules.game_actionbar.resetAction(1)
-    QtButton
+    CipsoftButton
       id: clearBottomBar2
       !text: tr('Bar 2')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: parent.top
-      margin-right: 65
-      margin-top: 3
+      anchors.left: clearBottomBar1.right
+      anchors.top: clearBottomBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(2)
-    QtButton
+    CipsoftButton
       id: clearBottomBar3
       !text: tr('Bar 3')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: parent.top
-      margin-right: 0
-      margin-top: 3
+      anchors.left: clearBottomBar2.right
+      anchors.top: clearBottomBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(3)
     Label
+      id: clearLeftActionBarsLabel
       !text: tr('Clear Left Action Bars:')
       anchors.left: parent.left
-      anchors.top: clearBottomBar1.bottom
+      anchors.verticalCenter: clearLeftBar1.verticalCenter
       margin-left: 10
-      margin-top: 5
       color: #c0c0c0ff
 
-    QtButton
+    CipsoftButton
       id: clearLeftBar1
       !text: tr('Bar 1')
-      width: 60
-      height: 18
-      anchors.right: parent.right
+      anchors.left: clearBottomBar1.left
       anchors.top: clearBottomBar1.bottom
-      margin-right: 130
       margin-top: 3
       @onClick: modules.game_actionbar.resetAction(4)
-    QtButton
+    CipsoftButton
       id: clearLeftBar2
       !text: tr('Bar 2')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: clearBottomBar2.bottom
-      margin-right: 65
-      margin-top: 3
+      anchors.left: clearLeftBar1.right
+      anchors.top: clearLeftBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(5)
-    QtButton
+    CipsoftButton
       id: clearLeftBar3
       !text: tr('Bar 3')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: clearBottomBar3.bottom
-      margin-right: 0
-      margin-top: 3
+      anchors.left: clearLeftBar2.right
+      anchors.top: clearLeftBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(6)
     Label
+      id: clearRightActionBarsLabel
       !text: tr('Clear Right Action Bars:')
       anchors.left: parent.left
-      anchors.top: clearLeftBar1.bottom
+      anchors.verticalCenter: clearRightBar1.verticalCenter
       margin-left: 10
-      margin-top: 5
       color: #c0c0c0ff
 
-    QtButton
+    CipsoftButton
       id: clearRightBar1
       !text: tr('Bar 1')
-      width: 60
-      height: 18
-      anchors.right: parent.right
+      anchors.left: clearBottomBar1.left
       anchors.top: clearLeftBar1.bottom
-      margin-right: 130
       margin-top: 3
       @onClick: modules.game_actionbar.resetAction(7)
-    QtButton
+    CipsoftButton
       id: clearRightBar2
       !text: tr('Bar 2')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: clearLeftBar2.bottom
-      margin-right: 65
-      margin-top: 3
+      anchors.left: clearRightBar1.right
+      anchors.top: clearRightBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(8)
-    QtButton
+    CipsoftButton
       id: clearRightBar3
       !text: tr('Bar 3')
-      width: 60
-      height: 18
-      anchors.right: parent.right
-      anchors.top: clearLeftBar3.bottom
-      margin-right: 0
-      margin-top: 3
+      anchors.left: clearRightBar2.right
+      anchors.top: clearRightBar1.top
+      margin-left: 8
       @onClick: modules.game_actionbar.resetAction(9)
 
   QtButton

@@ -1,102 +1,113 @@
-﻿-- chunkname: @/game_helper/helper_tools.lua
-
-HelperTools = HelperTools or {}
+﻿HelperTools = HelperTools or {}
 
 local ctx
 local toolsUiLanguage = "en"
 local TOOLS_HELP_TEXT = {
 	en = {
 		changeGold = "Change Gold:<br><li>Every second, converts a stack of 100 gold coins into platinum coins.</li><li>If no gold stack is available, converts a stack of 100 platinum coins into crystal coins.</li><li>The coins must be available in your inventory or accessible containers.</li>",
-		manaTraining = "Mana Training:<br><li>Left-click the action slot to select a learned spell; right-click to clear it.</li><li>Casts when current mana is strictly above the selected percentage and the spell cooldown is ready.</li>",
+		haste = "Haste:<br><li>Left-click the action slot to select a learned haste spell; right-click to clear it.</li><li>Recasts the spell when its duration and cooldown allow it.</li><li>PZ Cast allows the spell to be cast inside protection zones.</li>",
 		eatFood = "Eat Food:<br><li>Every 30 seconds, uses an available food item from the configured internal priority list.</li><li>The food must be available in your inventory or accessible containers.</li>",
-		antiIdle = "Anti Idle:<br><li>After 5 minutes without walking or turning, rotates your character once every 15 seconds.</li><li>Manual walking or turning restarts the inactivity timer.</li>",
+		manaTraining = "Mana Training:<br><li>Left-click the action slot to select a learned spell, rune-conjure spell or ammo-conjure spell for your vocation; right-click to clear it.</li><li>Casts when current mana is strictly above the selected percentage and the spell cooldown is ready.</li><li>The spell is only cast with enough mana and soul. Spells that create runes also need at least one blank rune in your inventory or accessible containers.</li>",
 		reconnect = "Reconnect:<br><li>Enables the client native auto-reconnect setting.</li><li>Attempts to log the same character back in after recoverable connection errors.</li><li>A recent manual logout is respected and does not trigger an immediate reconnect.</li>",
-		autoTraining = "Auto Training:<br><li>Left-click the slot to select an exercise weapon; right-click to clear it.</li><li>Uses the selected weapon every 10 seconds on the nearest visible exercise dummy within 5 tiles.</li><li>The weapon must be available in your inventory or accessible containers.</li>",
-		autoAmmo = "Auto Ammo:<br><li>Left-click the slot to select arrows, bolts or stackable distance ammunition; right-click to clear it.</li><li>Every 20 seconds, when the amount is below Target, performs up to three moves one second apart into an equipped open quiver.</li><li>Stops the cycle early when Target is reached. Stackable hand ammunition is equipped directly from inventory or accessible containers.</li>",
-		haste = "Haste:<br><li>Left-click the action slot to select a learned haste spell; right-click to clear it.</li><li>Recasts the spell when its duration and cooldown allow it.</li><li>PZ Cast allows the spell to be cast inside protection zones.</li>"
+		antiIdle = "Anti Idle:<br><li>After 5 minutes without walking or turning, rotates your character once every 15 seconds.</li><li>Manual walking or turning restarts the inactivity timer.</li>",
+		autoAmmo = "Auto Ammo:<br><li>Left-click the slot to select arrows, bolts or stackable distance ammunition; right-click to clear it.</li><li>When the amount is below Target, keeps refilling the equipped open quiver until Target is reached or reserve ammunition ends.</li><li>Each refill waits for server confirmation and yields whenever the Healer needs priority. Reserve ammunition can stay in a closed backpack.</li>",
+		autoTraining = "Auto Training:<br><li>Left-click the slot to select an exercise weapon; right-click to clear it.</li><li>Uses the selected weapon every 10 seconds on the nearest visible exercise dummy within 5 tiles.</li><li>The weapon must be available in your inventory or accessible containers.</li>"
 	},
 	pt = {
 		changeGold = "Trocar Ouro:<br><li>A cada segundo, converte uma pilha de 100 moedas de ouro em moedas de platina.</li><li>Se nao houver uma pilha de ouro, converte 100 moedas de platina em uma moeda de cristal.</li><li>As moedas devem estar no inventario ou em containers acessiveis.</li>",
-		manaTraining = "Treino de Mana:<br><li>Clique esquerdo no slot para selecionar uma magia aprendida; clique direito para limpar.</li><li>Conjura quando a mana atual esta estritamente acima da porcentagem selecionada e o cooldown esta pronto.</li>",
+		haste = "Acelerar:<br><li>Clique esquerdo no slot para selecionar uma magia de velocidade aprendida; clique direito para limpar.</li><li>Conjura novamente quando a duracao e o cooldown permitirem.</li><li>Conjurar em PZ permite usar a magia dentro de zonas de protecao.</li>",
 		eatFood = "Comer:<br><li>A cada 30 segundos, usa um alimento disponivel conforme a lista interna de prioridade.</li><li>O alimento deve estar no inventario ou em containers acessiveis.</li>",
-		antiIdle = "Anti Inatividade:<br><li>Apos 5 minutos sem caminhar ou virar, gira o personagem uma vez a cada 15 segundos.</li><li>Caminhar ou virar manualmente reinicia o contador de inatividade.</li>",
+		manaTraining = "Treino de Mana:<br><li>Clique esquerdo no slot para selecionar uma magia aprendida, uma magia de criar runa ou uma magia de conjurar municao da sua vocacao; clique direito para limpar.</li><li>Conjura quando a mana atual esta estritamente acima da porcentagem selecionada e o cooldown esta pronto.</li><li>A magia so e conjurada com mana e soul suficientes. Magias de criar runa tambem exigem pelo menos uma blank rune no inventario ou em containers acessiveis.</li>",
 		reconnect = "Reconectar:<br><li>Ativa a reconexao automatica nativa do cliente.</li><li>Tenta conectar novamente o mesmo personagem apos erros de conexao recuperaveis.</li><li>Um logout manual recente e respeitado e nao dispara uma reconexao imediata.</li>",
-		autoTraining = "Treino Automatico:<br><li>Clique esquerdo no slot para selecionar uma arma de exercicio; clique direito para limpar.</li><li>Usa a arma a cada 10 segundos no boneco de treino visivel mais proximo em ate 5 sqm.</li><li>A arma deve estar no inventario ou em containers acessiveis.</li>",
-		autoAmmo = "Municao Automatica:<br><li>Clique esquerdo no slot para selecionar flechas, bolts ou municao de distancia empilhavel; clique direito para limpar.</li><li>A cada 20 segundos, quando a quantidade fica abaixo do Alvo, faz ate tres movimentos com intervalo de um segundo para o quiver equipado e aberto.</li><li>Interrompe o ciclo ao atingir o Alvo. Municao de mao empilhavel e equipada diretamente do inventario ou de containers acessiveis.</li>",
-		haste = "Acelerar:<br><li>Clique esquerdo no slot para selecionar uma magia de velocidade aprendida; clique direito para limpar.</li><li>Conjura novamente quando a duracao e o cooldown permitirem.</li><li>Conjurar em PZ permite usar a magia dentro de zonas de protecao.</li>"
+		antiIdle = "Anti Inatividade:<br><li>Apos 5 minutos sem caminhar ou virar, gira o personagem uma vez a cada 15 segundos.</li><li>Caminhar ou virar manualmente reinicia o contador de inatividade.</li>",
+		autoAmmo = "Municao Automatica:<br><li>Clique esquerdo no slot para selecionar flechas, bolts ou municao de distancia empilhavel; clique direito para limpar.</li><li>Quando a quantidade fica abaixo do Alvo, continua recarregando o quiver equipado e aberto ate atingir o Alvo ou acabar a reserva.</li><li>Cada recarga espera a confirmacao do servidor e cede prioridade ao Healer. A municao de reserva pode ficar em uma backpack fechada.</li>",
+		autoTraining = "Treino Automatico:<br><li>Clique esquerdo no slot para selecionar uma arma de exercicio; clique direito para limpar.</li><li>Usa a arma a cada 10 segundos no boneco de treino visivel mais proximo em ate 5 sqm.</li><li>A arma deve estar no inventario ou em containers acessiveis.</li>"
 	}
 }
 local TOOLS_HELP_WIDGETS = {
+	toolsAutoAmmoHelp = "autoAmmo",
+	toolsReconnectHelp = "reconnect",
 	toolsEatFoodHelp = "eatFood",
 	toolsChangeGoldHelp = "changeGold",
 	toolsManaTrainingHelp = "manaTraining",
 	toolsAntiIdleHelp = "antiIdle",
 	toolsAutoTrainingHelp = "autoTraining",
-	toolsHasteHelp = "haste",
-	toolsAutoAmmoHelp = "autoAmmo",
-	toolsReconnectHelp = "reconnect"
+	toolsHasteHelp = "haste"
 }
 local TOOLS_UI_TEXT = {
 	en = {
-		clearAction = "Clear Action",
+		noExerciseDummyFound = "No exercise dummy found.",
 		selectAmmoFirst = "Select ammunition first.",
-		assignExerciseWeapon = "Assign Exercise Weapon",
+		clearAction = "Clear Action",
 		selectExerciseWeaponFirst = "Select an exercise weapon first.",
-		assignAmmo = "Assign Ammunition",
+		assignExerciseWeapon = "Assign Exercise Weapon",
 		typeToSearch = "Type to search",
-		noExerciseDummyFound = "No exercise dummy found."
+		assignAmmo = "Assign Ammunition"
 	},
 	pt = {
-		clearAction = "Limpar Acao",
+		noExerciseDummyFound = "Nenhum boneco de treino encontrado.",
 		selectAmmoFirst = "Selecione uma municao primeiro.",
-		assignExerciseWeapon = "Selecionar Arma de Exercicio",
+		clearAction = "Limpar Acao",
 		selectExerciseWeaponFirst = "Selecione uma arma de exercicio primeiro.",
-		assignAmmo = "Selecionar Municao",
+		assignExerciseWeapon = "Selecionar Arma de Exercicio",
 		typeToSearch = "Digite para pesquisar",
-		noExerciseDummyFound = "Nenhum boneco de treino encontrado."
+		assignAmmo = "Selecionar Municao"
 	}
 }
 
 local function toolsText(key)
-	local texts = TOOLS_UI_TEXT[toolsUiLanguage] or TOOLS_UI_TEXT.en
-
-	return texts[key] or TOOLS_UI_TEXT.en[key] or key
+	return (TOOLS_UI_TEXT[toolsUiLanguage] or TOOLS_UI_TEXT.en)[key] or TOOLS_UI_TEXT.en[key] or key
 end
 
 local lastAntiIdleTurnMs = 0
 local lastActivityMs = 0
 local antiIdleSelfTurn = false
-local originalGameWalk, originalGameTurn
+local originalGameWalk
+local originalGameTurn
 local lastChangeGoldMs = 0
 local lastEatFoodMs = 0
 local lastExerciseMs = 0
 local lastExerciseDummyMsgMs = 0
-local lastAutoAmmoMs = 0
-local autoAmmoBurstEvent, toolsTickEvent, antiIdleOutfitEvent
+local var_0_15 = 0
+local autoAmmoBurstEvent
+local cachedExerciseDummyKey
+local cachedExerciseDummyAt = 0
+local EXERCISE_DUMMY_CACHE_MS = 0
+local toolsTickEvent
+local antiIdleOutfitEvent
 local antiIdleOutfitDirectionIndex = 1
 local changeGoldIconEvent
 local changeGoldIconIndex = 1
 local eatFoodIconEvent
 local eatFoodCount = 1
 local positionConnected = false
-local trainingSlot, configuredTrainingItemId
+local trainingSlot
+local configuredTrainingItemId
 local autoTrainingEnabled = false
-local ammoSlot, configuredAmmoItemId
+local ammoSlot
+local configuredAmmoItemId
 local autoAmmoEnabled = false
 local autoAmmoTargetCount = 100
-local cachedMainCheck, cachedExerciseDummy, cachedExerciseDummyKey
-local cachedExerciseDummyAt = 0
-local EXERCISE_DUMMY_CACHE_MS = 2500
-local toolsItemAssignWindow, toolsItemAssignPanel, toolsItemAssignTargetSlot, toolsItemAssignKind, cachedAmmoAssignList
+local cachedMainCheck
+local cachedExerciseDummy
+local var_0_37
+local var_0_38 = 0
+local var_0_39 = 2500
+local toolsItemAssignWindow
+local toolsItemAssignPanel
+local toolsItemAssignTargetSlot
+local toolsItemAssignKind
+local cachedAmmoAssignList
 local ANTI_IDLE_THRESHOLD_MS = 300000
 local ANTI_IDLE_INTERVAL_MS = 15000
 local CHANGE_GOLD_INTERVAL_MS = 1000
 local EAT_FOOD_INTERVAL_MS = 30000
 local EXERCISE_INTERVAL_MS = 10000
 local EXERCISE_SEARCH_RADIUS = 5
-local AUTO_AMMO_INTERVAL_MS = 20000
-local AUTO_AMMO_ACTION_DELAY_MS = 1000
-local AUTO_AMMO_ACTIONS_PER_CYCLE = 3
+local var_0_51 = 10000
+local var_0_52 = 100
+local var_0_53 = 250
+local var_0_54 = 2000
 local AUTO_AMMO_DEFAULT_TARGET_COUNT = 100
 local AUTO_AMMO_COUNT_STEP = 10
 local AUTO_AMMO_MAX_COUNT = 1000
@@ -129,6 +140,7 @@ local EAT_FOOD_FALLBACK_ITEM_IDS = {
 	3602,
 	3607,
 	3723,
+	3724,
 	3725,
 	3726,
 	3727,
@@ -179,7 +191,23 @@ local EXERCISE_WEAPON_IDS = {
 	44064,
 	44065,
 	44066,
-	44067
+	44067,
+	63298,
+	63299,
+	63300,
+	63301,
+	63302,
+	63303,
+	63304,
+	63305,
+	63338,
+	63339,
+	63340,
+	63341,
+	63342,
+	63343,
+	63344,
+	63345
 }
 local EXERCISE_DUMMY_IDS = {
 	28558,
@@ -211,7 +239,11 @@ local EXERCISE_DUMMY_IDS = {
 	63244,
 	63245,
 	63296,
-	63297
+	63297,
+	63360,
+	63361,
+	63366,
+	63367
 }
 local SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
 local TURN_DIRS = {
@@ -239,6 +271,10 @@ local function stopAutoAmmoBurst()
 
 		autoAmmoBurstEvent = nil
 	end
+
+	cachedExerciseDummyKey = nil
+	cachedExerciseDummyAt = 0
+	EXERCISE_DUMMY_CACHE_MS = 0
 end
 
 local function localizeToolsItemAssignWindow()
@@ -424,8 +460,8 @@ end
 
 local function invalidateExerciseDummyCache()
 	cachedExerciseDummy = nil
-	cachedExerciseDummyKey = nil
-	cachedExerciseDummyAt = 0
+	var_0_37 = nil
+	var_0_38 = 0
 end
 
 local function playerPosCacheKey(pos)
@@ -633,8 +669,7 @@ end
 
 local function normalizeAutoAmmoCount(value, fallback)
 	local count = math.floor(tonumber(value) or fallback)
-
-	count = math.floor((count + AUTO_AMMO_COUNT_STEP / 2) / AUTO_AMMO_COUNT_STEP) * AUTO_AMMO_COUNT_STEP
+	local count = math.floor((count + AUTO_AMMO_COUNT_STEP / 2) / AUTO_AMMO_COUNT_STEP) * AUTO_AMMO_COUNT_STEP
 
 	return math.max(AUTO_AMMO_COUNT_STEP, math.min(AUTO_AMMO_MAX_COUNT, count))
 end
@@ -1122,7 +1157,7 @@ function bindAutoTrainingSlot()
 	slot:setVisible(true)
 	updateTrainingSlotVisual(configuredTrainingItemId)
 
-	function slot:onMouseRelease(mousePos, button)
+	function slot.onMouseRelease(self, mousePos, button)
 		if button == MouseRightButton then
 			openTrainingSlotContextMenu(self)
 
@@ -1175,7 +1210,7 @@ local function bindAutoAmmoSlot()
 		targetCombo:setCurrentOption(tostring(autoAmmoTargetCount), true)
 	end
 
-	function slot:onMouseRelease(_, button)
+	function slot.onMouseRelease(self, _, button)
 		if button == MouseRightButton then
 			openAmmoSlotContextMenu(self)
 
@@ -1201,7 +1236,7 @@ local function getNearestExerciseDummy()
 	local posKey = playerPosCacheKey(playerPos)
 	local now = g_clock.millis()
 
-	if cachedExerciseDummyKey == posKey and now < cachedExerciseDummyAt + EXERCISE_DUMMY_CACHE_MS then
+	if var_0_37 == posKey and now < var_0_38 + var_0_39 then
 		return cachedExerciseDummy
 	end
 
@@ -1244,14 +1279,16 @@ local function getNearestExerciseDummy()
 	end
 
 	cachedExerciseDummy = nearest
-	cachedExerciseDummyKey = posKey
-	cachedExerciseDummyAt = now
+	var_0_37 = posKey
+	var_0_38 = now
 
 	return nearest
 end
 
 local function itemMatchesId(item, itemId)
-	return item and item:getId() == itemId
+	local var_69_0 = type(item)
+
+	return (var_69_0 == "userdata" or var_69_0 == "table") and item:getId() == itemId
 end
 
 local function itemCount(item)
@@ -1259,7 +1296,10 @@ local function itemCount(item)
 end
 
 local function sameContainerSource(left, right)
-	if not left or not right then
+	local var_71_0 = type(left)
+	local var_71_1 = type(right)
+
+	if var_71_0 ~= "userdata" and var_71_0 ~= "table" or var_71_1 ~= "userdata" and var_71_1 ~= "table" then
 		return false
 	end
 
@@ -1357,34 +1397,104 @@ local function findAmmoSource(player, itemId, excludedContainer, excludedItems)
 	return nil
 end
 
-local function runQuiverAutoAmmo(player, itemId, targetCount)
-	local _, quiverContainer = findOpenEquippedQuiver(player)
-
-	if not quiverContainer then
+local function runQuiverAutoAmmo(player)
+	if not HelperHealer then
 		return false
 	end
 
-	local currentCount = countContainerItem(quiverContainer, itemId)
+	if HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(player) then
+		return true
+	end
+
+	return HelperHealer.isItemUsePending and HelperHealer.isItemUsePending() or false
+end
+
+local function var_0_134(arg_78_0)
+	cachedExerciseDummyKey = arg_78_0
+	cachedExerciseDummyAt = g_clock.millis()
+	EXERCISE_DUMMY_CACHE_MS = cachedExerciseDummyAt
+end
+
+local function var_0_135(arg_79_0)
+	if cachedExerciseDummyKey == nil then
+		return false, false
+	end
+
+	if arg_79_0 > cachedExerciseDummyKey then
+		cachedExerciseDummyKey = nil
+		cachedExerciseDummyAt = 0
+
+		return false, false
+	end
+
+	if g_clock.millis() - cachedExerciseDummyAt < var_0_54 then
+		return true, false
+	end
+
+	cachedExerciseDummyKey = nil
+	cachedExerciseDummyAt = 0
+
+	return false, true
+end
+
+local function var_0_136(arg_80_0, arg_80_1, arg_80_2)
+	if not arg_80_0.getInventoryCount then
+		return false
+	end
+
+	if arg_80_2 >= (tonumber(arg_80_0:getInventoryCount(arg_80_1, 0)) or 0) then
+		return false
+	end
+
+	var_0_134(arg_80_2)
+	g_game.equipItemId(arg_80_1, 0)
+
+	return true
+end
+
+local function var_0_137(arg_81_0, arg_81_1, targetCount)
+	local unusedValue, var_81_1 = findOpenEquippedQuiver(arg_81_0)
+
+	if not var_81_1 then
+		return false
+	end
+
+	local currentCount = countContainerItem(var_81_1, arg_81_1)
 
 	if targetCount <= currentCount then
 		return false
 	end
 
-	local destination, destinationCapacity = findAmmoDestination(quiverContainer, itemId)
+	local var_81_3, var_81_4 = var_0_135(currentCount)
+
+	if var_81_3 then
+		return true
+	end
+
+	if var_81_4 then
+		return false
+	end
+
+	if g_clock.millis() - EXERCISE_DUMMY_CACHE_MS < var_0_53 then
+		return true
+	end
+
+	local destination, destinationCapacity = findAmmoDestination(var_81_1, arg_81_1)
 
 	if not destination or destinationCapacity <= 0 then
 		return false
 	end
 
-	local source = findAmmoSource(player, itemId, quiverContainer)
+	local source = findAmmoSource(arg_81_0, arg_81_1, var_81_1)
 
 	if not source then
-		return false
+		return var_0_136(arg_81_0, arg_81_1, currentCount)
 	end
 
 	local moveCount = math.min(targetCount - currentCount, itemCount(source), destinationCapacity)
 
 	if moveCount > 0 then
+		var_0_134(currentCount)
 		g_game.move(source, destination, moveCount)
 
 		return true
@@ -1413,9 +1523,7 @@ local function runHandAutoAmmo(player, itemId, targetCount)
 		return false
 	end
 
-	local source = findAmmoSource(player, itemId, nil, excludedItems)
-
-	if source then
+	if findAmmoSource(player, itemId, nil, excludedItems) then
 		g_game.equipItemId(itemId, 0)
 
 		return true
@@ -1425,6 +1533,10 @@ local function runHandAutoAmmo(player, itemId, targetCount)
 end
 
 local function performAutoAmmoAction()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return true
+	end
+
 	if not isEnabled("toolsAutoAmmoCheckBox") or not autoAmmoEnabled then
 		return
 	end
@@ -1446,31 +1558,32 @@ local function performAutoAmmoAction()
 		return
 	end
 
+	if runQuiverAutoAmmo(player) then
+		return true
+	end
+
 	local targetCount = normalizeAutoAmmoCount(autoAmmoTargetCount, AUTO_AMMO_DEFAULT_TARGET_COUNT)
 
 	if ammoKind == "quiver" then
-		return runQuiverAutoAmmo(player, itemId, targetCount)
+		return var_0_137(player, itemId, targetCount)
 	else
-		return runHandAutoAmmo(player, itemId, math.min(targetCount, AMMO_STACK_MAX_COUNT))
+		runHandAutoAmmo(player, itemId, math.min(targetCount, AMMO_STACK_MAX_COUNT))
+
+		return false
 	end
 end
 
-local function runAutoAmmoBurst(remainingActions)
+local function var_0_140()
 	autoAmmoBurstEvent = nil
 
-	if remainingActions <= 0 then
+	if not performAutoAmmoAction() then
+		cachedExerciseDummyKey = nil
+		cachedExerciseDummyAt = 0
+
 		return
 	end
 
-	local moved = performAutoAmmoAction()
-
-	if not moved or remainingActions <= 1 then
-		return
-	end
-
-	autoAmmoBurstEvent = scheduleEvent(function()
-		runAutoAmmoBurst(remainingActions - 1)
-	end, AUTO_AMMO_ACTION_DELAY_MS)
+	autoAmmoBurstEvent = scheduleEvent(var_0_140, var_0_52)
 end
 
 local function runAutoAmmo(force)
@@ -1482,9 +1595,13 @@ local function runAutoAmmo(force)
 		return
 	end
 
+	if autoAmmoBurstEvent and not force then
+		return
+	end
+
 	local now = g_clock.millis()
 
-	if not force and now < lastAutoAmmoMs + AUTO_AMMO_INTERVAL_MS then
+	if not force and now < var_0_15 + var_0_51 then
 		return
 	end
 
@@ -1492,23 +1609,23 @@ local function runAutoAmmo(force)
 		stopAutoAmmoBurst()
 	end
 
-	lastAutoAmmoMs = now
+	var_0_15 = now
 
-	runAutoAmmoBurst(AUTO_AMMO_ACTIONS_PER_CYCLE)
+	var_0_140()
 end
 
-local function findConvertibleCoinStack(lp, itemId)
-	if not lp or not lp.getItems then
+local function var_0_142(arg_86_0, arg_86_1)
+	if not arg_86_0 or not arg_86_0.getItems then
 		return nil
 	end
 
-	local items = lp:getItems(itemId)
+	local items = arg_86_0:getItems(arg_86_1)
 
-	for i = 1, #items do
-		local item = items[i]
+	for iter_86_0 = 1, #items do
+		local var_86_1 = items[iter_86_0]
 
-		if item and item:getCount() >= CONVERT_STACK_SIZE then
-			return item
+		if var_86_1 and var_86_1:getCount() >= CONVERT_STACK_SIZE then
+			return var_86_1
 		end
 	end
 
@@ -1516,6 +1633,10 @@ local function findConvertibleCoinStack(lp, itemId)
 end
 
 local function runChangeGold()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return
+	end
+
 	if not isEnabled("toolsChangeGoldCheckBox") then
 		return
 	end
@@ -1524,36 +1645,40 @@ local function runChangeGold()
 		return
 	end
 
-	local lp = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not lp or not lp.getItems then
+	if not localPlayer or not localPlayer.getItems then
 		return
 	end
 
-	local now = g_clock.millis()
+	local var_87_1 = g_clock.millis()
 
-	if now < lastChangeGoldMs + CHANGE_GOLD_INTERVAL_MS then
+	if var_87_1 < lastChangeGoldMs + CHANGE_GOLD_INTERVAL_MS then
 		return
 	end
 
-	lastChangeGoldMs = now
+	lastChangeGoldMs = var_87_1
 
-	local goldStack = findConvertibleCoinStack(lp, GOLD_COIN_ID)
+	local var_87_2 = var_0_142(localPlayer, GOLD_COIN_ID)
 
-	if goldStack then
-		g_game.use(goldStack)
+	if var_87_2 then
+		g_game.use(var_87_2)
 
 		return
 	end
 
-	local platinumStack = findConvertibleCoinStack(lp, PLATINUM_COIN_ID)
+	local var_87_3 = var_0_142(localPlayer, PLATINUM_COIN_ID)
 
-	if platinumStack then
-		g_game.use(platinumStack)
+	if var_87_3 then
+		g_game.use(var_87_3)
 	end
 end
 
 local function runEatFood()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return
+	end
+
 	if not isEnabled("toolsEatFoodCheckBox") then
 		return
 	end
@@ -1598,6 +1723,10 @@ local function runEatFood()
 end
 
 local function runAutoTraining(force)
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
+		return
+	end
+
 	if not isTrainingEnabled() then
 		return
 	end
@@ -1618,13 +1747,19 @@ local function runAutoTraining(force)
 		return
 	end
 
-	local lp = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not lp then
+	if not localPlayer then
 		return
 	end
 
-	if not playerHasExerciseItem(lp, itemId) then
+	if not localPlayer.isInProtectionZone or not localPlayer:isInProtectionZone() then
+		invalidateExerciseDummyCache()
+
+		return
+	end
+
+	if not playerHasExerciseItem(localPlayer, itemId) then
 		return
 	end
 
@@ -1654,9 +1789,7 @@ local function runAntiIdle()
 		return
 	end
 
-	local lp = g_game.getLocalPlayer()
-
-	if not lp then
+	if not g_game.getLocalPlayer() then
 		return
 	end
 
@@ -2044,10 +2177,10 @@ function HelperTools.loadFromConfig(config)
 		autoAmmoCheck:setChecked(autoAmmoEnabled)
 	end
 
-	lastAutoAmmoMs = 0
+	var_0_15 = 0
 end
 
-function HelperTools:onReconnectChange(on)
+function HelperTools.onReconnectChange(self, on)
 	g_settings.set("autoReconnect", on)
 
 	if ctx and ctx.saveConfig and (not ctx.isLoadingConfig or not ctx.isLoadingConfig()) then

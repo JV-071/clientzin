@@ -1,8 +1,8 @@
-﻿-- chunkname: @/gamelib/creature_list.lua
+﻿CreatureList = {}
 
-CreatureList = {}
-
-local hoveredCreatureButton, hoveredCreatureCursor, hoveredCreatureCursorEvent
+local hoveredCreatureButton
+local hoveredCreatureCursor
+local hoveredCreatureCursorEvent
 
 CreatureListEventHub = {
 	connectCount = 0,
@@ -52,8 +52,8 @@ end
 function CreatureList.getDistanceBetween(p1, p2)
 	if p2 == nil then
 		p2 = {
-			y = 0,
-			x = 0
+			x = 0,
+			y = 0
 		}
 	end
 
@@ -176,8 +176,8 @@ function CreatureList.syncHoveredCreature(manager, hoveredCreature)
 		for creatureId, button in pairs(instance.battleButtons or {}) do
 			local isHovered = hoveredId ~= nil and creatureId == hoveredId
 
-			if button.isHovered ~= isHovered then
-				button.isHovered = isHovered
+			if button.creatureHovered ~= isHovered then
+				button.creatureHovered = isHovered
 
 				button:update()
 			end
@@ -214,7 +214,8 @@ function CreatureList.BSComparator(a, b)
 end
 
 function CreatureList.BSComparatorSortType(a, b, sortType, id)
-	local comparatorA, comparatorB
+	local comparatorA
+	local comparatorB
 
 	if sortType == "distance" then
 		comparatorA, comparatorB = a.distance, type(b) == "table" and b.distance or b
@@ -246,7 +247,8 @@ end
 function CreatureList.binarySearch(tbl, value, comparator, ...)
 	comparator = comparator or CreatureList.BSComparator
 
-	local mini, maxi = 1, #tbl
+	local mini = 1
+	local maxi = #tbl
 
 	while mini <= maxi do
 		local mid = math.floor((maxi + mini) / 2)
@@ -267,8 +269,10 @@ end
 function CreatureList.binaryInsert(tbl, value, comparator, ...)
 	comparator = comparator or CreatureList.BSComparator
 
-	local mini, maxi = 1, #tbl
-	local state, mid = 0, 1
+	local mini = 1
+	local maxi = #tbl
+	local state = 0
+	local mid = 1
 
 	while mini <= maxi do
 		mid = math.floor((maxi + mini) / 2)
@@ -286,14 +290,14 @@ function CreatureList.binaryInsert(tbl, value, comparator, ...)
 end
 
 CreatureList.DEFAULT_FILTERS = {
+	sortAscByHitPoints = false,
 	sortDescByDistance = false,
 	sortAscByDistance = false,
 	sortDescByDisplayTime = false,
 	sortAscByDisplayTime = true,
 	sortDescByName = false,
 	sortAscByName = false,
-	sortDescByHitPoints = false,
-	sortAscByHitPoints = false
+	sortDescByHitPoints = false
 }
 CreatureList.Instance = {
 	lastAge = 0,
@@ -303,7 +307,7 @@ CreatureList.Instance = {
 	settings = {}
 }
 
-function CreatureList.Instance:new(manager, id, customName)
+function CreatureList.Instance.new(self, manager, id, customName)
 	local instance = {}
 
 	setmetatable(instance, {
@@ -319,8 +323,8 @@ function CreatureList.Instance:new(manager, id, customName)
 	instance.name = customName or manager.config.defaultTitle
 	instance.settings = {
 		sortOrder = "A",
-		hidingFilters = false,
 		sortType = "name",
+		hidingFilters = false,
 		filters = CreatureList.tableCopy(CreatureList.DEFAULT_FILTERS),
 		customName = instance.name
 	}
@@ -328,7 +332,7 @@ function CreatureList.Instance:new(manager, id, customName)
 	return instance
 end
 
-function CreatureList.Instance:getSettingsKey()
+function CreatureList.Instance.getSettingsKey(self)
 	if self.id == 0 then
 		return self.manager.config.settingsPrefix
 	end
@@ -336,7 +340,7 @@ function CreatureList.Instance:getSettingsKey()
 	return self.manager.config.settingsPrefix .. "_" .. self.id
 end
 
-function CreatureList.Instance:loadFilters()
+function CreatureList.Instance.loadFilters(self)
 	local settings = g_settings.getNode(self:getSettingsKey())
 
 	if not settings or not settings.filters then
@@ -346,13 +350,13 @@ function CreatureList.Instance:loadFilters()
 	return settings.filters
 end
 
-function CreatureList.Instance:saveFilters()
+function CreatureList.Instance.saveFilters(self)
 	g_settings.mergeNode(self:getSettingsKey(), {
 		filters = self:loadFilters()
 	})
 end
 
-function CreatureList.Instance:saveHideButtonStates()
+function CreatureList.Instance.saveHideButtonStates(self)
 	if not self.hideButtons then
 		return
 	end
@@ -371,7 +375,7 @@ function CreatureList.Instance:saveHideButtonStates()
 	})
 end
 
-function CreatureList.Instance:saveLockState()
+function CreatureList.Instance.saveLockState(self)
 	if self.window then
 		local isLocked = self.window:getSettings("locked") or false
 		local lockButton = self.window:getChildById("lockButton")
@@ -386,7 +390,7 @@ function CreatureList.Instance:saveLockState()
 	end
 end
 
-function CreatureList.Instance:loadLockState()
+function CreatureList.Instance.loadLockState(self)
 	if not self.window then
 		return false
 	end
@@ -417,7 +421,7 @@ function CreatureList.Instance:loadLockState()
 	return false
 end
 
-function CreatureList.Instance:loadHideButtonStates()
+function CreatureList.Instance.loadHideButtonStates(self)
 	if not self.hideButtons then
 		return
 	end
@@ -446,9 +450,8 @@ function CreatureList.Instance:loadHideButtonStates()
 	end
 end
 
-function CreatureList.Instance:getFilter(filter)
-	local filters = self:loadFilters()
-	local value = filters[filter]
+function CreatureList.Instance.getFilter(self, filter)
+	local value = self:loadFilters()[filter]
 
 	if value ~= nil then
 		return value
@@ -457,7 +460,7 @@ function CreatureList.Instance:getFilter(filter)
 	return CreatureList.DEFAULT_FILTERS[filter] or false
 end
 
-function CreatureList.Instance:setFilter(filter)
+function CreatureList.Instance.setFilter(self, filter)
 	local filters = self:loadFilters()
 	local value = filters[filter]
 
@@ -482,6 +485,7 @@ function CreatureList.Instance:setFilter(filter)
 	g_settings.mergeNode(self:getSettingsKey(), {
 		filters = filters
 	})
+	tagHitchEventSource("gamelib.CreatureList.checkCreatures")
 	scheduleEvent(function()
 		self:checkCreatures()
 	end, 50)
@@ -489,7 +493,7 @@ function CreatureList.Instance:setFilter(filter)
 	return true
 end
 
-function CreatureList.Instance:getSortType()
+function CreatureList.Instance.getSortType(self)
 	local filters = self:loadFilters()
 
 	for filterName, isActive in pairs(filters) do
@@ -509,7 +513,7 @@ function CreatureList.Instance:getSortType()
 	return "name"
 end
 
-function CreatureList.Instance:getSortOrder()
+function CreatureList.Instance.getSortOrder(self)
 	local filters = self:loadFilters()
 
 	for filterName, isActive in pairs(filters) do
@@ -521,11 +525,11 @@ function CreatureList.Instance:getSortOrder()
 	return "A"
 end
 
-function CreatureList.Instance:isSortAsc()
+function CreatureList.Instance.isSortAsc(self)
 	return self:getSortOrder() == "A"
 end
 
-function CreatureList.Instance:getName()
+function CreatureList.Instance.getName(self)
 	local settings = g_settings.getNode(self:getSettingsKey())
 
 	if settings and settings.customName then
@@ -535,7 +539,7 @@ function CreatureList.Instance:getName()
 	return self.manager.config.defaultTitle
 end
 
-function CreatureList.Instance:setName(name)
+function CreatureList.Instance.setName(self, name)
 	local settings = g_settings.getNode(self:getSettingsKey()) or {}
 
 	settings.customName = (name == nil or name == "") and self.manager.config.defaultTitle or name
@@ -548,7 +552,7 @@ function CreatureList.Instance:setName(name)
 	end
 end
 
-function CreatureList.Instance:updateTitle()
+function CreatureList.Instance.updateTitle(self)
 	if self.window then
 		local titleLabel = self.window:recursiveGetChildById("miniwindowTitle")
 
@@ -564,13 +568,13 @@ function CreatureList.Instance:updateTitle()
 	end
 end
 
-function CreatureList.Instance:setHidingFilters(state)
+function CreatureList.Instance.setHidingFilters(self, state)
 	g_settings.mergeNode(self:getSettingsKey(), {
 		hidingFilters = state
 	})
 end
 
-function CreatureList.Instance:isHidingFilters()
+function CreatureList.Instance.isHidingFilters(self)
 	local settings = g_settings.getNode(self:getSettingsKey())
 
 	if not settings then
@@ -580,7 +584,7 @@ function CreatureList.Instance:isHidingFilters()
 	return settings.hidingFilters
 end
 
-function CreatureList.Instance:getScrollbarMarginTopWithFilters()
+function CreatureList.Instance.getScrollbarMarginTopWithFilters(self)
 	local h = self.filterPanel and self.filterPanel:getHeight() or 0
 
 	if h <= 0 then
@@ -590,7 +594,7 @@ function CreatureList.Instance:getScrollbarMarginTopWithFilters()
 	return 17 + h - 1 + 1
 end
 
-function CreatureList.Instance:hideFilterPanel()
+function CreatureList.Instance.hideFilterPanel(self)
 	self.filterPanel.originalHeight = self.filterPanel:getHeight()
 
 	self.filterPanel:setHeight(0)
@@ -623,7 +627,7 @@ function CreatureList.Instance:hideFilterPanel()
 	end
 end
 
-function CreatureList.Instance:showFilterPanel()
+function CreatureList.Instance.showFilterPanel(self)
 	if self.toggleFilterButton then
 		self.toggleFilterButton:getParent():setMarginTop()
 		self.toggleFilterButton:setOn(true)
@@ -657,7 +661,7 @@ function CreatureList.Instance:showFilterPanel()
 	end
 end
 
-function CreatureList.Instance:toggleFilterPanel()
+function CreatureList.Instance.toggleFilterPanel(self)
 	if self.filterPanel:isVisible() then
 		self:hideFilterPanel()
 	else
@@ -665,7 +669,7 @@ function CreatureList.Instance:toggleFilterPanel()
 	end
 end
 
-function CreatureList.Instance:onFilterButtonClick(button)
+function CreatureList.Instance.onFilterButtonClick(self, button)
 	button:setChecked(not button:isChecked())
 
 	if self.manager.refreshFilterTooltips then
@@ -676,7 +680,7 @@ function CreatureList.Instance:onFilterButtonClick(button)
 	self:checkCreatures()
 end
 
-function CreatureList.Instance:getAttributeByOrderType(battleButton, orderType)
+function CreatureList.Instance.getAttributeByOrderType(self, battleButton, orderType)
 	if battleButton.data then
 		local data = battleButton.data
 
@@ -702,7 +706,7 @@ function CreatureList.Instance:getAttributeByOrderType(battleButton, orderType)
 	return false
 end
 
-function CreatureList.Instance:correctBattleButtons(sortOrder)
+function CreatureList.Instance.correctBattleButtons(self, sortOrder)
 	self.panel:disableUpdateTemporarily()
 
 	sortOrder = sortOrder or self:getSortOrder()
@@ -726,7 +730,7 @@ function CreatureList.Instance:correctBattleButtons(sortOrder)
 	return true
 end
 
-function CreatureList.Instance:reSort(oldSortType, newSortType, oldSortOrder, newSortOrder)
+function CreatureList.Instance.reSort(self, oldSortType, newSortType, oldSortOrder, newSortOrder)
 	if #self.binaryTree > 1 then
 		if newSortType and newSortType ~= oldSortType then
 			self:checkCreatures()
@@ -740,7 +744,7 @@ function CreatureList.Instance:reSort(oldSortType, newSortType, oldSortOrder, ne
 	return true
 end
 
-function CreatureList.Instance:swap(index, newIndex)
+function CreatureList.Instance.swap(self, index, newIndex)
 	local highest = newIndex
 	local lowest = index
 
@@ -755,11 +759,11 @@ function CreatureList.Instance:swap(index, newIndex)
 	self.binaryTree[highest] = tmp
 end
 
-function CreatureList.Instance:removeAllCreatures()
+function CreatureList.Instance.removeAllCreatures(self)
 	self:removeCreature(false, true)
 end
 
-function CreatureList.Instance:removeCreature(creature, all)
+function CreatureList.Instance.removeCreature(self, creature, all)
 	if all then
 		self.binaryTree = {}
 		self.lastBattleButtonSwitched = nil
@@ -829,7 +833,7 @@ function CreatureList.Instance:removeCreature(creature, all)
 	return false
 end
 
-function CreatureList.Instance:addCreature(creature, sortType)
+function CreatureList.Instance.addCreature(self, creature, sortType)
 	local cfg = self.manager.config
 	local creatureId = creature:getId()
 	local battleButton = self.battleButtons[creatureId]
@@ -847,12 +851,11 @@ function CreatureList.Instance:addCreature(creature, sortType)
 			return
 		end
 
-		local newCreature = {}
-
-		newCreature.id = creatureId
-		newCreature.name = creature:getName():lower()
-		newCreature.healthpercent = creature:getHealthPercent()
-
+		local newCreature = {
+			id = creatureId,
+			name = creature:getName():lower(),
+			healthpercent = creature:getHealthPercent()
+		}
 		local playerPos = g_game.getLocalPlayer() and g_game.getLocalPlayer():getPosition()
 		local creaturePos = creature:getPosition()
 
@@ -913,7 +916,7 @@ function CreatureList.Instance:addCreature(creature, sortType)
 	self.panel:getLayout():update()
 end
 
-function CreatureList.Instance:checkCreatures()
+function CreatureList.Instance.checkCreatures(self)
 	if not self.panel or not g_game.isOnline() then
 		return false
 	end
@@ -942,7 +945,7 @@ function CreatureList.Instance:checkCreatures()
 	end
 end
 
-function CreatureList.Instance:destroy(saveSettings)
+function CreatureList.Instance.destroy(self, saveSettings)
 	if not saveSettings then
 		local settingsKey = self:getSettingsKey()
 
@@ -1045,7 +1048,7 @@ function CreatureList.createManager(config)
 		__index = CreatureList.Instance
 	})
 
-	function InstanceClass:doCreatureFitFilters(creature)
+	function InstanceClass.doCreatureFitFilters(self, creature)
 		if config.doCreatureFitFilters then
 			return config.doCreatureFitFilters(self, creature)
 		end
@@ -1056,11 +1059,11 @@ function CreatureList.createManager(config)
 	manager.InstanceClass = InstanceClass
 	manager.buttonPool = CreatureList.createButtonPool(config)
 
-	function manager:getMainInstance()
+	function manager.getMainInstance(self)
 		return self.instances[0]
 	end
 
-	function manager:register()
+	function manager.register(self)
 		for _, m in ipairs(CreatureListEventHub.managers) do
 			if m == self then
 				return
@@ -1070,7 +1073,7 @@ function CreatureList.createManager(config)
 		table.insert(CreatureListEventHub.managers, self)
 	end
 
-	function manager:saveInstancesState()
+	function manager.saveInstancesState(self)
 		if not config.instancesSettingsKey then
 			return
 		end
@@ -1126,7 +1129,7 @@ function CreatureList.createManager(config)
 		g_settings.mergeNode(config.instancesSettingsKey, instancesData)
 	end
 
-	function manager:removeSavedInstanceState(id)
+	function manager.removeSavedInstanceState(self, id)
 		if not config.instancesSettingsKey then
 			return
 		end
@@ -1138,7 +1141,7 @@ function CreatureList.createManager(config)
 		g_settings.mergeNode(config.instancesSettingsKey, instancesData)
 	end
 
-	function manager:startPeriodicSave()
+	function manager.startPeriodicSave(self)
 		self:stopPeriodicSave()
 
 		self.autoSaveEvent = scheduleEvent(function()
@@ -1149,7 +1152,7 @@ function CreatureList.createManager(config)
 		end, 30000)
 	end
 
-	function manager:stopPeriodicSave()
+	function manager.stopPeriodicSave(self)
 		if self.autoSaveEvent then
 			removeEvent(self.autoSaveEvent)
 
@@ -1157,7 +1160,7 @@ function CreatureList.createManager(config)
 		end
 	end
 
-	function manager:createInstance(id, customName)
+	function manager.createInstance(self, id, customName)
 		return InstanceClass:new(self, id, customName)
 	end
 
@@ -1179,6 +1182,7 @@ function CreatureListEventHub.connect()
 	connect(Creature, {
 		onSkullChange = CreatureListEventHub.onSkullChange,
 		onEmblemChange = CreatureListEventHub.onEmblemChange,
+		onChangeName = CreatureListEventHub.onChangeName,
 		onOutfitChange = CreatureListEventHub.onOutfitChange,
 		onHealthPercentChange = CreatureListEventHub.onHealthPercentChange,
 		onManaPercentChange = CreatureListEventHub.onManaPercentChange,
@@ -1217,6 +1221,7 @@ function CreatureListEventHub.disconnect()
 	disconnect(Creature, {
 		onSkullChange = CreatureListEventHub.onSkullChange,
 		onEmblemChange = CreatureListEventHub.onEmblemChange,
+		onChangeName = CreatureListEventHub.onChangeName,
 		onOutfitChange = CreatureListEventHub.onOutfitChange,
 		onHealthPercentChange = CreatureListEventHub.onHealthPercentChange,
 		onManaPercentChange = CreatureListEventHub.onManaPercentChange,
@@ -1328,17 +1333,67 @@ function CreatureListEventHub.onShieldChange(creature, shieldId)
 	end)
 end
 
+function CreatureListEventHub.onChangeName(arg_84_0, arg_84_1)
+	local creatureId = arg_84_0:getId()
+	local name = (arg_84_1 or arg_84_0:getName() or ""):lower()
+
+	CreatureListEventHub.forEachInstance(function(arg_85_0, instance)
+		local battleButton = instance.battleButtons[creatureId]
+
+		if not battleButton or battleButton.creature ~= arg_84_0 then
+			return
+		end
+
+		local var_85_1 = battleButton.data and battleButton.data.name
+
+		if battleButton.data then
+			battleButton.data.name = name
+		end
+
+		for unusedValue, entry in ipairs(instance.binaryTree) do
+			if entry.id == creatureId then
+				entry.name = name
+
+				break
+			end
+		end
+
+		if battleButton.updateNameLabel then
+			battleButton:updateNameLabel()
+		end
+
+		if battleButton.creature then
+			battleButton:update()
+		end
+
+		if var_85_1 ~= name and instance:getSortType() == "name" then
+			table.sort(instance.binaryTree, function(arg_86_0, arg_86_1)
+				return CreatureList.BSComparatorSortType(arg_86_0, arg_86_1, "name", true) == 1
+			end)
+			instance:correctBattleButtons()
+		end
+
+		if arg_85_0.config.onChangeName then
+			arg_85_0.config.onChangeName(arg_85_0, instance, arg_84_0, arg_84_1)
+		end
+	end)
+end
+
 function CreatureListEventHub.onHealthPercentChange(creature, healthPercent, oldHealthPercent)
 	CreatureListEventHub.forEachInstance(function(manager, instance)
 		local creatureId = creature:getId()
 		local battleButton = instance.battleButtons[creatureId]
+		local newHealthPercent = healthPercent or 0
 
 		if not battleButton then
+			if newHealthPercent > 0 and instance:doCreatureFitFilters(creature) then
+				instance:addCreature(creature, instance:getSortType())
+			end
+
 			return
 		end
 
 		local sortType = instance:getSortType()
-		local newHealthPercent = healthPercent or 0
 		local previousHealthPercent = oldHealthPercent
 
 		if previousHealthPercent == nil and battleButton.data then
@@ -1420,6 +1475,13 @@ function CreatureListEventHub.onCreatureAppear(creature)
 	end
 
 	CreatureListEventHub.forEachInstance(function(manager, instance)
+		local id = creature:getId()
+		local var_90_1 = instance.battleButtons[id]
+
+		if var_90_1 and var_90_1.creature ~= creature then
+			instance:removeCreature(var_90_1.creature or creature)
+		end
+
 		if instance:doCreatureFitFilters(creature) then
 			instance:addCreature(creature, instance:getSortType())
 		elseif manager.config.onCreatureAppear then
@@ -1429,7 +1491,33 @@ function CreatureListEventHub.onCreatureAppear(creature)
 end
 
 function CreatureListEventHub.onCreatureDisappear(creature)
+	local creatureById = g_map.getCreatureById(creature:getId())
+
 	CreatureListEventHub.forEachInstance(function(manager, instance)
+		if creatureById and creatureById ~= creature then
+			local id = instance.battleButtons[creature:getId()]
+
+			if not instance:doCreatureFitFilters(creatureById) then
+				if id then
+					instance:removeCreature(id.creature or creature)
+				end
+
+				return
+			end
+
+			if id and id.creature ~= creatureById then
+				instance:removeCreature(id.creature or creature)
+
+				id = nil
+			end
+
+			if not id then
+				instance:addCreature(creatureById, instance:getSortType())
+			end
+
+			return
+		end
+
 		if manager.config.shouldRemoveOnDisappear and not manager.config.shouldRemoveOnDisappear(instance, creature) then
 			return
 		end
@@ -1476,9 +1564,7 @@ function CreatureListEventHub.onCreaturePositionChange(creature, newPos, oldPos)
 		return
 	end
 
-	local position = localPlayer:getPosition()
-
-	if not position then
+	if not localPlayer:getPosition() then
 		return
 	end
 

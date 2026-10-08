@@ -48,9 +48,9 @@ MainWindowHigh
   id: playerReportWindow
   !text: tr('Report Rule Violation')
   size: 545 455
-  font: Verdana-11px-lowspace
+  font: $var-cip-font-new
   color: #909090
-  text-offset: 0 2
+  text-offset: -1 2
   @onEscape: modules.game_ruleviolation.hidePlayerReportWindow()
 
   Panel

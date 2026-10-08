@@ -1,8 +1,7 @@
-﻿-- chunkname: @/game_playertrade/playertrade.lua
+﻿tradeWindow = nil
 
-tradeWindow = nil
-
-local ownTradeName, counterTradeName
+local ownTradeName
+local counterTradeName
 local DEFAULT_TRADE_BAG_ID = 2853
 
 local function showTradeItemMenu(item, counter, tradeIndex)
@@ -102,17 +101,13 @@ function createTrade()
 		end
 
 		if mouseWheel == MouseWheelUp then
-			local minimum = masterScroll:getMinimum()
-
-			if minimum >= masterScroll:getValue() then
+			if masterScroll:getMinimum() >= masterScroll:getValue() then
 				return false
 			end
 
 			masterScroll:decrement()
 		else
-			local maximum = masterScroll:getMaximum()
-
-			if maximum <= masterScroll:getValue() then
+			if masterScroll:getMaximum() <= masterScroll:getValue() then
 				return false
 			end
 
@@ -155,10 +150,9 @@ function fillTrade(name, items, counter)
 		tradeItemWidget:setItemId(0)
 	end
 
-	local localPlayerName = g_game.getCharacterName()
-	local isOwnTrade = name == localPlayerName
+	local characterName = name == g_game.getCharacterName()
 
-	if isOwnTrade then
+	if characterName then
 		ownTradeName = name
 	else
 		counterTradeName = name
@@ -166,9 +160,10 @@ function fillTrade(name, items, counter)
 
 	updateTradeWindowTitle()
 
-	local tradeContainer, label
+	local tradeContainer
+	local label
 
-	if isOwnTrade then
+	if characterName then
 		tradeContainer = tradeWindow:recursiveGetChildById("ownTradeContainer")
 		label = tradeWindow:recursiveGetChildById("ownTradeLabel")
 	else

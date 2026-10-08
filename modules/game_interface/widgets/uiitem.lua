@@ -1,8 +1,127 @@
-﻿-- chunkname: @/game_interface/widgets/uiitem.lua
-
-local dragPreviewItem
+﻿local dragPreviewItem
 local dragPreviewIsActionSlot = false
-local dragPreviewStyleName, hoveredActionTargetSlot
+local dragPreviewStyleName
+local hoveredActionTargetSlot
+local var_0_4
+local var_0_5
+local var_0_6
+local var_0_7 = 2
+
+local function var_0_8(arg_1_0)
+	if var_0_5 == arg_1_0 then
+		return
+	end
+
+	if var_0_5 then
+		g_mouse.popCursor(var_0_5)
+
+		var_0_5 = nil
+	end
+
+	if arg_1_0 and g_mouse.pushCursor(arg_1_0) then
+		var_0_5 = arg_1_0
+	end
+end
+
+local function var_0_9()
+	local option = modules.client_options and modules.client_options.getOption("classicControl") or "regular"
+
+	if option == true then
+		return "classic"
+	end
+
+	if option == "classic" or option == "leftSmart" then
+		return option
+	end
+
+	return "regular"
+end
+
+local function var_0_10(arg_3_0)
+	local parent = arg_3_0
+
+	for unusedValue = 1, 2 do
+		if not parent then
+			break
+		end
+
+		local var_3_1 = parent.position or parent.slotPosition
+
+		if var_3_1 and var_3_1.x == 65535 then
+			return true
+		end
+
+		parent = parent:getParent()
+	end
+
+	return false
+end
+
+local function var_0_11(arg_4_0)
+	if not arg_4_0 or g_platform.isMobile() then
+		return nil
+	end
+
+	local modifiers = g_keyboard.getModifiers()
+
+	if modifiers == KeyboardShiftModifier then
+		return "look"
+	end
+
+	local var_4_1 = var_0_9()
+	local var_4_2 = var_4_1 == "leftSmart" and modifiers == KeyboardNoModifier
+	local var_4_3 = var_4_1 == "regular" and modifiers == KeyboardCtrlModifier or var_4_1 == "classic" and modifiers == KeyboardAltModifier
+
+	if var_4_2 or var_4_3 then
+		if arg_4_0:isContainer() then
+			return "container"
+		elseif arg_4_0:isUsable() or arg_4_0:isMultiUse() or arg_4_0:getDefaultAction() == var_0_7 then
+			return "use"
+		elseif var_4_2 then
+			return "look"
+		end
+	end
+
+	return nil
+end
+
+function UIItem.refreshHoveredInteractionCursor()
+	local var_5_0 = var_0_4
+
+	if not var_5_0 or var_5_0:isDestroyed() or var_5_0:isVirtual() or not var_5_0:isHovered(true) or not var_0_10(var_5_0) then
+		UIItem.clearHoveredInteractionCursor()
+
+		return
+	end
+
+	var_0_8(var_0_11(var_5_0:getItem()))
+end
+
+function UIItem.clearHoveredInteractionCursor()
+	var_0_4 = nil
+
+	if var_0_6 then
+		removeEvent(var_0_6)
+
+		var_0_6 = nil
+	end
+
+	var_0_8(nil)
+end
+
+local function var_0_12(arg_7_0)
+	if var_0_4 ~= arg_7_0 then
+		UIItem.clearHoveredInteractionCursor()
+
+		var_0_4 = arg_7_0
+	end
+
+	UIItem.refreshHoveredInteractionCursor()
+
+	if var_0_4 and not var_0_6 then
+		var_0_6 = cycleEvent(UIItem.refreshHoveredInteractionCursor, 25)
+	end
+end
 
 local function isDropTransparentWidget(widget)
 	if not widget then
@@ -138,8 +257,8 @@ local function ensureDragPreviewItem(sourceWidget)
 			dragPreviewItem:setSize(size)
 		else
 			dragPreviewItem:setSize({
-				height = 34,
-				width = 34
+				width = 34,
+				height = 34
 			})
 		end
 
@@ -195,7 +314,7 @@ local function updateDragPreviewPosition(mousePos)
 	dragPreviewItem:raise()
 end
 
-function UIItem:onDragEnter(mousePos)
+function UIItem.onDragEnter(self, mousePos)
 	if self:isVirtual() then
 		return false
 	end
@@ -248,7 +367,7 @@ function UIItem:onDragEnter(mousePos)
 	return true
 end
 
-function UIItem:onDragLeave(droppedWidget, mousePos)
+function UIItem.onDragLeave(self, droppedWidget, mousePos)
 	if self:isVirtual() then
 		return false
 	end
@@ -292,16 +411,15 @@ function UIItem:onDragLeave(droppedWidget, mousePos)
 	return true
 end
 
-function UIItem:onDragMove(mousePos, mouseMoved)
+function UIItem.onDragMove(self, mousePos, unusedArgument)
 	updateDragPreviewPosition(mousePos)
 
 	if dragPreviewIsActionSlot then
 		updateHoveredActionTargetSlot(mousePos, self)
 	else
 		local hoveredWidget = rootWidget:recursiveGetChildByPos(mousePos, false)
-		local hoveredSlot = findParentActionSlot(hoveredWidget)
 
-		if hoveredSlot then
+		if findParentActionSlot(hoveredWidget) then
 			updateHoveredActionTargetSlot(mousePos, self)
 		else
 			clearHoveredActionTargetSlot()
@@ -311,7 +429,7 @@ function UIItem:onDragMove(mousePos, mouseMoved)
 	return false
 end
 
-function UIItem:onDrop(widget, mousePos, forced)
+function UIItem.onDrop(self, widget, mousePos, forced)
 	self:setBorderWidth(0)
 
 	if not forced and not self:canAcceptDrop(widget, mousePos) then
@@ -404,7 +522,11 @@ function UIItem:onDrop(widget, mousePos, forced)
 	return true
 end
 
-function UIItem:onDestroy()
+function UIItem.onDestroy(self)
+	if var_0_4 == self then
+		UIItem.clearHoveredInteractionCursor()
+	end
+
 	if self == g_ui.getDraggingWidget() and self.hoveredWho then
 		self.hoveredWho:setBorderWidth(0)
 	end
@@ -414,8 +536,26 @@ function UIItem:onDestroy()
 	end
 end
 
-function UIItem:onHoverChange(hovered)
-	UIWidget.onHoverChange(self, hovered)
+function UIItem.onHoverChange(self, hovered)
+	local parent = self:getParent()
+	local duration = self:getChildById("duration") or parent and parent:getChildById("duration")
+	local text = duration and duration:getText() or ""
+
+	if text ~= "" then
+		self:setTooltip(text)
+	end
+
+	signalcall(UIWidget.onHoverChange, self, hovered)
+
+	if not self:isVirtual() and self:getItem() and var_0_10(self) then
+		if hovered or self:isHovered(true) then
+			var_0_12(self)
+		elseif var_0_4 == self then
+			UIItem.clearHoveredInteractionCursor()
+		end
+	elseif var_0_4 == self then
+		UIItem.clearHoveredInteractionCursor()
+	end
 
 	if self:isVirtual() or not self:isDraggable() then
 		return
@@ -424,10 +564,10 @@ function UIItem:onHoverChange(hovered)
 	local draggingWidget = g_ui.getDraggingWidget()
 
 	if draggingWidget and self ~= draggingWidget then
-		local gotMap = draggingWidget:getClassName() == "UIGameMap"
-		local gotItem = draggingWidget:getClassName() == "UIItem" and not draggingWidget:isVirtual()
+		local className = draggingWidget:getClassName() == "UIGameMap"
+		local var_21_5 = draggingWidget:getClassName() == "UIItem" and not draggingWidget:isVirtual()
 
-		if hovered and (gotItem or gotMap) then
+		if hovered and (var_21_5 or className) then
 			self:setBorderWidth(1)
 
 			draggingWidget.hoveredWho = self
@@ -438,7 +578,7 @@ function UIItem:onHoverChange(hovered)
 		end
 	end
 
-	if g_game.getFeature(GameItemTooltipV8) then
+	if text == "" and g_game.getFeature(GameItemTooltipV8) then
 		local tooltip = ""
 
 		local function splitTextIntoLines(text, maxLineLength)
@@ -467,7 +607,7 @@ function UIItem:onHoverChange(hovered)
 		end
 
 		if self:getItem() and self:getItem():getTooltip():len() > 0 then
-			tooltip = splitTextIntoLines(self:getItem():getTooltip(), 80)
+			local tooltip = splitTextIntoLines(self:getItem():getTooltip(), 80)
 
 			if tooltip then
 				self:setTooltip(tooltip)
@@ -476,7 +616,7 @@ function UIItem:onHoverChange(hovered)
 	end
 end
 
-function UIItem:onMouseRelease(mousePosition, mouseButton)
+function UIItem.onMouseRelease(self, mousePosition, mouseButton)
 	if self.cancelNextRelease then
 		self.cancelNextRelease = false
 
@@ -508,7 +648,7 @@ function UIItem:onMouseRelease(mousePosition, mouseButton)
 	return false
 end
 
-function UIItem:canAcceptDrop(widget, mousePos)
+function UIItem.canAcceptDrop(self, widget, mousePos)
 	if not self.selectable and (self:isVirtual() or not self:isDraggable()) then
 		return false
 	end

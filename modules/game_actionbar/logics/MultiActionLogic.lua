@@ -1,11 +1,11 @@
-﻿-- chunkname: @/game_actionbar/logics/MultiActionLogic.lua
-
-local AB = modules.game_actionbar
-local multiPanel, multiPanelPositionEvent
+﻿local AB = modules.game_actionbar
+local multiPanel
+local multiPanelPositionEvent
 local cacheMultiActionSlots = {}
 local spellCooldownCache = {}
 local spellGroupCooldownCache = {}
-local itemMultiUseCooldownCache, multiActionSyncEvent
+local itemMultiUseCooldownCache
+local multiActionSyncEvent
 local MULTI_ITEM_CD_KEY = "itemShared"
 
 local function readItemMultiUseCooldownRemaining()
@@ -46,8 +46,8 @@ end
 
 local MULTI_ICON_SOURCE = "/assets/images/game/actionbar/marker-multiactionbutton"
 local MULTI_ICON_SIZE = {
-	width = 5,
-	height = 11
+	height = 11,
+	width = 5
 }
 
 local function applyMultiIconLayout(icon)
@@ -80,7 +80,7 @@ local function ensureMultiIconWidget(slot)
 		return icon
 	end
 
-	icon = g_ui.createWidget("UIWidget", slot)
+	local icon = g_ui.createWidget("UIWidget", slot)
 
 	icon:setId("multiIcon")
 	applyMultiIconLayout(icon)
@@ -163,7 +163,7 @@ local function shouldShowMultiActionGraphicalCooldown()
 	return modules.client_options.getOption("graphicalCooldown") ~= false
 end
 
-local function clearSubSlotProgressWidgets(subSlot)
+local function clearSubSlotProgressWidgets(subSlot, arg_11_1)
 	if not subSlot then
 		return
 	end
@@ -171,14 +171,19 @@ local function clearSubSlotProgressWidgets(subSlot)
 	for _, ch in pairs(subSlot:getChildren()) do
 		local cid = ch:getId()
 
-		if cid and tostring(cid):sub(1, 8) == "progress" then
+		if cid and cid ~= arg_11_1 and tostring(cid):sub(1, 8) == "progress" then
 			if ch.event then
 				removeEvent(ch.event)
 
 				ch.event = nil
 			end
 
-			ch:destroy()
+			ch.cooldownEndTime = nil
+			ch.cooldownDuration = nil
+
+			ch:setPercent(0)
+			ch:setText("")
+			ch:hide()
 		end
 	end
 end
@@ -194,7 +199,11 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 		return
 	end
 
-	local remaining, progressId, useGroupCooldown, groupId, spellId
+	local remaining
+	local progressId
+	local useGroupCooldown
+	local groupId
+	local spellId
 
 	if data.words then
 		local spell = Spells.getSpellByWords(data.words)
@@ -205,9 +214,9 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 			return
 		end
 
-		local spellRem, groupRem = getMultiActionCooldownRemaining(spell)
+		local var_12_6, groupRem = getMultiActionCooldownRemaining(spell)
 
-		remaining = math.max(spellRem, groupRem)
+		remaining = math.max(var_12_6, groupRem)
 
 		if remaining <= 0 then
 			clearSubSlotProgressWidgets(subSlot)
@@ -215,7 +224,7 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 			return
 		end
 
-		useGroupCooldown = spellRem < groupRem
+		useGroupCooldown = var_12_6 < groupRem
 
 		if useGroupCooldown then
 			groupId = getMultiActionActiveGroupId and getMultiActionActiveGroupId(spell)
@@ -280,15 +289,25 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 		return
 	end
 
-	if onlyIfMissing and progressId and subSlot:recursiveGetChildById(progressId) then
+	local progressRect = subSlot:recursiveGetChildById(progressId)
+
+	if onlyIfMissing and progressRect and progressRect:isExplicitlyVisible() then
 		return
 	end
 
-	clearSubSlotProgressWidgets(subSlot)
+	clearSubSlotProgressWidgets(subSlot, progressId)
 
-	local progressRect = g_ui.createWidget("ActionBarCooldownProgress", subSlot)
+	if progressRect and not progressRect:isDestroyed() then
+		removeEvent(progressRect.event)
 
-	progressRect:setId(progressId)
+		progressRect.event = nil
+		progressRect.cooldownEndTime = nil
+		progressRect.cooldownDuration = nil
+	else
+		progressRect = g_ui.createWidget("ActionBarCooldownProgress", subSlot)
+
+		progressRect:setId(progressId)
+	end
 
 	progressRect.item = subSlot.parentSlot or subSlot
 
@@ -298,7 +317,8 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 
 	progressRect:show()
 
-	local totalDuration, remainingMs = remaining, remaining
+	local totalDuration = remaining
+	local remainingMs = remaining
 
 	if groupId == MULTI_ITEM_CD_KEY and getMultiActionItemCooldownTiming then
 		totalDuration, remainingMs = getMultiActionItemCooldownTiming()
@@ -433,7 +453,8 @@ local function getActiveGroupCooldownId(spellData)
 		return nil
 	end
 
-	local bestId, bestRem = nil, 0
+	local bestId
+	local bestRem = 0
 
 	for _, groupId in pairs(groupIds) do
 		local groupCooldown = spellGroupCooldownCache[groupId]
@@ -470,6 +491,10 @@ function AB.getGroupCooldownTiming(spellData)
 		return nil, 0
 	end
 
+	return AB.getGroupCooldownTimingById(groupId)
+end
+
+function AB.getGroupCooldownTimingById(groupId)
 	local cd = spellGroupCooldownCache[groupId]
 
 	if not cd or cd.exhaustion <= 0 then
@@ -712,7 +737,9 @@ local function resolveActiveSlot(multiActions)
 		end
 	end
 
-	local bestIdx, bestData, bestRem
+	local bestIdx
+	local bestData
+	local bestRem
 
 	for i = 1, 3 do
 		local data = multiActions[i]
@@ -846,6 +873,13 @@ local function clearSlotDisplayFields(slot)
 	slot.useType = nil
 	slot.getTier = nil
 	slot.passiveId = nil
+	slot.helperId = nil
+	slot.multiHelper = nil
+
+	if HelperAction and HelperAction.clearIcons then
+		HelperAction.clearIcons(slot)
+	end
+
 	slot.parameter = nil
 	slot.autoSend = nil
 	slot.smartMode = nil
@@ -876,6 +910,12 @@ local function clearSlotDisplayFields(slot)
 	if spellParam then
 		spellParam:setVisible(false)
 		spellParam:setText("")
+	end
+
+	local helperBorder = slot:getChildById("helperBorder")
+
+	if helperBorder then
+		helperBorder:hide()
 	end
 end
 
@@ -1093,9 +1133,7 @@ function AB.commitMultiActionSubEntry(parentSlot, index, entry)
 		return
 	end
 
-	local multi = ensureSlotMultiActions(parentSlot)
-
-	multi[index] = entry or {}
+	ensureSlotMultiActions(parentSlot)[index] = entry or {}
 
 	setMultiIconVisible(parentSlot, true)
 	registerMultiActionSlot(parentSlot)
@@ -1155,9 +1193,8 @@ function AB.updateMultiSlotState(slot, forceRotation)
 	end
 
 	local previousIndex = slot._activeMultiIndex
-	local alreadyShown = actionMatchesSlotDisplay(slot, action)
 
-	if not alreadyShown or previousIndex ~= activeIndex then
+	if not actionMatchesSlotDisplay(slot, action) or previousIndex ~= activeIndex then
 		applyActionDataToSlot(slot, action)
 		setMultiIconVisible(slot, true)
 	elseif refreshMultiActionSlotCooldownDisplay then
@@ -1192,9 +1229,7 @@ local function getBarIdFromSlot(slot)
 		return slot._actionBarId
 	end
 
-	local barId = AB.getSlotBarId(slot:getId())
-
-	return barId or BAR_BOTTOM_1
+	return AB.getSlotBarId(slot:getId()) or BAR_BOTTOM_1
 end
 
 function AB.isBottomActionBar(barId)
@@ -1509,6 +1544,7 @@ local function startMultiPanelPositionTracking(slot)
 
 		multiPanel:setPosition(AB.getMultiActionPosition(slot))
 		multiPanel:raise()
+		tagHitchEventSource("game_actionbar.MultiAction.panelTick")
 
 		multiPanelPositionEvent = scheduleEvent(tick, 50)
 	end
@@ -1540,6 +1576,14 @@ function AB.assignMultiAction(slotId, skipMigrate)
 
 	if not slot then
 		return
+	end
+
+	if slot.passiveId or slot.helperId or slot.multiHelper or isActionSlotEquipmentPreset and isActionSlotEquipmentPreset(slot) then
+		return
+	end
+
+	if closeCurrentMultiHelperPanel then
+		closeCurrentMultiHelperPanel()
 	end
 
 	local barId = getBarIdFromSlot(slot)
@@ -1594,7 +1638,7 @@ function AB.assignMultiAction(slotId, skipMigrate)
 				text = slot.text,
 				autoSend = slot.autoSend ~= false
 			}
-		elseif slot.itemId and slot.itemId > 100 and not slot.passiveId then
+		elseif slot.itemId and slot.itemId > 100 and not slot.passiveId and not slot.helperId and not slot.multiHelper then
 			multi[1] = {
 				itemId = slot.itemId,
 				subType = slot.subType,
@@ -1819,6 +1863,10 @@ function AB.buildMultiActionEntryFromSlot(slot)
 	end
 
 	if slot.passiveId then
+		return nil
+	end
+
+	if slot.helperId or slot.multiHelper then
 		return nil
 	end
 
@@ -2144,6 +2192,7 @@ onMultiActionItemMultiUseCooldown = AB.onMultiActionItemMultiUseCooldown
 getMultiActionCooldownRemaining = AB.getMultiActionCooldownRemaining
 getMultiActionSpellCooldownTiming = AB.getSpellCooldownTiming
 getMultiActionGroupCooldownTiming = AB.getGroupCooldownTiming
+getMultiActionGroupCooldownTimingById = AB.getGroupCooldownTimingById
 getMultiActionItemCooldownTiming = AB.getItemMultiUseCooldownTiming
 getItemMultiUseCooldownRemaining = AB.getItemMultiUseCooldownRemaining
 clearItemMultiUseCooldownCache = AB.clearItemMultiUseCooldownCache

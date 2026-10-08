@@ -1,28 +1,28 @@
-﻿-- chunkname: @/corelib/sidebar_widget_options.lua
-
-SidebarWidgetOptions = {}
+﻿SidebarWidgetOptions = {}
 SidebarLayoutState = {
 	widgets = {}
 }
 
 local WIDGET_ID_TO_TYPE = {}
 local WIDGET_TYPE_TO_ID = {
-	xpAnalyser = "xpAnalyserMiniWindow",
-	supplyAnalyser = "supplyAnalyserMiniWindow",
-	dropTracker = "dropTrackerMiniWindow",
-	lootAnalyser = "lootAnalyserMiniWindow",
-	bossCooldown = "bossCdAnalyserMiniWindow",
-	analyticsSelector = "analyserMiniWindow",
-	minimap = "mainmappanel",
 	questTracker = "QuestLogTracker",
 	imbuementTracker = "imbuementTracker",
-	partyHuntAnalyser = "phAnalyserMiniWindow",
 	prey = "preyTracker",
-	huntingSessionAnalyser = "huntingAnalyserMiniWindow",
 	vip = "vipWindow",
-	damageInputAnalyser = "inputAnalyserMiniWindow",
+	minimap = "mainmappanel",
 	skills = "skillWindow",
-	impactAnalyser = "impactAnalyserMiniWindow"
+	bossCooldown = "bossCdAnalyserMiniWindow",
+	dropTracker = "dropTrackerMiniWindow",
+	xpAnalyser = "xpAnalyserMiniWindow",
+	partyHuntAnalyser = "phAnalyserMiniWindow",
+	huntingSessionAnalyser = "huntingAnalyserMiniWindow",
+	damageInputAnalyser = "inputAnalyserMiniWindow",
+	impactAnalyser = "impactAnalyserMiniWindow",
+	supplyAnalyser = "supplyAnalyserMiniWindow",
+	lootAnalyser = "lootAnalyserMiniWindow",
+	analyticsSelector = "analyserMiniWindow",
+	battlePassInbox = "BattlePassInboxWindow",
+	battlePassTracker = "BattlePassTrackerWindow"
 }
 local WIDGET_ID_FALLBACKS = {
 	skillWindow = {
@@ -105,6 +105,14 @@ local WIDGET_ID_FALLBACKS = {
 		"bosstiaryTracker",
 		0
 	},
+	BattlePassTrackerWindow = {
+		"battlePassTracker",
+		0
+	},
+	BattlePassInboxWindow = {
+		"battlePassInbox",
+		0
+	},
 	dropTrackerMiniWindow = {
 		"dropTracker",
 		0
@@ -158,6 +166,10 @@ function SidebarLayoutState.resolveTypeFromWidgetId(widgetId)
 	local containerId = widgetId:match("^container(%d+)$")
 
 	if containerId then
+		if SidebarWidgetOptions.isBattlePassInboxContainerId(tonumber(containerId)) then
+			return "battlePassInbox", 0
+		end
+
 		return "container", tonumber(containerId)
 	end
 
@@ -312,7 +324,7 @@ function SidebarLayoutState.noteWidgetPlacement(widget)
 		return
 	end
 
-	local index = widget.miniIndex
+	local index = tonumber(widget.miniIndex)
 
 	if not index and parent:getClassName() == "UIMiniWindowContainer" then
 		local children = parent:getChildren()
@@ -341,7 +353,7 @@ function SidebarLayoutState.noteWidgetPlacement(widget)
 		type = widgetType,
 		instance = instance or 0,
 		parentId = SidebarLayoutState.canonicalParentId(parentId),
-		index = index or 1
+		index = tonumber(index) or 1
 	}
 end
 
@@ -354,9 +366,15 @@ local function appendWidgetEntry(widgets, seen, widgetType, instance, index)
 
 	seen[key] = true
 
+	local entry = tonumber(index)
+
+	if entry == nil then
+		entry = #widgets + 1
+	end
+
 	local entry = {
 		type = widgetType,
-		_index = index or #widgets + 1
+		_index = entry
 	}
 
 	if widgetType == "container" or instance and instance ~= 0 then
@@ -381,7 +399,7 @@ local function collectWidgetsInPanel(panel, parentId)
 	end
 
 	table.sort(widgets, function(a, b)
-		return (a._index or 0) < (b._index or 0)
+		return (tonumber(a._index) or 0) < (tonumber(b._index) or 0)
 	end)
 
 	for i = 1, #widgets do
@@ -586,9 +604,7 @@ function SidebarWidgetOptions.applyBaseOptions(window, opts)
 		return
 	end
 
-	local wasHidden = not window:isVisible()
-
-	if wasHidden and window.open then
+	if not window:isVisible() and window.open then
 		window:open(true)
 
 		local w = window
@@ -600,7 +616,9 @@ function SidebarWidgetOptions.applyBaseOptions(window, opts)
 		end)
 	end
 
-	local wid = window.getId and window:getId() or "?"
+	if not window.getId or not window:getId() then
+		local unusedValue = "?"
+	end
 
 	if opts.contentHeight == 0 and opts.contentMaximized == true and not forceOpen then
 		if window:isVisible() then
@@ -620,8 +638,7 @@ function SidebarWidgetOptions.applyBaseOptions(window, opts)
 	local desiredMaxHeight
 
 	if type(opts.contentHeight) == "number" and opts.contentHeight > 0 then
-		desiredMaxHeight = opts.contentHeight + chrome
-		window.maximizedHeight = desiredMaxHeight
+		window.maximizedHeight = opts.contentHeight + chrome
 	end
 
 	if opts.contentMaximized == false then
@@ -647,7 +664,47 @@ function SidebarWidgetOptions.applyBaseOptions(window, opts)
 	end
 end
 
-function SidebarWidgetOptions.resolveWindow(widgetType, instance)
+local var_0_8 = 11698
+
+function SidebarWidgetOptions.isBattlePassInboxContainer(arg_23_0)
+	if not arg_23_0 then
+		return false
+	end
+
+	local containerItem = arg_23_0.getContainerItem and arg_23_0:getContainerItem()
+
+	if containerItem and containerItem:getId() == var_0_8 then
+		return true
+	end
+
+	local name = arg_23_0.getName and arg_23_0:getName()
+
+	return type(name) == "string" and name:lower():find("battle pass", 1, true) ~= nil
+end
+
+function SidebarWidgetOptions.isBattlePassInboxContainerId(arg_24_0)
+	if not g_game or not g_game.getContainer then
+		return false
+	end
+
+	return SidebarWidgetOptions.isBattlePassInboxContainer(g_game.getContainer(tonumber(arg_24_0)))
+end
+
+function SidebarWidgetOptions.findBattlePassInboxWindow()
+	if not g_game or not g_game.getContainers then
+		return nil
+	end
+
+	for unusedValue, getContainer in pairs(g_game.getContainers()) do
+		if SidebarWidgetOptions.isBattlePassInboxContainer(getContainer) and getContainer.window and not getContainer.window:isDestroyed() then
+			return getContainer.window
+		end
+	end
+
+	return nil
+end
+
+function SidebarWidgetOptions.resolveWindow(widgetType, numericValue)
 	local rootWidget = g_ui.getRootWidget()
 
 	if not rootWidget then
@@ -655,17 +712,21 @@ function SidebarWidgetOptions.resolveWindow(widgetType, instance)
 	end
 
 	if widgetType == "container" then
-		return rootWidget:recursiveGetChildById("container" .. tostring(instance or 0))
+		return rootWidget:recursiveGetChildById("container" .. tostring(numericValue or 0))
+	end
+
+	if widgetType == "battlePassInbox" then
+		return SidebarWidgetOptions.findBattlePassInboxWindow()
 	end
 
 	if widgetType == "battleList" then
-		instance = tonumber(instance) or 0
+		numericValue = tonumber(numericValue) or 0
 
-		if instance == 0 then
+		if numericValue == 0 then
 			return rootWidget:recursiveGetChildById("battleWindow")
 		end
 
-		return rootWidget:recursiveGetChildById("battleWindow_" .. instance)
+		return rootWidget:recursiveGetChildById("battleWindow_" .. numericValue)
 	end
 
 	if widgetType == "bestiaryTracker" then
@@ -674,6 +735,10 @@ function SidebarWidgetOptions.resolveWindow(widgetType, instance)
 
 	if widgetType == "bosstiaryTracker" then
 		return rootWidget:recursiveGetChildById("BosstiaryTrackerWindow")
+	end
+
+	if widgetType == "battlePassTracker" then
+		return rootWidget:recursiveGetChildById("BattlePassTrackerWindow")
 	end
 
 	if widgetType == "partyList" then
@@ -692,17 +757,17 @@ function SidebarWidgetOptions.resolveWindow(widgetType, instance)
 		return rootWidget:recursiveGetChildById("helperStatsWindow")
 	end
 
-	local widgetId = WIDGET_TYPE_TO_ID[widgetType]
+	local var_26_1 = WIDGET_TYPE_TO_ID[widgetType]
 
-	if widgetId then
-		return rootWidget:recursiveGetChildById(widgetId)
+	if var_26_1 then
+		return rootWidget:recursiveGetChildById(var_26_1)
 	end
 
 	if CipImportMappings and CipImportMappings.resolveSidebarWidgetId then
-		local widgetId = CipImportMappings.resolveSidebarWidgetId(widgetType, instance)
+		local var_26_2 = CipImportMappings.resolveSidebarWidgetId(widgetType, numericValue)
 
-		if widgetId then
-			return rootWidget:recursiveGetChildById(widgetId)
+		if var_26_2 then
+			return rootWidget:recursiveGetChildById(var_26_2)
 		end
 	end
 

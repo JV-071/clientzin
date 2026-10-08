@@ -1,9 +1,9 @@
-﻿-- chunkname: @/updater/updater.lua
-
-Updater = {}
+﻿Updater = {}
 Updater.maxRetries = 5
 
-local updaterWindow, loadModulesFunction, scheduledEvent
+local updaterWindow
+local loadModulesFunction
+local scheduledEvent
 local httpOperationId = 0
 
 local function onLog(level, message, time)
@@ -260,6 +260,10 @@ function Updater.check(args)
 	end
 
 	progressUpdater(0)
+
+	if type(Services) ~= "table" or type(Services.updater) ~= "string" or Services.updater == "" or Services.updater == "0" then
+		return Updater.error(tr("Updater service URL is not configured"))
+	end
 
 	httpOperationId = HTTP.postJSON(Services.updater, {
 		version = g_app.getBuildRevision(),

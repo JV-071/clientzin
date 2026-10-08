@@ -1,0 +1,179 @@
+MainWindow
+  id: battlePassWindow
+  @onEscape: modules.game_battlepass.hide()
+  size: 1000 703
+  !text: tr('Battle Pass')
+  image-source: /images/ui/popupwindow
+  text-offset: -1 1
+  padding-top: 30
+  color: #909090
+
+  Panel
+    id: menus
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: -1
+    height: 36
+    padding: 1
+    image-source: /images/ui/1pixel-down-frame
+    image-border: 3
+
+    BattlePassTabButton
+      id: missionsTab
+      !text: tr('Missions')
+      icon-source: /images/icons_big/icon-battle-pass-missions
+      anchors.top: parent.top
+      anchors.left: parent.left
+      @onClick: modules.game_battlepass.showMissionsTab()
+
+    BattlePassTabButton
+      id: rewardsTab
+      !text: tr('Rewards')
+      icon-source: /images/icons_big/icon-battle-pass-rewards
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-left: 1
+      @onClick: modules.game_battlepass.showRewardsTab()
+
+  Panel
+    id: mainBody
+    anchors.top: menus.bottom
+    anchors.bottom: hSep.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    margin-bottom: 5
+
+    BattlePassDailyPanel
+      id: missionsPanel
+      anchors.fill: parent
+      visible: true
+
+    BattlePassRewardsPanel
+      id: rewardsPanel
+      anchors.fill: parent
+      visible: false
+
+  HorizontalSeparator
+    id: hSep
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-bottom: 30
+
+  Panel
+    id: goldChip
+    size: 130 20
+    anchors.top: hSep.bottom
+    anchors.left: parent.left
+    margin-top: 11
+    image-source: /images/ui/button-verydarkgrey-down
+    image-border: 3
+
+    UIWidget
+      id: goldIcon
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+      margin-top: 1
+      image-source: /images/icons/icon-goldcoin
+      !tooltip: tr('Gold Coins')
+
+    Label
+      id: goldLabel
+      !text: '0'
+      anchors.right: goldIcon.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      margin-top: 2
+      text-auto-resize: true
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+
+  Panel
+    id: tcChip
+    size: 130 20
+    anchors.top: hSep.bottom
+    anchors.left: goldChip.right
+    margin-top: 11
+    margin-left: 6
+    image-source: /images/ui/button-verydarkgrey-down
+    image-border: 3
+
+    UIWidget
+      id: tcIcon
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+      margin-top: 1
+      image-source: /images/icons/icon-tibiacoin
+      !tooltip: tr('Clientzin Coins')
+
+    Label
+      id: balanceLabel
+      !text: '0'
+      anchors.right: tcIcon.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      margin-top: 2
+      text-auto-resize: true
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+
+  Button
+    id: trackerButton
+    !text: tr('Battle Pass Tracker')
+    anchors.top: hSep.bottom
+    anchors.left: tcChip.right
+    margin-top: 11
+    margin-left: 6
+    height: 20
+    width: 128
+    text-offset: 0 0
+    @onClick: modules.game_battlepass.openBattlePassTracker()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 1 1
+
+  UIButton
+    id: getDeluxeButton
+    !text: tr('Get Deluxe')
+    !tooltip: tr('Go to the Store to get the Battle Pass Deluxe')
+    anchors.top: hSep.bottom
+    anchors.right: closeButton.left
+    margin-top: 11
+    margin-right: 6
+    height: 20
+    width: 108
+    image-source: /images/ui/button-blue-up
+    image-border: 3
+    font: verdana-bold-8px-antialiased
+    color: $var-text-cip-color
+    icon-source: /images/icons/icon-tibiastore
+    icon-size: 19 16
+    icon-align: left
+    icon-offset: 18 2
+    text-offset: 12 0
+    @onClick: modules.game_battlepass.openGetDeluxeOffer()
+
+    $pressed:
+      image-source: /images/ui/button-blue-down
+      icon-offset: 19 3
+      text-offset: 13 1
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    anchors.top: hSep.bottom
+    anchors.right: parent.right
+    margin-top: 11
+    height: 20
+    width: 43
+    text-offset: 0 0
+    @onClick: modules.game_battlepass.hide()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 1 1

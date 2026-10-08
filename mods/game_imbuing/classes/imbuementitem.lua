@@ -1,11 +1,9 @@
-﻿-- chunkname: @/mods/game_imbuing/classes/imbuementitem.lua
-
-if not ImbuementItem then
+﻿if not ImbuementItem then
 	ImbuementItem = {
+		selectedSlot = 0,
 		slots = 0,
 		tier = 0,
 		itemId = 0,
-		selectedSlot = 0,
 		activeSlots = {},
 		availableImbuements = {},
 		needItems = {}
@@ -250,9 +248,8 @@ function ImbuementItem.configureWindow(window)
 
 	local rawName = resolvePreviewItemName(self.itemId, itemWidget)
 	local displayName = rawName ~= "" and string.capitalize(rawName) or "-"
-	local itemInformation = content and content:getChildById("titleInformation")
 
-	if itemInformation then
+	if content and content:getChildById("titleInformation") then
 		applyItemPreviewTitle(window, displayName)
 	end
 end
@@ -300,7 +297,7 @@ function ImbuementItem.onSelectImbuementSlot(slot)
 	imbuingSlotSetSelected(Imbuement.selectImbue:recursiveGetChildById("slot" .. slot), true)
 end
 
-function ImbuementItem:shutdown()
+function ImbuementItem.shutdown(self)
 	self.window = nil
 	self.itemId = 0
 	self.tier = 0
@@ -394,13 +391,11 @@ function ImbuementItem.onSelectSlotClear(imbuement)
 	end
 
 	local player = g_game.getLocalPlayer()
-	local playerBank = player:getResourceBalance(ResourceBank)
-	local playerInventory = player:getResourceBalance(ResourceInventary)
-	local balance = playerBank + playerInventory
+	local resourceBalance = player:getResourceBalance(ResourceBank) + player:getResourceBalance(ResourceInventary)
 	local clearButton = self.window:recursiveGetChildById("clear")
 
 	if clearButton then
-		clearButton:setEnabled(balance >= imbuement[3])
+		clearButton:setEnabled(resourceBalance >= imbuement[3])
 
 		function clearButton.onClick()
 			if self.confirmWindow then
@@ -456,7 +451,7 @@ function ImbuementItem.onSelectSlotClear(imbuement)
 			g_modalManager.show(self.confirmWindow)
 		end
 
-		if balance >= imbuement[3] then
+		if resourceBalance >= imbuement[3] then
 			clearButton:setImageSource("/images/game/imbuing/button-confirm-remove")
 			clearButton:setImageClip("0 0 128 66")
 		else
@@ -476,7 +471,7 @@ function ImbuementItem.onSelectSlotClear(imbuement)
 
 	if costPanel then
 		costPanel.cost:setText(comma_value(imbuement[3]))
-		costPanel.cost:setColor(balance < imbuement[3] and "#d33c3c" or "#c0c0c0")
+		costPanel.cost:setColor(resourceBalance < imbuement[3] and "#d33c3c" or "#c0c0c0")
 	end
 end
 
@@ -515,10 +510,7 @@ function ImbuementItem.selectBaseType(selectedButtonId)
 
 	imbuementsList:setWidth(70)
 	imbuementsList:destroyChildren()
-
-	local imbuementsDetails = self.window:recursiveGetChildById("imbuementsDetails")
-
-	imbuementsDetails:setVisible(false)
+	self.window:recursiveGetChildById("imbuementsDetails"):setVisible(false)
 
 	local maxWidth = 0
 
@@ -631,15 +623,13 @@ function ImbuementItem.selectImbuementWidget(widget, imbuement)
 		costPanel.cost:setText(comma_value(cost))
 
 		local player = g_game.getLocalPlayer()
-		local playerBank = player:getResourceBalance(ResourceBank)
-		local playerInventory = player:getResourceBalance(ResourceInventary)
-		local balance = playerBank + playerInventory
+		local resourceBalance = player:getResourceBalance(ResourceBank) + player:getResourceBalance(ResourceInventary)
 
-		if balance < cost then
+		if resourceBalance < cost then
 			hasRequiredItems = false
 		end
 
-		costPanel.cost:setColor(balance < cost and "#d33c3c" or "#c0c0c0")
+		costPanel.cost:setColor(resourceBalance < cost and "#d33c3c" or "#c0c0c0")
 	end
 
 	local imbueApply = self.window:recursiveGetChildById("imbueApply")

@@ -1,0 +1,24 @@
+// EXCEPTION: CIP hunt plaque extracted from RubinOT (130x38 ranked-queue HUD).
+// Not a modal; keep original size, anchors, font and label offsets.
+EbbFlowTimerPanel < UIWidget
+  id: ebbFlowTimer
+  size: 130 38
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  image-source: /images/game/ranked-queue/game-hud-ui
+  visible: false
+  focusable: false
+  opacity: 1.0
+
+  Label
+    id: timeLeftTimer
+    text: 00 : 00 . 00
+    height: 22
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 14
+    margin-left: 27
+    text-align: leftCenter
+    font: textmessageblue-13px_cp1252
+    phantom: true

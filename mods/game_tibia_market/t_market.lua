@@ -1,5 +1,3 @@
-﻿-- chunkname: @/mods/game_tibia_market/t_market.lua
-
 marketWindow = nil
 
 local marketItems = {}
@@ -26,28 +24,28 @@ local suppressSearchCallbacks = false
 local suppressFilterCallbacks = false
 local cache = {
 	SCROLL_MARKET_ITEMS = {
+		listFit = 0,
 		listMax = 0,
 		listMin = 0,
 		scrollDelay = 0,
 		offset = 0,
 		listPool = 14,
-		listFit = 0,
 		listData = {}
 	},
 	SCROLL_SELL_OFFERS = {
+		listFit = 0,
 		listMax = 0,
 		listMin = 0,
 		lastSelected = 0,
 		listPool = 14,
-		listFit = 0,
 		listData = {}
 	},
 	SCROLL_BUY_OFFERS = {
+		listFit = 0,
 		listMax = 0,
 		listMin = 0,
 		lastSelected = 0,
 		listPool = 14,
-		listFit = 0,
 		listData = {}
 	}
 }
@@ -88,8 +86,8 @@ local MARKET_ITEM_ROW_HEIGHT = 36
 local function resetItemListScrollOffset(itemList)
 	if itemList then
 		itemList:setVirtualOffset({
-			x = 0,
-			y = 0
+			y = 0,
+			x = 0
 		})
 	end
 end
@@ -110,17 +108,22 @@ local function setupItemListScrollbar(itemList)
 	end
 
 	resetItemListScrollOffset(itemList)
+
+	scroll.onValueChange = nil
+
 	scroll:setValue(0)
 	scroll:setMinimum(cache.SCROLL_MARKET_ITEMS.listMin or 0)
 
-	local visibleCount = cache.SCROLL_MARKET_ITEMS.listFit or 8
-	local dataCount = #cache.SCROLL_MARKET_ITEMS.listData
+	local var_3_1 = cache.SCROLL_MARKET_ITEMS.listFit or 8
+	local var_3_2 = #cache.SCROLL_MARKET_ITEMS.listData
 
-	scroll:setMaximum(math.max(0, dataCount - visibleCount))
+	scroll:setMaximum(math.max(0, var_3_2 - var_3_1 + 1))
 
-	function scroll:onValueChange(value, delta)
+	function scroll.onValueChange(self, value, delta)
 		onItemListValueChange(self, value, delta)
 	end
+
+	onItemListValueChange(scroll, 0)
 
 	function itemList.onMouseWheel(widget, mousePos, direction)
 		local itemListScroll = marketWindow:recursiveGetChildById("itemListScroll")
@@ -155,7 +158,8 @@ local function sortByUnitPriceAsc(list)
 			return true
 		end
 
-		local pa, pb = a.price or 0, b.price or 0
+		local pa = a.price or 0
+		local pb = b.price or 0
 
 		if pa == pb then
 			if (a.timestamp or 0) ~= (b.timestamp or 0) then
@@ -174,28 +178,25 @@ local function sortByUnitPriceAsc(list)
 end
 
 local function compareMarketItemsByNameCaseInsensitive(a, b)
-	local nameA = string.lower(a.marketData.name or "")
-	local nameB = string.lower(b.marketData.name or "")
-
-	return nameA < nameB
+	return string.lower(a.marketData.name or "") < string.lower(b.marketData.name or "")
 end
 
 local function normalizeMarketSearchText(text)
-	if not text then
+	if type(text) ~= "string" then
 		return ""
 	end
 
-	return text:match("^%s*(.-)%s*$") or ""
+	return text:gsub("^%s+", ""):gsub("%s+$", "")
 end
 
 local function marketItemNameMatchesSearch(itemName, searchTerm)
-	searchTerm = normalizeMarketSearchText(searchTerm)
+	searchTerm = string.lower(normalizeMarketSearchText(searchTerm))
 
 	if searchTerm == "" then
 		return false
 	end
 
-	return string.lower(itemName or ""):find(string.lower(searchTerm), 1, true) ~= nil
+	return string.lower(itemName or ""):find(searchTerm, 1, true) ~= nil
 end
 
 local function formatAmountShort(n)
@@ -203,7 +204,8 @@ local function formatAmountShort(n)
 		return nil
 	end
 
-	local step, unit = 1, ""
+	local step = 1
+	local unit = ""
 
 	if n >= 1000000000 then
 		step, unit = 1000000000, "b"
@@ -320,8 +322,6 @@ local function applyMarketItemNameColor(nameWidget, count)
 end
 
 local MARKET_ITEM_EMPTY_SLOT_OPACITY = 0.5
-local MARKET_ITEM_EMPTY_TINT = "#808080"
-local MARKET_ITEM_NORMAL_TINT = "#ffffff"
 
 local function setMarketAmountScrollRange(scrollBar, minVal, maxVal)
 	if not scrollBar then
@@ -342,8 +342,7 @@ local function applyMarketItemSlotOpacity(rowWidget, count)
 		return
 	end
 
-	local empty = count == 0
-	local slotOpacity = empty and MARKET_ITEM_EMPTY_SLOT_OPACITY or 1
+	local slotOpacity = count == 0 and MARKET_ITEM_EMPTY_SLOT_OPACITY or 1
 
 	if rowWidget.itemSlot then
 		rowWidget.itemSlot:setOpacity(slotOpacity)
@@ -363,7 +362,6 @@ local function applyMarketItemSlotOpacity(rowWidget, count)
 
 	if rowWidget.item then
 		rowWidget.item:setOpacity(slotOpacity)
-		rowWidget.item:setColor(empty and MARKET_ITEM_EMPTY_TINT or MARKET_ITEM_NORMAL_TINT)
 	end
 end
 
@@ -388,7 +386,6 @@ local function resetSelectedItemPreviewVisual()
 
 	if panel.selectedItem then
 		panel.selectedItem:setOpacity(1)
-		panel.selectedItem:setColor(MARKET_ITEM_NORMAL_TINT)
 	end
 
 	local amountLabel = panel.amount
@@ -434,7 +431,44 @@ local function resetCreateOfferType()
 	mainMarket.anonymous:setChecked(false)
 end
 
-local function resetMarketViewState()
+local function resetMarketViewState(arg_26_0, arg_26_1)
+	return math.min(math.max(math.ceil(arg_26_0 / 50 * arg_26_1), 20), 1000000)
+end
+
+local function var_0_44()
+	local numericValue = tonumber(mainMarket.grossAmount.value) or 0
+	local text = tonumber((mainMarket.createOfferAmount:getText():gsub("%D", ""))) or 0
+	local var_27_2 = resetMarketViewState(numericValue, text)
+
+	if currentActionType == 0 then
+		if text == 0 or getTotalMoney() < numericValue * text + var_27_2 then
+			return tr("You don't have enough gold to pay the total price.")
+		end
+	elseif var_27_2 > getTotalMoney() then
+		return tr("You don't have enough gold to pay the fee.")
+	end
+
+	return nil
+end
+
+local function var_0_45(arg_28_0)
+	local createButton = mainMarket.createButton
+	local var_28_1 = arg_28_0 and var_0_44() or nil
+
+	createButton:setEnabled(arg_28_0 and not var_28_1)
+
+	if var_28_1 then
+		createButton:setTooltip(var_28_1)
+	elseif createButton:getTooltip() then
+		createButton:removeTooltip()
+
+		if createButton:containsPoint(g_window.getMousePosition()) then
+			g_tooltip.hide()
+		end
+	end
+end
+
+local function var_0_46()
 	if not marketWindow then
 		return
 	end
@@ -541,7 +575,8 @@ local function sortByUnitPriceDesc(list)
 			return true
 		end
 
-		local pa, pb = a.price or 0, b.price or 0
+		local pa = a.price or 0
+		local pb = b.price or 0
 
 		if pa == pb then
 			if (a.timestamp or 0) ~= (b.timestamp or 0) then
@@ -709,6 +744,10 @@ function showItemInMarket(item)
 	end
 end
 
+local function var_0_61(unusedArgument, arg_49_1)
+	displayInfoBox(tr("Market Message"), arg_49_1)
+end
+
 function init()
 	marketWindow = g_ui.displayUI("t_market")
 
@@ -720,7 +759,7 @@ function init()
 
 	mainMarket = marketWindow.contentPanel.mainMarket
 
-	function marketWindow.contentPanel.lockerOnly:onCheckChange(checked)
+	function marketWindow.contentPanel.lockerOnly.onCheckChange(self, checked)
 		toggleShowLockerOnly(self, checked)
 	end
 
@@ -750,6 +789,7 @@ function init()
 	connect(Container, {
 		onOpen = onDepotContainerOpen
 	})
+	registerMessageMode(MessageModes.Market, var_0_61)
 
 	if modules.game_interface then
 		modules.game_interface.addMenuHook("market", tr("Show in Market"), showInMarketCallback, canShowInMarket)
@@ -811,6 +851,7 @@ function terminate()
 	disconnect(g_game, {
 		onGameEnd = onGameEndDepot
 	})
+	unregisterMessageMode(MessageModes.Market, var_0_61)
 
 	playerAtDepot = false
 
@@ -853,7 +894,7 @@ function onMarketLeave()
 end
 
 function hide()
-	resetMarketViewState()
+	var_0_46()
 	resetMarketPreviewPanel()
 	clearMarketWidgetRefs()
 	onClearMainMarket(true)
@@ -911,7 +952,7 @@ function onMarketEscape()
 end
 
 function show()
-	resetMarketViewState()
+	var_0_46()
 	resetMarketPreviewPanel()
 	showMarketWindow()
 
@@ -1018,6 +1059,14 @@ function myOffersButton(widget)
 	else
 		returnToMainMarket()
 	end
+end
+
+local function var_0_64(arg_65_0, arg_65_1)
+	if arg_65_0 and arg_65_0.tier ~= nil then
+		return arg_65_0.tier
+	end
+
+	return arg_65_1 or 0
 end
 
 function getDepotItemCount(itemId, tier)
@@ -1184,6 +1233,7 @@ function onUpdateResourceValue()
 	end
 
 	refreshMarketTibiaCoinItemWidgets(transferableCoins)
+	onPiecePriceEdit(mainMarket.piecePriceCreate)
 end
 
 local function refreshMarketSellOfferMoneyColors()
@@ -1595,6 +1645,11 @@ function onMarketEnter(offerCount, items)
 
 	depotLockerItems = items
 
+	local var_90_0 = marketWindow:isVisible()
+	local actionId = lastSelectedCategory and lastSelectedCategory:getActionId()
+
+	marketWindow.contentPanel.category.onChildFocusChange = nil
+
 	marketWindow.contentPanel.category:destroyChildren()
 
 	for _, pair in ipairs(categoryList) do
@@ -1613,30 +1668,49 @@ function onMarketEnter(offerCount, items)
 		marketWindow.contentPanel.category:moveChildToIndex(lastWidget, lastIndex)
 	end
 
+	lastSelectedCategory = nil
+
+	if actionId then
+		for unusedValue, child in ipairs(marketWindow.contentPanel.category:getChildren()) do
+			if child:getActionId() == actionId then
+				lastSelectedCategory = child
+
+				child:setBackgroundColor("#585858")
+				child:setColor("#f4f4f4")
+
+				break
+			end
+		end
+	end
+
 	updateCategoryRowColors()
 
-	local prev = suppressFilterCallbacks
+	local var_90_5 = suppressFilterCallbacks
 
 	suppressFilterCallbacks = true
 
 	marketWindow.contentPanel.classFilter:clearOptions()
 	marketWindow.contentPanel.tierFilter:clearOptions()
 
-	suppressFilterCallbacks = prev
+	suppressFilterCallbacks = var_90_5
 
-	local itemListScroll = marketWindow:recursiveGetChildById("itemListScroll")
+	if not var_90_0 then
+		local itemListScroll = marketWindow:recursiveGetChildById("itemListScroll")
 
-	itemListScroll:setValue(0)
-	itemListScroll:setMinimum(0)
-	itemListScroll:setMaximum(0)
+		if itemListScroll then
+			itemListScroll:setValue(0)
+			itemListScroll:setMinimum(0)
+			itemListScroll:setMaximum(0)
 
-	itemListScroll.onValueChange = nil
+			itemListScroll.onValueChange = nil
+		end
+	end
 
-	function marketWindow.contentPanel.category:onChildFocusChange(selected)
+	function marketWindow.contentPanel.category.onChildFocusChange(self, selected)
 		onSelectChildCategory(self, selected)
 	end
 
-	if marketWindow:isVisible() then
+	if var_90_0 then
 		if not table.empty(lastSelectedItem) then
 			refreshSelectedItemDepotDisplay()
 		end
@@ -1719,8 +1793,7 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 			widget.name:setTooltip(holder)
 		end
 
-		local count = getDepotItemCount(itemId, itemTier)
-		local colorText = count > 0 and "#c0c0c0" or "#808080"
+		local colorText = getDepotItemCount(itemId, itemTier) > 0 and "#c0c0c0" or "#808080"
 
 		widget.piecePrice:setColor(colorText)
 		widget.totalPrice:setColor(colorText)
@@ -1739,7 +1812,7 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 	buyListScroll:setMinimum(cache.SCROLL_BUY_OFFERS.listMin)
 	buyListScroll:setMaximum(#cache.SCROLL_BUY_OFFERS.listPool < 11 and 0 or math.max(0, cache.SCROLL_BUY_OFFERS.listMax - #cache.SCROLL_BUY_OFFERS.listPool))
 
-	function buyListScroll:onValueChange(value, delta)
+	function buyListScroll.onValueChange(self, value, delta)
 		onBuyListValueChange(self, value, delta)
 	end
 
@@ -1785,14 +1858,13 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 			widget.piecePrice:setTooltip(comma_value(unitPrice))
 		end
 
-		local hasMoney = unitPrice <= getTotalMoney()
-		local colorText = hasMoney and "#c0c0c0" or "#808080"
+		local var_92_17 = unitPrice <= getTotalMoney() and "#c0c0c0" or "#808080"
 
-		widget.piecePrice:setColor(colorText)
-		widget.totalPrice:setColor(colorText)
-		widget.name:setColor(colorText)
-		widget.amount:setColor(colorText)
-		widget.endAt:setColor(colorText)
+		widget.piecePrice:setColor(var_92_17)
+		widget.totalPrice:setColor(var_92_17)
+		widget.name:setColor(var_92_17)
+		widget.amount:setColor(var_92_17)
+		widget.endAt:setColor(var_92_17)
 		table.insert(cache.SCROLL_SELL_OFFERS.listPool, widget)
 	end
 
@@ -1805,18 +1877,18 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 	sellListScroll:setMinimum(cache.SCROLL_SELL_OFFERS.listMin)
 	sellListScroll:setMaximum(#cache.SCROLL_SELL_OFFERS.listPool < 11 and 0 or math.max(0, cache.SCROLL_SELL_OFFERS.listMax - #cache.SCROLL_SELL_OFFERS.listPool))
 
-	function sellListScroll:onValueChange(value, delta)
+	function sellListScroll.onValueChange(self, value, delta)
 		onSellListValueChange(self, value, delta)
 	end
 
 	lastItemID = itemId
 	lastItemTier = itemTier
 
-	function mainMarket.sellOffersList:onChildFocusChange(selected, oldFocus)
+	function mainMarket.sellOffersList.onChildFocusChange(self, selected, oldFocus)
 		onSelectSellOffer(self, selected, oldFocus)
 	end
 
-	function mainMarket.buyOffersList:onChildFocusChange(selected, oldFocus)
+	function mainMarket.buyOffersList.onChildFocusChange(self, selected, oldFocus)
 		onSelectBuyOffer(self, selected, oldFocus)
 	end
 
@@ -1828,7 +1900,7 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 		mainMarket.sellOffersList:focusChild(firstChild)
 	end
 
-	firstChild = mainMarket.buyOffersList:getChildren()[1]
+	local firstChild = mainMarket.buyOffersList:getChildren()[1]
 
 	if firstChild then
 		mainMarket.buyOffersList:focusChild(firstChild)
@@ -1838,16 +1910,14 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 end
 
 function onBuyListValueChange(scroll, value, delta)
-	local startLabel = math.max(cache.SCROLL_BUY_OFFERS.listMin, value)
-	local endLabel = startLabel + #cache.SCROLL_BUY_OFFERS.listPool - 1
+	local var_97_0 = math.max(cache.SCROLL_BUY_OFFERS.listMin, value)
 
-	if endLabel > cache.SCROLL_BUY_OFFERS.listMax then
-		endLabel = cache.SCROLL_BUY_OFFERS.listMax
-		startLabel = endLabel - #cache.SCROLL_BUY_OFFERS.listPool + 1
+	if var_97_0 + #cache.SCROLL_BUY_OFFERS.listPool - 1 > cache.SCROLL_BUY_OFFERS.listMax then
+		var_97_0 = cache.SCROLL_BUY_OFFERS.listMax - #cache.SCROLL_BUY_OFFERS.listPool + 1
 	end
 
 	for i, widget in ipairs(cache.SCROLL_BUY_OFFERS.listPool) do
-		local index = startLabel + i - 1
+		local index = var_97_0 + i - 1
 		local data = cache.SCROLL_BUY_OFFERS.listData[index]
 
 		if data then
@@ -1892,16 +1962,14 @@ function onBuyListValueChange(scroll, value, delta)
 end
 
 function onSellListValueChange(scroll, value, delta)
-	local startLabel = math.max(cache.SCROLL_SELL_OFFERS.listMin, value)
-	local endLabel = startLabel + #cache.SCROLL_SELL_OFFERS.listPool - 1
+	local var_98_0 = math.max(cache.SCROLL_SELL_OFFERS.listMin, value)
 
-	if endLabel > cache.SCROLL_SELL_OFFERS.listMax then
-		endLabel = cache.SCROLL_SELL_OFFERS.listMax
-		startLabel = endLabel - #cache.SCROLL_SELL_OFFERS.listPool + 1
+	if var_98_0 + #cache.SCROLL_SELL_OFFERS.listPool - 1 > cache.SCROLL_SELL_OFFERS.listMax then
+		var_98_0 = cache.SCROLL_SELL_OFFERS.listMax - #cache.SCROLL_SELL_OFFERS.listPool + 1
 	end
 
 	for i, widget in ipairs(cache.SCROLL_SELL_OFFERS.listPool) do
-		local index = startLabel + i - 1
+		local index = var_98_0 + i - 1
 		local data = cache.SCROLL_SELL_OFFERS.listData[index]
 
 		if data then
@@ -2032,7 +2100,7 @@ function onSelectChildCategory(widget, selected, keepFilter)
 
 	resetMarketPreviewPanel()
 
-	function itemList:onChildFocusChange(sel, oldFocus)
+	function itemList.onChildFocusChange(self, sel, oldFocus)
 		onSelectChildItem(self, sel, oldFocus)
 	end
 
@@ -2097,10 +2165,10 @@ function createItemWidget(itemList, itemInfo, index, tier)
 	end
 
 	local id = itemInfo.thingType:getId()
-	local t = tier or 0
+	local t = var_0_64(itemInfo, tier)
 	local count = getDepotItemCount(id, t)
 
-	if showLockerOnly and count == 0 and t > 0 then
+	if itemInfo.tier == nil and showLockerOnly and count == 0 and t > 0 then
 		count = getDepotItemCount(id, 0)
 	end
 
@@ -2144,11 +2212,17 @@ function onItemListValueChange(scroll, value, delta)
 		return
 	end
 
-	resetItemListScrollOffset(itemList)
+	if not cache.SCROLL_MARKET_ITEMS.listFit then
+		local unusedValue = 8
+	end
 
-	local visibleCount = cache.SCROLL_MARKET_ITEMS.listFit or 8
 	local startIndex = value + 1
-	local tier = sortButtons.tierFilter or 0
+
+	if not sortButtons.tierFilter then
+		local unusedValue = 0
+	end
+
+	local maximum = scroll:getMaximum() > 0 and value >= scroll:getMaximum()
 
 	for i, widget in ipairs(cache.SCROLL_MARKET_ITEMS.listPool) do
 		local dataIndex = startIndex + i - 1
@@ -2161,13 +2235,19 @@ function onItemListValueChange(scroll, value, delta)
 			widget:setVisible(false)
 		end
 	end
+
+	itemList:setVirtualOffset({
+		x = 0,
+		y = maximum and -4 or 0
+	})
 end
 
 function updateItemWidget(widget, data, index)
+	local var_104_0 = var_0_64(data, sortButtons.tierFilter or 0)
 	local isSelected = lastSelectedItem.itemId == data.thingType:getId()
 
-	if data.tier then
-		isSelected = lastSelectedItem.itemId == data.thingType:getId() and data.tier == lastSelectedItem.tier
+	if data.tier ~= nil then
+		isSelected = isSelected and var_104_0 == lastSelectedItem.tier
 	end
 
 	widget:setBackgroundColor(isSelected and "#585858" or "#404040")
@@ -2176,11 +2256,10 @@ function updateItemWidget(widget, data, index)
 		lastSelectedItem.lastWidget = widget
 	end
 
-	local tier = sortButtons.tierFilter or 0
 	local id = data.thingType:getId()
-	local count = getDepotItemCount(id, tier)
+	local count = getDepotItemCount(id, var_104_0)
 
-	if showLockerOnly and count == 0 and tier > 0 then
+	if data.tier == nil and showLockerOnly and count == 0 and var_104_0 > 0 then
 		count = getDepotItemCount(id, 0)
 	end
 
@@ -2200,9 +2279,9 @@ function updateItemWidget(widget, data, index)
 	widget.item:getItem():setCount(count)
 	widget.item:setActionId(index)
 	widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", count > 65000 and "+ " or " ", data.marketData.name))
-	widget.item:setTier(data.tier and data.tier or tier)
+	widget.item:setTier(var_104_0)
 	setAmount(widget.amount or widget:getChildById("amount"), count)
-	applyMarketItemTierBadge(widget, data.tier or tier)
+	applyMarketItemTierBadge(widget, var_104_0)
 
 	if not widget.name:isTextWrap() then
 		widget.name:setMarginTop(1)
@@ -2239,7 +2318,7 @@ function onUpdateChildItem(itemID, tier)
 		mainMarket.sellOffersList:onChildFocusChange(firstChild, nil, KeyboardFocusReason)
 	end
 
-	firstChild = mainMarket.buyOffersList:getChildren()[1]
+	local firstChild = mainMarket.buyOffersList:getChildren()[1]
 
 	if firstChild then
 		mainMarket.buyOffersList:onChildFocusChange(firstChild, nil, KeyboardFocusReason)
@@ -2324,6 +2403,7 @@ function onClearMainMarket(cleanList)
 
 	mainMarket.sellAcceptButton:setEnabled(false)
 	mainMarket.buyAcceptButton:setEnabled(false)
+	var_0_45(false)
 	mainMarket.sellOffersList:destroyChildren()
 	mainMarket.buyOffersList:destroyChildren()
 	setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 0, 0)
@@ -2391,19 +2471,18 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		return
 	end
 
-	local money = getTotalMoney()
+	local var_109_0 = getTotalMoney()
 
 	if oldFocus then
 		local offer = sellOffers[cache.SCROLL_SELL_OFFERS.lastSelected]
-		local offerPrice = offer and offer.price or 0
-		local color = offerPrice <= money and "#c0c0c0" or "#808080"
+		local offerPrice = var_109_0 >= (offer and offer.price or 0) and "#c0c0c0" or "#808080"
 
 		oldFocus:setBackgroundColor(oldFocus:getId())
-		oldFocus.piecePrice:setColor(color)
-		oldFocus.totalPrice:setColor(color)
-		oldFocus.name:setColor(color)
-		oldFocus.amount:setColor(color)
-		oldFocus.endAt:setColor(color)
+		oldFocus.piecePrice:setColor(offerPrice)
+		oldFocus.totalPrice:setColor(offerPrice)
+		oldFocus.name:setColor(offerPrice)
+		oldFocus.amount:setColor(offerPrice)
+		oldFocus.endAt:setColor(offerPrice)
 	end
 
 	selected:setBackgroundColor("#585858")
@@ -2422,7 +2501,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		unitPrice = 1
 	end
 
-	if money < unitPrice then
+	if var_109_0 < unitPrice then
 		mainMarket.sellAcceptButton:setEnabled(false)
 		updateSellCount(nil, 0)
 		setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 0, 0)
@@ -2430,7 +2509,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		return
 	end
 
-	local maxValue = math.min(currentOffer.amount or 0, math.floor(money / unitPrice))
+	local maxValue = math.min(currentOffer.amount or 0, math.floor(var_109_0 / unitPrice))
 
 	mainMarket.amountSellScrollBar:setValue(1)
 	setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 1, maxValue)
@@ -2441,7 +2520,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 	local startValue = 1
 
 	if not table.empty(lastSelectedItem) and lastSelectedItem.itemId == 22118 then
-		local sellCount = math.floor(money / (unitPrice * 25))
+		local sellCount = math.floor(var_109_0 / (unitPrice * 25))
 
 		if sellCount > 0 then
 			setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 25, math.min(currentOffer.amount or 0, sellCount * 25))
@@ -2650,7 +2729,7 @@ function onPiecePriceEdit(widget)
 
 		mainMarket.profitAmount:setText(0)
 		mainMarket.feeAmount:setText(0)
-		mainMarket.createButton:setEnabled(false)
+		var_0_45(false)
 		mainMarket.amountCreateScrollBar:setIncrementStep(25)
 		setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, 0, 0)
 
@@ -2675,7 +2754,7 @@ function onPiecePriceEdit(widget)
 	end
 
 	if numericValue >= 999999999999 then
-		currentText = "999999999999"
+		local currentText = "999999999999"
 
 		widget:setText(currentText)
 	end
@@ -2686,24 +2765,15 @@ function onPiecePriceEdit(widget)
 		amount = math.cround(amount, mainMarket.amountCreateScrollBar:getIncrementValue())
 	end
 
-	local fee = math.ceil(numericValue / 50 * amount)
-
-	if fee < 20 then
-		fee = 20
-	elseif fee > 1000000 then
-		fee = 1000000
-	end
-
-	local thing = g_things.getThingType(lastSelectedItem.itemId)
-	local stackable = thing:isStackable()
-	local maxCount = stackable and 64000 or 2000
+	local fee = resetMarketViewState(numericValue, amount)
+	local thingType = g_things.getThingType(lastSelectedItem.itemId):isStackable() and 64000 or 2000
 	local maxValue = 999999999999
 
 	if not isTibiaCoin and maxValue <= numericValue * amount then
 		local newAmount = math.floor(maxValue / numericValue)
 
 		amount = newAmount
-		maxCount = newAmount
+		thingType = newAmount
 
 		mainMarket.amountCreateScrollBar:setValue(amount)
 	end
@@ -2720,6 +2790,8 @@ function onPiecePriceEdit(widget)
 
 	mainMarket.amountCreateScrollBar:setStep(steps)
 
+	local var_116_10 = false
+
 	if currentActionType == 0 then
 		local grossProfit = numericValue * amount
 
@@ -2728,7 +2800,9 @@ function onPiecePriceEdit(widget)
 		mainMarket.grossAmount.value = numericValue
 
 		mainMarket.profitAmount:setText(convertGold(grossProfit + fee, true))
-		mainMarket.createButton:setEnabled(true)
+
+		var_116_10 = true
+
 		mainMarket.feeAmount:setText(convertGold(fee))
 
 		local balance = getTotalMoney()
@@ -2750,7 +2824,7 @@ function onPiecePriceEdit(widget)
 			end
 		else
 			if numericValue <= getTotalMoney() then
-				barCount = math.min(maxCount, getTotalMoney() / numericValue)
+				barCount = math.min(thingType, getTotalMoney() / numericValue)
 			end
 
 			if barCount > 0 then
@@ -2760,6 +2834,15 @@ function onPiecePriceEdit(widget)
 			end
 		end
 	else
+		local itemCount = numericValue * amount
+
+		mainMarket.grossAmount:setText(convertGold(itemCount, true))
+
+		mainMarket.grossAmount.value = numericValue
+
+		mainMarket.profitAmount:setText(convertGold(itemCount - fee, true))
+		mainMarket.feeAmount:setText(convertGold(fee))
+
 		local itemCount = isTibiaCoin and g_game.getTransferableTibiaCoins() or getDepotItemCount(lastSelectedItem.itemId, lastSelectedItem.tier)
 
 		if itemCount > 0 then
@@ -2768,22 +2851,16 @@ function onPiecePriceEdit(widget)
 				mainMarket.amountCreateScrollBar:setStep(25)
 				mainMarket.amountCreateScrollBar:setIncrementStep(25)
 			else
-				setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, isTibiaCoin and 25 or 1, math.min(maxCount, itemCount))
-				mainMarket.createButton:setEnabled(true)
+				setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, isTibiaCoin and 25 or 1, math.min(thingType, itemCount))
+
+				var_116_10 = true
 			end
 		else
 			setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, 0, 0)
 		end
-
-		local grossProfit = numericValue * amount
-
-		mainMarket.grossAmount:setText(convertGold(grossProfit, true))
-
-		mainMarket.grossAmount.value = numericValue
-
-		mainMarket.profitAmount:setText(convertGold(grossProfit - fee, true))
-		mainMarket.feeAmount:setText(convertGold(fee))
 	end
+
+	var_0_45(var_116_10)
 end
 
 function changeOfferType(widget, primary)
@@ -2817,11 +2894,10 @@ function createMarketOffer()
 		return
 	end
 
-	local n = mainMarket.createOfferAmount:getText()
-	local amount = n:gsub("%D", "")
+	local n = mainMarket.createOfferAmount:getText():gsub("%D", "")
 	local price = tonumber(mainMarket.grossAmount.value)
 
-	if currentActionType == 0 and price > getTotalMoney() then
+	if var_0_44() then
 		return
 	end
 
@@ -2838,11 +2914,11 @@ function createMarketOffer()
 	mainMarket.piecePriceCreate:clearText()
 
 	if currentActionType == 1 then
-		adjustDepotLockerItemCount(lastSelectedItem.itemId, lastSelectedItem.tier or 0, -tonumber(amount))
+		adjustDepotLockerItemCount(lastSelectedItem.itemId, lastSelectedItem.tier or 0, -tonumber(n))
 		refreshSelectedItemDepotDisplay()
 	end
 
-	g_game.createMarketOffer(currentActionType, lastSelectedItem.itemId, lastSelectedItem.tier or 0, amount, price, mainMarket.anonymous:isChecked() and 1 or 0)
+	g_game.createMarketOffer(currentActionType, lastSelectedItem.itemId, lastSelectedItem.tier or 0, n, price, mainMarket.anonymous:isChecked() and 1 or 0)
 	requestMarketGoldRefresh()
 	refreshSelectedMarketBrowse()
 end
@@ -2852,7 +2928,7 @@ function onSearchItem(textField)
 		return
 	end
 
-	local searchText = normalizeMarketSearchText(textField and textField:getText() or "")
+	local searchText = normalizeMarketSearchText(textField and textField.getText and textField:getText() or "")
 
 	lastSelectedItem = {}
 
@@ -2886,7 +2962,7 @@ function onSearchItem(textField)
 	updateCategoryShopButtons(nil)
 	resetMarketPreviewPanel()
 
-	function itemList:onChildFocusChange(selected, oldFocus)
+	function itemList.onChildFocusChange(self, selected, oldFocus)
 		onSelectChildItem(self, selected, oldFocus)
 	end
 
@@ -2923,9 +2999,7 @@ function onSearchItem(textField)
 	local tier = sortButtons.tierFilter or 0
 
 	for _, data in ipairs(allMarketItems) do
-		if not checkSortMarketOptions(data) then
-			-- block empty
-		else
+		if checkSortMarketOptions(data) then
 			local id = data.thingType:getId()
 			local hasCount = 1
 
@@ -2944,50 +3018,7 @@ function onSearchItem(textField)
 	end
 
 	table.sort(cache.SCROLL_MARKET_ITEMS.listData, compareMarketItemsByNameCaseInsensitive)
-
-	for i, itemInfo in pairs(cache.SCROLL_MARKET_ITEMS.listData) do
-		if #cache.SCROLL_MARKET_ITEMS.listPool >= cache.SCROLL_MARKET_ITEMS.listFit then
-			break
-		end
-
-		local id = itemInfo.thingType:getId()
-		local count = getDepotItemCount(id, tier)
-
-		if showLockerOnly and count == 0 and tier > 0 then
-			count = getDepotItemCount(id, 0)
-		end
-
-		if not checkSortMarketOptions(itemInfo) or count == 0 and showLockerOnly then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("MarketItemList", itemList)
-
-			widget.item:setItemId(id)
-			widget.name:setText(itemInfo.marketData.name)
-
-			if widget.name:isOfflimit(20) then
-				widget.name:setText(short_text(itemInfo.marketData.name, 20))
-				widget.name:setTooltip(itemInfo.marketData.name)
-			end
-
-			widget:setBackgroundColor("#404040")
-			widget.item:getItem():setCount(count)
-			widget.item:setActionId(i)
-			widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", count > 65000 and "+ " or " ", itemInfo.marketData.name))
-			setAmount(widget.amount or widget:getChildById("amount"), count)
-			widget.item:getItem():setTier(tier)
-			applyMarketItemTierBadge(widget, tier)
-
-			if not widget.name:isTextWrap() then
-				widget.name:setMarginTop(1)
-			end
-
-			applyMarketItemRarity(widget.rarity, id)
-			applyMarketItemNameColor(widget.name, count)
-			applyMarketItemSlotOpacity(widget, count)
-			table.insert(cache.SCROLL_MARKET_ITEMS.listPool, widget)
-		end
-	end
+	createVisibleItemWidgets(itemList, tier)
 
 	cache.SCROLL_MARKET_ITEMS.listMax = #cache.SCROLL_MARKET_ITEMS.listData
 
@@ -3039,7 +3070,7 @@ function onShowRedirect(item)
 	updateCategoryShopButtons(nil)
 	resetMarketPreviewPanel()
 
-	function itemList:onChildFocusChange(selected, oldFocus)
+	function itemList.onChildFocusChange(self, selected, oldFocus)
 		onSelectChildItem(self, selected, oldFocus)
 	end
 
@@ -3059,15 +3090,15 @@ function onShowRedirect(item)
 		suppressFilterCallbacks = prev
 	end
 
-	if sortButtons.tierFilter == 0 then
-		local prev = suppressFilterCallbacks
+	sortButtons.tierFilter = 0
 
-		suppressFilterCallbacks = true
+	local prev = suppressFilterCallbacks
 
-		marketWindow.contentPanel.tierFilter:clearOptions()
+	suppressFilterCallbacks = true
 
-		suppressFilterCallbacks = prev
-	end
+	marketWindow.contentPanel.tierFilter:clearOptions()
+
+	suppressFilterCallbacks = prev
 
 	for _, data in ipairs(allMarketItems) do
 		if item:getId() == data.thingType:getId() then
@@ -3085,50 +3116,7 @@ function onShowRedirect(item)
 		end
 	end
 
-	for i, itemInfo in pairs(cache.SCROLL_MARKET_ITEMS.listData) do
-		if #cache.SCROLL_MARKET_ITEMS.listPool >= cache.SCROLL_MARKET_ITEMS.listFit then
-			break
-		end
-
-		local id = itemInfo.thingType:getId()
-		local tier = itemInfo.tier or 0
-		local count = getDepotItemCount(id, tier)
-
-		if showLockerOnly and count == 0 and tier > 0 then
-			count = getDepotItemCount(id, 0)
-		end
-
-		if not checkSortMarketOptions(itemInfo) or count == 0 and showLockerOnly then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("MarketItemList", itemList)
-
-			widget.item:setItemId(id)
-			widget.name:setText(itemInfo.marketData.name)
-
-			if widget.name:isOfflimit(20) then
-				widget.name:setText(short_text(itemInfo.marketData.name, 20))
-				widget.name:setTooltip(itemInfo.marketData.name)
-			end
-
-			widget:setBackgroundColor("#404040")
-			widget.item:getItem():setCount(count)
-			widget.item:setActionId(i)
-			widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", count > 65000 and "+ " or " ", itemInfo.marketData.name))
-			setAmount(widget.amount or widget:getChildById("amount"), count)
-			widget.item:getItem():setTier(tier)
-			applyMarketItemTierBadge(widget, tier)
-
-			if not widget.name:isTextWrap() then
-				widget.name:setMarginTop(1)
-			end
-
-			applyMarketItemRarity(widget.rarity, id)
-			applyMarketItemNameColor(widget.name, count)
-			applyMarketItemSlotOpacity(widget, count)
-			table.insert(cache.SCROLL_MARKET_ITEMS.listPool, widget)
-		end
-	end
+	createVisibleItemWidgets(itemList, sortButtons.tierFilter or 0)
 
 	cache.SCROLL_MARKET_ITEMS.listMax = #cache.SCROLL_MARKET_ITEMS.listData
 
@@ -3167,46 +3155,6 @@ function onClearSearch(clearHands)
 	marketWindow.contentPanel.itemList:updateScrollBars()
 end
 
-local function normalizeVocationSet(v)
-	if v == nil then
-		return nil
-	end
-
-	local set = {}
-
-	local function add(val)
-		local n = tonumber(val)
-
-		if n and n > 0 then
-			set[n] = true
-		end
-	end
-
-	local tv = type(v)
-
-	if tv == "number" then
-		add(v)
-	elseif tv == "string" then
-		for token in v:gmatch("[^,;%s]+") do
-			add(token)
-		end
-	elseif tv == "table" then
-		for k, val in pairs(v) do
-			if type(k) == "number" and type(val) ~= "boolean" then
-				add(val)
-			else
-				add(k)
-			end
-		end
-	end
-
-	if next(set) == nil then
-		return nil
-	end
-
-	return set
-end
-
 function checkSortMarketOptions(itemData)
 	local player = g_game.getLocalPlayer()
 
@@ -3224,10 +3172,14 @@ function checkSortMarketOptions(itemData)
 	end
 
 	if sortButtons.vocButton then
-		local vocSet = normalizeVocationSet(md.restrictVocation)
+		local vocSet = tonumber(md.restrictVocation) or 0
 
-		if vocSet and not vocSet[playerVocation] then
-			return false
+		if vocSet > 0 then
+			local var_126_6 = playerVocation > 0 and Bit.bit(playerVocation) or 0
+
+			if var_126_6 == 0 or not Bit.hasBit(vocSet, var_126_6) then
+				return false
+			end
 		end
 	end
 
@@ -3323,9 +3275,8 @@ function onMarketDetail(itemId, tier, details, purchase, sale)
 
 		if desc and #desc > 0 then
 			local label = MarketDetailNames[i] or "Unknown[" .. tostring(i) .. "]: "
-			local widget = g_ui.createWidget("DatailsLabel", marketWindow.contentPanel.detailsMarket.detailsList)
 
-			widget:setText(label .. desc)
+			g_ui.createWidget("DatailsLabel", marketWindow.contentPanel.detailsMarket.detailsList):setText(label .. desc)
 		end
 	end
 

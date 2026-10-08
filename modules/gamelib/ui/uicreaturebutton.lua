@@ -1,6 +1,4 @@
-﻿-- chunkname: @/gamelib/ui/uicreaturebutton.lua
-
-UICreatureButton = extends(UIWidget, "UICreatureButton")
+﻿UICreatureButton = extends(UIWidget, "UICreatureButton")
 
 local CreatureButtonColors = {
 	onIdle = {
@@ -17,10 +15,42 @@ local CreatureButtonColors = {
 	}
 }
 local NameBorderColors = {
-	orange = "#EE8413",
 	red = "#FF2020",
-	pink = "#C850C0"
+	pink = "#C850C0",
+	orange = "#EE8413"
 }
+local var_0_2 = 11
+local var_0_3 = 2
+local var_0_4 = "..."
+local var_0_5 = {
+	"iconsMonsterSlot3",
+	"iconsMonsterSlot2",
+	"iconsMonsterSlot1",
+	"emblem",
+	"partyShield",
+	"skull"
+}
+
+local function var_0_6(arg_1_0, arg_1_1)
+	return arg_1_0:recursiveGetChildById(arg_1_1)
+end
+
+local function var_0_7(arg_2_0, arg_2_1, arg_2_2, arg_2_3)
+	local var_2_0 = var_0_6(arg_2_0, arg_2_1)
+
+	if not var_2_0 then
+		return
+	end
+
+	local var_2_1 = arg_2_2 ~= nil
+
+	var_2_0:setVisible(var_2_1)
+	var_2_0:setImageSource(arg_2_2 or "")
+
+	if var_2_1 and arg_2_3 then
+		var_2_0:setImageClip(torect(arg_2_3))
+	end
+end
 
 local function resolveNameBorderColor(creature)
 	if not creature then
@@ -48,12 +78,12 @@ local function resolveNameBorderColor(creature)
 	return nil
 end
 
-function UICreatureButton:update()
+function UICreatureButton.update(self)
 	local labelColor = CreatureButtonColors.onIdle.notHovered
 	local borderColor
 	local showBorder = false
 
-	if self.isHovered then
+	if self.creatureHovered then
 		labelColor = "#FFFFFF"
 		borderColor = "#FFFFFF"
 		showBorder = true
@@ -88,7 +118,7 @@ function UICreatureButton:update()
 	self:updateNameBorder()
 end
 
-function UICreatureButton:updateNameBorder()
+function UICreatureButton.updateNameBorder(self)
 	local labelWidget = self:getChildById("label")
 
 	if not labelWidget or not labelWidget.setTextOutlineColor then
@@ -112,7 +142,7 @@ function UICreatureButton.create()
 	button:setFocusable(false)
 
 	button.creature = nil
-	button.isHovered = false
+	button.creatureHovered = false
 	button.isTarget = false
 	button.isFollowed = false
 
@@ -123,94 +153,164 @@ function UICreatureButton.getCreatureButtonColors()
 	return CreatureButtonColors
 end
 
-function UICreatureButton:setCreature(creature)
+function UICreatureButton.setCreature(self, creature)
 	self.creature = creature
 end
 
-function UICreatureButton:getCreature()
+function UICreatureButton.getCreature(self)
 	return self.creature
 end
 
-function UICreatureButton:getCreatureId()
+function UICreatureButton.getCreatureId(self)
 	return self.creature:getId()
 end
 
-local function getCreatureThingExactSize(lookType)
-	if not lookType or lookType <= 0 or not g_things or not g_things.getThingType then
-		return 0
-	end
-
-	local ok, exactSize = pcall(function()
-		local thingType = g_things.getThingType(lookType, ThingCategoryCreature)
-
-		return thingType and thingType:getExactSize() or 0
-	end)
-
-	return ok and (tonumber(exactSize) or 0) or 0
-end
-
-function UICreatureButton:updateOutfitPreview(outfit)
-	local creatureWidget = self:getChildById("creature")
-
-	if not creatureWidget then
-		return
-	end
-
-	creatureWidget:setOutfit(outfit)
-
-	if not self.isBattleButton then
-		return
-	end
-
-	local mountId = tonumber(outfit and outfit.mount) or 0
-	local mounted = mountId > 0
-
-	creatureWidget:setCenter(mounted)
-	creatureWidget:setCenterByBoundingBox(mounted)
-
-	if not mounted then
-		creatureWidget:setCreatureSize(0)
-
-		return
-	end
-
-	local spriteSize = tonumber(g_gameConfig.getSpriteSize()) or 32
-	local previewCreature = creatureWidget:getCreature()
-	local outfitSize = previewCreature and tonumber(previewCreature:getExactSize()) or 0
-	local percentageBase = math.max(outfitSize, spriteSize * 2)
-	local visualSize = math.max(percentageBase, getCreatureThingExactSize(mountId))
-	local percentage = math.ceil(visualSize * 100 / percentageBase)
-
-	creatureWidget:setCreatureSize(math.min(255, math.max(100, percentage)))
-end
-
-function UICreatureButton:setup(creature, onlyOutfit)
-	self.creature = creature
-	self.isHovered = g_game.getHoveredCreature() == creature
-
-	local creatureWidget = self:getChildById("creature")
+function UICreatureButton.updateNameLabel(self)
 	local labelWidget = self:getChildById("label")
 
-	labelWidget:setText(creature:getName())
-
-	if onlyOutfit == true then
-		self:updateOutfitPreview(creature:getOutfit())
-	else
-		creatureWidget:setCreature(creature)
+	if not labelWidget then
+		return
 	end
 
-	self:setId("CreatureButton_" .. creature:getName():gsub("%s", "_"))
-	self:setLifeBarPercent(creature:getHealthPercent())
-	self:updateSkull(creature:getSkull())
-	self:updateEmblem(creature:getEmblem())
-	self:updateIcons(creature:getIcons())
+	local name = self.creature and self.creature:getName() or ""
+
+	labelWidget:setText(name)
+
+	local width = labelWidget:getWidth() - labelWidget:getPaddingLeft() - labelWidget:getPaddingRight()
+
+	if width <= 0 or width >= labelWidget:getTextSize().width then
+		return
+	end
+
+	labelWidget:setText(var_0_4)
+
+	if width < labelWidget:getTextSize().width then
+		labelWidget:setText("")
+
+		return
+	end
+
+	local var_11_3 = 0
+	local var_11_4 = #name
+	local var_11_5 = var_0_4
+
+	while var_11_3 <= var_11_4 do
+		local var_11_6 = math.floor((var_11_3 + var_11_4) / 2)
+		local var_11_7 = name:sub(1, var_11_6) .. var_0_4
+
+		labelWidget:setText(var_11_7)
+
+		if width >= labelWidget:getTextSize().width then
+			var_11_5 = var_11_7
+			var_11_3 = var_11_6 + 1
+		else
+			var_11_4 = var_11_6 - 1
+		end
+	end
+
+	labelWidget:setText(var_11_5)
+end
+
+function UICreatureButton.updateStatusIconLayout(arg_12_0)
+	local statusIcons = arg_12_0:getChildById("statusIcons")
+
+	if not statusIcons then
+		return
+	end
+
+	local var_12_1 = 0
+
+	for unusedValue, entry in ipairs(var_0_5) do
+		local var_12_2 = var_0_6(arg_12_0, entry)
+
+		if var_12_2 and var_12_2:isExplicitlyVisible() then
+			var_12_1 = var_12_1 + 1
+		end
+	end
+
+	local var_12_3 = var_12_1 > 0 and var_12_1 * var_0_2 + (var_12_1 - 1) * var_0_3 or 0
+
+	statusIcons:setWidth(var_12_3)
+	statusIcons:getLayout():update()
+
+	local layout = arg_12_0:getLayout()
+
+	if layout then
+		layout:update()
+	end
+
+	arg_12_0:updateNameLabel()
+end
+
+function UICreatureButton.updateOutfitPreview(self, outfit)
+	local creature = self:getChildById("creature")
+
+	if not creature then
+		return
+	end
+
+	creature:setOutfit(outfit)
+
+	local var_13_1 = creature:getCreature()
+
+	if var_13_1 then
+		var_13_1:setAnimate(true)
+
+		if not var_13_1:isDisabledWalkAnimation() then
+			var_13_1:setDisableWalkAnimation(true)
+		end
+	end
+
+	creature:setCenter(true)
+	creature:setCenterByBoundingBox(true)
+	creature:setFitVisibleBounds(true)
+	creature:setFixedCreatureSize(true)
+	creature:setCreatureSize(0)
+	creature:setBaseScale(false)
+	creature:setIgnoreDisplacementShift(false)
+	creature:setCreatureSmooth(false)
+end
+
+function UICreatureButton.setup(self, arg_14_1, onlyOutfit)
+	self.creature = arg_14_1
+	self.isHovered = nil
+	self.creatureHovered = g_game.getHoveredCreature() == arg_14_1
+
+	local creature = self:getChildById("creature")
+	local label = self:getChildById("label")
+
+	if not label._nameEllipsisBound then
+		label._nameEllipsisBound = true
+
+		function label.onGeometryChange(arg_15_0)
+			local parent = arg_15_0:getParent()
+
+			if parent and parent.updateNameLabel then
+				parent:updateNameLabel()
+			end
+		end
+	end
+
+	self:updateNameLabel()
+
+	if onlyOutfit == true then
+		self:updateOutfitPreview(arg_14_1:getOutfit())
+	else
+		creature:setCreature(arg_14_1)
+	end
+
+	self:setId("CreatureButton_" .. arg_14_1:getName():gsub("%s", "_"))
+	self:setLifeBarPercent(arg_14_1:getHealthPercent())
+	self:updateSkull(arg_14_1:getSkull())
+	self:updateEmblem(arg_14_1:getEmblem())
+	self:updateIcons(arg_14_1:getIcons())
 
 	if self:getChildById("manaBar") then
-		self:setManaBarPercent(creature:getManaPercent())
+		self:setManaBarPercent(arg_14_1:getManaPercent())
 	end
 
 	if self.updatePartyShield then
-		self:updatePartyShield(creature:getShield())
+		self:updatePartyShield(arg_14_1:getShield())
 	end
 
 	if self.isBattleButton then
@@ -226,72 +326,50 @@ function UICreatureButton:setup(creature, onlyOutfit)
 	self:update()
 end
 
-function UICreatureButton:updateSkull(skullId)
+function UICreatureButton.updateSkull(self, skullId)
 	if not self.creature then
 		return
 	end
 
 	local skullId = skullId or self.creature:getSkull()
-	local skullWidget = self:getChildById("skull")
-	local labelWidget = self:getChildById("label")
-	local partyShield = self:getChildById("partyShield")
 
 	if skullId ~= SkullNone then
-		skullWidget:setWidth(skullWidget:getHeight())
-
 		local imagePath, clip = getSkullImagePath(skullId)
 
-		skullWidget:setImageSource(imagePath)
-
-		if clip then
-			skullWidget:setImageClip(torect(clip))
-		end
-
-		if not partyShield or partyShield:getWidth() == 0 then
-			labelWidget:setMarginLeft(5)
-		else
-			labelWidget:setMarginLeft(2)
-		end
+		var_0_7(self, "skull", imagePath, clip)
 	else
-		skullWidget:setWidth(0)
-		skullWidget:setImageSource("")
-		labelWidget:setMarginLeft(partyShield and partyShield:getWidth() > 0 and 2 or 2)
+		var_0_7(self, "skull", nil)
 	end
+
+	self:updateStatusIconLayout()
 end
 
-function UICreatureButton:updateEmblem(emblemId)
+function UICreatureButton.updateEmblem(self, emblemId)
 	if not self.creature then
 		return
 	end
 
 	local emblemId = emblemId or self.creature:getEmblem()
-	local emblemWidget = self:getChildById("emblem")
 
 	if emblemId ~= EmblemNone then
-		emblemWidget:setWidth(emblemWidget:getHeight())
-
 		local imagePath, clip = getEmblemImagePath(emblemId)
 
-		emblemWidget:setImageSource(imagePath)
-
-		if clip then
-			emblemWidget:setImageClip(torect(clip))
-		end
+		var_0_7(self, "emblem", imagePath, clip)
 	else
-		emblemWidget:setWidth(0)
+		var_0_7(self, "emblem", nil)
 	end
 
-	emblemWidget:setMarginLeft(0)
+	self:updateStatusIconLayout()
 end
 
-function UICreatureButton:setLifeBarPercent(percent)
+function UICreatureButton.setLifeBarPercent(self, percent)
 	local lifeBarWidget = self:getChildById("lifeBar")
 
 	lifeBarWidget:setPercent(percent)
 	lifeBarWidget:setBackgroundColor(getHealthColorByPercent(percent))
 end
 
-function UICreatureButton:setManaBarPercent(percent)
+function UICreatureButton.setManaBarPercent(self, percent)
 	local manaBarWidget = self:getChildById("manaBar")
 
 	if not manaBarWidget then
@@ -302,36 +380,29 @@ function UICreatureButton:setManaBarPercent(percent)
 	manaBarWidget:setBackgroundColor("#0000FF")
 end
 
-function UICreatureButton:updatePartyShield(shieldId)
+function UICreatureButton.updatePartyShield(self, shieldId)
 	if not self.creature then
 		return
 	end
 
-	local shieldWidget = self:getChildById("partyShield")
-
-	if not shieldWidget then
+	if not var_0_6(self, "partyShield") then
 		return
 	end
 
 	shieldId = shieldId or self.creature:getShield()
 
 	if shieldId ~= ShieldNone then
-		shieldWidget:setWidth(shieldWidget:getHeight())
-
 		local imagePath, clip = getShieldImagePath(shieldId)
 
-		shieldWidget:setImageSource(imagePath)
-
-		if clip then
-			shieldWidget:setImageClip(torect(clip))
-		end
+		var_0_7(self, "partyShield", imagePath, clip)
 	else
-		shieldWidget:setWidth(0)
-		shieldWidget:setImageSource("")
+		var_0_7(self, "partyShield", nil)
 	end
+
+	self:updateStatusIconLayout()
 end
 
-function UICreatureButton:updateShowStatus(showStatus)
+function UICreatureButton.updateShowStatus(self, showStatus)
 	if showStatus == nil and self.creature and self.creature.getShowStatus then
 		showStatus = self.creature:getShowStatus()
 	end
@@ -358,23 +429,25 @@ function UICreatureButton:updateShowStatus(showStatus)
 	end
 end
 
-function UICreatureButton:updateIcons(icons)
+function UICreatureButton.updateIcons(self, icons)
 	for i = 1, 3 do
-		local w = self:getChildById("iconsMonsterSlot" .. i)
+		local w = var_0_6(self, "iconsMonsterSlot" .. i)
 
 		if w then
 			w:setImageSource("")
-			w:setWidth(0)
+			w:setVisible(false)
 		end
 	end
 
 	if not self.creature or not icons or #icons == 0 then
+		self:updateStatusIconLayout()
 		self:updateNameBorder()
 
 		return
 	end
 
 	if not self.creature:isMonster() then
+		self:updateStatusIconLayout()
 		self:updateNameBorder()
 
 		return
@@ -386,41 +459,38 @@ function UICreatureButton:updateIcons(icons)
 		end
 
 		local iconId = iconData[1]
-		local widget = self:getChildById("iconsMonsterSlot" .. index)
+		local widget = var_0_6(self, "iconsMonsterSlot" .. index)
 
 		if widget then
-			widget:setWidth(11)
+			widget:setVisible(true)
 			widget:setImageSource("/images/game/creatures/hud/flags/modifications")
 			widget:setImageClip(torect((iconId - 1) * 11 .. " 0 11 11"))
 		end
 	end
 
+	self:updateStatusIconLayout()
 	self:updateNameBorder()
 end
 
-function UICreatureButton:resetState()
-	self.isHovered = false
+function UICreatureButton.resetState(self)
+	self.isHovered = nil
+	self.creatureHovered = false
 	self.isTarget = false
 	self.isFollowed = false
 
 	self:getChildById("creature"):setBorderWidth(0)
 	self:getChildById("label"):setColor(CreatureButtonColors.onIdle.notHovered)
-	self:getChildById("skull"):setImageSource("")
-	self:getChildById("emblem"):setImageSource("")
 
-	local partyShield = self:getChildById("partyShield")
+	for unusedValue, entry in ipairs(var_0_5) do
+		local w = var_0_6(self, entry)
 
-	if partyShield then
-		partyShield:setImageSource("")
-		partyShield:setWidth(0)
+		if w then
+			w:setImageSource("")
+			w:setVisible(false)
+		end
 	end
 
-	for i = 1, 3 do
-		local w = self:getChildById("iconsMonsterSlot" .. i)
-
-		w:setImageSource("")
-		w:setWidth(0)
-	end
+	self:updateStatusIconLayout()
 
 	local labelWidget = self:getChildById("label")
 

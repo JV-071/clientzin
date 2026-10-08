@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_options/custom_hotkey_manager.lua
-
-CustomHotkeyManager = {
+﻿CustomHotkeyManager = {
 	presets = {},
 	presetToIndex = {},
 	chatMode = CHAT_MODE.ON,
@@ -10,10 +8,10 @@ CustomHotkeyManager = {
 		[CHAT_MODE.OFF] = {}
 	},
 	reservedKeys = {
+		Up = true,
 		Right = true,
 		Left = true,
-		Down = true,
-		Up = true
+		Down = true
 	}
 }
 
@@ -714,8 +712,8 @@ function CustomHotkeyManager.getHotkeyKeys(hotkeyId, preset, chatMode)
 	preset = preset or CustomHotkeyManager.currentPreset
 
 	local keys = {
-		primary = "",
-		secondary = ""
+		secondary = "",
+		primary = ""
 	}
 	local list = CustomHotkeyManager.hotkeys[chatMode][preset]
 
@@ -991,95 +989,54 @@ function CustomHotkeyManager.hotkeyCallback(hotkeyId, chatMode, preset, isPress)
 	local data = hotkey.data or {}
 
 	if action == HOTKEY_ACTION.USE_YOURSELF then
-		if g_game.getClientVersion() < 780 then
-			local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-			if item then
-				g_game.useWith(item, g_game.getLocalPlayer())
-			end
-		else
-			g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
-		end
+		g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
 	elseif action == HOTKEY_ACTION.USE_CROSSHAIR then
-		local item = Item.create(data.itemId)
+		local var_56_3 = Item.create(data.itemId)
 
-		if g_game.getClientVersion() < 780 then
-			item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-		end
-
-		if item then
-			modules.game_interface.startUseWith(item, data.subType or -1)
+		if var_56_3 then
+			modules.game_interface.startUseWith(var_56_3, data.subType or -1)
 		end
 	elseif action == HOTKEY_ACTION.USE_TARGET then
 		local attackingCreature = g_game.getAttackingCreature()
 
 		if not attackingCreature then
-			local item = Item.create(data.itemId)
+			local var_56_5 = Item.create(data.itemId)
 
-			if g_game.getClientVersion() < 780 then
-				item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-			end
-
-			if item then
-				modules.game_interface.startUseWith(item, data.subType or -1)
+			if var_56_5 then
+				modules.game_interface.startUseWith(var_56_5, data.subType or -1)
 			end
 
 			return
 		end
 
 		if attackingCreature:getTile() then
-			if g_game.getClientVersion() < 780 then
-				local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-				if item then
-					g_game.useWith(item, attackingCreature, data.subType or -1)
-				end
-			else
-				g_game.useInventoryItemWith(data.itemId, attackingCreature, data.subType or -1)
-			end
+			g_game.useInventoryItemWith(data.itemId, attackingCreature, data.subType or -1)
 		end
 	elseif action == HOTKEY_ACTION.EQUIP then
-		if g_game.getClientVersion() >= 910 then
-			g_game.equipItem(Item.create(data.itemId))
-		end
+		g_game.equipItem(Item.create(data.itemId))
 	elseif action == HOTKEY_ACTION.USE then
 		if data.useAtCursor then
 			local mousePos = g_window.getMousePosition()
 			local root = modules.game_interface and modules.game_interface.getRootPanel()
 
 			if root then
-				local leaf = root:recursiveGetChildByPos(mousePos, false)
-				local mapWidget = leaf
+				local parent = root:recursiveGetChildByPos(mousePos, false)
 
-				while mapWidget and mapWidget:getClassName() ~= "UIGameMap" do
-					mapWidget = mapWidget:getParent()
+				while parent and parent:getClassName() ~= "UIGameMap" do
+					parent = parent:getParent()
 				end
 
-				if mapWidget then
-					local tile = mapWidget:getTile(mousePos)
+				if parent then
+					local tile = parent:getTile(mousePos)
 
 					if tile then
 						local topThing = tile:getTopUseThing()
 
 						if topThing then
-							if g_game.getClientVersion() < 780 then
-								local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-								if item then
-									g_game.useWith(item, topThing, data.subType or -1)
-								end
-							else
-								g_game.useInventoryItemWith(data.itemId, topThing, data.subType or -1)
-							end
+							g_game.useInventoryItemWith(data.itemId, topThing, data.subType or -1)
 						end
 					end
 				end
-			end
-		elseif g_game.getClientVersion() < 780 then
-			local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-			if item then
-				g_game.use(item)
 			end
 		else
 			g_game.useInventoryItem(data.itemId)

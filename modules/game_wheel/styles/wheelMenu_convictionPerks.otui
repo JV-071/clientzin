@@ -1,0 +1,50 @@
+WheelMenuConvictionPerksPanel < Panel
+  size: 213 159
+  anchors.top: prev.bottom
+  anchors.right: parent.right
+  margin-top: 6
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Conviction Perks')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+  UIWidget
+    id: headerInfo
+    size: 12 12
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 4
+    margin-right: 4
+    image-source: /images/icons/show_gui_help_grey
+    !tooltip: tr('The Conviction Perk is unlocked when the maximum number of\npromotion points for this slice has been assigned.\n\nMost Conviction Perks can be found more than once within the\nWheel of Destiny. When they are unlocked, their effect adds up.')
+  ScrollablePanel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 22
+    margin-left: 6
+    margin-right: 16
+    margin-bottom: 4
+    vertical-scrollbar: tabContentScroll
+    text-wrap: true
+    layout:
+      type: verticalBox
+      align-top: true
+
+  VerticalScrollBar
+    id: tabContentScroll
+    anchors.top: prev.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-right: 2
+    margin-top: -4
+    margin-bottom: 2
+    step: 16
+    visible: false
+    pixels-scroll: true

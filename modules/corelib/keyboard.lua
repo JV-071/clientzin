@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/keyboard.lua
-
-g_keyboard = {}
+﻿g_keyboard = {}
 
 function translateKeyCombo(keyCombo)
 	if not keyCombo then
@@ -33,24 +31,24 @@ function translateKeyCombo(keyCombo)
 end
 
 local KeyDescAliases = {
-	numpad7 = "Num+7",
-	numpad4 = "Num+4",
-	numpad5 = "Num+5",
-	numpad9 = "Num+9",
-	numpad6 = "Num+6",
-	numpad8 = "Num+8",
-	numpad3 = "Num+3",
-	numpad0 = "Num+0",
-	["return"] = "Enter",
 	numpaddivide = "Num+/",
-	numpadmultiply = "Num+*",
-	numpadsubtract = "Num+-",
 	numpaddelete = "Num+Delete",
 	numpaddecimal = "Num+.",
 	numpadadd = "Num++",
 	numpadenter = "Num+Enter",
+	numpad9 = "Num+9",
+	numpad8 = "Num+8",
+	numpad7 = "Num+7",
+	numpad6 = "Num+6",
+	numpad5 = "Num+5",
+	["return"] = "Enter",
+	numpad4 = "Num+4",
+	numpad3 = "Num+3",
 	numpad2 = "Num+2",
-	numpad1 = "Num+1"
+	numpad1 = "Num+1",
+	numpad0 = "Num+0",
+	numpadmultiply = "Num+*",
+	numpadsubtract = "Num+-"
 }
 local NumpadKeyTokens = {
 	"Num++",
@@ -123,11 +121,11 @@ local function splitKeyComboDesc(keyComboDesc)
 end
 
 local KEY_DISPLAY_ABBREVIATIONS = {
-	Delete = "Del",
 	ScrollLock = "ScrLk",
-	PageDown = "PgDown",
 	PageUp = "PgUp",
-	Insert = "Ins"
+	Insert = "Ins",
+	Delete = "Del",
+	PageDown = "PgDown"
 }
 local KEY_TOOLTIP_EXPANSIONS = {}
 
@@ -169,12 +167,59 @@ function g_keyboard.splitKeyComboDesc(keyComboDesc)
 	return splitKeyComboDesc(keyComboDesc)
 end
 
-function g_keyboard.formatHotkeyDisplayText(combo)
+local function var_0_8(combo)
 	if combo == nil or combo == "" then
 		return ""
 	end
 
-	local text = type(combo) == "string" and combo or tostring(combo)
+	local text = combo
+
+	if type(text) ~= "string" then
+		text = tostring(text)
+	end
+
+	if text == "string" then
+		return ""
+	end
+
+	if text == "number" then
+		return ""
+	end
+
+	if text == "nil" then
+		return ""
+	end
+
+	if text == "boolean" then
+		return ""
+	end
+
+	if text == "table" then
+		return ""
+	end
+
+	if text == "function" then
+		return ""
+	end
+
+	if text == "userdata" then
+		return ""
+	end
+
+	if text == "thread" then
+		return ""
+	end
+
+	return text
+end
+
+function g_keyboard.formatHotkeyDisplayText(combo)
+	local text = var_0_8(combo)
+
+	if text == "" then
+		return ""
+	end
+
 	local parts = splitKeyComboDesc(text)
 	local out = {}
 
@@ -186,12 +231,13 @@ function g_keyboard.formatHotkeyDisplayText(combo)
 end
 
 function g_keyboard.formatHotkeyTooltipText(combo)
-	if combo == nil or combo == "" then
+	local var_9_0 = var_0_8(combo)
+
+	if var_9_0 == "" then
 		return ""
 	end
 
-	local text = type(combo) == "string" and combo or tostring(combo)
-	local parts = splitKeyComboDesc(text)
+	local parts = splitKeyComboDesc(var_9_0)
 	local out = {}
 
 	for _, part in ipairs(parts) do
@@ -216,10 +262,6 @@ function g_keyboard.truncateHotkeySlotText(text, maxLen)
 end
 
 local RESERVED_MOVEMENT_HOTKEYS = {
-	Right = true,
-	Left = true,
-	Down = true,
-	Up = true,
 	["Num+PgUp"] = true,
 	["Num+Up"] = true,
 	["Num+Home"] = true,
@@ -227,7 +269,11 @@ local RESERVED_MOVEMENT_HOTKEYS = {
 	["Num+Left"] = true,
 	["Num+PgDown"] = true,
 	["Num+Down"] = true,
-	["Num+End"] = true
+	["Num+End"] = true,
+	Right = true,
+	Left = true,
+	Down = true,
+	Up = true
 }
 
 function g_keyboard.isReservedMovementHotkey(combo)
@@ -338,7 +384,7 @@ local function onWidgetKeyDown(widget, keyCode, keyboardModifiers, keyText)
 
 	signalcall(callback, widget, keyCode)
 
-	callback = widget.boundKeyDownCombos[determineKeyComboDesc(keyCode, keyboardModifiers, keyText)]
+	local callback = widget.boundKeyDownCombos[determineKeyComboDesc(keyCode, keyboardModifiers, keyText)]
 
 	return signalcall(callback, widget, keyCode, keyText)
 end
@@ -356,7 +402,7 @@ local function onWidgetKeyUp(widget, keyCode, keyboardModifiers, keyText)
 
 	signalcall(callback, widget, keyCode)
 
-	callback = widget.boundKeyUpCombos[determineKeyComboDesc(keyCode, keyboardModifiers, keyText)]
+	local callback = widget.boundKeyUpCombos[determineKeyComboDesc(keyCode, keyboardModifiers, keyText)]
 
 	return signalcall(callback, widget, keyCode)
 end
@@ -460,7 +506,8 @@ function g_keyboard.bindKeyPress(keyComboDesc, callback, widget)
 end
 
 local function getUnbindArgs(arg1, arg2)
-	local callback, widget
+	local callback
+	local widget
 
 	if type(arg1) == "function" then
 		callback = arg1

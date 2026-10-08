@@ -30,6 +30,20 @@ PhantomMiniWindow
         anchors.fill: parent
         margin: 1
 
+      UIMinimap
+        id: cavebotMinimap
+        anchors.fill: parent
+        margin: 1
+        visible: false
+        clipping: true
+        draggable: true
+        focusable: false
+        cross: true
+        color: black
+        autowalk: false
+        max-zoom: 4
+        !tooltip: tr('Cavebot route map. Right-click to add a waypoint.')
+
     UIWidget
       id: layersPanel
       size: 20 68
@@ -110,6 +124,7 @@ PhantomMiniWindow
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         size: 20 20
+        !tooltip: tr('Open the Cyclopedia map.')
         @onClick: modules.game_cyclopedia.show("map")
 
         $pressed !disabled:
@@ -337,10 +352,31 @@ PhantomMiniWindow
       margin-left: 3
       margin-bottom: 3
       size: 20 20
+      !tooltip: tr('Open the Cyclopedia map.')
       @onClick: modules.game_cyclopedia.show("map")
 
       $pressed !disabled:
         image-source: /images/automap/automap_buttons
+        image-clip: 20 0 20 20
+
+    UIButton
+      id: cavebotMap
+      // Temporarily hidden while the Cavebot route map is still in development.
+      visible: false
+      image-source: /modules/game_minimap/images/cavebot-helper-button
+      image-clip: 0 0 20 20
+      anchors.left: fullMap.right
+      anchors.bottom: fullMap.bottom
+      margin-left: 3
+      size: 20 20
+      focusable: false
+      !tooltip: tr('Show the Cavebot route map.')
+      @onClick: toggleCavebotMap()
+
+      $pressed:
+        image-clip: 20 0 20 20
+
+      $on:
         image-clip: 20 0 20 20
 
     UIWidget

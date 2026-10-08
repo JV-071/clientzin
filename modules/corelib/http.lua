@@ -1,18 +1,38 @@
-﻿-- chunkname: @/corelib/http.lua
-
-HTTP = {
-	enableTimeOut = false,
-	imageId = 1000,
+﻿HTTP = {
 	agent = "Mozilla/5.0",
 	websocketTimeout = 15,
 	timeout = 60,
+	enableTimeOut = false,
+	imageId = 1000,
 	images = {},
 	operations = {}
 }
 
+local function var_0_0(arg_1_0)
+	if type(arg_1_0) ~= "string" then
+		return false
+	end
+
+	if arg_1_0 == "" or arg_1_0 == "0" then
+		return false
+	end
+
+	if not arg_1_0:find("://", 1, true) and arg_1_0:match("^%d+$") then
+		return false
+	end
+
+	return true
+end
+
 function HTTP.get(url, callback)
 	if not g_http or not g_http.get then
 		return error("HTTP.get is not supported")
+	end
+
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.get ignored invalid url: %s", tostring(url)))
+
+		return nil
 	end
 
 	local operation = g_http.get(url, HTTP.timeout)
@@ -31,6 +51,12 @@ function HTTP.getJSON(url, callback)
 		return error("HTTP.getJSON is not supported")
 	end
 
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.getJSON ignored invalid url: %s", tostring(url)))
+
+		return nil
+	end
+
 	local operation = g_http.get(url, HTTP.timeout)
 
 	HTTP.operations[operation] = {
@@ -46,6 +72,12 @@ end
 function HTTP.post(url, data, callback, checkContentLength)
 	if not g_http or not g_http.post then
 		return error("HTTP.post is not supported")
+	end
+
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.post ignored invalid url: %s", tostring(url)))
+
+		return nil
 	end
 
 	local is_json = false
@@ -75,6 +107,12 @@ function HTTP.postJSON(url, data, callback)
 		return error("HTTP.postJSON is not supported")
 	end
 
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.postJSON ignored invalid url: %s", tostring(url)))
+
+		return nil
+	end
+
 	if type(data) == "table" then
 		data = json.encode(data)
 	end
@@ -96,6 +134,12 @@ function HTTP.download(url, file, callback, progressCallback)
 		return error("HTTP.download is not supported")
 	end
 
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.download ignored invalid url: %s", tostring(url)))
+
+		return nil
+	end
+
 	local operation = g_http.download(url, file, HTTP.timeout)
 
 	HTTP.operations[operation] = {
@@ -112,6 +156,12 @@ end
 function HTTP.downloadImage(url, callback)
 	if not g_http or not g_http.download then
 		return error("HTTP.downloadImage is not supported")
+	end
+
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.downloadImage ignored invalid url: %s", tostring(url)))
+
+		return nil
 	end
 
 	if HTTP.images[url] ~= nil then
@@ -141,6 +191,12 @@ end
 function HTTP.webSocket(url, callbacks, timeout, jsonWebsocket)
 	if not g_http or not g_http.ws then
 		return error("WebSocket is not supported")
+	end
+
+	if not var_0_0(url) then
+		g_logger.warning(string.format("HTTP.webSocket ignored invalid url: %s", tostring(url)))
+
+		return nil
 	end
 
 	if not timeout or timeout < 1 then
@@ -227,9 +283,7 @@ function HTTP.onGet(operationId, url, err, data)
 end
 
 function HTTP.onGetProgress(operationId, url, progress)
-	local operation = HTTP.operations[operationId]
-
-	if operation == nil then
+	if HTTP.operations[operationId] == nil then
 		return
 	end
 end
@@ -269,9 +323,7 @@ function HTTP.onPost(operationId, url, err, data)
 end
 
 function HTTP.onPostProgress(operationId, url, progress)
-	local operation = HTTP.operations[operationId]
-
-	if operation == nil then
+	if HTTP.operations[operationId] == nil then
 		return
 	end
 end

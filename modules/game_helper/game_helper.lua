@@ -1,199 +1,282 @@
-﻿-- chunkname: @/game_helper/game_helper.lua
-
-helperWindow = nil
+﻿helperWindow = nil
 helperButton = nil
 currentTab = nil
 
 local helperConfig = {}
-local modulesByTab = {}
+local var_0_1 = {}
 local helperLanguage = "en"
 local helperUiLanguageCaptured = false
 local HELPER_PT_TRANSLATIONS = {
-	Condition = "Condicao",
-	Name = "Nome",
-	["Combo priority"] = "Prioridade de combo",
-	["Clear Action"] = "Limpar Acao",
-	Close = "Fechar",
-	["Change Gold"] = "Trocar Ouro",
-	["Auto Training"] = "Treino Automatico",
-	["Auto Invite"] = "Convite Automatico",
-	["Auto Ammo"] = "Municao Automatica",
-	["Auto Accept"] = "Aceite Automatico",
-	["Assign Spell"] = "Selecionar Magia",
-	["Assign Exercise Weapon"] = "Selecionar Arma de Exercicio",
-	["Assign Ammunition"] = "Selecionar Municao",
-	["Anti Idle"] = "Anti Inatividade",
-	["Add Selected"] = "Adicionar Selecionado",
-	["Add Spell"] = "Adicionar Magia",
-	["Add Player"] = "Adicionar Jogador",
-	["Add Potion"] = "Adicionar Pocao",
-	Add = "Adicionar",
-	Action = "Acao",
-	Cancel = "Cancelar",
-	["Type to search"] = "Digite para pesquisar",
-	["Only show learnt spells"] = "Mostrar somente magias aprendidas",
-	["Target + Shooter Hotkey"] = "Hotkey do Target + Shooter",
-	["Visible Players"] = "Jogadores Visiveis",
-	["When HP"] = "Se HP",
-	Value = "Valor",
-	["Source:"] = "Origem:",
-	["Spell Healing"] = "Cura por Magia",
-	["Shooter Settings"] = "Configuracoes do Shooter",
-	["Shooter List"] = "Lista do Shooter",
-	["Send invite to (max 4 players):"] = "Enviar convite para (max. 4 jogadores):",
-	["Select an exercise weapon first."] = "Selecione uma arma de exercicio primeiro.",
-	Save = "Salvar",
-	Rename = "Renomear",
-	Remove = "Remover",
-	["Refresh Map"] = "Atualizar Mapa",
-	Reconnect = "Reconectar",
-	["Mana Training"] = "Treino de Mana",
-	["PZ Cast"] = "Conjurar em PZ",
-	["Limit:"] = "Limite:",
-	["Priority: "] = "Prior.: ",
-	Load = "Carregar",
-	["Priority:"] = "Prior.:",
-	["Leader (Accept Party):"] = "Lider (aceitar):",
 	["Preset:"] = "Perfil:",
-	Haste = "Acelerar",
+	["Auto Ammo"] = "Municao Automatica",
 	["Presets:"] = "Perfis:",
-	["Heal Friend"] = "Cura de Aliado",
+	["Auto Accept"] = "Aceite Automatico",
 	["Potion Healing"] = "Cura por Pocao",
-	["General Settings"] = "Configuracoes Gerais",
+	["Assign Spell"] = "Selecionar Magia",
 	["Posture:"] = "Postura:",
-	Enabled = "Ativado",
+	["Assign Exercise Weapon"] = "Selecionar Arma de Exercicio",
 	["Add players using the button below."] = "Adicione jogadores usando o botao abaixo.",
-	["Enable Shooter"] = "Ativar Shooter",
+	["Assign Ammunition"] = "Selecionar Municao",
 	["Higher priority"] = "Maior prioridade",
-	["Enable Helper"] = "Ativar Helper",
+	["Anti Idle"] = "Anti Inatividade",
 	["No exercise dummy found."] = "Nenhum boneco de treino encontrado.",
-	["Enable Healing"] = "Ativar Cura",
+	["Add Selected"] = "Adicionar Selecionado",
 	["No party players."] = "Nenhum jogador no grupo.",
-	["Enable Heal Friend"] = "Cura em Aliado",
+	["Add Spell"] = "Adicionar Magia",
 	Players = "Jogadores",
-	["Enable Auto Invite"] = "Ativar Convite Automatico",
+	["Add Player"] = "Adicionar Jogador",
 	["Player name"] = "Nome do jogador",
-	["Enable Auto Accept"] = "Ativar Aceite Automatico",
+	["Add Potion"] = "Adicionar Pocao",
 	["Player List"] = "Lista de Jogadores",
-	["Edit Spell"] = "Editar Magia",
+	["Add Waypoint"] = "Adicionar Waypoint",
+	Position = "Posicao",
+	Add = "Adicionar",
 	Player = "Jogador",
-	Edit = "Editar",
+	Action = "Acao",
 	["Specific Players"] = "Jogadores Especificos",
-	["Eat Food"] = "Comer",
+	Record = "Gravar",
 	["Configured Players"] = "Jogadores Configurados",
-	["Distance:"] = "Dist.:",
+	["Refresh Map"] = "Atualizar Mapa",
 	["Party players: 0"] = "Jogadores no grupo: 0",
-	Disabled = "Desativado",
+	Remove = "Remover",
 	["Party Players"] = "Jogadores do Grupo",
-	Delete = "Excluir",
+	Rename = "Renomear",
 	["Open Helper"] = "Abrir Helper",
+	Renew = "Renovar",
+	New = "Novo",
+	["Route Configuration"] = "Configuracao da Rota",
+	Name = "Nome",
+	Save = "Salvar",
+	["Mana Training"] = "Treino de Mana",
+	["Luring:"] = "Luring:",
+	["Select an exercise weapon first."] = "Selecione uma arma de exercicio primeiro.",
+	["Limit:"] = "Limite:",
+	["Send invite to (max 4 players):"] = "Enviar convite para (max. 4 jogadores):",
+	Load = "Carregar",
+	["Shooter List"] = "Lista do Shooter",
+	["Leader (Accept Party):"] = "Lider (aceitar):",
+	["Shooter Settings"] = "Configuracoes do Shooter",
+	["Interval (s)"] = "Intervalo (s)",
+	["Spell Healing"] = "Cura por Magia",
+	Haste = "Acelerar",
+	Stop = "Parar",
+	["Heal Friend"] = "Cura de Aliado",
+	Run = "Voltar",
+	["General Settings"] = "Configuracoes Gerais",
+	["Source:"] = "Origem:",
+	Enabled = "Ativado",
+	["Stop:"] = "Parar:",
+	["Walk diagonally"] = "Andar na diagonal",
+	Passage = "Passagem",
+	["Start at nearest waypoint"] = "Iniciar no waypoint mais proximo",
+	Stairs = "Escada",
+	tiles = "SQMs",
+	Teleport = "Teleporte",
+	["Record every:"] = "Gravar a cada:",
+	["Time left:"] = "Tempo restante:",
+	["Avoid Echo Raid"] = "Evitar a Echo Raid",
+	["3:00 hours"] = "3:00 horas",
+	["Step on Echo Raid"] = "Pisar na Echo Raid",
+	["0:00 hours"] = "0:00 horas",
+	["Echo Raid Mode:"] = "Modo Echo Raid:",
+	Expired = "Expirado",
+	["General Cavebot Settings"] = "Configuracoes Gerais do Cavebot",
+	Up = "Cima",
+	["Enable Target"] = "Ativar Target",
+	Down = "Baixo",
+	["Enable Shooter"] = "Ativar Shooter",
+	["Resume:"] = "Voltar:",
+	["Enable Heal"] = "Ativar Heal",
+	Value = "Valor",
+	["Enable Healing"] = "Ativar Cura",
+	["When HP"] = "Se HP",
+	["Enable Cavebot"] = "Ativar Cavebot",
+	["Visible Players"] = "Jogadores Visiveis",
+	["Edit Spell"] = "Editar Magia",
+	Waypoints = "Waypoints",
+	Edit = "Editar",
+	["Only show learnt spells"] = "Mostrar somente magias aprendidas",
+	["Eat Food"] = "Comer",
+	["Type to search"] = "Digite para pesquisar",
+	["Distance:"] = "Dist.:",
+	Cancel = "Cancelar",
+	Disabled = "Desativado",
+	["Del."] = "Rem.",
+	Delete = "Excluir",
+	Reconnect = "Reconectar",
 	Creature = "Criatura",
-	New = "Novo"
+	["PZ Cast"] = "Conjurar em PZ",
+	Condition = "Condicao",
+	["Priority: "] = "Prior.: ",
+	["Prioritize Hotkeys"] = "Priorizar Hotkeys",
+	["Priority:"] = "Prior.:",
+	["Combo priority"] = "Prioridade de combo",
+	Earth = "Terra",
+	["Clear All"] = "Limpar Tudo",
+	Ice = "Gelo",
+	["Clear Action"] = "Limpar Acao",
+	Fire = "Fogo",
+	Clear = "Limpar",
+	Energy = "Energia",
+	Close = "Fechar",
+	["Which elemental line should the rotation be built around?"] = "Em torno de qual linha elemental a rotacao deve ser montada?",
+	["Change Gold"] = "Trocar Ouro",
+	["Choose Element"] = "Escolha o Elemento",
+	Center = "Centralizar",
+	["The preset \"%s\" already exists. Replace it?"] = "O preset \"%s\" ja existe. Substituir?",
+	["Renew Cavebot access for 1 hour?"] = "Renovar o Cavebot por 1 hora?",
+	["Overwrite Preset"] = "Substituir Preset",
+	["Renew Cavebot Time"] = "Renovar Tempo do Cavebot",
+	Yes = "Sim",
+	["Cavebot Map"] = "Mapa do Cavebot",
+	No = "Nao",
+	["Auto Training"] = "Treino Automatico",
+	["Preset generation failed."] = "Falha ao gerar o preset.",
+	["Auto Invite"] = "Convite Automatico"
 }
-local HELPER_PT_TOOLTIP_TRANSLATIONS = {
-	["PZ Auto:<br><li>Enabled: pauses Target inside a protection zone and restores it after leaving.</li><li>Disabled: turns Target off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>"] = "PZ Auto:<br><li>Ativado: pausa o Target dentro de uma protection zone e restaura ao sair.</li><li>Desativado: desliga o Target dentro de uma protection zone. Ele permanece desligado ao sair e nao pode ser ativado enquanto voce estiver nela.</li>",
-	["Auto-Switch Hotkey Preset:<br><li>On login, selects the client hotkey preset and Helper preset whose name exactly matches the character name.</li><li>All Helper tabs, profiles and hotkeys are always stored separately for each character.</li><li>If there is no matching preset, each system keeps its current preset.</li>"] = "Troca Automatica de Preset de Hotkeys:<br><li>Ao entrar, seleciona o preset de hotkeys do cliente e o perfil do Helper cujo nome corresponde exatamente ao nome do personagem.</li><li>Todas as abas, perfis e hotkeys do Helper sao sempre salvos separadamente para cada personagem.</li><li>Se nao houver um preset correspondente, cada sistema mantem seu preset atual.</li>",
-	["Combo priority: when enabled, casts your enabled spells as a rotating combo (round-robin), reading the list from top to bottom, instead of always repeating the highest-priority ready spell."] = "Prioridade de combo: quando ativada, conjura as magias habilitadas em rotacao, lendo a lista de cima para baixo, em vez de repetir sempre a magia pronta de maior prioridade.",
-	["Metrics used in the When row:<br><li>HP%: Health Points percentage.</li><li>MP%: Mana Points percentage.</li><br>Condition logic:<br><li>and: both conditions must be true.</li><li>or: at least one condition must be true.</li><br>Condition operators used in the Is row:<br><li>&lt; : value is below the threshold.</li><li>&lt;= : value is at or below the threshold.</li><li>&gt; : value is above the threshold.</li><li>&gt;= : value is at or above the threshold.</li>"] = "Metricas usadas na linha Quando:<br><li>HP%: percentual de pontos de vida.</li><li>MP%: percentual de pontos de mana.</li><br>Logica das condicoes:<br><li>e: ambas as condicoes devem ser verdadeiras.</li><li>ou: pelo menos uma condicao deve ser verdadeira.</li><br>Operadores usados na linha E:<br><li>&lt; : valor abaixo do limite.</li><li>&lt;= : valor igual ou abaixo do limite.</li><li>&gt; : valor acima do limite.</li><li>&gt;= : valor igual ou acima do limite.</li>",
-	["The order of entries in the list determines the shooter priority. Entries at the top are checked first.<br><br><li>Drag an entry up or down to reorder it.</li><li>Right-click an entry to open a menu and change its order in the list.</li><li>Uncheck an entry to temporarily disable that spell or rune without removing it.</li>"] = "A ordem das entradas define a prioridade do Shooter. As entradas no topo sao verificadas primeiro.<br><br><li>Arraste uma entrada para cima ou para baixo para reordena-la.</li><li>Clique com o botao direito para abrir o menu e alterar sua ordem.</li><li>Desmarque uma entrada para desativar temporariamente a magia ou runa sem remove-la.</li>",
-	["Shooter entry conditions:<br><li>HP%: target health percentage required to use this entry.</li><li>Creatures: minimum number of creatures needed for area spells or runes, unless force cast is enabled.</li><li>Use to: uses the selected spell or rune on the target, yourself, or the best position for area hits.</li><li>Harmony: minimum harmony required for spells that use harmony.</li>"] = "Condicoes da entrada do Shooter:<br><li>HP%: percentual de vida do alvo necessario para usar esta entrada.</li><li>Criaturas: quantidade minima de criaturas para magias ou runas de area, exceto quando o uso forcado estiver ativo.</li><li>Usar em: usa a magia ou runa no alvo, em voce ou na melhor posicao para ataques em area.</li><li>Harmonia: harmonia minima exigida pelas magias que usam esse recurso.</li>",
-	["Heal Friend:<br><li>Only confirmed party members are added automatically.</li><li>Players at the top have higher healing priority than players below. Drag a player up or down to reorder.</li><li>Only party members visible on the map can be healed.</li>"] = "Cura de Aliado:<br><li>Somente membros confirmados do grupo sao adicionados automaticamente.</li><li>Jogadores no topo possuem mais prioridade de cura que os de baixo. Arraste um jogador para cima ou para baixo para reordenar.</li><li>Somente membros do grupo visiveis no mapa podem ser curados.</li>",
-	["Auto-turn: before casting this directional spell, turn toward the direction that hits the most creatures. If unchecked, the spell is simply forced out in your current facing."] = "Giro automatico: antes de conjurar esta magia direcional, vira para a direcao que atinge mais criaturas. Se desmarcado, a magia e lancada na direcao atual.",
-	["Action: Restore Balance\nFormula: exura tio sio\nCooldown: 2s\nMana: 120"] = "Acao: Restaurar Equilibrio\nFormula: exura tio sio\nRecarga: 2s\nMana: 120",
-	["Action: Cast Nature's Embrace\nFormula: exura gran sio\nCooldown: 1min\nMana: 400"] = "Acao: Conjurar Abraco da Natureza\nFormula: exura gran sio\nRecarga: 1min\nMana: 400",
-	["Action: Cast Heal Friend\nFormula: exura sio\nCooldown: 1s\nMana: 120"] = "Acao: Curar Aliado\nFormula: exura sio\nRecarga: 1s\nMana: 120",
-	["Maximum number of eligible players (1-50)."] = "Numero maximo de jogadores elegiveis (1-50).",
-	["Healing actions are checked by their configured HP/MP percent, not by their visual position."] = "As acoes de cura sao verificadas pelo percentual de HP/MP configurado, nao pela posicao visual.",
-	["Auto Save:<br><li>Saves every change automatically in the active profile.</li><li>When disabled, changes remain temporary until you use Save.</li>"] = "Salvar Auto:<br><li>Salva automaticamente cada alteracao no perfil ativo.</li><li>Quando desativado, as alteracoes ficam temporarias ate voce usar Salvar.</li>",
-	["Target + Shooter hotkey:<br><li>Assigns an independent key that toggles Target and Shooter together.</li><li>Does not change the individual hotkeys in either tab.</li><li>The key must be available; occupied keys cannot be overwritten.</li>"] = "Hotkey do Target + Shooter:<br><li>Define uma tecla independente que alterna Target e Shooter juntos.</li><li>Nao altera as hotkeys individuais de nenhuma das abas.</li><li>A tecla precisa estar livre; hotkeys ocupadas nao podem ser substituidas.</li>",
-	["Check this box to activate the Helper."] = "Marque esta caixa para ativar o Helper.",
+local var_0_5 = {
+	["Prioritize Hotkeys:<br><li>When an Action Bar hotkey uses an item or casts a spell, the Helper briefly pauses its automatic actions.</li><li>The pause lasts 200-400 ms based on ping and does not override server cooldowns.</li>"] = "Priorizar Hotkeys:<br><li>Quando uma hotkey da Action Bar usa um item ou conjura uma magia, o Helper pausa brevemente suas acoes automaticas.</li><li>A pausa dura de 200 a 400 ms conforme o ping e nao ignora os cooldowns do servidor.</li>",
+	["Move the selected waypoint down."] = "Move o waypoint selecionado para baixo.",
+	["Auto-Switch Hotkey Preset:<br><li>On login, selects the client hotkey preset and shared Helper profile whose name exactly matches the character name.</li><li>Helper profiles are shared by all characters and accounts in this client; the active selection and local preferences remain per character.</li><li>If there is no matching preset, each system keeps its current preset.</li>"] = "Troca Automatica de Preset de Hotkeys:<br><li>Ao entrar, seleciona o preset de hotkeys do cliente e o perfil compartilhado do Helper cujo nome corresponde exatamente ao nome do personagem.</li><li>Os perfis do Helper sao compartilhados por todos os personagens e contas deste cliente; a selecao ativa e as preferencias locais continuam por personagem.</li><li>Se nao houver um preset correspondente, cada sistema mantem seu preset atual.</li>",
+	["Right-click this Cavebot map to add Position or Passage waypoints."] = "Clique com o botao direito no mapa do Cavebot para adicionar waypoints de Posicao ou Passagem.",
+	["Auto Save:<br><li>Saves every change automatically in the active shared profile.</li><li>All characters and accounts in this client can use the updated profile.</li><li>When disabled, changes remain temporary until you use Save.</li>"] = "Salvar Auto:<br><li>Salva automaticamente cada alteracao no perfil compartilhado ativo.</li><li>Todos os personagens e contas deste cliente podem usar o perfil atualizado.</li><li>Quando desativado, as alteracoes ficam temporarias ate voce usar Salvar.</li>",
+	["Start recording waypoints while you walk."] = "Inicia a gravacao de waypoints enquanto voce caminha.",
 	["Auto Accept:<br><li>Uses only the leader field above.</li><li>When enabled, the helper accepts party invites from the configured leader.</li><li>The leader must be nearby or visible when the invite is detected.</li>"] = "Aceite Automatico:<br><li>Usa apenas o campo de lider acima.</li><li>Quando ativado, aceita convites de grupo enviados pelo lider configurado.</li><li>O lider deve estar proximo ou visivel quando o convite for detectado.</li>",
+	["Stop recording waypoints."] = "Para de gravar waypoints.",
 	["Auto Invite:<br><li>Uses only the invite list above.</li><li>When enabled, the helper invites configured players when they are nearby and not already in party.</li><li>Fill up to four player names.</li>"] = "Convite Automatico:<br><li>Usa apenas a lista de convites acima.</li><li>Quando ativado, convida os jogadores configurados que estiverem proximos e ainda nao estiverem no grupo.</li><li>Preencha ate quatro nomes de jogadores.</li>",
+	["Zoom out."] = "Diminuir zoom.",
 	["Shooter settings:<br><li>Presets save independent shooter lists.</li><li>Use the pencil beside a preset to assign a hotkey that selects it.</li><li>PZ Auto enabled: pauses Shooter inside a protection zone and restores it after leaving.</li><li>PZ Auto disabled: turns Shooter off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>"] = "Configuracoes do Shooter:<br><li>Os perfis salvam listas independentes do Shooter.</li><li>Use o lapis ao lado de um perfil para definir uma hotkey que o seleciona.</li><li>PZ Auto ativado: pausa o Shooter dentro de uma protection zone e restaura ao sair.</li><li>PZ Auto desativado: desliga o Shooter dentro de uma protection zone. Ele permanece desligado ao sair e nao pode ser ativado enquanto voce estiver nela.</li>",
-	["PZ Auto:<br><li>Enabled: pauses Shooter inside a protection zone and restores it after leaving.</li><li>Disabled: turns Shooter off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>"] = "PZ Auto:<br><li>Ativado: pausa o Shooter dentro de uma protection zone e restaura ao sair.</li><li>Desativado: desliga o Shooter dentro de uma protection zone. Ele permanece desligado ao sair e nao pode ser ativado enquanto voce estiver nela.</li>"
+	["Zoom in."] = "Aumentar zoom.",
+	["PZ Auto:<br><li>Enabled: pauses Shooter inside a protection zone and restores it after leaving.</li><li>Disabled: turns Shooter off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>"] = "PZ Auto:<br><li>Ativado: pausa o Shooter dentro de uma protection zone e restaura ao sair.</li><li>Desativado: desliga o Shooter dentro de uma protection zone. Ele permanece desligado ao sair e nao pode ser ativado enquanto voce estiver nela.</li>",
+	["Show the floor above."] = "Mostrar o andar acima.",
+	["PZ Auto:<br><li>Enabled: pauses Target inside a protection zone and restores it after leaving.</li><li>Disabled: turns Target off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>"] = "PZ Auto:<br><li>Ativado: pausa o Target dentro de uma protection zone e restaura ao sair.</li><li>Desativado: desliga o Target dentro de uma protection zone. Ele permanece desligado ao sair e nao pode ser ativado enquanto voce estiver nela.</li>",
+	["Show the floor below."] = "Mostrar o andar abaixo.",
+	["Combo priority: when enabled, casts your enabled spells as a rotating combo (round-robin), reading the list from top to bottom, instead of always repeating the highest-priority ready spell."] = "Prioridade de combo: quando ativada, conjura as magias habilitadas em rotacao, lendo a lista de cima para baixo, em vez de repetir sempre a magia pronta de maior prioridade.",
+	["This map belongs to Cavebot. Right-click it to add Position, Box or Passage waypoints; drag to move the camera."] = "Este mapa pertence ao Cavebot. Clique com o botao direito para adicionar waypoints de Posicao, Box ou Passagem; arraste para mover a camera.",
+	["The order of entries in the list determines the shooter priority. Entries at the top are checked first.<br><br><li>Drag an entry up or down to reorder it.</li><li>Right-click an entry to open a menu and change its order in the list.</li><li>Uncheck an entry to temporarily disable that spell or rune without removing it.</li>"] = "A ordem das entradas define a prioridade do Shooter. As entradas no topo sao verificadas primeiro.<br><br><li>Arraste uma entrada para cima ou para baixo para reordena-la.</li><li>Clique com o botao direito para abrir o menu e alterar sua ordem.</li><li>Desmarque uma entrada para desativar temporariamente a magia ou runa sem remove-la.</li>",
+	["Remove every waypoint from the current route."] = "Remove todos os waypoints da rota atual.",
+	["Heal Friend:<br><li>Only confirmed party members are added automatically.</li><li>Players at the top have higher healing priority than players below. Drag a player up or down to reorder.</li><li>Only party members visible on the map can be healed.</li>"] = "Cura de Aliado:<br><li>Somente membros confirmados do grupo sao adicionados automaticamente.</li><li>Jogadores no topo possuem mais prioridade de cura que os de baixo. Arraste um jogador para cima ou para baixo para reordenar.</li><li>Somente membros do grupo visiveis no mapa podem ser curados.</li>",
+	["Add a Position waypoint at your current position."] = "Adiciona um waypoint de Posicao na sua posicao atual.",
+	["Action: Restore Balance\nFormula: exura tio sio\nCooldown: 2s\nMana: 120"] = "Acao: Restaurar Equilibrio\nFormula: exura tio sio\nRecarga: 2s\nMana: 120",
+	["Add a Box waypoint at your current position. The route holds there while monsters are around."] = "Adiciona um waypoint de Box na sua posicao atual. A rota segura nele enquanto houver monstros por perto.",
+	["Action: Cast Nature's Embrace\nFormula: exura gran sio\nCooldown: 1min\nMana: 400"] = "Acao: Conjurar Abraco da Natureza\nFormula: exura gran sio\nRecarga: 1min\nMana: 400",
+	["Luring modes:<br><li>Disabled: follows the route normally and pauses while Target attacks.</li><li>Continuous: follows the route while Target attacks, without monster-count or Anti-Lost stops; only Speed controls walking.</li><li>Stop / Run: stops the route when the reachable monster count reaches Stop and resumes when it falls to Run.</li><li>Anti-Lost: advances in controlled sections and waits for reachable trailing monsters.</li><br>Stop and Run also control Box waypoints in every mode except Continuous, which passes through them without holding.<br>Only visible, reachable monsters on the player floor are considered."] = "Modos de Luring:<br><li>Desativado: segue a rota normalmente e pausa enquanto o Target ataca.</li><li>Continuo: segue a rota enquanto o Target ataca, sem paradas por quantidade de monstros ou Anti-Lost; somente a Velocidade controla a caminhada.</li><li>Parar / Voltar: para a rota quando a quantidade de monstros alcancaveis chega em Parar e retoma quando cai para Voltar.</li><li>Anti-Lost: avanca em trechos controlados e espera monstros alcancaveis que ficaram para tras.</li><br>Parar e Voltar tambem controlam waypoints de Box em todos os modos, exceto Continuo, que passa por eles sem segurar a rota.<br>Somente monstros visiveis e alcancaveis no andar do jogador sao considerados.",
+	["Action: Cast Heal Friend\nFormula: exura sio\nCooldown: 1s\nMana: 120"] = "Acao: Curar Aliado\nFormula: exura sio\nRecarga: 1s\nMana: 120",
+	["Number of monsters that stops the route in Stop / Run mode, or that holds a Box waypoint outside Continuous mode."] = "Quantidade de monstros que para a rota no modo Parar / Voltar, ou que segura um waypoint de Box fora do modo Continuo.",
+	["Maximum number of eligible players (1-50)."] = "Numero maximo de jogadores elegiveis (1-50).",
+	["Number of monsters that resumes the route, and that releases a Box waypoint outside Continuous mode."] = "Quantidade de monstros que retoma a rota, e que libera um waypoint de Box fora do modo Continuo.",
+	["Healing actions are checked by their configured HP/MP percent, not by their visual position."] = "As acoes de cura sao verificadas pelo percentual de HP/MP configurado, nao pela posicao visual.",
+	["Speed:"] = "Vel.:",
+	["Auto preset:<br><li>Builds a Shooter rotation, Healing entries, Target defaults, posture and Auto Haste from this character vocation and level.</li><li>Only spells the character already meets the level for are added. Wheel of Destiny spells are only added when they are unlocked on the active wheel.</li><li>Attack runes are added disabled - enable them if you carry runes.</li><li>The result is saved as its own profile (e.g. Auto RP), so the current profile is not changed.</li>"] = "Preset automatico:<br><li>Monta a rotacao do Shooter, as entradas de cura, os padroes do Target, a postura e o Auto Haste a partir da vocacao e do level deste personagem.</li><li>So entram magias cujo level o personagem ja alcancou. Magias da Wheel of Destiny so entram se estiverem desbloqueadas na roda ativa.</li><li>Runas de ataque entram desligadas - ative se estiver carregando runa.</li><li>O resultado e salvo como um perfil proprio (ex.: Auto RP), sem alterar o perfil atual.</li>",
+	["Route walking speed from 5% to 100% in 5% steps. Lower values walk in short sections and give monsters more time to follow; 100% walks the whole path at once. Use the mouse wheel over the bar to adjust it."] = "Velocidade de caminhada da rota de 5% a 100%, em passos de 5%. Valores menores caminham em trechos curtos e dao mais tempo para os monstros acompanharem; 100% percorre o caminho inteiro de uma vez. Use a roda do mouse sobre a barra para ajustar.",
+	["Move the selected waypoint up."] = "Move o waypoint selecionado para cima.",
+	["Configure Echo Raid behavior."] = "Configure o comportamento da Echo Raid.",
+	["Record a passage that completes after a floor change or teleport."] = "Grava uma passagem concluida apos mudar de andar ou teleportar.",
+	["Number of tiles walked between automatically recorded waypoints (1-50)."] = "Quantidade de SQMs percorridos entre os waypoints gravados automaticamente (1-50).",
+	["Record the current player position:"] = "Gravar a posicao atual do jogador:",
+	["Start from the nearest reachable positional waypoint on the current floor whenever Cavebot or Helper is enabled."] = "Inicia pelo waypoint de posicao alcancavel mais proximo no andar atual sempre que o Cavebot ou o Helper for ativado.",
+	["Center the Cavebot map on the player."] = "Centraliza o mapa do Cavebot no jogador.",
+	["Walk diagonally:<br><li>Checked: the Cavebot takes diagonal steps to reach each waypoint in the fewest steps.</li><li>Unchecked (default): it takes the fastest route, which avoids diagonal steps because each one takes longer than a straight step.</li>"] = "Andar na diagonal:<br><li>Marcado: o Cavebot usa passos na diagonal para chegar a cada waypoint com o menor numero de passos.</li><li>Desmarcado (padrao): segue a rota mais rapida, que evita passos na diagonal porque cada um demora mais que um passo reto.</li>",
+	["Record the current player position as a waypoint."] = "Grava a posicao atual do jogador como waypoint.",
+	["Select a saved route configuration, then press Load."] = "Selecione uma configuracao de rota salva e pressione Carregar.",
+	["Cast with 1+ (single-target spells and runes):<br><li>Checked (default): casts on your target no matter how many monsters are on screen.</li><li>Unchecked: casts only when your target is the only monster on screen. With 2 or more, this entry waits and leaves the attack cooldown free for the area spells in your list.</li>"] = "Cast with 1+ = usar com 1 ou mais monstros (magias e runas de alvo unico):<br><li>Marcado (padrao): usa no seu alvo, nao importa quantos monstros estejam na tela.</li><li>Desmarcado: usa somente quando o seu alvo e o unico monstro na tela. Com 2 ou mais, esta entrada espera e deixa a recarga de ataque livre para as magias de area da sua lista.</li>",
+	["Type a route name. Save updates it or creates a new configuration."] = "Digite um nome de rota. Salvar atualiza ou cria uma nova configuracao.",
+	["Auto-turn: before casting this directional spell, turn toward the direction that hits the most creatures. If unchecked, the spell is simply forced out in your current facing."] = "Giro automatico: antes de conjurar esta magia direcional, vira para a direcao que atinge mais criaturas. Se desmarcado, a magia e lancada na direcao atual.",
+	["Minimum time in seconds between automatic casts of this pulling spell. The server cooldown is still respected."] = "Tempo minimo em segundos entre usos automaticos desta magia de puxar. A recarga do servidor continua sendo respeitada.",
+	["Shooter entry conditions:<br><li>HP%: target health percentage required to use this entry.</li><li>Creatures: minimum number needed for area spells, area runes, pulling spells, timed support spells, or exori amp kor. Exori amp kor counts nearby monsters scanned by the Shooter.</li><li>Cast with 1+: other single-target spells and runes only. Uncheck it to use the entry only when your target is the only monster on screen.</li><li>Timer (s): minimum time in seconds between timed-spell casts; server cooldown is always respected.</li><li>Use to: uses the selected spell or rune on the target, yourself, or the best position for area hits.</li><li>Harmony: minimum harmony required for spells that use harmony.</li>"] = "Condicoes da entrada do Shooter:<br><li>HP%: percentual de vida do alvo necessario para usar esta entrada.</li><li>Criaturas: quantidade minima para magias de area, runas de area, magias de puxar, magias de suporte com temporizador ou exori amp kor. Exori amp kor conta os monstros proximos identificados pelo Shooter.</li><li>Cast with 1+: so para as outras magias e runas de alvo unico. Desmarque para usar a entrada somente quando o seu alvo for o unico monstro na tela.</li><li>Timer (s): tempo minimo em segundos entre usos da magia com temporizador; a recarga do servidor sempre e respeitada.</li><li>Usar em: usa a magia ou runa no alvo, em voce ou na melhor posicao para ataques em area.</li><li>Harmonia: harmonia minima exigida pelas magias que usam esse recurso.</li>",
+	["Metrics used in the When row:<br><li>HP%: Health Points percentage.</li><li>MP%: Mana Points percentage.</li><br>Condition logic:<br><li>and: both conditions must be true.</li><li>or: at least one condition must be true.</li><br>Condition operators used in the Is row:<br><li>&lt; : value is below the threshold.</li><li>&lt;= : value is at or below the threshold.</li><li>&gt; : value is above the threshold.</li><li>&gt;= : value is at or above the threshold.</li>"] = "Metricas usadas na linha Quando:<br><li>HP%: percentual de pontos de vida.</li><li>MP%: percentual de pontos de mana.</li><br>Logica das condicoes:<br><li>e: ambas as condicoes devem ser verdadeiras.</li><li>ou: pelo menos uma condicao deve ser verdadeira.</li><br>Operadores usados na linha E:<br><li>&lt; : valor abaixo do limite.</li><li>&lt;= : valor igual ou abaixo do limite.</li><li>&gt; : valor acima do limite.</li><li>&gt;= : valor igual ou acima do limite.</li>",
+	["Creates a new empty shared profile. The current profile is kept as it is."] = "Cria um novo perfil compartilhado vazio. O perfil atual continua como esta.",
+	["Renames this shared profile for every character."] = "Renomeia este perfil compartilhado para todos os personagens.",
+	["Deletes this shared profile for every character."] = "Exclui este perfil compartilhado para todos os personagens.",
+	["Saves changes to this shared profile for every character."] = "Salva as alteracoes neste perfil compartilhado para todos os personagens.",
+	["Shared Helper profile. Saving changes updates it for every character and account in this client."] = "Perfil compartilhado do Helper. Salvar alteracoes o atualiza para todos os personagens e contas deste cliente."
 }
 local HELPER_LANGUAGE_SKIPPED_PANELS = {
 	targetPanel = true,
-	MainMenuLeft = true
+	MainMenuLeft = true,
+	cavebotTimeValueLabel = true
 }
-local helperStatsWindow, helperTickEvent
+local helperStatsWindow
+local helperTickEvent
 local helperTickIntervalMs = 50
 local combatTickEvent
 local combatTickIntervalMs = 50
 local boundTargetHotkeyWindow
-local targetHotkeyPendingCombo = ""
-local combatCreatureAppearHandler, combatCreatureDisappearHandler, combatSpellCooldownHandler, combatSpellGroupCooldownHandler, combatMultiUseCooldownHandler, combatAttackingCreatureChangeHandler, combatFollowingCreatureChangeHandler, combatPlayerStatesChangeHandler, boundSharedCombatHotkey, bindCombatHotkeys, unbindCombatHotkeys, showHelperMessage
-local LEGACY_HELPER_JSON_FILE = "/settings/game_helper_data.json"
-local HELPER_CHARACTER_DATA_ROOT = "/characterdata"
-local HELPER_JSON_FILE_NAME = "game_helper_data.json"
-local HELPER_JSON_VERSION = 1
+local targetHotkeyPendingCombo
+local handleSpellCooldown
+local handleSpellGroupCooldown
+local handleMultiUseCooldown
+local handleAttackingCreatureChange
+local handleFollowingCreatureChange
+local handleStatesChange
+local bindCombatHotkeys
+local unusedValue
+local unusedValue
+local HELPER_JSON_VERSION = 4
 local DEFAULT_HELPER_PROFILE_NAME = "Default"
 local AUTO_SWITCH_HOTKEY_PRESET_SETTING = "autoSwitchPreset"
-local activeHelperJSONFile, activeHelperCharacterId, activeHelperCharacterName
+local var_0_26
+local textValue
 local helperSavedOnLogout = false
 local autoSaveEvent
 local loadingConfig = false
-local combatHotkeyBatchActive = false
-local combatHotkeySavePending = false
-local combatHotkeyStatsPending = false
-local helperHotkeyWindow
-local helperHotkeyPendingCombo = ""
-local boundHelperHotkey, shooterHotkeyWindow
-local shooterHotkeyPendingCombo = ""
-local shooterPresetHotkeyProfileName, boundShooterHotkey
+local combatHotkeyBatchActive
+local presetHotkey = ""
+local var_0_33
+local var_0_34 = false
+local boundShooterHotkey
 
 local function helperLog(level, message)
 	if not g_logger then
 		return
 	end
 
-	local fn = g_logger[level] or g_logger.info
-
-	fn("[game_helper] " .. message)
+	;(g_logger[level] or g_logger.info)("[game_helper] " .. message)
 end
 
-local function cancelAutoSave()
+local function cancelAutoSave(arg_2_0)
+	arg_2_0 = arg_2_0 and arg_2_0:lower() or "status"
+
+	if arg_2_0 == "on" then
+		var_0_34 = true
+	elseif arg_2_0 == "off" then
+		var_0_34 = false
+	elseif arg_2_0 ~= "status" then
+		return "helperhitch on | off | status"
+	end
+
+	return "Helper hitch " .. (var_0_34 and "ON" or "OFF")
+end
+
+local function var_0_38()
+	local commandEnv = commandEnv
+
+	if not commandEnv and modules.client_terminal then
+		commandEnv = modules.client_terminal.commandEnv
+	end
+
+	if not commandEnv then
+		return
+	end
+
+	commandEnv.helperhitch = cancelAutoSave
+	boundShooterHotkey = commandEnv
+end
+
+local function saveActiveHelperCharacter()
+	if boundShooterHotkey and boundShooterHotkey.helperhitch == cancelAutoSave then
+		boundShooterHotkey.helperhitch = nil
+	end
+
+	boundShooterHotkey = nil
+end
+
+local function unbindCombatHotkeys()
 	if autoSaveEvent then
 		removeEvent(autoSaveEvent)
 
 		autoSaveEvent = nil
 	end
-end
-
-local function ensureHelperSettingsDir()
-	pcall(function()
-		if not g_resources.directoryExists("/settings") then
-			g_resources.makeDir("/settings")
-		end
-	end)
-end
-
-local function ensureHelperCharacterDir(characterId)
-	if not characterId or characterId == "" then
-		return false
-	end
-
-	local ok, result = pcall(function()
-		if not g_resources.directoryExists(HELPER_CHARACTER_DATA_ROOT) then
-			g_resources.makeDir(HELPER_CHARACTER_DATA_ROOT)
-		end
-
-		local directory = HELPER_CHARACTER_DATA_ROOT .. "/" .. characterId
-
-		if not g_resources.directoryExists(directory) then
-			g_resources.makeDir(directory)
-		end
-
-		return g_resources.directoryExists(directory)
-	end)
-
-	if not ok or not result then
-		helperLog("error", "Failed to create character Helper directory for id " .. tostring(characterId) .. ". Details: " .. tostring(result))
-
-		return false
-	end
-
-	return true
 end
 
 local function copyConfig(config)
@@ -210,6 +293,33 @@ local function copyConfig(config)
 	end
 
 	return config
+end
+
+local var_0_42 = {
+	"hotkey",
+	"autoTargetHotkey",
+	"shooterHotkey",
+	"shooterEnableHotkey",
+	"shooterPresetHotkey",
+	"sharedCombatHotkey",
+	"cavebotHotkey"
+}
+
+local function var_0_43(arg_8_0)
+	if type(arg_8_0) ~= "table" then
+		return false
+	end
+
+	local var_8_0 = false
+
+	for unusedValue, entry in ipairs(var_0_42) do
+		if arg_8_0[entry] ~= nil then
+			arg_8_0[entry] = nil
+			var_8_0 = true
+		end
+	end
+
+	return var_8_0
 end
 
 local function normalizeHelperLanguage(language)
@@ -233,7 +343,7 @@ local function ensureDefaultProfile(data)
 
 	data.profiles = data.profiles or {}
 
-	if type(data.profiles[defaultName]) == "table" then
+	if next(data.profiles) ~= nil then
 		return
 	end
 
@@ -246,6 +356,7 @@ end
 
 local function normalizeHelperData(raw)
 	local data = type(raw) == "table" and raw or {}
+	local numericValue = tonumber(data.version) or 0
 
 	if type(data.profiles) ~= "table" then
 		data.profiles = {}
@@ -261,283 +372,249 @@ local function normalizeHelperData(raw)
 
 	ensureDefaultProfile(data)
 
+	local var_13_2 = var_0_43(data.current)
+
+	for unusedValue, profile in pairs(data.profiles) do
+		var_13_2 = var_0_43(profile) or var_13_2
+	end
+
 	if data.autoSaveEnabled == nil then
 		data.autoSaveEnabled = true
 	end
 
+	data.openHelperStatsOnButton = nil
 	data.language = normalizeHelperLanguage(data.language)
 	data.version = HELPER_JSON_VERSION
 
-	return data
-end
-
-local function readHelperJSONFile(filePath)
-	if not filePath or not g_resources.fileExists(filePath) then
-		return nil
-	end
-
-	local ok, content = pcall(g_resources.readFileContents, filePath)
-
-	if not ok or not content or content == "" then
-		helperLog("error", "Failed to read Helper JSON: " .. tostring(filePath))
-
-		return nil
-	end
-
-	local okDecode, data = pcall(json.decode, content)
-
-	if not okDecode or type(data) ~= "table" then
-		helperLog("error", "Invalid Helper JSON at " .. tostring(filePath) .. ". Details: " .. tostring(data))
-
-		return nil
-	end
-
-	return normalizeHelperData(data)
-end
-
-local function writeHelperJSONFile(filePath, data)
-	if not filePath then
-		helperLog("error", "No active character Helper JSON file is available.")
-
-		return false
-	end
-
-	data = normalizeHelperData(data)
-
-	local ok, content = pcall(json.encode, data, 2)
-
-	if not ok or not content then
-		helperLog("error", "Failed to encode helper JSON: " .. tostring(content))
-
-		return false
-	end
-
-	local okWrite, writeErr = pcall(g_resources.writeFileContents, filePath, content)
-
-	if not okWrite or writeErr == false then
-		helperLog("error", "Failed to write Helper JSON at " .. tostring(filePath) .. ": " .. tostring(writeErr))
-
-		return false
-	end
-
-	return true
-end
-
-local function getActiveHelperJSONFile()
-	if activeHelperJSONFile then
-		return activeHelperJSONFile
-	end
-
-	if g_game and g_game.isOnline and g_game.isOnline() then
-		return nil
-	end
-
-	return LEGACY_HELPER_JSON_FILE
+	return data, var_13_2 or numericValue < HELPER_JSON_VERSION
 end
 
 local function readHelperJSON()
-	local filePath = getActiveHelperJSONFile()
+	if not HelperProfileStorage or not HelperProfileStorage.readDocument then
+		helperLog("error", "Shared Helper profile storage is unavailable.")
 
-	if filePath == LEGACY_HELPER_JSON_FILE then
-		ensureHelperSettingsDir()
+		return normalizeHelperData({})
 	end
 
-	return readHelperJSONFile(filePath) or normalizeHelperData({})
+	local var_14_0, var_14_1 = normalizeHelperData(HelperProfileStorage.readDocument())
+
+	if var_14_1 and HelperProfileStorage.writeDocument then
+		HelperProfileStorage.writeDocument(var_14_0)
+	end
+
+	return var_14_0
 end
 
-local function writeHelperJSON(data)
-	local filePath = getActiveHelperJSONFile()
+local function var_0_50(arg_15_0)
+	if not HelperProfileStorage or not HelperProfileStorage.writeDocument then
+		helperLog("error", "Shared Helper profile storage is unavailable for writes.")
 
-	if filePath == LEGACY_HELPER_JSON_FILE then
-		ensureHelperSettingsDir()
-	elseif activeHelperCharacterId and not ensureHelperCharacterDir(activeHelperCharacterId) then
 		return false
 	end
 
-	return writeHelperJSONFile(filePath, data)
+	arg_15_0 = normalizeHelperData(arg_15_0)
+
+	return HelperProfileStorage.writeDocument(arg_15_0)
 end
 
 local function activateHelperCharacterStorage()
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player then
-		activeHelperJSONFile = nil
-		activeHelperCharacterId = nil
-		activeHelperCharacterName = nil
+	if not localPlayer then
+		var_0_26 = nil
+		textValue = nil
 
-		return false
-	end
-
-	local characterId = tostring(player:getId() or "")
-
-	if characterId == "" or characterId == "0" then
-		helperLog("error", "Cannot activate character Helper storage without a valid player id.")
-
-		activeHelperJSONFile = nil
-		activeHelperCharacterId = nil
-		activeHelperCharacterName = nil
-
-		return false
-	end
-
-	local characterName = g_game.getCharacterName() or player:getName() or ""
-	local filePath = HELPER_CHARACTER_DATA_ROOT .. "/" .. characterId .. "/" .. HELPER_JSON_FILE_NAME
-
-	activeHelperJSONFile = nil
-	activeHelperCharacterId = nil
-	activeHelperCharacterName = nil
-
-	if not ensureHelperCharacterDir(characterId) then
-		return false
-	end
-
-	if not g_resources.fileExists(filePath) then
-		ensureHelperSettingsDir()
-
-		local legacyData = readHelperJSONFile(LEGACY_HELPER_JSON_FILE) or normalizeHelperData({})
-
-		if not writeHelperJSONFile(filePath, copyConfig(legacyData)) then
-			helperLog("error", "Failed to migrate legacy Helper data for character id " .. characterId .. ".")
-
-			return false
+		if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
+			HelperProfileStorage.clearActiveCharacter()
 		end
 
-		helperLog("info", "Migrated legacy Helper data to " .. filePath .. ".")
+		return false
 	end
 
-	activeHelperJSONFile = filePath
-	activeHelperCharacterId = characterId
-	activeHelperCharacterName = tostring(characterName)
+	local id = tostring(localPlayer:getId() or "")
+
+	if id == "" or id == "0" then
+		helperLog("error", "Cannot activate character Helper storage without a valid player id.")
+
+		var_0_26 = nil
+		textValue = nil
+
+		if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
+			HelperProfileStorage.clearActiveCharacter()
+		end
+
+		return false
+	end
+
+	local characterName = g_game.getCharacterName() or localPlayer:getName() or ""
+
+	var_0_26 = nil
+	textValue = nil
+
+	if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
+		HelperProfileStorage.clearActiveCharacter()
+	end
+
+	if not HelperProfileStorage or not HelperProfileStorage.activateCharacter or not HelperProfileStorage.activateCharacter(id, characterName) then
+		helperLog("error", "Failed to activate shared Helper profiles for character id " .. id .. ".")
+
+		return false
+	end
+
+	var_0_26 = id
+	textValue = tostring(characterName)
 	helperSavedOnLogout = false
 
-	helperLog("info", "Active character Helper storage: " .. filePath .. " (" .. activeHelperCharacterName .. ").")
+	local activeStatePath = HelperProfileStorage.getActiveStatePath and HelperProfileStorage.getActiveStatePath() or "unavailable"
+
+	helperLog("info", "Active Helper character state: " .. tostring(activeStatePath) .. " (" .. textValue .. "); profiles are shared.")
 
 	return true
 end
 
 local TABS = {
 	healing = {
+		module = "healer",
 		panelId = "healingPanel",
-		buttonId = "healing",
-		module = "healer"
+		buttonId = "healing"
 	},
 	healFriend = {
+		module = "healFriend",
 		panelId = "healFriendPanel",
-		buttonId = "healFriend",
-		module = "healFriend"
+		buttonId = "healFriend"
 	},
 	target = {
+		module = "target",
 		panelId = "targetPanel",
-		buttonId = "targetButton",
-		module = "target"
+		buttonId = "targetButton"
 	},
 	shooter = {
+		module = "shooter",
 		panelId = "shooterPanel",
-		buttonId = "shooterButton",
-		module = "shooter"
+		buttonId = "shooterButton"
+	},
+	cavebot = {
+		module = "cavebot",
+		panelId = "cavebotPanel",
+		buttonId = "cavebotButton"
 	},
 	party = {
+		module = "autoparty",
 		panelId = "partyPanel",
-		buttonId = "partyButton",
-		module = "autoparty"
+		buttonId = "partyButton"
 	},
 	tools = {
+		module = "tools",
 		panelId = "toolsPanel",
-		buttonId = "toolsButton",
-		module = "tools"
+		buttonId = "toolsButton"
 	},
 	configs = {
+		module = "config",
 		panelId = "configsPanel",
-		buttonId = "configsButton",
-		module = "config"
+		buttonId = "configsButton"
 	}
 }
-local HELPER_STATS_ITEMS = {
+local var_0_53 = {
 	{
-		label = "Healing",
 		id = "healing",
 		rowId = "helperStatsHealingRow",
-		widgetId = "enableHealingCheckBox"
+		widgetId = "enableHealingCheckBox",
+		label = "Healing"
 	},
 	{
-		label = "Heal Friend",
 		id = "healFriend",
 		rowId = "helperStatsHealFriendRow",
-		widgetId = "enableHealFriendCheckBox"
+		widgetId = "enableHealFriendCheckBox",
+		label = "Heal Friend"
 	},
 	{
-		label = "Target Helper",
 		id = "target",
 		rowId = "helperStatsTargetRow",
-		widgetId = "enableTargetCheckBox"
+		widgetId = "enableTargetCheckBox",
+		label = "Target Helper"
 	},
 	{
-		label = "Shooter Helper",
 		id = "shooter",
 		rowId = "helperStatsShooterRow",
-		widgetId = "enableShooterCheckBox"
+		widgetId = "enableShooterCheckBox",
+		label = "Shooter Helper"
 	},
 	{
-		label = "Auto Invite",
+		id = "cavebot",
+		rowId = "helperStatsCavebotRow",
+		widgetId = "enableCavebotCheckBox",
+		label = "Cavebot Helper"
+	},
+	{
 		id = "autoInvite",
 		rowId = "helperStatsAutoInviteRow",
-		widgetId = "toolsAutoPartyCheckBox"
+		widgetId = "toolsAutoPartyCheckBox",
+		label = "Auto Invite"
 	},
 	{
-		label = "Auto Accept",
 		id = "autoAccept",
 		rowId = "helperStatsAutoAcceptRow",
-		widgetId = "toolsAutoPartyAcceptCheckBox"
+		widgetId = "toolsAutoPartyAcceptCheckBox",
+		label = "Auto Accept"
 	},
 	{
-		label = "Auto Haste",
 		id = "autoHaste",
 		rowId = "helperStatsAutoHasteRow",
-		widgetId = "toolsAutoHasteCheckBox"
+		widgetId = "toolsAutoHasteCheckBox",
+		label = "Auto Haste"
 	},
 	{
-		label = "Auto Training",
 		id = "autoTraining",
 		rowId = "helperStatsAutoTrainingRow",
-		widgetId = "toolsAutoTrainingCheckBox"
+		widgetId = "toolsAutoTrainingCheckBox",
+		label = "Auto Training"
 	},
 	{
-		label = "Anti Idle",
 		id = "antiIdle",
 		rowId = "helperStatsAntiIdleRow",
-		widgetId = "toolsAntiIdleCheckBox"
+		widgetId = "toolsAntiIdleCheckBox",
+		label = "Anti Idle"
 	},
 	{
-		label = "Mana Training",
 		id = "manaTraining",
 		rowId = "helperStatsManaTrainingRow",
-		widgetId = "toolsManaTrainingCheckBox"
+		widgetId = "toolsManaTrainingCheckBox",
+		label = "Mana Training"
 	},
 	{
-		label = "Change Gold",
 		id = "changeGold",
 		rowId = "helperStatsChangeGoldRow",
-		widgetId = "toolsChangeGoldCheckBox"
+		widgetId = "toolsChangeGoldCheckBox",
+		label = "Change Gold"
 	},
 	{
-		label = "Eat Food",
 		id = "eatFood",
 		rowId = "helperStatsEatFoodRow",
-		widgetId = "toolsEatFoodCheckBox"
+		widgetId = "toolsEatFoodCheckBox",
+		label = "Eat Food"
 	},
 	{
-		label = "Reconnect",
 		id = "reconnect",
 		rowId = "helperStatsReconnectRow",
-		widgetId = "toolsReconnectCheckBox"
+		widgetId = "toolsReconnectCheckBox",
+		label = "Reconnect"
 	}
 }
 
 local function syncButton()
-	if helperButton and not helperButton:isDestroyed() then
-		local statsOpen = helperStatsWindow and not helperStatsWindow:isDestroyed() and not helperStatsWindow:isHidden()
+	if not helperButton or helperButton:isDestroyed() or not helperButton.setTooltip then
+		return
+	end
 
-		helperButton:setOn(statsOpen == true)
+	helperButton:setTooltip(tr("Open Helper"))
+end
+
+local function var_0_55()
+	if helperButton and not helperButton:isDestroyed() then
+		local var_18_0 = helperWindow and not helperWindow:isDestroyed() and not helperWindow:isHidden()
+
+		helperButton:setOn(var_18_0 == true)
+		syncButton()
 	end
 end
 
@@ -579,14 +656,16 @@ local function setCharacterCardName(fullName)
 		budget = 98
 	end
 
-	budget = math.max(1, budget - 2)
+	local budget = math.max(1, budget - 2)
 
 	if budget >= label:getTextSize().width then
 		return
 	end
 
 	local dots = "..."
-	local low, high, best = 0, #fullName, dots
+	local low = 0
+	local high = #fullName
+	local best = dots
 
 	while low <= high do
 		local middle = math.floor((low + high) / 2)
@@ -622,21 +701,51 @@ local function isCurrentAccountPremium(player)
 end
 
 local function refreshHelperCharacterCard()
+	local player = g_game.isOnline() and g_game.getLocalPlayer() or nil
+	local isPortuguese = 0
+
+	if player then
+		if player.getTotalMoney then
+			isPortuguese = player:getTotalMoney() or 0
+		elseif player.getResourceBalance then
+			isPortuguese = (player:getResourceBalance(ResourceBank) or 0) + (player:getResourceBalance(ResourceInventary) or 0)
+		end
+	end
+
+	local var_23_2 = player and (type(comma_value) == "function" and comma_value(isPortuguese) or tostring(isPortuguese)) or "?"
+
+	setCharacterCardText("helperGoldBalance", var_23_2)
+end
+
+local function var_0_61()
+	if not g_game.isOnline() then
+		return
+	end
+
+	if g_game.requestResource then
+		g_game.requestResource(ResourceBank)
+		g_game.requestResource(ResourceInventary)
+	elseif g_game.sendResourceBalance then
+		g_game.sendResourceBalance()
+	end
+end
+
+local function var_0_62()
 	if not helperWindow or helperWindow:isDestroyed() then
 		return
 	end
 
-	local player = g_game.isOnline() and g_game.getLocalPlayer() or nil
-	local isPortuguese = helperLanguage == "pt"
-	local outfitWidget = getWidget("helperCharacterOutfit")
+	local localPlayer = g_game.isOnline() and g_game.getLocalPlayer() or nil
+	local var_25_1 = helperLanguage == "pt"
+	local var_25_2 = getWidget("helperCharacterOutfit")
 
-	if outfitWidget then
-		outfitWidget:setVisible(player ~= nil)
+	if var_25_2 then
+		var_25_2:setVisible(localPlayer ~= nil)
 
-		if player then
-			outfitWidget:setOutfit(player:getOutfit())
+		if localPlayer then
+			var_25_2:setOutfit(localPlayer:getOutfit())
 
-			local creature = outfitWidget:getCreature()
+			local creature = var_25_2:getCreature()
 
 			if creature and creature.setDirection then
 				creature:setDirection(South)
@@ -644,249 +753,296 @@ local function refreshHelperCharacterCard()
 		end
 	end
 
-	local playerName = player and player:getName() or isPortuguese and "Desconectado" or "Offline"
+	local name = localPlayer and localPlayer:getName() or var_25_1 and "Desconectado" or "Offline"
 
-	setCharacterCardName(playerName)
+	setCharacterCardName(name)
 
-	local levelText = isPortuguese and "Nivel: -" or "Level: -"
+	local level = var_25_1 and "Nivel: -" or "Level: -"
 
-	if player then
-		levelText = string.format(isPortuguese and "Nivel: %d" or "Level: %d", player:getLevel())
+	if localPlayer then
+		level = string.format(var_25_1 and "Nivel: %d" or "Level: %d", localPlayer:getLevel())
 	end
 
-	setCharacterCardText("helperCharacterLevel", levelText)
-	setCharacterCardText("helperAccountCaption", isPortuguese and "Status da Conta:" or "Account Status:")
+	setCharacterCardText("helperCharacterLevel", level)
+	setCharacterCardText("helperAccountCaption", var_25_1 and "Status da Conta:" or "Account Status:")
 
-	local statusText = isPortuguese and "Desconectado" or "Offline"
-	local statusIcon = "/images/game/entergame/nopremium"
+	local var_25_6 = var_25_1 and "Desconectado" or "Offline"
+	local var_25_7 = "/images/game/entergame/nopremium"
 
-	if player then
-		local isPremiumAccount = isCurrentAccountPremium(player)
-
-		if isPremiumAccount then
-			statusText = isPortuguese and "Conta Premium" or "Premium Account"
-			statusIcon = "/images/game/entergame/premium"
+	if localPlayer then
+		if isCurrentAccountPremium(localPlayer) then
+			var_25_6 = var_25_1 and "Conta Premium" or "Premium Account"
+			var_25_7 = "/images/game/entergame/premium"
 		else
-			statusText = isPortuguese and "Conta Gratuita" or "Free Account"
+			var_25_6 = var_25_1 and "Conta Gratuita" or "Free Account"
 		end
 	end
 
-	setCharacterCardText("helperAccountStatus", statusText, statusText)
+	setCharacterCardText("helperAccountStatus", var_25_6, var_25_6)
 
-	local accountIcon = getWidget("helperAccountStatusIcon")
+	local var_25_8 = getWidget("helperAccountStatusIcon")
 
-	if accountIcon then
-		accountIcon:setImageSource(statusIcon)
-		accountIcon:setTooltip(statusText)
+	if var_25_8 then
+		var_25_8:setImageSource(var_25_7)
+		var_25_8:setTooltip(var_25_6)
 	end
 
-	local languageButton = getWidget("helperLanguageButton")
+	refreshHelperCharacterCard()
 
-	if languageButton then
-		languageButton:setText(isPortuguese and "Portugues" or "English")
-		languageButton:setTooltip(isPortuguese and "Mudar idioma para ingles." or "Switch language to Portuguese.")
+	local var_25_9 = getWidget("helperLanguageButton")
+
+	if var_25_9 then
+		var_25_9:setText(var_25_1 and "Portugues" or "English")
+		var_25_9:setTooltip(var_25_1 and "Mudar idioma para ingles." or "Switch language to Portuguese.")
 	end
 
-	local portugueseFlag = getWidget("helperLanguageFlagPt")
+	local var_25_10 = getWidget("helperLanguageFlagPt")
 
-	if portugueseFlag then
-		portugueseFlag:setVisible(isPortuguese)
+	if var_25_10 then
+		var_25_10:setVisible(var_25_1)
 	end
 
-	local englishFlag = getWidget("helperLanguageFlagEn")
+	local var_25_11 = getWidget("helperLanguageFlagEn")
 
-	if englishFlag then
-		englishFlag:setVisible(not isPortuguese)
+	if var_25_11 then
+		var_25_11:setVisible(not var_25_1)
 	end
 end
 
 local function onHelperCharacterChanged()
-	refreshHelperCharacterCard()
+	var_0_62()
 end
 
-local function translateHelperWidgetTree(target, capture)
-	if not target then
+local function handleResourceBalance(arg_27_0)
+	if not arg_27_0 or arg_27_0 == ResourceBank or arg_27_0 == ResourceInventary then
+		refreshHelperCharacterCard()
+	end
+end
+
+local function var_0_65(HELPER_STATS_ITEMS, arg_28_1)
+	if not HELPER_STATS_ITEMS then
 		return
 	end
 
-	local id = target.getId and target:getId() or nil
+	local id = HELPER_STATS_ITEMS.getId and HELPER_STATS_ITEMS:getId() or nil
 
 	if HELPER_LANGUAGE_SKIPPED_PANELS[id] then
 		return
 	end
 
-	local className = target.getClassName and target:getClassName() or ""
-	local canTranslateText = className ~= "UITextEdit" and className ~= "UIComboBox" and target.getText and target.setText
+	local className = HELPER_STATS_ITEMS.getClassName and HELPER_STATS_ITEMS:getClassName() or ""
 
-	if canTranslateText then
-		local current = target:getText()
+	if className ~= "UITextEdit" and className ~= "UIComboBox" and HELPER_STATS_ITEMS.getText and HELPER_STATS_ITEMS.setText then
+		local text = HELPER_STATS_ITEMS:getText()
 
-		if capture and current and HELPER_PT_TRANSLATIONS[current] then
-			target.helperLanguageSourceText = current
+		if arg_28_1 and text and HELPER_PT_TRANSLATIONS[text] then
+			HELPER_STATS_ITEMS.helperLanguageSourceText = text
 		end
 
-		local source = target.helperLanguageSourceText
+		local helperLanguageSourceText = HELPER_STATS_ITEMS.helperLanguageSourceText
 
-		if source then
-			local lastApplied = target.helperLanguageAppliedText
+		if helperLanguageSourceText then
+			local helperLanguageAppliedText = HELPER_STATS_ITEMS.helperLanguageAppliedText
 
-			if lastApplied and current ~= lastApplied and current ~= source then
-				if HELPER_PT_TRANSLATIONS[current] then
-					source = current
-					target.helperLanguageSourceText = current
+			if helperLanguageAppliedText and text ~= helperLanguageAppliedText and text ~= helperLanguageSourceText then
+				if HELPER_PT_TRANSLATIONS[text] then
+					helperLanguageSourceText = text
+					HELPER_STATS_ITEMS.helperLanguageSourceText = text
 				else
-					source = nil
-					target.helperLanguageSourceText = nil
-					target.helperLanguageAppliedText = nil
+					helperLanguageSourceText = nil
+					HELPER_STATS_ITEMS.helperLanguageSourceText = nil
+					HELPER_STATS_ITEMS.helperLanguageAppliedText = nil
 				end
 			end
 
-			if source then
-				local translated = helperLanguage == "pt" and HELPER_PT_TRANSLATIONS[source] or source
+			if helperLanguageSourceText then
+				local var_28_5 = helperLanguage == "pt" and HELPER_PT_TRANSLATIONS[helperLanguageSourceText] or helperLanguageSourceText
 
-				target:setText(translated)
+				HELPER_STATS_ITEMS:setText(var_28_5)
 
-				target.helperLanguageAppliedText = translated
+				HELPER_STATS_ITEMS.helperLanguageAppliedText = var_28_5
 			end
 		end
 	end
 
-	if target.getTooltip and target.setTooltip then
-		local currentTooltip = target:getTooltip()
+	if HELPER_STATS_ITEMS.getTooltip and HELPER_STATS_ITEMS.setTooltip then
+		local tooltip = HELPER_STATS_ITEMS:getTooltip()
 
-		if capture and currentTooltip and HELPER_PT_TOOLTIP_TRANSLATIONS[currentTooltip] then
-			target.helperLanguageSourceTooltip = currentTooltip
+		if arg_28_1 and tooltip and var_0_5[tooltip] then
+			HELPER_STATS_ITEMS.helperLanguageSourceTooltip = tooltip
 		end
 
-		local sourceTooltip = target.helperLanguageSourceTooltip
+		local helperLanguageSourceTooltip = HELPER_STATS_ITEMS.helperLanguageSourceTooltip
 
-		if sourceTooltip then
-			local translatedTooltip = helperLanguage == "pt" and HELPER_PT_TOOLTIP_TRANSLATIONS[sourceTooltip] or sourceTooltip
+		if helperLanguageSourceTooltip then
+			local var_28_8 = helperLanguage == "pt" and var_0_5[helperLanguageSourceTooltip] or helperLanguageSourceTooltip
 
-			target:setTooltip(translatedTooltip)
+			HELPER_STATS_ITEMS:setTooltip(var_28_8)
 		end
 	end
 
-	if target.getChildren then
-		for _, child in ipairs(target:getChildren()) do
-			translateHelperWidgetTree(child, capture)
+	if HELPER_STATS_ITEMS.getChildren then
+		for _, item in ipairs(HELPER_STATS_ITEMS:getChildren()) do
+			var_0_65(item, arg_28_1)
 		end
 	end
 end
 
-local function refreshHelperUiLanguage(capture)
+local function var_0_66(arg_29_0)
 	if not helperWindow then
 		return
 	end
 
-	local shouldCapture = capture == true or not helperUiLanguageCaptured
+	local var_29_0 = arg_29_0 == true or not helperUiLanguageCaptured
 
-	translateHelperWidgetTree(helperWindow, shouldCapture)
+	var_0_65(helperWindow, var_29_0)
 
 	helperUiLanguageCaptured = true
 end
 
-local function applyHelperLanguage(language)
-	helperLanguage = normalizeHelperLanguage(language)
+local function var_0_67(arg_30_0)
+	helperLanguage = normalizeHelperLanguage(arg_30_0)
 
-	for name, mod in pairs(modulesByTab) do
-		if mod and mod.refreshLanguage then
-			local ok, err = pcall(mod.refreshLanguage, helperLanguage)
+	for name, cfg in pairs(var_0_1) do
+		if cfg and cfg.refreshLanguage then
+			local var_30_0, var_30_1 = pcall(cfg.refreshLanguage, helperLanguage)
 
-			if not ok then
-				helperLog("warning", "refreshLanguage failed for " .. tostring(name) .. ": " .. tostring(err))
+			if not var_30_0 then
+				helperLog("warning", "refreshLanguage failed for " .. tostring(name) .. ": " .. tostring(var_30_1))
 			end
 		end
 	end
 
-	refreshHelperUiLanguage(false)
-	refreshHelperCharacterCard()
+	var_0_66(false)
+	var_0_62()
 
 	return helperLanguage
 end
 
-local function getHelperStatsRow(item)
+local function var_0_68(arg_31_0)
 	if not helperStatsWindow or helperStatsWindow:isDestroyed() then
 		return nil
 	end
 
-	return helperStatsWindow:recursiveGetChildById(item.rowId)
+	return helperStatsWindow:recursiveGetChildById(arg_31_0.rowId)
+end
+
+local function var_0_69()
+	local game_actionbar = modules.game_actionbar
+
+	if game_actionbar and game_actionbar.refreshHelperActionBarSlots then
+		game_actionbar.refreshHelperActionBarSlots()
+	end
 end
 
 local function refreshHelperStatsWindow()
-	if combatHotkeyBatchActive then
-		combatHotkeyStatsPending = true
-
-		return
-	end
-
 	if not helperStatsWindow or helperStatsWindow:isDestroyed() then
+		var_0_69()
+
 		return
 	end
 
-	for _, item in ipairs(HELPER_STATS_ITEMS) do
-		local row = getHelperStatsRow(item)
-		local icon = row and row:getChildById("statusIcon")
-		local status = row and row:getChildById("statusLabel")
-		local check = getWidget(item.widgetId)
-		local enabled = check and check:isChecked()
-		local paused = false
+	for unusedValue, entry in ipairs(var_0_53) do
+		local var_33_0 = var_0_68(entry)
 
-		if item.id == "shooter" and HelperShooter and HelperShooter.isDisabledByFollow and HelperShooter.isDisabledByFollow() then
-			paused = true
-		end
+		if entry.id == "healFriend" then
+			local var_33_1 = HelperHealFriend and HelperHealFriend.isAllowedVocation and HelperHealFriend.isAllowedVocation()
 
-		if item.id == "target" and HelperTarget and HelperTarget.isDisabledByProtectionZone and HelperTarget.isDisabledByProtectionZone() then
-			paused = true
-		end
+			if var_33_0 then
+				var_33_0:setVisible(var_33_1 == true)
+			end
 
-		if item.id == "shooter" and HelperShooter and HelperShooter.isDisabledByProtectionZone and HelperShooter.isDisabledByProtectionZone() then
-			paused = true
-		end
-
-		if item.id == "autoHaste" and enabled then
-			local pzCastCheck = getWidget("toolsAutoHastePzCastCheckBox")
-			local player = g_game.getLocalPlayer()
-			local inProtectionZone = player and player.isInProtectionZone and player:isInProtectionZone()
-
-			if inProtectionZone and pzCastCheck and not pzCastCheck:isChecked() then
-				paused = true
+			if not var_33_1 then
+				goto label_33_0
 			end
 		end
 
-		local displayEnabled = enabled or paused
+		do
+			local statusIcon = var_33_0 and var_33_0:getChildById("statusIcon")
+			local statusLabel = var_33_0 and var_33_0:getChildById("statusLabel")
+			local var_33_4 = getWidget(entry.widgetId)
+			local var_33_5 = var_33_4 and var_33_4:isChecked()
+			local var_33_6 = false
 
-		if icon then
-			if paused then
-				icon:setImageSource("/images/icons/icon-paused")
-			else
-				icon:setImageSource(displayEnabled and "/images/icons/icon-yes" or "/images/icons/icon-no")
+			if entry.id == "shooter" and HelperShooter and HelperShooter.isDisabledByFollow and HelperShooter.isDisabledByFollow() then
+				var_33_6 = true
+			end
+
+			if entry.id == "target" and HelperTarget and HelperTarget.isDisabledByProtectionZone and HelperTarget.isDisabledByProtectionZone() then
+				var_33_6 = true
+			end
+
+			if entry.id == "shooter" and HelperShooter and HelperShooter.isDisabledByProtectionZone and HelperShooter.isDisabledByProtectionZone() then
+				var_33_6 = true
+			end
+
+			if entry.id == "autoHaste" and var_33_5 then
+				local var_33_7 = getWidget("toolsAutoHastePzCastCheckBox")
+				local localPlayer = g_game.getLocalPlayer()
+
+				if localPlayer and localPlayer.isInProtectionZone and localPlayer:isInProtectionZone() and var_33_7 and not var_33_7:isChecked() then
+					var_33_6 = true
+				end
+			end
+
+			local var_33_9 = var_33_5 or var_33_6
+
+			if statusIcon then
+				if var_33_6 then
+					statusIcon:setImageSource("/images/icons/icon-paused")
+				else
+					statusIcon:setImageSource(var_33_9 and "/images/icons/icon-yes" or "/images/icons/icon-no")
+				end
+			end
+
+			if statusLabel then
+				statusLabel:setText(var_33_9 and tr("Enabled") or tr("Disabled"))
+
+				local var_33_10 = "#5ff75f"
+				local var_33_11 = "#f75f5f"
+
+				if var_33_6 then
+					var_33_10 = "#ff9854"
+				end
+
+				statusLabel:setColor(var_33_9 and var_33_10 or var_33_11)
 			end
 		end
 
-		if status then
-			status:setText(displayEnabled and tr("Enabled") or tr("Disabled"))
+		::label_33_0::
+	end
 
-			local enabledColor = "#5ff75f"
-			local disabledColor = "#f75f5f"
+	var_0_69()
+end
 
-			if paused then
-				enabledColor = "#ff9854"
-			end
+function isHealFriendAllowed()
+	return HelperHealFriend and HelperHealFriend.isAllowedVocation and HelperHealFriend.isAllowedVocation() == true
+end
 
-			status:setColor(displayEnabled and enabledColor or disabledColor)
+function isHelperStatsEntryEnabled(arg_35_0)
+	if type(arg_35_0) ~= "string" or arg_35_0 == "" then
+		return false
+	end
+
+	for unusedValue, entry in ipairs(var_0_53) do
+		if entry.id == arg_35_0 then
+			local var_35_0 = getWidget(entry.widgetId)
+
+			return var_35_0 and var_35_0:isChecked() == true
 		end
 	end
+
+	return false
 end
 
 function refreshHelperStats()
 	refreshHelperStatsWindow()
 end
 
-local function setupHelperStatsWindow()
-	local parent = modules.game_interface and modules.game_interface.getRightPanel and modules.game_interface.getRightPanel()
+local function unusedValue()
+	local rightPanel = modules.game_interface and modules.game_interface.getRightPanel and modules.game_interface.getRightPanel()
 
-	helperStatsWindow = g_ui.createWidget("HelperStatsWindow", parent or rootWidget)
+	helperStatsWindow = g_ui.createWidget("HelperStatsWindow", rightPanel or rootWidget)
 
 	if helperStatsWindow.setup then
 		helperStatsWindow:setup()
@@ -896,17 +1052,17 @@ local function setupHelperStatsWindow()
 		helperStatsWindow:setContentMinimumHeight(80)
 	end
 
-	for _, id in ipairs({
+	for unusedValue, iter_37_1 in ipairs({
 		"newWindowButton",
 		"toggleFilterButton",
 		"contextMenuButton",
 		"lockButton"
 	}) do
-		local widget = helperStatsWindow:recursiveGetChildById(id)
+		local var_37_1 = helperStatsWindow:recursiveGetChildById(iter_37_1)
 
-		if widget then
-			widget:setVisible(false)
-			widget:setOn(false)
+		if var_37_1 then
+			var_37_1:setVisible(false)
+			var_37_1:setOn(false)
 		end
 	end
 
@@ -920,62 +1076,62 @@ local function setupHelperStatsWindow()
 				helperStatsWindow:closeAndForgetLayout()
 			end
 
-			syncButton()
+			var_0_55()
 		end
 	end
 
-	for _, item in ipairs(HELPER_STATS_ITEMS) do
-		local row = getHelperStatsRow(item)
+	for unusedValue, entry in ipairs(var_0_53) do
+		local var_37_3 = var_0_68(entry)
 
-		if row then
-			local title = row:getChildById("titleLabel")
+		if var_37_3 then
+			local titleLabel = var_37_3:getChildById("titleLabel")
 
-			if title then
-				title:setText(tr(item.label))
+			if titleLabel then
+				titleLabel:setText(tr(entry.label))
 			end
 
-			row.helperStatsItemId = item.id
+			var_37_3.helperStatsItemId = entry.id
 
-			function row.onMousePress(widget, _, mouseButton)
-				if mouseButton ~= MouseLeftButton then
+			function var_37_3.onMousePress(arg_39_0, unusedArgument, arg_39_2)
+				if arg_39_2 ~= MouseLeftButton then
 					return false
 				end
 
-				modules.game_helper.toggleHelperStatsEntry(widget.helperStatsItemId)
+				modules.game_helper.toggleHelperStatsEntry(arg_39_0.helperStatsItemId)
 
 				return true
 			end
 		end
 	end
 
-	local openButton = helperStatsWindow:recursiveGetChildById("helperStatsOpenHelperButton")
+	local helperStatsOpenHelperButton = helperStatsWindow:recursiveGetChildById("helperStatsOpenHelperButton")
 
-	if openButton then
-		function openButton.onClick()
+	if helperStatsOpenHelperButton then
+		function helperStatsOpenHelperButton.onClick()
 			modules.game_helper.openHelperFromStats()
 		end
 	end
 
 	function helperStatsWindow.onVisibilityChange()
-		syncButton()
+		var_0_55()
 	end
 
 	helperStatsWindow:hide()
 	refreshHelperStatsWindow()
-	syncButton()
+	var_0_55()
 end
 
-local function getPlayerVoc()
-	local player = g_game.getLocalPlayer()
+local function var_0_72()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player then
+	if not localPlayer then
 		return 0
 	end
 
-	return translateVocation(player:getVocation())
+	return translateVocation(localPlayer:getVocation())
 end
 
-local function getProfileNameForAutoSave()
+local function var_0_73()
 	if HelperConfigTab and HelperConfigTab.getProfileNameForAutoSave then
 		return HelperConfigTab.getProfileNameForAutoSave()
 	end
@@ -984,30 +1140,28 @@ local function getProfileNameForAutoSave()
 end
 
 function isAutoSaveEnabled()
-	local check = getWidget("configsAutoSaveCheckBox")
+	local var_44_0 = getWidget("configsAutoSaveCheckBox")
 
-	if check then
-		return check:isChecked()
+	if var_44_0 then
+		return var_44_0:isChecked()
 	end
 
-	local data = readHelperJSON()
-
-	return data.autoSaveEnabled ~= false
+	return readHelperJSON().autoSaveEnabled ~= false
 end
 
-local function applyAutoSavePreferenceToCheckbox(enabled)
-	local check = getWidget("configsAutoSaveCheckBox")
+local function var_0_74(arg_45_0)
+	local var_45_0 = getWidget("configsAutoSaveCheckBox")
 
-	if not check then
+	if not var_45_0 then
 		return
 	end
 
-	local value = enabled ~= false
+	local var_45_1 = arg_45_0 ~= false
 
-	if check:isChecked() ~= value then
+	if var_45_0:isChecked() ~= var_45_1 then
 		loadingConfig = true
 
-		check:setChecked(value)
+		var_45_0:setChecked(var_45_1)
 
 		loadingConfig = false
 	end
@@ -1015,10 +1169,10 @@ end
 
 local function isAutoSwitchHotkeyPresetEnabled()
 	if modules.client_options and modules.client_options.getOption then
-		local ok, enabled = pcall(modules.client_options.getOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING)
+		local var_46_0, var_46_1 = pcall(modules.client_options.getOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING)
 
-		if ok and type(enabled) == "boolean" then
-			return enabled
+		if var_46_0 and type(var_46_1) == "boolean" then
+			return var_46_1
 		end
 	end
 
@@ -1026,35 +1180,35 @@ local function isAutoSwitchHotkeyPresetEnabled()
 end
 
 local function applyAutoSwitchHotkeyPresetToCheckbox(enabled)
-	local check = getWidget("configsAutoSwitchHotkeyPresetCheckBox")
+	local var_47_0 = getWidget("configsAutoSwitchHotkeyPresetCheckBox")
 
-	if not check then
+	if not var_47_0 then
 		return
 	end
 
-	local value = enabled == true
+	local var_47_1 = enabled == true
 
-	if check:isChecked() ~= value then
+	if var_47_0:isChecked() ~= var_47_1 then
 		loadingConfig = true
 
-		check:setChecked(value)
+		var_47_0:setChecked(var_47_1)
 
 		loadingConfig = false
 	end
 end
 
 local function setAutoSwitchHotkeyPresetEnabled(enabled)
-	local value = enabled == true
+	local var_48_0 = enabled == true
 
-	local function saveNativeSettings()
+	local function var_48_1()
 		if not g_settings or not g_settings.save then
 			return true
 		end
 
-		local ok, err = pcall(g_settings.save)
+		local var_49_0, var_49_1 = pcall(g_settings.save)
 
-		if not ok then
-			helperLog("error", "Failed to save native auto-switch option: " .. tostring(err))
+		if not var_49_0 then
+			helperLog("error", "Failed to save native auto-switch option: " .. tostring(var_49_1))
 
 			return false
 		end
@@ -1063,51 +1217,43 @@ local function setAutoSwitchHotkeyPresetEnabled(enabled)
 	end
 
 	if modules.client_options and modules.client_options.setOption then
-		local ok, err = pcall(modules.client_options.setOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING, value, true)
+		local var_48_2, var_48_3 = pcall(modules.client_options.setOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING, var_48_0, true)
 
-		if ok and isAutoSwitchHotkeyPresetEnabled() == value then
-			return saveNativeSettings()
+		if var_48_2 and isAutoSwitchHotkeyPresetEnabled() == var_48_0 then
+			return var_48_1()
 		end
 
-		if not ok then
-			helperLog("warning", "Failed to update native auto-switch option: " .. tostring(err))
+		if not var_48_2 then
+			helperLog("warning", "Failed to update native auto-switch option: " .. tostring(var_48_3))
 		end
 	end
 
 	if g_settings and g_settings.set then
-		local ok, err = pcall(g_settings.set, AUTO_SWITCH_HOTKEY_PRESET_SETTING, value)
+		local var_48_4, var_48_5 = pcall(g_settings.set, AUTO_SWITCH_HOTKEY_PRESET_SETTING, var_48_0)
 
-		if ok then
-			return saveNativeSettings()
+		if var_48_4 then
+			return var_48_1()
 		end
 
-		helperLog("error", "Failed to persist native auto-switch option: " .. tostring(err))
+		helperLog("error", "Failed to persist native auto-switch option: " .. tostring(var_48_5))
 	end
 
 	return false
 end
 
-local function collectHelperConfigSnapshot()
-	helperConfig.enableHelper = getWidget("checkbox") and getWidget("checkbox"):isChecked() or false
+local function var_0_78()
+	helperConfig.enableHelper = true
 	helperConfig.enableHealing = getWidget("enableHealingCheckBox") and getWidget("enableHealingCheckBox"):isChecked() or false
 	helperConfig.enableHealFriend = getWidget("enableHealFriendCheckBox") and getWidget("enableHealFriendCheckBox"):isChecked() or false
-	helperConfig.hotkey = helperConfig.hotkey or ""
-	helperConfig.shooterHotkey = helperConfig.shooterHotkey or ""
-	helperConfig.autoTargetHotkey = helperConfig.autoTargetHotkey or "F11"
-	helperConfig.shooterEnableHotkey = helperConfig.shooterEnableHotkey or helperConfig.shooterHotkey or "F10"
-	helperConfig.shooterPresetHotkey = nil
-	helperConfig.sharedCombatHotkey = helperConfig.sharedCombatHotkey or ""
 
-	if HelperTarget and HelperTarget.collectHotkeys then
-		HelperTarget.collectHotkeys(helperConfig)
-	end
+	local var_50_0 = getWidget("configsPrioritizeHotkeysCheckBox")
 
-	if HelperShooter and HelperShooter.collectHotkeys then
-		HelperShooter.collectHotkeys(helperConfig)
-	end
+	helperConfig.prioritizeHotkeys = var_50_0 and var_50_0:isChecked() or false
 
-	for _, tab in pairs(TABS) do
-		local mod = modulesByTab[tab.module]
+	var_0_43(helperConfig)
+
+	for unusedValue, cfg in pairs(TABS) do
+		local mod = var_0_1[cfg.module]
 
 		if mod and mod.collectConfig then
 			mod.collectConfig(helperConfig)
@@ -1121,80 +1267,74 @@ local function collectHelperConfigSnapshot()
 	return copyConfig(helperConfig)
 end
 
-local function saveConfig()
+local function var_0_79()
 	if loadingConfig then
 		return false
-	end
-
-	if combatHotkeyBatchActive then
-		combatHotkeySavePending = true
-
-		return true
 	end
 
 	if not helperWindow then
 		return false
 	end
 
-	local snapshot = collectHelperConfigSnapshot()
+	local var_51_0 = var_0_78()
 
-	helperConfig = snapshot
+	helperConfig = var_51_0
 
-	local data = readHelperJSON()
+	local var_51_1 = readHelperJSON()
 
-	data.autoSaveEnabled = isAutoSaveEnabled()
-	data.current = copyConfig(snapshot)
+	var_51_1.autoSaveEnabled = isAutoSaveEnabled()
+	var_51_1.current = copyConfig(var_51_0)
 
-	if data.autoSaveEnabled then
-		local profileName = getProfileNameForAutoSave()
+	if var_51_1.autoSaveEnabled then
+		local activeProfile = var_0_73()
 
-		if not profileName or profileName == "" then
-			profileName = data.activeProfile
+		if not activeProfile or activeProfile == "" then
+			activeProfile = var_51_1.activeProfile
 		end
 
-		if not profileName or profileName == "" then
-			profileName = getDefaultProfileName()
+		if not activeProfile or activeProfile == "" then
+			activeProfile = getDefaultProfileName()
 		end
 
-		if profileName and profileName ~= "" then
-			data.profiles = data.profiles or {}
-			data.profiles[profileName] = copyConfig(snapshot)
-			data.activeProfile = profileName
+		if activeProfile and activeProfile ~= "" then
+			var_51_1.profiles = var_51_1.profiles or {}
+			var_51_1.profiles[activeProfile] = copyConfig(var_51_0)
+			var_51_1.activeProfile = activeProfile
 
 			if HelperConfigTab and HelperConfigTab.setSelectedProfileName then
-				HelperConfigTab.setSelectedProfileName(profileName)
+				HelperConfigTab.setSelectedProfileName(activeProfile)
 			end
 		end
 	end
 
-	local saved = writeHelperJSON(data)
+	local var_51_3 = var_0_50(var_51_1)
 
-	if not saved then
+	if not var_51_3 then
 		helperLog("error", "Auto-save failed.")
 	end
 
 	refreshHelperStatsWindow()
 
-	return saved
+	return var_51_3
 end
 
-local function flushAutoSave()
+local function var_0_80()
 	if not autoSaveEvent then
 		return
 	end
 
-	cancelAutoSave()
-	saveConfig()
+	unbindCombatHotkeys()
+	var_0_79()
 end
 
-local function saveActiveHelperCharacter()
-	if not activeHelperCharacterId or helperSavedOnLogout then
+local function var_0_81()
+	if not var_0_26 or helperSavedOnLogout then
 		return false
 	end
 
-	cancelAutoSave()
+	unbindCombatHotkeys()
 
-	if saveConfig() then
+	if var_0_79() then
 		helperSavedOnLogout = true
 
 		return true
@@ -1203,323 +1343,30 @@ local function saveActiveHelperCharacter()
 	return false
 end
 
-local function updateSetHotkeyButtonLabel()
-	local btn = getWidget("setHotkeyButton")
-
-	if not btn then
-		return
-	end
-
-	local hotkey = helperConfig.hotkey or ""
-
-	if hotkey == "" then
-		btn:setText(tr("Key [NONE]"))
-	else
-		btn:setText(tr("Key [%s]", hotkey))
-	end
-end
-
-local function toggleHelperEnabled()
-	if loadingConfig then
-		return
-	end
-
-	local check = getWidget("checkbox")
-
-	if not check then
-		return
-	end
-
-	check:setChecked(not check:isChecked())
-end
-
-local function unbindHelperHotkey()
-	if boundHelperHotkey and boundHelperHotkey ~= "" then
-		g_keyboard.unbindKeyPress(boundHelperHotkey)
-	end
-
-	boundHelperHotkey = nil
-end
-
-local helperHotkeyConflict
-
-local function bindHelperHotkey()
-	unbindHelperHotkey()
-
-	local hotkey = helperConfig.hotkey
-
-	if type(hotkey) ~= "string" or hotkey == "" then
-		updateSetHotkeyButtonLabel()
-
-		return
-	end
-
-	if helperHotkeyConflict and helperHotkeyConflict(hotkey) then
-		helperLog("warning", "Helper hotkey not bound because it is already in use: " .. hotkey)
-		updateSetHotkeyButtonLabel()
-
-		return
-	end
-
-	boundHelperHotkey = hotkey
-
-	g_keyboard.bindKeyPress(hotkey, function()
-		if not HotkeyUtils.canPerformKeyCombo(hotkey) then
-			return
-		end
-
-		toggleHelperEnabled()
-	end)
-	updateSetHotkeyButtonLabel()
-end
-
-function helperHotkeyConflict(combo)
-	if not combo or combo == "" then
-		return false
-	end
-
-	if g_keyboard.isReservedMovementHotkey and g_keyboard.isReservedMovementHotkey(combo) then
-		return true
-	end
-
-	if combo == helperConfig.autoTargetHotkey or combo == helperConfig.shooterEnableHotkey or combo == helperConfig.shooterHotkey or combo == helperConfig.sharedCombatHotkey or HelperShooter and HelperShooter.hasPresetHotkey and HelperShooter.hasPresetHotkey(combo) then
-		return true
-	end
-
-	if Keybind and Keybind.isKeyComboUsedOnActionBar then
-		if Keybind.isKeyComboUsedOnActionBar(combo, CHAT_MODE.ON) or Keybind.isKeyComboUsedOnActionBar(combo, CHAT_MODE.OFF) then
-			return true
-		end
-	else
-		local ab = modules.game_actionbar
-
-		if ab and ab.checkHotkey and ab.checkHotkey(combo, nil) then
-			return true
-		end
-	end
-
-	if Keybind and Keybind.isKeyComboUsedOnCustomHotkeys then
-		return Keybind.isKeyComboUsedOnCustomHotkeys(combo, CHAT_MODE.ON) == true or Keybind.isKeyComboUsedOnCustomHotkeys(combo, CHAT_MODE.OFF) == true
-	end
-
-	if CustomHotkeyManager and CustomHotkeyManager.isKeyComboUsed then
-		return CustomHotkeyManager.isKeyComboUsed(combo, nil, CHAT_MODE.ON) == true or CustomHotkeyManager.isKeyComboUsed(combo, nil, CHAT_MODE.OFF) == true
-	end
-
-	return false
-end
-
-local function updateHelperHotkeyPreview()
-	if not helperHotkeyWindow or helperHotkeyWindow:isDestroyed() then
-		return
-	end
-
-	local comboPreview = helperHotkeyWindow:recursiveGetChildById("comboPreview")
-
-	if comboPreview then
-		comboPreview:setText(tr("%s", helperHotkeyPendingCombo or ""))
-		comboPreview:resizeToText()
-	end
-
-	local errorLabel = helperHotkeyWindow:recursiveGetChildById("errorLabel")
-	local conflict = helperHotkeyConflict(helperHotkeyPendingCombo)
-
-	if errorLabel then
-		errorLabel:setText(helperLanguage == "pt" and "Esta hotkey ja esta em uso." or "This hotkey is already in use.")
-		errorLabel:setVisible(conflict)
-	end
-
-	local applyButton = helperHotkeyWindow:recursiveGetChildById("applyButton")
-
-	if applyButton then
-		applyButton:setEnabled(not conflict and helperHotkeyPendingCombo ~= "")
-	end
-end
-
-function closeHelperHotkeyWindow()
-	if helperHotkeyWindow and not helperHotkeyWindow:isDestroyed() then
-		helperHotkeyWindow:destroy()
-	end
-
-	helperHotkeyWindow = nil
-	helperHotkeyPendingCombo = ""
-end
-
-local function onHelperHotkeyKeyDown(_, keyCode, keyboardModifiers, keyText)
-	if not helperHotkeyWindow or helperHotkeyWindow:isDestroyed() then
-		return false
-	end
-
-	helperHotkeyWindow:raise()
-	helperHotkeyWindow:focus()
-
-	helperHotkeyPendingCombo = determineKeyComboDesc(keyCode, keyboardModifiers, keyText) or ""
-
-	updateHelperHotkeyPreview()
-
-	return true
-end
-
-function onHelperHotkeyCaptureOk()
-	local combo = helperHotkeyPendingCombo or ""
-
-	if combo == "" then
-		return
-	end
-
-	if type(combo) ~= "string" then
-		combo = tostring(combo)
-	end
-
-	if helperHotkeyConflict(combo) then
-		updateHelperHotkeyPreview()
-
-		return
-	end
-
-	helperConfig.hotkey = combo
-
-	bindHelperHotkey()
-	saveConfig()
-	helperLog("info", "Helper hotkey assigned: " .. combo)
-	closeHelperHotkeyWindow()
-end
-
-function onHelperHotkeyClear()
-	helperConfig.hotkey = ""
-
-	bindHelperHotkey()
-	saveConfig()
-	helperLog("info", "Helper hotkey cleared.")
-	closeHelperHotkeyWindow()
-end
-
-function openHelperHotkeyWindow()
-	if helperHotkeyWindow and not helperHotkeyWindow:isDestroyed() then
-		closeHelperHotkeyWindow()
-	end
-
-	helperHotkeyWindow = g_ui.loadUI("/game_actionbar/assign_hotkey", g_ui.getRootWidget())
-
-	if not helperHotkeyWindow then
-		helperLog("error", "Failed to load assign_hotkey UI.")
-
-		return
-	end
-
-	helperHotkeyPendingCombo = helperConfig.hotkey or ""
-
-	helperHotkeyWindow:setText(tr("Edit Hotkey for Helper"))
-
-	local chatModeLabel = helperHotkeyWindow:recursiveGetChildById("chatMode")
-
-	if chatModeLabel then
-		chatModeLabel:setVisible(false)
-	end
-
-	local instrLabel = helperHotkeyWindow:recursiveGetChildById("hotkeyInstructionLabel")
-
-	if instrLabel then
-		instrLabel:setText(tr("Click \"Ok\" to assign the hotkey. Click \"Clear\" to remove the helper hotkey."))
-	end
-
-	updateHelperHotkeyPreview()
-
-	helperHotkeyWindow.onKeyDown = onHelperHotkeyKeyDown
-	helperHotkeyWindow.onEscape = closeHelperHotkeyWindow
-
-	local applyBtn = helperHotkeyWindow:recursiveGetChildById("applyButton")
-
-	if applyBtn then
-		function applyBtn.onClick()
-			onHelperHotkeyCaptureOk()
-		end
-	end
-
-	local clearBtn = helperHotkeyWindow:recursiveGetChildById("clearButton")
-
-	if clearBtn then
-		function clearBtn.onClick()
-			onHelperHotkeyClear()
-		end
-	end
-
-	local cancelBtn = helperHotkeyWindow:recursiveGetChildById("cancelButton")
-
-	if cancelBtn then
-		function cancelBtn.onClick()
-			closeHelperHotkeyWindow()
-		end
-	end
-
-	helperHotkeyWindow:grabKeyboard()
-	helperHotkeyWindow:raise()
-	helperHotkeyWindow:focus()
-
-	helperHotkeyWindow.hotkeyBlock = HotkeyUtils.createHotkeyBlock("helper_hotkey_window")
-end
-
-local function updateSetShooterHotkeyButtonLabel()
-	if HelperShooter and HelperShooter.updateShooterHotkeyLabels then
-		HelperShooter.updateShooterHotkeyLabels(helperConfig)
-	end
-end
-
-local function updateSharedCombatHotkeyButtonLabel()
-	local btn = getWidget("configsSharedHotkeyButton")
-
-	if not btn then
-		return
-	end
-
-	local sharedHotkey = helperConfig.sharedCombatHotkey or ""
-
-	btn:setText(sharedHotkey == "" and tr("Key [NONE]") or tr("Key [%s]", sharedHotkey))
-end
-
-local function toggleShooterEnabled()
-	if loadingConfig then
-		return
-	end
-
-	if HelperShooter and HelperShooter.toggleShooterEnableHotkey then
-		HelperShooter.toggleShooterEnableHotkey()
-	end
-end
-
-local function unbindShooterHotkey()
-	return
-end
-
 function closeShooterHotkeyWindow()
-	if shooterHotkeyWindow and not shooterHotkeyWindow:isDestroyed() then
-		shooterHotkeyWindow:destroy()
+	if combatHotkeyBatchActive and not combatHotkeyBatchActive:isDestroyed() then
+		combatHotkeyBatchActive:destroy()
 	end
 
-	shooterHotkeyWindow = nil
-	shooterHotkeyPendingCombo = ""
-	shooterPresetHotkeyProfileName = nil
+	combatHotkeyBatchActive = nil
+	presetHotkey = ""
+	var_0_33 = nil
 end
 
-local function bindShooterHotkey()
-	bindCombatHotkeys()
-	updateSetShooterHotkeyButtonLabel()
-end
-
-local combatHotkeyConflict
-local COMBAT_HOTKEY_CHAT_MODES = {
+local unusedValue
+local var_0_83 = {
 	CHAT_MODE.ON,
 	CHAT_MODE.OFF
 }
 
-local function isNativeKeybindUsed(combo)
-	if not Keybind or not combo or combo == "" then
+local function var_0_84(arg_55_0)
+	if not Keybind or not arg_55_0 or arg_55_0 == "" then
 		return false
 	end
 
 	if Keybind.isKeyComboUsed then
-		for _, chatMode in ipairs(COMBAT_HOTKEY_CHAT_MODES) do
-			if Keybind.isKeyComboUsed(combo, nil, nil, chatMode) then
+		for unusedValue, entry in ipairs(var_0_83) do
+			if Keybind.isKeyComboUsed(arg_55_0, nil, nil, entry) then
 				return true
 			end
 		end
@@ -1527,7 +1374,7 @@ local function isNativeKeybindUsed(combo)
 		return false
 	end
 
-	if Keybind.reservedKeys and Keybind.reservedKeys[combo] then
+	if Keybind.reservedKeys and Keybind.reservedKeys[arg_55_0] then
 		return true
 	end
 
@@ -1535,11 +1382,11 @@ local function isNativeKeybindUsed(combo)
 		return false
 	end
 
-	for _, chatMode in ipairs(COMBAT_HOTKEY_CHAT_MODES) do
-		for _, keybind in pairs(Keybind.defaultKeybinds) do
-			local keys = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, Keybind.currentPreset)
+	for unusedValue, entry in ipairs(var_0_83) do
+		for unusedValue, defaultKeybind in pairs(Keybind.defaultKeybinds) do
+			local keybindKeys = Keybind.getKeybindKeys(defaultKeybind.category, defaultKeybind.action, entry, Keybind.currentPreset)
 
-			if keys and (keys.primary == combo or keys.secondary == combo) then
+			if keybindKeys and (keybindKeys.primary == arg_55_0 or keybindKeys.secondary == arg_55_0) then
 				return true
 			end
 		end
@@ -1548,29 +1395,15 @@ local function isNativeKeybindUsed(combo)
 	return false
 end
 
-local function isActionBarHotkeyUsed(combo)
-	for _, chatMode in ipairs(COMBAT_HOTKEY_CHAT_MODES) do
-		if Keybind and Keybind.isKeyComboUsedOnActionBar and Keybind.isKeyComboUsedOnActionBar(combo, chatMode) then
+local function var_0_85(arg_56_0)
+	for unusedValue, entry in ipairs(var_0_83) do
+		if Keybind and Keybind.isKeyComboUsedOnActionBar and Keybind.isKeyComboUsedOnActionBar(arg_56_0, entry) then
 			return true
 		end
 
-		local actionbar = modules.game_actionbar
+		local game_actionbar = modules.game_actionbar
 
-		if (not Keybind or not Keybind.isKeyComboUsedOnActionBar) and actionbar and actionbar.isKeyComboUsedOnActionBar and actionbar.isKeyComboUsedOnActionBar(combo, chatMode == CHAT_MODE.ON) then
-			return true
-		end
-	end
-
-	return false
-end
-
-local function isCustomHotkeyUsed(combo)
-	for _, chatMode in ipairs(COMBAT_HOTKEY_CHAT_MODES) do
-		if Keybind and Keybind.isKeyComboUsedOnCustomHotkeys and Keybind.isKeyComboUsedOnCustomHotkeys(combo, chatMode) then
-			return true
-		end
-
-		if (not Keybind or not Keybind.isKeyComboUsedOnCustomHotkeys) and CustomHotkeyManager and CustomHotkeyManager.isKeyComboUsed and CustomHotkeyManager.isKeyComboUsed(combo, nil, chatMode) then
+		if (not Keybind or not Keybind.isKeyComboUsedOnActionBar) and game_actionbar and game_actionbar.isKeyComboUsedOnActionBar and game_actionbar.isKeyComboUsedOnActionBar(arg_56_0, entry == CHAT_MODE.ON) then
 			return true
 		end
 	end
@@ -1578,211 +1411,156 @@ local function isCustomHotkeyUsed(combo)
 	return false
 end
 
-function combatHotkeyConflict(kind, combo, presetProfileName)
-	if type(combo) ~= "string" or combo == "" then
+local function var_0_86(arg_57_0)
+	for unusedValue, entry in ipairs(var_0_83) do
+		if Keybind and Keybind.isKeyComboUsedOnCustomHotkeys and Keybind.isKeyComboUsedOnCustomHotkeys(arg_57_0, entry) then
+			return true
+		end
+
+		if (not Keybind or not Keybind.isKeyComboUsedOnCustomHotkeys) and CustomHotkeyManager and CustomHotkeyManager.isKeyComboUsed and CustomHotkeyManager.isKeyComboUsed(arg_57_0, nil, entry) then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function var_0_87(arg_58_0, arg_58_1)
+	if type(arg_58_0) ~= "string" or arg_58_0 == "" then
 		return false, nil
 	end
 
-	if g_keyboard.isReservedMovementHotkey and g_keyboard.isReservedMovementHotkey(combo) then
+	if g_keyboard.isReservedMovementHotkey and g_keyboard.isReservedMovementHotkey(arg_58_0) then
 		return true, helperLanguage == "pt" and "Esta hotkey e reservada para movimento." or "This hotkey is reserved for movement."
 	end
 
-	if isNativeKeybindUsed(combo) then
+	if var_0_84(arg_58_0) then
 		return true, helperLanguage == "pt" and "Hotkey usada nos controles. Escolha outra." or "Hotkey used in Controls. Choose another."
 	end
 
-	local targetHotkey = helperConfig.autoTargetHotkey or ""
-	local shooterHotkey = helperConfig.shooterEnableHotkey or helperConfig.shooterHotkey or ""
-	local sharedHotkey = helperConfig.sharedCombatHotkey or ""
-	local presetHotkeyConflict = HelperShooter and HelperShooter.hasPresetHotkey and HelperShooter.hasPresetHotkey(combo, kind == "preset" and presetProfileName or nil)
-
-	if combo == helperConfig.hotkey or kind ~= "target" and combo == targetHotkey or kind ~= "enable" and (combo == shooterHotkey or combo == helperConfig.shooterHotkey) or kind ~= "shared" and combo == sharedHotkey or presetHotkeyConflict or isActionBarHotkeyUsed(combo) or isCustomHotkeyUsed(combo) then
+	if HelperShooter and HelperShooter.hasPresetHotkey and HelperShooter.hasPresetHotkey(arg_58_0, arg_58_1) or var_0_85(arg_58_0) or var_0_86(arg_58_0) then
 		return true, helperLanguage == "pt" and "Esta hotkey ja esta em uso." or "This hotkey is already in use."
 	end
 
 	return false, nil
 end
 
-local function sharedCombatHotkeyConflict(combo)
-	return combatHotkeyConflict("shared", combo)
-end
-
-local function applySharedCombatHotkey(combo)
-	helperConfig.sharedCombatHotkey = combo
-
-	bindCombatHotkeys()
-	saveConfig()
-	showHelperMessage(false, helperLanguage == "pt" and string.format("Hotkey %s definida para ativar Target e Shooter juntos.", combo) or string.format("Hotkey %s assigned to toggle Target and Shooter together.", combo))
-end
-
-local function clearSharedCombatHotkey()
-	helperConfig.sharedCombatHotkey = ""
-
-	bindCombatHotkeys()
-	saveConfig()
-	showHelperMessage(false, helperLanguage == "pt" and "Hotkey conjunta removida. As hotkeys individuais foram preservadas." or "Shared hotkey cleared. Individual hotkeys were preserved.")
-end
-
-local function openCombatHotkeyWindow(kind, title, configKey, clearMessage, presetProfileName)
-	if shooterHotkeyWindow and not shooterHotkeyWindow:isDestroyed() then
-		shooterHotkeyWindow:destroy()
+local function var_0_88(arg_59_0, arg_59_1, arg_59_2)
+	if combatHotkeyBatchActive and not combatHotkeyBatchActive:isDestroyed() then
+		combatHotkeyBatchActive:destroy()
 	end
 
-	shooterHotkeyWindow = g_ui.loadUI("/game_actionbar/assign_hotkey", g_ui.getRootWidget())
+	combatHotkeyBatchActive = g_ui.loadUI("/game_actionbar/assign_hotkey", g_ui.getRootWidget())
 
-	if not shooterHotkeyWindow then
+	if not combatHotkeyBatchActive then
 		return
 	end
 
-	shooterPresetHotkeyProfileName = kind == "preset" and presetProfileName or nil
+	var_0_33 = arg_59_2
+	presetHotkey = HelperShooter and HelperShooter.getPresetHotkey and HelperShooter.getPresetHotkey(var_0_33) or ""
 
-	if kind == "shared" then
-		shooterHotkeyPendingCombo = helperConfig.sharedCombatHotkey or ""
-	elseif kind == "target" then
-		shooterHotkeyPendingCombo = helperConfig.autoTargetHotkey or ""
-	elseif kind == "preset" then
-		shooterHotkeyPendingCombo = HelperShooter and HelperShooter.getPresetHotkey and HelperShooter.getPresetHotkey(shooterPresetHotkeyProfileName) or ""
-	else
-		shooterHotkeyPendingCombo = helperConfig.shooterEnableHotkey or ""
+	combatHotkeyBatchActive:setText(tr(arg_59_0))
+
+	local chatMode = combatHotkeyBatchActive:recursiveGetChildById("chatMode")
+
+	if chatMode then
+		chatMode:setVisible(false)
 	end
 
-	shooterHotkeyWindow:setText(tr(title))
+	local hotkeyInstructionLabel = combatHotkeyBatchActive:recursiveGetChildById("hotkeyInstructionLabel")
 
-	local chatModeLabel = shooterHotkeyWindow:recursiveGetChildById("chatMode")
-
-	if chatModeLabel then
-		chatModeLabel:setVisible(false)
+	if hotkeyInstructionLabel then
+		hotkeyInstructionLabel:setText(tr(arg_59_1))
 	end
 
-	local instrLabel = shooterHotkeyWindow:recursiveGetChildById("hotkeyInstructionLabel")
+	local comboPreview = combatHotkeyBatchActive:recursiveGetChildById("comboPreview")
+	local errorLabel = combatHotkeyBatchActive:recursiveGetChildById("errorLabel")
+	local applyButton = combatHotkeyBatchActive:recursiveGetChildById("applyButton")
 
-	if instrLabel then
-		instrLabel:setText(tr(clearMessage))
-	end
-
-	local comboPreview = shooterHotkeyWindow:recursiveGetChildById("comboPreview")
-	local errorLabel = shooterHotkeyWindow:recursiveGetChildById("errorLabel")
-	local applyBtn = shooterHotkeyWindow:recursiveGetChildById("applyButton")
-
-	local function refreshCombatHotkeyPreview()
+	local function var_59_5()
 		if comboPreview then
-			comboPreview:setText(tr("%s", shooterHotkeyPendingCombo or ""))
+			comboPreview:setText(tr("%s", presetHotkey or ""))
 			comboPreview:resizeToText()
 		end
 
-		local combo = shooterHotkeyPendingCombo or ""
-		local conflict, conflictMessage = combatHotkeyConflict(kind, combo, shooterPresetHotkeyProfileName)
+		local var_60_0 = presetHotkey or ""
+		local var_60_1, var_60_2 = var_0_87(var_60_0, var_0_33)
 
 		if errorLabel then
-			errorLabel:setText(conflictMessage or helperLanguage == "pt" and "Esta hotkey ja esta em uso." or "This hotkey is already in use.")
-			errorLabel:setVisible(conflict)
+			errorLabel:setText(var_60_2 or helperLanguage == "pt" and "Esta hotkey ja esta em uso." or "This hotkey is already in use.")
+			errorLabel:setVisible(var_60_1)
 		end
 
-		if applyBtn then
-			applyBtn:setEnabled(combo ~= "" and not conflict)
+		if applyButton then
+			applyButton:setEnabled(var_60_0 ~= "" and not var_60_1)
 		end
 	end
 
-	refreshCombatHotkeyPreview()
+	var_59_5()
 
-	function shooterHotkeyWindow.onKeyDown(_, keyCode, keyboardModifiers, keyText)
-		if not shooterHotkeyWindow or shooterHotkeyWindow:isDestroyed() then
+	function combatHotkeyBatchActive.onKeyDown(unusedArgument, arg_61_1, arg_61_2, arg_61_3)
+		if not combatHotkeyBatchActive or combatHotkeyBatchActive:isDestroyed() then
 			return false
 		end
 
-		shooterHotkeyWindow:raise()
-		shooterHotkeyWindow:focus()
+		combatHotkeyBatchActive:raise()
+		combatHotkeyBatchActive:focus()
 
-		shooterHotkeyPendingCombo = determineKeyComboDesc(keyCode, keyboardModifiers, keyText) or ""
+		presetHotkey = determineKeyComboDesc(arg_61_1, arg_61_2, arg_61_3) or ""
 
-		refreshCombatHotkeyPreview()
+		var_59_5()
 
 		return true
 	end
 
-	shooterHotkeyWindow.onEscape = closeShooterHotkeyWindow
+	combatHotkeyBatchActive.onEscape = closeShooterHotkeyWindow
 
-	if applyBtn then
-		function applyBtn.onClick()
-			local combo = shooterHotkeyPendingCombo or ""
-			local conflict = combatHotkeyConflict(kind, combo, shooterPresetHotkeyProfileName)
+	if applyButton then
+		function applyButton.onClick()
+			local var_62_0 = presetHotkey or ""
+			local var_62_1 = var_0_87(var_62_0, var_0_33)
 
-			if combo == "" or conflict then
-				refreshCombatHotkeyPreview()
+			if var_62_0 == "" or var_62_1 then
+				var_59_5()
 
 				return
 			end
 
-			if kind == "shared" then
-				applySharedCombatHotkey(combo)
+			if not HelperShooter or not HelperShooter.setPresetHotkey or not HelperShooter.setPresetHotkey(var_0_33, var_62_0) then
 				closeShooterHotkeyWindow()
 
 				return
-			elseif kind == "target" then
-				helperConfig.autoTargetHotkey = combo
-			elseif kind == "preset" then
-				if not HelperShooter or not HelperShooter.setPresetHotkey or not HelperShooter.setPresetHotkey(shooterPresetHotkeyProfileName, combo) then
-					closeShooterHotkeyWindow()
-
-					return
-				end
-			else
-				helperConfig.shooterEnableHotkey = combo
-				helperConfig.shooterHotkey = combo
 			end
 
 			bindCombatHotkeys()
-			saveConfig()
+			var_0_79()
 			closeShooterHotkeyWindow()
 		end
 	end
 
-	local clearBtn = shooterHotkeyWindow:recursiveGetChildById("clearButton")
+	local clearButton = combatHotkeyBatchActive:recursiveGetChildById("clearButton")
 
-	if clearBtn then
-		function clearBtn.onClick()
-			if kind == "shared" then
-				clearSharedCombatHotkey()
-			elseif kind == "target" then
-				helperConfig.autoTargetHotkey = ""
-			elseif kind == "preset" then
-				if HelperShooter and HelperShooter.setPresetHotkey then
-					HelperShooter.setPresetHotkey(shooterPresetHotkeyProfileName, "")
-				end
-			else
-				helperConfig.shooterEnableHotkey = ""
-				helperConfig.shooterHotkey = ""
+	if clearButton then
+		function clearButton.onClick()
+			if HelperShooter and HelperShooter.setPresetHotkey then
+				HelperShooter.setPresetHotkey(var_0_33, "")
 			end
 
-			if kind ~= "shared" then
-				bindCombatHotkeys()
-				saveConfig()
-			end
-
+			bindCombatHotkeys()
+			var_0_79()
 			closeShooterHotkeyWindow()
 		end
 	end
 
-	local cancelBtn = shooterHotkeyWindow:recursiveGetChildById("cancelButton")
+	local cancelButton = combatHotkeyBatchActive:recursiveGetChildById("cancelButton")
 
-	if cancelBtn then
-		cancelBtn.onClick = closeShooterHotkeyWindow
+	if cancelButton then
+		cancelButton.onClick = closeShooterHotkeyWindow
 	end
 
-	shooterHotkeyWindow:grabKeyboard()
-	shooterHotkeyWindow:raise()
-	shooterHotkeyWindow:focus()
-end
-
-function openTargetHotkeyWindow()
-	openCombatHotkeyWindow("target", "Edit Hotkey for Auto Target", "autoTargetHotkey", "Click Ok to assign. Clear removes the hotkey.")
-end
-
-function openSharedCombatHotkeyWindow()
-	local title = helperLanguage == "pt" and "Editar Hotkey do Target + Shooter" or "Edit Hotkey for Target + Shooter"
-	local instruction = helperLanguage == "pt" and "Clique Ok para criar um atalho independente que alterna os dois juntos. Limpar remove apenas este atalho." or "Click Ok to create an independent shortcut that toggles both together. Clear removes only this shortcut."
-
-	openCombatHotkeyWindow("shared", title, "sharedCombatHotkey", instruction)
+	combatHotkeyBatchActive:grabKeyboard()
+	combatHotkeyBatchActive:raise()
+	combatHotkeyBatchActive:focus()
 end
 
 function openPresetHotkeyWindow(profileName)
@@ -1790,46 +1568,55 @@ function openPresetHotkeyWindow(profileName)
 		return
 	end
 
-	local title = helperLanguage == "pt" and string.format("Editar Hotkey do Perfil %s", profileName) or string.format("Edit Hotkey for Profile %s", profileName)
-	local instruction = helperLanguage == "pt" and "Clique Ok para definir. Limpar remove a hotkey deste perfil." or "Click Ok to assign. Clear removes this profile hotkey."
+	local var_64_0 = helperLanguage == "pt" and string.format("Editar Hotkey do Perfil %s", profileName) or string.format("Edit Hotkey for Profile %s", profileName)
+	local var_64_1 = helperLanguage == "pt" and "Clique Ok para definir. Limpar remove a hotkey deste perfil." or "Click Ok to assign. Clear removes this profile hotkey."
 
-	openCombatHotkeyWindow("preset", title, nil, instruction, profileName)
+	var_0_88(var_64_0, var_64_1, profileName)
 end
 
-function openShooterEnableHotkeyWindow()
-	openCombatHotkeyWindow("enable", "Edit Hotkey for Shooter Enable", "shooterEnableHotkey", "Click Ok to assign. Clear removes the hotkey.")
-end
+local function var_0_89(arg_65_0)
+	helperConfig = copyConfig(arg_65_0 or {})
 
-local function applyConfigToWidgets(config)
-	helperConfig = copyConfig(config or {})
+	var_0_43(helperConfig)
+
 	loadingConfig = true
 
-	local helperCheck = getWidget("checkbox")
-	local healingCheck = getWidget("enableHealingCheckBox")
-	local healFriendCheck = getWidget("enableHealFriendCheckBox")
+	local var_65_0 = getWidget("checkbox")
+	local var_65_1 = getWidget("enableHealingCheckBox")
+	local var_65_2 = getWidget("enableHealFriendCheckBox")
 
-	if helperCheck then
-		helperCheck:setChecked(helperConfig.enableHelper == true)
+	if var_65_0 then
+		var_65_0:setChecked(true)
 	end
 
-	if healingCheck then
-		healingCheck:setChecked(helperConfig.enableHealing == true)
+	if var_65_1 then
+		var_65_1:setChecked(helperConfig.enableHealing == true)
 	end
 
-	if healFriendCheck then
-		healFriendCheck:setChecked(helperConfig.enableHealFriend == true)
+	if var_65_2 then
+		var_65_2:setChecked(helperConfig.enableHealFriend == true)
+	end
+
+	local var_65_3 = getWidget("configsPrioritizeHotkeysCheckBox")
+
+	if var_65_3 then
+		var_65_3:setChecked(helperConfig.prioritizeHotkeys == true)
+	end
+
+	if helperConfig.prioritizeHotkeys ~= true and HelperActionCoordinator then
+		HelperActionCoordinator.clearManualHotkeyAction()
 	end
 
 	initDistanceControls()
 
-	for _, tab in pairs(TABS) do
-		local mod = modulesByTab[tab.module]
+	for unusedValue, entry in pairs(TABS) do
+		local var_65_4 = var_0_1[entry.module]
 
-		if mod and mod.loadFromConfig then
-			local ok, err = pcall(mod.loadFromConfig, helperConfig)
+		if var_65_4 and var_65_4.loadFromConfig then
+			local var_65_5, var_65_6 = pcall(var_65_4.loadFromConfig, helperConfig)
 
-			if not ok then
-				helperLog("warning", "loadFromConfig failed for " .. tostring(tab.module) .. ": " .. tostring(err))
+			if not var_65_5 then
+				helperLog("warning", "loadFromConfig failed for " .. tostring(entry.module) .. ": " .. tostring(var_65_6))
 			end
 		end
 	end
@@ -1838,7 +1625,7 @@ local function applyConfigToWidgets(config)
 		HelperConditions.loadFromConfig(helperConfig)
 	end
 
-	local healFriend = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
 	if healFriend and healFriend.refreshAllPrioritySteppers then
 		healFriend.refreshAllPrioritySteppers()
@@ -1846,7 +1633,6 @@ local function applyConfigToWidgets(config)
 
 	loadingConfig = false
 
-	bindHelperHotkey()
 	bindCombatHotkeys()
 
 	if HelperShooter and HelperShooter.syncHotkeyStatus then
@@ -1860,74 +1646,74 @@ local function applyConfigToWidgets(config)
 	refreshHelperStatsWindow()
 end
 
-local function loadConfigIntoWidgets()
-	local data = readHelperJSON()
-	local defaultName = getDefaultProfileName()
-	local needsPersist = false
+local function var_0_90()
+	local var_66_0 = readHelperJSON()
+	local fallbackProfileName = HelperConfigTab and HelperConfigTab.getFallbackProfileName and HelperConfigTab.getFallbackProfileName(var_66_0.profiles) or getDefaultProfileName()
+	local var_66_2 = false
 
 	if HelperConfigTab and HelperConfigTab.setLanguage then
-		HelperConfigTab.setLanguage(data.language, false)
+		HelperConfigTab.setLanguage(var_66_0.language, false)
 	end
 
-	local characterProfile = activeHelperCharacterName
+	local var_66_3 = textValue
 
-	if isAutoSwitchHotkeyPresetEnabled() and characterProfile and characterProfile ~= "" and type(data.profiles[characterProfile]) == "table" and data.activeProfile ~= characterProfile then
-		data.activeProfile = characterProfile
-		data.current = copyConfig(data.profiles[characterProfile])
-		needsPersist = true
+	if isAutoSwitchHotkeyPresetEnabled() and var_66_3 and var_66_3 ~= "" and type(var_66_0.profiles[var_66_3]) == "table" and var_66_0.activeProfile ~= var_66_3 then
+		var_66_0.activeProfile = var_66_3
+		var_66_0.current = copyConfig(var_66_0.profiles[var_66_3])
+		var_66_2 = true
 
-		helperLog("info", "Auto-switched Helper profile to \"" .. characterProfile .. "\".")
+		helperLog("info", "Auto-switched Helper profile to \"" .. var_66_3 .. "\".")
 	end
 
-	if data.autoSaveEnabled == nil then
-		data.autoSaveEnabled = true
-		needsPersist = true
+	if var_66_0.autoSaveEnabled == nil then
+		var_66_0.autoSaveEnabled = true
+		var_66_2 = true
 	end
 
-	if not data.activeProfile or data.activeProfile == "" or type(data.profiles[data.activeProfile]) ~= "table" then
-		data.activeProfile = defaultName
-		needsPersist = true
+	if not var_66_0.activeProfile or var_66_0.activeProfile == "" or type(var_66_0.profiles[var_66_0.activeProfile]) ~= "table" then
+		var_66_0.activeProfile = fallbackProfileName
+		var_66_2 = true
 	end
 
-	local config = data.current or {}
+	local var_66_4 = var_66_0.current or {}
 
-	if data.activeProfile and type(data.profiles) == "table" and type(data.profiles[data.activeProfile]) == "table" then
-		config = data.profiles[data.activeProfile]
+	if var_66_0.activeProfile and type(var_66_0.profiles) == "table" and type(var_66_0.profiles[var_66_0.activeProfile]) == "table" then
+		var_66_4 = var_66_0.profiles[var_66_0.activeProfile]
 
 		if HelperConfigTab and HelperConfigTab.setSelectedProfileName then
-			HelperConfigTab.setSelectedProfileName(data.activeProfile)
-			HelperConfigTab.syncProfileNameEdit(data.activeProfile)
+			HelperConfigTab.setSelectedProfileName(var_66_0.activeProfile)
+			HelperConfigTab.syncProfileNameEdit(var_66_0.activeProfile)
 		end
-	elseif type(data.profiles) == "table" and type(data.profiles[defaultName]) == "table" then
-		config = data.profiles[defaultName]
+	elseif type(var_66_0.profiles) == "table" and type(var_66_0.profiles[fallbackProfileName]) == "table" then
+		var_66_4 = var_66_0.profiles[fallbackProfileName]
 
-		if data.activeProfile == defaultName and HelperConfigTab then
+		if var_66_0.activeProfile == fallbackProfileName and HelperConfigTab then
 			if HelperConfigTab.setSelectedProfileName then
-				HelperConfigTab.setSelectedProfileName(defaultName)
+				HelperConfigTab.setSelectedProfileName(fallbackProfileName)
 			end
 
 			if HelperConfigTab.syncProfileNameEdit then
-				HelperConfigTab.syncProfileNameEdit(defaultName)
+				HelperConfigTab.syncProfileNameEdit(fallbackProfileName)
 			end
 		end
 	end
 
-	applyConfigToWidgets(config)
+	var_0_89(var_66_4)
 
-	if data.autoSaveEnabled == false then
-		applyAutoSavePreferenceToCheckbox(false)
+	if var_66_0.autoSaveEnabled == false then
+		var_0_74(false)
 	else
-		if data.autoSaveEnabled ~= true then
-			needsPersist = true
+		if var_66_0.autoSaveEnabled ~= true then
+			var_66_2 = true
 		end
 
-		data.autoSaveEnabled = true
+		var_66_0.autoSaveEnabled = true
 
-		applyAutoSavePreferenceToCheckbox(true)
+		var_0_74(true)
 	end
 
-	if needsPersist then
-		writeHelperJSON(data)
+	if var_66_2 then
+		var_0_50(var_66_0)
 	end
 
 	if HelperConfigTab and HelperConfigTab.refreshProfileList then
@@ -1935,122 +1721,115 @@ local function loadConfigIntoWidgets()
 	end
 end
 
-function showHelperMessage(failure, message)
+local function var_0_91(arg_67_0, arg_67_1)
 	if not modules.game_textmessage then
 		return
 	end
 
-	if failure then
-		modules.game_textmessage.displayFailureMessage(message)
+	if arg_67_0 then
+		modules.game_textmessage.displayFailureMessage(arg_67_1)
 	else
-		modules.game_textmessage.displayGameMessage(message)
+		modules.game_textmessage.displayGameMessage(arg_67_1)
 	end
 end
 
-local function buildRuntimeState()
-	local player = g_game.getLocalPlayer()
+local function var_0_92()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player then
+	if not localPlayer then
 		return nil
 	end
 
-	local healthPercent = player.getHealthPercent and player:getHealthPercent()
-
-	if not healthPercent then
-		local maxHealth = player:getMaxHealth() or 0
-
-		healthPercent = maxHealth > 0 and player:getHealth() / maxHealth * 100 or 100
-	end
-
-	local maxMana = player:getMaxMana() or 0
-	local manaPercent = maxMana > 0 and player:getMana() / maxMana * 100 or 100
+	local maxHealth = localPlayer:getMaxHealth() or 0
+	local health = localPlayer:getHealth()
+	local healthPercent = maxHealth > 0 and health and health / maxHealth * 100 or localPlayer.getHealthPercent and localPlayer:getHealthPercent() or 100
+	local maxMana = localPlayer:getMaxMana() or 0
+	local mana = maxMana > 0 and localPlayer:getMana() / maxMana * 100 or 100
 
 	return {
 		nowMs = g_clock.millis(),
-		player = player,
+		player = localPlayer,
 		healthPercent = healthPercent,
-		manaPercent = manaPercent
+		manaPercent = mana
 	}
 end
 
 local function helperShouldRunTick()
-	if not g_game.isOnline() then
-		return false
-	end
-
-	local enableHelper = getWidget("checkbox")
-
-	return enableHelper and enableHelper:isChecked() or false
+	return g_game.isOnline()
 end
 
-local function combatFeatureStates()
+local function var_0_94()
 	if not helperShouldRunTick() then
 		return false, false
 	end
 
-	local targetCheck = getWidget("enableTargetCheckBox")
-	local shooterCheck = getWidget("enableShooterCheckBox")
+	local var_70_0 = getWidget("enableTargetCheckBox")
+	local var_70_1 = getWidget("enableShooterCheckBox")
 
-	return targetCheck and targetCheck:isChecked() or false, shooterCheck and shooterCheck:isChecked() or false
+	return var_70_0 and var_70_0:isChecked() or false, var_70_1 and var_70_1:isChecked() or false
 end
 
-local function runCombatTick()
-	local tickStartedUs = g_clock.realMicros()
-	local targetEnabled, shooterEnabled = combatFeatureStates()
-
-	if not targetEnabled and not shooterEnabled then
-		return false
-	end
-
-	local stateStartedUs = g_clock.realMicros()
-	local state = buildRuntimeState()
-	local stateUs = g_clock.realMicros() - stateStartedUs
-
-	if not state then
+local function var_0_95()
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
 		return true
 	end
 
-	local targetUs = 0
-	local targetMod = modulesByTab.target
+	local var_71_0 = g_clock.realMicros()
+	local var_71_1, var_71_2 = var_0_94()
 
-	if targetEnabled and targetMod and targetMod.runTick then
-		local targetStartedUs = g_clock.realMicros()
-		local ok, err = pcall(targetMod.runTick, state)
+	if not var_71_1 and not var_71_2 then
+		return false
+	end
 
-		targetUs = g_clock.realMicros() - targetStartedUs
+	local var_71_3 = g_clock.realMicros()
+	local var_71_4 = var_0_92()
+	local var_71_5 = g_clock.realMicros() - var_71_3
 
-		if not ok and g_logger and g_logger.error then
-			g_logger.error("[game_helper] combatTick target failure: " .. tostring(err))
+	if not var_71_4 then
+		return true
+	end
+
+	local var_71_6 = 0
+	local target = var_0_1.target
+
+	if var_71_1 and target and target.runTick then
+		local var_71_8 = g_clock.realMicros()
+		local var_71_9, var_71_10 = pcall(target.runTick, var_71_4)
+
+		var_71_6 = g_clock.realMicros() - var_71_8
+
+		if not var_71_9 and g_logger and g_logger.error then
+			g_logger.error("[game_helper] combatTick target failure: " .. tostring(var_71_10))
 		end
 	end
 
-	local shooterUs = 0
-	local shooterScanUs = 0
-	local shooterCreatureCount = 0
-	local shooterPriorityCount = 0
-	local shooterHotPriority = "none"
-	local shooterHotPriorityUs = 0
-	local shooterMod = modulesByTab.shooter
+	local var_71_11 = 0
+	local var_71_12 = 0
+	local var_71_13 = 0
+	local var_71_14 = 0
+	local var_71_15 = "none"
+	local var_71_16 = 0
+	local shooter = var_0_1.shooter
 
-	if shooterEnabled and shooterMod and shooterMod.runTick then
-		local shooterStartedUs = g_clock.realMicros()
-		local ok, err = pcall(shooterMod.runTick, state)
+	if var_71_2 and shooter and shooter.runTick then
+		local var_71_18 = g_clock.realMicros()
+		local var_71_19, var_71_20 = pcall(shooter.runTick, var_71_4)
 
-		shooterUs = g_clock.realMicros() - shooterStartedUs
+		var_71_11 = g_clock.realMicros() - var_71_18
 
-		if shooterMod.getLastTickProfile then
-			shooterScanUs, shooterCreatureCount, shooterPriorityCount, shooterHotPriority, shooterHotPriorityUs = shooterMod.getLastTickProfile()
+		if shooter.getLastTickProfile then
+			var_71_12, var_71_13, var_71_14, var_71_15, var_71_16 = shooter.getLastTickProfile()
 		end
 
-		if not ok and g_logger and g_logger.error then
-			g_logger.error("[game_helper] combatTick shooter failure: " .. tostring(err))
+		if not var_71_19 and g_logger and g_logger.error then
+			g_logger.error("[game_helper] combatTick shooter failure: " .. tostring(var_71_20))
 		end
 	end
 
-	local totalUs = g_clock.realMicros() - tickStartedUs
+	local var_71_21 = g_clock.realMicros() - var_71_0
 
-	if totalUs >= 5000 and g_logger and g_logger.warning then
-		g_logger.warning(string.format("[HelperHitch] total=%.2fms state=%.2fms target=%.2fms shooter=%.2fms scan=%.2fms creatures=%d priorities=%d hot=%s/%.2fms active=%s/%s", totalUs / 1000, stateUs / 1000, targetUs / 1000, shooterUs / 1000, (tonumber(shooterScanUs) or 0) / 1000, tonumber(shooterCreatureCount) or 0, tonumber(shooterPriorityCount) or 0, tostring(shooterHotPriority or "none"), (tonumber(shooterHotPriorityUs) or 0) / 1000, tostring(targetEnabled), tostring(shooterEnabled)))
+	if var_0_34 and var_71_21 >= 5000 and g_logger and g_logger.warning then
+		g_logger.warning(string.format("[HelperHitch] total=%.2fms state=%.2fms target=%.2fms shooter=%.2fms scan=%.2fms creatures=%d priorities=%d hot=%s/%.2fms active=%s/%s", var_71_21 / 1000, var_71_5 / 1000, var_71_6 / 1000, var_71_11 / 1000, (tonumber(var_71_12) or 0) / 1000, tonumber(var_71_13) or 0, tonumber(var_71_14) or 0, tostring(var_71_15 or "none"), (tonumber(var_71_16) or 0) / 1000, tostring(var_71_1), tostring(var_71_2)))
 	end
 
 	return true
@@ -2064,325 +1843,219 @@ local function stopCombatScheduler()
 	end
 end
 
-local function startCombatScheduler()
+local function var_0_97()
 	if combatTickEvent then
 		return
 	end
 
-	local targetEnabled, shooterEnabled = combatFeatureStates()
+	local var_73_0, var_73_1 = var_0_94()
 
-	if not targetEnabled and not shooterEnabled then
+	if not var_73_0 and not var_73_1 then
 		return
 	end
 
 	combatTickEvent = scheduleEvent(function()
 		combatTickEvent = nil
 
-		local ok, shouldContinue = pcall(runCombatTick)
+		local var_74_0, var_74_1 = pcall(var_0_95)
 
-		if not ok then
+		if not var_74_0 then
 			if g_logger and g_logger.error then
-				g_logger.error("[game_helper] combatTick failure: " .. tostring(shouldContinue))
+				g_logger.error("[game_helper] combatTick failure: " .. tostring(var_74_1))
 			end
-		elseif not shouldContinue then
+		elseif not var_74_1 then
 			return
 		end
 
-		startCombatScheduler()
+		var_0_97()
 	end, combatTickIntervalMs)
 end
 
 function syncCombatSchedulerState()
-	local targetEnabled, shooterEnabled = combatFeatureStates()
+	local var_75_0, var_75_1 = var_0_94()
 
-	if targetEnabled or shooterEnabled then
-		startCombatScheduler()
+	if var_75_0 or var_75_1 then
+		var_0_97()
 	else
 		stopCombatScheduler()
 	end
 end
 
-local function bindCombatHotkeysImpl()
-	if boundSharedCombatHotkey and boundSharedCombatHotkey ~= "" then
-		g_keyboard.unbindKeyPress(boundSharedCombatHotkey)
+function bindCombatHotkeys()
+	if HelperShooter and HelperShooter.unbindPresetHotkeys then
+		HelperShooter.unbindPresetHotkeys()
 	end
 
-	boundSharedCombatHotkey = nil
+	local var_76_0 = {}
 
-	if HelperTarget and HelperTarget.unbindHotkeys then
-		HelperTarget.unbindHotkeys()
-	end
-
-	if HelperShooter and HelperShooter.unbindHotkeys then
-		HelperShooter.unbindHotkeys()
-	end
-
-	local sharedHotkey = helperConfig.sharedCombatHotkey or ""
-
-	if HelperTarget and HelperTarget.bindHotkeys then
-		HelperTarget.bindHotkeys(helperConfig, false)
-	end
-
-	local skippedPresetHotkeys = {}
-
-	if HelperShooter and HelperShooter.bindHotkeys then
-		skippedPresetHotkeys = HelperShooter.bindHotkeys(helperConfig, false, function(profileName, hotkey)
-			return combatHotkeyConflict("preset", hotkey, profileName)
+	if HelperShooter and HelperShooter.bindPresetHotkeys then
+		var_76_0 = HelperShooter.bindPresetHotkeys(function(arg_77_0, arg_77_1)
+			return var_0_87(arg_77_1, arg_77_0)
 		end) or {}
 	end
 
-	for _, skipped in ipairs(skippedPresetHotkeys) do
-		helperLog("warning", string.format("Shooter profile hotkey not bound because it is already in use: %s (%s)", tostring(skipped.profile), tostring(skipped.key)))
-	end
-
-	local sharedConflict = sharedHotkey ~= "" and sharedCombatHotkeyConflict(sharedHotkey) or false
-
-	if sharedHotkey ~= "" and not sharedConflict then
-		local sharedCombo = sharedHotkey
-
-		boundSharedCombatHotkey = sharedCombo
-
-		g_keyboard.bindKeyPress(sharedCombo, function()
-			if not HotkeyUtils.canPerformKeyCombo(sharedCombo) then
-				return
-			end
-
-			local helperCheck = getWidget("checkbox")
-
-			if not helperCheck or not helperCheck:isChecked() then
-				return
-			end
-
-			local targetCheck = getWidget("enableTargetCheckBox")
-			local shooterCheck = getWidget("enableShooterCheckBox")
-			local bothEnabled = targetCheck and targetCheck:isChecked() and shooterCheck and shooterCheck:isChecked()
-			local newState = not bothEnabled
-
-			combatHotkeyBatchActive = true
-			combatHotkeySavePending = false
-			combatHotkeyStatsPending = false
-
-			local ok, err = pcall(function()
-				if HelperTarget and HelperTarget.setAutoTargetEnabledFromHotkey then
-					HelperTarget.setAutoTargetEnabledFromHotkey(newState, true)
-				end
-
-				if HelperShooter and HelperShooter.toggleMagicShooterFromHotkey then
-					HelperShooter.toggleMagicShooterFromHotkey(newState, true)
-				end
-			end)
-			local shouldSave = combatHotkeySavePending
-			local shouldRefreshStats = combatHotkeyStatsPending
-
-			combatHotkeyBatchActive = false
-			combatHotkeySavePending = false
-			combatHotkeyStatsPending = false
-
-			if shouldSave then
-				autoSave()
-			elseif shouldRefreshStats then
-				refreshHelperStatsWindow()
-			end
-
-			if not ok then
-				error(err, 0)
-			end
-
-			local targetEnabled = targetCheck and targetCheck:isChecked() or false
-			local shooterEnabled = shooterCheck and shooterCheck:isChecked() or false
-
-			if targetEnabled == shooterEnabled then
-				local message
-
-				if helperLanguage == "pt" then
-					message = string.format("Auto Target e Shooter %s.", targetEnabled and "ativados" or "desativados")
-				else
-					message = string.format("Auto Target and Shooter are %s.", targetEnabled and "enabled" or "disabled")
-				end
-
-				showHelperMessage(false, message)
-			else
-				local message
-
-				if helperLanguage == "pt" then
-					message = string.format("Auto Target %s. Shooter %s.", targetEnabled and "ativado" or "desativado", shooterEnabled and "ativado" or "desativado")
-				else
-					message = string.format("Auto Target is %s. Shooter is %s.", targetEnabled and "enabled" or "disabled", shooterEnabled and "enabled" or "disabled")
-				end
-
-				showHelperMessage(false, message)
-			end
-		end)
-	elseif sharedConflict then
-		helperLog("warning", "Shared combat hotkey not bound because it is already in use: " .. tostring(sharedHotkey))
-	end
-
-	updateSharedCombatHotkeyButtonLabel()
-end
-
-bindCombatHotkeys = bindCombatHotkeysImpl
-
-local function unbindCombatHotkeysImpl()
-	if boundSharedCombatHotkey and boundSharedCombatHotkey ~= "" then
-		g_keyboard.unbindKeyPress(boundSharedCombatHotkey)
-	end
-
-	boundSharedCombatHotkey = nil
-
-	if HelperTarget and HelperTarget.unbindHotkeys then
-		HelperTarget.unbindHotkeys()
-	end
-
-	if HelperShooter and HelperShooter.unbindHotkeys then
-		HelperShooter.unbindHotkeys()
+	for unusedValue, entry in ipairs(var_76_0) do
+		helperLog("warning", string.format("Shooter profile hotkey not bound because it is already in use: %s (%s)", tostring(entry.profile), tostring(entry.key)))
 	end
 end
 
-unbindCombatHotkeys = unbindCombatHotkeysImpl
+local function closeHelperHotkeyWindow()
+	if HelperShooter and HelperShooter.unbindPresetHotkeys then
+		HelperShooter.unbindPresetHotkeys()
+	end
+end
 
-local function connectCombatEvents()
-	function combatCreatureAppearHandler(creature)
-		local mod = modulesByTab.target
+local function loadConfigIntoWidgets()
+	function boundTargetHotkeyWindow(arg_80_0)
+		local target = var_0_1.target
 
-		if mod and mod.onCreatureAppear then
-			mod.onCreatureAppear(creature)
+		if target and target.onCreatureAppear then
+			target.onCreatureAppear(arg_80_0)
 		end
 	end
 
-	function combatCreatureDisappearHandler(creature)
-		local mod = modulesByTab.target
+	function targetHotkeyPendingCombo(arg_81_0)
+		local target = var_0_1.target
 
-		if mod and mod.onCreatureDisappear then
-			mod.onCreatureDisappear(creature)
+		if target and target.onCreatureDisappear then
+			target.onCreatureDisappear(arg_81_0)
 		end
 	end
 
-	function combatSpellCooldownHandler(spellId, duration)
+	function handleSpellCooldown(arg_82_0, arg_82_1)
 		if HelperShooter and HelperShooter.onSpellCooldown then
-			HelperShooter.onSpellCooldown(spellId, duration)
+			HelperShooter.onSpellCooldown(arg_82_0, arg_82_1)
 		end
 	end
 
-	function combatSpellGroupCooldownHandler(groupId, duration)
+	function handleSpellGroupCooldown(arg_83_0, arg_83_1)
 		if HelperShooter and HelperShooter.onSpellGroupCooldown then
-			HelperShooter.onSpellGroupCooldown(groupId, duration)
+			HelperShooter.onSpellGroupCooldown(arg_83_0, arg_83_1)
 		end
 	end
 
-	function combatMultiUseCooldownHandler(duration)
+	function handleMultiUseCooldown(arg_84_0)
 		if HelperShooter and HelperShooter.onMultiUseCooldown then
-			HelperShooter.onMultiUseCooldown(duration)
+			HelperShooter.onMultiUseCooldown(arg_84_0)
 		end
 	end
 
-	function combatAttackingCreatureChangeHandler(creature, oldCreature)
-		local targetMod = modulesByTab.target
+	function handleAttackingCreatureChange(arg_85_0, arg_85_1)
+		local target = var_0_1.target
 
-		if targetMod and targetMod.onAttackingCreatureChange then
-			targetMod.onAttackingCreatureChange(creature, oldCreature)
+		if target and target.onAttackingCreatureChange then
+			target.onAttackingCreatureChange(arg_85_0, arg_85_1)
 		end
 
-		local shooterMod = modulesByTab.shooter
+		local shooter = var_0_1.shooter
 
-		if shooterMod and shooterMod.onAttackingCreatureChange then
-			local ok, err = pcall(shooterMod.onAttackingCreatureChange, creature, oldCreature)
+		if shooter and shooter.onAttackingCreatureChange then
+			local var_85_2, var_85_3 = pcall(shooter.onAttackingCreatureChange, arg_85_0, arg_85_1)
 
-			if not ok and g_logger and g_logger.error then
-				g_logger.error("[game_helper] attackingCreatureChange shooter failure: " .. tostring(err))
+			if not var_85_2 and g_logger and g_logger.error then
+				g_logger.error("[game_helper] attackingCreatureChange shooter failure: " .. tostring(var_85_3))
 			end
 		end
 	end
 
-	function combatFollowingCreatureChangeHandler(creature, oldCreature)
-		local mod = modulesByTab.shooter
+	function handleFollowingCreatureChange(arg_86_0, arg_86_1)
+		local shooter = var_0_1.shooter
 
-		if mod and mod.onFollowingCreatureChange then
-			mod.onFollowingCreatureChange(creature, oldCreature)
+		if shooter and shooter.onFollowingCreatureChange then
+			shooter.onFollowingCreatureChange(arg_86_0, arg_86_1)
 		end
 	end
 
-	function combatPlayerStatesChangeHandler(_, states, oldStates)
-		local pzState = PlayerStates and PlayerStates.Pz
+	function handleStatesChange(unusedArgument, arg_87_1, arg_87_2)
+		local var_87_0 = PlayerStates and PlayerStates.Pz
 
-		if not pzState or bit.band(bit.bxor(states, oldStates), pzState) == 0 then
+		if not var_87_0 or bit.band(bit.bxor(arg_87_1, arg_87_2), var_87_0) == 0 then
 			return
 		end
 
-		local targetMod = modulesByTab.target
+		local target = var_0_1.target
 
-		if targetMod and targetMod.refreshProtectionZoneState then
-			targetMod.refreshProtectionZoneState()
+		if target and target.refreshProtectionZoneState then
+			target.refreshProtectionZoneState()
 		end
 
-		local shooterMod = modulesByTab.shooter
+		local shooter = var_0_1.shooter
 
-		if shooterMod and shooterMod.refreshProtectionZoneState then
-			shooterMod.refreshProtectionZoneState()
+		if shooter and shooter.refreshProtectionZoneState then
+			shooter.refreshProtectionZoneState()
 		end
 	end
 
 	connect(Creature, {
-		onAppear = combatCreatureAppearHandler,
-		onDisappear = combatCreatureDisappearHandler
+		onAppear = boundTargetHotkeyWindow,
+		onDisappear = targetHotkeyPendingCombo
 	})
 	connect(LocalPlayer, {
-		onStatesChange = combatPlayerStatesChangeHandler
+		onStatesChange = handleStatesChange
 	})
 	connect(g_game, {
-		onSpellCooldown = combatSpellCooldownHandler,
-		onSpellGroupCooldown = combatSpellGroupCooldownHandler,
-		onMultiUseCooldown = combatMultiUseCooldownHandler,
-		onAttackingCreatureChange = combatAttackingCreatureChangeHandler,
-		onFollowingCreatureChange = combatFollowingCreatureChangeHandler
+		onSpellCooldown = handleSpellCooldown,
+		onSpellGroupCooldown = handleSpellGroupCooldown,
+		onMultiUseCooldown = handleMultiUseCooldown,
+		onAttackingCreatureChange = handleAttackingCreatureChange,
+		onFollowingCreatureChange = handleFollowingCreatureChange
 	})
 end
 
 local function disconnectCombatEvents()
-	if combatCreatureAppearHandler then
+	if boundTargetHotkeyWindow then
 		disconnect(Creature, {
-			onAppear = combatCreatureAppearHandler,
-			onDisappear = combatCreatureDisappearHandler
+			onAppear = boundTargetHotkeyWindow,
+			onDisappear = targetHotkeyPendingCombo
 		})
 	end
 
-	if combatSpellCooldownHandler or combatAttackingCreatureChangeHandler then
+	if handleSpellCooldown or handleAttackingCreatureChange then
 		disconnect(g_game, {
-			onSpellCooldown = combatSpellCooldownHandler,
-			onSpellGroupCooldown = combatSpellGroupCooldownHandler,
-			onMultiUseCooldown = combatMultiUseCooldownHandler,
-			onAttackingCreatureChange = combatAttackingCreatureChangeHandler,
-			onFollowingCreatureChange = combatFollowingCreatureChangeHandler
+			onSpellCooldown = handleSpellCooldown,
+			onSpellGroupCooldown = handleSpellGroupCooldown,
+			onMultiUseCooldown = handleMultiUseCooldown,
+			onAttackingCreatureChange = handleAttackingCreatureChange,
+			onFollowingCreatureChange = handleFollowingCreatureChange
 		})
 	end
 
-	if combatPlayerStatesChangeHandler then
+	if handleStatesChange then
 		disconnect(LocalPlayer, {
-			onStatesChange = combatPlayerStatesChangeHandler
+			onStatesChange = handleStatesChange
 		})
 	end
 end
 
-local function runHelperTick()
+local function var_0_101()
 	if not helperShouldRunTick() then
 		return
 	end
 
-	local state = buildRuntimeState()
-
-	if not state then
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
 		return
 	end
 
-	local healer = modulesByTab.healer
+	local var_89_0 = var_0_92()
 
-	if healer and healer.runTick and healer.runTick(state) then
+	if not var_89_0 then
 		return
 	end
 
-	local healFriend = modulesByTab.healFriend
+	local healer = var_0_1.healer
+
+	if healer and healer.runTick and healer.runTick(var_89_0) then
+		return
+	end
+
+	if healer and healer.shouldYieldToHealing and healer.shouldYieldToHealing(var_89_0.player) then
+		return
+	end
+
+	local healFriend = var_0_1.healFriend
 
 	if healFriend and healFriend.runTick then
-		healFriend.runTick(state)
+		healFriend.runTick(var_89_0)
 	end
 end
 
@@ -2391,11 +2064,13 @@ local function startScheduler()
 		return
 	end
 
-	helperTickEvent = cycleEvent(function()
-		local ok, err = pcall(runHelperTick)
+	tagHitchEventSource("game_helper.runHelperTick")
 
-		if not ok and g_logger and g_logger.error then
-			g_logger.error("[game_helper] helperTick failure: " .. tostring(err))
+	helperTickEvent = cycleEvent(function()
+		local var_91_0, var_91_1 = pcall(var_0_101)
+
+		if not var_91_0 and g_logger and g_logger.error then
+			g_logger.error("[game_helper] helperTick failure: " .. tostring(var_91_1))
 		end
 	end, helperTickIntervalMs)
 end
@@ -2409,27 +2084,28 @@ local function stopScheduler()
 end
 
 local function initModules()
-	modulesByTab.healer = HelperHealer
-	modulesByTab.healFriend = HelperHealFriend
-	modulesByTab.target = HelperTarget
-	modulesByTab.shooter = HelperShooter
-	modulesByTab.conditions = HelperConditions
-	modulesByTab.tools = HelperTools
-	modulesByTab.autoparty = HelperAutoParty
-	modulesByTab.config = HelperConfigTab
+	var_0_1.healer = HelperHealer
+	var_0_1.healFriend = HelperHealFriend
+	var_0_1.target = HelperTarget
+	var_0_1.shooter = HelperShooter
+	var_0_1.cavebot = HelperCavebot
+	var_0_1.conditions = HelperConditions
+	var_0_1.tools = HelperTools
+	var_0_1.autoparty = HelperAutoParty
+	var_0_1.config = HelperConfigTab
 
-	local ctx = {
+	local var_93_0 = {
 		getWidget = getWidget,
-		getPlayerVoc = getPlayerVoc,
-		saveConfig = saveConfig,
+		getPlayerVoc = var_0_72,
+		saveConfig = var_0_79,
 		isLoadingConfig = function()
 			return loadingConfig
 		end,
 		getLanguage = function()
 			return helperLanguage
 		end,
-		applyWidgetLanguage = function(target)
-			translateHelperWidgetTree(target, true)
+		applyWidgetLanguage = function(arg_96_0)
+			var_0_65(arg_96_0, true)
 		end,
 		rebindCombatHotkeys = function()
 			if bindCombatHotkeys then
@@ -2439,37 +2115,46 @@ local function initModules()
 		requestAutoSave = function()
 			autoSave()
 		end,
-		isTabActive = function(tabName)
-			return currentTab == tabName and helperWindow and not helperWindow:isHidden()
+		isTabActive = function(arg_99_0)
+			return currentTab == arg_99_0 and helperWindow and not helperWindow:isHidden()
 		end,
 		readDistanceValue = readDistanceValue,
-		applyDistanceValue = applyDistanceValue
+		applyDistanceValue = applyDistanceValue,
+		collectConfig = var_0_78,
+		applyConfig = var_0_89
 	}
 
-	for _, tab in pairs(TABS) do
-		if tab.module ~= "config" then
-			local mod = modulesByTab[tab.module]
+	for unusedValue, entry in pairs(TABS) do
+		if entry.module ~= "config" then
+			local var_93_1 = var_0_1[entry.module]
 
-			if mod and mod.init then
-				mod.init(ctx)
+			if var_93_1 and var_93_1.init then
+				var_93_1.init(var_93_0)
 			end
 		end
 	end
 
 	if HelperConditions and HelperConditions.init then
-		HelperConditions.init(ctx)
+		HelperConditions.init(var_93_0)
+	end
+
+	if HelperPresets and HelperPresets.init then
+		HelperPresets.init(var_93_0)
 	end
 
 	if HelperConfigTab and HelperConfigTab.init then
 		HelperConfigTab.init({
 			getWidget = getWidget,
 			readHelperJSON = readHelperJSON,
-			writeHelperJSON = writeHelperJSON,
+			writeHelperJSON = var_0_50,
+			refreshProfileLibrary = function()
+				return HelperProfileStorage and HelperProfileStorage.refreshLibrary and HelperProfileStorage.refreshLibrary() or false
+			end,
 			copyConfig = copyConfig,
-			collectConfig = collectHelperConfigSnapshot,
-			applyConfig = applyConfigToWidgets,
-			applyConfigSnapshot = function(snapshot)
-				helperConfig = copyConfig(snapshot)
+			collectConfig = var_0_78,
+			applyConfig = var_0_89,
+			applyConfigSnapshot = function(arg_101_0)
+				helperConfig = copyConfig(arg_101_0)
 			end,
 			isAutoSaveEnabled = isAutoSaveEnabled,
 			isLoadingConfig = function()
@@ -2478,14 +2163,14 @@ local function initModules()
 			getLanguage = function()
 				return helperLanguage
 			end,
-			applyLanguage = applyHelperLanguage,
-			getProfileNameForAutoSave = getProfileNameForAutoSave,
-			applyAutoSavePreferenceToCheckbox = applyAutoSavePreferenceToCheckbox,
+			applyLanguage = var_0_67,
+			getProfileNameForAutoSave = var_0_73,
+			applyAutoSavePreferenceToCheckbox = var_0_74,
 			isAutoSwitchHotkeyPresetEnabled = isAutoSwitchHotkeyPresetEnabled,
 			applyAutoSwitchHotkeyPresetToCheckbox = applyAutoSwitchHotkeyPresetToCheckbox,
-			cancelAutoSave = cancelAutoSave,
-			flushAutoSave = flushAutoSave,
-			showMessage = showHelperMessage,
+			cancelAutoSave = unbindCombatHotkeys,
+			flushAutoSave = var_0_80,
+			showMessage = var_0_91,
 			log = helperLog,
 			openHelperWindow = function()
 				if helperWindow then
@@ -2499,161 +2184,229 @@ local function initModules()
 end
 
 local function getModuleForTab(tab)
-	local cfg = tab and TABS[tab]
+	local var_105_0 = tab and TABS[tab]
 
-	return cfg and modulesByTab[cfg.module] or nil
+	return var_105_0 and var_0_1[var_105_0.module] or nil
 end
 
 local function showCurrentTabModule()
-	local mod = getModuleForTab(currentTab)
+	local var_106_0 = getModuleForTab(currentTab)
 
-	if mod and mod.onShow then
-		mod.onShow()
+	if var_106_0 and var_106_0.onShow then
+		var_106_0.onShow()
 	end
 end
 
 local function hideCurrentTabModule()
-	local mod = getModuleForTab(currentTab)
+	local var_107_0 = getModuleForTab(currentTab)
 
-	if mod and mod.onHide then
-		mod.onHide()
+	if var_107_0 and var_107_0.onHide then
+		var_107_0.onHide()
+	end
+end
+
+local function var_0_108()
+	return g_game and g_game.isCavebotAuthorized and g_game.isCavebotAuthorized()
+end
+
+local function var_0_109(arg_109_0)
+	local var_109_0 = getWidget("partyButtonFrame")
+
+	if not var_109_0 then
+		return
+	end
+
+	local var_109_1 = arg_109_0 and "cavebotButtonFrame" or "shooterButtonFrame"
+
+	var_109_0:breakAnchors()
+	var_109_0:addAnchor(AnchorTop, var_109_1, AnchorBottom)
+	var_109_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	var_109_0:setMarginLeft(7)
+	var_109_0:setMarginTop(5)
+end
+
+local function refreshHelperCharacterCard(arg_110_0)
+	local var_110_0 = getWidget("cavebotButtonFrame")
+	local var_110_1 = getWidget("cavebotButton")
+	local var_110_2 = getWidget("cavebotPanel")
+
+	if var_110_0 then
+		var_110_0:setVisible(arg_110_0)
+	end
+
+	if var_110_1 then
+		var_110_1:setVisible(arg_110_0)
+	end
+
+	if var_110_2 and not arg_110_0 then
+		var_110_2:setVisible(false)
+	end
+
+	var_0_109(arg_110_0)
+
+	if not arg_110_0 and currentTab == "cavebot" then
+		currentTab = nil
+
+		showTab("healing")
+	end
+end
+
+function onCavebotAuthorized(unusedArgument, arg_111_1, arg_111_2, arg_111_3)
+	refreshHelperCharacterCard(true)
+
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onAuthorized then
+		cavebot.onAuthorized(arg_111_1, arg_111_2, arg_111_3)
+	end
+end
+
+function onCavebotStatus(arg_112_0, arg_112_1, arg_112_2, arg_112_3)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onStatus then
+		cavebot.onStatus(arg_112_0, arg_112_1, arg_112_2, arg_112_3)
 	end
 end
 
 function showTab(tab)
+	if tab == "cavebot" and not var_0_108() then
+		return
+	end
+
 	if not helperWindow or currentTab == tab then
 		return
 	end
 
-	local prevTab = currentTab
+	local var_113_0 = currentTab
 
 	currentTab = tab
 
-	for name, cfg in pairs(TABS) do
-		local active = name == tab
-		local button = getWidget(cfg.buttonId)
-		local panel = getWidget(cfg.panelId)
+	for key, entry in pairs(TABS) do
+		local var_113_1 = key == tab
+		local var_113_2 = getWidget(entry.buttonId)
+		local var_113_3 = getWidget(entry.panelId)
 
-		if button then
-			button:setOn(active)
+		if var_113_2 then
+			var_113_2:setOn(var_113_1)
 		end
 
-		if panel then
-			panel:setVisible(active)
+		if var_113_3 then
+			var_113_3:setVisible(var_113_1)
 		end
 	end
 
-	if prevTab and TABS[prevTab] then
-		local prevMod = getModuleForTab(prevTab)
+	if var_113_0 and TABS[var_113_0] then
+		local var_113_4 = getModuleForTab(var_113_0)
 
-		if prevMod and prevMod.onHide then
-			prevMod.onHide()
+		if var_113_4 and var_113_4.onHide then
+			var_113_4.onHide()
 		end
 	end
 
 	if TABS[tab] then
-		local currentMod = getModuleForTab(tab)
+		local var_113_5 = getModuleForTab(tab)
 
-		if currentMod and currentMod.onShow then
-			currentMod.onShow()
+		if var_113_5 and var_113_5.onShow then
+			var_113_5.onShow()
 		end
 	end
 
-	refreshHelperUiLanguage(false)
+	var_0_66(false)
 end
 
-local DISTANCE_MIN = 1
-local DISTANCE_MAX = 7
-local DISTANCE_DEFAULT = 7
+local var_0_111 = 1
+local var_0_112 = 7
+local var_0_113 = 7
 
 function clampDistanceValue(value, default)
-	local n = tonumber(value)
+	local numericValue = tonumber(value)
 
-	if not n then
-		return default or DISTANCE_DEFAULT
+	if not numericValue then
+		return default or var_0_113
 	end
 
-	n = math.floor(n)
+	local var_114_1 = math.floor(numericValue)
 
-	if n < DISTANCE_MIN then
-		n = DISTANCE_MIN
+	if var_114_1 < var_0_111 then
+		var_114_1 = var_0_111
 	end
 
-	if n > DISTANCE_MAX then
-		n = DISTANCE_MAX
+	if var_114_1 > var_0_112 then
+		var_114_1 = var_0_112
 	end
 
-	return n
+	return var_114_1
 end
 
-local function getDistanceWidgetText(widget)
-	if not widget then
+local function var_0_114(arg_115_0)
+	if not arg_115_0 then
 		return nil
 	end
 
-	if widget.getCurrentOption then
-		local current = widget:getCurrentOption()
+	if arg_115_0.getCurrentOption then
+		local currentOption = arg_115_0:getCurrentOption()
 
-		if type(current) == "table" then
-			return current.text
+		if type(currentOption) == "table" then
+			return currentOption.text
 		end
 
-		return current
+		return currentOption
 	end
 
-	if widget.getText then
-		return widget:getText()
+	if arg_115_0.getText then
+		return arg_115_0:getText()
 	end
 
 	return nil
 end
 
-local function setDistanceWidgetValue(widget, value, default)
-	if not widget then
+local function var_0_115(arg_116_0, arg_116_1, arg_116_2)
+	if not arg_116_0 then
 		return
 	end
 
-	local text = tostring(clampDistanceValue(value, default or DISTANCE_DEFAULT))
+	local textValue = tostring(clampDistanceValue(arg_116_1, arg_116_2 or var_0_113))
 
-	if widget.setCurrentOption then
-		widget:setCurrentOption(text, true)
-	elseif widget.setText then
-		widget:setText(text)
+	if arg_116_0.setCurrentOption then
+		arg_116_0:setCurrentOption(textValue, true)
+	elseif arg_116_0.setText then
+		arg_116_0:setText(textValue)
 	end
 end
 
-local function ensureDistanceComboOptions(combo)
-	if not combo or not combo.addOption then
+local function var_0_116(arg_117_0)
+	if not arg_117_0 or not arg_117_0.addOption then
 		return
 	end
 
-	if combo.getOptionsCount and combo:getOptionsCount() > 0 then
+	if arg_117_0.getOptionsCount and arg_117_0:getOptionsCount() > 0 then
 		return
 	end
 
-	for i = DISTANCE_MIN, DISTANCE_MAX do
-		combo:addOption(tostring(i), i)
+	for iter_117_0 = var_0_111, var_0_112 do
+		arg_117_0:addOption(tostring(iter_117_0), iter_117_0)
 	end
 end
 
 function readDistanceValue(id)
-	local distanceWidget = getWidget(id)
+	local var_118_0 = getWidget(id)
 
-	return clampDistanceValue(getDistanceWidgetText(distanceWidget), DISTANCE_DEFAULT)
+	return clampDistanceValue(var_0_114(var_118_0), var_0_113)
 end
 
 function applyDistanceValue(id, value)
-	local distanceWidget = getWidget(id)
+	local var_119_0 = getWidget(id)
 
-	ensureDistanceComboOptions(distanceWidget)
-	setDistanceWidgetValue(distanceWidget, value, DISTANCE_DEFAULT)
+	var_0_116(var_119_0)
+	var_0_115(var_119_0, value, var_0_113)
 end
 
 function initDistanceControls()
-	applyDistanceValue("targetDistanceCombo", DISTANCE_DEFAULT)
+	applyDistanceValue("targetDistanceCombo", var_0_113)
 end
 
-function onTargetDistanceChange(_)
+function onTargetDistanceChange(unusedArgument)
 	if loadingConfig then
 		return
 	end
@@ -2661,43 +2414,43 @@ function onTargetDistanceChange(_)
 	autoSave()
 end
 
-function onTargetModeChange(_)
+function onTargetModeChange(unusedArgument)
 	if loadingConfig then
 		return
 	end
 
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.onTargetModeChange then
-		mod.onTargetModeChange()
+	if target and target.onTargetModeChange then
+		target.onTargetModeChange()
 	else
 		autoSave()
 	end
 end
 
-function onTargetPriorityChange(_)
+function onTargetPriorityChange(unusedArgument)
 	if loadingConfig then
 		return
 	end
 
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.onTargetPriorityChange then
-		mod.onTargetPriorityChange()
+	if target and target.onTargetPriorityChange then
+		target.onTargetPriorityChange()
 	else
 		autoSave()
 	end
 end
 
-function onTargetPzAutoChange(_)
+function onTargetPzAutoChange(unusedArgument)
 	if loadingConfig then
 		return
 	end
 
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.onTargetPzAutoChange then
-		mod.onTargetPzAutoChange()
+	if target and target.onTargetPzAutoChange then
+		target.onTargetPzAutoChange()
 	else
 		autoSave()
 	end
@@ -2708,12 +2461,12 @@ function autoSave()
 		return
 	end
 
-	cancelAutoSave()
+	unbindCombatHotkeys()
 
 	autoSaveEvent = scheduleEvent(function()
 		autoSaveEvent = nil
 
-		saveConfig()
+		var_0_79()
 	end, 800)
 
 	refreshHelperStatsWindow()
@@ -2724,7 +2477,7 @@ function openHelperFromStats()
 		return
 	end
 
-	local opening = helperWindow:isHidden()
+	local var_127_0 = helperWindow:isHidden()
 
 	helperWindow:show()
 	helperWindow:raise()
@@ -2732,11 +2485,11 @@ function openHelperFromStats()
 
 	if not currentTab then
 		showTab("healing")
-	elseif opening then
+	elseif var_127_0 then
 		showCurrentTabModule()
 	end
 
-	syncButton()
+	var_0_55()
 end
 
 function closeHelperStatsWindow()
@@ -2744,7 +2497,7 @@ function closeHelperStatsWindow()
 		helperStatsWindow:closeAndForgetLayout()
 	end
 
-	syncButton()
+	var_0_55()
 end
 
 function toggleHelperStatsWindow()
@@ -2752,17 +2505,17 @@ function toggleHelperStatsWindow()
 		return
 	end
 
-	if helperButton and helperButton:isOn() then
+	if not helperStatsWindow:isHidden() then
 		helperStatsWindow:closeAndForgetLayout()
 	else
 		if not helperStatsWindow:getParent() then
-			local panel = modules.game_interface.findContentPanelAvailable(helperStatsWindow, helperStatsWindow:getMinimumHeight())
+			local minimumHeight = modules.game_interface.findContentPanelAvailable(helperStatsWindow, helperStatsWindow:getMinimumHeight())
 
-			if not panel then
+			if not minimumHeight then
 				return
 			end
 
-			panel:addChild(helperStatsWindow)
+			minimumHeight:addChild(helperStatsWindow)
 		end
 
 		helperStatsWindow:open()
@@ -2771,7 +2524,7 @@ function toggleHelperStatsWindow()
 		helperStatsWindow:focus()
 	end
 
-	syncButton()
+	var_0_55()
 end
 
 function toggleHelperStatsEntry(itemId)
@@ -2779,40 +2532,40 @@ function toggleHelperStatsEntry(itemId)
 		return
 	end
 
-	for _, item in ipairs(HELPER_STATS_ITEMS) do
-		if item.id == itemId then
-			if item.id == "target" and HelperTarget and HelperTarget.isDisabledByProtectionZone and HelperTarget.isDisabledByProtectionZone() and HelperTarget.disableProtectionZonePause then
+	for unusedValue, entry in ipairs(var_0_53) do
+		if entry.id == itemId then
+			if entry.id == "target" and HelperTarget and HelperTarget.isDisabledByProtectionZone and HelperTarget.isDisabledByProtectionZone() and HelperTarget.disableProtectionZonePause then
 				HelperTarget.disableProtectionZonePause()
 				refreshHelperStatsWindow()
 
 				return
 			end
 
-			if item.id == "shooter" and HelperShooter and (HelperShooter.isDisabledByFollow and HelperShooter.isDisabledByFollow() or HelperShooter.isDisabledByProtectionZone and HelperShooter.isDisabledByProtectionZone()) and HelperShooter.disablePausedState then
+			if entry.id == "shooter" and HelperShooter and (HelperShooter.isDisabledByFollow and HelperShooter.isDisabledByFollow() or HelperShooter.isDisabledByProtectionZone and HelperShooter.isDisabledByProtectionZone()) and HelperShooter.disablePausedState then
 				HelperShooter.disablePausedState()
 				refreshHelperStatsWindow()
 
 				return
 			end
 
-			local check = getWidget(item.widgetId)
+			local var_130_0 = getWidget(entry.widgetId)
 
-			if check then
-				local enabling = not check:isChecked()
+			if var_130_0 then
+				local var_130_1 = not var_130_0:isChecked()
 
-				if enabling and item.id == "target" and HelperTarget and HelperTarget.enableProtectionZonePause and HelperTarget.enableProtectionZonePause() then
+				if var_130_1 and entry.id == "target" and HelperTarget and HelperTarget.enableProtectionZonePause and HelperTarget.enableProtectionZonePause() then
 					refreshHelperStatsWindow()
 
 					return
 				end
 
-				if enabling and item.id == "shooter" and HelperShooter and HelperShooter.enableProtectionZonePause and HelperShooter.enableProtectionZonePause() then
+				if var_130_1 and entry.id == "shooter" and HelperShooter and HelperShooter.enableProtectionZonePause and HelperShooter.enableProtectionZonePause() then
 					refreshHelperStatsWindow()
 
 					return
 				end
 
-				check:setChecked(enabling)
+				var_130_0:setChecked(var_130_1)
 				refreshHelperStatsWindow()
 			end
 
@@ -2857,10 +2610,137 @@ function onQuickProfileSave()
 	end
 end
 
+function onQuickProfileRename()
+	if HelperConfigTab and HelperConfigTab.renameQuickProfile then
+		HelperConfigTab.renameQuickProfile()
+	end
+end
+
 function onQuickProfileDelete()
 	if HelperConfigTab and HelperConfigTab.deleteQuickProfile then
 		HelperConfigTab.deleteQuickProfile()
 	end
+end
+
+local var_0_117
+
+local function var_0_118()
+	if var_0_117 and not var_0_117:isDestroyed() then
+		var_0_117:destroy()
+	end
+
+	var_0_117 = nil
+end
+
+local var_0_119
+
+local function var_0_120()
+	if var_0_119 and not var_0_119:isDestroyed() then
+		var_0_119:destroy()
+	end
+
+	var_0_119 = nil
+end
+
+local function var_0_121(arg_141_0)
+	if not arg_141_0 or arg_141_0 == "" then
+		return false
+	end
+
+	local var_141_0 = readHelperJSON()
+
+	return type(var_141_0.profiles) == "table" and var_141_0.profiles[arg_141_0] ~= nil
+end
+
+local function var_0_122(arg_142_0, arg_142_1)
+	var_0_80()
+
+	local var_142_0, var_142_1, var_142_2 = pcall(HelperPresets.generate, arg_142_0)
+
+	if not var_142_0 then
+		helperLog("error", "Preset generation failed: " .. tostring(var_142_1))
+		var_0_91(true, tr("Preset generation failed."))
+
+		return false
+	end
+
+	if var_142_1 ~= true then
+		if var_142_2 then
+			var_0_91(true, var_142_2)
+		end
+
+		return false
+	end
+
+	if arg_142_1 and arg_142_1 ~= "" and HelperConfigTab and HelperConfigTab.saveProfile then
+		HelperConfigTab.saveProfile(arg_142_1)
+	end
+
+	if var_142_2 then
+		var_0_91(false, var_142_2)
+	end
+
+	return true
+end
+
+local function var_0_123(arg_143_0)
+	var_0_120()
+
+	local profileName = HelperPresets.getProfileName and HelperPresets.getProfileName(arg_143_0)
+
+	if not var_0_121(profileName) then
+		return var_0_122(arg_143_0, profileName)
+	end
+
+	var_0_119 = displayGeneralBox(tr("Overwrite Preset"), tr("The preset \"%s\" already exists. Replace it?", profileName), {
+		{
+			text = tr("No"),
+			callback = var_0_120
+		},
+		{
+			text = tr("Yes"),
+			callback = function()
+				var_0_120()
+				var_0_122(arg_143_0, profileName)
+			end
+		}
+	}, nil, var_0_120)
+end
+
+function onQuickProfileAutoGenerate()
+	if not HelperPresets or type(HelperPresets.generate) ~= "function" then
+		return
+	end
+
+	var_0_118()
+	var_0_120()
+
+	local elementOptions = HelperPresets.getElementOptions and HelperPresets.getElementOptions()
+
+	if type(elementOptions) ~= "table" or #elementOptions == 0 then
+		return var_0_123(nil)
+	end
+
+	local var_145_1 = {
+		{
+			text = tr("Cancel"),
+			callback = var_0_118
+		}
+	}
+
+	for iter_145_0 = #elementOptions, 1, -1 do
+		local var_145_2 = elementOptions[iter_145_0]
+
+		table.insert(var_145_1, {
+			text = tr(var_145_2.label),
+			callback = function()
+				var_0_118()
+				var_0_123(var_145_2.id)
+			end
+		})
+	end
+
+	var_0_117 = displayGeneralBox(tr("Choose Element"), tr("Which elemental line should the rotation be built around?"), var_145_1, nil, var_0_118)
 end
 
 local function countAttackRunes()
@@ -2868,15 +2748,15 @@ local function countAttackRunes()
 		return 0
 	end
 
-	local count = 0
+	local var_147_0 = 0
 
-	for itemId, runeData in pairs(SpellRunesData) do
-		if runeData.group == 1 and Spells.getRuneSpellByItem(itemId) then
-			count = count + 1
+	for key, entry in pairs(SpellRunesData) do
+		if entry.group == 1 and Spells.getRuneSpellByItem(key) then
+			var_147_0 = var_147_0 + 1
 		end
 	end
 
-	return count
+	return var_147_0
 end
 
 local function validateHelperRuntime()
@@ -2885,11 +2765,13 @@ local function validateHelperRuntime()
 	if not helperWindow or helperWindow:isDestroyed() then
 		table.insert(warnings, "HelperWindow missing or destroyed after init")
 	else
-		for _, id in ipairs({
+		for unusedValue, iter_148_1 in ipairs({
 			"presetBar",
 			"quickProfileCombo",
+			"quickProfileAutoButton",
 			"quickProfileNewButton",
 			"quickProfileSaveButton",
+			"quickProfileRenameButton",
 			"quickProfileDeleteButton",
 			"helperCharacterCard",
 			"helperCharacterOutfit",
@@ -2900,25 +2782,26 @@ local function validateHelperRuntime()
 			"toolsAutoAmmoSection",
 			"toolsAutoAmmoSlot",
 			"toolsAutoAmmoCheckBox",
-			"toolsAutoAmmoTargetCombo"
+			"toolsAutoAmmoTargetCombo",
+			"enableCavebotCheckBox",
+			"cavebotWaypointsList",
+			"cavebotMapPreview"
 		}) do
-			if not getWidget(id) then
-				table.insert(warnings, "Helper UI widget missing: " .. id)
+			if not getWidget(iter_148_1) then
+				table.insert(warnings, "Helper UI widget missing: " .. iter_148_1)
 			end
 		end
 
-		for name, cfg in pairs(TABS) do
-			if not getWidget(cfg.panelId) then
-				table.insert(warnings, "Tab panel missing: " .. name .. " (" .. cfg.panelId .. ")")
+		for name, iter_148_3 in pairs(TABS) do
+			if not getWidget(iter_148_3.panelId) then
+				table.insert(warnings, "Tab panel missing: " .. name .. " (" .. iter_148_3.panelId .. ")")
 			end
 
-			if not getWidget(cfg.buttonId) then
-				table.insert(warnings, "Tab button missing: " .. name .. " (" .. cfg.buttonId .. ")")
+			if not getWidget(iter_148_3.buttonId) then
+				table.insert(warnings, "Tab button missing: " .. name .. " (" .. iter_148_3.buttonId .. ")")
 			end
 
-			local mod = modulesByTab[cfg.module]
-
-			if not mod then
+			if not var_0_1[iter_148_3.module] then
 				table.insert(warnings, "Module missing for tab: " .. name)
 			end
 		end
@@ -2934,9 +2817,7 @@ local function validateHelperRuntime()
 	}
 
 	for _, path in ipairs(modalPaths) do
-		local exists = g_resources.fileExists("/modules/game_helper/" .. path .. ".otui") or g_resources.fileExists("modules/game_helper/" .. path .. ".otui")
-
-		if not exists then
+		if not (g_resources.fileExists("/modules/game_helper/" .. path .. ".otui") or g_resources.fileExists("modules/game_helper/" .. path .. ".otui")) then
 			table.insert(warnings, "Modal OTUI missing: " .. path)
 		end
 	end
@@ -2975,10 +2856,23 @@ end
 
 function init()
 	g_ui.importStyle("game_helper")
+	var_0_38()
+
+	if not HelperProfileStorage or not HelperProfileStorage.initialize or not HelperProfileStorage.initialize(helperLog) then
+		helperLog("error", "Shared Helper profile storage could not be initialized.")
+	end
+
+	if HelperActionCoordinator and HelperActionCoordinator.init then
+		HelperActionCoordinator.init()
+	end
+
 	connect(g_game, {
 		onGameEnd = onGameEnd,
 		onGameStart = onGameStart,
-		onLogout = onLogout
+		onLogout = onLogout,
+		onResourceBalance = handleResourceBalance,
+		onCavebotAuthorized = onCavebotAuthorized,
+		onCavebotStatus = onCavebotStatus
 	})
 
 	helperWindow = g_ui.createWidget("HelperWindow", rootWidget)
@@ -2995,10 +2889,11 @@ function init()
 	end
 
 	initModules()
-	refreshHelperCharacterCard()
-	connectCombatEvents()
+	refreshHelperCharacterCard(var_0_108())
+	var_0_61()
+	var_0_62()
 	loadConfigIntoWidgets()
-	setupHelperStatsWindow()
+	var_0_90()
 
 	if helperShouldRunTick() then
 		startScheduler()
@@ -3008,31 +2903,51 @@ function init()
 	validateHelperRuntime()
 
 	if modules.game_mainpanel then
-		helperButton = modules.game_mainpanel.addToggleButton("helperButton", tr("Open Helper Stats"), "/images/options/button_helper", toggleHelperStatsWindow, false, 1002, "HelperMainToggleButton")
+		helperButton = modules.game_mainpanel.addSpecialToggleButton("helperButton", tr("Open Helper"), "/images/options/button_helper", toggleHelperMainButton, false, 1002, "HelperMainToggleButton")
 
 		helperButton:setImageBorder(0)
+		syncButton()
+		var_0_55()
+
+		if modules.game_mainpanel.reorderMainPanelSpecialButtons then
+			modules.game_mainpanel.reorderMainPanelSpecialButtons()
+		end
 	end
 end
 
 function onGameStart()
 	local startedAt = g_clock.realMillis()
 
-	if activeHelperCharacterId and not helperSavedOnLogout then
-		saveActiveHelperCharacter()
+	if HelperActionCoordinator and HelperActionCoordinator.onGameStart then
+		HelperActionCoordinator.onGameStart()
 	end
 
-	cancelAutoSave()
+	if var_0_26 and not helperSavedOnLogout then
+		var_0_81()
+	end
+
+	unbindCombatHotkeys()
 
 	helperSavedOnLogout = false
+
+	refreshHelperCharacterCard(var_0_108())
 
 	if not activateHelperCharacterStorage() then
 		helperLog("error", "Character Helper storage could not be activated on game start.")
 	end
 
-	loadConfigIntoWidgets()
+	var_0_90()
+
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onGameStart then
+		cavebot.onGameStart()
+	end
+
 	helperLog("info", string.format("[login] Helper config ready in %d ms.", g_clock.realMillis() - startedAt))
 	scheduleEvent(function()
-		refreshHelperCharacterCard()
+		var_0_61()
+		var_0_62()
 
 		if not modules.game_mainpanel then
 			return
@@ -3040,13 +2955,7 @@ function onGameStart()
 
 		helperButton = modules.game_mainpanel.getButton("helperButton") or helperButton
 
-		local saved = g_settings.getNode("control_buttons")
-
-		if not saved or not saved.buttons or saved.buttons.helperButton == nil then
-			modules.game_mainpanel.setMainPanelButtonVisible("helperButton", true)
-		end
-
-		syncButton()
+		var_0_55()
 
 		if helperShouldRunTick() then
 			startScheduler()
@@ -3056,17 +2965,13 @@ function onGameStart()
 			stopCombatScheduler()
 		end
 
-		if helperStatsWindow and helperStatsWindow.setupOnStart then
-			helperStatsWindow:setupOnStart()
-		end
-
-		local targetMod = modulesByTab.target
+		local targetMod = var_0_1.target
 
 		if targetMod and targetMod.onGameStart then
 			targetMod.onGameStart()
 		end
 
-		local shooterMod = modulesByTab.shooter
+		local shooterMod = var_0_1.shooter
 
 		if shooterMod and shooterMod.onGameStart then
 			shooterMod.onGameStart()
@@ -3074,13 +2979,13 @@ function onGameStart()
 
 		bindCombatHotkeys()
 
-		local healer = modulesByTab.healer
+		local healer = var_0_1.healer
 
 		if healer and healer.onGameStart then
 			healer.onGameStart()
 		end
 
-		local mod = modulesByTab.healFriend
+		local mod = var_0_1.healFriend
 
 		if mod and mod.applyVocationGate then
 			mod.applyVocationGate()
@@ -3089,31 +2994,54 @@ function onGameStart()
 end
 
 function onLogout()
-	saveActiveHelperCharacter()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onLogout then
+		cavebot.onLogout()
+	end
+
+	var_0_81()
 end
 
 function onGameEnd()
+	if HelperActionCoordinator and HelperActionCoordinator.onGameEnd then
+		HelperActionCoordinator.onGameEnd()
+	end
+
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onLogout then
+		cavebot.onLogout()
+	end
+
 	stopScheduler()
 	stopCombatScheduler()
-	saveActiveHelperCharacter()
+	var_0_81()
+	refreshHelperCharacterCard(false)
 	onHelperClose()
 end
 
 function terminate()
 	saveActiveHelperCharacter()
-	cancelAutoSave()
-	unbindHelperHotkey()
-	unbindShooterHotkey()
+	var_0_81()
 	unbindCombatHotkeys()
 	closeHelperHotkeyWindow()
 	closeShooterHotkeyWindow()
 	stopScheduler()
 	stopCombatScheduler()
 	disconnectCombatEvents()
+
+	if HelperActionCoordinator and HelperActionCoordinator.terminate then
+		HelperActionCoordinator.terminate()
+	end
+
 	disconnect(g_game, {
 		onGameEnd = onGameEnd,
 		onGameStart = onGameStart,
-		onLogout = onLogout
+		onLogout = onLogout,
+		onResourceBalance = handleResourceBalance,
+		onCavebotAuthorized = onCavebotAuthorized,
+		onCavebotStatus = onCavebotStatus
 	})
 	disconnect(LocalPlayer, {
 		onLevelChange = onHelperCharacterChanged,
@@ -3122,7 +3050,7 @@ function terminate()
 	})
 
 	for _, tab in pairs(TABS) do
-		local mod = modulesByTab[tab.module]
+		local mod = var_0_1[tab.module]
 
 		if tab.module ~= "config" and mod and mod.terminate then
 			mod.terminate()
@@ -3135,6 +3063,10 @@ function terminate()
 
 	if HelperConditions and HelperConditions.terminate then
 		HelperConditions.terminate()
+	end
+
+	if HelperPresets and HelperPresets.terminate then
+		HelperPresets.terminate()
 	end
 
 	if helperButton then
@@ -3152,10 +3084,34 @@ function terminate()
 	helperStatsWindow = nil
 	helperWindow = nil
 	helperUiLanguageCaptured = false
-	activeHelperJSONFile = nil
-	activeHelperCharacterId = nil
-	activeHelperCharacterName = nil
+	var_0_26 = nil
+	textValue = nil
+
+	if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
+		HelperProfileStorage.clearActiveCharacter()
+	end
+
 	helperSavedOnLogout = false
+end
+
+function beginManualEquipmentAction(arg_155_0)
+	if not HelperActionCoordinator or not HelperActionCoordinator.beginManualEquipmentAction then
+		return false
+	end
+
+	return HelperActionCoordinator.beginManualEquipmentAction(arg_155_0)
+end
+
+function beginManualHotkeyAction()
+	if helperConfig.prioritizeHotkeys ~= true or not HelperActionCoordinator or not HelperActionCoordinator.beginManualHotkeyAction then
+		return false
+	end
+
+	return HelperActionCoordinator.beginManualHotkeyAction()
+end
+
+function isAutomaticActionBlocked()
+	return HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() or false
 end
 
 function onHelperClose()
@@ -3163,15 +3119,15 @@ function onHelperClose()
 		helperWindow:hide()
 	end
 
-	refreshHelperCharacterCard()
+	var_0_62()
 
-	local current = getModuleForTab(currentTab) or modulesByTab.healer
+	local current = getModuleForTab(currentTab) or var_0_1.healer
 
 	if current and current.onHide then
 		current.onHide()
 	end
 
-	local mod = modulesByTab.healer
+	local mod = var_0_1.healer
 
 	if mod and mod ~= current and mod.onHide then
 		mod.onHide()
@@ -3182,10 +3138,14 @@ function onHelperClose()
 		stopCombatScheduler()
 	end
 
-	syncButton()
+	var_0_55()
 end
 
-function toggle()
+local function saveConfig()
+	if not helperWindow or helperWindow:isDestroyed() then
+		return
+	end
+
 	local opening = helperWindow:isHidden()
 
 	if not opening then
@@ -3200,18 +3160,23 @@ function toggle()
 		else
 			showCurrentTabModule()
 
-			local mod = modulesByTab.healer
+			local mod = var_0_1.healer
 
 			if mod and mod.clearListSelection then
 				mod.clearListSelection()
 			end
 		end
 
-		refreshHelperCharacterCard()
-		refreshHelperUiLanguage(false)
+		var_0_61()
+		var_0_62()
+		var_0_66(false)
 	end
 
-	syncButton()
+	var_0_55()
+end
+
+function toggle()
+	saveConfig()
 end
 
 function onHelperLanguageToggle()
@@ -3220,42 +3185,29 @@ function onHelperLanguageToggle()
 	end
 end
 
-function onEnableHelperChange(_, checked)
-	if loadingConfig then
-		return
-	end
-
-	if checked and g_game.isOnline() then
-		startScheduler()
-		syncCombatSchedulerState()
-	else
-		stopScheduler()
-		stopCombatScheduler()
-	end
-
-	if not checked then
-		local targetMod = modulesByTab.target
-
-		if targetMod and targetMod.onHelperDisabled then
-			targetMod.onHelperDisabled()
-		end
-	end
-
-	showHelperMessage(false, string.format("Helper is %s.", checked and "enabled" or "disabled"))
-	saveConfig()
-
-	if HelperShooter and HelperShooter.syncHotkeyStatus then
-		HelperShooter.syncHotkeyStatus()
-	end
-
-	refreshHelperStatsWindow()
-end
-
 function onConfigsAutoSaveChange(_, _)
 	if loadingConfig then
 		return
 	end
 
+	var_0_79()
+end
+
+function onConfigsPrioritizeHotkeysChange(unusedArgument, arg_163_1)
+	if loadingConfig then
+		return
+	end
+
+	helperConfig.prioritizeHotkeys = arg_163_1 == true
+
+	if not arg_163_1 and HelperActionCoordinator then
+		HelperActionCoordinator.clearManualHotkeyAction()
+	end
+
+	autoSave()
+end
+
+function toggleHelperMainButton()
 	saveConfig()
 end
 
@@ -3275,7 +3227,7 @@ function onEnableTargetChange(self, checked)
 		return
 	end
 
-	local mod = modulesByTab.target
+	local mod = var_0_1.target
 
 	if mod and mod.onEnableTargetCheckChange then
 		mod.onEnableTargetCheckChange(self)
@@ -3293,7 +3245,7 @@ function onEnableShooterChange(self, checked)
 		return
 	end
 
-	local mod = modulesByTab.shooter
+	local mod = var_0_1.shooter
 
 	if mod and mod.toggleMagicShooter then
 		mod.toggleMagicShooter(self, nil, true)
@@ -3304,59 +3256,253 @@ function onEnableShooterChange(self, checked)
 	refreshHelperStatsWindow()
 end
 
-function openAddHealingWindow()
-	local mod = modulesByTab.healer
+function onEnableCavebotChange(arg_168_0, arg_168_1)
+	if loadingConfig then
+		return
+	end
 
-	if mod and mod.openAddHealingWindow then
-		mod.openAddHealingWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onEnableChange then
+		cavebot.onEnableChange(arg_168_0, arg_168_1)
+	else
+		autoSave()
+	end
+
+	refreshHelperStatsWindow()
+end
+
+function openCavebotEchoRaidWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.openEchoRaidWindow then
+		cavebot.openEchoRaidWindow()
+	end
+end
+
+function closeCavebotEchoRaidWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.closeEchoRaidWindow then
+		cavebot.closeEchoRaidWindow()
+	end
+end
+
+function confirmCavebotEchoRaidWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.confirmEchoRaidWindow then
+		cavebot.confirmEchoRaidWindow()
+	end
+end
+
+function onCavebotEchoRaidModeChange(arg_172_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onEchoRaidModeChange then
+		cavebot.onEchoRaidModeChange(arg_172_0)
+	end
+end
+
+function onCavebotStartNearestWaypointChange(arg_173_0, arg_173_1)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onStartNearestWaypointChange then
+		cavebot.onStartNearestWaypointChange(arg_173_0, arg_173_1)
+	end
+end
+
+function onCavebotDiagonalWalkChange(arg_174_0, arg_174_1)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.onDiagonalWalkChange then
+		cavebot.onDiagonalWalkChange(arg_174_0, arg_174_1)
+	end
+end
+
+function addCavebotWaypoint(arg_175_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.addCurrentWaypoint then
+		cavebot.addCurrentWaypoint(arg_175_0)
+	end
+end
+
+function toggleCavebotRecording()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.toggleRecording then
+		cavebot.toggleRecording()
+	end
+end
+
+function newCavebotPreset()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.newPreset then
+		cavebot.newPreset()
+	end
+end
+
+function deleteCavebotPreset()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.deleteNamedPreset then
+		cavebot.deleteNamedPreset()
+	end
+end
+
+function moveCavebotWaypoint(arg_179_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.moveSelectedWaypoint then
+		cavebot.moveSelectedWaypoint(arg_179_0)
+	end
+end
+
+function removeCavebotWaypoint()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.removeSelectedWaypoint then
+		cavebot.removeSelectedWaypoint()
+	end
+end
+
+function clearCavebotWaypoints()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.requestClearWaypoints then
+		cavebot.requestClearWaypoints()
+	end
+end
+
+function openCavebotRenewWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.openRenewWindow then
+		cavebot.openRenewWindow()
+	end
+end
+
+function setCavebotMinimapView(arg_183_0, arg_183_1)
+	local cavebot = var_0_1.cavebot
+
+	if not cavebot or not cavebot.setExternalMapPreview then
+		return false
+	end
+
+	return cavebot.setExternalMapPreview(arg_183_0, arg_183_1)
+end
+
+function closeCavebotRenewWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.closeRenewWindow then
+		cavebot.closeRenewWindow()
+	end
+end
+
+function confirmCavebotRenewWindow()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.confirmRenewWindow then
+		cavebot.confirmRenewWindow()
+	end
+end
+
+function centerCavebotMap()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.centerMapOnPlayer then
+		cavebot.centerMapOnPlayer()
+	end
+end
+
+function toggleCavebotAutoRoute()
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.toggleAutoRouteSelection then
+		cavebot.toggleAutoRouteSelection()
+	end
+end
+
+function navigateCavebotMap(arg_188_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.navigateMap then
+		cavebot.navigateMap(arg_188_0)
+	end
+end
+
+function zoomCavebotMap(arg_189_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.zoomMap then
+		cavebot.zoomMap(arg_189_0)
+	end
+end
+
+function changeCavebotMapFloor(arg_190_0)
+	local cavebot = var_0_1.cavebot
+
+	if cavebot and cavebot.changeMapFloor then
+		cavebot.changeMapFloor(arg_190_0)
+	end
+end
+
+function openAddHealingWindow()
+	local healer = var_0_1.healer
+
+	if healer and healer.openAddHealingWindow then
+		healer.openAddHealingWindow()
 	end
 end
 
 function openAddHealingSpellWindow()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.openAddHealingSpellWindow then
-		mod.openAddHealingSpellWindow()
+	if healer and healer.openAddHealingSpellWindow then
+		healer.openAddHealingSpellWindow()
 	end
 end
 
 function openAddHealingPotionWindow()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.openAddHealingPotionWindow then
-		mod.openAddHealingPotionWindow()
+	if healer and healer.openAddHealingPotionWindow then
+		healer.openAddHealingPotionWindow()
 	end
 end
 
 function openEditHealingWindow()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.openEditHealingWindow then
-		mod.openEditHealingWindow()
+	if healer and healer.openEditHealingWindow then
+		healer.openEditHealingWindow()
 	end
 end
 
 function closeAddHealingWindow()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.closeAddHealingWindow then
-		mod.closeAddHealingWindow()
+	if healer and healer.closeAddHealingWindow then
+		healer.closeAddHealingWindow()
 	end
 end
 
 function addHealingEntryOk()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.addHealingEntryOk then
-		mod.addHealingEntryOk()
+	if healer and healer.addHealingEntryOk then
+		healer.addHealingEntryOk()
 	end
 end
 
 function addHealingEntryApply()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.addHealingEntryApply then
-		mod.addHealingEntryApply()
+	if healer and healer.addHealingEntryApply then
+		healer.addHealingEntryApply()
 	end
 end
 
@@ -3365,162 +3511,162 @@ function addHealingEntryConfirm()
 end
 
 function onHealingRemoveClick()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.removeSelectedEntry then
-		mod.removeSelectedEntry()
+	if healer and healer.removeSelectedEntry then
+		healer.removeSelectedEntry()
 	end
 end
 
 function onAddHealingThresholdChange(edit)
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.onAddHealingThresholdChange then
-		mod.onAddHealingThresholdChange(edit)
+	if healer and healer.onAddHealingThresholdChange then
+		healer.onAddHealingThresholdChange(edit)
 	end
 end
 
 function onAddHealingThresholdFocusChange(edit, focused)
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.onAddHealingThresholdFocusChange then
-		mod.onAddHealingThresholdFocusChange(edit, focused)
+	if healer and healer.onAddHealingThresholdFocusChange then
+		healer.onAddHealingThresholdFocusChange(edit, focused)
 	end
 end
 
 function onEnableHealingChange(self, on)
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.onEnableHealingChange then
-		mod.onEnableHealingChange(self, on)
+	if healer and healer.onEnableHealingChange then
+		healer.onEnableHealingChange(self, on)
 	else
-		saveConfig()
+		var_0_79()
 	end
 
 	refreshHelperStatsWindow()
 end
 
 function onEnableHealFriendChange(self, on)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.onEnableHealFriendChange then
-		mod.onEnableHealFriendChange(self, on)
+	if healFriend and healFriend.onEnableHealFriendChange then
+		healFriend.onEnableHealFriendChange(self, on)
 	else
-		saveConfig()
+		var_0_79()
 	end
 
 	refreshHelperStatsWindow()
 end
 
 function onHealFriendClassToggle(self, on)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.onHealFriendClassToggle then
-		mod.onHealFriendClassToggle(self, on)
+	if healFriend and healFriend.onHealFriendClassToggle then
+		healFriend.onHealFriendClassToggle(self, on)
 	else
-		saveConfig()
+		var_0_79()
 	end
 end
 
 function onHealFriendThresholdChange(edit)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.onThresholdChange then
-		mod.onThresholdChange(edit)
+	if healFriend and healFriend.onThresholdChange then
+		healFriend.onThresholdChange(edit)
 	else
 		autoSave()
 	end
 end
 
 function onHealFriendThresholdFocusChange(edit, focused)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.onThresholdFocusChange then
-		mod.onThresholdFocusChange(edit, focused)
+	if healFriend and healFriend.onThresholdFocusChange then
+		healFriend.onThresholdFocusChange(edit, focused)
 	end
 end
 
 function setupHealFriendPriorityStepper(stepper, valueId, defaultValue)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.setupPriorityStepper then
-		mod.setupPriorityStepper(stepper, valueId, defaultValue)
+	if healFriend and healFriend.setupPriorityStepper then
+		healFriend.setupPriorityStepper(stepper, valueId, defaultValue)
 	end
 end
 
 function refreshHealFriendPriorityStepper(stepper)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.refreshPriorityStepper then
-		mod.refreshPriorityStepper(stepper)
+	if healFriend and healFriend.refreshPriorityStepper then
+		healFriend.refreshPriorityStepper(stepper)
 	end
 end
 
 function onHealFriendPriorityClick(widget, action)
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.onPriorityClick then
-		mod.onPriorityClick(widget, action)
+	if healFriend and healFriend.onPriorityClick then
+		healFriend.onPriorityClick(widget, action)
 	end
 end
 
 function openHealFriendPlayersWindow()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.openPlayerListWindow then
-		mod.openPlayerListWindow()
+	if healFriend and healFriend.openPlayerListWindow then
+		healFriend.openPlayerListWindow()
 	end
 end
 
 function closeHealFriendPlayersWindow()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.closePlayerListWindow then
-		mod.closePlayerListWindow()
+	if healFriend and healFriend.closePlayerListWindow then
+		healFriend.closePlayerListWindow()
 	end
 end
 
 function addHealFriendTypedPlayer()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.addTypedPlayer then
-		mod.addTypedPlayer()
+	if healFriend and healFriend.addTypedPlayer then
+		healFriend.addTypedPlayer()
 	end
 end
 
 function addHealFriendVisiblePlayer()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.addVisiblePlayer then
-		mod.addVisiblePlayer()
+	if healFriend and healFriend.addVisiblePlayer then
+		healFriend.addVisiblePlayer()
 	end
 end
 
 function removeHealFriendConfiguredPlayer()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.removeConfiguredPlayer then
-		mod.removeConfiguredPlayer()
+	if healFriend and healFriend.removeConfiguredPlayer then
+		healFriend.removeConfiguredPlayer()
 	end
 end
 
 function refreshHealFriendVisiblePlayers()
-	local mod = modulesByTab.healFriend
+	local healFriend = var_0_1.healFriend
 
-	if mod and mod.refreshVisiblePlayers then
-		mod.refreshVisiblePlayers()
+	if healFriend and healFriend.refreshVisiblePlayers then
+		healFriend.refreshVisiblePlayers()
 	end
 end
 
-local function actionbarSpellAssign()
+local function var_0_127()
 	return modules.game_actionbar
 end
 
-local function helperAssignFilterText()
-	local ab = actionbarSpellAssign()
+local function var_0_128()
+	local var_217_0 = var_0_127()
 
-	if ab and ab.getSpellAssignFilterText then
-		return ab.getSpellAssignFilterText()
+	if var_217_0 and var_217_0.getSpellAssignFilterText then
+		return var_217_0.getSpellAssignFilterText()
 	end
 
 	return ""
@@ -3533,26 +3679,26 @@ function closeHelperAssignWindow()
 		return
 	end
 
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
-		mod.closeHelperItemAssignWindow()
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
+		healer.closeHelperItemAssignWindow()
 
 		return
 	end
 
-	if mod and mod.cancelPendingHealingEntryAssign then
-		mod.cancelPendingHealingEntryAssign()
+	if healer and healer.cancelPendingHealingEntryAssign then
+		healer.cancelPendingHealingEntryAssign()
 	end
 
 	closeHelperSpellAssignWindow()
 end
 
 function closeHelperSpellAssignWindow()
-	local ab = actionbarSpellAssign()
+	local var_219_0 = var_0_127()
 
-	if ab and ab.closeSpellAssignWindow then
-		ab.closeSpellAssignWindow()
+	if var_219_0 and var_219_0.closeSpellAssignWindow then
+		var_219_0.closeSpellAssignWindow()
 	end
 end
 
@@ -3563,10 +3709,10 @@ function helperAssignOk()
 		return
 	end
 
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
-		mod.helperItemAssignOk()
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
+		healer.helperItemAssignOk()
 
 		return
 	end
@@ -3575,17 +3721,17 @@ function helperAssignOk()
 end
 
 function helperSpellAssignOk()
-	local ab = actionbarSpellAssign()
+	local var_221_0 = var_0_127()
 
-	if ab and ab.spellAssignOk then
-		ab.spellAssignOk()
+	if var_221_0 and var_221_0.spellAssignOk then
+		var_221_0.spellAssignOk()
 	end
 end
 
 function helperAssignApply()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		return
 	end
 
@@ -3593,10 +3739,10 @@ function helperAssignApply()
 end
 
 function helperSpellAssignApply()
-	local ab = actionbarSpellAssign()
+	local var_223_0 = var_0_127()
 
-	if ab and ab.spellAssignApply then
-		ab.spellAssignApply()
+	if var_223_0 and var_223_0.spellAssignApply then
+		var_223_0.spellAssignApply()
 	end
 end
 
@@ -3607,10 +3753,10 @@ function filterHelperAssign(text)
 		return
 	end
 
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
-		mod.filterHelperAssignEntries(text)
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
+		healer.filterHelperAssignEntries(text)
 
 		return
 	end
@@ -3619,10 +3765,10 @@ function filterHelperAssign(text)
 end
 
 function filterHelperSpells(text)
-	local ab = actionbarSpellAssign()
+	local var_225_0 = var_0_127()
 
-	if ab and ab.filterSpells then
-		ab.filterSpells(text)
+	if var_225_0 and var_225_0.filterSpells then
+		var_225_0.filterSpells(text)
 	end
 end
 
@@ -3633,10 +3779,10 @@ function clearHelperAssignFilter()
 		return
 	end
 
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
-		mod.clearHelperItemAssignFilter()
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
+		healer.clearHelperItemAssignFilter()
 
 		return
 	end
@@ -3645,23 +3791,23 @@ function clearHelperAssignFilter()
 end
 
 function clearHelperSpellFilter()
-	local ab = actionbarSpellAssign()
+	local var_227_0 = var_0_127()
 
-	if ab and ab.clearSpellFilter then
-		ab.clearSpellFilter()
+	if var_227_0 and var_227_0.clearSpellFilter then
+		var_227_0.clearSpellFilter()
 	end
 end
 
 function onHelperAssignLearntChange()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.isHelperItemAssignActive and mod.isHelperItemAssignActive() then
-		mod.onHelperAssignLearntChange()
+	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
+		healer.onHelperAssignLearntChange()
 
 		return
 	end
 
-	filterHelperSpells(helperAssignFilterText())
+	filterHelperSpells(var_0_128())
 end
 
 function filterPotions(text)
@@ -3669,218 +3815,218 @@ function filterPotions(text)
 end
 
 function clearPotionFilter()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.clearPotionFilter then
-		mod.clearPotionFilter()
+	if healer and healer.clearPotionFilter then
+		healer.clearPotionFilter()
 	end
 end
 
 function potionAssignOk()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.potionAssignOk then
-		mod.potionAssignOk()
+	if healer and healer.potionAssignOk then
+		healer.potionAssignOk()
 	end
 end
 
 function closePotionAssignWindow()
-	local mod = modulesByTab.healer
+	local healer = var_0_1.healer
 
-	if mod and mod.closePotionAssignWindow then
-		mod.closePotionAssignWindow()
+	if healer and healer.closePotionAssignWindow then
+		healer.closePotionAssignWindow()
 	end
 end
 
 function openTargetAssignWindow()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.openAssignWindow then
-		mod.openAssignWindow()
+	if target and target.openAssignWindow then
+		target.openAssignWindow()
 	end
 end
 
 function openTargetEditWindow()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.openEditAssignWindow then
-		mod.openEditAssignWindow()
+	if target and target.openEditAssignWindow then
+		target.openEditAssignWindow()
 	end
 end
 
 function closeTargetAssignWindow()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.closeAssignWindow then
-		mod.closeAssignWindow()
+	if target and target.closeAssignWindow then
+		target.closeAssignWindow()
 	end
 end
 
 function targetAssignOk()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.assignOk then
-		mod.assignOk()
+	if target and target.assignOk then
+		target.assignOk()
 	end
 end
 
 function filterTargetMonsters(text)
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.filterMonsters then
-		mod.filterMonsters(text)
+	if target and target.filterMonsters then
+		target.filterMonsters(text)
 	end
 end
 
 function clearTargetMonsterFilter()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.clearMonsterFilter then
-		mod.clearMonsterFilter()
+	if target and target.clearMonsterFilter then
+		target.clearMonsterFilter()
 	end
 end
 
 function onTargetAllCreaturesChange(self, checked)
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.onAllCreaturesChange then
-		mod.onAllCreaturesChange(self, checked)
+	if target and target.onAllCreaturesChange then
+		target.onAllCreaturesChange(self, checked)
 	end
 end
 
 function onTargetRemoveClick()
-	local mod = modulesByTab.target
+	local target = var_0_1.target
 
-	if mod and mod.onRemoveClick then
-		mod.onRemoveClick()
+	if target and target.onRemoveClick then
+		target.onRemoveClick()
 	end
 end
 
 function openShooterAssignWindow()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.openAssignWindow then
-		mod.openAssignWindow()
+	if shooter and shooter.openAssignWindow then
+		shooter.openAssignWindow()
 	end
 end
 
 function openShooterEditWindow()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.openEditAssignWindow then
-		mod.openEditAssignWindow()
+	if shooter and shooter.openEditAssignWindow then
+		shooter.openEditAssignWindow()
 	end
 end
 
 function closeShooterAssignWindow()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.closeAssignWindow then
-		mod.closeAssignWindow()
+	if shooter and shooter.closeAssignWindow then
+		shooter.closeAssignWindow()
 	end
 end
 
 function closeShooterEntryWindow()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.closeEntryWindow then
-		mod.closeEntryWindow()
+	if shooter and shooter.closeEntryWindow then
+		shooter.closeEntryWindow()
 	end
 end
 
 function shooterAssignOk()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.assignOk then
-		mod.assignOk()
+	if shooter and shooter.assignOk then
+		shooter.assignOk()
 	end
 end
 
 function filterShooterSpells(text)
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.filterSpells then
-		mod.filterSpells(text)
+	if shooter and shooter.filterSpells then
+		shooter.filterSpells(text)
 	end
 end
 
 function clearShooterSpellFilter()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.clearSpellFilter then
-		mod.clearSpellFilter()
+	if shooter and shooter.clearSpellFilter then
+		shooter.clearSpellFilter()
 	end
 end
 
 function onShooterAssignLearntChange()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onAssignLearntChange then
-		mod.onAssignLearntChange()
+	if shooter and shooter.onAssignLearntChange then
+		shooter.onAssignLearntChange()
 	end
 end
 
 function addShooterEntryOk()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.addEntryOk then
-		mod.addEntryOk()
+	if shooter and shooter.addEntryOk then
+		shooter.addEntryOk()
 	end
 end
 
 function onAddShooterHpChange(edit)
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onHpTextChange then
-		mod.onHpTextChange(edit)
+	if shooter and shooter.onHpTextChange then
+		shooter.onHpTextChange(edit)
 	end
 end
 
 function onAddShooterHpFocusChange(edit, focused)
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onHpFocusChange then
-		mod.onHpFocusChange(edit, focused)
+	if shooter and shooter.onHpFocusChange then
+		shooter.onHpFocusChange(edit, focused)
 	end
 end
 
 function onShooterAssignModeSpells()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.setAssignMode then
-		mod.setAssignMode("spells")
+	if shooter and shooter.setAssignMode then
+		shooter.setAssignMode("spells")
 	end
 end
 
 function onShooterAssignModeRunes()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.setAssignMode then
-		mod.setAssignMode("runes")
+	if shooter and shooter.setAssignMode then
+		shooter.setAssignMode("runes")
 	end
 end
 
 function onShooterRemoveClick()
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onRemoveClick then
-		mod.onRemoveClick()
+	if shooter and shooter.onRemoveClick then
+		shooter.onRemoveClick()
 	end
 end
 
 function onShooterPriorityClick(widget, action)
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onPriorityClick then
-		mod.onPriorityClick(widget, action)
+	if shooter and shooter.onPriorityClick then
+		shooter.onPriorityClick(widget, action)
 	end
 end
 
 function onShooterPriorityChange(edit)
-	local mod = modulesByTab.shooter
+	local shooter = var_0_1.shooter
 
-	if mod and mod.onPriorityChange then
-		mod.onPriorityChange(edit)
+	if shooter and shooter.onPriorityChange then
+		shooter.onPriorityChange(edit)
 	end
 end
 
@@ -3925,19 +4071,17 @@ function onShooterEntryCreaturesChange(combo)
 		return
 	end
 
-	local row = combo:getParent()
+	local parent = combo:getParent()
 
-	if not row or not row.shooterEntryIndex then
+	if not parent or not parent.shooterEntryIndex then
 		return
 	end
 
-	local text = combo:getCurrentOption()
-	local creatures = type(text) == "table" and text.text or tostring(text or "1")
-
-	creatures = creatures:match("%d+")
+	local currentOption = combo:getCurrentOption()
+	local var_262_2 = (type(currentOption) == "table" and currentOption.text or tostring(currentOption or "1")):match("%d+")
 
 	if HelperShooter and HelperShooter.updateEntryCreatures then
-		HelperShooter.updateEntryCreatures(row.shooterEntryIndex, creatures)
+		HelperShooter.updateEntryCreatures(parent.shooterEntryIndex, var_262_2)
 	end
 end
 
@@ -3946,15 +4090,15 @@ function onShooterEntryEnabledChange(check)
 		return
 	end
 
-	local column = check:getParent()
-	local row = column and column:getParent()
+	local parent = check:getParent()
+	local parent = parent and parent:getParent()
 
-	if not row or not row.shooterEntryIndex then
+	if not parent or not parent.shooterEntryIndex then
 		return
 	end
 
 	if HelperShooter and HelperShooter.updateEntryEnabled then
-		HelperShooter.updateEntryEnabled(row.shooterEntryIndex, check:isChecked())
+		HelperShooter.updateEntryEnabled(parent.shooterEntryIndex, check:isChecked())
 	end
 end
 
@@ -3988,7 +4132,7 @@ function onShooterPresetMenu(combo)
 	return false
 end
 
-function onShooterPzAutoChange(_)
+function onShooterPzAutoChange(unusedArgument)
 	if loadingConfig then
 		return
 	end
@@ -4000,7 +4144,7 @@ function onShooterPzAutoChange(_)
 	end
 end
 
-function onShooterComboModeChange(_, checked)
+function onShooterComboModeChange(unusedArgument, checked)
 	if loadingConfig then
 		return
 	end
@@ -4028,10 +4172,6 @@ function onShooterRemovePreset()
 	end
 end
 
-function openShooterHotkeyWindow()
-	openShooterEnableHotkeyWindow()
-end
-
 function onShooterSettingChange()
 	if loadingConfig then
 		return
@@ -4040,7 +4180,7 @@ function onShooterSettingChange()
 	autoSave()
 end
 
-function onEnableConditionsChange(_, _)
+function onEnableConditionsChange(unusedArgument, unusedArgument)
 	if loadingConfig then
 		return
 	end
@@ -4048,7 +4188,7 @@ function onEnableConditionsChange(_, _)
 	if HelperConditions and HelperConditions.onEnableConditionsChange then
 		HelperConditions.onEnableConditionsChange()
 	else
-		saveConfig()
+		var_0_79()
 	end
 end
 

@@ -76,7 +76,21 @@ NewMainWindow
       margin-top: 1
       priceable: false
       virtual: true
-      draggable: false 
+      draggable: false
+
+      UIWidget
+        id: bigtier
+        size: 19 16
+        image-source: /images/inventory/tiers-strip-big
+        image-clip: 0 0 10 9
+        image-size: 18 16
+        anchors.top: parent.top
+        anchors.right: parent.right
+        margin-right: -1
+        phantom: true
+        focusable: false
+        visible: false
+        image-smooth: true
 
     Slot
       id: imbuiSlot2

@@ -8,7 +8,7 @@ MainWindowHigh
   @onEscape: toggle()
 
   UIWidget
-    id: buttonSelection
+    id: menus
     anchors.top: parent.top
     anchors.left: parent.left
     size: 668 36

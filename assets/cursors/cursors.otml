@@ -8,6 +8,12 @@ Cursors
   look:
     image: cursor-look
     hot-spot: 0 0
+  use:
+    image: cursor-use
+    hot-spot: 0 0
+  container:
+    image: cursor-container
+    hot-spot: 0 0
   walk:
     image: cursor-walk
     hot-spot: 0 0

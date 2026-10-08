@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_interface/gameinterface.lua
-
-gameRootPanel = nil
+﻿gameRootPanel = nil
 gameMapPanel = nil
 gameMainRightPanel = nil
 gameRightPanel = nil
@@ -20,6 +18,8 @@ panelsList = {}
 panelsRadioGroup = nil
 gameTopPanel = nil
 gameBottomStatsBarPanel = nil
+gameLeftStatsBarPanel = nil
+gameRightStatsBarPanel = nil
 gameBottomPanel = nil
 showTopMenuButton = nil
 logoutButton = nil
@@ -53,18 +53,22 @@ hookedMenuOptions = {}
 local SIDEBAR_COLUMN_WIDTH = 178
 local SIDEBAR_INNER_BORDER_GAP = 2
 local ABSOLUTE_MIN_MAP_WIDTH = 160
-local DEFAULT_WINDOW_MIN_WIDTH = 1020
+local DEFAULT_WINDOW_MIN_WIDTH = 513
+local var_0_5 = 1020
 local DEFAULT_WINDOW_MIN_HEIGHT = 644
 local MAX_HORIZONTAL_SIDEBAR_COLUMNS = 2
 local VERTICAL_COLUMNS_UNDER_HORIZONTAL = 2
 local pendingSidebarLayoutEvent
 local lastStopAction = 0
-local supplyStashMenuEnabled = false
+local supplyStashMenuEnabled = 150
+local var_0_12 = 0
+local var_0_13 = 2500
+local var_0_14 = false
 local mobileConfig = {
+	mobileWidthJoystick = 0,
 	mobileHeightShortcuts = 0,
 	mobileHeightJoystick = 0,
-	mobileWidthShortcuts = 0,
-	mobileWidthJoystick = 0
+	mobileWidthShortcuts = 0
 }
 
 function init()
@@ -121,6 +125,8 @@ function init()
 	gameBottomPanel = gameRootPanel:getChildById("gameBottomPanel")
 	gameTopPanel = gameRootPanel:getChildById("gameTopPanel")
 	gameBottomStatsBarPanel = gameRootPanel:getChildById("gameBottomStatsBarPanel")
+	gameLeftStatsBarPanel = gameRootPanel:getChildById("gameLeftStatsBarPanel")
+	gameRightStatsBarPanel = gameRootPanel:getChildById("gameRightStatsBarPanel")
 	leftIncreaseSidePanels = gameRootPanel:getChildById("leftIncreaseSidePanels")
 	leftDecreaseSidePanels = gameRootPanel:getChildById("leftDecreaseSidePanels")
 	rightIncreaseSidePanels = gameRootPanel:getChildById("rightIncreaseSidePanels")
@@ -193,7 +199,15 @@ function init()
 		onGeometryChange = onSidebarVisibilityChange
 	})
 
-	logoutButton = modules.client_topmenu.addTopRightToggleButton("logoutButton", tr("Exit"), "/images/topbuttons/logout", tryLogout, true)
+	logoutButton = modules.client_topmenu.addTopRightToggleButton("logoutButton", tr("Exit"), "/images/topbuttons/logout", function()
+		if g_game.isOnline() then
+			return tryLogout()
+		end
+
+		exit()
+
+		return true
+	end, true)
 	showTopMenuButton = gameMapPanel:getChildById("showTopMenuButton")
 
 	function showTopMenuButton.onClick()
@@ -207,6 +221,82 @@ function init()
 	end
 
 	StatsBar.init()
+end
+
+local var_0_16 = {
+	{
+		action = "Open Compendium",
+		buttonId = "compendiumDialog"
+	},
+	{
+		action = "Open Social - Assemble Team",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Badges",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Friend List",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Friends Config",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Friends Invitations",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Friends Search",
+		buttonId = "friendsDialog"
+	},
+	{
+		action = "Open Social - Join Team",
+		buttonId = "friendsDialog"
+	}
+}
+local var_0_17 = {
+	{
+		action = "Show/hide player guide",
+		buttonId = "playerGuide"
+	}
+}
+
+local function var_0_18(arg_7_0)
+	local game_mainpanel = modules.game_mainpanel
+	local button = game_mainpanel and game_mainpanel.getButton and game_mainpanel.getButton(arg_7_0)
+
+	if not button or button:isDestroyed() or button.isEnabled and not button:isEnabled() then
+		return false
+	end
+
+	if button.mainPanelCallback then
+		button.mainPanelCallback()
+
+		return true
+	end
+
+	if button.onClick then
+		button:onClick()
+
+		return true
+	end
+
+	return false
+end
+
+local function var_0_19()
+	local var_8_0 = modules.game_quickloot and modules.game_quickloot.QuickLoot
+
+	if not var_8_0 or not var_8_0.toggle then
+		return false
+	end
+
+	var_8_0.toggle()
+
+	return true
 end
 
 function bindKeys()
@@ -228,20 +318,57 @@ function bindKeys()
 	Keybind.new("Movement", "Stop All Actions", "Escape", "", true)
 	Keybind.bind("Movement", "Stop All Actions", {
 		{
-			type = KEY_PRESS,
+			type = KEY_DOWN,
 			callback = function()
-				if lastStopAction + 50 > g_clock.millis() then
+				if lastStopAction + supplyStashMenuEnabled > g_clock.millis() then
 					return
 				end
 
 				lastStopAction = g_clock.millis()
 
+				if modules.game_walk and modules.game_walk.cancelWalkInput then
+					modules.game_walk.cancelWalkInput()
+				end
+
 				g_game.cancelAttackAndFollow()
 			end
 		}
 	}, gameRootPanel)
-	Keybind.new("Misc", "Logout", "Ctrl+L", "Ctrl+Q")
-	Keybind.bind("Misc", "Logout", {
+	Keybind.new("Misc.", "Activate Lenshelp", "", "")
+	Keybind.bind("Misc.", "Activate Lenshelp", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if modules.client_options and modules.client_options.openOptionsCategory then
+					modules.client_options.openOptionsCategory("Misc.", "Help")
+				end
+			end
+		}
+	}, gameRootPanel)
+	Keybind.new("Misc.", "Allow/disallow all characters to Exiva", "", "")
+	Keybind.bind("Misc.", "Allow/disallow all characters to Exiva", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if modules.game_textmessage and modules.game_textmessage.displayFailureMessage then
+					modules.game_textmessage.displayFailureMessage(tr("Exiva options are not available in this client."))
+				end
+			end
+		}
+	}, gameRootPanel)
+	Keybind.new("Misc.", "Customise Character", "", "")
+	Keybind.bind("Misc.", "Customise Character", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if g_game.isOnline() then
+					g_game.requestOutfit()
+				end
+			end
+		}
+	}, gameRootPanel)
+	Keybind.new("Misc.", "Logout", "Ctrl+L", "Ctrl+Q")
+	Keybind.bind("Misc.", "Logout", {
 		{
 			type = KEY_PRESS,
 			callback = function()
@@ -249,8 +376,8 @@ function bindKeys()
 			end
 		}
 	}, gameRootPanel)
-	Keybind.new("Misc", "Clear oldest message from Game Window", "Alt+W", "")
-	Keybind.bind("Misc", "Clear oldest message from Game Window", {
+	Keybind.new("Misc.", "Clear oldest message from Game Window", "Alt+W", "")
+	Keybind.bind("Misc.", "Clear oldest message from Game Window", {
 		{
 			type = KEY_DOWN,
 			callback = function()
@@ -261,11 +388,55 @@ function bindKeys()
 		}
 	}, gameRootPanel)
 
+	for unusedValue, entry in ipairs(var_0_16) do
+		local buttonId = entry.buttonId
+
+		Keybind.new("Dialogs", entry.action, "", "")
+		Keybind.bind("Dialogs", entry.action, {
+			{
+				type = KEY_DOWN,
+				callback = function()
+					return var_0_18(buttonId)
+				end
+			}
+		}, gameRootPanel)
+	end
+
+	for unusedValue, entry in ipairs(var_0_17) do
+		local buttonId = entry.buttonId
+
+		Keybind.new("Windows", entry.action, "", "")
+		Keybind.bind("Windows", entry.action, {
+			{
+				type = KEY_DOWN,
+				callback = function()
+					return var_0_18(buttonId)
+				end
+			}
+		}, gameRootPanel)
+	end
+
+	Keybind.new("Dialogs", "Open Manage Containers", "", "")
+	Keybind.bind("Dialogs", "Open Manage Containers", {
+		{
+			type = KEY_DOWN,
+			callback = var_0_19
+		}
+	}, gameRootPanel)
+
 	if modules.game_textmessage and modules.game_textmessage.bindClearOldestHotkey then
 		modules.game_textmessage.bindClearOldestHotkey(gameRootPanel)
 	end
 
 	g_keyboard.bindKeyDown("Ctrl+.", nextViewMode, gameRootPanel)
+end
+
+function refreshHoveredItemInteractionCursor()
+	if UIItem and UIItem.refreshHoveredInteractionCursor then
+		UIItem.refreshHoveredInteractionCursor()
+	end
+
+	return false
 end
 
 function terminate()
@@ -339,7 +510,7 @@ function terminate()
 
 	if not g_platform.isMobile() then
 		g_window.setMinimumSize({
-			width = DEFAULT_WINDOW_MIN_WIDTH,
+			width = var_0_5,
 			height = DEFAULT_WINDOW_MIN_HEIGHT
 		})
 	end
@@ -347,8 +518,21 @@ function terminate()
 	logoutButton:destroy()
 	gameRootPanel:destroy()
 	Keybind.delete("Movement", "Stop All Actions")
-	Keybind.delete("Misc", "Logout")
-	Keybind.delete("Misc", "Clear oldest message from Game Window")
+	Keybind.delete("Misc.", "Activate Lenshelp")
+	Keybind.delete("Misc.", "Allow/disallow all characters to Exiva")
+	Keybind.delete("Misc.", "Customise Character")
+	Keybind.delete("Misc.", "Logout")
+	Keybind.delete("Misc.", "Clear oldest message from Game Window")
+
+	for unusedValue, entry in ipairs(var_0_16) do
+		Keybind.delete("Dialogs", entry.action)
+	end
+
+	for unusedValue, entry in ipairs(var_0_17) do
+		Keybind.delete("Windows", entry.action)
+	end
+
+	Keybind.delete("Dialogs", "Open Manage Containers")
 end
 
 function onGameStart()
@@ -372,7 +556,7 @@ function onGameStart()
 	addEvent(function()
 		for _, container in pairs(g_game.getContainers()) do
 			if container.isInDepot and container:isInDepot() then
-				supplyStashMenuEnabled = true
+				var_0_14 = true
 
 				break
 			end
@@ -389,12 +573,13 @@ local function cancelPendingSidebarLayoutUpdate()
 end
 
 function onGameEnd()
-	supplyStashMenuEnabled = false
+	var_0_14 = false
 
 	cancelPendingSidebarLayoutUpdate()
 
 	creatureInspectionFlags = {}
 
+	saveSidebarsBeforeLogout()
 	save()
 	hide()
 	addEvent(function()
@@ -452,6 +637,11 @@ end
 
 function hide()
 	setupViewMode(0)
+
+	if UIItem and UIItem.clearHoveredInteractionCursor then
+		UIItem.clearHoveredInteractionCursor()
+	end
+
 	disconnect(g_app, {
 		onClose = tryExit
 	})
@@ -596,23 +786,21 @@ end
 function getBottomSplitterMinMarginBottom()
 	local cooldownH = getCooldownVisibleExtraHeight()
 	local statsH = getBottomStatsBarHeight()
-	local actionH = getBottomActionBarsDockHeight()
-	local barCount = getBottomActionBarsCount()
-	local physicalTotal = actionH - barCount
+	local var_39_2 = getBottomActionBarsDockHeight() - getBottomActionBarsCount()
 
 	if cooldownH > 0 then
-		physicalTotal = physicalTotal + cooldownH + 1
+		var_39_2 = var_39_2 + cooldownH + 1
 	end
 
 	if statsH > 0 then
-		physicalTotal = physicalTotal + statsH - 3
+		var_39_2 = var_39_2 + statsH - 3
 	end
 
-	if physicalTotal < 0 then
-		physicalTotal = 0
+	if var_39_2 < 0 then
+		var_39_2 = 0
 	end
 
-	return CHAT_MIN_HEIGHT + physicalTotal
+	return CHAT_MIN_HEIGHT + var_39_2
 end
 
 function applyBottomSplitterLayoutHeight()
@@ -689,6 +877,10 @@ function syncMainRightPanelClearance()
 
 	if gameRightPanel:getPaddingTop() ~= mainHeight then
 		gameRightPanel:setPaddingTop(mainHeight)
+
+		if type(gameRightPanel.scheduleSidebarFreeSpaceRefresh) == "function" then
+			gameRightPanel:scheduleSidebarFreeSpaceRefresh()
+		end
 	end
 end
 
@@ -872,8 +1064,6 @@ function tryLogout(prompt)
 	end
 
 	if not g_game.isOnline() then
-		exit()
-
 		return
 	end
 
@@ -881,7 +1071,8 @@ function tryLogout(prompt)
 		return
 	end
 
-	local msg, yesCallback
+	local msg
+	local yesCallback
 
 	if not g_game.isConnectionOk() then
 		msg = "Your connection is failing, if you logout now your character will be still online, do you want to force logout?"
@@ -930,6 +1121,12 @@ function tryLogout(prompt)
 			anchor = AnchorHorizontalCenter
 		}, yesCallback, noCallback)
 	else
+		if var_0_12 > 0 and var_0_12 + var_0_13 > g_clock.millis() then
+			return
+		end
+
+		var_0_12 = g_clock.millis()
+
 		yesCallback()
 	end
 end
@@ -962,11 +1159,24 @@ function onMouseGrabberRelease(self, mousePosition, mouseButton)
 	end
 
 	selectedThing = nil
+	selectedUseWithCallback = nil
 
 	g_mouse.popCursor("target")
 	self:ungrabMouse()
 
 	return true
+end
+
+local function var_0_34(arg_65_0)
+	if not arg_65_0 then
+		return
+	end
+
+	if selectedUseWithCallback then
+		selectedUseWithCallback(true)
+	end
+
+	g_game.useWith(selectedThing, arg_65_0)
 end
 
 function onUseWith(clickedWidget, mousePosition)
@@ -975,18 +1185,18 @@ function onUseWith(clickedWidget, mousePosition)
 
 		if tile then
 			if selectedThing:isFluidContainer() or selectedThing:isMultiUse() then
-				g_game.useWith(selectedThing, tile:getTopMultiUseThing())
+				var_0_34(tile:getTopMultiUseThing())
 			else
-				g_game.useWith(selectedThing, tile:getTopUseThing())
+				var_0_34(tile:getTopUseThing())
 			end
 		end
 	elseif clickedWidget:getClassName() == "UIItem" and not clickedWidget:isVirtual() then
-		g_game.useWith(selectedThing, clickedWidget:getItem())
+		var_0_34(clickedWidget:getItem())
 	elseif clickedWidget:getClassName() == "UICreatureButton" then
 		local creature = clickedWidget:getCreature()
 
 		if creature then
-			g_game.useWith(selectedThing, creature)
+			var_0_34(creature)
 		end
 	end
 end
@@ -1007,7 +1217,7 @@ function onTradeWith(clickedWidget, mousePosition)
 	end
 end
 
-function startUseWith(thing)
+function startUseWith(thing, arg_68_1)
 	if not thing then
 		return
 	end
@@ -1016,6 +1226,7 @@ function startUseWith(thing)
 		if selectedThing then
 			selectedThing = thing
 			selectedType = "use"
+			selectedUseWithCallback = arg_68_1
 		end
 
 		return
@@ -1023,6 +1234,7 @@ function startUseWith(thing)
 
 	selectedType = "use"
 	selectedThing = thing
+	selectedUseWithCallback = arg_68_1
 
 	mouseGrabberWidget:grabMouse()
 	g_mouse.pushCursor("target")
@@ -1037,6 +1249,7 @@ function startTradeWith(thing)
 		if selectedThing then
 			selectedThing = thing
 			selectedType = "trade"
+			selectedUseWithCallback = nil
 		end
 
 		return
@@ -1044,6 +1257,7 @@ function startTradeWith(thing)
 
 	selectedType = "trade"
 	selectedThing = thing
+	selectedUseWithCallback = nil
 
 	mouseGrabberWidget:grabMouse()
 	g_mouse.pushCursor("target")
@@ -1569,9 +1783,8 @@ function createBattleListCreatureMenu(menuPosition, creature)
 	local localPosition = localPlayer:getPosition()
 	local creatureName = creature:getName()
 	local creaturePos = creature:getPosition()
-	local sameFloor = creaturePos and localPosition and creaturePos.z == localPosition.z
 
-	if sameFloor then
+	if creaturePos and localPosition and creaturePos.z == localPosition.z then
 		if creature:isNpc() then
 			menu:addOption(tr("Talk"), function()
 				g_game.attack(creature)
@@ -1651,12 +1864,8 @@ local function isSupplyStashItem(thing)
 
 	local thingType = g_things.getThingType(thing:getId(), ThingCategoryItem)
 
-	if thingType and thingType.getName then
-		local name = thingType:getName():lower()
-
-		if name:find("supply stash", 1, true) then
-			return true
-		end
+	if thingType and thingType.getName and thingType:getName():lower():find("supply stash", 1, true) then
+		return true
 	end
 
 	return false
@@ -1664,15 +1873,15 @@ end
 
 function onSpecialContainer(supplyStashAvailable, marketAvailable)
 	if supplyStashAvailable == true or marketAvailable == true then
-		supplyStashMenuEnabled = true
+		var_0_14 = true
 	elseif supplyStashAvailable == false and marketAvailable == false then
-		supplyStashMenuEnabled = false
+		var_0_14 = false
 	end
 end
 
 function onDepotContainerOpen(container)
 	if container and container.isInDepot and container:isInDepot() then
-		supplyStashMenuEnabled = true
+		var_0_14 = true
 	end
 end
 
@@ -1681,7 +1890,7 @@ local function isSupplyStashMenuAvailable()
 		return true
 	end
 
-	if supplyStashMenuEnabled then
+	if var_0_14 then
 		return true
 	end
 
@@ -1759,9 +1968,7 @@ local function canStowItem(item)
 		return false
 	end
 
-	local tier = item.getTier and item:getTier() or 0
-
-	if tier ~= 0 then
+	if (item.getTier and item:getTier() or 0) ~= 0 then
 		return false
 	end
 
@@ -1838,7 +2045,7 @@ local function openItemCountWindow(item, onConfirm, hotkeyId)
 		spinbox:setValue(spinbox:getValue() - 10)
 	end, spinbox)
 
-	function scrollbar:onValueChange(value)
+	function scrollbar.onValueChange(unusedArgument, value)
 		itembox:setItemCount(value)
 
 		spinbox.onValueChange = nil
@@ -1875,9 +2082,7 @@ local function openItemCountWindow(item, onConfirm, hotkeyId)
 end
 
 local function requestStowItem(item)
-	local count = item:getCount()
-
-	if count > 1 then
+	if item:getCount() > 1 then
 		openItemCountWindow(item, function(selectedCount)
 			stowItem(item, selectedCount)
 		end, "stow_item_dialog")
@@ -2112,12 +2317,8 @@ local function isSupplyStashContainer(container)
 		return false
 	end
 
-	if container.getName then
-		local name = container:getName():lower()
-
-		if name:find("supply stash", 1, true) then
-			return true
-		end
+	if container.getName and container:getName():lower():find("supply stash", 1, true) then
+		return true
 	end
 
 	local containerItem = container.getContainerItem and container:getContainerItem()
@@ -2177,7 +2378,14 @@ end
 
 local OTC_TOGGLE_COLOR_ENABLED = "#44ad25"
 local OTC_TOGGLE_COLOR_DISABLED = "#ff9854"
-local LOOT_POUCH_ITEM_ID = 23721
+local LOOT_POUCH_ITEM_ID = 65535
+local var_0_88 = {
+	[19202] = true,
+	[470] = true,
+	[12902] = true,
+	[3502] = true,
+	[23396] = true
+}
 
 local function addOtcToggleMenuOption(menu, opCode, enabledLabel, disabledLabel, defaultEnabled)
 	local enabled = defaultEnabled and true or false
@@ -2206,7 +2414,45 @@ local function addFlaskCreationMenuOption(menu)
 end
 
 local function isLootPouchItem(thing)
-	return thing and thing.isItem and thing:isItem() and thing:getId() == LOOT_POUCH_ITEM_ID
+	if not thing or not thing.isItem or not thing:isItem() or not thing:isContainer() then
+		return false
+	end
+
+	if thing.isLyingCorpse and thing:isLyingCorpse() then
+		return false
+	end
+
+	if thing.isPlayerCorpse and thing:isPlayerCorpse() then
+		return false
+	end
+
+	if var_0_88[thing:getId()] then
+		return false
+	end
+
+	local position = thing.getPosition and thing:getPosition()
+
+	if not position or position.x ~= LOOT_POUCH_ITEM_ID then
+		return false
+	end
+
+	local parentContainer = thing.getParentContainer and thing:getParentContainer()
+
+	if parentContainer and parentContainer.isInDepot and parentContainer:isInDepot() then
+		return false
+	end
+
+	local name = thing.getName and thing:getName()
+
+	if name then
+		local var_182_3 = name:lower()
+
+		if var_182_3:find("depot", 1, true) or var_182_3:find("browse field", 1, true) or var_182_3:find("market", 1, true) then
+			return false
+		end
+	end
+
+	return true
 end
 
 local function addAutoLootMenuOption(menu)
@@ -2249,7 +2495,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing, mapTi
 				local count = lookThing:getCount()
 
 				if not count or count < 1 then
-					count = 1
+					local count = 1
 				end
 
 				g_game.inspectionNormalObject(pos)
@@ -2336,14 +2582,10 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing, mapTi
 	if creatureThing and creatureThing:isPlayer() and not creatureThing:isLocalPlayer() and g_game.getFeature(GameBrowseField) then
 		local pos = creatureThing:getPosition()
 
-		if pos and pos.x ~= 65535 then
-			local browseAlreadyAdded = useThing and useThing:getPosition().x == pos.x and useThing:getPosition().y == pos.y and useThing:getPosition().z == pos.z
-
-			if not browseAlreadyAdded then
-				menu:addOption(tr("Browse Field"), function()
-					g_game.browseField(pos)
-				end)
-			end
+		if pos and pos.x ~= 65535 and not (useThing and useThing:getPosition().x == pos.x and useThing:getPosition().y == pos.y and useThing:getPosition().z == pos.z) then
+			menu:addOption(tr("Browse Field"), function()
+				g_game.browseField(pos)
+			end)
 		end
 	end
 
@@ -2353,7 +2595,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing, mapTi
 		menu:addSeparator()
 
 		if creatureThing:isLocalPlayer() then
-			menu:addOption(tr(g_game.getClientVersion() >= 1000 and "Customise Character" or "Set Outfit"), function()
+			menu:addOption(tr("Customise Character"), function()
 				g_game.requestOutfit()
 			end)
 
@@ -2421,7 +2663,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing, mapTi
 					g_game.attack(creatureThing)
 				end, talkShortcut)
 				menu:addSeparator()
-				menu:addOption(tr(g_game.getClientVersion() >= 1000 and "Customise Character" or "Set Outfit"), function()
+				menu:addOption(tr("Customise Character"), function()
 					g_game.requestHirelingOutfit(creatureThing:getId())
 				end)
 				menu:addOption(tr("Change Name/Sex"), function()
@@ -2429,8 +2671,8 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing, mapTi
 						modules.game_store.openHirelingSexChange()
 					end
 				end, tr("(Store)"), false, {
-					minWidth = 220,
-					shortcutColor = "#1872c3"
+					shortcutColor = "#1872c3",
+					minWidth = 220
 				})
 				menu:addSeparator()
 				menu:addOption(tr("Report Name"), function()
@@ -2699,6 +2941,12 @@ local function handleUseThing(thing, quickLootContainers)
 	end
 end
 
+local var_0_101 = 2
+
+local function var_0_102(arg_234_0)
+	return arg_234_0 and arg_234_0:isItem() and (arg_234_0:isContainer() or arg_234_0:isUsable() or arg_234_0:isMultiUse() or arg_234_0:getDefaultAction() == var_0_101)
+end
+
 local function tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos)
 	if attackCreature and attackCreature ~= player then
 		g_game.attack(attackCreature)
@@ -2717,14 +2965,22 @@ end
 
 function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature)
 	local keyboardModifiers = g_keyboard.getModifiers()
-	local classicControl = modules.client_options.getOption("classicControl")
+	local option = modules.client_options.getOption("classicControl")
+	local classic = option == "classic" or option == true
+	local var_236_3 = classic and keyboardModifiers == KeyboardAltModifier and mouseButton == MouseLeftButton
+
+	if var_236_3 then
+		mouseButton = MouseRightButton
+		keyboardModifiers = KeyboardNoModifier
+	end
+
 	local player = g_game.getLocalPlayer()
 
 	if not player then
 		return false
 	end
 
-	local effectiveUseThing = resolveHirelingUseThing(useThing, creatureThing)
+	local var_236_5 = resolveHirelingUseThing(useThing, creatureThing)
 
 	if g_platform.isMobile() then
 		if mouseButton == MouseRightButton then
@@ -2745,23 +3001,23 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 			return true
 		elseif shortcut == "use" then
-			if effectiveUseThing then
+			if var_236_5 then
 				modules.game_shortcuts.resetShortcuts()
 
-				if effectiveUseThing:isContainer() then
-					if effectiveUseThing:getParentContainer() then
-						g_game.open(effectiveUseThing, effectiveUseThing:getParentContainer())
+				if var_236_5:isContainer() then
+					if var_236_5:getParentContainer() then
+						g_game.open(var_236_5, var_236_5:getParentContainer())
 					else
-						g_game.open(effectiveUseThing)
+						g_game.open(var_236_5)
 					end
 
 					return true
-				elseif effectiveUseThing:isMultiUse() then
-					startUseWith(effectiveUseThing)
+				elseif var_236_5:isMultiUse() then
+					startUseWith(var_236_5)
 
 					return true
 				else
-					handleUseThing(effectiveUseThing, false)
+					handleUseThing(var_236_5, false)
 
 					return true
 				end
@@ -2801,7 +3057,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 			return true
 		end
-	elseif classicControl ~= "classic" and classicControl ~= true then
+	elseif not classic then
 		if keyboardModifiers == KeyboardNoModifier and mouseButton == MouseRightButton then
 			createThingMenu(menuPosition, lookThing, useThing, creatureThing, autoWalkPos)
 
@@ -2810,21 +3066,31 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 			g_game.look(lookThing)
 
 			return true
-		elseif effectiveUseThing and keyboardModifiers == KeyboardCtrlModifier and (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
-			if effectiveUseThing:isContainer() then
-				if effectiveUseThing:getParentContainer() then
-					g_game.open(effectiveUseThing, effectiveUseThing:getParentContainer())
+		elseif option == "leftSmart" and keyboardModifiers == KeyboardNoModifier and mouseButton == MouseLeftButton then
+			if var_0_102(var_236_5) then
+				handleUseThing(var_236_5, false)
+
+				return true
+			elseif not autoWalkPos and lookThing then
+				g_game.look(lookThing)
+
+				return true
+			end
+		elseif var_236_5 and keyboardModifiers == KeyboardCtrlModifier and (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
+			if var_236_5:isContainer() then
+				if var_236_5:getParentContainer() then
+					g_game.open(var_236_5, var_236_5:getParentContainer())
 				else
-					g_game.open(effectiveUseThing)
+					g_game.open(var_236_5)
 				end
 
 				return true
-			elseif effectiveUseThing:isMultiUse() then
-				startUseWith(effectiveUseThing)
+			elseif var_236_5:isMultiUse() then
+				startUseWith(var_236_5)
 
 				return true
 			else
-				handleUseThing(effectiveUseThing, false)
+				handleUseThing(var_236_5, false)
 
 				return true
 			end
@@ -2844,27 +3110,27 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 			return true
 		end
 	else
-		local lootSide = modules.client_options.getOption("lootSide") or "right"
+		local option = modules.client_options.getOption("lootSide") or "right"
 
-		if lootSide == "right" then
-			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and not g_mouse.isPressed(MouseLeftButton) then
+		if option == "right" then
+			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif effectiveUseThing and handleUseThing(effectiveUseThing, true) then
+				elseif var_236_5 and handleUseThing(var_236_5, true) then
 					return true
 				elseif lookThing and not lookThing:isCreature() and lookThing:isPickupable() then
 					g_game.move(lookThing, lookThing:getPosition(), 1)
 
 					return true
 				end
-			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier and effectiveUseThing and handleUseThing(effectiveUseThing, false) then
+			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier and var_236_5 and handleUseThing(var_236_5, false) then
 				return true
 			end
-		elseif lootSide == "shiftRight" then
-			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and not g_mouse.isPressed(MouseLeftButton) then
+		elseif option == "shiftRight" then
+			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif effectiveUseThing and handleUseThing(effectiveUseThing, false) then
+				elseif var_236_5 and handleUseThing(var_236_5, false) then
 					return true
 				end
 			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier then
@@ -2876,7 +3142,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 					return true
 				end
 			end
-		elseif lootSide == "left" then
+		elseif option == "left" then
 			if mouseButton == MouseLeftButton and keyboardModifiers == KeyboardNoModifier then
 				if tryQuickLootCorpse(useThing, lookThing) then
 					return true
@@ -2885,12 +3151,12 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 					return true
 				end
-			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and not g_mouse.isPressed(MouseLeftButton) then
+			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif effectiveUseThing and handleUseThing(effectiveUseThing, false) then
+				elseif var_236_5 and handleUseThing(var_236_5, false) then
 					return true
-				elseif not effectiveUseThing then
+				elseif not var_236_5 then
 					createThingMenu(menuPosition, lookThing, useThing, creatureThing, autoWalkPos)
 
 					return true
@@ -2930,13 +3196,10 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 	player:stopAutoWalk()
 
 	if autoWalkPos and keyboardModifiers == KeyboardNoModifier and mouseButton == MouseLeftButton then
-		local classic = classicControl == "classic" or classicControl == true
-		local lootSide = modules.client_options.getOption("lootSide") or "right"
+		local option = modules.client_options.getOption("lootSide") or "right"
 
-		if classic and lootSide == "left" then
-			local lootTarget = resolveGroundLootTarget(useThing, lookThing)
-
-			if not lootTarget and (not lookThing or lookThing:isCreature() or not lookThing:isPickupable()) then
+		if classic and option == "left" then
+			if not resolveGroundLootTarget(useThing, lookThing) and (not lookThing or lookThing:isCreature() or not lookThing:isPickupable()) then
 				player:autoWalk(autoWalkPos)
 
 				if g_game.isAttacking() and g_game.getChaseMode() == ChaseOpponent then
@@ -3247,19 +3510,15 @@ function getBottomSplitterEffectiveMinMargin(parentH)
 		local internalWidth = widgetWidth - paddingH
 
 		if internalWidth > 0 then
-			local idealInternalHeight = math.floor(internalWidth / getMapAspectRatio() + 0.5)
-			local idealWidgetHeight = idealInternalHeight + paddingV
-			local currentWidgetHeight = gameMapPanel:getHeight()
-			local currentSplitterMargin = bottomSplitter:getMarginBottom()
-			local totalHeight = currentWidgetHeight + currentSplitterMargin
-			local ceilingMarginBottom = totalHeight - idealWidgetHeight
+			local var_268_5 = math.floor(internalWidth / getMapAspectRatio() + 0.5) + paddingV
+			local height = gameMapPanel:getHeight() + bottomSplitter:getMarginBottom() - var_268_5
 
-			if ceilingMarginBottom < 0 then
-				ceilingMarginBottom = 0
+			if height < 0 then
+				height = 0
 			end
 
-			if baseMin < ceilingMarginBottom then
-				return ceilingMarginBottom
+			if baseMin < height then
+				return height
 			end
 		end
 	end
@@ -3330,7 +3589,9 @@ local function canIncreaseRightSidePanels()
 end
 
 local function getRequiredGameRootWidth()
-	return getTotalOccupiedSidebarWidth() + getRequiredCenterWidth()
+	local var_275_0 = math.max(getRequiredCenterWidth(), DEFAULT_WINDOW_MIN_WIDTH)
+
+	return getTotalOccupiedSidebarWidth() + var_275_0
 end
 
 local function setSidebarPanelVisible(panel, visible)
@@ -3413,6 +3674,8 @@ local function stackGameCenterAboveSidebars()
 		mapVerticalLineRight,
 		gameTopPanel,
 		gameMapPanel,
+		gameLeftStatsBarPanel,
+		gameRightStatsBarPanel,
 		bottomSplitter,
 		gameBottomPanel,
 		gameBottomStatsBarPanel
@@ -3447,6 +3710,24 @@ local function stackGameCenterAboveSidebars()
 	if rightDecreaseSidePanels and not rightDecreaseSidePanels:isDestroyed() then
 		rightDecreaseSidePanels:raise()
 	end
+end
+
+function raiseBottomCustomisableStatsBar(arg_281_0)
+	if gameBottomPanel and not gameBottomPanel:isDestroyed() then
+		gameBottomPanel:raise()
+	end
+
+	if gameBottomStatsBarPanel and not gameBottomStatsBarPanel:isDestroyed() and g_settings.getString("statsbar_placement") == "bottom" then
+		gameBottomStatsBarPanel:raise()
+	end
+
+	if arg_281_0 and not arg_281_0:isDestroyed() then
+		arg_281_0:raise()
+	end
+end
+
+function restoreCenterHudZOrder()
+	raiseBottomCustomisableStatsBar()
 end
 
 function countVisibleExtraPanels(side)
@@ -3550,10 +3831,23 @@ function updateGameWindowMinimumSize()
 		return
 	end
 
+	local width = math.max(var_0_5, getRequiredGameRootWidth())
+
 	g_window.setMinimumSize({
-		width = math.max(DEFAULT_WINDOW_MIN_WIDTH, getRequiredGameRootWidth()),
+		width = width,
 		height = DEFAULT_WINDOW_MIN_HEIGHT
 	})
+
+	if not g_window.isMaximized() then
+		local size = g_window.getSize()
+
+		if width > size.width or size.height < DEFAULT_WINDOW_MIN_HEIGHT then
+			g_window.resize({
+				width = math.max(size.width, width),
+				height = math.max(size.height, DEFAULT_WINDOW_MIN_HEIGHT)
+			})
+		end
+	end
 end
 
 function scheduleSidebarLayoutUpdate()
@@ -3657,8 +3951,26 @@ local function closeSidebarMiniwindows(mainpanel)
 	for i = #children, 1, -1 do
 		local widget = children[i]
 
-		if widget and not widget:isDestroyed() and widget.UIMiniWindowContainer and widget.close and widget:isExplicitlyVisible() then
-			widget:close()
+		if widget and not widget:isDestroyed() and widget.UIMiniWindowContainer then
+			if modules.game_containers and modules.game_containers.isContainerMiniWindow and modules.game_containers.isContainerMiniWindow(widget) then
+				local var_298_2
+
+				for unusedValue, getContainer in pairs(g_game.getContainers()) do
+					if getContainer and getContainer.window == widget then
+						var_298_2 = getContainer
+
+						break
+					end
+				end
+
+				if var_298_2 and modules.game_containers.closeContainerForSidebar then
+					modules.game_containers.closeContainerForSidebar(var_298_2)
+				elseif widget.close and widget:isExplicitlyVisible() then
+					widget:close()
+				end
+			elseif widget.close and widget:isExplicitlyVisible() then
+				widget:close()
+			end
 		end
 	end
 end
@@ -3963,50 +4275,94 @@ function reanchorCenterToSidebars()
 	local leftId = leftEdge:getId()
 	local rightId = rightEdge:getId()
 
+	if gameLeftStatsBarPanel and not gameLeftStatsBarPanel:isDestroyed() then
+		gameLeftStatsBarPanel:breakAnchors()
+		gameLeftStatsBarPanel:addAnchor(AnchorLeft, leftId, AnchorRight)
+		gameLeftStatsBarPanel:addAnchor(AnchorTop, "parent", AnchorTop)
+		gameLeftStatsBarPanel:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
+		gameLeftStatsBarPanel:setMarginLeft(SIDEBAR_INNER_BORDER_GAP - 1)
+		gameLeftStatsBarPanel:setMarginBottom(1)
+	end
+
+	if gameRightStatsBarPanel and not gameRightStatsBarPanel:isDestroyed() then
+		gameRightStatsBarPanel:breakAnchors()
+		gameRightStatsBarPanel:addAnchor(AnchorRight, rightId, AnchorLeft)
+		gameRightStatsBarPanel:addAnchor(AnchorTop, "parent", AnchorTop)
+		gameRightStatsBarPanel:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
+		gameRightStatsBarPanel:setMarginRight(SIDEBAR_INNER_BORDER_GAP - 1)
+		gameRightStatsBarPanel:setMarginBottom(1)
+	end
+
 	if gameActionBarLeftPanel and not gameActionBarLeftPanel:isDestroyed() then
 		gameActionBarLeftPanel:breakAnchors()
-		gameActionBarLeftPanel:addAnchor(AnchorLeft, leftId, AnchorRight)
+		gameActionBarLeftPanel:addAnchor(AnchorLeft, "gameLeftStatsBarPanel", AnchorRight)
 		gameActionBarLeftPanel:addAnchor(AnchorTop, "parent", AnchorTop)
 		gameActionBarLeftPanel:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
 	end
 
 	if gameActionBarRightPanel and not gameActionBarRightPanel:isDestroyed() then
 		gameActionBarRightPanel:breakAnchors()
-		gameActionBarRightPanel:addAnchor(AnchorRight, rightId, AnchorLeft)
+		gameActionBarRightPanel:addAnchor(AnchorRight, "gameRightStatsBarPanel", AnchorLeft)
 		gameActionBarRightPanel:addAnchor(AnchorTop, "parent", AnchorTop)
 		gameActionBarRightPanel:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
 	end
 
 	local leftActionBarOpen = gameActionBarLeftPanel and not gameActionBarLeftPanel:isDestroyed() and gameActionBarLeftPanel:isVisible() and gameActionBarLeftPanel:getWidth() > 0
-	local rightActionBarOpen = gameActionBarRightPanel and not gameActionBarRightPanel:isDestroyed() and gameActionBarRightPanel:isVisible() and gameActionBarRightPanel:getWidth() > 0
+	local rightActionBarOpen = gameLeftStatsBarPanel and not gameLeftStatsBarPanel:isDestroyed() and gameLeftStatsBarPanel:isVisible() and (tonumber(gameLeftStatsBarPanel:getWidth()) or 0) > 0
+	local width = gameActionBarRightPanel and not gameActionBarRightPanel:isDestroyed() and gameActionBarRightPanel:isVisible() and gameActionBarRightPanel:getWidth() > 0
+	local var_313_7 = gameRightStatsBarPanel and not gameRightStatsBarPanel:isDestroyed() and gameRightStatsBarPanel:isVisible() and (tonumber(gameRightStatsBarPanel:getWidth()) or 0) > 0
+	local var_313_8 = rightActionBarOpen and not leftActionBarOpen
+	local var_313_9 = var_313_7 and not width
 
 	if mapVerticalLineLeft and not mapVerticalLineLeft:isDestroyed() then
 		mapVerticalLineLeft:breakAnchors()
-		mapVerticalLineLeft:addAnchor(AnchorLeft, "gameActionBarLeftPanel", AnchorRight)
-		mapVerticalLineLeft:addAnchor(AnchorTop, "gameActionBarLeftPanel", AnchorTop)
-		mapVerticalLineLeft:addAnchor(AnchorBottom, "gameActionBarLeftPanel", AnchorBottom)
-		mapVerticalLineLeft:setMarginLeft(1)
-		mapVerticalLineLeft:setVisible(leftActionBarOpen == true)
+
+		if leftActionBarOpen then
+			mapVerticalLineLeft:addAnchor(AnchorLeft, "gameActionBarLeftPanel", AnchorRight)
+			mapVerticalLineLeft:addAnchor(AnchorTop, "gameActionBarLeftPanel", AnchorTop)
+			mapVerticalLineLeft:addAnchor(AnchorBottom, "gameActionBarLeftPanel", AnchorBottom)
+			mapVerticalLineLeft:setMarginLeft(1)
+			mapVerticalLineLeft:setVisible(true)
+		else
+			mapVerticalLineLeft:addAnchor(AnchorLeft, leftId, AnchorRight)
+			mapVerticalLineLeft:addAnchor(AnchorTop, "parent", AnchorTop)
+			mapVerticalLineLeft:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
+			mapVerticalLineLeft:setMarginLeft(1)
+			mapVerticalLineLeft:setVisible(false)
+		end
 	end
 
 	if mapVerticalLineRight and not mapVerticalLineRight:isDestroyed() then
 		mapVerticalLineRight:breakAnchors()
-		mapVerticalLineRight:addAnchor(AnchorRight, "gameActionBarRightPanel", AnchorLeft)
-		mapVerticalLineRight:addAnchor(AnchorTop, "gameActionBarRightPanel", AnchorTop)
-		mapVerticalLineRight:addAnchor(AnchorBottom, "gameActionBarRightPanel", AnchorBottom)
-		mapVerticalLineRight:setMarginRight(1)
-		mapVerticalLineRight:setVisible(rightActionBarOpen == true)
+
+		if width then
+			mapVerticalLineRight:addAnchor(AnchorRight, "gameActionBarRightPanel", AnchorLeft)
+			mapVerticalLineRight:addAnchor(AnchorTop, "gameActionBarRightPanel", AnchorTop)
+			mapVerticalLineRight:addAnchor(AnchorBottom, "gameActionBarRightPanel", AnchorBottom)
+			mapVerticalLineRight:setMarginRight(1)
+			mapVerticalLineRight:setVisible(true)
+		else
+			mapVerticalLineRight:addAnchor(AnchorRight, rightId, AnchorLeft)
+			mapVerticalLineRight:addAnchor(AnchorTop, "parent", AnchorTop)
+			mapVerticalLineRight:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
+			mapVerticalLineRight:setMarginRight(1)
+			mapVerticalLineRight:setVisible(false)
+		end
 	end
 
 	if gameMapPanel and not gameMapPanel:isDestroyed() then
-		local leftMapAnchor = leftActionBarOpen and "mapVerticalLineLeft" or leftId
-		local rightMapAnchor = rightActionBarOpen and "mapVerticalLineRight" or rightId
+		local unusedValue
+		local leftMapAnchor = leftActionBarOpen and "mapVerticalLineLeft" or var_313_8 and "gameLeftStatsBarPanel" or leftId
+		local unusedValue
+		local rightMapAnchor = width and "mapVerticalLineRight" or var_313_9 and "gameRightStatsBarPanel" or rightId
 
 		gameMapPanel:breakAnchors()
 		gameMapPanel:addAnchor(AnchorLeft, leftMapAnchor, AnchorRight)
 		gameMapPanel:addAnchor(AnchorRight, rightMapAnchor, AnchorLeft)
 		gameMapPanel:addAnchor(AnchorTop, "gameTopPanel", AnchorBottom)
 		gameMapPanel:addAnchor(AnchorBottom, "gameBottomPanel", AnchorTop)
+		gameMapPanel:setMarginLeft(var_313_8 and 0 or 1)
+		gameMapPanel:setMarginRight(var_313_9 and 0 or 1)
 	end
 
 	if gameBottomPanel and not gameBottomPanel:isDestroyed() then
@@ -4056,7 +4412,7 @@ function reanchorCenterToSidebars()
 	end
 
 	if gameActionBarRightPanel and not gameActionBarRightPanel:isDestroyed() then
-		gameActionBarRightPanel:setMarginRight(SIDEBAR_INNER_BORDER_GAP - 1)
+		gameActionBarRightPanel:setMarginRight(1)
 		gameActionBarRightPanel:setMarginTop(0)
 	end
 
@@ -4178,6 +4534,14 @@ end
 
 function getGameBottomStatsBar()
 	return gameBottomStatsBarPanel
+end
+
+function getGameLeftStatsBar()
+	return gameLeftStatsBarPanel
+end
+
+function getGameRightStatsBar()
+	return gameRightStatsBarPanel
 end
 
 function isBottomStatsBarDockActive()
@@ -4346,14 +4710,14 @@ end
 function updateStatsBar(dimension, placement)
 	placement = string.lower(tostring(placement or g_settings.getString("statsbar_placement")))
 
-	if placement ~= "bottom" then
+	if placement ~= "bottom" and placement ~= "left" and placement ~= "right" then
 		placement = "top"
 	end
 
 	g_settings.set("statsbar_dimension", dimension)
 	g_settings.set("statsbar_placement", placement)
 
-	if placement == "top" or placement == "bottom" then
+	if placement == "top" or placement == "bottom" or placement == "left" or placement == "right" then
 		g_settings.set("statsbar_dock", "full")
 	end
 

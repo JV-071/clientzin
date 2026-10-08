@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_attachedeffects/effects.lua
-
-AttachedEffectManager.register(1, "Spoke Lighting", 12, ThingCategoryEffect, {
+﻿AttachedEffectManager.register(1, "Spoke Lighting", 12, ThingCategoryEffect, {
 	speed = 0.5,
 	onAttach = function(effect, owner)
 		print("onAttach: ", effect:getId(), owner:getName())
@@ -10,9 +8,9 @@ AttachedEffectManager.register(1, "Spoke Lighting", 12, ThingCategoryEffect, {
 	end
 })
 AttachedEffectManager.register(2, "Bat Wings", 307, ThingCategoryCreature, {
-	speed = 5,
 	shader = "Outfit - Rainbow",
 	disableWalkAnimation = true,
+	speed = 5,
 	dirOffset = {
 		[North] = {
 			0,
@@ -103,7 +101,7 @@ AttachedEffectManager.register(10, "Dynamic Effect", 0, 0, {
 		missile:move(Position.translated(owner:getPosition(), -length, 0), owner:getPosition())
 		effect:attachEffect(missile)
 
-		missile = AttachedEffect.create(38, ThingCategoryMissile)
+		local missile = AttachedEffect.create(38, ThingCategoryMissile)
 
 		missile:setDuration(effect:getDuration())
 		missile:setDirection(3)
@@ -132,7 +130,7 @@ AttachedEffectManager.register(11, "Bat", 307, ThingCategoryCreature, {
 	}
 })
 AttachedEffectManager.register(252, "Loot Highlight", 252, ThingCategoryEffect, {
-	permanent = true,
 	drawOrder = 4,
-	onTop = true
+	onTop = true,
+	permanent = true
 })

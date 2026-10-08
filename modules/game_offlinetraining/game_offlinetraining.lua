@@ -1,53 +1,4 @@
-﻿-- chunkname: @/game_offlinetraining/game_offlinetraining.lua
-
-offlineTrainingWindow = nil
-
-local function setSkillValue(id, value)
-	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
-		return
-	end
-
-	local skill = offlineTrainingWindow:recursiveGetChildById(id)
-
-	if not skill then
-		return
-	end
-
-	local widget = skill:getChildById("value")
-
-	if widget then
-		widget:setText(value)
-	end
-end
-
-local function setSkillPercent(id, percent, tooltip, color)
-	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
-		return
-	end
-
-	local skill = offlineTrainingWindow:recursiveGetChildById(id)
-
-	if not skill then
-		return
-	end
-
-	local widget = skill:getChildById("percent")
-
-	if not widget then
-		return
-	end
-
-	widget:setVisible(true)
-	widget:setPercent(skillPercentForBar(percent))
-
-	if tooltip then
-		widget:setTooltip(tooltip)
-	end
-
-	if color then
-		widget:setBackgroundColor(color)
-	end
-end
+﻿local offlineTrainingWindow
 
 local function skillPercentForBar(rawPercent)
 	return math.floor((rawPercent or 0) / 100)
@@ -59,6 +10,53 @@ end
 
 local function skillPercentToGoTooltip(rawPercent)
 	return tr("You have %s percent to go", skillPercentToGoFormatted(rawPercent))
+end
+
+local function setSkillValue(total, base)
+	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
+		return
+	end
+
+	local var_4_0 = offlineTrainingWindow:recursiveGetChildById(total)
+
+	if not var_4_0 then
+		return
+	end
+
+	local value = var_4_0:getChildById("value")
+
+	if value then
+		value:setText(base)
+	end
+end
+
+local function setSkillPercent(id, arg_5_1, tooltip, color)
+	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
+		return
+	end
+
+	local var_5_0 = offlineTrainingWindow:recursiveGetChildById(id)
+
+	if not var_5_0 then
+		return
+	end
+
+	local percent = var_5_0:getChildById("percent")
+
+	if not percent then
+		return
+	end
+
+	percent:setVisible(true)
+	percent:setPercent(skillPercentForBar(arg_5_1))
+
+	if tooltip then
+		percent:setTooltip(tooltip)
+	end
+
+	if color then
+		percent:setBackgroundColor(color)
+	end
 end
 
 local function buildLoyaltySkillTooltipLine(total, base, loyaltyField)
@@ -151,58 +149,53 @@ local function updateAllSkills()
 	end
 end
 
-function init()
-	g_ui.importStyle("/game_skills/skills_widgets")
-	g_ui.importStyle("game_offlinetraining")
-	connect(g_game, {
-		onGameEnd = destroyDialog,
-		onModalOfflineTraining = onModalOfflineTraining
-	})
+local function handleGameEnd()
+	local var_9_0 = offlineTrainingWindow
 
-	modules.game_offlinetraining.hide = hide
-	modules.game_offlinetraining.cancel = cancel
-	modules.game_offlinetraining.sendOfflineTraining = sendOfflineTraining
-end
+	offlineTrainingWindow = nil
 
-function terminate()
-	disconnect(g_game, {
-		onGameEnd = destroyDialog,
-		onModalOfflineTraining = onModalOfflineTraining
-	})
-	destroyDialog()
-end
-
-function destroyDialog()
-	if offlineTrainingWindow and not offlineTrainingWindow:isDestroyed() then
-		g_modalManager.hide(offlineTrainingWindow)
-		offlineTrainingWindow:destroy()
-
-		offlineTrainingWindow = nil
+	if not var_9_0 or var_9_0:isDestroyed() then
+		return
 	end
+
+	pcall(function()
+		g_modalManager.hide(var_9_0)
+	end)
+	pcall(function()
+		var_9_0:destroy()
+	end)
 end
 
-function hide()
+local function var_0_10()
 	if offlineTrainingWindow and not offlineTrainingWindow:isDestroyed() then
 		g_modalManager.hide(offlineTrainingWindow)
 		offlineTrainingWindow:hide()
 	end
 end
 
-function cancel()
-	destroyDialog()
-	g_game.sendOfflineTraining(0)
+local function handleEscape()
+	if g_game.isOnline() then
+		g_game.sendOfflineTraining(0)
+	end
+
+	handleGameEnd()
 end
 
-local function bindWindowHandlers()
+local function var_0_12(arg_14_0)
+	g_game.sendOfflineTraining(arg_14_0)
+	handleGameEnd()
+end
+
+local function var_0_13()
 	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
 		return
 	end
 
-	offlineTrainingWindow.onEscape = cancel
+	offlineTrainingWindow.onEscape = handleEscape
 
 	function offlineTrainingWindow.onKeyDown(_, keyCode, keyboardModifiers)
 		if keyboardModifiers == KeyboardNoModifier and keyCode == KeyEscape then
-			cancel()
+			handleEscape()
 
 			return true
 		end
@@ -210,26 +203,56 @@ local function bindWindowHandlers()
 		return false
 	end
 
-	local closeButton = offlineTrainingWindow:recursiveGetChildById("closeButton")
+	for unusedValue, iter_15_1 in ipairs({
+		"magiclevel",
+		"skillId0",
+		"skillId1",
+		"skillId2",
+		"skillId3",
+		"skillId4"
+	}) do
+		local closeButton = offlineTrainingWindow:recursiveGetChildById(iter_15_1)
 
-	if closeButton then
-		closeButton.onClick = cancel
+		if closeButton then
+			closeButton.onClick = nil
+		end
 	end
 end
 
-function onModalOfflineTraining()
+local function handleModalOfflineTraining()
 	if offlineTrainingWindow and not offlineTrainingWindow:isDestroyed() then
 		offlineTrainingWindow:show()
 	else
 		offlineTrainingWindow = g_ui.createWidget("OfflineTrainingWindow", rootWidget)
 	end
 
-	updateAllSkills()
-	bindWindowHandlers()
+	var_0_13()
 	g_modalManager.show(offlineTrainingWindow)
+
+	local var_17_0, var_17_1 = pcall(updateAllSkills)
+
+	if not var_17_0 then
+		g_logger.error("Offline training skills update failed: " .. tostring(var_17_1))
+	end
 end
 
-function sendOfflineTraining(skillId)
-	g_game.sendOfflineTraining(skillId)
-	destroyDialog()
+function init()
+	g_ui.importStyle("/game_skills/skills_widgets")
+	g_ui.importStyle("game_offlinetraining")
+	connect(g_game, {
+		onGameEnd = handleGameEnd,
+		onModalOfflineTraining = handleModalOfflineTraining
+	})
+
+	modules.game_offlinetraining.hide = var_0_10
+	modules.game_offlinetraining.cancel = handleEscape
+	modules.game_offlinetraining.sendOfflineTraining = var_0_12
+end
+
+function terminate()
+	disconnect(g_game, {
+		onGameEnd = handleGameEnd,
+		onModalOfflineTraining = handleModalOfflineTraining
+	})
+	handleGameEnd()
 end

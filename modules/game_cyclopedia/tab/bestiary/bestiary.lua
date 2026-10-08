@@ -1,11 +1,9 @@
-﻿-- chunkname: @/game_cyclopedia/tab/bestiary/bestiary.lua
-
-local UI
+﻿local UI
 local STAGES = {
-	CREATURE = 3,
-	CATEGORY = 1,
 	SEARCH = 4,
-	CREATURES = 2
+	CREATURES = 2,
+	CREATURE = 3,
+	CATEGORY = 1
 }
 local BESTIARY_PAGE_SIZE = 15
 
@@ -62,7 +60,7 @@ local function applyEchoRaidCharmIndicator(widget, ecoraid, charmPoints)
 	end
 end
 
-local function getBestiaryCharmSlotWidget(category)
+local function unusedValue(category)
 	local info = getBestiaryCreatureInfo()
 
 	if not info then
@@ -121,10 +119,7 @@ local function canAffordBestiaryGoldCost(player, cost)
 		return cost <= (player:getTotalMoney() or 0)
 	end
 
-	local bank = player:getResourceBalance(ResourceBank) or 0
-	local inventory = player:getResourceBalance(ResourceInventary) or 0
-
-	return cost <= bank + inventory
+	return cost <= (player:getResourceBalance(ResourceBank) or 0) + (player:getResourceBalance(ResourceInventary) or 0)
 end
 
 local function setBestiaryCharmSlotDisplay(slotWidget, charmData)
@@ -647,6 +642,34 @@ local function applyBestiaryCreaturePreview(spriteWidget)
 	spriteWidget:setIgnoreDisplacementShift(true)
 end
 
+local function var_0_23(arg_30_0)
+	if not arg_30_0 then
+		return
+	end
+
+	arg_30_0:setCenter(true)
+
+	if arg_30_0.setCenterByBoundingBox then
+		arg_30_0:setCenterByBoundingBox(true)
+	end
+
+	if arg_30_0.setFitVisibleBounds then
+		arg_30_0:setFitVisibleBounds(true)
+	end
+
+	arg_30_0:setFixedCreatureSize(true)
+	arg_30_0:setCreatureSize(0)
+	arg_30_0:setBaseScale(false)
+
+	if arg_30_0.setIgnoreDisplacementShift then
+		arg_30_0:setIgnoreDisplacementShift(false)
+	end
+
+	if arg_30_0.setCreatureSmooth then
+		arg_30_0:setCreatureSmooth(true)
+	end
+end
+
 local BESTIARY_SLOT_OVERLAYS = {
 	"Stackable",
 	"eventMask",
@@ -721,6 +744,7 @@ end
 
 local function finishBestiarySearchNavigation()
 	Cyclopedia.Bestiary.SearchPending = false
+	Cyclopedia.Bestiary.SearchExpectedRaceIds = nil
 end
 
 local function resetBestiarySearchNoResult()
@@ -733,11 +757,53 @@ local function scheduleBestiarySearchFallback(requestId)
 		if Cyclopedia.Bestiary.SearchPending and Cyclopedia.Bestiary.SearchRequestId == requestId then
 			resetBestiarySearchNoResult()
 		end
-	end, 400)
+	end, 2500)
 end
 
 local function normalizeRaceId(raceId)
 	return tonumber(raceId) or raceId
+end
+
+local function var_0_35(arg_42_0)
+	return arg_42_0 == "Search" or arg_42_0 == "Result"
+end
+
+local function var_0_36(arg_43_0)
+	local SearchExpectedRaceIds = Cyclopedia.Bestiary.SearchExpectedRaceIds
+
+	if not SearchExpectedRaceIds or #SearchExpectedRaceIds == 0 then
+		return false
+	end
+
+	arg_43_0 = normalizeRaceId(arg_43_0)
+
+	for iter_43_0 = 1, #SearchExpectedRaceIds do
+		if normalizeRaceId(SearchExpectedRaceIds[iter_43_0]) == arg_43_0 then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function var_0_37(arg_44_0)
+	local SearchExpectedRaceIds = Cyclopedia.Bestiary.SearchExpectedRaceIds
+
+	if not SearchExpectedRaceIds or #SearchExpectedRaceIds == 0 or not arg_44_0 or #arg_44_0 == 0 then
+		return false
+	end
+
+	if #arg_44_0 > #SearchExpectedRaceIds then
+		return false
+	end
+
+	for iter_44_0 = 1, #arg_44_0 do
+		if not var_0_36(arg_44_0[iter_44_0].id) then
+			return false
+		end
+	end
+
+	return true
 end
 
 local function getOverviewEchoRaid(raceId)
@@ -769,6 +835,32 @@ local function getCreatureCategory(data)
 end
 
 local function findCategoryPage(categoryName)
+	categoryName = normalizeRaceId(categoryName)
+
+	if not categoryName then
+		return nil
+	end
+
+	local OverviewCache = Cyclopedia.Bestiary.OverviewCache
+
+	if OverviewCache then
+		for page, pageCreatures in pairs(OverviewCache) do
+			if type(pageCreatures) == "table" then
+				for _, creature in ipairs(pageCreatures) do
+					if normalizeRaceId(creature.id) == categoryName then
+						return page
+					end
+				end
+			end
+		end
+	end
+
+	local var_47_1 = Cyclopedia.Bestiary.CreatureDetailCache and Cyclopedia.Bestiary.CreatureDetailCache[categoryName]
+
+	return getCreatureCategory(var_47_1)
+end
+
+local function var_0_41(categoryName)
 	local categories = Cyclopedia.Bestiary.Categories
 
 	if not categories or not categoryName then
@@ -790,34 +882,34 @@ local function findCategoryPage(categoryName)
 	return 1
 end
 
-local function findCreaturePageInList(creatureData, raceId)
-	raceId = normalizeRaceId(raceId)
+local function var_0_42(arg_49_0, arg_49_1)
+	arg_49_1 = normalizeRaceId(arg_49_1)
 
-	for i = 1, #creatureData do
-		if normalizeRaceId(creatureData[i].id) == raceId then
-			return math.floor((i - 1) / BESTIARY_PAGE_SIZE) + 1
+	for iter_49_0 = 1, #arg_49_0 do
+		if normalizeRaceId(arg_49_0[iter_49_0].id) == arg_49_1 then
+			return math.floor((iter_49_0 - 1) / BESTIARY_PAGE_SIZE) + 1
 		end
 	end
 
 	return 1
 end
 
-local function findCreaturePage(raceId, categoryName)
+local function findCreaturePage(raceId, target)
 	raceId = normalizeRaceId(raceId)
 
 	if not raceId then
 		return 1
 	end
 
-	if categoryName and Cyclopedia.Bestiary.OverviewCache and Cyclopedia.Bestiary.OverviewCache[categoryName] then
-		return findCreaturePageInList(Cyclopedia.Bestiary.OverviewCache[categoryName], raceId)
+	if target and Cyclopedia.Bestiary.OverviewCache and Cyclopedia.Bestiary.OverviewCache[target] then
+		return var_0_42(Cyclopedia.Bestiary.OverviewCache[target], raceId)
 	end
 
-	if Cyclopedia.Bestiary.Creatures and Cyclopedia.Bestiary.CreaturesCategory == categoryName then
-		for page, pageCreatures in pairs(Cyclopedia.Bestiary.Creatures) do
-			for _, creature in ipairs(pageCreatures) do
-				if normalizeRaceId(creature.id) == raceId then
-					return page
+	if Cyclopedia.Bestiary.Creatures and Cyclopedia.Bestiary.CreaturesCategory == target then
+		for key, Creature in pairs(Cyclopedia.Bestiary.Creatures) do
+			for unusedValue, entry in ipairs(Creature) do
+				if normalizeRaceId(entry.id) == raceId then
+					return key
 				end
 			end
 		end
@@ -826,10 +918,10 @@ local function findCreaturePage(raceId, categoryName)
 	return 1
 end
 
-local function setReturnTarget(raceId, category)
-	raceId = normalizeRaceId(raceId)
+local function var_0_44(arg_51_0, arg_51_1)
+	arg_51_0 = normalizeRaceId(arg_51_0)
 
-	if not raceId then
+	if not arg_51_0 then
 		return
 	end
 
@@ -837,15 +929,15 @@ local function setReturnTarget(raceId, category)
 
 	local target = Cyclopedia.Bestiary.ReturnTarget
 
-	if category and category ~= "" then
-		target.raceId = raceId
-		target.category = category
-		target.creaturePage = findCreaturePage(raceId, category)
-		target.categoryPage = findCategoryPage(category)
+	if arg_51_1 and arg_51_1 ~= "" then
+		target.raceId = arg_51_0
+		target.category = arg_51_1
+		target.creaturePage = findCreaturePage(arg_51_0, arg_51_1)
+		target.categoryPage = var_0_41(arg_51_1)
 	end
 end
 
-local CREATURE_DETAIL_SHOW_DELAY = 50
+local var_0_45 = 50
 local creatureDetailShowEvent
 local creatureDetailShowToken = 0
 
@@ -864,13 +956,17 @@ local function navigateBackFromCreature()
 	creatureDetailShowToken = creatureDetailShowToken + 1
 	Cyclopedia.Bestiary.DeferCreatureUI = false
 	Cyclopedia.Bestiary.Search = {}
+	Cyclopedia.Bestiary.ActiveCreatureRaceId = nil
+
+	finishBestiarySearchNavigation()
 
 	local target = Cyclopedia.Bestiary.ReturnTarget
 
 	if not target or not target.category or target.category == "" then
-		if Cyclopedia.Bestiary.ActiveCreatureRaceId then
-			g_game.requestBestiarySearch(Cyclopedia.Bestiary.ActiveCreatureRaceId)
-		end
+		Cyclopedia.Bestiary.Stage = STAGES.CATEGORY
+		Cyclopedia.Bestiary.Page = Cyclopedia.Bestiary.LastCategoryPage or 1
+
+		Cyclopedia.onStageChange()
 
 		return
 	end
@@ -1022,6 +1118,12 @@ function Cyclopedia.preloadBestiaryOverviews()
 end
 
 function Cyclopedia.requestNextBestiaryOverviewPreload()
+	if Cyclopedia.Bestiary.SearchPending then
+		scheduleEvent(Cyclopedia.requestNextBestiaryOverviewPreload, 150)
+
+		return
+	end
+
 	local queue = Cyclopedia.Bestiary.OverviewPreloadQueue
 	local index = Cyclopedia.Bestiary.OverviewPreloadIndex
 
@@ -1114,6 +1216,46 @@ local function applyCreatureQuickPreview(raceId)
 	info.LeftBase.Sprite:getCreature():setStaticWalking(1000)
 end
 
+local bestiarySearchEnterCallback
+
+local function focusBestiarySearchEdit()
+	if not UI or not UI.SearchEdit or UI.SearchEdit:isDestroyed() then
+		return
+	end
+
+	local cyclopediaUi = controllerCyclopedia and controllerCyclopedia.ui
+
+	if not cyclopediaUi or cyclopediaUi:isDestroyed() or not cyclopediaUi:isVisible() then
+		return
+	end
+
+	local edit = UI.SearchEdit
+
+	edit:setFocusable(true)
+
+	if not edit:isFocused() then
+		edit:focus()
+	end
+
+	pcall(function()
+		if not edit:isDestroyed() then
+			edit:grabKeyboard()
+		end
+	end)
+	pcall(function()
+		if not edit:isDestroyed() then
+			edit:setEditable(true)
+			edit:setCursorVisible(true)
+			edit:setCursorPos(-1)
+		end
+	end)
+end
+
+local function var_0_56()
+	scheduleEvent(focusBestiarySearchEdit, 0)
+	scheduleEvent(focusBestiarySearchEdit, 50)
+end
+
 local function showCreatureDetailPanel()
 	if not UI or not UI.ListBase then
 		return
@@ -1129,10 +1271,10 @@ local function showCreatureDetailPanel()
 	end
 
 	Cyclopedia.verifyBestiaryButtons()
-	scheduleEvent(focusBestiarySearchEdit, 0)
+	var_0_56()
 end
 
-local function scheduleCreatureDetailReveal(raceId, token)
+local function var_0_58(raceId, token)
 	cancelCreatureDetailShow()
 
 	creatureDetailShowEvent = scheduleEvent(function()
@@ -1160,7 +1302,7 @@ local function scheduleCreatureDetailReveal(raceId, token)
 			applyCreatureQuickPreview(raceId)
 			Cyclopedia.refreshBestiaryCharmUI()
 		end
-	end, CREATURE_DETAIL_SHOW_DELAY)
+	end, var_0_45)
 end
 
 local function openCreatureDetail(raceId, category)
@@ -1168,12 +1310,13 @@ local function openCreatureDetail(raceId, category)
 		return
 	end
 
+	finishBestiarySearchNavigation()
 	clearTabBackRestore()
 
 	raceId = normalizeRaceId(raceId)
 	creatureDetailShowToken = creatureDetailShowToken + 1
 
-	local token = creatureDetailShowToken
+	local var_74_0 = creatureDetailShowToken
 
 	Cyclopedia.Bestiary.DeferCreatureUI = true
 	Cyclopedia.Bestiary.Stage = STAGES.CREATURE
@@ -1181,38 +1324,10 @@ local function openCreatureDetail(raceId, category)
 	Cyclopedia.Bestiary.PendingPageRaceId = nil
 
 	if category then
-		setReturnTarget(raceId, category)
+		var_0_44(raceId, category)
 	end
 
-	scheduleCreatureDetailReveal(raceId, token)
-end
-
-local bestiarySearchEnterCallback
-
-local function focusBestiarySearchEdit()
-	if not UI or not UI.SearchEdit or UI.SearchEdit:isDestroyed() then
-		return
-	end
-
-	local cyclopediaUi = controllerCyclopedia and controllerCyclopedia.ui
-
-	if not cyclopediaUi or cyclopediaUi:isDestroyed() or not cyclopediaUi:isVisible() then
-		return
-	end
-
-	local edit = UI.SearchEdit
-
-	edit:setFocusable(true)
-	cyclopediaUi:raise()
-	edit:focus()
-	pcall(function()
-		edit:grabKeyboard()
-	end)
-	pcall(function()
-		edit:setEditable(true)
-		edit:setCursorVisible(true)
-		edit:setCursorPos(-1)
-	end)
+	var_0_58(raceId, var_74_0)
 end
 
 local function setupBestiarySearchEdit()
@@ -1237,6 +1352,10 @@ local function setupBestiarySearchEdit()
 			end)
 			pcall(function()
 				widget:setCursorVisible(true)
+			end)
+		else
+			pcall(function()
+				widget:ungrabKeyboard()
 			end)
 		end
 	end
@@ -1276,6 +1395,10 @@ local function setupBestiarySearchEdit()
 	end
 
 	g_keyboard.bindKeyDown("Enter", bestiarySearchEnterCallback, edit)
+
+	if g_modalManager and g_modalManager.hookSearchEdit then
+		g_modalManager.hookSearchEdit(edit)
+	end
 end
 
 function Cyclopedia.releaseBestiarySearchFocus()
@@ -1311,6 +1434,7 @@ local function resetBestiaryViewState()
 	Cyclopedia.Bestiary.Page = 1
 	Cyclopedia.Bestiary.Search = {}
 	Cyclopedia.Bestiary.SearchPending = false
+	Cyclopedia.Bestiary.SearchExpectedRaceIds = nil
 	Cyclopedia.Bestiary.DeferCreatureUI = false
 	Cyclopedia.Bestiary.ActiveCreatureRaceId = nil
 	Cyclopedia.Bestiary.PendingPageRaceId = nil
@@ -1338,20 +1462,26 @@ function Cyclopedia.clearBestiaryUI(resetState)
 end
 
 function Cyclopedia.loadBestiaryOverview(name, creatures, animusMasteryPoints)
-	if name and name ~= "Search" and name ~= "Result" then
+	local var_86_0 = var_0_35(name)
+
+	if name and name ~= "" and not var_86_0 then
 		Cyclopedia.Bestiary.OverviewCache = Cyclopedia.Bestiary.OverviewCache or {}
 		Cyclopedia.Bestiary.OverviewCache[name] = creatures
 	end
 
 	if Cyclopedia.Bestiary.SearchPending then
-		Cyclopedia.loadBestiarySearchCreatures(creatures)
+		if var_86_0 or name == "" or var_0_37(creatures) then
+			Cyclopedia.loadBestiarySearchCreatures(creatures)
+		end
 
 		return
 	end
 
-	if name == "Search" or name == "Result" then
-		Cyclopedia.loadBestiarySearchCreatures(creatures)
-	else
+	if var_86_0 then
+		return
+	end
+
+	if name and name ~= "" then
 		Cyclopedia.loadBestiaryCreatures(creatures, name)
 	end
 
@@ -1479,8 +1609,7 @@ function Cyclopedia.SetBestiaryProgress(fitCenter, firstBar, secondBar, thirdBar
 		return math.min(math.floor(value / max * fit), fit)
 	end
 
-	local allStagesComplete = thirdGoal > 0 and thirdGoal <= killCount
-	local fillImage = allStagesComplete and "/images/bars/progressbar-green-large" or "/images/bars/progressbar-orange-large"
+	local var_90_1 = thirdGoal > 0 and thirdGoal <= killCount and "/images/bars/progressbar-green-large" or "/images/bars/progressbar-orange-large"
 
 	local function setBarVisibility(bar, isVisible, width)
 		if not bar then
@@ -1493,15 +1622,15 @@ function Cyclopedia.SetBestiaryProgress(fitCenter, firstBar, secondBar, thirdBar
 
 		if isVisible then
 			local rect = {
-				y = 0,
 				x = 0,
+				y = 0,
 				height = fillHeight,
 				width = width
 			}
 
 			bar:setImageRect(rect)
 			bar:setImageClip(rect)
-			bar:setImageSource(fillImage)
+			bar:setImageSource(var_90_1)
 		end
 	end
 
@@ -1578,23 +1707,18 @@ function Cyclopedia.CreateCreatureItems(data)
 		end
 
 		for i = 1, itemsPerRow do
-			local item = g_ui.createWidget("BestiaryItem", widget.Items)
-
-			item:setId(i)
+			g_ui.createWidget("BestiaryItem", widget.Items):setId(i)
 		end
 
 		for i = 1, itemsPerRow do
-			local item = g_ui.createWidget("BestiaryItem", widget.ItemsSecond)
-
-			item:setId(i)
+			g_ui.createWidget("BestiaryItem", widget.ItemsSecond):setId(i)
 		end
 
 		local lootEntries = data[index] or {}
-		local visibleLootCount = math.min(#lootEntries, maxItemsPerDifficulty)
-		local hasSecondRow = itemsPerRow < visibleLootCount
+		local var_95_8 = itemsPerRow < math.min(#lootEntries, maxItemsPerDifficulty)
 
-		widget.ItemsSecond:setVisible(hasSecondRow)
-		widget:setHeight(hasSecondRow and 78 or 44)
+		widget.ItemsSecond:setVisible(var_95_8)
+		widget:setHeight(var_95_8 and 78 or 44)
 
 		for itemIndex, itemData in ipairs(lootEntries) do
 			if maxItemsPerDifficulty < itemIndex then
@@ -1656,10 +1780,25 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
 	Cyclopedia.Bestiary.CreatureDetailCache = Cyclopedia.Bestiary.CreatureDetailCache or {}
 	Cyclopedia.Bestiary.CreatureDetailCache[data.id] = data
 
-	local category = getCreatureCategory(data)
+	if Cyclopedia.Bestiary.SearchPending and var_0_36(data.id) then
+		finishBestiarySearchNavigation()
+		cancelCreatureDetailShow()
 
-	if (Cyclopedia.Bestiary.ActiveCreatureRaceId == nil or normalizeRaceId(Cyclopedia.Bestiary.ActiveCreatureRaceId) == normalizeRaceId(data.id)) and category and category ~= "" then
-		setReturnTarget(data.id, category)
+		creatureDetailShowToken = creatureDetailShowToken + 1
+		Cyclopedia.Bestiary.DeferCreatureUI = false
+		Cyclopedia.Bestiary.Stage = STAGES.CREATURE
+		Cyclopedia.Bestiary.ActiveCreatureRaceId = normalizeRaceId(data.id)
+		Cyclopedia.Bestiary.PendingPageRaceId = nil
+
+		if UI then
+			showCreatureDetailPanel()
+		end
+	end
+
+	local var_96_0 = getCreatureCategory(data)
+
+	if (Cyclopedia.Bestiary.ActiveCreatureRaceId == nil or normalizeRaceId(Cyclopedia.Bestiary.ActiveCreatureRaceId) == normalizeRaceId(data.id)) and var_96_0 and var_96_0 ~= "" then
+		var_0_44(data.id, var_96_0)
 	end
 
 	if not UI then
@@ -1667,24 +1806,6 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
 	end
 
 	if Cyclopedia.Bestiary.ActiveCreatureRaceId and normalizeRaceId(Cyclopedia.Bestiary.ActiveCreatureRaceId) ~= normalizeRaceId(data.id) then
-		return
-	end
-
-	if Cyclopedia.Bestiary.SearchPending then
-		finishBestiarySearchNavigation()
-
-		if not isBestiaryCreatureUnlocked(data) then
-			Cyclopedia.verifyBestiaryButtons()
-
-			return
-		end
-
-		Cyclopedia.Bestiary.ActiveCreatureRaceId = data.id
-		Cyclopedia.Bestiary.DeferCreatureUI = true
-		creatureDetailShowToken = creatureDetailShowToken + 1
-
-		scheduleCreatureDetailReveal(data.id, creatureDetailShowToken)
-
 		return
 	end
 
@@ -1846,7 +1967,7 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
 	Cyclopedia.refreshBestiaryCharmUI()
 
 	if Cyclopedia.Bestiary.Stage == STAGES.CREATURE and UI.ListBase.CreatureInfo:isVisible() then
-		scheduleEvent(focusBestiarySearchEdit, 0)
+		var_0_56()
 	end
 end
 
@@ -1893,7 +2014,7 @@ function Cyclopedia.CreateBestiaryCategoryItem(Data)
 	widget.TotalValue:setText(string.format("Total: %d", Data.amount))
 	widget.KnownValue:setText(string.format("Known: %d", Data.know))
 
-	function widget.ClassBase:onClick()
+	function widget.ClassBase.onClick(self)
 		clearTabBackRestore()
 		UI.BackPageButton:setEnabled(true)
 
@@ -1909,11 +2030,13 @@ function Cyclopedia.CreateBestiaryCategoryItem(Data)
 end
 
 function Cyclopedia.loadBestiarySearchCreatures(data)
+	finishBestiarySearchNavigation()
+
 	if not UI then
 		return
 	end
 
-	finishBestiarySearchNavigation()
+	data = data or {}
 
 	local unlockedCreatures = {}
 
@@ -1938,8 +2061,10 @@ function Cyclopedia.loadBestiarySearchCreatures(data)
 	end
 
 	if #unlockedCreatures == 1 then
-		openCreatureDetail(unlockedCreatures[1].id)
-		g_game.requestBestiarySearch(unlockedCreatures[1].id)
+		local var_102_2 = unlockedCreatures[1].id
+
+		openCreatureDetail(var_102_2, findCategoryPage(var_102_2))
+		g_game.requestBestiarySearch(var_102_2)
 
 		return
 	end
@@ -2062,10 +2187,10 @@ function Cyclopedia.BestiarySearch()
 	local requestId = Cyclopedia.Bestiary.SearchRequestId
 
 	Cyclopedia.Bestiary.SearchPending = true
+	Cyclopedia.Bestiary.SearchExpectedRaceIds = raceIds
 
 	if not sendBestiaryOverviewSearch(raceIds) then
-		Cyclopedia.Bestiary.SearchPending = false
-
+		finishBestiarySearchNavigation()
 		g_logger.warning("[Bestiary] Search is unavailable. Rebuild the client with bestiary overview search support.")
 
 		return
@@ -2147,7 +2272,7 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
 		widget.Sprite:getCreature():setShader("")
 	end
 
-	function widget.ClassBase:onClick()
+	function widget.ClassBase.onClick(self)
 		if data.currentLevel < 1 then
 			return
 		end
@@ -2279,7 +2404,7 @@ function Cyclopedia.onStageChange()
 	end
 
 	Cyclopedia.verifyBestiaryButtons()
-	scheduleEvent(focusBestiarySearchEdit, 0)
+	var_0_56()
 end
 
 function Cyclopedia.changeBestiaryPage(prev, next)
@@ -2360,6 +2485,242 @@ end
 
 local TRACKER_TYPE_BESTIARY = 0
 local TRACKER_TYPE_BOSSTIARY = 1
+local var_0_65 = {}
+local var_0_66 = {}
+local var_0_67 = "/images/icons/icon-cooldown-running"
+local var_0_68 = "/images/icons/icon-cooldown-finished"
+local var_0_69 = 2
+local var_0_70 = 16
+local var_0_71 = 1000
+local var_0_72 = tr("No Cooldown")
+
+Cyclopedia.bosstiaryCooldownByRace = Cyclopedia.bosstiaryCooldownByRace or {}
+
+local var_0_73
+local var_0_74 = false
+
+local function var_0_75(numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	if numericValue < 1 then
+		return os.time()
+	end
+
+	if numericValue >= 1000000000 then
+		return numericValue
+	end
+
+	return os.time() + numericValue
+end
+
+local function var_0_76(arg_122_0)
+	arg_122_0 = math.max(0, math.floor(arg_122_0))
+
+	if arg_122_0 <= 0 then
+		return var_0_72
+	end
+
+	if arg_122_0 < 60 then
+		return arg_122_0 .. "s"
+	end
+
+	local var_122_0 = math.floor(arg_122_0 / 86400)
+	local var_122_1 = math.floor(arg_122_0 % 86400 / 3600)
+	local var_122_2 = math.floor(arg_122_0 % 3600 / 60)
+	local var_122_3 = arg_122_0 % 60
+
+	if var_122_0 > 0 then
+		return string.format("%dd %dh %dmin", var_122_0, var_122_1, var_122_2)
+	end
+
+	if var_122_1 > 0 then
+		return string.format("%dh %dmin", var_122_1, var_122_2)
+	end
+
+	return string.format("%dmin %ds", var_122_2, var_122_3)
+end
+
+local function var_0_77(arg_123_0)
+	local var_123_0 = {}
+
+	if type(arg_123_0) == "table" then
+		for unusedValue, entry in pairs(arg_123_0) do
+			if type(entry) == "table" then
+				local numericValue = tonumber(entry[1])
+
+				if numericValue then
+					var_123_0[numericValue] = var_0_75(entry[2])
+				end
+			end
+		end
+	end
+
+	Cyclopedia.bosstiaryCooldownByRace = var_123_0
+end
+
+function Cyclopedia.syncBosstiaryCooldownCache()
+	local var_124_0 = BossCooldown and BossCooldown.entries
+
+	if not var_124_0 or #var_124_0 == 0 then
+		return
+	end
+
+	local bosstiaryCooldownByRace = Cyclopedia.bosstiaryCooldownByRace
+
+	for iter_124_0 = 1, #var_124_0 do
+		local var_124_2 = var_124_0[iter_124_0]
+		local numericValue = tonumber(var_124_2.bossId)
+
+		if numericValue and var_124_2.untilTs then
+			bosstiaryCooldownByRace[numericValue] = var_124_2.untilTs
+		end
+	end
+end
+
+function Cyclopedia.ensureBosstiaryCooldownCache()
+	if next(Cyclopedia.bosstiaryCooldownByRace) then
+		return
+	end
+
+	Cyclopedia.syncBosstiaryCooldownCache()
+end
+
+local function var_0_78(arg_126_0, arg_126_1)
+	if arg_126_0.cooldownState == "hidden" then
+		return
+	end
+
+	arg_126_1:setVisible(false)
+	arg_126_1:removeTooltip()
+
+	if arg_126_0.label then
+		arg_126_0.label:setMarginRight(var_0_69)
+	end
+
+	arg_126_0.cooldownState = "hidden"
+end
+
+local function var_0_79(arg_127_0)
+	local cooldownIcon = arg_127_0.cooldownIcon
+
+	if not cooldownIcon or not arg_127_0.trackerIsBoss then
+		return
+	end
+
+	local trackerRaceId = arg_127_0.trackerRaceId
+	local var_127_2 = trackerRaceId and Cyclopedia.bosstiaryCooldownByRace[trackerRaceId]
+
+	if not var_127_2 then
+		var_0_78(arg_127_0, cooldownIcon)
+
+		return
+	end
+
+	local var_127_3 = var_127_2 - os.time()
+	local var_127_4 = var_127_3 > 0 and "running" or "finished"
+
+	if arg_127_0.cooldownState ~= var_127_4 then
+		cooldownIcon:setVisible(true)
+		cooldownIcon:setImageSource(var_127_4 == "running" and var_0_67 or var_0_68)
+
+		if arg_127_0.label then
+			arg_127_0.label:setMarginRight(var_0_70)
+		end
+
+		arg_127_0.cooldownState = var_127_4
+
+		if var_127_4 == "finished" then
+			cooldownIcon:setTooltip(var_0_72)
+		end
+	end
+
+	if var_127_4 == "running" then
+		cooldownIcon:setTooltip(var_0_76(var_127_3))
+
+		var_0_74 = true
+	end
+end
+
+local function var_0_80()
+	var_0_74 = false
+
+	if not trackerMiniWindowBosstiary or trackerMiniWindowBosstiary:isDestroyed() then
+		return
+	end
+
+	local contentsPanel = trackerMiniWindowBosstiary.contentsPanel
+
+	if not contentsPanel then
+		return
+	end
+
+	local children = contentsPanel:getChildren()
+
+	for iter_128_0 = 1, #children do
+		var_0_79(children[iter_128_0])
+	end
+end
+
+local function var_0_81()
+	if var_0_73 then
+		removeEvent(var_0_73)
+
+		var_0_73 = nil
+	end
+end
+
+local function var_0_82()
+	if var_0_73 then
+		return
+	end
+
+	var_0_73 = scheduleEvent(function()
+		var_0_73 = nil
+
+		if not trackerMiniWindowBosstiary or trackerMiniWindowBosstiary:isDestroyed() or not trackerMiniWindowBosstiary:isVisible() then
+			return
+		end
+
+		var_0_80()
+
+		if var_0_74 then
+			var_0_82()
+		end
+	end, var_0_71)
+end
+
+function Cyclopedia.refreshBosstiaryTrackerCooldownIcons()
+	var_0_80()
+end
+
+function Cyclopedia.onBossCooldown(arg_133_0)
+	var_0_77(arg_133_0)
+
+	if trackerMiniWindowBosstiary and not trackerMiniWindowBosstiary:isDestroyed() and trackerMiniWindowBosstiary:isVisible() then
+		var_0_80()
+
+		if var_0_74 then
+			var_0_82()
+		else
+			var_0_81()
+		end
+	end
+end
+
+function Cyclopedia.startBosstiaryTrackerCooldownTick()
+	Cyclopedia.ensureBosstiaryCooldownCache()
+	var_0_80()
+
+	if var_0_74 then
+		var_0_82()
+	else
+		var_0_81()
+	end
+end
+
+function Cyclopedia.stopBosstiaryTrackerCooldownTick()
+	var_0_81()
+end
 
 local function trackerDataCount(data)
 	if not data or type(data) ~= "table" then
@@ -2448,9 +2809,202 @@ local function setStoredTrackerData(trackerType, data)
 	end
 end
 
+local function var_0_89(arg_142_0)
+	local var_142_0 = var_0_66[arg_142_0]
+
+	if var_142_0 then
+		removeEvent(var_142_0)
+
+		var_0_66[arg_142_0] = nil
+	end
+end
+
+local function var_0_90(arg_143_0)
+	return arg_143_0 and not arg_143_0:isDestroyed()
+end
+
+local function var_0_91(arg_144_0, arg_144_1, arg_144_2, arg_144_3, arg_144_4)
+	if arg_144_0.trackerKills == arg_144_1 and arg_144_0.trackerUno == arg_144_2 and arg_144_0.trackerDos == arg_144_3 and arg_144_0.trackerMaxKills == arg_144_4 then
+		return
+	end
+
+	arg_144_0.trackerKills = arg_144_1
+	arg_144_0.trackerUno = arg_144_2
+	arg_144_0.trackerDos = arg_144_3
+	arg_144_0.trackerMaxKills = arg_144_4
+
+	local textValue = tostring(arg_144_1)
+
+	if arg_144_0.kills:getText() ~= textValue then
+		arg_144_0.kills:setText(textValue)
+	end
+
+	Cyclopedia.SetBestiaryProgress(50, arg_144_0.killsBar2, arg_144_0.ProgressBack33, arg_144_0.ProgressBack55, arg_144_1, arg_144_2, arg_144_3, arg_144_4, 49, 12)
+
+	if arg_144_0.ProgressBorder1 then
+		arg_144_0.ProgressBorder1:setTooltip(string.format("%d / %d", arg_144_1, arg_144_2))
+	end
+
+	if arg_144_0.ProgressBorder2 then
+		arg_144_0.ProgressBorder2:setTooltip(string.format("%d / %d", arg_144_1, arg_144_3))
+	end
+
+	if arg_144_0.ProgressBorder3 then
+		arg_144_0.ProgressBorder3:setTooltip(string.format("%d / %d", arg_144_1, arg_144_4))
+	end
+end
+
+local function var_0_92(arg_145_0, arg_145_1, arg_145_2, arg_145_3, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
+	local trackerButtonWidget = g_ui.createWidget("TrackerButton", arg_145_0)
+
+	trackerButtonWidget:setId(arg_145_2)
+
+	trackerButtonWidget.trackerIsBoss = arg_145_1
+	trackerButtonWidget.trackerRaceId = arg_145_2
+
+	trackerButtonWidget.creature:setOutfit(arg_145_3.outfit)
+	var_0_23(trackerButtonWidget.creature)
+	trackerButtonWidget.creature:getCreature():setStaticWalking(1000)
+	trackerButtonWidget.label:setText(formatTrackerCreatureName(arg_145_3.name, true))
+
+	trackerButtonWidget.onMouseRelease = onTrackerClick
+
+	trackerButtonWidget:setMarginLeft(0)
+	trackerButtonWidget.label:setColor("#C0C0C0")
+	trackerButtonWidget.label:setFont("verdana-11px-monochrome")
+	trackerButtonWidget.kills:setColor("#C0C0C0")
+	trackerButtonWidget.kills:setFont("verdana-11px-monochrome")
+	trackerButtonWidget.kills:raise()
+	var_0_91(trackerButtonWidget, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
+
+	if arg_145_1 then
+		var_0_79(trackerButtonWidget)
+	end
+
+	return trackerButtonWidget
+end
+
+local function var_0_93(arg_146_0, arg_146_1)
+	var_0_89(arg_146_0)
+
+	var_0_65[arg_146_0] = false
+
+	local var_146_0 = getTrackerWindow(arg_146_0)
+
+	if not var_0_90(var_146_0) then
+		return
+	end
+
+	if not arg_146_1 and not var_146_0:isVisible() then
+		var_0_65[arg_146_0] = true
+
+		return
+	end
+
+	local contentsPanel = var_146_0.contentsPanel
+
+	if not contentsPanel then
+		return
+	end
+
+	local var_146_2 = arg_146_0 == TRACKER_TYPE_BOSSTIARY
+	local var_146_3 = var_146_2 and "bosstiary" or "bestiary"
+	local var_146_4 = Cyclopedia.sortTrackerData(getStoredTrackerData(arg_146_0) or {}, var_146_3)
+	local var_146_5 = {}
+	local children = contentsPanel:getChildren()
+
+	for iter_146_0 = 1, #children do
+		local var_146_7 = children[iter_146_0]
+		local id = var_146_7.trackerRaceId or tonumber(var_146_7:getId())
+
+		if id then
+			var_146_5[id] = var_146_7
+		end
+	end
+
+	local layout = contentsPanel.getLayout and contentsPanel:getLayout()
+
+	if layout and layout.disableUpdates then
+		layout:disableUpdates()
+	end
+
+	local var_146_10, var_146_11 = pcall(function()
+		local var_147_0 = {}
+		local var_147_1 = 0
+
+		for iter_147_0 = 1, #var_146_4 do
+			local var_147_2 = var_146_4[iter_147_0]
+			local var_147_3, var_147_4, var_147_5, var_147_6, var_147_7 = unpack(var_147_2)
+			local raceData = g_things.getRaceData(var_147_3)
+
+			if raceData and raceData.name then
+				var_147_1 = var_147_1 + 1
+				var_147_0[var_147_3] = true
+
+				local var_147_9 = var_146_5[var_147_3]
+
+				if var_147_9 and not var_147_9:isDestroyed() then
+					var_0_91(var_147_9, var_147_4, var_147_5, var_147_6, var_147_7)
+				else
+					var_147_9 = var_0_92(contentsPanel, var_146_2, var_147_3, raceData, var_147_4, var_147_5, var_147_6, var_147_7)
+				end
+
+				if contentsPanel:getChildIndex(var_147_9) ~= var_147_1 then
+					contentsPanel:moveChildToIndex(var_147_9, var_147_1)
+				end
+			end
+		end
+
+		for key, entry in pairs(var_146_5) do
+			if not var_147_0[key] and entry and not entry:isDestroyed() then
+				entry:destroy()
+			end
+		end
+	end)
+
+	if layout and layout.enableUpdates then
+		layout:enableUpdates()
+
+		if layout.update then
+			layout:update()
+		end
+	end
+
+	if not var_146_10 then
+		g_logger.error("Cyclopedia tracker rebuild failed: " .. tostring(var_146_11))
+
+		return
+	end
+
+	if var_146_2 and var_146_0:isVisible() then
+		Cyclopedia.startBosstiaryTrackerCooldownTick()
+	end
+end
+
+local function var_0_94(arg_148_0)
+	if var_0_66[arg_148_0] then
+		return
+	end
+
+	var_0_66[arg_148_0] = scheduleEvent(function()
+		var_0_66[arg_148_0] = nil
+
+		var_0_93(arg_148_0, false)
+	end, 0)
+end
+
 function Cyclopedia.clearTrackerDataForCharacterChange()
+	var_0_89(TRACKER_TYPE_BESTIARY)
+	var_0_89(TRACKER_TYPE_BOSSTIARY)
+
+	var_0_65[TRACKER_TYPE_BESTIARY] = false
+	var_0_65[TRACKER_TYPE_BOSSTIARY] = false
 	Cyclopedia.storedTrackerData = {}
 	Cyclopedia.storedBosstiaryTrackerData = {}
+	Cyclopedia.bosstiaryCooldownByRace = {}
+
+	Cyclopedia.stopBosstiaryTrackerCooldownTick()
+
 	storedRaceIDs = {}
 
 	if trackerMiniWindow and trackerMiniWindow.contentsPanel then
@@ -2479,10 +3033,8 @@ function Cyclopedia.ensureStoredRaceIDsPopulated()
 end
 
 function Cyclopedia.applyStoredTracker(trackerType)
-	local data = getStoredTrackerData(trackerType)
-
-	if data then
-		Cyclopedia.onParseCyclopediaTracker(trackerType, data)
+	if getStoredTrackerData(trackerType) then
+		var_0_93(trackerType, true)
 	end
 end
 
@@ -2528,7 +3080,7 @@ function Cyclopedia.removeFromTracker(trackerType, raceId)
 		end
 	end
 
-	Cyclopedia.onParseCyclopediaTracker(trackerType, filtered)
+	Cyclopedia.onParseCyclopediaTracker(trackerType, filtered, true)
 end
 
 function Cyclopedia.onBestiaryTrackCheckChange(widget, checked)
@@ -2549,7 +3101,7 @@ function Cyclopedia.onBestiaryTrackCheckChange(widget, checked)
 	end
 end
 
-function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
+function Cyclopedia.onParseCyclopediaTracker(trackerType, data, arg_155_2)
 	if data == nil then
 		return
 	end
@@ -2557,73 +3109,38 @@ function Cyclopedia.onParseCyclopediaTracker(trackerType, data)
 	data = normalizeTrackerData(data)
 
 	local isBoss = trackerType == TRACKER_TYPE_BOSSTIARY
-	local trackerTypeStr = isBoss and "bosstiary" or "bestiary"
 
 	setStoredTrackerData(trackerType, data)
 
 	if not isBoss then
 		storedRaceIDs = {}
 
-		for _, entry in ipairs(data) do
-			table.insert(storedRaceIDs, entry[1])
+		for _ = 1, #data do
+			storedRaceIDs[_] = data[_][1]
 		end
 	end
 
-	local window = getTrackerWindow(trackerType)
+	local var_155_1 = getTrackerWindow(trackerType)
 
-	if not window or window:isDestroyed() then
+	if not var_0_90(var_155_1) then
+		var_0_65[trackerType] = true
+
 		return
 	end
 
-	window.contentsPanel:destroyChildren()
+	if arg_155_2 then
+		var_0_93(trackerType, true)
 
-	if #data == 0 then
 		return
 	end
 
-	data = Cyclopedia.sortTrackerData(data, trackerTypeStr)
+	if not var_155_1:isVisible() then
+		var_0_65[trackerType] = true
 
-	for _, entry in ipairs(data) do
-		local raceId, kills, uno, dos, maxKills = unpack(entry)
-		local raceData = g_things.getRaceData(raceId)
-
-		if not raceData or not raceData.name then
-			-- block empty
-		else
-			local widget = g_ui.createWidget("TrackerButton", window.contentsPanel)
-
-			widget:setId(raceId)
-
-			widget.trackerIsBoss = isBoss
-
-			widget.creature:setOutfit(raceData.outfit)
-			widget.creature:getCreature():setStaticWalking(1000)
-			widget.label:setText(formatTrackerCreatureName(raceData.name, true))
-			widget.kills:setText(kills)
-
-			widget.onMouseRelease = onTrackerClick
-
-			widget:setMarginLeft(0)
-			widget.label:setColor("#C0C0C0")
-			widget.label:setFont("verdana-11px-monochrome")
-			widget.kills:setColor("#C0C0C0")
-			widget.kills:setFont("verdana-11px-monochrome")
-			widget.kills:raise()
-			Cyclopedia.SetBestiaryProgress(50, widget.killsBar2, widget.ProgressBack33, widget.ProgressBack55, kills, uno, dos, maxKills, 49, 12)
-
-			if widget.ProgressBorder1 then
-				widget.ProgressBorder1:setTooltip(string.format("%d / %d", kills, uno))
-			end
-
-			if widget.ProgressBorder2 then
-				widget.ProgressBorder2:setTooltip(string.format("%d / %d", kills, dos))
-			end
-
-			if widget.ProgressBorder3 then
-				widget.ProgressBorder3:setTooltip(string.format("%d / %d", kills, maxKills))
-			end
-		end
+		return
 	end
+
+	var_0_94(trackerType)
 end
 
 local function toggleTrackerWindow(trackerType, syncButtonFn)
@@ -2635,6 +3152,10 @@ local function toggleTrackerWindow(trackerType, syncButtonFn)
 	end
 
 	if button:isOn() then
+		if trackerType == TRACKER_TYPE_BOSSTIARY then
+			Cyclopedia.stopBosstiaryTrackerCooldownTick()
+		end
+
 		window:closeAndForgetLayout()
 	else
 		if not window:getParent() then
@@ -2649,6 +3170,10 @@ local function toggleTrackerWindow(trackerType, syncButtonFn)
 
 		Cyclopedia.applyStoredTracker(trackerType)
 		window:open()
+
+		if trackerType == TRACKER_TYPE_BOSSTIARY then
+			Cyclopedia.startBosstiaryTrackerCooldownTick()
+		end
 	end
 
 	syncButtonFn()
@@ -2663,7 +3188,7 @@ function Cyclopedia.toggleBosstiaryTracker()
 end
 
 function Cyclopedia.onTrackerClose(temp)
-	return
+	Cyclopedia.stopBosstiaryTrackerCooldownTick()
 end
 
 function Cyclopedia.setBarPercent(widget, percent)
@@ -2685,18 +3210,18 @@ function Cyclopedia.setBarPercent(widget, percent)
 end
 
 local BESTIATYTRACKER_FILTERS = {
-	sortByKills = false,
 	ShortByPercentage = false,
 	sortByName = true,
 	sortByDescending = false,
-	sortByAscending = true
+	sortByAscending = true,
+	sortByKills = false
 }
 local BOSSTIARYTRACKER_FILTERS = {
-	sortByKills = false,
 	ShortByPercentage = false,
 	sortByName = true,
 	sortByDescending = false,
-	sortByAscending = true
+	sortByAscending = true,
+	sortByKills = false
 }
 
 local function trackerSortSectionKey(trackerType)
@@ -2705,11 +3230,11 @@ end
 
 local function filtersFromSortValues(sortKey, sortOrder)
 	local filters = {
-		sortByKills = false,
 		ShortByPercentage = false,
 		sortByName = false,
 		sortByDescending = false,
-		sortByAscending = false
+		sortByAscending = false,
+		sortByKills = false
 	}
 
 	if sortKey == "completion" then
@@ -2812,10 +3337,10 @@ end
 function Cyclopedia.refreshTracker(trackerType)
 	if trackerType == "bosstiary" then
 		if trackerMiniWindowBosstiary and Cyclopedia.storedBosstiaryTrackerData then
-			Cyclopedia.onParseCyclopediaTracker(1, Cyclopedia.storedBosstiaryTrackerData)
+			var_0_93(TRACKER_TYPE_BOSSTIARY, true)
 		end
 	elseif trackerMiniWindow and Cyclopedia.storedTrackerData then
-		Cyclopedia.onParseCyclopediaTracker(0, Cyclopedia.storedTrackerData)
+		var_0_93(TRACKER_TYPE_BESTIARY, true)
 	end
 end
 

@@ -88,6 +88,9 @@ ForgeButton < UIWidget
     $checked:
       image-source: /images/ui/button-grey-down
       text-offset: 8 2
+    $on:
+      image-source: /images/ui/button-grey-down
+      text-offset: 8 2
 
 ForgeHistoryButton < UIWidget
   anchors.top: parent.top
@@ -118,6 +121,9 @@ ForgeHistoryButton < UIWidget
     $checked:
       image-source: /images/ui/button-grey-down
       text-offset: 9 2
+    $on:
+      image-source: /images/ui/button-grey-down
+      text-offset: 9 2
 
 MainWindow
   @onEscape: modules.game_exaltationforge.Forge:close()
@@ -126,9 +132,12 @@ MainWindow
   image-source: /images/ui/popupwindow
   text-offset: 0 1
   padding-top: 30
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
 
   Panel
-    id: headerPainel
+    id: menus
     width: 468
     height: 36
     anchors.top: parent.top

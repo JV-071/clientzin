@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/objectpool.lua
-
-ObjectPool = {}
+﻿ObjectPool = {}
 ObjectPool.__index = ObjectPool
 
 function ObjectPool.new(createFunc, resetFunc)
@@ -11,15 +9,11 @@ function ObjectPool.new(createFunc, resetFunc)
 	}, ObjectPool)
 end
 
-function ObjectPool:get()
-	local obj = table.remove(self.pool)
-
-	obj = obj or self.create()
-
-	return obj
+function ObjectPool.get(self)
+	return table.remove(self.pool) or self.create()
 end
 
-function ObjectPool:release(obj)
+function ObjectPool.release(self, obj)
 	if self.reset then
 		self.reset(obj)
 	end
@@ -27,6 +21,6 @@ function ObjectPool:release(obj)
 	table.insert(self.pool, obj)
 end
 
-function ObjectPool:clear()
+function ObjectPool.clear(self)
 	self.pool = {}
 end

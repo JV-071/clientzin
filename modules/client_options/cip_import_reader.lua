@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_options/cip_import_reader.lua
-
-CipImportReader = {}
+﻿CipImportReader = {}
 
 local function normalizePath(path)
 	if type(path) ~= "string" then
@@ -90,9 +88,7 @@ function CipImportReader.resolveRoot(sourcePath)
 		local entries = g_platform.listLocalDirectory(root, false)
 
 		for _, entry in ipairs(entries or {}) do
-			local name = entry:match("([^/]+)$")
-
-			if name and g_platform.isDirectory(entry) then
+			if entry:match("([^/]+)$") and g_platform.isDirectory(entry) then
 				local nestedConf = joinPath(entry, "conf/clientoptions.json")
 
 				if g_platform.fileExists(nestedConf) then

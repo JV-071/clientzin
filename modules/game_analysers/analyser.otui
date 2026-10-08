@@ -13,7 +13,7 @@ AnalyticsSelectorButton < Button
 
 MiniWindow
   id: analyserMiniWindow
-  height: 230
+  height: 253
   @onClose: modules.game_analysers.hideAnalyser();
   @onOpen: modules.game_analysers.onOpenAnalyser();
   &save: true
@@ -44,8 +44,8 @@ MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 1
-    margin-left: 20
-    font: verdana-11px-monochrome
+    margin-left: 19
+    font: $var-cip-font-new
     height: 13
     !text: tr('Analytics Selector')
     color: #909090
@@ -117,6 +117,13 @@ MiniWindow
       anchors.left: parent.left
       margin-top: 3
 
+    AnalyticsSelectorButton
+      id: miscButton
+      !text: tr('Misc Analyser')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 3
+
   UIWidget
     id: miniborder
     anchors.bottom: parent.bottom
@@ -133,6 +140,6 @@ MiniWindow
     anchors.right: parent.right
     height: 3
     minimum: 79
-    maximum: 230
+    maximum: 253
     margin-left: 3
     margin-right: 3

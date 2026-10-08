@@ -1,7 +1,7 @@
-﻿-- chunkname: @/gamelib/ui/uiminimap.lua
-
-local bundledMarkerCache = {}
-local sharedHiddenBundled, sharedHiddenBundledSet, sharedUserFlags
+﻿local bundledMarkerCache = {}
+local sharedHiddenBundled
+local sharedHiddenBundledSet
+local sharedUserFlags
 local activeMinimaps = {}
 local syncingUserFlag = false
 local BUNDLED_FLAG_CREATE_BATCH = 20
@@ -196,7 +196,7 @@ local function syncUserFlagUpdateOnAllMinimaps(pos, icon, description, sourceFla
 			local flag = minimap:getFlag(pos)
 
 			if flag and flag ~= sourceFlag and not flag.bundled and not flag:isDestroyed() then
-				minimap:updateFlag(flag, icon, description)
+				minimap:updateFlag(flag, icon, description, true)
 			end
 		end
 	end
@@ -240,11 +240,11 @@ local VocationsNames = {
 	"Exalted Monk"
 }
 
-function UIMinimap:onCreate()
+function UIMinimap.onCreate(self)
 	self.autowalk = true
 end
 
-function UIMinimap:onSetup()
+function UIMinimap.onSetup(self)
 	table.insert(activeMinimaps, self)
 
 	self.flagWindow = nil
@@ -274,7 +274,7 @@ function UIMinimap:onSetup()
 	})
 end
 
-function UIMinimap:onDestroy()
+function UIMinimap.onDestroy(self)
 	if self._smoothZoomEvent then
 		removeEvent(self._smoothZoomEvent)
 
@@ -307,13 +307,13 @@ function UIMinimap:onDestroy()
 	self._flagsByKey = nil
 end
 
-function UIMinimap:onVisibilityChange()
+function UIMinimap.onVisibilityChange(self)
 	if not self:isVisible() then
 		self:destroyFlagWindow()
 	end
 end
 
-function UIMinimap:isCyclopediaMap()
+function UIMinimap.isCyclopediaMap(self)
 	local parent = self:getParent()
 
 	return parent and parent:getId() == "MapBase"
@@ -325,7 +325,7 @@ local function positionCrossAtTile(minimap, cross, displayPos)
 	minimap:anchorPosition(cross, AnchorBottom, displayPos, AnchorVerticalCenter)
 end
 
-function UIMinimap:updateCrossVisibility()
+function UIMinimap.updateCrossVisibility(self)
 	local cross = self.cross
 
 	if not cross or not cross.pos then
@@ -390,7 +390,7 @@ function UIMinimap:updateCrossVisibility()
 	positionCrossAtTile(self, cross, displayPos)
 end
 
-function UIMinimap:updatePartyMemberVisibility(member)
+function UIMinimap.updatePartyMemberVisibility(self, member)
 	if not member or not member.widget or member.widget:isDestroyed() or not member.pos then
 		return
 	end
@@ -413,11 +413,11 @@ function UIMinimap:updatePartyMemberVisibility(member)
 	self:centerInPosition(member.widget, displayPos)
 end
 
-function UIMinimap:bundledMarkerKey(pos)
+function UIMinimap.bundledMarkerKey(self, pos)
 	return bundledMarkerKeyFromCoords(pos.x, pos.y, pos.z)
 end
 
-function UIMinimap:scheduleBundledFlagsRefresh()
+function UIMinimap.scheduleBundledFlagsRefresh(self)
 	if self._bundledRefreshScheduled then
 		return
 	end
@@ -435,7 +435,7 @@ function UIMinimap:scheduleBundledFlagsRefresh()
 	end)
 end
 
-function UIMinimap:getVisibleTileBounds()
+function UIMinimap.getVisibleTileBounds(self)
 	local cameraPos = self:getCameraPosition()
 
 	if not cameraPos then
@@ -472,7 +472,7 @@ function UIMinimap:getVisibleTileBounds()
 	}
 end
 
-function UIMinimap:clearBundledFlags()
+function UIMinimap.clearBundledFlags(self)
 	if self._bundledFlagWidgets then
 		for _, widget in pairs(self._bundledFlagWidgets) do
 			if widget and not widget:isDestroyed() then
@@ -484,7 +484,7 @@ function UIMinimap:clearBundledFlags()
 	self._bundledFlagWidgets = {}
 end
 
-function UIMinimap:loadBundledMarkerData(path)
+function UIMinimap.loadBundledMarkerData(self, path)
 	if self._bundledMarkerByFloor then
 		return #self._bundledMarkerData
 	end
@@ -498,7 +498,7 @@ function UIMinimap:loadBundledMarkerData(path)
 	return cache.total
 end
 
-function UIMinimap:cancelBundledFlagCreate()
+function UIMinimap.cancelBundledFlagCreate(self)
 	if self._bundledCreateEvent then
 		removeEvent(self._bundledCreateEvent)
 
@@ -508,7 +508,7 @@ function UIMinimap:cancelBundledFlagCreate()
 	self._bundledCreateQueue = nil
 end
 
-function UIMinimap:processBundledCreateBatch()
+function UIMinimap.processBundledCreateBatch(self)
 	self._bundledCreateEvent = nil
 
 	if self:isDestroyed() then
@@ -572,7 +572,7 @@ function UIMinimap:processBundledCreateBatch()
 	end
 end
 
-function UIMinimap:refreshBundledFlags()
+function UIMinimap.refreshBundledFlags(self)
 	if not self._bundledMarkerByFloor then
 		return 0
 	end
@@ -676,7 +676,7 @@ function UIMinimap:refreshBundledFlags()
 	return #createQueue
 end
 
-function UIMinimap:onCameraPositionChange(cameraPos)
+function UIMinimap.onCameraPositionChange(self, cameraPos)
 	self:updateCrossVisibility()
 
 	for _, member in pairs(self.partyMembers) do
@@ -686,21 +686,21 @@ function UIMinimap:onCameraPositionChange(cameraPos)
 	self:scheduleBundledFlagsRefresh()
 end
 
-function UIMinimap:hideFloor()
+function UIMinimap.hideFloor(self)
 	self.floorUpWidget:hide()
 	self.floorDownWidget:hide()
 end
 
-function UIMinimap:hideZoom()
+function UIMinimap.hideZoom(self)
 	self.zoomInWidget:hide()
 	self.zoomOutWidget:hide()
 end
 
-function UIMinimap:disableAutoWalk()
+function UIMinimap.disableAutoWalk(self)
 	self.autowalk = false
 end
 
-function UIMinimap:isBundledHidden(pos)
+function UIMinimap.isBundledHidden(self, pos)
 	if not pos then
 		return false
 	end
@@ -708,7 +708,7 @@ function UIMinimap:isBundledHidden(pos)
 	return getSharedHiddenBundledSet()[bundledMarkerKeyFromCoords(pos.x, pos.y, pos.z)] == true
 end
 
-function UIMinimap:hideBundledMarker(pos)
+function UIMinimap.hideBundledMarker(self, pos)
 	if not pos then
 		return
 	end
@@ -730,7 +730,7 @@ function UIMinimap:hideBundledMarker(pos)
 	syncBundledMarkerHiddenOnAllMinimaps(pos)
 end
 
-function UIMinimap:load()
+function UIMinimap.load(self)
 	getSharedHiddenBundled()
 
 	syncingUserFlag = true
@@ -750,7 +750,7 @@ function UIMinimap:load()
 	end
 end
 
-function UIMinimap:save()
+function UIMinimap.save(self)
 	local settings = {
 		flags = {},
 		hiddenBundled = getSharedHiddenBundled()
@@ -768,6 +768,10 @@ end
 local function onFlagMouseRelease(widget, pos, button)
 	if button == MouseLeftButton then
 		local player = g_game.getLocalPlayer()
+
+		if g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed() then
+			return g_game.sendGmTeleport(widget.pos)
+		end
 
 		if Position.distance(player:getPosition(), widget.pos) > 250 then
 			modules.game_textmessage.displayStatusMessage(tr("Destination is out of range."))
@@ -811,7 +815,7 @@ local function onFlagMouseRelease(widget, pos, button)
 	return false
 end
 
-function UIMinimap:setCrossPosition(pos)
+function UIMinimap.setCrossPosition(self, pos)
 	local cross = self.cross
 
 	if not self.cross then
@@ -845,7 +849,7 @@ function UIMinimap:setCrossPosition(pos)
 	self:updateCrossVisibility()
 end
 
-function UIMinimap:setPartyMemberPosition(playerName, vocationId, pos, isLeader)
+function UIMinimap.setPartyMemberPosition(self, playerName, vocationId, pos, isLeader)
 	if not playerName or playerName == "" or not pos then
 		return
 	end
@@ -892,7 +896,7 @@ function UIMinimap:setPartyMemberPosition(playerName, vocationId, pos, isLeader)
 	member.widget:setTooltip(tooltipText)
 end
 
-function UIMinimap:removePartyMember(playerName)
+function UIMinimap.removePartyMember(self, playerName)
 	local member = self.partyMembers[playerName]
 
 	if not member then
@@ -906,7 +910,7 @@ function UIMinimap:removePartyMember(playerName)
 	self.partyMembers[playerName] = nil
 end
 
-function UIMinimap:clearPartyMembers()
+function UIMinimap.clearPartyMembers(self)
 	for name, member in pairs(self.partyMembers) do
 		if member.widget and not member.widget:isDestroyed() then
 			member.widget:destroy()
@@ -916,7 +920,7 @@ function UIMinimap:clearPartyMembers()
 	end
 end
 
-function UIMinimap:addFlagLocal(pos, icon, description, temporary, bundled)
+function UIMinimap.addFlagLocal(self, pos, icon, description, temporary, bundled)
 	if not pos or not icon then
 		return
 	end
@@ -925,15 +929,14 @@ function UIMinimap:addFlagLocal(pos, icon, description, temporary, bundled)
 		return
 	end
 
-	local flag = self:getFlag(pos)
-
-	if flag or not icon then
+	if self:getFlag(pos) or not icon then
 		return
 	end
 
 	temporary = temporary or false
 	bundled = bundled or false
-	flag = g_ui.createWidget("MinimapFlag")
+
+	local flag = g_ui.createWidget("MinimapFlag")
 
 	self:insertChild(1, flag)
 
@@ -968,7 +971,7 @@ function UIMinimap:addFlagLocal(pos, icon, description, temporary, bundled)
 	self:centerInPosition(flag, pos)
 end
 
-function UIMinimap:addFlag(pos, icon, description, temporary, bundled)
+function UIMinimap.addFlag(self, pos, icon, description, temporary, bundled)
 	if not pos or not icon then
 		return
 	end
@@ -998,7 +1001,7 @@ function UIMinimap:addFlag(pos, icon, description, temporary, bundled)
 	end
 end
 
-function UIMinimap:addAlternativeWidget(widget, pos, maxZoom)
+function UIMinimap.addAlternativeWidget(self, widget, pos, maxZoom)
 	widget.pos = pos
 	widget.maxZoom = maxZoom or 0
 	widget.minZoom = minZoom
@@ -1006,7 +1009,7 @@ function UIMinimap:addAlternativeWidget(widget, pos, maxZoom)
 	table.insert(self.alternatives, widget)
 end
 
-function UIMinimap:setAlternativeWidgetsVisible(show)
+function UIMinimap.setAlternativeWidgetsVisible(self, show)
 	local layout = self:getLayout()
 
 	layout:disableUpdates()
@@ -1024,7 +1027,7 @@ function UIMinimap:setAlternativeWidgetsVisible(show)
 	layout:update()
 end
 
-function UIMinimap:onZoomChange(zoom)
+function UIMinimap.onZoomChange(self, zoom)
 	if self.fullMapView then
 		self.zoomFullmap = zoom
 	else
@@ -1042,7 +1045,7 @@ function UIMinimap:onZoomChange(zoom)
 	end
 end
 
-function UIMinimap:getFlag(pos)
+function UIMinimap.getFlag(self, pos)
 	if not pos then
 		return nil
 	end
@@ -1070,7 +1073,7 @@ function UIMinimap:getFlag(pos)
 	return nil
 end
 
-function UIMinimap:removeFlag(pos, icon, description)
+function UIMinimap.removeFlag(self, pos, icon, description)
 	local flag = self:getFlag(pos)
 
 	if flag then
@@ -1078,7 +1081,7 @@ function UIMinimap:removeFlag(pos, icon, description)
 	end
 end
 
-function UIMinimap:updateFlag(flag, icon, description)
+function UIMinimap.updateFlag(unusedArgument, flag, icon, description, skipFlagPersistence)
 	if not flag or flag:isDestroyed() then
 		return
 	end
@@ -1094,7 +1097,7 @@ function UIMinimap:updateFlag(flag, icon, description)
 		flag:setIcon(resolvepath(icon, 1))
 	end
 
-	if not flag.bundled and not flag.temporary then
+	if not flag.bundled and not flag.temporary and not skipFlagPersistence then
 		getSharedUserFlags()[userFlagKey(flag.pos)] = {
 			position = {
 				x = flag.pos.x,
@@ -1110,7 +1113,7 @@ function UIMinimap:updateFlag(flag, icon, description)
 	end
 end
 
-function UIMinimap:reset()
+function UIMinimap.reset(self)
 	local player = g_game.getLocalPlayer()
 
 	if player then
@@ -1118,7 +1121,7 @@ function UIMinimap:reset()
 	end
 end
 
-function UIMinimap:move(x, y)
+function UIMinimap.move(self, x, y)
 	local cameraPos = self:getCameraPosition()
 	local scale = self:getScale()
 
@@ -1137,7 +1140,7 @@ function UIMinimap:move(x, y)
 	self:setCameraPosition(pos)
 end
 
-function UIMinimap:smoothZoomBy(step, mousePos)
+function UIMinimap.smoothZoomBy(self, step, mousePos)
 	if not self.setScale or step == 0 then
 		return step > 0 and self:zoomIn() or self:zoomOut()
 	end
@@ -1222,7 +1225,7 @@ function UIMinimap:smoothZoomBy(step, mousePos)
 	return true
 end
 
-function UIMinimap:onMouseWheel(mousePos, direction)
+function UIMinimap.onMouseWheel(self, mousePos, direction)
 	local keyboardModifiers = g_keyboard.getModifiers()
 
 	if direction == MouseWheelUp and keyboardModifiers == KeyboardNoModifier then
@@ -1254,13 +1257,13 @@ function UIMinimap:onMouseWheel(mousePos, direction)
 	return false
 end
 
-function UIMinimap:onMousePress(pos, button)
+function UIMinimap.onMousePress(self, pos, button)
 	if not self:isDragging() then
 		self.allowNextRelease = true
 	end
 end
 
-function UIMinimap:onMouseRelease(pos, button)
+function UIMinimap.onMouseRelease(self, pos, button)
 	if not self.allowNextRelease then
 		return true
 	end
@@ -1276,7 +1279,7 @@ function UIMinimap:onMouseRelease(pos, button)
 	if button == MouseLeftButton then
 		local player = g_game.getLocalPlayer()
 
-		if g_game.getClientVersion() > 1288 and g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed() then
+		if g_keyboard.isCtrlPressed() and g_keyboard.isShiftPressed() then
 			return g_game.sendGmTeleport(mapPos)
 		end
 
@@ -1306,14 +1309,14 @@ function UIMinimap:onMouseRelease(pos, button)
 	return false
 end
 
-function UIMinimap:onDragEnter(pos)
+function UIMinimap.onDragEnter(self, pos)
 	self.dragReference = pos
 	self.dragCameraReference = self:getCameraPosition()
 
 	return true
 end
 
-function UIMinimap:onDragMove(pos, moved)
+function UIMinimap.onDragMove(self, pos, moved)
 	local scale = self:getScale()
 	local dx = (self.dragReference.x - pos.x) / scale
 	local dy = (self.dragReference.y - pos.y) / scale
@@ -1328,11 +1331,11 @@ function UIMinimap:onDragMove(pos, moved)
 	return true
 end
 
-function UIMinimap:onDragLeave(widget, pos)
+function UIMinimap.onDragLeave(self, widget, pos)
 	return true
 end
 
-function UIMinimap:onStyleApply(styleName, styleNode)
+function UIMinimap.onStyleApply(self, styleName, styleNode)
 	for name, value in pairs(styleNode) do
 		if name == "autowalk" then
 			self.autowalk = value
@@ -1340,7 +1343,7 @@ function UIMinimap:onStyleApply(styleName, styleNode)
 	end
 end
 
-function UIMinimap:createFlagWindow(pos, existingFlag)
+function UIMinimap.createFlagWindow(self, pos, existingFlag)
 	if self.flagWindow then
 		return
 	end
@@ -1409,7 +1412,7 @@ function UIMinimap:createFlagWindow(pos, existingFlag)
 	end
 end
 
-function UIMinimap:destroyFlagWindow()
+function UIMinimap.destroyFlagWindow(self)
 	if self.flagWindow then
 		self.flagWindow:destroy()
 

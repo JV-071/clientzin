@@ -68,8 +68,8 @@ MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 1
-    margin-left: 20
-    font: verdana-11px-monochrome
+    margin-left: 19
+    font: $var-cip-font-new
     height: 13
     !text: tr('Impact Analyser')
     color: #909090

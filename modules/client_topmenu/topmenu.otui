@@ -39,7 +39,7 @@ TopMenuPanel
   anchors.horizontalCenter: parent.horizontalCenter
   width: 1024
   height: 33
-  image-source: /images/ui/2pixel_up_frame_borderimage
+  image-source: /images/ui/2pixel-up-frame-borderimage
   image-border: 5
   margin-top: -2
 

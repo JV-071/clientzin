@@ -1,0 +1,173 @@
+BattlePassTrackerProgress < UIWidget
+  image-source: /images/ui/1pixel-down-frame
+  image-border: 5
+  padding: 1
+
+  UIWidget
+    image-source: /images/ui/backdrop-dark-grey
+    image-border: 5
+    anchors.fill: parent
+    phantom: true
+
+BattlePassTrackerSectionHeader < Panel
+  height: 16
+  phantom: true
+  margin-top: 2
+  margin-bottom: 3
+
+  Label
+    id: title
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    font: $var-cip-font-new
+    color: $var-text-cip-color
+    margin-left: 1
+    height: 13
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: title.bottom
+    margin-top: 3
+    margin-left: 2
+    margin-right: 1
+
+BattlePassTrackerRow < Panel
+  height: 34
+  phantom: false
+
+  UIWidget
+    id: icon
+    size: 32 32
+    image-size: 32 32
+    image-smooth: false
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 2
+    phantom: true
+
+  UIWidget
+    id: iconOverlay
+    size: 32 32
+    image-source: /images/game/battlepass/icon_overwhite_tracker
+    image-smooth: false
+    anchors.fill: icon
+    phantom: true
+
+  Label
+    id: description
+    height: 13
+    anchors.left: icon.right
+    anchors.right: parent.right
+    anchors.top: parent.top
+    margin-left: 3
+    margin-top: 2
+    margin-right: 2
+    font: verdana-11px-monochrome
+    color: #c0c0c0
+    text-align: topLeft
+    text-offset: 0 -1
+    text-wrap: false
+    text-overflow: ellipsis
+    text-auto-resize: false
+    clipping: true
+    phantom: false
+
+  UIWidget
+    id: lockIcon
+    size: 11 12
+    image-source: /images/icons/icon-lock-red
+    image-smooth: false
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 3
+    margin-right: 4
+    visible: false
+    phantom: true
+
+  BattlePassTrackerProgress
+    id: progressFrame
+    height: 14
+    anchors.left: description.left
+    anchors.right: parent.right
+    anchors.top: description.bottom
+    margin-top: 2
+    margin-right: 1
+    phantom: true
+
+    UIWidget
+      id: progressFill
+      anchors.left: parent.left
+      anchors.bottom: parent.bottom
+      height: 12
+      phantom: true
+      visible: false
+      image-source: /images/bars/progressbar-orange-large
+
+    Label
+      id: count
+      anchors.centerIn: parent
+      text-align: center
+      text-auto-resize: true
+      font: verdana-11px-monochrome
+      color: #c0c0c0
+      margin-bottom: -1
+      phantom: true
+
+BattlePassTracker < MiniWindow
+  id: BattlePassTrackerWindow
+  @onClose: modules.game_battlepass.onBattlePassTrackerClose()
+  max-height: 338
+  &save: true
+
+  UIWidget
+    id: miniwindowIcon
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    margin-top: 2
+    margin-left: 4
+    size: 12 12
+    image-source: /images/icons/icon-battlepasstracker-widget
+    image-smooth: false
+
+  Label
+    id: miniwindowTitle
+    anchors.top: miniwindowHeader.top
+    anchors.left: miniwindowHeader.left
+    anchors.right: miniwindowHeader.right
+    margin-top: 2
+    margin-left: 20
+    margin-right: 50
+    font: verdana-11px-monochrome
+    height: 13
+    !text: tr('Battle Pass Tracker')
+    color: #9d9d9dff
+    text-wrap: false
+    text-overflow: ellipsis
+    text-auto-resize: false
+    clipping: true
+
+  MiniWindowContents
+    id: contentsPanel
+    anchors.top: miniwindowTopBar.bottom
+    anchors.left: parent.left
+    anchors.right: miniwindowScrollBar.left
+    anchors.bottom: parent.bottom
+    margin-left: 3
+    margin-top: -2
+    margin-right: 1
+    margin-bottom: 4
+    vertical-scrollbar: miniwindowScrollBar
+    padding-left: 1
+    padding-right: 1
+    layout: verticalBox
+
+  UIWidget
+    id: miniborder
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    image-source: /images/ui/miniborder-bottom-left
+    size: 14 14
+    margin-left: 3
+    margin-bottom: 3

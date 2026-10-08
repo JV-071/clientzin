@@ -1,9 +1,7 @@
-﻿-- chunkname: @/game_wheel/classes/wheelnode.lua
+﻿WheelNode = {}
+WheelNode.__index = WheelNode
 
-WheelNode = {}
-WheelNode._index = WheelNode
-
-function WheelNode:new()
+function WheelNode.new(self)
 	local instance = {
 		connecteds = {},
 		connections = {}

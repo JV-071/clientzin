@@ -1,21 +1,20 @@
-﻿-- chunkname: @/game_analysers/menus/XPAnalyser.lua
-
-if not XPAnalyser then
+﻿if not XPAnalyser then
 	XPAnalyser = {
-		target = 0,
-		level = 0,
-		rawXpHour = 0,
-		xpHour = 0,
 		xpGain = 0,
 		rawXPGain = 0,
 		startExp = 0,
 		session = 0,
-		launchTime = 0
+		launchTime = 0,
+		target = 0,
+		level = 0,
+		rawXpHour = 0,
+		xpHour = 0
 	}
 	XPAnalyser.__index = XPAnalyser
 end
 
 local targetMaxMargin = 144
+local var_0_1 = 900000
 
 function expForLevel(level)
 	return math.floor(50 * level * level * level / 3 - 100 * level * level + 850 * level / 3 - 200)
@@ -29,9 +28,26 @@ local function formatXpShown(n)
 	return formatMoney(math.floor((tonumber(n) or 0) + 0.5))
 end
 
-function XPAnalyser:refreshXpRatesFromSession()
-	XPAnalyser.xpHour = AnalyserSession:perHourFromTotal(XPAnalyser.xpGain)
-	XPAnalyser.rawXpHour = AnalyserSession:perHourFromTotal(XPAnalyser.rawXPGain)
+local function var_0_3(arg_4_0, arg_4_1)
+	if arg_4_0 then
+		arg_4_0:setText(arg_4_1)
+		arg_4_0:setTooltip(arg_4_1)
+	end
+end
+
+function XPAnalyser.refreshXpRatesFromSession(unusedArgument)
+	XPAnalyser.xpHour = AnalyserSession:rollingRate(XPAnalyser.xpWindow, var_0_1, 3600000)
+	XPAnalyser.rawXpHour = AnalyserSession:rollingRate(XPAnalyser.rawXpWindow, var_0_1, 3600000)
+end
+
+local function percent(arg_6_0)
+	local numericValue = tonumber(arg_6_0) or 0
+
+	if g_game.getFeature and g_game.getFeature(GameLevelPercentU16) then
+		numericValue = numericValue / 100
+	end
+
+	return math.min(100, math.max(0, numericValue))
 end
 
 local function updateXpTargetArrow()
@@ -57,26 +73,28 @@ local function updateXpTargetArrow()
 		return
 	end
 
-	local targetValue = math.max(1, target)
-	local ratio = current / targetValue
+	local var_7_4 = current / math.max(1, target)
 
-	if ratio < 0 then
-		ratio = 0
-	elseif ratio > 1 then
-		ratio = 1
+	if var_7_4 < 0 then
+		var_7_4 = 0
+	elseif var_7_4 > 1 then
+		var_7_4 = 1
 	end
 
-	arrow:setMarginLeft(math.floor(targetMaxMargin * ratio + 0.5))
+	arrow:setMarginLeft(math.floor(targetMaxMargin * var_7_4 + 0.5))
 end
 
 function XPAnalyser.create()
 	XPAnalyser.window = openedWindows.xpButton
+	XPAnalyser.launchTime = g_clock.millis()
 	XPAnalyser.session = 0
 	XPAnalyser.startExp = 0
 	XPAnalyser.rawXPGain = 0
 	XPAnalyser.xpGain = 0
 	XPAnalyser.xpHour = 0
 	XPAnalyser.rawXpHour = 0
+	XPAnalyser.rawXpWindow = AnalyserSession:newRollingWindow(var_0_1, true)
+	XPAnalyser.xpWindow = AnalyserSession:newRollingWindow(var_0_1, true)
 	XPAnalyser.level = 0
 	XPAnalyser.target = 0
 
@@ -95,20 +113,30 @@ function XPAnalyser.create()
 			return true
 		end
 	end
+
+	function XPAnalyser.window.onMaximize()
+		XPAnalyser:checkAnchos()
+	end
 end
 
-function XPAnalyser:reset(allTimeDps, allTimeHps)
+function XPAnalyser.reset(unusedArgument, unusedArgument, unusedArgument)
+	XPAnalyser.launchTime = g_clock.millis()
 	XPAnalyser.session = 0
 	XPAnalyser.startExp = 0
 	XPAnalyser.rawXPGain = 0
 	XPAnalyser.xpGain = 0
 	XPAnalyser.xpHour = 0
 	XPAnalyser.rawXpHour = 0
+	XPAnalyser.rawXpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.rawXpWindow, var_0_1, true)
+	XPAnalyser.xpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.xpWindow, var_0_1, true)
 	XPAnalyser.level = 0
 	XPAnalyser.target = 0
 
 	if XPAnalyser.window and XPAnalyser.window.contentsPanel and XPAnalyser.window.contentsPanel.graphPanel then
-		analyserUIGraphReset(XPAnalyser.window.contentsPanel.graphPanel, nil, ANALYSER_GRAPH_CAPACITY_60_MIN)
+		local graphPanel = XPAnalyser.window.contentsPanel.graphPanel
+
+		analyserUIGraphReset(graphPanel, nil, ANALYSER_GRAPH_CAPACITY_60_MIN)
+		analyserUIGraphPushValue(graphPanel, 0)
 	end
 
 	pcall(function()
@@ -125,7 +153,7 @@ function XPAnalyser:reset(allTimeDps, allTimeHps)
 	end
 end
 
-function XPAnalyser:updateWindow(ignoreVisible)
+function XPAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	if not XPAnalyser.window:isVisible() and not ignoreVisible then
 		return
 	end
@@ -135,39 +163,39 @@ function XPAnalyser:updateWindow(ignoreVisible)
 	XPAnalyser:refreshXpRatesFromSession()
 
 	if contentsPanel.xpGain then
-		contentsPanel.xpGain:setText(formatXpShown(XPAnalyser.xpGain))
+		var_0_3(contentsPanel.xpGain, formatXpShown(XPAnalyser.xpGain))
 	end
 
 	if contentsPanel.rawXpGain then
-		contentsPanel.rawXpGain:setText(formatXpShown(XPAnalyser.rawXPGain))
+		var_0_3(contentsPanel.rawXpGain, formatXpShown(XPAnalyser.rawXPGain))
 	end
 
 	if contentsPanel.xpHour then
-		contentsPanel.xpHour:setText(formatXpShown(XPAnalyser.xpHour))
+		var_0_3(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
 	end
 
 	if contentsPanel.rawXpHour then
-		contentsPanel.rawXpHour:setText(formatXpShown(XPAnalyser.rawXpHour))
+		var_0_3(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
 	end
 
 	updateXpTargetArrow()
 	XPAnalyser:updateTooltip()
 end
 
-function XPAnalyser:setupStartExp(value)
+function XPAnalyser.setupStartExp(self, value)
 	if XPAnalyser.startExp == 0 then
 		XPAnalyser.startExp = value
 	end
 end
 
-function XPAnalyser:setupLevel(level, percent)
+function XPAnalyser.setupLevel(unusedArgument, level, arg_18_2)
 	XPAnalyser.level = level
 
-	XPAnalyser.window.contentsPanel.percent:setPercent(math.floor(percent))
-	XPAnalyser.window.contentsPanel.nextLevel:setText("-")
+	XPAnalyser.window.contentsPanel.percent:setPercent(math.floor(percent(arg_18_2)))
+	var_0_3(XPAnalyser.window.contentsPanel.nextLevel, "-")
 end
 
-function XPAnalyser:updateNextLevel(hours, minutes)
+function XPAnalyser.updateNextLevel(unusedArgument, hours, minutes)
 	local nl = XPAnalyser.window and XPAnalyser.window.contentsPanel and XPAnalyser.window.contentsPanel.nextLevel
 	local text = "-"
 
@@ -176,7 +204,7 @@ function XPAnalyser:updateNextLevel(hours, minutes)
 	end
 
 	if XPAnalyser.xpHour == 0 then
-		nl:setText(text)
+		var_0_3(nl, text)
 
 		return
 	end
@@ -191,10 +219,10 @@ function XPAnalyser:updateNextLevel(hours, minutes)
 		end
 	end
 
-	nl:setText(text)
+	var_0_3(nl, text)
 end
 
-function XPAnalyser:pushGraphSample()
+function XPAnalyser.pushGraphSample(self)
 	if not XPAnalyser.window or not XPAnalyser.window.contentsPanel then
 		return
 	end
@@ -212,7 +240,7 @@ function XPAnalyser:pushGraphSample()
 	analyserUIGraphPushValue(panel, math.max(0, math.floor(xpHr + 0.5)))
 end
 
-function XPAnalyser:checkExpHour()
+function XPAnalyser.checkExpHour(unusedArgument)
 	local player = g_game.getLocalPlayer()
 
 	if not player or not XPAnalyser.window or XPAnalyser.window:isDestroyed() then
@@ -228,22 +256,20 @@ function XPAnalyser:checkExpHour()
 	XPAnalyser:refreshXpRatesFromSession()
 
 	if contentsPanel.xpHour then
-		contentsPanel.xpHour:setText(formatXpShown(XPAnalyser.xpHour))
+		var_0_3(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
 	end
 
 	if contentsPanel.rawXpHour then
-		contentsPanel.rawXpHour:setText(formatXpShown(XPAnalyser.rawXpHour))
+		var_0_3(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
 	end
 
 	local xpHr = tonumber(XPAnalyser.xpHour) or 0
 
 	if xpHr > 0 then
 		local curExp = tonumber(player:getExperience()) or 0
-		local nextLevelExp = expForLevel(math.max(0, player:getLevel() + 1))
-		local hoursLeft = (nextLevelExp - curExp) / xpHr
-		local minutesLeft = math.floor(math.max(0, (hoursLeft - math.floor(hoursLeft)) * 60))
-
-		hoursLeft = math.floor(hoursLeft)
+		local level = (expForLevel(math.max(0, player:getLevel() + 1)) - curExp) / xpHr
+		local minutesLeft = math.floor(math.max(0, (level - math.floor(level)) * 60))
+		local hoursLeft = math.floor(level)
 
 		XPAnalyser:updateNextLevel(hoursLeft, minutesLeft)
 	else
@@ -252,58 +278,43 @@ function XPAnalyser:checkExpHour()
 
 	updateXpTargetArrow()
 
-	local pct = tonumber(player:getLevelPercent())
+	local pct = percent(player:getLevelPercent())
 
 	if contentsPanel.percent then
 		if pct ~= pct then
 			pct = 0
 		end
 
-		local percentDisplay = math.floor(pct / 1000 * 10)
-
-		contentsPanel.percent:setPercent(math.min(100, math.max(0, percentDisplay)))
+		contentsPanel.percent:setPercent(math.floor(pct))
 	end
 
 	XPAnalyser:updateTooltip()
 end
 
-function XPAnalyser:addRawXPGain(value)
+function XPAnalyser.addRawXPGain(unusedArgument, value)
 	XPAnalyser.rawXPGain = XPAnalyser.rawXPGain + value
 
+	AnalyserSession:addRollingValue(XPAnalyser.rawXpWindow, value)
 	XPAnalyser:updateWindow(true)
 end
 
-function XPAnalyser:addXpGain(value)
+function XPAnalyser.addXpGain(unusedArgument, value)
 	XPAnalyser.xpGain = XPAnalyser.xpGain + value
 
+	AnalyserSession:addRollingValue(XPAnalyser.xpWindow, value)
 	XPAnalyser:updateWindow(true)
 end
 
-function XPAnalyser:updateTooltip()
+function XPAnalyser.updateTooltip(unusedArgument)
 	local player = g_game.getLocalPlayer()
 
 	if not player then
 		return
 	end
 
-	local text = "Raw XP Gain: " .. formatMoney(XPAnalyser.rawXPGain)
-
-	text = text .. "\nXP Gain: " .. formatMoney(XPAnalyser.xpGain)
-	text = text .. "\nCurrent Raw XP Per Hour: " .. formatMoney(XPAnalyser.rawXpHour)
-	text = text .. "\nCurrent XP Per Hour: " .. formatMoney(XPAnalyser.xpHour)
-	text = text .. "\nTarget XP Per Hour: " .. (XPAnalyser.target and formatMoney(XPAnalyser.target) or "0")
-	text = text .. "\n" .. formatMoney(expToAdvance(player:getLevel(), player:getExperience())) .. " XP until next level."
-
-	local lp = tonumber(player:getLevelPercent()) or 0
-	local percentToGo
-
-	if lp >= 1000 then
-		percentToGo = 100 - lp / 100
-	else
-		percentToGo = 100 - lp / 100
-	end
-
-	text = text .. "\nYou have " .. string.format("%.2f", math.max(0, percentToGo)) .. " percent to go."
+	local text = ((((("Raw XP Gain: " .. formatMoney(XPAnalyser.rawXPGain)) .. "\nXP Gain: " .. formatMoney(XPAnalyser.xpGain)) .. "\nCurrent Raw XP Per Hour: " .. formatMoney(XPAnalyser.rawXpHour)) .. "\nCurrent XP Per Hour: " .. formatMoney(XPAnalyser.xpHour)) .. "\nTarget XP Per Hour: " .. (XPAnalyser.target and formatMoney(XPAnalyser.target) or "0")) .. "\n" .. formatMoney(expToAdvance(player:getLevel(), player:getExperience())) .. " XP until next level."
+	local percentToGo = 100 - percent(player:getLevelPercent())
+	local text = text .. "\nYou have " .. string.format("%.2f", math.max(0, percentToGo)) .. " percent to go."
 
 	if XPAnalyser.window and not XPAnalyser.window:isDestroyed() then
 		XPAnalyser.window:setTooltip(text)
@@ -367,24 +378,32 @@ function onXPExtra(mousePosition, mode)
 	return true
 end
 
-function XPAnalyser:checkAnchos()
-	if XPAnalyser.window.contentsPanel.rawXpLabel:isVisible() then
+function XPAnalyser.checkAnchos(unusedArgument)
+	local var_34_0 = 218
+
+	if XPAnalyser.window.contentsPanel.rawXpLabel:isExplicitlyVisible() then
 		XPAnalyser.window.contentsPanel.xpLabel:addAnchor(AnchorTop, "rawXpLabel", AnchorBottom)
-		XPAnalyser.window.contentsPanel.xpGain:addAnchor(AnchorTop, "rawXpGain", AnchorBottom)
+		XPAnalyser.window.contentsPanel.xpGain:addAnchor(AnchorTop, "xpLabel", AnchorTop)
 		XPAnalyser.window.contentsPanel.xpLabel:setMarginTop(4)
-		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(4)
-		XPAnalyser.window:setHeight(254)
-		XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(254)
+		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(0)
+
+		var_34_0 = 254
 	else
 		XPAnalyser.window.contentsPanel.xpLabel:setMarginTop(-2)
 		XPAnalyser.window.contentsPanel.xpLabel:addAnchor(AnchorTop, "topParent", AnchorBottom)
 		XPAnalyser.window.contentsPanel.xpGain:addAnchor(AnchorTop, "xpLabel", AnchorTop)
 		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(0)
-		XPAnalyser.window:setHeight(218)
-		XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(218)
 	end
 
-	if XPAnalyser.window.contentsPanel.rawXpHourLabel:isVisible() then
+	XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(var_34_0)
+
+	XPAnalyser.window.maximizedHeight = var_34_0
+
+	if not XPAnalyser.window:isOn() then
+		XPAnalyser.window:setHeight(var_34_0)
+	end
+
+	if XPAnalyser.window.contentsPanel.rawXpHourLabel:isExplicitlyVisible() then
 		XPAnalyser.window.contentsPanel.xpHourLabel:addAnchor(AnchorTop, "rawXpHourLabel", AnchorBottom)
 		XPAnalyser.window.contentsPanel.xpHour:addAnchor(AnchorTop, "xpHourLabel", AnchorTop)
 	else
@@ -392,14 +411,14 @@ function XPAnalyser:checkAnchos()
 		XPAnalyser.window.contentsPanel.xpHour:addAnchor(AnchorTop, "xpHourLabel", AnchorTop)
 	end
 
-	if XPAnalyser.window.contentsPanel.xpBG:isVisible() then
+	if XPAnalyser.window.contentsPanel.xpBG:isExplicitlyVisible() then
 		XPAnalyser.window.contentsPanel.graphPanel:addAnchor(AnchorTop, "separatorGauge", AnchorBottom)
 	else
 		XPAnalyser.window.contentsPanel.graphPanel:addAnchor(AnchorTop, "separatorPercent", AnchorBottom)
 	end
 end
 
-function XPAnalyser:setRawXPVisible(value)
+function XPAnalyser.setRawXPVisible(self, value)
 	XPAnalyser.window.contentsPanel.rawXpLabel:setVisible(value)
 	XPAnalyser.window.contentsPanel.rawXpGain:setVisible(value)
 	XPAnalyser.window.contentsPanel.rawXpHourLabel:setVisible(value)
@@ -410,7 +429,7 @@ function XPAnalyser:setRawXPVisible(value)
 	XPAnalyser:checkAnchos()
 end
 
-function XPAnalyser:setGaugeVisible(value)
+function XPAnalyser.setGaugeVisible(self, value)
 	XPAnalyser.window.contentsPanel.xpBG:setVisible(value)
 	XPAnalyser.window.contentsPanel.separatorGauge:setVisible(value)
 
@@ -419,7 +438,7 @@ function XPAnalyser:setGaugeVisible(value)
 	XPAnalyser:checkAnchos()
 end
 
-function XPAnalyser:setGraphVisible(value)
+function XPAnalyser.setGraphVisible(self, value)
 	XPAnalyser.window.contentsPanel.graphPanel:setVisible(value)
 	XPAnalyser.window.contentsPanel.graphHorizontal:setVisible(value)
 
@@ -428,7 +447,7 @@ function XPAnalyser:setGraphVisible(value)
 	XPAnalyser:checkAnchos()
 end
 
-function XPAnalyser:openTargetConfig()
+function XPAnalyser.openTargetConfig(self)
 	local window = configPopupWindow.xpButton
 
 	window:show()
@@ -455,28 +474,28 @@ function XPAnalyser:openTargetConfig()
 	end
 end
 
-function XPAnalyser:gaugeIsVisible()
+function XPAnalyser.gaugeIsVisible(self)
 	return XPAnalyser.gaugeVisible
 end
 
-function XPAnalyser:graphIsVisible()
+function XPAnalyser.graphIsVisible(self)
 	return XPAnalyser.graphVisible
 end
 
-function XPAnalyser:rawXPIsVisible()
+function XPAnalyser.rawXPIsVisible(self)
 	return XPAnalyser.rawXpVisible
 end
 
-function XPAnalyser:getTarget()
+function XPAnalyser.getTarget(self)
 	return XPAnalyser.target
 end
 
-function XPAnalyser:loadConfigJson()
+function XPAnalyser.loadConfigJson(self)
 	local config = {
-		experienceGaugeTargetValue = 0,
 		desiredXPGraphVisible = true,
 		desiredExperienceGaugeVisible = true,
-		showBaseXp = false
+		showBaseXp = false,
+		experienceGaugeTargetValue = 0
 	}
 	local player = g_game.getLocalPlayer()
 
@@ -507,7 +526,7 @@ function XPAnalyser:loadConfigJson()
 	XPAnalyser:checkAnchos()
 end
 
-function XPAnalyser:saveConfigJson()
+function XPAnalyser.saveConfigJson(self)
 	local config = {
 		desiredExperienceGaugeVisible = XPAnalyser:gaugeIsVisible(),
 		desiredXPGraphVisible = XPAnalyser:graphIsVisible(),

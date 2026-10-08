@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cyclopedia/game_cyclopedia.lua
-
-Cyclopedia = {}
+﻿Cyclopedia = {}
 
 local DETAIL_LABEL_COLUMN_WIDTH = 150
 local DETAIL_ROW_HEIGHT = 20
@@ -18,7 +16,8 @@ local function measureDetailRowHeight(value, valueWidth)
 	label:setFont("Verdana Bold-11px-new")
 	label:setTextAutoResize(false)
 	label:setTextWrap(true)
-	label:setWidth(valueWidth)
+	label:resize(valueWidth, DETAIL_ROW_HEIGHT)
+	label:setText("")
 	label:setText(value or "")
 
 	return math.max(DETAIL_ROW_HEIGHT, label:getTextSize().height + 2)
@@ -79,24 +78,21 @@ local function formatOffencePercentDisplay(display)
 	local absVal = math.abs(display)
 	local rounded = math.floor(absVal + 1e-06)
 	local isWhole = math.abs(absVal - rounded) < 1e-06
-	local formatted
+	local formattedText
 
 	if isWhole then
-		formatted = string.format("%d%%", rounded)
+		formattedText = string.format("%d%%", rounded)
 	else
-		local numberText = string.format("%.2f", absVal)
-
-		numberText = numberText:gsub("0+$", ""):gsub("%.$", "")
-		formatted = numberText .. "%"
+		formattedText = string.format("%.2f", absVal):gsub("0+$", ""):gsub("%.$", "") .. "%"
 	end
 
 	if display > 0 then
-		return "+" .. formatted
+		return "+" .. formattedText
 	elseif display < 0 then
-		return "-" .. formatted
+		return "-" .. formattedText
 	end
 
-	return formatted
+	return formattedText
 end
 
 local function formatOffenceStatValue(value, percent)
@@ -149,9 +145,7 @@ end
 function Cyclopedia.appendOffenceStatPrincipalRow(parent, name, value, options)
 	options = options or {}
 
-	local numericValue = tonumber(value) or 0
-
-	if numericValue == 0 and not options.showZero then
+	if (tonumber(value) or 0) == 0 and not options.showZero then
 		return nil
 	end
 
@@ -261,9 +255,7 @@ end
 function Cyclopedia.appendOffenceStatRow(parent, value, description, options)
 	options = options or {}
 
-	local numericValue = tonumber(value) or 0
-
-	if numericValue == 0 and not options.showZero then
+	if (tonumber(value) or 0) == 0 and not options.showZero then
 		return nil
 	end
 
@@ -470,11 +462,77 @@ function Cyclopedia.syncBosstiaryTrackerMainPanelButton()
 	end
 end
 
-local buttonSelection, items, bestiary, charms, map, houses, character, CyclopediaButton, bosstiary, bossSlot, ButtonBossSlot, ButtonBestiary
+local buttonSelection
+local items
+local bestiary
+local charms
+local map
+local houses
+local character
+local CyclopediaButton
+local bosstiary
+local bossSlot
+local ButtonBossSlot
+local ButtonBestiary
 local tabStack = {}
 local previousType
 local windowTypes = {}
 local magicalArchives
+local var_0_29 = {
+	{
+		action = "Open Cyclopedia - Bestiary",
+		primary = "",
+		window = "bestiary"
+	},
+	{
+		action = "Open Cyclopedia - Character",
+		primary = "",
+		window = "character"
+	},
+	{
+		action = "Open Cyclopedia - Charms",
+		primary = "",
+		window = "charms"
+	},
+	{
+		action = "Open Cyclopedia - Items",
+		primary = "",
+		window = "items"
+	},
+	{
+		action = "Open Cyclopedia - Magical Archive",
+		primary = "",
+		window = "magicalArchives"
+	},
+	{
+		action = "Open Cyclopedia - Map",
+		window = "map",
+		primary = {
+			[CHAT_MODE.ON] = "",
+			[CHAT_MODE.OFF] = "M"
+		}
+	}
+}
+
+local function var_0_30(arg_13_0)
+	if not g_game.isOnline() or not controllerCyclopedia.ui or not windowTypes[arg_13_0] then
+		return false
+	end
+
+	if controllerCyclopedia.ui:isVisible() then
+		if previousType ~= arg_13_0 then
+			SelectWindow(arg_13_0, false)
+		end
+
+		controllerCyclopedia.ui:raise()
+		controllerCyclopedia.ui:focus()
+	else
+		show(arg_13_0)
+	end
+
+	return true
+end
+
 local cyclopediaShortcutHighlightActive = false
 local bosstiaryShortcutHighlightActive = false
 local CLIENT_EVENT_TYPE_BESTIARY = 6
@@ -518,6 +576,10 @@ local function applyShortcutHighlight(button, highlightId, visible)
 
 	if highlight then
 		highlight:setVisible(visible)
+	end
+
+	if modules.game_mainpanel and modules.game_mainpanel.refreshOffPanelResizerHighlight then
+		modules.game_mainpanel.refreshOffPanelResizerHighlight()
 	end
 end
 
@@ -615,10 +677,7 @@ local function updateCyclopediaMoneyDisplay()
 		if player.getTotalMoney then
 			totalMoney = player:getTotalMoney() or 0
 		else
-			local bankMoney = player:getResourceBalance(ResourceBank) or 0
-			local inventoryMoney = player:getResourceBalance(ResourceInventary) or 0
-
-			totalMoney = bankMoney + inventoryMoney
+			totalMoney = (player:getResourceBalance(ResourceBank) or 0) + (player:getResourceBalance(ResourceInventary) or 0)
 		end
 	end
 
@@ -657,7 +716,18 @@ controllerCyclopedia = Controller:new()
 
 controllerCyclopedia:setUI("game_cyclopedia")
 
-function controllerCyclopedia:onInit()
+function Cyclopedia.ensureStylesLoaded()
+	if Cyclopedia.stylesLoaded then
+		return
+	end
+
+	g_ui.importStyle("cyclopedia_widgets")
+	g_ui.importStyle("cyclopedia_pages")
+
+	Cyclopedia.stylesLoaded = true
+end
+
+function controllerCyclopedia.onInit(unusedArgument)
 	Cyclopedia.storedTrackerData = {}
 	Cyclopedia.storedBosstiaryTrackerData = {}
 
@@ -666,321 +736,340 @@ function controllerCyclopedia:onInit()
 		onParseBestiaryRaces = Cyclopedia.loadBestiaryCategories,
 		onParseBestiaryOverview = Cyclopedia.loadBestiaryOverview,
 		onUpdateBestiaryMonsterData = Cyclopedia.loadBestiarySelectedCreature,
-		onBestiaryEntryChanged = Cyclopedia.onBestiaryEntryChanged
+		onBestiaryEntryChanged = Cyclopedia.onBestiaryEntryChanged,
+		onBossCooldown = Cyclopedia.onBossCooldown
 	})
 	connect(g_things, {
 		onLoadDat = Cyclopedia.invalidateItemsIndex
 	})
-end
 
-function controllerCyclopedia:onGameStart()
-	if g_game.getClientVersion() >= 1310 then
-		CyclopediaButton = modules.game_mainpanel.addToggleButton("CyclopediaButton", tr("Open Cyclopedia Window"), "/images/options/button_cyclopedia", Cyclopedia.openFromShortcutButton, false, 7)
-		ButtonBossSlot = modules.game_mainpanel.addToggleButton("bossSlot", tr("Open Boss Slots Dialog"), "/images/options/button_boss_slot", function()
-			toggle("bossSlot")
-		end, false, 20)
+	for unusedValue, entry in ipairs(var_0_29) do
+		local window = entry.window
 
-		CyclopediaButton:setOn(false)
-
-		ButtonBestiary = modules.game_mainpanel.addToggleButton("bosstiary", tr("Open Bosstiary Dialog"), "/images/options/button_bosstiary", Cyclopedia.openBosstiaryFromShortcutButton, false, 17)
-
-		ensureCyclopediaShortcutHighlightWidget()
-		ensureBosstiaryShortcutHighlightWidget()
-
-		contentContainer = controllerCyclopedia.ui:recursiveGetChildById("contentContainer")
-		buttonSelection = controllerCyclopedia.ui:recursiveGetChildById("buttonSelection")
-		items = buttonSelection:recursiveGetChildById("items")
-		bestiary = buttonSelection:recursiveGetChildById("bestiary")
-		charms = buttonSelection:recursiveGetChildById("charms")
-		map = buttonSelection:recursiveGetChildById("map")
-		houses = buttonSelection:recursiveGetChildById("houses")
-		character = buttonSelection:recursiveGetChildById("character")
-		bosstiary = buttonSelection:recursiveGetChildById("bosstiary")
-		bossSlot = buttonSelection:recursiveGetChildById("bossSlot")
-		magicalArchives = buttonSelection:recursiveGetChildById("magicalArchives")
-		windowTypes = {
-			items = {
-				obj = items,
-				func = showItems
-			},
-			bestiary = {
-				obj = bestiary,
-				func = showBestiary
-			},
-			charms = {
-				obj = charms,
-				func = showCharms
-			},
-			map = {
-				obj = map,
-				func = showMap
-			},
-			houses = {
-				obj = houses,
-				func = showHouse
-			},
-			character = {
-				obj = character,
-				func = showCharacter
-			},
-			bosstiary = {
-				obj = bosstiary,
-				func = showBosstiary
-			},
-			bossSlot = {
-				obj = bossSlot,
-				func = showBossSlot
-			},
-			magicalArchives = {
-				obj = magicalArchives,
-				func = showMagicalArchives
-			}
-		}
-
-		g_ui.importStyle("cyclopedia_widgets")
-		g_ui.importStyle("cyclopedia_pages")
-		controllerCyclopedia:registerEvents(g_game, {
-			onBosstiaryEntryChanged = Cyclopedia.onBosstiaryEntryChanged,
-			onClientEvent = Cyclopedia.onClientEvent,
-			onParseSendBosstiary = Cyclopedia.LoadBosstiaryCreatures,
-			onParseBosstiarySlots = Cyclopedia.loadBossSlots,
-			onParseCyclopediaCharacterGeneralStats = Cyclopedia.loadCharacterGeneralStats,
-			onParseCyclopediaCharacterCombatStats = Cyclopedia.loadCharacterCombatStats,
-			onParseCyclopediaCharacterBadges = Cyclopedia.loadCharacterBadges,
-			onCyclopediaCharacterRecentDeaths = Cyclopedia.loadCharacterRecentDeaths,
-			onCyclopediaCharacterRecentKills = Cyclopedia.loadCharacterRecentKills,
-			onUpdateCyclopediaCharacterItemSummary = Cyclopedia.loadCharacterItems,
-			onParseCyclopediaCharacterAppearances = Cyclopedia.loadCharacterAppearances,
-			onParseCyclopediaStoreSummary = Cyclopedia.onParseCyclopediaStoreSummary,
-			onParseCyclopediaCharacterAchievements = Cyclopedia.onParseCyclopediaCharacterAchievements,
-			onParseCyclopediaCharacterInspection = Cyclopedia.loadCharacterInspection,
-			onParseCyclopediaCharacterTitles = Cyclopedia.loadCharacterTitles,
-			onPreyActive = Cyclopedia.refreshCharacterPreyIfVisible,
-			onPreyInactive = Cyclopedia.refreshCharacterPreyIfVisible,
-			onPreyTimeLeft = Cyclopedia.refreshCharacterPreyIfVisible,
-			onCyclopediaCharacterOffenceStats = Cyclopedia.onCyclopediaCharacterOffenceStats,
-			onCyclopediaCharacterDefenceStats = Cyclopedia.onCyclopediaCharacterDefenceStats,
-			onCyclopediaCharacterMiscStats = Cyclopedia.onCyclopediaCharacterMiscStats,
-			onResourceBalance = Cyclopedia.onResourceBalance,
-			onCyclopediaHouseList = Cyclopedia.onCyclopediaHouseList,
-			onCyclopediaHousesInfo = Cyclopedia.onCyclopediaHousesInfo,
-			onCyclopediaHouseActionResult = Cyclopedia.onCyclopediaHouseActionResult,
-			onUpdateBestiaryCharmsData = Cyclopedia.loadCharms,
-			onParseItemDetail = function(itemId, descriptions)
-				if Cyclopedia.handleCharacterItemDetail(itemId, descriptions) then
-					return
-				end
-
-				Cyclopedia.loadItemDetail(itemId, descriptions)
-			end
-		})
-
-		if Cyclopedia.ensureBestiaryCategoriesRequested then
-			Cyclopedia.ensureBestiaryCategoriesRequested()
-		end
-
-		if not trackerButton then
-			trackerButton = modules.game_mainpanel.addToggleButton("trackerButton", tr("Open Bestiary Tracker Window"), "/images/options/button_bestiary_tracker", Cyclopedia.toggleBestiaryTracker, false, 17)
-		end
-
-		trackerButton:setOn(false)
-
-		if not trackerMiniWindow then
-			trackerMiniWindow = g_ui.createWidget("BestiaryTracker", modules.game_interface.getRightPanel())
-
-			trackerMiniWindow:setId("BestiaryTrackerWindow")
-
-			local titleWidget = trackerMiniWindow:getChildById("miniwindowTitle")
-
-			if titleWidget then
-				local title = tr("Bestiary Tracker")
-
-				if title:len() > 12 then
-					title = title:sub(1, 12) .. "..."
-				end
-
-				titleWidget:setText(title)
-			end
-
-			local toggleFilterButton = trackerMiniWindow:recursiveGetChildById("toggleFilterButton")
-
-			if toggleFilterButton then
-				toggleFilterButton:setVisible(false)
-				toggleFilterButton:setOn(false)
-			end
-
-			local contextMenuButton = trackerMiniWindow:recursiveGetChildById("contextMenuButton")
-			local newWindowButton = trackerMiniWindow:recursiveGetChildById("newWindowButton")
-			local minimizeButton = trackerMiniWindow:recursiveGetChildById("minimizeButton")
-
-			if contextMenuButton then
-				contextMenuButton:setVisible(true)
-
-				if minimizeButton then
-					contextMenuButton:breakAnchors()
-					contextMenuButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-					contextMenuButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-					contextMenuButton:setMarginRight(5)
-					contextMenuButton:setMarginTop(0)
-				end
-
-				function contextMenuButton.onClick(widget, mousePos, mouseButton)
-					return Cyclopedia.createTrackerContextMenu("bestiary", mousePos)
-				end
-			end
-
-			if newWindowButton then
-				newWindowButton:setVisible(true)
-
-				function newWindowButton.onClick(widget, mousePos, mouseButton)
-					toggle("bestiary")
-
-					return true
-				end
-			end
-
-			function trackerMiniWindow.onOpen()
-				Cyclopedia.syncBestiaryTrackerMainPanelButton()
-				Cyclopedia.applyStoredTracker(0)
-			end
-
-			function trackerMiniWindow.onClose()
-				Cyclopedia.syncBestiaryTrackerMainPanelButton()
-			end
-
-			trackerMiniWindow:setup()
-			trackerMiniWindow:hide()
-		end
-
-		if not trackerButtonBosstiary then
-			trackerButtonBosstiary = modules.game_mainpanel.addToggleButton("bosstiarytrackerButton", tr("Open Bosstiary Tracker Window"), "/images/options/button_bosstiary_tracker", Cyclopedia.toggleBosstiaryTracker, false, 17)
-		end
-
-		trackerButtonBosstiary:setOn(false)
-
-		if not trackerMiniWindowBosstiary then
-			trackerMiniWindowBosstiary = g_ui.createWidget("BestiaryTracker", modules.game_interface.getRightPanel())
-
-			trackerMiniWindowBosstiary:setId("BosstiaryTrackerWindow")
-
-			local titleWidgetBosstiary = trackerMiniWindowBosstiary:getChildById("miniwindowTitle")
-
-			if titleWidgetBosstiary then
-				local title = tr("Bosstiary Tracker")
-
-				if title:len() > 12 then
-					title = title:sub(1, 12) .. "..."
-				end
-
-				titleWidgetBosstiary:setText(title)
-				titleWidgetBosstiary:setTextOffset("0 -1")
-				titleWidgetBosstiary:setColor("#909090")
-			end
-
-			local iconWidgetBosstiary = trackerMiniWindowBosstiary:getChildById("miniwindowIcon")
-
-			if iconWidgetBosstiary then
-				iconWidgetBosstiary:setImageSource("/images/icons/icon-bosstiarytracker-widget")
-			end
-
-			local toggleFilterButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("toggleFilterButton")
-
-			if toggleFilterButtonBosstiary then
-				toggleFilterButtonBosstiary:setVisible(false)
-				toggleFilterButtonBosstiary:setOn(false)
-			end
-
-			local contextMenuButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("contextMenuButton")
-			local newWindowButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("newWindowButton")
-			local minimizeButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("minimizeButton")
-
-			if contextMenuButtonBosstiary then
-				contextMenuButtonBosstiary:setVisible(true)
-
-				if minimizeButtonBosstiary then
-					contextMenuButtonBosstiary:breakAnchors()
-					contextMenuButtonBosstiary:addAnchor(AnchorTop, minimizeButtonBosstiary:getId(), AnchorTop)
-					contextMenuButtonBosstiary:addAnchor(AnchorRight, minimizeButtonBosstiary:getId(), AnchorLeft)
-					contextMenuButtonBosstiary:setMarginRight(5)
-					contextMenuButtonBosstiary:setMarginTop(0)
-				end
-
-				function contextMenuButtonBosstiary.onClick(widget, mousePos, mouseButton)
-					return Cyclopedia.createTrackerContextMenu("bosstiary", mousePos)
-				end
-			end
-
-			if newWindowButtonBosstiary then
-				newWindowButtonBosstiary:setVisible(true)
-
-				function newWindowButtonBosstiary.onClick(widget, mousePos, mouseButton)
-					toggle("bosstiary")
-
-					return true
-				end
-			end
-
-			function trackerMiniWindowBosstiary.onOpen()
-				Cyclopedia.syncBosstiaryTrackerMainPanelButton()
-				Cyclopedia.applyStoredTracker(1)
-			end
-
-			function trackerMiniWindowBosstiary.onClose()
-				Cyclopedia.syncBosstiaryTrackerMainPanelButton()
-			end
-
-			trackerMiniWindowBosstiary:setup()
-			trackerMiniWindowBosstiary:hide()
-		end
-
-		trackerMiniWindow:setupOnStart()
-		trackerMiniWindowBosstiary:setupOnStart()
-		Cyclopedia.loadTrackerFilters("bestiary")
-		Cyclopedia.loadTrackerFilters("bosstiary")
-
-		local char = g_game.getCharacterName()
-
-		if char and #char > 0 then
-			if currentCharacter and currentCharacter ~= char then
-				Cyclopedia.clearTrackerDataForCharacterChange()
-			end
-
-			currentCharacter = char
-		end
-
-		if Cyclopedia.loadItemPrices then
-			Cyclopedia.loadItemPrices()
-		end
-
-		if Cyclopedia.scheduleItemsIndexPreload then
-			Cyclopedia.scheduleItemsIndexPreload()
-		end
-
-		Cyclopedia.applyStoredTracker(0)
-		Cyclopedia.applyStoredTracker(1)
-		Cyclopedia.syncBestiaryTrackerMainPanelButton()
-		Cyclopedia.syncBosstiaryTrackerMainPanelButton()
-
-		Cyclopedia.BossSlots.UnlockBosses = {}
-
-		Keybind.new("Windows", "Show/hide Bosstiary Tracker", "", "")
-		Keybind.bind("Windows", "Show/hide Bosstiary Tracker", {
+		Keybind.new("Dialogs", entry.action, entry.primary, "")
+		Keybind.bind("Dialogs", entry.action, {
 			{
 				type = KEY_DOWN,
-				callback = Cyclopedia.toggleBosstiaryTracker
+				callback = function()
+					return var_0_30(window)
+				end
 			}
-		})
-		Keybind.new("Windows", "Show/hide Bestiary Tracker", "", "")
-		Keybind.bind("Windows", "Show/hide Bestiary Tracker", {
-			{
-				type = KEY_DOWN,
-				callback = Cyclopedia.toggleBestiaryTracker
-			}
-		})
+		}, modules.game_interface.getRootPanel())
 	end
 end
 
-function controllerCyclopedia:onGameEnd()
+function controllerCyclopedia.onGameStart(unusedArgument)
+	CyclopediaButton = modules.game_mainpanel.addToggleButton("CyclopediaButton", tr("Open Cyclopedia Window"), "/images/options/button_cyclopedia", Cyclopedia.openFromShortcutButton, false, 7)
+	ButtonBossSlot = modules.game_mainpanel.addToggleButton("bossSlot", tr("Open Boss Slots Dialog"), "/images/options/button_boss_slot", function()
+		toggle("bossSlot")
+	end, false, 20)
+
+	CyclopediaButton:setOn(false)
+
+	ButtonBestiary = modules.game_mainpanel.addToggleButton("bosstiary", tr("Open Bosstiary Dialog"), "/images/options/button_bosstiary", Cyclopedia.openBosstiaryFromShortcutButton, false, 17)
+
+	ensureCyclopediaShortcutHighlightWidget()
+	ensureBosstiaryShortcutHighlightWidget()
+
+	contentContainer = controllerCyclopedia.ui:recursiveGetChildById("contentContainer")
+	buttonSelection = controllerCyclopedia.ui:recursiveGetChildById("menus")
+	items = buttonSelection:recursiveGetChildById("items")
+	bestiary = buttonSelection:recursiveGetChildById("bestiary")
+	charms = buttonSelection:recursiveGetChildById("charms")
+	map = buttonSelection:recursiveGetChildById("map")
+	houses = buttonSelection:recursiveGetChildById("houses")
+	character = buttonSelection:recursiveGetChildById("character")
+	bosstiary = buttonSelection:recursiveGetChildById("bosstiary")
+	bossSlot = buttonSelection:recursiveGetChildById("bossSlot")
+	magicalArchives = buttonSelection:recursiveGetChildById("magicalArchives")
+	windowTypes = {
+		items = {
+			obj = items,
+			func = showItems
+		},
+		bestiary = {
+			obj = bestiary,
+			func = showBestiary
+		},
+		charms = {
+			obj = charms,
+			func = showCharms
+		},
+		map = {
+			obj = map,
+			func = showMap
+		},
+		houses = {
+			obj = houses,
+			func = showHouse
+		},
+		character = {
+			obj = character,
+			func = showCharacter
+		},
+		bosstiary = {
+			obj = bosstiary,
+			func = showBosstiary
+		},
+		bossSlot = {
+			obj = bossSlot,
+			func = showBossSlot
+		},
+		magicalArchives = {
+			obj = magicalArchives,
+			func = showMagicalArchives
+		}
+	}
+
+	Cyclopedia.ensureStylesLoaded()
+	controllerCyclopedia:registerEvents(g_game, {
+		onBosstiaryEntryChanged = Cyclopedia.onBosstiaryEntryChanged,
+		onClientEvent = Cyclopedia.onClientEvent,
+		onParseSendBosstiary = Cyclopedia.LoadBosstiaryCreatures,
+		onParseBosstiarySlots = Cyclopedia.loadBossSlots,
+		onParseCyclopediaCharacterGeneralStats = Cyclopedia.loadCharacterGeneralStats,
+		onParseCyclopediaCharacterCombatStats = Cyclopedia.loadCharacterCombatStats,
+		onParseCyclopediaCharacterBadges = Cyclopedia.loadCharacterBadges,
+		onCyclopediaCharacterRecentDeaths = Cyclopedia.loadCharacterRecentDeaths,
+		onCyclopediaCharacterRecentKills = Cyclopedia.loadCharacterRecentKills,
+		onUpdateCyclopediaCharacterItemSummary = Cyclopedia.loadCharacterItems,
+		onParseCyclopediaCharacterAppearances = Cyclopedia.loadCharacterAppearances,
+		onParseCyclopediaStoreSummary = Cyclopedia.onParseCyclopediaStoreSummary,
+		onParseCyclopediaCharacterAchievements = Cyclopedia.onParseCyclopediaCharacterAchievements,
+		onParseCyclopediaCharacterInspection = Cyclopedia.loadCharacterInspection,
+		onOtcToggle = function(arg_37_0)
+			if OtcOpCode and arg_37_0 == OtcOpCode.OVERLORD_ACTIVE then
+				Cyclopedia.refreshOverlordTiers()
+			end
+		end,
+		onParseCyclopediaCharacterTitles = Cyclopedia.loadCharacterTitles,
+		onPreyActive = Cyclopedia.refreshCharacterPreyIfVisible,
+		onPreyInactive = Cyclopedia.refreshCharacterPreyIfVisible,
+		onPreyTimeLeft = Cyclopedia.refreshCharacterPreyIfVisible,
+		onCyclopediaCharacterOffenceStats = Cyclopedia.onCyclopediaCharacterOffenceStats,
+		onCyclopediaCharacterDefenceStats = Cyclopedia.onCyclopediaCharacterDefenceStats,
+		onCyclopediaCharacterMiscStats = Cyclopedia.onCyclopediaCharacterMiscStats,
+		onResourceBalance = Cyclopedia.onResourceBalance,
+		onCyclopediaHouseList = Cyclopedia.onCyclopediaHouseList,
+		onCyclopediaHousesInfo = Cyclopedia.onCyclopediaHousesInfo,
+		onCyclopediaHouseActionResult = Cyclopedia.onCyclopediaHouseActionResult,
+		onUpdateBestiaryCharmsData = Cyclopedia.loadCharms,
+		onParseItemDetail = function(itemId, descriptions)
+			if Cyclopedia.handleCharacterItemDetail(itemId, descriptions) then
+				return
+			end
+
+			Cyclopedia.loadItemDetail(itemId, descriptions)
+		end
+	})
+
+	if Cyclopedia.ensureBestiaryCategoriesRequested then
+		Cyclopedia.ensureBestiaryCategoriesRequested()
+	end
+
+	if not trackerButton then
+		trackerButton = modules.game_mainpanel.addToggleButton("trackerButton", tr("Open Bestiary Tracker Window"), "/images/options/button_bestiary_tracker", Cyclopedia.toggleBestiaryTracker, false, 17)
+	end
+
+	trackerButton:setOn(false)
+
+	if not trackerMiniWindow then
+		trackerMiniWindow = g_ui.createWidget("BestiaryTracker", modules.game_interface.getRightPanel())
+
+		trackerMiniWindow:setId("BestiaryTrackerWindow")
+
+		local titleWidget = trackerMiniWindow:getChildById("miniwindowTitle")
+
+		if titleWidget then
+			local title = tr("Bestiary Tracker")
+
+			if title:len() > 12 then
+				title = title:sub(1, 12) .. "..."
+			end
+
+			titleWidget:setText(title)
+		end
+
+		local toggleFilterButton = trackerMiniWindow:recursiveGetChildById("toggleFilterButton")
+
+		if toggleFilterButton then
+			toggleFilterButton:setVisible(false)
+			toggleFilterButton:setOn(false)
+		end
+
+		local contextMenuButton = trackerMiniWindow:recursiveGetChildById("contextMenuButton")
+		local newWindowButton = trackerMiniWindow:recursiveGetChildById("newWindowButton")
+		local minimizeButton = trackerMiniWindow:recursiveGetChildById("minimizeButton")
+
+		if contextMenuButton then
+			contextMenuButton:setVisible(true)
+
+			if minimizeButton then
+				contextMenuButton:breakAnchors()
+				contextMenuButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
+				contextMenuButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
+				contextMenuButton:setMarginRight(5)
+				contextMenuButton:setMarginTop(0)
+			end
+
+			function contextMenuButton.onClick(widget, mousePos, mouseButton)
+				return Cyclopedia.createTrackerContextMenu("bestiary", mousePos)
+			end
+		end
+
+		if newWindowButton then
+			newWindowButton:setVisible(true)
+
+			function newWindowButton.onClick(widget, mousePos, mouseButton)
+				toggle("bestiary")
+
+				return true
+			end
+		end
+
+		function trackerMiniWindow.onOpen()
+			Cyclopedia.syncBestiaryTrackerMainPanelButton()
+			Cyclopedia.applyStoredTracker(0)
+		end
+
+		function trackerMiniWindow.onClose()
+			Cyclopedia.syncBestiaryTrackerMainPanelButton()
+		end
+
+		trackerMiniWindow:setup()
+		trackerMiniWindow:hide()
+	end
+
+	if not trackerButtonBosstiary then
+		trackerButtonBosstiary = modules.game_mainpanel.addToggleButton("bosstiarytrackerButton", tr("Open Bosstiary Tracker Window"), "/images/options/button_bosstiary_tracker", Cyclopedia.toggleBosstiaryTracker, false, 17)
+	end
+
+	trackerButtonBosstiary:setOn(false)
+
+	if not trackerMiniWindowBosstiary then
+		trackerMiniWindowBosstiary = g_ui.createWidget("BestiaryTracker", modules.game_interface.getRightPanel())
+
+		trackerMiniWindowBosstiary:setId("BosstiaryTrackerWindow")
+
+		local titleWidgetBosstiary = trackerMiniWindowBosstiary:getChildById("miniwindowTitle")
+
+		if titleWidgetBosstiary then
+			local title = tr("Bosstiary Tracker")
+
+			if title:len() > 12 then
+				title = title:sub(1, 12) .. "..."
+			end
+
+			titleWidgetBosstiary:setText(title)
+			titleWidgetBosstiary:setTextOffset("0 -1")
+			titleWidgetBosstiary:setColor("#909090")
+		end
+
+		local iconWidgetBosstiary = trackerMiniWindowBosstiary:getChildById("miniwindowIcon")
+
+		if iconWidgetBosstiary then
+			iconWidgetBosstiary:setImageSource("/images/icons/icon-bosstiarytracker-widget")
+		end
+
+		local toggleFilterButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("toggleFilterButton")
+
+		if toggleFilterButtonBosstiary then
+			toggleFilterButtonBosstiary:setVisible(false)
+			toggleFilterButtonBosstiary:setOn(false)
+		end
+
+		local contextMenuButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("contextMenuButton")
+		local newWindowButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("newWindowButton")
+		local minimizeButtonBosstiary = trackerMiniWindowBosstiary:recursiveGetChildById("minimizeButton")
+
+		if contextMenuButtonBosstiary then
+			contextMenuButtonBosstiary:setVisible(true)
+
+			if minimizeButtonBosstiary then
+				contextMenuButtonBosstiary:breakAnchors()
+				contextMenuButtonBosstiary:addAnchor(AnchorTop, minimizeButtonBosstiary:getId(), AnchorTop)
+				contextMenuButtonBosstiary:addAnchor(AnchorRight, minimizeButtonBosstiary:getId(), AnchorLeft)
+				contextMenuButtonBosstiary:setMarginRight(5)
+				contextMenuButtonBosstiary:setMarginTop(0)
+			end
+
+			function contextMenuButtonBosstiary.onClick(widget, mousePos, mouseButton)
+				return Cyclopedia.createTrackerContextMenu("bosstiary", mousePos)
+			end
+		end
+
+		if newWindowButtonBosstiary then
+			newWindowButtonBosstiary:setVisible(true)
+
+			function newWindowButtonBosstiary.onClick(widget, mousePos, mouseButton)
+				toggle("bosstiary")
+
+				return true
+			end
+		end
+
+		function trackerMiniWindowBosstiary.onOpen()
+			Cyclopedia.syncBosstiaryTrackerMainPanelButton()
+			Cyclopedia.applyStoredTracker(1)
+			Cyclopedia.startBosstiaryTrackerCooldownTick()
+		end
+
+		function trackerMiniWindowBosstiary.onClose()
+			Cyclopedia.syncBosstiaryTrackerMainPanelButton()
+			Cyclopedia.stopBosstiaryTrackerCooldownTick()
+		end
+
+		trackerMiniWindowBosstiary:setup()
+		trackerMiniWindowBosstiary:hide()
+	end
+
+	trackerMiniWindow:setupOnStart()
+	trackerMiniWindowBosstiary:setupOnStart()
+	Cyclopedia.loadTrackerFilters("bestiary")
+	Cyclopedia.loadTrackerFilters("bosstiary")
+
+	local char = g_game.getCharacterName()
+
+	if char and #char > 0 then
+		if currentCharacter and currentCharacter ~= char then
+			Cyclopedia.clearTrackerDataForCharacterChange()
+		end
+
+		currentCharacter = char
+	end
+
+	if Cyclopedia.loadItemPrices then
+		Cyclopedia.loadItemPrices()
+	end
+
+	if Cyclopedia.scheduleItemsIndexPreload then
+		Cyclopedia.scheduleItemsIndexPreload()
+	end
+
+	Cyclopedia.applyStoredTracker(0)
+	Cyclopedia.applyStoredTracker(1)
+	Cyclopedia.syncBestiaryTrackerMainPanelButton()
+	Cyclopedia.syncBosstiaryTrackerMainPanelButton()
+
+	Cyclopedia.BossSlots.UnlockBosses = {}
+
+	Keybind.new("Windows", "Show/hide bosstiary tracker", "", "")
+	Keybind.bind("Windows", "Show/hide bosstiary tracker", {
+		{
+			type = KEY_DOWN,
+			callback = Cyclopedia.toggleBosstiaryTracker
+		}
+	})
+	Keybind.new("Windows", "Show/hide bestiary tracker", "", "")
+	Keybind.bind("Windows", "Show/hide bestiary tracker", {
+		{
+			type = KEY_DOWN,
+			callback = Cyclopedia.toggleBestiaryTracker
+		}
+	})
+end
+
+function controllerCyclopedia.onGameEnd(unusedArgument)
 	if trackerMiniWindow and trackerMiniWindow.save then
 		trackerMiniWindow:saveSelfIndex()
 
@@ -1020,6 +1109,12 @@ function controllerCyclopedia:onGameEnd()
 
 	Cyclopedia.storedTrackerData = {}
 	Cyclopedia.storedBosstiaryTrackerData = {}
+	Cyclopedia.bosstiaryCooldownByRace = {}
+
+	if Cyclopedia.stopBosstiaryTrackerCooldownTick then
+		Cyclopedia.stopBosstiaryTrackerCooldownTick()
+	end
+
 	Cyclopedia.ItemPrices = nil
 
 	if Cyclopedia.invalidateItemsIndex then
@@ -1030,11 +1125,15 @@ function controllerCyclopedia:onGameEnd()
 		Cyclopedia.clearBestiaryCachedData()
 	end
 
-	Keybind.delete("Windows", "Show/hide Bosstiary Tracker")
-	Keybind.delete("Windows", "Show/hide Bestiary Tracker")
+	Keybind.delete("Windows", "Show/hide bosstiary tracker")
+	Keybind.delete("Windows", "Show/hide bestiary tracker")
 end
 
-function controllerCyclopedia:onTerminate()
+function controllerCyclopedia.onTerminate(unusedArgument)
+	for unusedValue, entry in ipairs(var_0_29) do
+		Keybind.delete("Dialogs", entry.action)
+	end
+
 	disconnect(g_things, {
 		onLoadDat = Cyclopedia.invalidateItemsIndex
 	})

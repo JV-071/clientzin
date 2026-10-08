@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_exaltationforge/menu/conversion/conversion.lua
-
-ACTION_FUSION_TYPE = 0
+﻿ACTION_FUSION_TYPE = 0
 ACTION_TRANSFER_TYPE = 1
 ACTION_DUST_TO_SILVER = 2
 ACTION_SILVER_TO_CORE = 3
@@ -17,8 +15,8 @@ local SILVER_REQUIRED = 50
 local SILVER_REWARD = 1
 local LIMIT_BASE_COST = 25
 local DESCRIPTIONS = {
-	notEnoughSliverForCore = "You do not have enough slivers to generate an exalted core.",
 	notEnoughDustForLimit = "You do not have enough dust to raise the limit.",
+	notEnoughSliverForCore = "You do not have enough slivers to generate an exalted core.",
 	notEnoughDustForSliver = "You do not have enough dust to generate a sliver.",
 	convertSliver = "Convert slivers into exalted cores. Exalted cores are useful for fusions and transfers.",
 	convertDust = "Convert your dust into slivers. Slivers are used to create exalted cores which are useful for fusions and transfers."
@@ -36,13 +34,13 @@ local function setItemWidgetAnimate(itemWidget, animate)
 	end
 end
 
-function Conversion:setDescription(text)
+function Conversion.setDescription(self, text)
 	if self.descriptionLabel then
 		self.descriptionLabel:setText(text or "")
 	end
 end
 
-function Conversion:resetDescription()
+function Conversion.resetDescription(self)
 	self:setDescription("")
 end
 
@@ -162,7 +160,7 @@ local function setupForgeAreaClearHover()
 	end
 
 	for _, widgetId in ipairs({
-		"headerPainel",
+		"menus",
 		"goldBalancePanel",
 		"dustBalancePanel",
 		"sliverBalancePanel",
@@ -174,11 +172,11 @@ local function setupForgeAreaClearHover()
 		"ConversionButton",
 		"HistoryButton"
 	}) do
-		clearOnEnter(forgeWindow:getChildById(widgetId))
+		clearOnEnter(forgeWindow:recursiveGetChildById(widgetId))
 	end
 end
 
-function Conversion:describeConvertDustCost()
+function Conversion.describeConvertDustCost(self)
 	if Forge:getResourceBalance("dust") < DUST_REQUIRED then
 		return DESCRIPTIONS.notEnoughDustForSliver
 	end
@@ -186,7 +184,7 @@ function Conversion:describeConvertDustCost()
 	return string.format("Click here to convert %d dust into %d slivers.", DUST_REQUIRED, DUST_REWARD)
 end
 
-function Conversion:describeConvertSliverCost()
+function Conversion.describeConvertSliverCost(self)
 	if Forge:getResourceBalance("sliver") < SILVER_REQUIRED then
 		return DESCRIPTIONS.notEnoughSliverForCore
 	end
@@ -194,13 +192,13 @@ function Conversion:describeConvertSliverCost()
 	return string.format("Click here to convert %d slivers into one exalted core.", SILVER_REQUIRED)
 end
 
-function Conversion:describeIncreaseDustLimit()
+function Conversion.describeIncreaseDustLimit(self)
 	local dustMax = 100 + Forge:getDustLevel() * 20
 
 	return string.format("Use dust to increase permanently the amount of the dust you can gather (currently %d).", dustMax)
 end
 
-function Conversion:describeIncreaseDustLimitCost()
+function Conversion.describeIncreaseDustLimitCost(self)
 	local currentLevel = Forge:getDustLevel()
 	local cost = LIMIT_BASE_COST + currentLevel
 	local currentLimit = 100 + currentLevel * 20
@@ -213,32 +211,28 @@ function Conversion:describeIncreaseDustLimitCost()
 	return string.format("Click here to spend %d dust to increase your limit from %d to %d.", cost, currentLimit, newLimit)
 end
 
-function Conversion:setupHovers()
+function Conversion.setupHovers(self)
 	setupForgeAreaClearHover()
 end
 
-function Conversion:createButton()
-	local buttonPanel = g_ui.createWidget("ForgeButton", Forge.mainWindow)
+function Conversion.createButton(self)
+	local conversionButtonPanel = Forge.createTabPanel("ForgeButton", "ConversionButton")
 
-	buttonPanel:addAnchor(AnchorTop, "FusionButton", AnchorTop)
-	buttonPanel:addAnchor(AnchorLeft, "TransferButton", AnchorRight)
-	buttonPanel:setId("ConversionButton")
+	conversionButtonPanel:addAnchor(AnchorTop, "parent", AnchorTop)
+	conversionButtonPanel:addAnchor(AnchorLeft, "TransferButton", AnchorRight)
 
-	self.buttonPanel = buttonPanel
-	self.mainButton = buttonPanel:getChildById("button")
+	self.buttonPanel = conversionButtonPanel
+	self.mainButton = conversionButtonPanel:getChildById("button")
 
 	self.mainButton:setText("Conversion")
-	Forge.setupTabButtonIcon(buttonPanel, "/images/icons_big/icon-conversion", 6, 3)
+	Forge.setupTabButtonIcon(conversionButtonPanel, "/images/icons_big/icon-conversion", 6, 3)
 
 	if not self.mainWindow then
 		g_ui.importStyle("Conversion")
 
 		self.mainWindow = g_ui.createWidget("ConversionWindow", Forge.mainWindow)
 
-		self.mainWindow:addAnchor(AnchorTop, "TransferButton", AnchorBottom)
-		self.mainWindow:addAnchor(AnchorLeft, "FusionButton", AnchorLeft)
-		self.mainWindow:addAnchor(AnchorRight, "parent", AnchorRight)
-		self.mainWindow:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		Forge.anchorContentPanel(self.mainWindow)
 	end
 
 	self:init()
@@ -248,7 +242,7 @@ function Conversion:createButton()
 	end
 end
 
-function Conversion:updateLimitCost(currentLevel, percent)
+function Conversion.updateLimitCost(self, currentLevel, percent)
 	currentLevel = math.max(0, currentLevel or 0)
 
 	local value = LIMIT_BASE_COST + currentLevel
@@ -275,7 +269,7 @@ function Conversion:updateLimitCost(currentLevel, percent)
 	end
 end
 
-function Conversion:updateConversion(dustRequired, dustReward, silverRequired, silverReward, currentLevel, percent)
+function Conversion.updateConversion(self, dustRequired, dustReward, silverRequired, silverReward, currentLevel, percent)
 	local dustRequiredWidget = self.widgetStorage.dustRequired
 	local dustRewardWidget = self.widgetStorage.dustReward
 	local dustButtonProcced = self.widgetStorage.dustButtonProcced
@@ -283,9 +277,7 @@ function Conversion:updateConversion(dustRequired, dustReward, silverRequired, s
 	dustRequiredWidget:setText(dustRequired)
 	dustRewardWidget:setText(string.format("Generate %d", dustReward))
 
-	local dustEnough = dustRequired > 0 and dustReward > 0 and dustRequired <= Forge:getResourceBalance("dust")
-
-	if not dustEnough then
+	if not (dustRequired > 0 and dustReward > 0 and dustRequired <= Forge:getResourceBalance("dust")) then
 		dustRequiredWidget:setColor(Forge.colors.missing)
 		dustButtonProcced:setEnabled(false)
 		self.widgetStorage.chainTransparent1:setVisible(true)
@@ -304,9 +296,7 @@ function Conversion:updateConversion(dustRequired, dustReward, silverRequired, s
 	silverRequiredWidget:setText(silverRequired)
 	sliverRewardWidget:setText(string.format("Generate %d", silverReward))
 
-	local silverEnough = silverRequired > 0 and silverReward > 0 and silverRequired <= Forge:getResourceBalance("sliver")
-
-	if not silverEnough then
+	if not (silverRequired > 0 and silverReward > 0 and silverRequired <= Forge:getResourceBalance("sliver")) then
 		silverRequiredWidget:setColor(Forge.colors.missing)
 		silverButtonProcced:setEnabled(false)
 		self.widgetStorage.chainTransparent2:setVisible(true)
@@ -321,19 +311,17 @@ function Conversion:updateConversion(dustRequired, dustReward, silverRequired, s
 	self:updateLimitCost(currentLevel, percent)
 end
 
-function Conversion:init()
+function Conversion.init(self)
 	self.widgetStorage = {}
 
-	local mainWindow = self.mainWindow
-	local tooltipPanel = mainWindow:getChildById("firstTooltip")
+	local tooltipPanel = self.mainWindow
 
-	self.descriptionLabel = tooltipPanel:getChildById("description")
+	self.descriptionLabel = tooltipPanel:getChildById("firstTooltip"):getChildById("description")
 
-	local convert_dustPanel = mainWindow:getChildById("convertDustPanel")
+	local convert_dustPanel = tooltipPanel:getChildById("convertDustPanel")
 	local dust_forgeItemWidget = convert_dustPanel:getChildById("forgeItem")
-	local dust_forgeItem = dust_forgeItemWidget:getChildById("item")
 
-	dust_forgeItem:setItemId(37160)
+	dust_forgeItemWidget:getChildById("item"):setItemId(37160)
 
 	local dust_countPanel = dust_forgeItemWidget:getChildById("countPanel")
 	local dust_countValue = dust_countPanel:getChildById("value")
@@ -342,11 +330,10 @@ function Conversion:init()
 	dust_countIcon:setImageSource("/images/icons/icon-currency-dust")
 	dust_countIcon:setSize(tosize("9 6"))
 
-	local dust_rewardAmountWidget = convert_dustPanel:getChildById("forgeTextWithIcon")
-	local dust_rewardAmountValue = dust_rewardAmountWidget:getChildById("value")
+	local forgeTextWithIcon = convert_dustPanel:getChildById("forgeTextWithIcon"):getChildById("value")
 
 	self.widgetStorage.dustRequired = dust_countValue
-	self.widgetStorage.dustReward = dust_rewardAmountValue
+	self.widgetStorage.dustReward = forgeTextWithIcon
 
 	local dust_buttonProcced = convert_dustPanel:getChildById("convertDustProcced")
 	local dust_rewardWidget = dust_buttonProcced:getChildById("rewardItem")
@@ -363,7 +350,7 @@ function Conversion:init()
 		g_game.sendForgeAction(ACTION_DUST_TO_SILVER, false, nil, nil, nil)
 	end
 
-	local convert_silverPanel = mainWindow:getChildById("convertSilverPanel")
+	local convert_silverPanel = tooltipPanel:getChildById("convertSilverPanel")
 	local silver_forgeItemWidget = convert_silverPanel:getChildById("forgeItem")
 	local silver_forgeItem = silver_forgeItemWidget:getChildById("item")
 
@@ -396,11 +383,10 @@ function Conversion:init()
 		g_game.sendForgeAction(ACTION_SILVER_TO_CORE, false, nil, nil, nil)
 	end
 
-	local dustLimitPanel = mainWindow:getChildById("dustLimitPanel")
+	local dustLimitPanel = tooltipPanel:getChildById("dustLimitPanel")
 	local dustLimit_forgeItemWidget = dustLimitPanel:getChildById("forgeItem")
-	local dustLimit_forgeItem = dustLimit_forgeItemWidget:getChildById("item")
 
-	dustLimit_forgeItem:setItemId(37160)
+	dustLimit_forgeItemWidget:getChildById("item"):setItemId(37160)
 
 	local dustLimit_countPanel = dustLimit_forgeItemWidget:getChildById("countPanel")
 	local dustLimit_countIcon = dustLimit_countPanel:getChildById("icon")
@@ -445,23 +431,16 @@ function Conversion:init()
 	self:setupHovers()
 end
 
-function Conversion:showWindow()
+function Conversion.showWindow(self)
 	if Forge.currentPanel then
 		Forge.currentPanel:setVisible(false)
 	end
 
-	if Forge.currentButton then
-		Forge.currentButton:setEnabled(true)
-		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
-	end
-
 	Forge.currentPanel = self.mainWindow
-	Forge.currentButton = self.mainButton
 
+	Forge.setActiveTabButton(self.mainButton)
 	self.mainWindow:setVisible(true)
 	self.mainWindow:raise()
-	self.mainButton:setEnabled(false)
-	Forge.onTabButtonEnabled(nil, self.buttonPanel, false)
 	Forge.firstTooltip:setVisible(false)
 	self:resetDescription()
 
@@ -484,9 +463,8 @@ function Conversion:showWindow()
 	end
 end
 
-function Conversion:parseResourcesChange(data)
-	local config = data.config
-	local dustPercentUpgrade = config.dustPercentUpgrade
+function Conversion.parseResourcesChange(self, data)
+	local dustPercentUpgrade = data.config.dustPercentUpgrade
 	local currentLevel = Forge:getDustLevel()
 
 	self:updateConversion(DUST_REQUIRED, DUST_REWARD, SILVER_REQUIRED, SILVER_REWARD, currentLevel, dustPercentUpgrade)

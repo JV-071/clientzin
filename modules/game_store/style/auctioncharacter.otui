@@ -67,9 +67,7 @@ AuctionCharacterItemBox < UIItem
     border-color: #aaaaaa
 
 RowAuctionCharacterArgumentEntry < UIWidget
-  margin-top: 1
-  $!first:
-    margin-top: 0
+  margin-top: 0
   margin-left: 2
   margin-right: -3
   height: 16
@@ -114,6 +112,7 @@ RowAuctionCharacterArgument < UIWidget
     anchors.left: parent.left
     anchors.right: parent.right
     margin-right: 1
+    margin-top: 4
     height: 16
     background-color: #363636
     text: "Argument Title"
@@ -126,7 +125,7 @@ RowAuctionCharacterArgument < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    margin-top: 7
+    margin-top: 3
     margin-right: 1
   
   Panel
@@ -134,13 +133,13 @@ RowAuctionCharacterArgument < UIWidget
     anchors.top: prev.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    margin-top: 4
+    margin-top: 5
     margin-left: -3
     margin-right: 1
   
     layout:
       type: grid
-      cell-size: 718 17
+      cell-size: 718 16
       spacing: 0 0
       flow: true
       auto-spacing: false
@@ -659,14 +658,8 @@ PanelSelectArgument < QtPanel
     size: 734 232
     padding: 1
     padding-top: 4
-    border-width-top: 1
-    border-width-left: 1
-    border-width-right: 1
-    border-width-bottom: 1
-    border-color-bottom: #808080
-    border-color-right: #808080
-    border-color-left: #131313
-    border-color-top: #131313
+    image-source: /images/ui/1pixel-down-frame
+    image-border: 3
     background-color: #363636
 
     VerticalQtScrollBar
@@ -689,7 +682,7 @@ PanelSelectArgument < QtPanel
 
       layout:
         type: verticalBox
-        spacing: 2
+        spacing: 1
 
 PanelConfirmation < QtPanel
   anchors.top: headerWindow.bottom

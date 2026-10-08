@@ -1,29 +1,18 @@
-﻿-- chunkname: @/game_wheel/classes/gematelier.lua
-
-GemAtelier = {}
+﻿GemAtelier = {}
 GemAtelier.__index = GemAtelier
 
 local lockedOnly = false
 local sortQuality = 1
 local sortAffinity = 1
 local currentPage = 1
-local destroyGemWindow, lastSelectedGem, lastSelectedVessel
+local destroyGemWindow
+local lastSelectedGem
+local var_0_6
 local currentGemList = {}
 local totalGemList = {}
 local currentSearchText = ""
 local cachedBasicMods = {}
 local cachedSupremeMods = {}
-
-GemRevealPrice = {
-	[0] = 125000,
-	1000000,
-	6000000
-}
-GemSwitchPrice = {
-	[0] = 125000,
-	250000,
-	1000000
-}
 
 function GemAtelier.resetFields()
 	lockedOnly = false
@@ -41,22 +30,13 @@ function GemAtelier.resetFields()
 	gemAtelierWindow:recursiveGetChildById("qualitiesBox"):setCurrentIndex(1, true)
 	gemAtelierWindow:recursiveGetChildById("lockedOnly"):setChecked(false, true)
 
-	if lastSelectedVessel then
-		lastSelectedVessel:setVisible(false)
+	if var_0_6 then
+		var_0_6:setVisible(false)
 
-		lastSelectedVessel = nil
+		var_0_6 = nil
 	end
 
-	cachedBasicMods = {}
-	cachedSupremeMods = {}
-
-	for _, data in pairs(Workshop.getFragmentList()) do
-		if data.supreme then
-			cachedSupremeMods[data.modID] = data
-		else
-			cachedBasicMods[data.modID] = data
-		end
-	end
+	cachedBasicMods, cachedSupremeMods = ModCatalog.buildModCache()
 end
 
 function GemAtelier.redirectToGem(gemData)
@@ -87,11 +67,11 @@ function GemAtelier.redirectToGem(gemData)
 
 		highLight:setVisible(true)
 
-		if lastSelectedVessel then
-			lastSelectedVessel:setVisible(false)
+		if var_0_6 then
+			var_0_6:setVisible(false)
 		end
 
-		lastSelectedVessel = highLight
+		var_0_6 = highLight
 	end
 
 	gemList:destroyChildren()
@@ -108,7 +88,8 @@ function GemAtelier.redirectToGem(gemData)
 		else
 			if gemData.gemID == data.gemID then
 				currentPage = math.ceil(index / 15)
-				foundIndex = math.max(1, index - 15)
+
+				local foundIndex = math.max(1, index - 15)
 			end
 
 			index = index + 1
@@ -130,9 +111,8 @@ function GemAtelier.redirectToGem(gemData)
 			-- block empty
 		else
 			local widget = g_ui.createWidget("GemPanel", gemList)
-			local success = GemAtelier.setupGemWidget(widget, data)
 
-			if success then
+			if GemAtelier.setupGemWidget(widget, data) then
 				currentGemList[#currentGemList + 1] = data
 
 				if widget then
@@ -153,7 +133,7 @@ function GemAtelier.redirectToGem(gemData)
 	GemAtelier.showGemRevelation()
 	GemAtelier.configurePages()
 
-	function gemList:onChildFocusChange(selected)
+	function gemList.onChildFocusChange(self, selected)
 		GemAtelier.onSelectGem(selected, true)
 	end
 
@@ -181,7 +161,7 @@ function GemAtelier.showGems(selectFirst, lastIndex)
 
 	for i, data in pairs(WheelOfDestiny.atelierGems) do
 		if not data.gemID or data.gemID < 0 then
-			g_logger.debug(string.format("[GemAtelier] Skipping gem with invalid ID: %s", tostring(data.gemID)))
+			-- block empty
 		else
 			local isLocked = data.locked == 1 or data.locked == true
 
@@ -203,7 +183,7 @@ function GemAtelier.showGems(selectFirst, lastIndex)
 
 	gemList:destroyChildren()
 
-	function gemList:onChildFocusChange(selected)
+	function gemList.onChildFocusChange(self, selected)
 		GemAtelier.onSelectGem(selected, true)
 	end
 
@@ -219,9 +199,8 @@ function GemAtelier.showGems(selectFirst, lastIndex)
 			-- block empty
 		else
 			local widget = g_ui.createWidget("GemPanel", gemList)
-			local success = GemAtelier.setupGemWidget(widget, data)
 
-			if success then
+			if GemAtelier.setupGemWidget(widget, data) then
 				currentGemList[#currentGemList + 1] = data
 
 				if widget then
@@ -265,12 +244,8 @@ function GemAtelier.showGems(selectFirst, lastIndex)
 
 			if targetIndex > 0 then
 				gemList:focusChild(children[targetIndex])
-			else
-				g_logger.debug(string.format("[GemAtelier] gemID %d not found among displayed children.", lastSelectedGem.gemID or -1))
-
-				if #children > 0 then
-					gemList:focusChild(children[1])
-				end
+			elseif #children > 0 then
+				gemList:focusChild(children[1])
 			end
 		elseif #children > 0 then
 			gemList:focusChild(children[1])
@@ -305,44 +280,31 @@ end
 
 function GemAtelier.setupGemWidget(widget, data)
 	if not widget then
-		g_logger.debug("[GemAtelier] widget nil — could not configure gem")
-
 		return false
 	end
 
 	if data and data.gemID and data.gemID >= 0 then
 		widget.gemID = data.gemID
-
-		g_logger.debug(string.format("[GemAtelier] setupGemWidget: set gemID=%d for widget", data.gemID))
 	else
 		widget.gemID = -1
-
-		g_logger.debug(string.format("[GemAtelier] gem without valid gemID — gemID=%s (type=%s)", tostring(data and data.gemID), type(data and data.gemID)))
 
 		return false
 	end
 
 	if not data then
-		g_logger.debug("[GemAtelier] setupGemWidget called with data=nil")
-
 		return false
 	end
 
 	if not data.gemType or not data.gemDomain then
-		g_logger.debug(string.format("[GemAtelier] incomplete gem data: id=%s type=%s domain=%s", tostring(data.gemID), tostring(data.gemType), tostring(data.gemDomain)))
-
 		return false
 	end
 
 	local typeOffset = data.gemType * 32
 	local domainOffset = data.gemDomain * 96
-	local vocationOffset = (WheelOfDestiny.vocationId - 1) * 384
-	local gemOffset = vocationOffset + domainOffset + typeOffset
+	local var_7_2 = (WheelOfDestiny.vocationId - 1) * 384 + domainOffset + typeOffset
 	local tmpData = GemVocations[WheelOfDestiny.vocationId][data.gemType]
 
 	if not tmpData then
-		g_logger.debug(string.format("[GemAtelier] gem id %d not found in GemVocations[%d][%d]", data.gemID or -1, WheelOfDestiny.vocationId or -1, data.gemType or -1))
-
 		return false
 	end
 
@@ -353,8 +315,7 @@ function GemAtelier.setupGemWidget(widget, data)
 	widget.locker.onClick = GemAtelier.onLockGem
 	widget.locker.gemID = data.gemID
 
-	g_logger.debug(string.format("[GemAtelier] Locker configured for gemID=%d | locked=%d | checked=%s | visible=%s", data.gemID or -1, data.locked or -1, tostring(widget.locker:isChecked()), tostring(widget.locker:isVisible())))
-	widget.gemRevelationItem:setImageClip(gemOffset .. " 0 32 32")
+	widget.gemRevelationItem:setImageClip(var_7_2 .. " 0 32 32")
 	widget.gemRevelationItem:setTooltip(tmpData.name:gsub(" %(x 0%)", ""))
 
 	if GemAtelier.isGemEquipped(data.gemID) then
@@ -365,8 +326,6 @@ function GemAtelier.setupGemWidget(widget, data)
 	local gemTypeWidget = widget:recursiveGetChildById("modType" .. data.gemType)
 
 	if not gemTypeWidget then
-		g_logger.debug(string.format("[GemAtelier] gemTypeWidget modType%d not found for gemID=%d", data.gemType, data.gemID))
-
 		return false
 	end
 
@@ -387,12 +346,16 @@ function GemAtelier.setupGemWidget(widget, data)
 		GemAtelier.setGemUpgradeImage(gemTypeWidget.fragmentType2, data.supremeBonus, WheelOfDestiny.supremeModsUpgrade, effectiveBonus)
 	end
 
-	g_logger.debug(string.format("[GemAtelier] GemWidget configured: id=%d type=%d domain=%d locked=%d", data.gemID or -1, data.gemType or -1, data.gemDomain or -1, data.locked or -1))
-
 	return true
 end
 
 function GemAtelier.setupGemSlot(gemSlot, bonus, upgradeData, isSupreme, gemData, gemPosition)
+	if not gemSlot then
+		return
+	end
+
+	gemSlot:setImageSmooth(false)
+
 	if isSupreme then
 		gemSlot:setImageClip(getSupremeModIconClip(bonus))
 	else
@@ -544,23 +507,7 @@ function shortenAfterCooldown(text)
 end
 
 function GemAtelier.getEffectiveLevel(gemData, currentBonusID, supreme, gemSlot)
-	local basicUpgrade = WheelOfDestiny.basicModsUpgrade
-	local supremeUpgrade = WheelOfDestiny.supremeModsUpgrade
-	local upgradeTier = supreme and (supremeUpgrade[currentBonusID] or 0) or basicUpgrade[currentBonusID] or 0
-
-	if gemSlot == 0 then
-		return upgradeTier
-	elseif gemSlot == 1 then
-		local lesserUpgradeTier = basicUpgrade[gemData.lesserBonus] or 0
-
-		return math.min(upgradeTier, lesserUpgradeTier)
-	elseif gemSlot == 2 then
-		local lesserUpgradeTier = basicUpgrade[gemData.lesserBonus] or 0
-		local regularUpgradeTier = basicUpgrade[gemData.regularBonus] or 0
-		local effectiveTier = math.min(lesserUpgradeTier, regularUpgradeTier)
-
-		return math.min(upgradeTier, effectiveTier)
-	end
+	return WheelGemState.getEffectiveLevel(gemData, currentBonusID, supreme, gemSlot)
 end
 
 function GemAtelier.createGemInformation(widget, gemTypeID, supremeMod, tooltip, gemData, gemSlot)
@@ -600,8 +547,7 @@ function GemAtelier.createGemInformation(widget, gemTypeID, supremeMod, tooltip,
 		widget:setTooltip(text)
 	else
 		local originalText = text
-
-		text, shorted = shortenAfterCooldown(text)
+		local text, shorted = shortenAfterCooldown(text)
 
 		widget:setTooltip(shorted and originalText or "")
 		widget:setText(text)
@@ -613,8 +559,6 @@ function GemAtelier.onSelectGem(selected, clicked)
 		return true
 	end
 
-	g_logger.debug(string.format("[GemAtelier] onSelectGem: gemID=%d currentGemList size=%d", selected.gemID, #currentGemList))
-
 	if #currentGemList == 0 then
 		return true
 	end
@@ -622,8 +566,6 @@ function GemAtelier.onSelectGem(selected, clicked)
 	local gemData = GemAtelier.getGemDataById(selected.gemID)
 
 	if not gemData then
-		g_logger.debug(string.format("[GemAtelier] gemData is nil for gemID=%s (currentGemList size=%d)", tostring(selected.gemID), #currentGemList))
-
 		return true
 	end
 
@@ -704,18 +646,14 @@ function GemAtelier.onSelectGem(selected, clicked)
 	local isTheSameGem = false
 
 	for _, id in pairs(WheelOfDestiny.equipedGems or {}) do
-		if type(id) == "number" and id > 0 then
-			local dom = GemAtelier.getGemDomainById(id)
+		if type(id) == "number" and id >= 0 and GemAtelier.getGemDomainById(id) == gemData.gemDomain then
+			alreadyEquipped = true
 
-			if dom == gemData.gemDomain then
-				alreadyEquipped = true
-
-				if id == gemData.gemID then
-					isTheSameGem = true
-				end
-
-				break
+			if id == gemData.gemID then
+				isTheSameGem = true
 			end
+
+			break
 		end
 	end
 
@@ -727,16 +665,14 @@ function GemAtelier.onSelectGem(selected, clicked)
 		panel.clickedContent.removeVessel:setVisible(false)
 	end
 
-	local switchTip, destroyTip = "", ""
+	local switchTip = ""
+	local destroyTip = ""
 	local canInteract = WheelOfDestiny.changeState == 1 and gemData.locked == 0 and not WheelOfDestiny.isPreview
 
 	panel.clickedContent.switch:setOn(canInteract)
 	panel.clickedContent.destroy:setOn(canInteract)
-	g_logger.debug(string.format("[GemAtelier] Buttons updated -> changeState=%d locked=%d canInteract=%s", WheelOfDestiny.changeState or -1, gemData.locked or -1, tostring(canInteract)))
 
-	local gemCount = GemAtelier.getGemCountByDomain(gemData.gemDomain)
-
-	if gemCount < 2 then
+	if GemAtelier.getGemCountByDomain(gemData.gemDomain) < 2 then
 		switchTip = tr("%s%sYou cannot switch the last gem of the domain.", switchTip, #switchTip > 0 and "\n" or "")
 		destroyTip = tr("%s%sYou cannot destroy the last gem of the domain.", destroyTip, #destroyTip > 0 and "\n" or "")
 	end
@@ -772,39 +708,11 @@ function GemAtelier.onSelectGem(selected, clicked)
 end
 
 function GemAtelier.isVesselAvailable(domain, count)
-	local vesselFilled = 0
-	local domainIndex = VesselIndex[domain]
-
-	if not domainIndex then
-		return false
-	end
-
-	for _, index in pairs(domainIndex) do
-		local bonus = WheelBonus[index]
-		local currentPoints = WheelOfDestiny.pointInvested[index + 1]
-
-		if currentPoints >= bonus.maxPoints then
-			vesselFilled = vesselFilled + 1
-		end
-	end
-
-	return count <= vesselFilled
+	return WheelGemState.isVesselAvailable(domain, count)
 end
 
 function GemAtelier.getFilledVesselCount(domain)
-	local vesselFilled = 0
-	local domainIndex = VesselIndex[domain]
-
-	for _, index in pairs(domainIndex) do
-		local bonus = WheelBonus[index]
-		local currentPoints = WheelOfDestiny.pointInvested[index + 1]
-
-		if bonus and currentPoints and currentPoints >= bonus.maxPoints then
-			vesselFilled = vesselFilled + 1
-		end
-	end
-
-	return vesselFilled
+	return WheelGemState.getFilledVesselCount(domain)
 end
 
 function GemAtelier.setupModAvailable(widget, gemType, vesselCount, gemData)
@@ -901,155 +809,54 @@ function GemAtelier.manageVessel(remove)
 	end
 
 	if not gemData then
-		g_logger.debug(string.format("[GemAtelier] gemData not found for gemID=%s", tostring(lastSelectedGem.gemID)))
-
 		return true
 	end
 
-	local equipedList = {
-		-1,
-		-1,
-		-1,
-		-1
-	}
-
-	for _, id in pairs(WheelOfDestiny.equipedGems or {}) do
-		if type(id) == "number" and id >= 0 then
-			local domain = GemAtelier.getGemDomainById(id)
-
-			if domain ~= -1 and domain ~= gemData.gemDomain then
-				equipedList[domain + 1] = id
-			end
-		end
-	end
-
-	if not remove then
-		equipedList[gemData.gemDomain + 1] = gemData.gemID
-	else
-		equipedList[gemData.gemDomain + 1] = -1
-	end
-
-	WheelOfDestiny.equipedGems = equipedList
-
-	if WheelOfDestiny.currentPreset then
-		WheelOfDestiny.currentPreset.equipedGems = equipedList
-	end
-
-	g_logger.debug(string.format("[GemAtelier] manageVessel -> %s gemID=%d domain=%d | equipedGems={%s}", remove and "remove" or "equip", gemData.gemID, gemData.gemDomain, table.concat(WheelOfDestiny.equipedGems, ", ")))
+	WheelGemState.equipGemInVessel(gemData, remove)
+	WheelOfDestiny.refreshGemState()
 
 	if lastSelectedGem then
-		g_logger.debug("[GemAtelier] Updating side panel after equip/remove.")
 		GemAtelier.setupVesselPanel()
 		GemAtelier.onSelectGem(lastSelectedGem, true)
-	else
-		g_logger.debug("[GemAtelier] No gem selected after manageVessel, could not update panel.")
 	end
 
 	GemAtelier.showGems(false, lastSelectedGem.gemIndex or 1)
 end
 
 function GemAtelier.isGemEquipped(gemID)
-	if not gemID or gemID < 0 then
-		return false
-	end
-
-	for _, id in pairs(WheelOfDestiny.equipedGems or {}) do
-		if type(id) == "number" and id == gemID then
-			return true
-		end
-	end
-
-	return false
+	return WheelGemState.isGemEquipped(gemID)
 end
 
 function GemAtelier.getGemDomainById(id)
-	if type(id) ~= "number" or id < 0 then
-		return -1
-	end
-
-	for _, data in pairs(WheelOfDestiny.atelierGems) do
-		if data.gemID == id then
-			return data.gemDomain
-		end
-	end
-
-	return -1
+	return WheelGemState.getGemDomainById(id)
 end
 
 function GemAtelier.getGemCountByDomain(domain)
-	local count = 0
-
-	for _, data in pairs(WheelOfDestiny.atelierGems) do
-		if data.gemDomain == domain then
-			count = count + 1
-		end
-	end
-
-	return count
+	return WheelGemState.getGemCountByDomain(domain)
 end
 
 function GemAtelier.getGemDataById(id)
-	if type(id) ~= "number" or id < 0 then
-		g_logger.debug(string.format("[GemAtelier] getGemDataById called with invalid id: %s (type=%s)", tostring(id), type(id)))
-
-		return nil
-	end
-
-	for _, data in pairs(WheelOfDestiny.atelierGems) do
-		if data.gemID == id then
-			return data
-		end
-	end
-
-	g_logger.debug(string.format("[GemAtelier] getGemDataById: gemID=%d not found in atelierGems (total gems=%d)", id, #WheelOfDestiny.atelierGems))
-
-	return nil
+	return WheelGemState.getGemDataById(id)
 end
 
 function GemAtelier.getEquipedGem(domain)
-	for _, data in pairs(WheelOfDestiny.atelierGems) do
-		if data.gemDomain == domain and GemAtelier.isGemEquipped(data.gemID) then
-			return data
-		end
-	end
-
-	return nil
+	return WheelGemState.getEquipedGem(domain)
 end
 
-function sendgemAction(actionType, param, pos)
-	if WheelOfDestiny.isPreview then
+function GemAtelier.onLockActionSent(arg_29_0)
+	local var_29_0 = WheelGemState.toggleGemLock(arg_29_0)
+
+	if var_29_0 == nil then
 		return
 	end
 
-	param = param or 0
-	pos = pos or 0
-
-	g_logger.debug(string.format("[GemAtelier] Sending action -> type=%d param=%d pos=%d", actionType, param, pos))
-	g_game.gemAction(actionType, param, pos)
-
-	if actionType == 3 then
-		scheduleEvent(function()
-			local gem = GemAtelier.getGemDataById(param)
-
-			if not gem then
-				g_logger.debug(string.format("[GemAtelier] Failed to toggle lock: gem id=%d not found.", param))
-
-				return
-			end
-
-			gem.locked = gem.locked == 1 and 0 or 1
-
-			g_logger.debug(string.format("[GemAtelier] Toggled local lock of gem id=%d -> %s", param, gem.locked == 1 and "locked" or "unlocked"))
-
-			if lastSelectedGem and lastSelectedGem.locker then
-				lastSelectedGem.locker:setChecked(gem.locked == 1)
-			end
-
-			local lastIndex = lastSelectedGem and lastSelectedGem.gemIndex or 1
-
-			GemAtelier.showGems(false, lastIndex)
-		end, 300)
+	if lastSelectedGem and lastSelectedGem.locker then
+		lastSelectedGem.locker:setChecked(var_29_0 == 1)
 	end
+
+	local var_29_1 = lastSelectedGem and lastSelectedGem.gemIndex or 1
+
+	GemAtelier.showGems(false, var_29_1)
 end
 
 function GemAtelier.onRevealGem(button, gemType)
@@ -1057,7 +864,7 @@ function GemAtelier.onRevealGem(button, gemType)
 		return true
 	end
 
-	sendgemAction(1, gemType)
+	WheelGemActions.send(1, gemType)
 end
 
 function GemAtelier.onSwitchDomain(button)
@@ -1065,13 +872,10 @@ function GemAtelier.onSwitchDomain(button)
 		return true
 	end
 
-	local gemData = GemAtelier.getGemDataById(lastSelectedGem.gemID)
+	local gemDataById = GemAtelier.getGemDataById(lastSelectedGem.gemID)
 
-	if gemData then
-		g_logger.debug(string.format("[GemAtelier] Requesting domain switch for gem id=%d", gemData.gemID))
-		sendgemAction(2, gemData.gemID)
-	else
-		g_logger.debug(string.format("[GemAtelier] onSwitchDomain: gemData not found for gemID=%s", tostring(lastSelectedGem.gemID)))
+	if gemDataById then
+		WheelGemActions.send(2, gemDataById.gemID)
 	end
 end
 
@@ -1080,19 +884,16 @@ function GemAtelier.onDestroyGem(button)
 		return true
 	end
 
-	local gemData = GemAtelier.getGemDataById(lastSelectedGem.gemID)
+	local gemDataById = GemAtelier.getGemDataById(lastSelectedGem.gemID)
 
-	if not gemData then
-		g_logger.debug("[GemAtelier] Failed to destroy: gemData not found.")
-
+	if not gemDataById then
 		return true
 	end
 
 	hideWheelWindow()
 
 	local function yesFunction()
-		sendgemAction(0, gemData.gemID)
-		g_logger.debug(string.format("[GemAtelier] Requesting gem destruction id=%d", gemData.gemID))
+		WheelGemActions.send(0, gemDataById.gemID)
 		showWheelWindow()
 		destroyGemWindow:destroy()
 
@@ -1122,13 +923,10 @@ function GemAtelier.onLockGem(button)
 	local gemID = button and button.gemID or lastSelectedGem and lastSelectedGem.gemID
 
 	if not gemID then
-		g_logger.debug("[GemAtelier] onLockGem called without gemID.")
-
 		return true
 	end
 
-	g_logger.debug(string.format("[GemAtelier] Toggle lock gemID=%d", gemID))
-	sendgemAction(3, gemID)
+	WheelGemActions.send(3, gemID)
 end
 
 function GemAtelier.showLockedOnly(button)
@@ -1217,7 +1015,7 @@ function GemAtelier.onSortAffinity(widget, selectedIndex)
 	end
 end
 
-function GemAtelier:onSearchChange()
+function GemAtelier.onSearchChange(self)
 	local text = self:getText()
 
 	if #text == 0 then
@@ -1241,8 +1039,6 @@ function GemAtelier.setupVesselPanel()
 	local selectWidget = gemAtelierWindow:recursiveGetChildById("vesselsContent")
 
 	if not selectWidget then
-		g_logger.debug("[GemAtelier] vesselsContent not found in window.")
-
 		return
 	end
 
@@ -1251,93 +1047,48 @@ function GemAtelier.setupVesselPanel()
 		local gemContainer = selectWidget:recursiveGetChildById("vessel" .. i)
 		local gemItem = selectWidget:recursiveGetChildById("gemItem" .. i)
 
-		if not background or not gemContainer or not gemItem then
-			g_logger.debug(string.format("[GemAtelier] Estrutura do slot %d incompleta (bg=%s, container=%s, gem=%s)", i, tostring(background ~= nil), tostring(gemContainer ~= nil), tostring(gemItem ~= nil)))
-		else
-			background:setImageSource("/images/game/wheel/backdrop_skillwheel_socket_inactive")
-			gemContainer:setVisible(false)
-			gemItem:setImageClip("0 0 32 32")
+		if background and gemContainer and gemItem then
+			local vesselSocketLevel = WheelGemState.getVesselSocketLevel(i)
+			local data = GemAtelier.getEquipedGem(i)
+			local var_40_6 = data ~= nil
+			local var_40_7 = var_40_6 and vesselSocketLevel == data.gemType + 1
+
+			background:setImageSource(vesselSocketLevel == 0 and "/images/game/wheel/backdrop_skillwheel_socket_inactive" or "/images/game/wheel/backdrop_skillwheel_socket_active")
+			gemContainer:setImageSource("/images/game/wheel/icons-skillwheel-sockets")
+			gemContainer:setImageClip(WheelGemState.getSocketImageClip(i, vesselSocketLevel, var_40_7))
+			gemContainer:setVisible(vesselSocketLevel > 0)
 
 			gemItem.gemID = -1
 
 			gemItem:setVisible(false)
+			gemItem:setImageClip("0 0 32 32")
 
-			local filledCount = GemAtelier.getFilledVesselCount(i)
+			if var_40_6 then
+				local typeOffset = data.gemType * 32
+				local domainOffset = data.gemDomain * 96
+				local vocationOffset = (WheelOfDestiny.vocationId - 1) * 384
 
-			if filledCount ~= 0 then
-				local startPos = 442
-				local containerOffset = startPos + 102 * i
-				local modOffset = 34 * math.max(0, filledCount - 1)
+				gemItem:setImageClip(vocationOffset + domainOffset + typeOffset .. " 0 32 32")
 
-				gemContainer:setImageClip(containerOffset + modOffset .. " 0 34 34")
-				gemContainer:setVisible(true)
-				background:setImageSource("/images/game/wheel/backdrop_skillwheel_socket_active")
+				gemItem.gemID = data.gemID
+
+				gemItem:setVisible(true)
 			end
 		end
 	end
-
-	for _, id in pairs(WheelOfDestiny.equipedGems) do
-		if type(id) ~= "number" or id < 0 then
-			-- block empty
-		else
-			local data = GemAtelier.getGemDataById(id)
-
-			if data then
-				local background = selectWidget:recursiveGetChildById("vesselBg" .. data.gemDomain)
-				local gemContainer = selectWidget:recursiveGetChildById("vessel" .. data.gemDomain)
-				local gemItem = selectWidget:recursiveGetChildById("gemItem" .. data.gemDomain)
-
-				if background and gemContainer and gemItem then
-					if GemAtelier.isVesselAvailable(data.gemDomain, 1) then
-						background:setImageSource("/images/game/wheel/backdrop_skillwheel_socket_active")
-						gemContainer:setVisible(true)
-					end
-
-					local typeOffset = data.gemType * 32
-					local domainOffset = data.gemDomain * 96
-					local vocationOffset = (WheelOfDestiny.vocationId - 1) * 384
-					local gemOffset = vocationOffset + domainOffset + typeOffset
-
-					gemItem:setImageClip(gemOffset .. " 0 32 32")
-
-					gemItem.gemID = data.gemID
-
-					gemItem:setVisible(true)
-
-					local startPos = 442
-					local filledCount = GemAtelier.getFilledVesselCount(data.gemDomain)
-
-					if filledCount == data.gemType + 1 then
-						startPos = 34
-					end
-
-					local containerOffset = startPos + 102 * data.gemDomain
-					local modOffset = 34 * math.max(0, filledCount - 1)
-
-					gemContainer:setImageClip(containerOffset + modOffset .. " 0 34 34")
-				else
-					g_logger.debug(string.format("[GemAtelier] Slot %d incomplete when applying gem %d.", data.gemDomain or -1, data.gemID or -1))
-				end
-			end
-		end
-	end
-
-	g_logger.debug("[GemAtelier] setupVesselPanel completed with 4 vessels.")
 end
 
-function GemAtelier.onClickVessel(widget, domain)
-	g_logger.debug(string.format("[DebugClick] Click on vessel domain=%d gemID=%s", domain, tostring(widget.gemID)))
-
-	if lastSelectedVessel then
-		lastSelectedVessel:setVisible(false)
+function GemAtelier.onClickVessel(unusedArgument, domain)
+	if var_0_6 then
+		var_0_6:setVisible(false)
 	end
 
-	local currentHighlight = gemAtelierWindow:recursiveGetChildById("selectVessel" .. domain)
+	local gemItem = gemAtelierWindow:recursiveGetChildById("selectVessel" .. domain)
 
-	if currentHighlight then
-		currentHighlight:setVisible(true)
+	if gemItem then
+		gemItem:setVisible(true)
 
-		lastSelectedVessel = currentHighlight
+		var_0_6 = gemItem
 	end
 
 	local gemItem = gemAtelierWindow:recursiveGetChildById("gemItem" .. domain)
@@ -1349,7 +1100,6 @@ function GemAtelier.onClickVessel(widget, domain)
 	end
 
 	if gemData and gemData.gemDomain == domain then
-		g_logger.debug(string.format("[DebugClick] Gem found id=%d domain=%d (valid for vessel)", gemData.gemID, gemData.gemDomain))
 		GemAtelier.redirectToGem(gemData)
 
 		return
@@ -1364,11 +1114,8 @@ function GemAtelier.onClickVessel(widget, domain)
 	end
 
 	if fallbackGem then
-		g_logger.debug(string.format("[DebugClick] No vessel equipped -> focusing smallest gem of domain %d (gemID=%d)", domain, fallbackGem.gemID))
 		GemAtelier.redirectToGem(fallbackGem)
 	else
-		g_logger.debug(string.format("[DebugClick] No gem found in domain %d -> just filtering", domain))
-
 		GemAtelier.currentDomain = domain
 
 		if GemAtelier.showGems then
@@ -1377,11 +1124,7 @@ function GemAtelier.onClickVessel(widget, domain)
 	end
 end
 
-function GemAtelier.onUnlockGem(gemID)
-	return
-end
-
-function GemAtelier:onModRedirect()
+function GemAtelier.onModRedirect(self)
 	local modID = self.modID
 	local isSupreme = self.isSupreme
 	local itemsPerPage = 30
@@ -1409,7 +1152,7 @@ function GemAtelier:onModRedirect()
 	fragmentMenuButton:setChecked(true)
 end
 
-function GemAtelier:onHoverGem(hovered)
+function GemAtelier.onHoverGem(self, hovered)
 	local hoverWidget = self:recursiveGetChildById("hover")
 
 	if not hoverWidget then
@@ -1426,18 +1169,14 @@ function GemAtelier:onHoverGem(hovered)
 	end
 end
 
-function GemAtelier:getDamageAndHealing()
+function GemAtelier.getDamageAndHealing(self)
 	local damage = 0
 
 	for i = 0, 3 do
 		local data = self.getEquipedGem(i)
 
-		if data then
-			local filledCount = self.getFilledVesselCount(i)
-
-			if filledCount >= data.gemType + 1 then
-				damage = damage + (data.gemType == 2 and 2 or 1)
-			end
+		if data and self.getFilledVesselCount(i) == data.gemType + 1 then
+			damage = damage + (data.gemType == 2 and 2 or 1)
 		end
 	end
 

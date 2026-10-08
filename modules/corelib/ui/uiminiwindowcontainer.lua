@@ -1,8 +1,6 @@
-﻿-- chunkname: @/corelib/ui/uiminiwindowcontainer.lua
+﻿UIMiniWindowContainer = extends(UIWidget, "UIMiniWindowContainer")
 
-UIMiniWindowContainer = extends(UIWidget, "UIMiniWindowContainer")
-
-local SIDEBAR_FREE_SPACE_IMAGE = "/images/ui/2pixel_up_frame_borderimage"
+local SIDEBAR_FREE_SPACE_IMAGE = "/images/ui/2pixel-up-frame-borderimage"
 local SIDEBAR_FREE_SPACE_BORDER = 2
 
 function UIMiniWindowContainer.create()
@@ -36,6 +34,10 @@ local function isSidebarSystemWidget(widget)
 end
 
 local function shouldManageSidebarFreeSpace(container)
+	return isSidebarSystemWidget(container) or container and container.moveOnlyToMain
+end
+
+local function var_0_6(container)
 	if not container or container:isDestroyed() or not container:isVisible() then
 		return false
 	end
@@ -54,7 +56,7 @@ local function ensureSidebarFreeSpaceWidget(container)
 		return widget
 	end
 
-	widget = g_ui.createWidget("UIWidget")
+	local widget = g_ui.createWidget("UIWidget")
 
 	widget:setId("sidebarFreeSpace")
 
@@ -71,7 +73,7 @@ local function ensureSidebarFreeSpaceWidget(container)
 	return widget
 end
 
-function UIMiniWindowContainer:scheduleSidebarFreeSpaceRefresh()
+function UIMiniWindowContainer.scheduleSidebarFreeSpaceRefresh(self)
 	if self._sidebarFreeSpaceRefreshScheduled or self._sidebarFreeSpaceRefreshing then
 		return
 	end
@@ -87,7 +89,7 @@ function UIMiniWindowContainer:scheduleSidebarFreeSpaceRefresh()
 	end)
 end
 
-function UIMiniWindowContainer:refreshSidebarFreeSpace()
+function UIMiniWindowContainer.refreshSidebarFreeSpace(self)
 	if self._sidebarFreeSpaceRefreshing then
 		return
 	end
@@ -101,7 +103,7 @@ function UIMiniWindowContainer:refreshSidebarFreeSpace()
 
 	local filler = self._sidebarFreeSpaceWidget
 
-	if not shouldManageSidebarFreeSpace(self) then
+	if not var_0_6(self) then
 		if filler and not filler:isDestroyed() then
 			filler:destroy()
 		end
@@ -138,7 +140,7 @@ function UIMiniWindowContainer:refreshSidebarFreeSpace()
 		return
 	end
 
-	filler = ensureSidebarFreeSpaceWidget(self)
+	local filler = ensureSidebarFreeSpaceWidget(self)
 
 	if filler:getParent() ~= self then
 		self:addChild(filler)
@@ -152,7 +154,7 @@ function UIMiniWindowContainer:refreshSidebarFreeSpace()
 	finish()
 end
 
-function UIMiniWindowContainer:fitAll(noRemoveChild)
+function UIMiniWindowContainer.fitAll(self, noRemoveChild)
 	if not self:isVisible() then
 		return
 	end
@@ -207,7 +209,7 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
 
 			local child = children[i]
 
-			if child ~= noRemoveChild and not isSidebarSystemWidget(child) and child:isVisible() and child:isResizeable() then
+			if child ~= noRemoveChild and not shouldManageSidebarFreeSpace(child) and child:isVisible() and child:isResizeable() then
 				local curH = child:getHeight()
 				local minH = child:getMinimumHeight()
 				local avail = math.max(0, curH - minH)
@@ -257,6 +259,16 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
 	end
 
 	if neededReduction > 0 then
+		local lockerSearchWindow = self:getChildById("lockerSearchWindow")
+
+		if lockerSearchWindow and lockerSearchWindow:isVisible() and modules.game_search_locker and type(modules.game_search_locker.relocateForSpace) == "function" and modules.game_search_locker.relocateForSpace(self) then
+			self:refreshSidebarFreeSpace()
+
+			return
+		end
+	end
+
+	if neededReduction > 0 then
 		for i = #children, 1, -1 do
 			if sumHeight <= selfHeight then
 				break
@@ -264,10 +276,8 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
 
 			local child = children[i]
 
-			if child ~= noRemoveChild and not isSidebarSystemWidget(child) and not child.save then
-				local childHeight = child:getHeight()
-
-				sumHeight = sumHeight - childHeight
+			if child ~= noRemoveChild and not shouldManageSidebarFreeSpace(child) and not child.save then
+				sumHeight = sumHeight - child:getHeight()
 
 				table.insert(removeChildren, child)
 			end
@@ -280,10 +290,8 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
 
 			local child = children[i]
 
-			if child ~= noRemoveChild and not isSidebarSystemWidget(child) and child:isVisible() then
-				local childHeight = child:getHeight()
-
-				sumHeight = sumHeight - childHeight
+			if child ~= noRemoveChild and not shouldManageSidebarFreeSpace(child) and child:isVisible() then
+				sumHeight = sumHeight - child:getHeight()
 
 				table.insert(removeChildren, child)
 			end
@@ -297,7 +305,7 @@ function UIMiniWindowContainer:fitAll(noRemoveChild)
 	self:refreshSidebarFreeSpace()
 end
 
-function UIMiniWindowContainer:redistributeChildrenWidths()
+function UIMiniWindowContainer.redistributeChildrenWidths(self)
 	if not self.isHorizontalPanel then
 		return
 	end
@@ -338,7 +346,7 @@ function UIMiniWindowContainer:redistributeChildrenWidths()
 	end
 end
 
-function UIMiniWindowContainer:fits(child, minContentHeight, maxContentHeight)
+function UIMiniWindowContainer.fits(self, child, minContentHeight, maxContentHeight)
 	if self.ignoreFillAll then
 		return 0
 	end
@@ -365,7 +373,7 @@ function UIMiniWindowContainer:fits(child, minContentHeight, maxContentHeight)
 	end
 end
 
-function UIMiniWindowContainer:onDrop(widget, mousePos)
+function UIMiniWindowContainer.onDrop(self, widget, mousePos)
 	if self.onlyPhantomDrop and not widget.moveOnlyToMain then
 		return true
 	end
@@ -427,7 +435,7 @@ function UIMiniWindowContainer:onDrop(widget, mousePos)
 	end
 end
 
-function UIMiniWindowContainer:swapInsert(widget, index)
+function UIMiniWindowContainer.swapInsert(self, widget, index)
 	local oldParent = widget:getParent()
 	local oldIndex = self:getChildIndex(widget)
 
@@ -478,7 +486,7 @@ local function safeInsertChild(container, index, widget)
 	return ok
 end
 
-function UIMiniWindowContainer:scheduleInsert(widget, index)
+function UIMiniWindowContainer.scheduleInsert(self, widget, index)
 	if not isUsableWidget(widget) then
 		return
 	end
@@ -523,7 +531,7 @@ function UIMiniWindowContainer:scheduleInsert(widget, index)
 				return
 			end
 
-			while true do
+			repeat
 				local placed = false
 
 				for nIndex, nWidget in pairs(self.scheduledWidgets) do
@@ -540,11 +548,7 @@ function UIMiniWindowContainer:scheduleInsert(widget, index)
 						break
 					end
 				end
-
-				if not placed then
-					break
-				end
-			end
+			until not placed
 
 			self:redistributeChildrenWidths()
 			self:scheduleSidebarFreeSpaceRefresh()
@@ -556,23 +560,49 @@ function UIMiniWindowContainer:scheduleInsert(widget, index)
 	end
 end
 
-function UIMiniWindowContainer:order()
-	local children = self:getChildren()
-
-	for i = 1, #children do
-		if children[i].miniIndex and children[i].miniLoaded == false then
+function UIMiniWindowContainer.order(self)
+	for unusedValue, child in ipairs(self:getChildren()) do
+		if child.miniIndex and child.miniLoaded == false then
 			return
 		end
 	end
 
-	for i = 1, #children do
-		if children[i].miniIndex then
-			self:swapInsert(children[i], children[i].miniIndex)
+	local var_23_0 = {}
+
+	for unusedValue, child in ipairs(self:getChildren()) do
+		if child and child.save and child.miniIndex then
+			var_23_0[#var_23_0 + 1] = child
+		end
+	end
+
+	table.sort(var_23_0, function(arg_24_0, arg_24_1)
+		return arg_24_0.miniIndex < arg_24_1.miniIndex
+	end)
+
+	for unusedValue, entry in ipairs(var_23_0) do
+		local children = self:getChildren()
+		local var_23_2 = 0
+		local childCount = self:getChildCount()
+
+		for index, iter_23_7 in ipairs(children) do
+			if iter_23_7 and iter_23_7.save then
+				var_23_2 = var_23_2 + 1
+
+				if var_23_2 == entry.miniIndex then
+					childCount = index
+
+					break
+				end
+			end
+		end
+
+		if self:getChildIndex(entry) ~= childCount then
+			pcall(self.moveChildToIndex, self, entry, childCount)
 		end
 	end
 end
 
-function UIMiniWindowContainer:saveChildren()
+function UIMiniWindowContainer.saveChildren(self)
 	local children = self:getChildren()
 	local ignoreIndex = 0
 

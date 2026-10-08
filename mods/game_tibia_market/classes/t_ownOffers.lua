@@ -1,15 +1,13 @@
-﻿-- chunkname: @/mods/game_tibia_market/classes/t_ownOffers.lua
-
-MarketOwnOffers = {
-	labelSize = 16,
+﻿MarketOwnOffers = {
 	ownBuyPool = 14,
+	ownSellPool = 14,
+	labelSize = 16,
 	bottomListFitItems = 0,
 	topListFitItems = 0,
 	bottomListMax = 0,
 	bottomListMin = 0,
 	topListMax = 0,
 	topListMin = 0,
-	ownSellPool = 14,
 	mySellOffers = {},
 	myBuyOffers = {},
 	topListPool = {},
@@ -36,7 +34,8 @@ local function normalizeOffers(t)
 		end
 
 		table.sort(out, function(a, b)
-			local ta, tb = a.timestamp or 0, b.timestamp or 0
+			local ta = a.timestamp or 0
+			local tb = b.timestamp or 0
 
 			if ta ~= tb then
 				return ta < tb
@@ -76,7 +75,8 @@ function MarketOwnOffers.onParseMyOffers(buyOffers, sellOffers)
 
 	local incomingBuy = normalizeOffers(buyOffers)
 	local incomingSell = normalizeOffers(sellOffers)
-	local updatedBuy, updatedSell = false, false
+	local updatedBuy = false
+	local updatedSell = false
 
 	if #incomingBuy == 1 and #MarketOwnOffers.myBuyOffers > 0 then
 		local u = incomingBuy[1]
@@ -168,7 +168,7 @@ function MarketOwnOffers.onParseMyOffers(buyOffers, sellOffers)
 	sellScrollbar:setMaximum(sellMax)
 	sellScrollbar:setValue(sellMin)
 
-	function sellScrollbar:onValueChange(value, delta)
+	function sellScrollbar.onValueChange(self, value, delta)
 		MarketOwnOffers.onTopListValueChange(self, value, delta)
 	end
 
@@ -222,15 +222,15 @@ function MarketOwnOffers.onParseMyOffers(buyOffers, sellOffers)
 	buyScrollbar:setMaximum(buyMax)
 	buyScrollbar:setValue(buyMin)
 
-	function buyScrollbar:onValueChange(value, delta)
+	function buyScrollbar.onValueChange(self, value, delta)
 		MarketOwnOffers.onBottomListValueChange(self, value, delta)
 	end
 
-	function window.sellOffersList:onChildFocusChange(selected)
+	function window.sellOffersList.onChildFocusChange(self, selected)
 		MarketOwnOffers.onSelectMyOffersChild(self, selected, true)
 	end
 
-	function window.buyOffersList:onChildFocusChange(selected)
+	function window.buyOffersList.onChildFocusChange(self, selected)
 		MarketOwnOffers.onSelectMyOffersChild(self, selected, false)
 	end
 
@@ -245,7 +245,7 @@ function MarketOwnOffers.onParseMyOffers(buyOffers, sellOffers)
 		lastSelectedMySell = nil
 	end
 
-	firstChild = window.buyOffersList:getChildren()[1]
+	local firstChild = window.buyOffersList:getChildren()[1]
 
 	if firstChild then
 		window.buyCancelOffer:setEnabled(true)
@@ -260,7 +260,7 @@ function MarketOwnOffers.onParseMyOffers(buyOffers, sellOffers)
 	window.buyOffersLabel:setText("Buy Offers (" .. buyCount .. "):")
 end
 
-function MarketOwnOffers:onSelectMyOffersChild(selected, selling)
+function MarketOwnOffers.onSelectMyOffersChild(self, selected, selling)
 	if not selected then
 		return
 	end
@@ -321,19 +321,17 @@ function MarketOwnOffers.cancelMarketOffer(selling)
 		return true
 	end
 
-	local targetList = selling and MarketOwnOffers.mySellOffers or MarketOwnOffers.myBuyOffers
-	local targetAction = selling and MarketOwnOffers.selectedSellCounter.action or MarketOwnOffers.selectedBuyCounter.action
-	local targetOffer = targetList[targetAction]
+	local var_9_3 = (selling and MarketOwnOffers.mySellOffers or MarketOwnOffers.myBuyOffers)[selling and MarketOwnOffers.selectedSellCounter.action or MarketOwnOffers.selectedBuyCounter.action]
 
-	if not targetOffer then
+	if not var_9_3 then
 		return true
 	end
 
-	if selling and targetOffer.itemId then
-		adjustDepotLockerItemCount(targetOffer.itemId, targetOffer.itemTier or 0, targetOffer.amount or 0)
+	if selling and var_9_3.itemId then
+		adjustDepotLockerItemCount(var_9_3.itemId, var_9_3.itemTier or 0, var_9_3.amount or 0)
 	end
 
-	g_game.cancelMarketOffer(targetOffer.timestamp, targetOffer.counter)
+	g_game.cancelMarketOffer(var_9_3.timestamp, var_9_3.counter)
 	g_game.sendMarketAction(2)
 	requestMarketGoldRefresh()
 	refreshSelectedMarketBrowse()
@@ -342,16 +340,14 @@ end
 
 function MarketOwnOffers.onTopListValueChange(scroll, value, delta)
 	local window = marketWindow.MarketHistory.currentOffers
-	local startLabel = math.max(MarketOwnOffers.topListMin, value)
-	local endLabel = startLabel + MarketOwnOffers.topListFitItems - 1
+	local endLabel = math.max(MarketOwnOffers.topListMin, value)
 
-	if endLabel > MarketOwnOffers.topListMax then
-		endLabel = MarketOwnOffers.topListMax
-		startLabel = endLabel - MarketOwnOffers.topListFitItems + 1
+	if endLabel + MarketOwnOffers.topListFitItems - 1 > MarketOwnOffers.topListMax then
+		endLabel = MarketOwnOffers.topListMax - MarketOwnOffers.topListFitItems + 1
 	end
 
 	for i, widget in ipairs(window.sellOffersList:getChildren()) do
-		local index = value > 0 and startLabel + i - 1 or startLabel + i
+		local index = value > 0 and endLabel + i - 1 or endLabel + i
 		local data = MarketOwnOffers.mySellOffers[index]
 
 		if not data then
@@ -464,18 +460,16 @@ end
 
 function MarketOwnOffers.onBottomListValueChange(scroll, value, delta)
 	local window = marketWindow.MarketHistory.currentOffers
-	local startLabel = math.max(MarketOwnOffers.bottomListMin, value)
-	local endLabel = startLabel + MarketOwnOffers.bottomListFitItems - 1
+	local endLabel = math.max(MarketOwnOffers.bottomListMin, value)
 
-	if endLabel > MarketOwnOffers.bottomListMax then
-		endLabel = MarketOwnOffers.bottomListMax
-		startLabel = endLabel - MarketOwnOffers.bottomListFitItems + 1
+	if endLabel + MarketOwnOffers.bottomListFitItems - 1 > MarketOwnOffers.bottomListMax then
+		endLabel = MarketOwnOffers.bottomListMax - MarketOwnOffers.bottomListFitItems + 1
 	end
 
 	local count = 0
 
 	for i, widget in ipairs(window.buyOffersList:getChildren()) do
-		if createWidgetMarket(widget, count, value, startLabel, i) then
+		if createWidgetMarket(widget, count, value, endLabel, i) then
 			count = count + 1
 		end
 	end

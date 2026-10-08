@@ -52,10 +52,10 @@ BossDifficultyConItem < UIWidget
 
   Label
     id: text
-    font: Verdana Bold-11-px-lowspace
+    height:13
+    font: $var-cip-font-new
     color: #c0c0c0
     fixed-size: true
-    text-offset: 0 1
 
 BossDifficultyProItem < UIWidget
   height: 12
@@ -74,10 +74,10 @@ BossDifficultyProItem < UIWidget
 
   Label
     id: text
-    font: Verdana Bold-11-px-lowspace
+    height:13
+    font: $var-cip-font-new
     color: #c0c0c0
     fixed-size: true
-    text-offset: 0 1
 
 BossDifficultyPlayerBox < UIWidget
   size: 152 25
@@ -192,8 +192,8 @@ BossDifficultyWindow < MainWindowHigh
       !text: tr('Select Difficulty:')
       anchors.top: pedestal.bottom
       anchors.horizontalCenter: parent.horizontalCenter
-      margin-top: 13
-      font: $var-cip-font-lowspace
+      margin-top: 12
+      font: $var-cip-font-new
       color: $var-text-cip-color
       text-auto-resize: true
 
@@ -382,7 +382,7 @@ BossDifficultyWindow < MainWindowHigh
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 6
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 2
     draggable: false
 

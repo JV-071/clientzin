@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_bugreport/bugreport.lua
-
-HOTKEY = "Ctrl+Z"
+﻿HOTKEY = "Ctrl+Z"
 BUG_CATEGORY_MAP = 0
 BUG_REPORT_MAX_LENGTH = 500
 bugReportWindow = nil
@@ -107,8 +105,8 @@ function init()
 	bugCategoryList = bugReportWindow:getChildById("bugCategory")
 
 	refreshBugCategoryList()
-	Keybind.new("Dialogs", "Open Bug Report", HOTKEY, "")
-	Keybind.bind("Dialogs", "Open Bug Report", {
+	Keybind.new("Dialogs", "Open Bugreport", HOTKEY, "")
+	Keybind.bind("Dialogs", "Open Bugreport", {
 		{
 			type = KEY_DOWN,
 			callback = function()
@@ -119,7 +117,7 @@ function init()
 end
 
 function terminate()
-	Keybind.delete("Dialogs", "Open Bug Report")
+	Keybind.delete("Dialogs", "Open Bugreport")
 	bugReportWindow:destroy()
 end
 

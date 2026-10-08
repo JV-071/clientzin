@@ -1,6 +1,5 @@
-﻿-- chunkname: @/game_mainpanel/mainpanel.lua
-
-local standModeBox, chaseModeBox
+﻿local unusedValue
+local chaseModeBox
 local optionsAmount = 0
 local specialsAmount = 0
 local storeAmount = 0
@@ -54,45 +53,45 @@ function refreshShortcutsSidebarContextMenu()
 end
 
 ControlButtonNames = {
-	bossSlot = "Boss Slots",
-	preyButton = "Prey Dialog",
-	trackerButton = "Bestiary Tracker",
-	questLogButton = "Quest Log",
-	battleButton = "Battle List",
-	questTrackerButton = "Quest Tracker",
-	analyticsSelectorWidget = "Analytics Selector",
-	rewardWall = "Reward Wall",
-	playerGuide = "Player Guide",
-	eventScheduleButton = "Event Schedule",
-	partyWidget = "Party List",
-	skillsButton = "Skills",
-	manageShortcuts = "Manage Shortcuts",
-	friendsDialog = "Social",
-	preyTrackerButton = "Kill Tracker",
-	spellListWidget = "Spell List",
 	imbuementTrackerButton = "Imbuement Tracker",
-	taskBoard = "Task Board",
-	highscoresButton = "Highscores",
-	unjustifiedPointsButton = "Unjustified Points",
-	helperDialog = "Helper",
-	vipListButton = "VIP List",
-	forgeButton = "Exaltation Forge",
-	ProciencyButton = "Weapon Proficiency",
-	CyclopediaButton = "Cyclopedia",
-	wheelButton = "Wheel of Destiny",
-	compendiumDialog = "Compendium",
-	helperButton = "Helper Stats",
 	bosstiarytrackerButton = "Bosstiary Tracker",
-	bosstiary = "Bosstiary"
+	preyButton = "Prey Dialog",
+	bosstiary = "Bosstiary",
+	reportButton = "Report",
+	bossSlot = "Boss Slots",
+	questLogButton = "Quest Log",
+	trackerButton = "Bestiary Tracker",
+	rewardWall = "Reward Wall",
+	battleButton = "Battle List",
+	eventScheduleButton = "Event Schedule",
+	analyticsSelectorWidget = "Analytics Selector",
+	skillsButton = "Skills",
+	questTrackerButton = "Quest Tracker",
+	friendsDialog = "Social",
+	partyWidget = "Party List",
+	spellListWidget = "Spell List",
+	manageShortcuts = "Manage Shortcuts",
+	taskBoard = "Task Board",
+	preyTrackerButton = "Kill Tracker",
+	unjustifiedPointsButton = "Unjustified Points",
+	playerGuide = "Player Guide",
+	vipListButton = "VIP List",
+	highscoresButton = "Highscores",
+	ProciencyButton = "Weapon Proficiency",
+	helperDialog = "Helper",
+	wheelButton = "Wheel of Destiny",
+	forgeButton = "Exaltation Forge",
+	CyclopediaButton = "Cyclopedia",
+	compendiumDialog = "Compendium"
 }
 
 local PANEL_CONSTANTS = {
+	MULTI_STORE_HEIGHT = 20,
+	HEIGHT_EXTRA_ONPANEL = -19,
+	HEIGHT_EXTRA_SHRINK = -14,
 	ICON_HEIGHT = 18,
 	ICON_WIDTH = 18,
 	MAIN_RIGHT_PANEL_EXTRA_HEIGHT = 3,
-	MULTI_STORE_HEIGHT = 20,
-	HEIGHT_EXTRA_ONPANEL = -16,
-	HEIGHT_EXTRA_SHRINK = -14,
 	MAX_ICONS_PER_ROW = {
 		STORE = 1,
 		SPECIALS = 2,
@@ -104,16 +103,38 @@ local DEFAULT_SHORTCUT_ORDER = {
 	"battleButton",
 	"spellListWidget",
 	"vipListButton",
-	"unjustifiedPointsButton",
+	"lenshelpFunction",
 	"questLogButton",
-	"preyButton",
+	"compendiumDialog",
 	"CyclopediaButton",
 	"highscoresButton",
+	"playerGuide",
+	"manageShortcuts",
+	"partyWidget",
+	"wheelButton",
+	"questTrackerButton",
+	"unjustifiedPointsButton",
+	"preyButton",
+	"preyTrackerButton",
+	"rewardWall",
+	"analyticsSelectorWidget",
+	"bosstiary",
+	"bossSlot",
+	"bosstiarytrackerButton",
+	"trackerButton",
+	"imbuementTrackerButton",
 	"ProciencyButton",
-	"helperButton",
-	"manageShortcuts"
+	"forgeButton",
+	"friendsDialog",
+	"taskBoard",
+	"eventScheduleButton",
+	"reportButton"
 }
 local optionsShrink = false
+local var_0_14 = "control_buttons"
+local var_0_15 = {
+	helperButton = true
+}
 
 local function calculatePanelHeight(panel, max_icons_per_row)
 	local icon_count = 0
@@ -158,34 +179,42 @@ function reloadMainPanelSizes()
 
 					if store_count > 0 then
 						store_height = store_count * PANEL_CONSTANTS.MULTI_STORE_HEIGHT
+
+						if store_count > 1 then
+							store_height = store_height + (store_count - 1) * 4
+						end
 					end
 
-					store_panel:setHeight(store_count > 0 and PANEL_CONSTANTS.MULTI_STORE_HEIGHT or 0)
+					store_panel:setHeight(store_height)
 
 					if panel:isOn() then
-						local options_panel = optionsController.ui.onPanel.options
-						local options_height, _ = calculatePanelHeight(options_panel, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.OPTIONS)
-						local specials_panel = optionsController.ui.onPanel.specials
-						local specials_height, _ = calculatePanelHeight(specials_panel, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.SPECIALS)
-						local separator = optionsController.ui.onPanel.optionsSeparator
-						local controls_height = math.max(options_height, specials_height)
+						local options = optionsController.ui.onPanel.options
 
-						options_panel:setHeight(controls_height)
-						specials_panel:setHeight(controls_height)
-
-						if separator then
-							separator:setHeight(controls_height)
+						if options then
+							options:setMarginTop(5)
 						end
 
-						local controls_start_offset = store_height + options_panel:getMarginTop()
-						local right_column_height = controls_start_offset + controls_height
+						local var_6_8, unusedValue = calculatePanelHeight(options, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.OPTIONS)
+						local specials = optionsController.ui.onPanel.specials
+						local var_6_11, unusedValue = calculatePanelHeight(specials, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.SPECIALS)
+						local optionsSeparator = optionsController.ui.onPanel.optionsSeparator
+						local controls_height = math.max(var_6_8, var_6_11)
+
+						options:setHeight(controls_height)
+						specials:setHeight(controls_height)
+
+						if optionsSeparator then
+							optionsSeparator:setHeight(controls_height)
+						end
+
+						local right_column_height = store_height + options:getMarginTop() + controls_height
 						local combined_height = math.max(store_height, right_column_height) + PANEL_CONSTANTS.HEIGHT_EXTRA_ONPANEL
 
 						panel:setHeight(combined_height + panel.panelHeight)
 
 						total_height = total_height + combined_height
 					else
-						local combined_height = store_height + PANEL_CONSTANTS.HEIGHT_EXTRA_SHRINK
+						local combined_height = store_height + PANEL_CONSTANTS.HEIGHT_EXTRA_SHRINK - 4
 
 						panel:setHeight(combined_height + panel.panelHeight)
 
@@ -199,16 +228,81 @@ function reloadMainPanelSizes()
 	end
 
 	main_panel:setHeight(total_height + PANEL_CONSTANTS.MAIN_RIGHT_PANEL_EXTRA_HEIGHT)
+
+	if modules.game_interface.syncMainRightPanelClearance then
+		modules.game_interface.syncMainRightPanelClearance()
+	end
+
 	right_panel:fitAll()
+end
+
+local function var_0_17(arg_7_0)
+	if not arg_7_0 or arg_7_0:isDestroyed() then
+		return false
+	end
+
+	if arg_7_0.isExplicitlyVisible and not arg_7_0:isExplicitlyVisible() then
+		return false
+	end
+
+	local id = arg_7_0:getId() or ""
+
+	if id:find("Highlight") or id:find("highlight") then
+		return true
+	end
+
+	local var_7_1, var_7_2 = pcall(function()
+		return arg_7_0:getImageSource()
+	end)
+
+	return var_7_1 and type(var_7_2) == "string" and var_7_2:find("button%-highlight") ~= nil
+end
+
+local function var_0_18()
+	if not optionsController or not optionsController.ui or not optionsController.ui.onPanel then
+		return false
+	end
+
+	local options = optionsController.ui.onPanel.options
+
+	if not options or options:isDestroyed() then
+		return false
+	end
+
+	for unusedValue, child in ipairs(options:getChildren()) do
+		if child and not child:isDestroyed() then
+			for unusedValue, child in ipairs(child:getChildren()) do
+				if var_0_17(child) then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
+end
+
+function refreshOffPanelResizerHighlight()
+	if not optionsController or not optionsController.ui or not optionsController.ui.offPanel then
+		return
+	end
+
+	local offPanelResizerHighlight = optionsController.ui.offPanel.offPanelResizerHighlight or optionsController.ui.offPanel:recursiveGetChildById("offPanelResizerHighlight")
+
+	if not offPanelResizerHighlight or offPanelResizerHighlight:isDestroyed() then
+		return
+	end
+
+	offPanelResizerHighlight:setVisible(optionsShrink and var_0_18())
 end
 
 local function refreshOptionsSizes()
 	local ui = optionsController.ui
 	local offBtn = ui.offPanel:recursiveGetChildById("offOptionsSizeButton")
 	local resizer = ui.onPanel:recursiveGetChildById("resizer")
-	local optionsPanel = ui.onPanel:recursiveGetChildById("options")
-	local specialsPanel = ui.onPanel:recursiveGetChildById("specials")
-	local separator = ui.onPanel:recursiveGetChildById("optionsSeparator")
+	local options = ui.onPanel:recursiveGetChildById("options")
+	local specials = ui.onPanel:recursiveGetChildById("specials")
+	local optionsSeparator = ui.onPanel:recursiveGetChildById("optionsSeparator")
 
 	ui.onPanel:show()
 
@@ -216,21 +310,21 @@ local function refreshOptionsSizes()
 		ui:setOn(false)
 		ui.offPanel:show()
 
-		if optionsPanel then
-			optionsPanel:hide()
+		if options then
+			options:hide()
 		end
 
-		if specialsPanel then
-			specialsPanel:hide()
+		if specials then
+			specials:hide()
 		end
 
-		if separator then
-			separator:hide()
+		if optionsSeparator then
+			optionsSeparator:hide()
 		end
 
 		if resizer then
 			resizer:hide()
-			resizer:setImageClip("0 20 42 20")
+			resizer:setImageClip("0 40 42 20")
 		end
 
 		if offBtn then
@@ -240,21 +334,21 @@ local function refreshOptionsSizes()
 		ui:setOn(true)
 		ui.offPanel:hide()
 
-		if optionsPanel then
-			optionsPanel:show()
+		if options then
+			options:show()
 		end
 
-		if specialsPanel then
-			specialsPanel:show()
+		if specials then
+			specials:show()
 		end
 
-		if separator then
-			separator:show()
+		if optionsSeparator then
+			optionsSeparator:show()
 		end
 
 		if resizer then
 			resizer:show()
-			resizer:setImageClip("0 20 42 20")
+			resizer:setImageClip("0 40 42 20")
 		end
 
 		if offBtn then
@@ -262,6 +356,7 @@ local function refreshOptionsSizes()
 		end
 	end
 
+	refreshOffPanelResizerHighlight()
 	reloadMainPanelSizes()
 end
 
@@ -294,6 +389,8 @@ local function createButton_large(id, description, image, callback, panelId, fro
 			return true
 		end
 	end
+
+	reloadMainPanelSizes()
 
 	return button
 end
@@ -407,6 +504,8 @@ local function createButton(id, description, image, callback, special, front, in
 	button:setImageSource(image)
 	button:setImageClip("0 0 20 20")
 
+	button.mainPanelCallback = callback
+
 	function button.onMouseRelease(widget, mousePos, mouseButton)
 		if widget:containsPoint(mousePos) and mouseButton == MouseLeftButton then
 			callback()
@@ -442,7 +541,7 @@ optionsController = Controller:new()
 
 optionsController:setUI("mainoptionspanel", modules.game_interface.getMainRightPanel())
 
-function optionsController:onInit()
+function optionsController.onInit(unusedArgument)
 	createButton_large("Store shop", tr("Open the Store"), "/images/options/store_large", toggleStore, "store", false)
 	refreshShortcutsSidebarContextMenu()
 end
@@ -453,11 +552,11 @@ function toggleStore()
 	end
 end
 
-function optionsController:onTerminate()
+function optionsController.onTerminate(self)
 	return
 end
 
-function optionsController:onGameStart()
+function optionsController.onGameStart(unusedArgument)
 	local config = loadButtonConfig()
 
 	buttonConfigs = {}
@@ -492,7 +591,7 @@ function optionsController:onGameStart()
 	end, 50, "onGameStart")
 end
 
-function optionsController:onGameEnd()
+function optionsController.onGameEnd(self)
 	return
 end
 
@@ -531,7 +630,13 @@ function addStoreButton(id, description, image, callback, front)
 end
 
 function getButton(id)
-	return optionsController.ui.onPanel.options:recursiveGetChildById(id)
+	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel
+
+	if not optionsPanel then
+		return nil
+	end
+
+	return optionsPanel.options:recursiveGetChildById(id) or optionsPanel.specials:recursiveGetChildById(id)
 end
 
 function toggleExtendedViewButtons(extended)
@@ -542,11 +647,11 @@ function toggleExtendedViewButtons(extended)
 	if extended then
 		local optionChildren = optionsPanel:getChildren()
 
-		for _, button in ipairs(optionChildren) do
-			if not button:isDestroyed() then
-				button.originalPanel = "options"
+		for _, id in ipairs(optionChildren) do
+			if not id:isDestroyed() then
+				id.originalPanel = "options"
 
-				rightGamePanel:addChild(button)
+				rightGamePanel:addChild(id)
 			end
 		end
 
@@ -565,12 +670,12 @@ function toggleExtendedViewButtons(extended)
 	else
 		local children = rightGamePanel:getChildren()
 
-		for _, button in ipairs(children) do
-			if not button:isDestroyed() then
-				if button.originalPanel == "options" then
-					optionsPanel:addChild(button)
-				elseif button.originalPanel == "specials" then
-					specialsPanel:addChild(button)
+		for _, id in ipairs(children) do
+			if not id:isDestroyed() then
+				if id.originalPanel == "options" then
+					optionsPanel:addChild(id)
+				elseif id.originalPanel == "specials" then
+					specialsPanel:addChild(id)
 				end
 			end
 		end
@@ -588,8 +693,162 @@ function toggleExtendedViewButtons(extended)
 	refreshOptionsSizes()
 end
 
+local function var_0_27(arg_36_0)
+	local var_36_0 = {}
+	local seen = {}
+
+	if type(arg_36_0) ~= "table" then
+		return var_36_0
+	end
+
+	local visibleSet = {}
+
+	for _, id in pairs(arg_36_0) do
+		local numericValue = tonumber(_)
+
+		if numericValue and numericValue >= 1 and numericValue == math.floor(numericValue) and type(id) == "string" and id ~= "" and not var_0_15[id] then
+			table.insert(visibleSet, {
+				index = numericValue,
+				id = id
+			})
+		end
+	end
+
+	table.sort(visibleSet, function(arg_37_0, arg_37_1)
+		return arg_37_0.index < arg_37_1.index
+	end)
+
+	for unusedValue, entry in ipairs(visibleSet) do
+		if not seen[entry.id] then
+			table.insert(var_36_0, entry.id)
+
+			seen[entry.id] = true
+		end
+	end
+
+	return var_36_0
+end
+
+local function var_0_28()
+	if not SidebarPersistence or not SidebarPersistence.getSection then
+		return {}, false
+	end
+
+	local section = SidebarPersistence.getSection("sidebarPanelsOptions")
+
+	if type(section) ~= "table" then
+		return {}, false
+	end
+
+	return var_0_27(section.shortcutOrder), type(section.shortcutOrder) == "table"
+end
+
+local function var_0_29()
+	local node = g_settings and g_settings.getNode and g_settings.getNode(var_0_14)
+
+	if type(node) ~= "table" then
+		node = {}
+	end
+
+	if type(node.buttons) ~= "table" then
+		node.buttons = {}
+	end
+
+	local var_39_1 = false
+
+	for iter_39_0 in pairs(var_0_15) do
+		if node.buttons[iter_39_0] ~= nil then
+			node.buttons[iter_39_0] = nil
+			var_39_1 = true
+		end
+	end
+
+	if type(node.order) == "table" then
+		for unusedValue, entry in pairs(node.order) do
+			if var_0_15[entry] then
+				var_39_1 = true
+
+				break
+			end
+		end
+	end
+
+	local var_39_2 = var_0_27(node.order)
+
+	if var_39_1 then
+		node.order = var_39_2
+	end
+
+	if not (#var_39_2 > 0 or node.shortcutOrderInitialized == true) then
+		local var_39_3, var_39_4 = var_0_28()
+
+		var_39_2 = var_39_3
+
+		if not var_39_4 then
+			var_39_2 = var_0_27(DEFAULT_SHORTCUT_ORDER)
+
+			for iter_39_3 = #var_39_2, 1, -1 do
+				local var_39_5 = node.buttons[var_39_2[iter_39_3]]
+
+				if type(var_39_5) == "table" and var_39_5.visible == false then
+					table.remove(var_39_2, iter_39_3)
+				end
+			end
+		end
+
+		node.order = var_39_2
+		node.shortcutOrderInitialized = true
+		var_39_1 = true
+	end
+
+	if var_39_1 and g_settings and g_settings.setNode then
+		g_settings.setNode(var_0_14, node)
+		g_settings.save()
+	end
+
+	return node, var_39_2
+end
+
 function saveButtonConfig()
-	return
+	if not g_settings or not g_settings.setNode then
+		return
+	end
+
+	local node = g_settings.getNode(var_0_14)
+
+	if type(node) ~= "table" then
+		node = {}
+	end
+
+	if type(node.buttons) ~= "table" then
+		node.buttons = {}
+	end
+
+	for iter_40_0 in pairs(var_0_15) do
+		node.buttons[iter_40_0] = nil
+	end
+
+	local var_40_1 = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
+
+	if var_40_1 then
+		for unusedValue, child in ipairs(var_40_1:getChildren()) do
+			local id = child:getId()
+
+			if id and id ~= "" then
+				local var_40_3 = buttonConfigs[id]
+
+				node.buttons[id] = {
+					visible = var_40_3 and var_40_3.visible ~= nil and var_40_3.visible or child:isVisible()
+				}
+			end
+		end
+	end
+
+	node.order = var_0_27(buttonOrder)
+	node.shortcutOrderInitialized = true
+
+	g_settings.setNode(var_0_14, node)
+	g_settings.save()
 end
 
 local function isShortcutButtonConfiguredVisible(id, button)
@@ -603,79 +862,71 @@ local function isShortcutButtonConfiguredVisible(id, button)
 end
 
 function getShortcutOrder()
-	local order = {}
-	local seen = {}
+	local var_42_0 = {}
+	local var_42_1 = {}
 	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
 
 	if not optionsPanel then
-		return order
+		return var_42_0
 	end
 
-	local function isShortcutVisible(id)
+	local function var_42_3(id)
 		return isShortcutButtonConfiguredVisible(id, optionsPanel:getChildById(id))
 	end
 
-	for _, id in ipairs(buttonOrder) do
-		if type(id) == "string" and id ~= "" and not seen[id] and isShortcutVisible(id) then
-			table.insert(order, id)
+	for unusedValue, entry in ipairs(buttonOrder) do
+		if type(entry) == "string" and entry ~= "" and not var_42_1[entry] and var_42_3(entry) then
+			table.insert(var_42_0, entry)
 
-			seen[id] = true
+			var_42_1[entry] = true
 		end
 	end
 
-	for _, button in ipairs(optionsPanel:getChildren()) do
-		local id = button:getId()
+	for unusedValue, child in ipairs(optionsPanel:getChildren()) do
+		local id = child:getId()
 
-		if id and id ~= "" and not seen[id] and isShortcutVisible(id) then
-			table.insert(order, id)
+		if id and id ~= "" and not var_42_1[id] and var_42_3(id) then
+			table.insert(var_42_0, id)
 
-			seen[id] = true
+			var_42_1[id] = true
 		end
 	end
 
-	return order
+	return var_42_0
 end
 
 function applyShortcutOrder(order)
-	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
+	local var_44_0 = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
 
-	if not optionsPanel then
+	if not var_44_0 then
 		return
 	end
 
-	buttonOrder = {}
+	buttonOrder = var_0_27(order)
 
-	if type(order) == "table" then
-		for _, id in ipairs(order) do
-			if type(id) == "string" and id ~= "" then
-				table.insert(buttonOrder, id)
-			end
-		end
+	local byId = {}
+
+	for _, ch in ipairs(buttonOrder) do
+		byId[ch] = true
 	end
 
-	local visibleSet = {}
-
-	for _, id in ipairs(buttonOrder) do
-		visibleSet[id] = true
-	end
-
-	for _, button in ipairs(optionsPanel:getChildren()) do
-		local id = button:getId()
+	for unusedValue, child in ipairs(var_44_0:getChildren()) do
+		local id = child:getId()
 
 		if id and id ~= "" then
-			local visible = visibleSet[id] == true
+			local var_44_3 = byId[id] == true
 
-			button:setVisible(visible)
+			child:setVisible(var_44_3)
 
-			local displayName = ControlButtonNames[id] or stripHotkey(button:getTooltip()) or id
+			local displayName = ControlButtonNames[id] or stripHotkey(child:getTooltip()) or id
 
 			if not buttonConfigs[id] then
 				buttonConfigs[id] = {
-					visible = visible,
+					visible = var_44_3,
 					tooltip = displayName
 				}
 			else
-				buttonConfigs[id].visible = visible
+				buttonConfigs[id].visible = var_44_3
 			end
 		end
 	end
@@ -686,18 +937,10 @@ function applyShortcutOrder(order)
 end
 
 function loadButtonConfig()
-	local shortcutOrder
-
-	if SidebarPersistence and SidebarPersistence.getSection then
-		local panelOptions = SidebarPersistence.getSection("sidebarPanelsOptions")
-
-		if type(panelOptions) == "table" and type(panelOptions.shortcutOrder) == "table" then
-			shortcutOrder = panelOptions.shortcutOrder
-		end
-	end
+	local unusedValue, DEFAULT_SHORTCUT_ORDER = var_0_29()
 
 	return {
-		shortcutOrder = shortcutOrder or DEFAULT_SHORTCUT_ORDER
+		shortcutOrder = DEFAULT_SHORTCUT_ORDER
 	}
 end
 
@@ -706,18 +949,21 @@ function reorderMainPanelSpecialButtons()
 		return
 	end
 
-	local panel = optionsController.ui.onPanel.specials
+	local specials = optionsController.ui.onPanel.specials
 
-	if not panel or panel:isDestroyed() then
+	if not specials or specials:isDestroyed() then
 		return
 	end
 
 	local orderIds = {
-		"optionsMainButton"
+		"optionsMainButton",
+		"logoutButton",
+		"helperButton",
+		"battlePassInboxButton"
 	}
 	local byId = {}
 
-	for _, ch in ipairs(panel:getChildren()) do
+	for _, ch in ipairs(specials:getChildren()) do
 		local id = ch:getId()
 
 		if id and id ~= "" then
@@ -725,33 +971,34 @@ function reorderMainPanelSpecialButtons()
 		end
 	end
 
-	local out, used = {}, {}
+	local rest = {}
+	local var_46_5 = {}
 
-	for _, id in ipairs(orderIds) do
-		local w = byId[id]
+	for id, w in ipairs(orderIds) do
+		local w = byId[w]
 
 		if w then
-			out[#out + 1] = w
-			used[w] = true
+			rest[#rest + 1] = w
+			var_46_5[w] = true
 		end
 	end
 
-	local rest = {}
+	local var_46_7 = {}
 
-	for id, w in pairs(byId) do
-		if not used[w] then
-			rest[#rest + 1] = id
+	for _, id in pairs(byId) do
+		if not var_46_5[id] then
+			var_46_7[#var_46_7 + 1] = _
 		end
 	end
 
-	table.sort(rest)
+	table.sort(var_46_7)
 
-	for _, id in ipairs(rest) do
-		out[#out + 1] = byId[id]
+	for _, button in ipairs(var_46_7) do
+		rest[#rest + 1] = byId[button]
 	end
 
-	if #out > 0 then
-		panel:reorderChildren(out)
+	if #rest > 0 then
+		specials:reorderChildren(rest)
 	end
 end
 
@@ -763,8 +1010,8 @@ function reorderButtons()
 	local optionsPanel = optionsController.ui.onPanel.options
 	local children = {}
 
-	for _, id in ipairs(buttonOrder) do
-		local button = optionsPanel:getChildById(id)
+	for _, button in ipairs(buttonOrder) do
+		local button = optionsPanel:getChildById(button)
 
 		if button then
 			table.insert(children, button)
@@ -784,15 +1031,15 @@ function reorderButtons()
 end
 
 function getMainPanelButtonsInfo()
-	local buttons = {}
-	local optionsPanel = optionsController.ui.onPanel.options
+	local var_48_0 = {}
+	local options = optionsController.ui.onPanel.options
 
-	if optionsPanel then
-		for _, button in ipairs(optionsPanel:getChildren()) do
+	if options then
+		for unusedValue, button in ipairs(options:getChildren()) do
 			local id = button:getId()
 
 			if id then
-				table.insert(buttons, {
+				table.insert(var_48_0, {
 					id = id,
 					tooltip = ControlButtonNames[id] or stripHotkey(button:getTooltip()) or id,
 					visible = isShortcutButtonConfiguredVisible(id, button)
@@ -801,7 +1048,7 @@ function getMainPanelButtonsInfo()
 		end
 	end
 
-	return buttons, buttonOrder
+	return var_48_0, buttonOrder
 end
 
 function setMainPanelButtonVisible(id, visible)
@@ -842,7 +1089,7 @@ function setMainPanelButtonVisible(id, visible)
 end
 
 function setMainPanelButtonOrder(order)
-	buttonOrder = order
+	buttonOrder = var_0_27(order)
 
 	reorderButtons()
 	saveButtonConfig()
@@ -850,25 +1097,7 @@ end
 
 function resetMainPanelButtons()
 	buttonConfigs = {}
-	buttonOrder = {}
 
-	local optionsPanel = optionsController.ui.onPanel.options
-
-	if optionsPanel then
-		for _, button in ipairs(optionsPanel:getChildren()) do
-			local id = button:getId()
-
-			if id then
-				button:setVisible(false)
-
-				buttonConfigs[id] = {
-					visible = false,
-					tooltip = ControlButtonNames[id] or stripHotkey(button:getTooltip()) or id
-				}
-			end
-		end
-	end
-
+	applyShortcutOrder(DEFAULT_SHORTCUT_ORDER)
 	saveButtonConfig()
-	reloadMainPanelSizes()
 end

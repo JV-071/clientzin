@@ -172,6 +172,7 @@ NpcModalWindow < npcWindowBase
     @onTextChange: |
       local p = self:getParent():getChildById('placeholderLabel')
       if p then p:setVisible(self:getText():len() == 0) end
+    @onClick: modules.game_console.activateNpcModalChatInput()
 
   UILabel
     id: placeholderLabel
@@ -367,6 +368,9 @@ NpcModalWindow < npcWindowBase
     anchors.left: sep1.right
     margin-left: 13
     margin-bottom: 76
+    text-align: left
+    padding-bottom: 0
+    placeholder-align: topLeft
     placeholder: "Type to search"
     placeholder-color:#707068
     @onTextChange: modules.game_npcmodal.search(self:getText(), 1)
@@ -547,55 +551,188 @@ NpcItemBox < Panel
 ///////////////// Sell All /////////////////
 ////////////////////////////////////////////
 
-ItemBoxSell < UIItem
-  id: itemBox
-  color: #aaaaaa
-  text-align: center
-  margin: 1
+SellAllItemRow < Panel
+  height: 36
+  margin-bottom: 0
+  background-color: #00000000
+  focusable: false
 
-  Item
-    id: itemsell
-    phantom: true
-    virtual: true
-    always-show-count: true
-    text-offset: 0 20
-    text-align: right
-    anchors.top: parent.top
-    anchors.horizontalCenter: parent.horizontalCenter
-    margin-top: 1
-
-  $hover !checked:
-    border-color: #aaaaaa
-
-  $disabled:
-    image-color: #ffffff88
-    color: #aaaaaa88
-  
   UIWidget
-    id: ignoredBorder
-    phantom: true
+    id: rowBackground
     anchors.fill: parent
-    margin: 1
-    image-source: /modules/game_npcmodal/assets/images/red-border
+    background-color: #484848
+    phantom: true
+
+  UIWidget
+    id: selectionBorder
+    anchors.fill: parent
+    background-color: #585858
+    phantom: true
     visible: false
+
+  UIWidget
+    id: hoverOverlay
+    anchors.fill: parent
+    background-color: #ffffff0d
+    phantom: true
+    visible: false
+    z-index: 5
+
+  VerticalSeparator
+    id: valueSeparator
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-top: -1
+    margin-bottom: -1
+    margin-right: 111
+    phantom: true
+
+  UIWidget
+    id: itemBackground
+    size: 34 34
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    image-source: /images/ui/item
+    phantom: true
+
+    Item
+      id: itemsell
+      anchors.fill: parent
+      phantom: true
+      virtual: true
+      show-count: false
+
+  Label
+    id: itemName
+    anchors.top: parent.top
+    anchors.left: itemBackground.right
+    anchors.right: totalValue.left
+    margin-top: 4
+    margin-left: 5
+    margin-right: 5
+    color: #c0c0c0
+    font: $var-cip-font-new
+    phantom: true
+
+  Label
+    id: itemDetails
+    anchors.bottom: parent.bottom
+    anchors.left: itemBackground.right
+    anchors.right: totalValue.left
+    margin-bottom: 3
+    margin-left: 5
+    margin-right: 5
+    color: #929292
+    font: $var-cip-font-new
+    phantom: true
+
+  Label
+    id: totalValue
+    anchors.left: valueSeparator.left
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 3
+    margin-right: 3
+    color: #c0c0c0
+    font: $var-cip-font-new
+    text-align: left
+    phantom: true
+
+SellAllIgnoredRow < Panel
+  height: 36
+  margin-bottom: 0
+  background-color: #00000000
+  focusable: false
+
+  UIWidget
+    id: rowBackground
+    anchors.fill: parent
+    background-color: #484848
+    phantom: true
+
+  UIWidget
+    id: selectionBorder
+    anchors.fill: parent
+    background-color: #585858
+    phantom: true
+    visible: false
+
+  UIWidget
+    id: hoverOverlay
+    anchors.fill: parent
+    background-color: #ffffff0d
+    phantom: true
+    visible: false
+    z-index: 5
+
+  UIWidget
+    id: itemBackground
+    size: 34 34
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 2
+    image-source: /images/ui/item
+    phantom: true
+
+    Item
+      id: itemsell
+      anchors.fill: parent
+      phantom: true
+      virtual: true
+      show-count: false
+      image-color: #ffffffaa
+
+    UIWidget
+      id: ignoredBorder
+      size: 34 34
+      anchors.centerIn: parent
+      image-source: /modules/game_npcmodal/assets/images/red-border
+      phantom: true
+
+  Label
+    id: itemName
+    anchors.top: parent.top
+    anchors.left: itemBackground.right
+    anchors.right: parent.right
+    margin-top: 4
+    margin-left: 5
+    margin-right: 5
+    color: #c0c0c0
+    font: $var-cip-font-new
+    phantom: true
+
+  Label
+    id: itemDetails
+    anchors.bottom: parent.bottom
+    anchors.left: itemBackground.right
+    anchors.right: parent.right
+    margin-bottom: 3
+    margin-left: 5
+    margin-right: 5
+    !text: tr('Ignored')
+    color: #986f6f
+    font: $var-cip-font-new
+    phantom: true
 
 SellAllModalWindow < npcWindowBase
   id: sellAllModal
-  // text: Sell All Loot Pouch
-  font: $var-cip-font-new
+  font: $var-cip-font
   text-offset: 0 2
-  size: 700 500
+  size: 720 470
+  image-source: /images/ui/window2
   anchors.horizontalCenter: parent.horizontalCenter
   anchors.verticalCenter: parent.verticalCenter
   @onEscape: modules.game_npcmodal.closeSellAllWindow()
 
   UIWidget
-    size: 145 56
+    size: 185 70
     anchors.top: parent.top
     anchors.horizontalCenter: parent.horizontalCenter
-    margin-top: -33
+    margin-top: -38
     margin-right: 7
-    image-source: /images/game/tutorial/backdrop_crest
+    image-source: /modules/game_npcmodal/assets/images/sell-all-clientzin-crest
     phantom: true
 
   UIButton
@@ -614,11 +751,32 @@ SellAllModalWindow < npcWindowBase
     $pressed:
       image-source: /modules/game_npcmodal/assets/images/press-button-12x12
 
+  Label
+    id: sellAllTitle
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-top: 26
+    margin-left: 16
+    !text: tr('Sell Loot')
+    color: #d6c28a
+    font: $var-cip-font
+    text-auto-resize: true
+
+  Label
+    id: sellAllSubtitle
+    anchors.top: sellAllTitle.bottom
+    anchors.left: sellAllTitle.left
+    margin-top: 2
+    !text: tr('Review your Loot Pouch before selling.')
+    color: #8f8f8f
+    font: $var-cip-font
+    text-auto-resize: true
+
   UIWindow
     id: mainPanel1
-    width: 286
-    height: 387
-    text: Sellable
+    width: 420
+    height: 326
+    !text: tr('Items to Sell')
     text-align: top
     image-source: /images/ui/popupwindow-sem-borda-interna
     text-offset: 1 2
@@ -627,9 +785,10 @@ SellAllModalWindow < npcWindowBase
     draggable: false
     anchors.top: parent.top
     anchors.left: parent.left
-    margin-top: 29
+    margin-top: 58
+    margin-left: 16
     color: $var-text-color-disabled
-    font: verdana-11px-monochrome
+    font: $var-cip-font
 
     Panel
       id: playerItens
@@ -656,52 +815,101 @@ SellAllModalWindow < npcWindowBase
       border-color-top: #131313
       background-color: #404040
 
+      UIWidget
+        id: sellListHeader
+        height: 16
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        background-color: #363636
+        border-width-bottom: 1
+        border-color-bottom: #808080
+
+        Label
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          margin-top: 1
+          margin-left: 3
+          !text: tr('Name')
+          color: #c0c0c0
+          font: $var-cip-font-new
+          phantom: true
+
+        VerticalSeparator
+          id: sellListHeaderSeparator
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-top: 1
+          margin-right: 123
+
+        Label
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: sellListHeaderSeparator.left
+          anchors.right: parent.right
+          margin-top: 1
+          margin-left: 3
+          margin-right: 14
+          !text: tr('Value')
+          color: #c0c0c0
+          font: $var-cip-font-new
+          phantom: true
+
       VerticalQtScrollBar
         id: npcTradeItemsScrollBar
-        anchors.top: parent.top
+        width: 12
+        anchors.top: sellListHeader.bottom
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        step: 34
+        margin-top: 1
+        step: 36
+        fixed-slider-size: 44
         
       ScrollablePanel
         id: npcSellItemsPanel
         anchors.left: parent.left
         anchors.right: prev.left
-        anchors.top: parent.top
+        anchors.top: sellListHeader.bottom
         anchors.bottom: parent.bottom
         vertical-scrollbar: npcTradeItemsScrollBar
-        margin-top: -1
+        margin-top: 1
         margin-left: 2
+        margin-right: 1
         padding-top: 1
         inverted-scroll: false
 
         layout:
-          type: grid
-          cell-size: 36 36
-          flow: true
-          cell-spacing: 1
+          type: verticalBox
+          spacing: 0
+
+      Label
+        id: sellItemsEmpty
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        !text: tr('No items available.')
+        color: #777777
+        font: $var-cip-font
+        text-auto-resize: true
+        phantom: true
+        visible: false
   
   UIWidget
-    anchors.verticalCenter: parent.verticalCenter
-    anchors.horizontalCenter: parent.horizontalCenter
-    margin-left: -26
+    id: moveItemsHint
+    size: 16 26
+    anchors.verticalCenter: mainPanel1.verticalCenter
+    anchors.left: mainPanel1.right
+    margin-left: 4
     image-source: /images/game/forge/icon-arrow-rightlarge
-  UIWidget
-    anchors.verticalCenter: prev.verticalCenter
-    anchors.left: prev.right
-    margin-left: 6
-    image-source: /images/game/forge/icon-arrow-rightlarge
-  UIWidget
-    anchors.verticalCenter: prev.verticalCenter
-    anchors.left: prev.right
-    margin-left: 6
-    image-source: /images/game/forge/icon-arrow-rightlarge
+    tooltip: Double-click an item to move it between the lists.
+    phantom: true
 
   UIWindow
     id: mainPanel2
-    width: 286
-    height: 387
-    text: Ignore List
+    width: 230
+    height: 326
+    !text: tr('Ignored')
     text-align: top
     image-source: /images/ui/popupwindow-sem-borda-interna
     text-offset: 1 2
@@ -710,10 +918,10 @@ SellAllModalWindow < npcWindowBase
     draggable: false
     anchors.top: parent.top
     anchors.right: parent.right
-    margin-top: 29
+    margin-top: 58
     margin-right: 16
     color: $var-text-color-disabled
-    font: verdana-11px-monochrome
+    font: $var-cip-font
 
     Panel
       id: ignoreItems
@@ -738,44 +946,78 @@ SellAllModalWindow < npcWindowBase
       border-color-top: #131313
       background-color: #404040
 
+      UIWidget
+        id: ignoreListHeader
+        height: 16
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        background-color: #363636
+        border-width-bottom: 1
+        border-color-bottom: #808080
+
+        Label
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.left: parent.left
+          margin-top: 1
+          margin-left: 3
+          !text: tr('Name')
+          color: #c0c0c0
+          font: $var-cip-font-new
+          phantom: true
+
       VerticalQtScrollBar
         id: npcIgnoreItemsScrollBar
-        anchors.top: parent.top
+        width: 12
+        anchors.top: ignoreListHeader.bottom
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        step: 34
+        margin-top: 1
+        step: 36
+        fixed-slider-size: 44
         
       ScrollablePanel
         id: npcIgnoreItemsPanel
         anchors.left: parent.left
         anchors.right: prev.left
-        anchors.top: parent.top
+        anchors.top: ignoreListHeader.bottom
         anchors.bottom: parent.bottom
         vertical-scrollbar: npcIgnoreItemsScrollBar
-        margin-top: -1
+        margin-top: 1
         margin-left: 2
+        margin-right: 1
         padding-top: 1
         inverted-scroll: false
 
         layout:
-          type: grid
-          cell-size: 36 36
-          flow: true
-          cell-spacing: 1
+          type: verticalBox
+          spacing: 0
+
+      Label
+        id: ignoreItemsEmpty
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        !text: tr('No ignored items.')
+        color: #777777
+        font: $var-cip-font
+        text-auto-resize: true
+        phantom: true
+        visible: false
 
   TextEdit
     id: search2
     height: 22
-    width: 286
+    width: 420
     anchors.top: mainPanel1.bottom
-    anchors.left: parent.left
-    margin-top: 9
+    anchors.left: mainPanel1.left
+    margin-top: 8
     placeholder: "Type to search"
     placeholder-color:#707068
     @onTextChange: modules.game_npcmodal.search(self:getText(), 2)
 
   Button
-    id: clearSearch
+    id: clearSellSearch
     width: 18
     height: 18
     anchors.right: search2.right
@@ -792,17 +1034,16 @@ SellAllModalWindow < npcWindowBase
   TextEdit
     id: search3
     height: 22
-    width: 286
+    width: 230
     anchors.top: mainPanel2.bottom
-    anchors.right: parent.right
-    margin-top: 9
-    margin-right: 16
+    anchors.left: mainPanel2.left
+    margin-top: 8
     placeholder: "Type to search"
     placeholder-color:#707068
     @onTextChange: modules.game_npcmodal.search(self:getText(), 3)
 
   Button
-    id: clearSearch
+    id: clearIgnoreSearch
     width: 18
     height: 18
     anchors.right: search3.right
@@ -818,66 +1059,102 @@ SellAllModalWindow < npcWindowBase
 
   HorizontalSeparator
     id: separator
-    anchors.top: mainPanel1.bottom
+    anchors.top: search2.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    margin-top: 39
+    margin-top: 12
+    margin-left: 16
     margin-right: 16
-  
-  Panel
-    id: goldBalancePanel
+
+  UIWidget
+    id: accountGoldBase
     size: 130 20
     anchors.top: separator.bottom
     anchors.left: parent.left
-    margin-top: 9
-    image-source: /images/ui/item
+    margin-top: 8
+    margin-left: 16
+    image-source: /images/ui/item66
     image-border: 10
+    !tooltip: tr('Your total gold balance (inventory and bank account).')
 
     UIWidget
+      id: accountGoldIcon
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
-      image-source: /images/icons/icon-goldcoin
       margin-right: 3
-      margin-top: 1
-      
+      margin-bottom: -1
+      image-source: /images/icons/icon-goldcoin
+      phantom: true
+
     Label
-      id: value
-      text: 0
-      anchors.right: prev.right
+      id: accountBalanceValue
+      anchors.right: accountGoldIcon.left
       anchors.verticalCenter: parent.verticalCenter
-      margin-right: 10
-      margin-top: 2
-      text-auto-resize: true
+      margin-right: 2
+      margin-bottom: -2
+      text: 0
+      color: #bdbdbd
       font: verdana-11px-monochrome
-  
+      text-align: right
+      text-auto-resize: true
+      phantom: true
+
+  UIWidget
+    id: saleGoldBase
+    size: 130 20
+    anchors.top: accountGoldBase.top
+    anchors.left: accountGoldBase.right
+    margin-left: 6
+    image-source: /images/ui/item66
+    image-border: 10
+    !tooltip: tr('Total value of the items that will be sold.')
+
+    UIWidget
+      id: saleGoldIcon
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 3
+      margin-bottom: -1
+      image-source: /images/icons/icon-bankaccount
+      phantom: true
+
+    Label
+      id: saleValue
+      anchors.right: saleGoldIcon.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 2
+      margin-bottom: -2
+      text: 0
+      color: #bdbdbd
+      font: verdana-11px-monochrome
+      text-align: right
+      text-auto-resize: true
+      phantom: true
+
   UIButton
-    id: sellAllButton
-    size: 77 20
+    id: confirmSellAllButton
+    size: 90 20
     !text: tr('Sell All')
-    text-offset: -1 0
+    text-offset: 8 2
     tooltip: Sell items to the NPC
-    font: $var-cip-font-new
+    font: $var-cip-font
     color: #c0c0c0
     anchors.top: separator.bottom
     anchors.right: parent.right
     margin-top: 8
-    margin-right: 17
-    image-source: /modules/game_npcmodal/assets/images/button-sell
-    image-border: 3
+    margin-right: 16
+    image-source: /modules/game_npcmodal/assets/images/button-sell-all
     image-clip: 0 0 77 16
     $pressed:
-      text-offset: 0 1
+      text-offset: 9 3
       image-clip: 0 16 77 16
 
     @onClick: modules.game_npcmodal.sendSellAll()
 
     UIWidget
-      id: highlightSell
-      size: 79 22
+      id: confirmSellAllHighlight
+      size: 92 22
+      anchors.centerIn: parent
+      border-width: 1
+      border-color: #d8ad35
       phantom: true
-      anchors.top: parent.top
-      anchors.left: parent.left
-      margin-top: -1
-      margin-left: -1
-      image-border: 3
-      image-source: /modules/game_npcmodal/assets/images/sell-all-highlight

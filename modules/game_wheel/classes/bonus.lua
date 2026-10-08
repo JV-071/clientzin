@@ -1,2338 +1,514 @@
-﻿-- chunkname: @/game_wheel/classes/bonus.lua
+﻿local function var_0_0(attribute)
+	if type(attribute) ~= "table" then
+		return false
+	end
 
-WheelPointTooltip = "From level 51 onwards, you receive one promotion point with each level, of which you currently have %s.\n\nFor each fully enhanced mod, you will receive another promotion point. This currently gives you %s out of a maximum of 69 points.\n\nCertain rare items and special game accomplishments can earn you bonus promotion points, of wich you currently have %s:"
-ConvictionTooltip = "The Conviction Perk is unlocked when the maximum number of\npromotion points for this slice has been assigned.\n\nMost Conviction Perks can be found more than once within the\nWheel of Destiny. When they are unlocked, thier effect adds up."
-WheelDedicationHeight = {
-	{
-		45,
-		60,
-		60,
-		74
-	},
-	{
-		45,
-		45,
-		60,
-		74
-	},
-	{
-		45,
-		60,
-		60,
-		74
-	},
-	{
-		45,
-		60,
-		74,
-		74
-	},
-	{
-		45,
-		60,
-		60,
-		74
-	}
-}
-WheelConsts = {
-	lifeleech = 0.75,
-	skill = 1,
-	manaleech = 0.25,
-	mitigation = 0.03,
-	lifemana = {
-		life = {
-			3,
-			2,
-			1,
-			1,
-			2
-		},
-		mana = {
-			1,
-			3,
-			6,
-			6,
-			2
-		}
-	},
-	special_1 = {
-		{
-			"Battle Instinct",
-			"Gain +6 shielding and +1 sword/axe/club fighting when 5\ncreatures are on adjacent squares.\nFor each additional creature, up to a maximum of 8, you get +6\nshielding and +1 sword/axe/club fighting more."
-		},
-		{
-			"Positional Tatic",
-			"Gain +3 distance fighting while no monster is within 1 squares.\nOtherwise gain +3 holy magic level and +3 healing magic level."
-		},
-		{
-			"Runic Mastery",
-			"If you use a rune, you have a 25% chance of increasing your magic\nlevel by 10%, or by 20% if you use a rune that can be created by\nyour vocation."
-		},
-		{
-			"Healing Link",
-			"If you heal someone with Nature's Embrace or Heal Friend, you\nalso heal yourself for 10% of the applied healing."
-		},
-		{
-			"Guiding Presence",
-			"Gain an aura that shares 50% of your mantra with members of your group."
-		}
-	},
-	special_2 = {
-		{
-			"Battle Healing",
-			"For each creature challenged, you will heal yourself for a small\namount. This amount scales with your shielding skill. Heals for\ndouble the amount if you have less than 60% of your hit points and\ntriple the amount if you have less than 30% of your hit points."
-		},
-		{
-			"Ballistic Mastery",
-			"The critical extra damage for attacks with a crossbow is increased\nby 10%. While wielding a bow your attacks and spells treat the\ntargets physical and holy sensitivity as being 2% higher."
-		},
-		{
-			"Focus Mastery",
-			"Increases the damage of your next damage spell by 35% within 12\nseconds after casting a focus spell."
-		},
-		{
-			"Runic Mastery",
-			"If you use a rune, you have a 25% chance of increasing your magic\nlevel by 10%, or by 20% if you use a rune that can be created by\nyour vocation."
-		},
-		{
-			"Sanctuary",
-			"Consuming Harmony creates a field lasting 5 seconds, increasing your damage and healing done by 2% for each Harmony consumed."
-		}
-	},
-	health = {
-		3,
-		2,
-		1,
-		1,
-		2
-	},
-	mana = {
-		1,
-		3,
-		6,
-		6,
-		2
-	},
-	spell_1 = {
-		6,
-		21
-	},
-	spell_2 = {
-		8,
-		24
-	},
-	capacity = {
-		5,
-		4,
-		2,
-		2,
-		5
-	},
-	spell_3 = {
-		11,
-		26
-	},
-	spell_4 = {
-		13,
-		29
-	},
-	spell_5 = {
-		16,
-		31
-	}
-}
-WheelBonus = {
-	[0] = {
-		domain = 1,
-		maxPoints = 200,
-		conviction = "special_1",
-		dedication = "lifemana"
-	},
-	{
-		domain = 1,
-		maxPoints = 150,
-		conviction = "manaleech",
-		dedication = "mitigation"
-	},
-	{
-		domain = 1,
-		maxPoints = 100,
-		modType = 1,
-		conviction = "vessel",
-		dedication = "health"
-	},
-	{
-		domain = 2,
-		maxPoints = 100,
-		conviction = "skill",
-		dedication = "mana"
-	},
-	{
-		domain = 2,
-		maxPoints = 150,
-		modType = 2,
-		conviction = "vessel",
-		dedication = "health"
-	},
-	{
-		domain = 2,
-		maxPoints = 200,
-		conviction = "spell_1",
-		dedication = "lifemana"
-	},
-	{
-		domain = 1,
-		maxPoints = 150,
-		modType = 2,
-		conviction = "vessel",
-		dedication = "mitigation"
-	},
-	{
-		domain = 1,
-		maxPoints = 100,
-		conviction = "spell_2",
-		dedication = "health"
-	},
-	{
-		domain = 1,
-		maxPoints = 75,
-		conviction = "lifeleech",
-		dedication = "mana"
-	},
-	{
-		domain = 2,
-		maxPoints = 75,
-		modType = 0,
-		conviction = "vessel",
-		dedication = "capacity"
-	},
-	{
-		domain = 2,
-		maxPoints = 100,
-		conviction = "spell_3",
-		dedication = "mana"
-	},
-	{
-		domain = 2,
-		maxPoints = 150,
-		conviction = "manaleech",
-		dedication = "health"
-	},
-	{
-		domain = 1,
-		maxPoints = 100,
-		conviction = "spell_4",
-		dedication = "health"
-	},
-	{
-		domain = 1,
-		maxPoints = 75,
-		conviction = "skill",
-		dedication = "mana"
-	},
-	{
-		domain = 1,
-		maxPoints = 50,
-		modType = 0,
-		conviction = "vessel",
-		dedication = "capacity"
-	},
-	{
-		domain = 2,
-		maxPoints = 50,
-		conviction = "spell_5",
-		dedication = "mitigation"
-	},
-	{
-		domain = 2,
-		maxPoints = 75,
-		conviction = "lifeleech",
-		dedication = "capacity"
-	},
-	{
-		domain = 2,
-		maxPoints = 100,
-		modType = 1,
-		conviction = "vessel",
-		dedication = "mana"
-	},
-	{
-		domain = 3,
-		maxPoints = 100,
-		modType = 1,
-		conviction = "vessel",
-		dedication = "mitigation"
-	},
-	{
-		domain = 3,
-		maxPoints = 75,
-		conviction = "manaleech",
-		dedication = "health"
-	},
-	{
-		domain = 3,
-		maxPoints = 50,
-		conviction = "spell_1",
-		dedication = "mana"
-	},
-	{
-		domain = 4,
-		maxPoints = 50,
-		modType = 0,
-		conviction = "vessel",
-		dedication = "health"
-	},
-	{
-		domain = 4,
-		maxPoints = 75,
-		conviction = "skill",
-		dedication = "mitigation"
-	},
-	{
-		domain = 4,
-		maxPoints = 100,
-		conviction = "spell_2",
-		dedication = "capacity"
-	},
-	{
-		domain = 3,
-		maxPoints = 150,
-		conviction = "lifeleech",
-		dedication = "capacity"
-	},
-	{
-		domain = 3,
-		maxPoints = 100,
-		conviction = "spell_3",
-		dedication = "mitigation"
-	},
-	{
-		domain = 3,
-		maxPoints = 75,
-		modType = 0,
-		conviction = "vessel",
-		dedication = "health"
-	},
-	{
-		domain = 4,
-		maxPoints = 75,
-		conviction = "manaleech",
-		dedication = "mitigation"
-	},
-	{
-		domain = 4,
-		maxPoints = 100,
-		conviction = "spell_4",
-		dedication = "capacity"
-	},
-	{
-		domain = 4,
-		maxPoints = 150,
-		modType = 2,
-		conviction = "vessel",
-		dedication = "mana"
-	},
-	{
-		domain = 3,
-		maxPoints = 200,
-		conviction = "spell_5",
-		dedication = "lifemana"
-	},
-	{
-		domain = 3,
-		maxPoints = 150,
-		modType = 2,
-		conviction = "vessel",
-		dedication = "capacity"
-	},
-	{
-		domain = 3,
-		maxPoints = 100,
-		conviction = "skill",
-		dedication = "mitigation"
-	},
-	{
-		domain = 4,
-		maxPoints = 100,
-		modType = 1,
-		conviction = "vessel",
-		dedication = "capacity"
-	},
-	{
-		domain = 4,
-		maxPoints = 150,
-		conviction = "lifeleech",
-		dedication = "mana"
-	},
-	{
-		domain = 4,
-		maxPoints = 200,
-		conviction = "special_2",
-		dedication = "lifemana"
-	}
-}
-WheelDomainOrder = {
-	[0] = {
-		15,
-		14,
-		9,
-		13,
-		8,
-		3,
-		7,
-		2,
-		1
-	},
-	{
-		16,
-		10,
-		17,
-		4,
-		11,
-		18,
-		5,
-		12,
-		6
-	},
-	{
-		21,
-		20,
-		27,
-		19,
-		26,
-		33,
-		25,
-		32,
-		31
-	},
-	{
-		22,
-		23,
-		28,
-		24,
-		29,
-		34,
-		30,
-		35,
-		36
-	}
-}
-
-local function firstSpellIsUnlocked(attribute)
 	return WheelOfDestiny.isLitFull(attribute[1]) or WheelOfDestiny.isLitFull(attribute[2])
 end
 
 local function secondSpellIsUnlocked(attribute)
+	if type(attribute) ~= "table" then
+		return false
+	end
+
 	return WheelOfDestiny.isLitFull(attribute[1]) and WheelOfDestiny.isLitFull(attribute[2])
+end
+
+local var_0_2 = "#c0c0c0"
+local var_0_3 = "#707070"
+
+function formatWheelPercent(numericValue, arg_3_1)
+	numericValue = tonumber(numericValue) or 0
+
+	local formattedText
+
+	if math.abs(numericValue - math.floor(numericValue + 1e-09)) < 1e-09 then
+		formattedText = string.format("%d", math.floor(numericValue + 1e-09))
+	else
+		formattedText = string.format("%.2f", numericValue):gsub("(%..-)0+$", "%1"):gsub("%.$", "")
+	end
+
+	if arg_3_1 then
+		return string.format("+%s%%", formattedText)
+	end
+
+	return formattedText .. "%"
+end
+
+function formatWheelPlusInteger(arg_4_0)
+	arg_4_0 = math.floor((tonumber(arg_4_0) or 0) + 0.5)
+
+	return (arg_4_0 < 0 and "-" or "+") .. comma_value(math.abs(arg_4_0))
+end
+
+function formatWheelSignedPercent(numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	return (numericValue < 0 and "-" or "+") .. formatWheelPercent(math.abs(numericValue))
+end
+
+function formatWheelFixedPercent(numericValue, arg_6_1)
+	numericValue = tonumber(numericValue) or 0
+
+	local formattedText = string.format("%.2f%%", math.abs(numericValue))
+
+	if numericValue < 0 then
+		return "-" .. formattedText
+	end
+
+	return (arg_6_1 and "+" or "") .. formattedText
+end
+
+local function var_0_4(arg_7_0)
+	if type(arg_7_0) ~= "string" then
+		return ""
+	end
+
+	return arg_7_0:gsub("\n+", " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+local function var_0_5(arg_8_0, arg_8_1)
+	if type(arg_8_0) == "string" then
+		return arg_8_0
+	end
+
+	if type(arg_8_1) == "string" then
+		return arg_8_1
+	end
+
+	return ""
+end
+
+local function var_0_6(arg_9_0, arg_9_1, arg_9_2)
+	local var_9_0 = var_0_4(arg_9_2)
+	local var_9_1 = arg_9_1 and var_0_2 or var_0_3
+
+	return {
+		prefix = string.format("{icon:icon-augmentation-%d-%s}{: , %s}", arg_9_0, arg_9_1 and "active" or "inactive", var_0_2),
+		text = string.format("{%s, %s}", var_9_0, var_9_1)
+	}
+end
+
+local function var_0_7(arg_10_0, arg_10_1)
+	local var_10_0 = arg_10_1 and var_0_2 or var_0_3
+
+	return string.format("{%s, %s}", var_0_4(arg_10_0), var_10_0)
+end
+
+local function var_0_8(arg_11_0, arg_11_1, arg_11_2, arg_11_3)
+	local var_11_0 = {
+		var_0_6(1, arg_11_1, arg_11_0)
+	}
+
+	if arg_11_2 and arg_11_2 ~= "" then
+		var_11_0[#var_11_0 + 1] = var_0_6(2, arg_11_3, arg_11_2)
+	end
+
+	return var_11_0
+end
+
+local function var_0_9(arg_12_0, arg_12_1, arg_12_2, arg_12_3, arg_12_4, arg_12_5)
+	return {
+		name = var_0_7(arg_12_0, arg_12_5 <= arg_12_4),
+		tiers = var_0_8(arg_12_1, var_0_0(arg_12_3), arg_12_2, secondSpellIsUnlocked(arg_12_3))
+	}
+end
+
+local function var_0_10(arg_13_0)
+	if type(arg_13_0) ~= "string" or arg_13_0 == "" then
+		return "", ""
+	end
+
+	local var_13_0 = arg_13_0:find("\n", 1, true)
+
+	if not var_13_0 then
+		return arg_13_0, ""
+	end
+
+	return arg_13_0:sub(1, var_13_0 - 1), arg_13_0:sub(var_13_0 + 1)
+end
+
+local function var_0_11(arg_14_0)
+	local var_14_0, var_14_1 = var_0_10(arg_14_0)
+
+	return {
+		name = var_14_0,
+		body = var_14_1
+	}
 end
 
 function getDedicationBonus(index)
 	local bonus = WheelBonus[index - 1]
 	local vocation = WheelOfDestiny.vocationId
-	local points = WheelOfDestiny.pointInvested[index]
+	local points = WheelOfDestiny.pointInvested[index] or 0
 
 	if not vocation or vocation == 0 then
 		return
 	end
 
-	local attribute = WheelConsts[bonus.dedication]
-	local vocationAttribute = 0
+	local var_15_3 = WheelConsts[bonus.dedication]
+	local var_15_4 = 0
 
-	if type(attribute) == "table" then
-		vocationAttribute = attribute[vocation] or 0
+	if type(var_15_3) == "table" and var_15_3[vocation] then
+		var_15_4 = var_15_3[vocation] or 0
 	end
 
-	if bonus.dedication == "capacity" then
-		return string.format("+%d Capacity", points * vocationAttribute)
-	elseif bonus.dedication == "mana" then
-		return string.format("+%d Mana", points * vocationAttribute)
-	elseif bonus.dedication == "health" then
-		return string.format("+%d Hit Points", points * vocationAttribute)
-	elseif bonus.dedication == "mitigation" then
-		return string.format("%.2f%% Mitigation Multiplier", points * attribute)
-	elseif bonus.dedication == "lifemana" then
-		return string.format("+%d Hit Points\n+%d Mana", points * attribute.life[vocation], points * attribute.mana[vocation])
-	end
+	local var_15_5 = DedicationBonusTexts[bonus.dedication]
 
-	return ""
-end
-
-function getDedicationTooltip(index)
-	local bonus = WheelBonus[index - 1]
-	local vocation = WheelOfDestiny.vocationId
-	local points = WheelOfDestiny.pointInvested[index]
-
-	if not vocation or vocation == 0 then
+	if not var_15_5 then
 		return ""
 	end
 
-	local attribute = WheelConsts[bonus.dedication]
-	local vocationAttribute = 0
-
-	if type(attribute) == "table" then
-		vocationAttribute = attribute[vocation] or 0
-	end
-
-	if bonus.dedication == "capacity" then
-		return string.format("Per promotion point:\n+%d Capacity", vocationAttribute)
-	elseif bonus.dedication == "mana" then
-		return string.format("Per promotion point:\n+%d Mana", vocationAttribute)
-	elseif bonus.dedication == "health" then
-		return string.format("Per promotion point:\n+%d Hit Points", vocationAttribute)
-	elseif bonus.dedication == "mitigation" then
-		return string.format("Increases your mitigation multiplicatively.\n\n%.2f%% Mitigation Multiplier", attribute)
+	if bonus.dedication == "mitigation" then
+		return formatWheelPercent(points * var_15_3) .. var_15_5.percentSuffix
 	elseif bonus.dedication == "lifemana" then
-		return string.format("Per promotion point:\n+%d Hit Points\n+%d Mana", attribute.life[vocation], attribute.mana[vocation])
+		return string.format(var_15_5, points * var_15_3.life[vocation], points * var_15_3.mana[vocation])
 	end
 
-	return ""
+	return string.format(var_15_5, points * var_15_4)
+end
+
+function getDedicationTooltip(index)
+	local var_16_0 = WheelBonus[index - 1]
+	local vocationId = WheelOfDestiny.vocationId
+
+	if not vocationId or vocationId == 0 then
+		return ""
+	end
+
+	local var_16_2 = WheelConsts[var_16_0.dedication]
+	local var_16_3 = 0
+
+	if type(var_16_2) == "table" and var_16_2[vocationId] then
+		var_16_3 = var_16_2[vocationId] or 0
+	end
+
+	local var_16_4 = DedicationTooltipTexts[var_16_0.dedication]
+
+	if not var_16_4 then
+		return ""
+	end
+
+	if var_16_0.dedication == "mitigation" then
+		return var_16_4.prefix .. formatWheelPercent(var_16_2) .. var_16_4.percentSuffix
+	elseif var_16_0.dedication == "lifemana" then
+		return string.format(var_16_4, var_16_2.life[vocationId], var_16_2.mana[vocationId])
+	end
+
+	return string.format(var_16_4, var_16_3)
 end
 
 function getConvictionBonusTooltip(index)
-	local bonus = WheelBonus[index - 1]
+	local var_17_0 = WheelBonus[index - 1]
 	local vocation = WheelOfDestiny.vocationId
-	local points = WheelOfDestiny.pointInvested[index]
-	local attribute = WheelConsts[bonus.conviction]
+	local order = WheelConsts[var_17_0.conviction]
+	local conviction = var_17_0.conviction
 
-	if bonus.conviction == "vessel" then
-		local domain = bonus.domain
+	if conviction == "vessel" then
+		local var_17_4 = ConvictionStaticTexts.vessel[var_17_0.domain]
 
-		if domain == 1 then
-			return "Each level of Vessel Resonance unlocks equivalent Gem Mods in its\ndomain. If the Vessel Resonance matches the gem quality, a\ndamage and healing bonus is granted."
-		elseif domain == 2 then
-			return "Each level of Vessel Resonance unlocks equivalent Gem Mods in its\ndomain. If the Vessel Resonance matches the gem quality, a\ndamage and healing bonus is granted."
-		elseif domain == 3 then
-			return "Each level of Vessel Resonance unlocks equivalent Gem Mods in its\ndomain. If the Vessel Resonance matches the gem quality, a\ndamage and healing bonus is granted."
-		elseif domain == 4 then
-			return "Each level of Vessel Resonance unlocks equivalent Gem Mods in its\ndomain. If the Vessel Resonance matches the gem quality, a\ndamage and healing bonus is granted."
-		end
-	elseif bonus.conviction == "special_1" then
-		if vocation == KNIGHT then
-			return "Gain +6 shielding and +1 sword/axe/club fighting when 5\ncreatures are on adjacent squares.\nFor each additional creature, up to a maximum of 8, you get +6\nshielding and +1 sword/axe/club fighting more."
-		elseif vocation == PALADIN then
-			return "Gain +3 distance fighting while no monster is within 1 squares.\nOtherwise gain +3 holy magic level and +3 healing magic level."
-		elseif vocation == SORCERER then
-			return "If you use a rune, you have a 25% chance of increasing your magic\nlevel by 10%, or by 20% if you use a rune that can be created by\nyour vocation."
-		elseif vocation == DRUID then
-			return "If you heal someone with Nature's Embrace or Heal Friend, you\nalso heal yourself for 10% of the applied healing."
-		elseif vocation == MONK then
-			return "Gain an aura that shares 50% of your\nmantra with members of your group."
-		end
-	elseif bonus.conviction == "special_2" then
-		if vocation == KNIGHT then
-			return "For each creature challenged, you will heal yourself for a small\namount. This amount scales with your shielding skill. Heals for\ndouble the amount if you have less than 60% of your hit points and\ntriple the amount if you have less than 30% of your hit points."
-		elseif vocation == PALADIN then
-			return "The critical extra damage for attacks with a crossbow is increased\nby 10%. While wielding a bow your attacks and spells treat the\ntargets physical and holy sensitivity as being 2% higher."
-		elseif vocation == SORCERER then
-			return "Increases the damage of your next damage spell by 35% within 12\nseconds after casting a focus spell."
-		elseif vocation == DRUID then
-			return "If you use a rune, you have a 25% chance of increasing your magic\nlevel by 10%, or by 20% if you use a rune that can be created by\nyour vocation."
-		elseif vocation == MONK then
-			return "Consuming Harmony creates a field lasting 5 seconds, increasing\nyour damage and healing done by 2% for each Harmony\nconsumed."
-		end
-	elseif bonus.conviction == "spell_1" then
-		if vocation == KNIGHT then
-			return ""
-		elseif vocation == PALADIN then
-			local t = {}
+		return var_17_4 and var_17_4.tooltip or ""
+	elseif conviction == "special_1" or conviction == "special_2" then
+		local var_17_5 = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocation]
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, " Enables the casting of support spells while active and Focus secondary group cooldown -8s\n", "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, " -6s Cooldown; distance skill bonus increased by +5%", "#707070")
-
-			return t
-		end
+		return var_17_5 and (var_17_5.tooltip or var_17_5.body) or ""
+	elseif ConvictionSpellTexts[conviction] then
+		return buildSpellConvictionTooltip(conviction, vocation, order) or ""
 	end
 
 	return ""
 end
 
 function getConvictionBonus(index, fullMessage)
-	local bonus = WheelBonus[index - 1]
-	local vocation = WheelOfDestiny.vocationId
-	local points = WheelOfDestiny.pointInvested[index]
-	local attribute = WheelConsts[bonus.conviction]
+	local var_18_0 = getConvictionBonusParts(index, fullMessage)
 
-	if bonus.conviction == "vessel" then
-		local domain = bonus.domain
+	if not var_18_0.name or var_18_0.name == "" then
+		return var_18_0.body or ""
+	end
 
-		if domain == 1 then
-			if not fullMessage then
-				return "Vessel Resonance Top Left\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches t..."
-			else
-				return "Vessel Resonance Top Left\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches\nthe gem quality, a damage\nand healing bonus is granted."
+	if var_18_0.tiers and #var_18_0.tiers > 0 then
+		local var_18_1 = ""
+
+		for index, tier in ipairs(var_18_0.tiers) do
+			if index > 1 then
+				var_18_1 = var_18_1 .. "\n"
 			end
-		elseif domain == 2 then
-			if not fullMessage then
-				return "Vessel Resonance Top Right\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches t..."
-			else
-				return "Vessel Resonance Top Right\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches\nthe gem quality, a damage\nand healing bonus is granted."
-			end
-		elseif domain == 3 then
-			if not fullMessage then
-				return "Vessel Resonance Bottom Left\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches t..."
-			else
-				return "Vessel Resonance Bottom Left\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches\nthe gem quality, a damage\nand healing bonus is granted."
-			end
-		elseif domain == 4 then
-			if not fullMessage then
-				return "VR Bottom Right\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches t..."
-			else
-				return "VR Bottom Right\nEach level of Vessel\nResonance unlocks equivalent\nGem Mods in its domain. If the\nVessel Resonance matches\nthe gem quality, a damage\nand healing bonus is granted."
-			end
+
+			var_18_1 = var_18_1 .. tier.prefix .. tier.text
 		end
-	elseif bonus.conviction == "skill" then
-		if vocation == KNIGHT then
-			return string.format("+%d Weapon Skill Boost\nApplies to sword, axe and club\nfighting", attribute)
-		elseif vocation == PALADIN then
-			return string.format("+%d Distance Skill Boost", attribute)
-		elseif vocation == SORCERER or vocation == DRUID then
-			return string.format("+%d Magic Skill Boost", attribute)
-		elseif vocation == MONK then
-			return string.format("+%d Fist Fighting Skill Boost", attribute)
+
+		return var_18_0.name .. var_18_1
+	end
+
+	if var_18_0.body and var_18_0.body ~= "" then
+		if var_18_0.name:find("{", 1, true) or var_18_0.body:find("{", 1, true) then
+			return var_18_0.name .. var_18_0.body
 		end
-	elseif bonus.conviction == "lifeleech" then
-		return string.format("+%.2f%% Life Leech", attribute)
-	elseif bonus.conviction == "manaleech" then
-		return string.format("+%.2f%% Mana Leech", attribute)
-	elseif bonus.conviction == "spell_1" then
-		if vocation == KNIGHT then
-			local t = {}
 
-			setStringColor(t, "Augmented Front Sweep\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+		return var_18_0.name .. "\n" .. var_18_0.body
+	end
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+	return var_18_0.name
+end
 
-			setStringColor(t, ": Adds 5% life leech to this\nspell\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+function getConvictionBonusParts(arg_19_0, arg_19_1)
+	local var_19_0 = getConvictionBonusRaw(arg_19_0, arg_19_1)
 
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +14% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == PALADIN then
-			local t = {}
-
-			setStringColor(t, "Augmented Sharpshooter\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Enables the casting of\nsupport spells while activ...\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -6s Cooldown; distance\nskill bonus increased by ...", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == SORCERER then
-			local t = {}
-
-			setStringColor(t, "Augmented Focus Spells\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +8% Base Damage for Hell's\nCore and Rage of the Skies\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -4s Cooldown; Focus\nsecondary group cooldow...", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == DRUID then
-			local t = {}
-
-			setStringColor(t, "Augmented Forked Spells\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -2s Cooldown\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds +1 target", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == MONK then
-			local t = {}
-
-			setStringColor(t, "Aug. Thousand Fist Blows\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds 3% mana leech to\nthis spell\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds 25% critical extra\ndamage for this spell", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
+	if type(var_19_0) == "table" and type(var_19_0.name) == "string" then
+		if var_19_0.tiers then
+			return {
+				body = "",
+				name = var_19_0.name,
+				tiers = var_19_0.tiers
+			}
 		end
-	elseif bonus.conviction == "spell_2" then
-		if vocation == KNIGHT then
-			local t = {}
 
-			setStringColor(t, "Augmented Groundshaker\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+		return var_19_0
+	end
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+	if type(var_19_0) ~= "string" then
+		var_19_0 = ""
+	end
 
-			setStringColor(t, ": +12.5% Base Damage\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+	return var_0_11(var_19_0)
+end
 
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+local function var_0_12(arg_20_0, arg_20_1, arg_20_2)
+	local var_20_0 = ConvictionSpecialTexts[arg_20_0] and ConvictionSpecialTexts[arg_20_0][arg_20_1]
 
-			setStringColor(t, ": -2s Cooldown", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+	if not var_20_0 then
+		return ""
+	end
 
-			return t
-		elseif vocation == PALADIN then
-			local t = {}
+	local var_20_1 = arg_20_2 and var_20_0.body or var_20_0.bodyShort or var_20_0.body
 
-			setStringColor(t, "Aug. Strong Ethereal Spear\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+	return var_0_5(var_20_0.name) .. "\n" .. var_0_5(var_20_1)
+end
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+function getSpellConvictionTextEntry(arg_21_0, arg_21_1)
+	return ConvictionSpellTexts[arg_21_0] and ConvictionSpellTexts[arg_21_0][arg_21_1] or nil
+end
 
-			setStringColor(t, ": -2s Cooldown\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+local var_0_13 = "•"
 
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+function buildSpellConvictionTooltip(arg_22_0, arg_22_1, unusedArgument)
+	local var_22_0 = getSpellConvictionTextEntry(arg_22_0, arg_22_1)
 
-			setStringColor(t, ": +380% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+	if not var_22_0 then
+		return nil
+	end
 
-			return t
-		elseif vocation == SORCERER then
-			local t = {}
+	local var_22_1 = {}
+	local var_22_2 = var_22_0.tiers or {}
 
-			setStringColor(t, "Augmented Death Echo\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+	for index, entry in ipairs(var_22_2) do
+		if type(entry) ~= "string" then
+			-- block empty
+		else
+			setStringColor(var_22_1, var_0_13, "white")
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+			local var_22_3 = index < #var_22_2 and "\n" or ""
 
-			setStringColor(t, ": Enhanced effect\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -6s Cooldown", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == DRUID then
-			local t = {}
-
-			setStringColor(t, "Augmented Mass Healing\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +5% Base Healing\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Affected area enlarged", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == MONK then
-			local t = {}
-
-			setStringColor(t, "Augmented Mass Spirit Mend\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +8% Base Healing\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Affected area enlarged", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
+			setStringColor(var_22_1, entry .. var_22_3, "#3F3F3F")
 		end
-	elseif bonus.conviction == "spell_3" then
-		if vocation == KNIGHT then
-			local t = {}
+	end
 
-			setStringColor(t, "Augmented Shield Slam\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+	return var_22_1
+end
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+function getConvictionBonusRaw(arg_23_0, arg_23_1)
+	local var_23_0 = WheelBonus[arg_23_0 - 1]
 
-			setStringColor(t, ": +15% Life Leech\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+	if not var_23_0 then
+		return ""
+	end
 
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+	local vocationId = WheelOfDestiny.vocationId
+	local var_23_2 = WheelOfDestiny.pointInvested[arg_23_0] or 0
+	local var_23_3 = WheelConsts[var_23_0.conviction]
+	local conviction = var_23_0.conviction
 
-			setStringColor(t, ": +25% Damage Reduction\n(75% total)", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
+	if conviction == "vessel" then
+		local var_23_5 = ConvictionStaticTexts.vessel[var_23_0.domain]
 
-			return t
-		elseif vocation == PALADIN then
-			local t = {}
-
-			setStringColor(t, "Augmented Divine Dazzle\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Jumps to +1 additional\ntarget\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Duration increased; -4s\nCooldown", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == SORCERER then
-			local t = {}
-
-			setStringColor(t, "Augmented Special Spells\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Affected area enlarged\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Damage reduction\nincreased", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == DRUID then
-			local t = {}
-
-			setStringColor(t, "Augmented Heal Friend\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -10 Mana Cost\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +5% Base Healing", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == MONK then
-			local t = {}
-
-			setStringColor(t, "Augmented Mystic Repulse\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -4s Cooldown\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +40% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
+		if not var_23_5 then
+			return ""
 		end
-	elseif bonus.conviction == "spell_4" then
-		if vocation == KNIGHT then
-			local t = {}
 
-			setStringColor(t, "Aug. Intense Wound Cleansing\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+		local var_23_6 = arg_23_1 and var_23_5.body or var_23_5.bodyShort
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
+		return var_0_5(var_23_5.name) .. "\n" .. var_0_5(var_23_6)
+	elseif conviction == "skill" then
+		local var_23_7 = ConvictionStaticTexts.skill[vocationId]
 
-			setStringColor(t, ": +125% Base Healing\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -300s Cooldown", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == PALADIN then
-			local t = {}
-
-			setStringColor(t, "Augmented Swift Foot\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Focus secondary group\ncooldown -8s. Attacks an...\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -6s Cooldown and the\ndamage dealt is no longe...", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == SORCERER then
-			local t = {}
-
-			setStringColor(t, "Augmented Energy Wave\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +5% Base Damage\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Affected area enlarged", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == DRUID then
-			local t = {}
-
-			setStringColor(t, "Augmented Terra Wave\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +5% Base Damage\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds 5% life leech to this\nspell", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == MONK then
-			local t = {}
-
-			setStringColor(t, "Aug. Chained Penance\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Jumps to +1 additional\ntarget\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Jumps to +1 additional\ntarget", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
+		if not var_23_7 then
+			return ""
 		end
-	elseif bonus.conviction == "spell_5" then
-		if vocation == KNIGHT then
-			local t = {}
 
-			setStringColor(t, "Augmented Fierce Berserk\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
+		return string.format(var_0_5(var_23_7.template), var_23_3)
+	elseif conviction == "lifeleech" then
+		return formatWheelPercent(var_23_3, true) .. " Life Leech"
+	elseif conviction == "manaleech" then
+		return formatWheelPercent(var_23_3, true) .. " Mana Leech"
+	elseif ConvictionSpellTexts[conviction] then
+		local var_23_8 = getSpellConvictionTextEntry(conviction, vocationId)
 
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -30 Mana Cost\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +10% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == PALADIN then
-			local t = {}
-
-			setStringColor(t, "Augmented Divine Caldera\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": -20 Mana Cost\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +8.5% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == SORCERER then
-			local t = {}
-
-			setStringColor(t, "Augmented Great Fire Wave\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds 15% critical extra\ndamage for this spell and...\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +5% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == DRUID then
-			local t = {}
-
-			setStringColor(t, "Augmented Strong Ice Wave\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +6% Base Damage\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Affected area enlarged", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
-		elseif vocation == MONK then
-			local t = {}
-
-			setStringColor(t, "Aug. Flurry of Blows\n", points >= bonus.maxPoints and "#C0C0C0" or "#707070")
-
-			if not firstSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": Adds 5% life leech to this\nspell\n", firstSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			if not secondSpellIsUnlocked(attribute) then
-				setStringColor(t, "�", "white")
-			else
-				setStringColor(t, "�", "white")
-			end
-
-			setStringColor(t, ": +12% Base Damage", secondSpellIsUnlocked(attribute) and "#C0C0C0" or "#707070")
-
-			return t
+		if not var_23_8 then
+			return ""
 		end
-	elseif bonus.conviction == "special_1" then
-		if vocation == KNIGHT then
-			if not fullMessage then
-				return "Battle Instinct\nGain +6 shielding and +1\nsword/axe/club fighting when\n5 creatures are on adjacent\nsquares..."
-			else
-				return "Battle Instinct\nGain +6 shielding and +1\nsword/axe/club fighting when\n5 creatures are on adjacent\nsquares.\nFor each additional creature,\nup to a maximum of 8, you get\n+6 shielding and +1 sword/\naxe/club fighting more."
-			end
-		elseif vocation == PALADIN then
-			if not fullMessage then
-				return "Ballistic Mastery\nGain +3 distance fighting\nwhile no monster is within 1\nsquares. Otherwise gain +3\nholy magic level and +3 hea..."
-			else
-				return "Ballistic Mastery\nGain +3 distance fighting\nwhile no monster is within 1\nsquares. Otherwise gain +3\nholy magic level and +3\nhealing magic level."
-			end
-		elseif vocation == SORCERER then
-			if not fullMessage then
-				return "Runic Mastery\nIf you use a rune, you have a\n25% chance of increasing\nyour magic level by 10%, or\nby 20% if you use a rune th..."
-			else
-				return "Runic Mastery\nIf you use a rune, you have a\n25% chance of increasing\nyour magic level by 10%, or\nby 20% if you use a rune that\ncan be created by your\nvocation."
-			end
-		elseif vocation == DRUID then
-			if not fullMessage then
-				return "Healing Link\nIf you heal someone with\nNature's Embrace or Heal\nFriend, you also heal yourself\nfor 10% of the applied heali..."
-			else
-				return "Healing Link\nIf you heal someone with\nNature's Embrace or Heal\nFriend, you also heal yourself\nfor 10% of the applied\nhealing."
-			end
-		elseif vocation == MONK then
-			if not fullMessage then
-				return "Guiding Presence\nGain an aura that shares 50% of your\nmantra with members of your\ngroup."
-			else
-				return "Guiding Presence\nGain an aura that shares 50% of your\nmantra with members of your\ngroup."
-			end
+
+		local tiers = var_23_8.tiers
+
+		if type(tiers) ~= "table" then
+			tiers = {}
 		end
-	elseif bonus.conviction == "special_2" then
-		if vocation == KNIGHT then
-			if not fullMessage then
-				return "Battle Healing\nFor each creature challenged,\nyou will heal yourself for a\nsmall amount. This amount\nscales with your shielding s..."
-			else
-				return "Battle Healing\nFor each creature challenged,\nyou will heal yourself for a\nsmall amount. This amount\nscales with your shielding\nskill. Heals for double the\namount if you have less than\n60% of your hit points and\ntriple the amount if you hav..."
-			end
-		elseif vocation == PALADIN then
-			if not fullMessage then
-				return "Ballistic Mastery\nThe critical extra damage for\nattacks with a crossbow is\nincreased by 10%.\nWhile wielding a bow your a..."
-			else
-				return "Ballistic Mastery\nThe critical extra damage for\nattacks with a crossbow is\nincreased by 10%.\nWhile wielding a bow your\nattacks and spells treat the\ntargets physical and holy\nsensitivity as being 2%\nhigher."
-			end
-		elseif vocation == SORCERER then
-			return "Focus Mastery\nIncreases the damage of your\nnext damage spell by 35%\nwithin 12 seconds after\ncasting a focus spell."
-		elseif vocation == DRUID then
-			if not fullMessage then
-				return "Runic Mastery\nIf you use a rune, you have a\n25% chance of increasing\nyour magic level by 10%, or\nby 20% if you use a rune th..."
-			else
-				return "Runic Mastery\nIf you use a rune, you have a\n25% chance of increasing\nyour magic level by 10%, or\nby 20% if you use a rune that\ncan be created by your\nvocation."
-			end
-		elseif vocation == MONK then
-			if not fullMessage then
-				return "Sanctuary\nConsuming Harmony creates\na field lasting 5 seconds,\nincreasing damage and..."
-			else
-				return "Sanctuary\nConsuming Harmony creates\na field lasting 5 seconds,\nincreasing your damage and\nhealing done by 2% for each\nHarmony consumed."
-			end
-		end
+
+		return var_0_9(var_0_5(var_23_8.title, var_23_8.perk), var_0_5(tiers[1]), var_0_5(tiers[2]), var_23_3, var_23_2, var_23_0.maxPoints or 0)
+	elseif conviction == "special_1" or conviction == "special_2" then
+		return var_0_12(conviction, vocationId, arg_23_1)
 	end
 
 	return ""
 end
 
+local var_0_14 = {
+	"I",
+	"II",
+	"III"
+}
+
+local function var_0_15(arg_24_0)
+	return (arg_24_0 or ""):gsub("^Augmented%s+", ""):gsub("^Aug%.%s*", "")
+end
+
 function getConvictionPerks()
+	local vocationId = WheelOfDestiny.vocationId
 	local convictions = {}
-	local vocation = WheelOfDestiny.vocationId
-	local order = {
-		special_4 = 4,
-		special_3 = 3,
-		special_2 = 2,
-		spell_5 = 12,
-		spell_4 = 11,
-		spell_3 = 10,
-		special_1 = 1,
-		spell_2 = 9,
-		spell_1 = 8,
-		skill = 5,
-		["vessel.4"] = 16,
-		lifeleech = 6,
-		manaleech = 7,
-		["vessel.3"] = 15,
-		["vessel.2"] = 14,
-		["vessel.1"] = 13
-	}
+
+	local function var_25_2(arg_26_0, arg_26_1)
+		if not convictions[arg_26_0] then
+			arg_26_1.points = 0
+			convictions[arg_26_0] = arg_26_1
+		end
+
+		return convictions[arg_26_0]
+	end
 
 	for id, bonus in pairs(WheelBonus) do
 		local index = id + 1
 
-		if not WheelOfDestiny.isLit(index) then
+		if (WheelOfDestiny.pointInvested[index] or 0) < bonus.maxPoints then
 			-- block empty
 		else
-			local t = order[bonus.conviction] or table.size(order) + 1
-			local attribute = WheelConsts[bonus.conviction]
-			local pointsInvested = WheelOfDestiny.pointInvested[index] or 0
+			local conviction = bonus.conviction
+			local var_25_5 = WheelConsts[conviction]
 
-			if pointsInvested ~= bonus.maxPoints then
-				-- block empty
-			elseif bonus.conviction == "special_1" then
-				convictions[t] = {
-					perk = attribute[vocation][1],
-					tooltip = attribute[vocation][2]
-				}
-			elseif bonus.conviction == "special_2" then
-				convictions[t] = {
-					perk = attribute[vocation][1],
-					tooltip = attribute[vocation][2]
-				}
-			elseif bonus.conviction == "special_3" then
-				if vocation == MONK then
-					convictions[t] = {
-						perk = attribute[vocation][1],
-						tooltip = attribute[vocation][2]
-					}
+			if conviction == "special_1" or conviction == "special_2" then
+				local var_25_6 = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocationId]
+
+				if var_25_6 then
+					var_25_2(conviction, {
+						priority = 0,
+						names = {
+							var_25_6.name
+						},
+						tooltip = var_25_6.tooltip or var_25_6.body
+					})
+				elseif var_25_5 and var_25_5[vocationId] then
+					var_25_2(conviction, {
+						priority = 0,
+						names = {
+							var_25_5[vocationId][1]
+						},
+						tooltip = var_25_5[vocationId][2]
+					})
 				end
-			elseif bonus.conviction == "special_4" then
-				if vocation == MONK then
-					convictions[t] = {
-						perk = attribute[vocation][1],
-						tooltip = attribute[vocation][2]
-					}
+			elseif conviction == "skill" then
+				local var_25_7 = ConvictionStaticTexts.skill[vocationId]
+
+				if var_25_7 then
+					local var_25_8 = var_25_2(conviction, {
+						priority = 0,
+						names = {
+							var_25_7.perk
+						},
+						tooltip = var_25_7.tooltip
+					})
+
+					var_25_8.points = var_25_8.points + var_25_5
+					var_25_8.stringPoint = formatWheelPlusInteger(var_25_8.points)
 				end
-			elseif bonus.conviction == "manaleech" then
-				if not convictions[t] then
-					convictions[t] = {
-						points = 0,
-						perk = "Mana Leech",
-						stringPoint = ""
-					}
+			elseif conviction == "lifeleech" or conviction == "manaleech" then
+				local var_25_9 = conviction == "lifeleech" and "Life Leech" or "Mana Leech"
+				local var_25_10 = var_25_2(conviction, {
+					priority = 4,
+					names = {
+						var_25_9
+					},
+					order = conviction == "lifeleech" and 1 or 2
+				})
+
+				var_25_10.points = var_25_10.points + var_25_5
+				var_25_10.stringPoint = formatWheelFixedPercent(var_25_10.points, true)
+			elseif conviction == "vessel" then
+				local var_25_11 = ConvictionStaticTexts.vessel[bonus.domain]
+
+				if var_25_11 then
+					local var_25_12 = var_25_2("vessel." .. bonus.domain, {
+						priority = 4,
+						names = {
+							var_25_11.name,
+							var_25_11.perk
+						},
+						order = 10 + bonus.domain,
+						tooltip = var_25_11.tooltip
+					})
+
+					var_25_12.points = var_25_12.points + 1
+					var_25_12.stringPoint = var_0_14[math.min(var_25_12.points, 3)]
 				end
-
-				convictions[t].points = convictions[t].points + attribute
-				convictions[t].stringPoint = string.format("+%.2f%%", convictions[t].points)
-			elseif bonus.conviction == "lifeleech" then
-				if not convictions[t] then
-					convictions[t] = {
-						points = 0,
-						perk = "Life Leech",
-						stringPoint = ""
-					}
-				end
-
-				convictions[t].points = convictions[t].points + attribute
-				convictions[t].stringPoint = string.format("+%.2f%%", convictions[t].points)
-			elseif bonus.conviction == "vessel" then
-				t = "vessel." .. bonus.domain
-				t = order[t]
-
-				if bonus.domain == 1 then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "VR Top Left",
-							stringPoint = "I"
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					elseif convictions[t].points == 2 then
-						convictions[t].stringPoint = "II"
-					else
-						convictions[t].stringPoint = "III"
-					end
-				elseif bonus.domain == 2 then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "VR Top Right",
-							stringPoint = "I"
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					elseif convictions[t].points == 2 then
-						convictions[t].stringPoint = "II"
-					else
-						convictions[t].stringPoint = "III"
-					end
-				elseif bonus.domain == 3 then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "VR Bottom Left",
-							stringPoint = "I"
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					elseif convictions[t].points == 2 then
-						convictions[t].stringPoint = "II"
-					else
-						convictions[t].stringPoint = "III"
-					end
-				else
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "VR Bottom Right",
-							stringPoint = "I"
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					elseif convictions[t].points == 2 then
-						convictions[t].stringPoint = "II"
-					else
-						convictions[t].stringPoint = "III"
-					end
-				end
-
-				convictions[t].tooltip = "Each level of Vessel Resonance unlocks equivalent Gem Mods in its\ndomain. If the Vessel Resonance matches the gem quality, a\ndamage and healing bonus is granted."
-			elseif bonus.conviction == "skill" then
-				if not convictions[t] then
-					convictions[t] = {
-						points = 0,
-						perk = "",
-						stringPoint = ""
-					}
-				end
-
-				if vocation == KNIGHT then
-					convictions[t].perk = "Weapon Skill Boost"
-					convictions[t].points = convictions[t].points + attribute
-					convictions[t].stringPoint = string.format("+%d", convictions[t].points)
-					convictions[t].tooltip = "Applies to sword, axe and club fighting"
-				elseif vocation == PALADIN then
-					convictions[t].perk = "Distance Skill Boost"
-					convictions[t].points = convictions[t].points + attribute
-					convictions[t].stringPoint = string.format("+%d", convictions[t].points)
-				elseif vocation == SORCERER or vocation == DRUID then
-					convictions[t].perk = "Magic Skill Boost"
-					convictions[t].points = convictions[t].points + attribute
-					convictions[t].stringPoint = string.format("+%.2f%%", convictions[t].points)
-				elseif vocation == MONK then
-					convictions[t].perk = "Fist Fighting Skill Boost"
-					convictions[t].points = convictions[t].points + attribute
-					convictions[t].stringPoint = string.format("+%d", convictions[t].points)
-				end
-			elseif bonus.conviction == "spell_1" then
-				if vocation == KNIGHT then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Front Sweep",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 5% life leech to this spell\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+8% Base Damage", "#3f3f3f")
-
-					convictions[t].tooltip = message
-				elseif vocation == PALADIN then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Sharpshooter",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Enables the casting of support spells while active and Focus\nsecondary group cooldown -8s\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-6s Cooldown; distance skill bonus increased by +5%", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == SORCERER then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Focus Spells",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+8% Base Damage for Hell's Core and Rage of the Skies\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-4s Cooldown; Focus secondary group cooldown -4s for Hell's\nCore and Rage of the Skies", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == DRUID then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Forked Spells",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-2s Cooldown\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds +1 target", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == MONK then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Thousand Fist Blows",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 3% mana leech to this spell\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 25% critical extra damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				end
-			elseif bonus.conviction == "spell_2" then
-				if vocation == KNIGHT then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Groundshaker",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+12.5% Base Damage\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-2s Cooldown", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == PALADIN then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Strong Ethereal Spear",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-2s Cooldown\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+8% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == SORCERER then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Death Echo",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Enhanced effect\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-6s Cooldown", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == DRUID then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Mass Healing",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+5% Base Healing\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Affected area enlarged", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == MONK then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Mass Spirit Mend",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+8% Base Healing\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Affected area enlarged", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				end
-			elseif bonus.conviction == "spell_3" then
-				if vocation == KNIGHT then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Shield Slam",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+15% Life Leech\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+25% Damage Reduction (75% total)", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == PALADIN then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Divine Dazzle",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Jumps to +1 additional target\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Duration increased; -4s Cooldown", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == SORCERER then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Special Spells",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Affected area enlarged\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Damage reduction increased by +1%", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == DRUID then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Heal Friend",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-10 Mana Cost\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+5% Base Healing", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == MONK then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Mystic Repulse",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-4s Cooldown\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+40% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				end
-			elseif bonus.conviction == "spell_4" then
-				if vocation == KNIGHT then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Intense Wound C...",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+10% Base Healing\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-300s Cooldown", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == PALADIN then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Swift Foot",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Focus secondary group cooldown -8s. Attacks and spells are\nenabled but dealt damage is reduced by 50%.\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-6s Cooldown and the damage dealt is no longer reduced.", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == SORCERER then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Energy Wave",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+5% Base Damage\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Affected area enlarged", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == DRUID then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Terra Wave",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+5% Base Damage\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 5% life leech to this spell", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == MONK then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Chained Penance",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Jumps to +1 additional target\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Jumps to +1 additional target", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				end
-			elseif bonus.conviction == "spell_5" then
-				if vocation == KNIGHT then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Fierce Berserk",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-30 Mana Cost\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+10% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == PALADIN then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Divine Caldera",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "-20 Mana Cost\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+8.5% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == SORCERER then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Great Fire Wave",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 15% critical extra damage for this spell and grants a 10%\nchance (non-cumulative) for a critical hit.\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+5% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == DRUID then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Strong Ice Wave",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+6% Base Damage\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Affected area enlarged", "#3F3F3F")
-
-					convictions[t].tooltip = message
-				elseif vocation == MONK then
-					if not convictions[t] then
-						convictions[t] = {
-							points = 0,
-							perk = "Aug. Flurry of Blows",
-							stringPoint = ""
-						}
-					end
-
-					convictions[t].points = convictions[t].points + 1
-
-					if convictions[t].points == 1 then
-						convictions[t].stringPoint = "I"
-					else
-						convictions[t].stringPoint = "II"
-					end
-
-					local message = {}
-
-					if not firstSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "Adds 5% life leech to this spell\n", "#3F3F3F")
-
-					if not secondSpellIsUnlocked(attribute) then
-						setStringColor(message, "�", "white")
-					else
-						setStringColor(message, "�", "white")
-					end
-
-					setStringColor(message, "+12% Base Damage", "#3F3F3F")
-
-					convictions[t].tooltip = message
+			elseif ConvictionSpellTexts[conviction] then
+				local var_25_13 = getSpellConvictionTextEntry(conviction, vocationId)
+
+				if var_25_13 then
+					local var_25_14 = var_0_15(var_25_13.title or var_25_13.perk)
+					local var_25_15 = var_25_2(conviction, {
+						priority = 1,
+						names = {
+							"Augmented " .. var_25_14,
+							"Aug. " .. var_25_14
+						},
+						tooltip = buildSpellConvictionTooltip(conviction, vocationId, var_25_5)
+					})
+
+					var_25_15.points = var_25_15.points + 1
+					var_25_15.stringPoint = var_0_14[math.min(var_25_15.points, 2)]
 				end
 			end
 		end
 	end
 
-	return convictions
+	local var_25_16 = {}
+
+	for unusedValue, conviction in pairs(convictions) do
+		conviction.perk = conviction.names[#conviction.names]
+
+		table.insert(var_25_16, conviction)
+	end
+
+	table.sort(var_25_16, function(arg_27_0, arg_27_1)
+		if arg_27_0.priority ~= arg_27_1.priority then
+			return arg_27_0.priority < arg_27_1.priority
+		end
+
+		if (arg_27_0.order or 0) ~= (arg_27_1.order or 0) then
+			return (arg_27_0.order or 0) < (arg_27_1.order or 0)
+		end
+
+		return arg_27_0.names[1] < arg_27_1.names[1]
+	end)
+
+	return var_25_16, convictions
 end
 
 function getPassiveInfo(domain)
@@ -2369,7 +545,7 @@ function getPassiveInfo(domain)
 		setStringColor(message, "25%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 		setStringColor(message, "/", "#3F3F3F")
 		setStringColor(message, "30% ", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-		setStringColor(message, " of\nyour maximum hit points. Only after that is the damage applied.\nIn addition, all your spell cooldowns are reduced by 60 seconds.\n\nCooldown: ", "#3F3F3F")
+		setStringColor(message, " of\nyour maximum hit points and mana. Only after that is the damage\napplied. In addition, all your spell cooldowns are reduced by 60\nseconds.\n\nCooldown: ", "#3F3F3F")
 		setStringColor(message, "30h", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 		setStringColor(message, "/", "#3F3F3F")
 		setStringColor(message, "20h", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
@@ -2433,25 +609,24 @@ function getPassiveInfo(domain)
 			setStringColor(message, "36%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
 			setStringColor(message, "42%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, ").", "#3F3F3F")
+			setStringColor(message, ").\nBeam spells also hit adjacent squares for ", "#3F3F3F")
+			setStringColor(message, "40%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "/", "#3F3F3F")
+			setStringColor(message, "60%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "/", "#3F3F3F")
+			setStringColor(message, "80%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " of the\ninitial damage.", "#3F3F3F")
 
 			m1 = "Beam Mastery\nBoosts all of your beam spells\nand unlocks a beam spell that\ndeals death damage."
 			m2 = message
 		elseif vocation == DRUID then
-			setStringColor(message, "You healing is increased by\n", "#3F3F3F")
-			setStringColor(message, "6%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "Your healing spells can critically heal, using your critical hit\nchance and critical extra damage.\nYour healing is increased by ", "#3F3F3F")
+			setStringColor(message, "5%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "9%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "7.5%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "12%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, "if the target has less\nthan 60% but more than 30% of\ntheir hit points.\n", "#3F3F3F")
-			setStringColor(message, "You healing is increased by\n", "#3F3F3F")
-			setStringColor(message, "12%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "18%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "24%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, "if the target has less\nthan 30% of their hit points.", "#3F3F3F")
+			setStringColor(message, "10%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " if the target has less\nthan 60% of their hit points. This bonus is doubled if the target\nhas less than 30% of their hit points.", "#3F3F3F")
 
 			m1 = "Blessing of the Grove\nIncreases your healing if the target's\nmissing hit points is below certain \nthresholds."
 			m2 = message
@@ -2478,19 +653,20 @@ function getPassiveInfo(domain)
 		end
 	elseif domain == 3 then
 		if vocation == KNIGHT then
-			setStringColor(message, "Increases the defence value of shields by ", "#3F3F3F")
-			setStringColor(message, "10", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "You take 1% less damage for every ", "#3F3F3F")
+			setStringColor(message, "12%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "20", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "10%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "30.\n", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, "Increases your critical extra damage by ", "#3F3F3F")
-			setStringColor(message, "4%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "8%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " of your missing\nhit points. This bonus is doubled while wielding a shield.\n", "#3F3F3F")
+			setStringColor(message, "You deal 1% more damage for every ", "#3F3F3F")
+			setStringColor(message, "12%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "8%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "10%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "12%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, " while\nwielding a two-handed weapon.", "#3F3F3F")
+			setStringColor(message, "8%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " of your target's\nmissing hit points. This bonus is doubled while wielding a\ntwo-handed weapon.", "#3F3F3F")
 
 			m1 = "Combat Mastery\nImprove your combat\nprowess based on the\nequipment you use."
 			m2 = message
@@ -2512,21 +688,27 @@ function getPassiveInfo(domain)
 			m1 = "Divine Empowerment\nThis support spell creates a\nfield that increases your dealt\ndamage."
 			m2 = message
 		elseif vocation == SORCERER then
-			setStringColor(message, "Expose Weakness grants ", "#3F3F3F")
-			setStringColor(message, "1.00%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "Improves the buffs provided by your elemental stances.\nMaster of Flames: fire spells gain +", "#3F3F3F")
+			setStringColor(message, "2%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "2.00%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "3%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "3.00%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, " mana leech and\nSap Strength grants ", "#3F3F3F")
-			setStringColor(message, "3.00%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "4%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " base power.\nMaster of Thunder: energy spells gain +", "#3F3F3F")
+			setStringColor(message, "2%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "4.00%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "3%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
 			setStringColor(message, "/", "#3F3F3F")
-			setStringColor(message, "5.00%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
-			setStringColor(message, " life leech against\ndebuffed creatures.", "#3F3F3F")
+			setStringColor(message, "4%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " critical hit chance.\nMaster of Decay: death spells gain +", "#3F3F3F")
+			setStringColor(message, "15%", currentUnlocked(1) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "/", "#3F3F3F")
+			setStringColor(message, "22.5%", currentUnlocked(2) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, "/", "#3F3F3F")
+			setStringColor(message, "30%", currentUnlocked(3) and "#ffffff" or "#3F3F3F")
+			setStringColor(message, " critical extra\ndamage.", "#3F3F3F")
 
-			m1 = "Drain Body\nImprove your crippling spells\nby adding mana or life leech\nto them."
+			m1 = "Lord of Destruction\nImproves the buffs provided\nby your elemental stances."
 			m2 = message
 		elseif vocation == DRUID then
 			setStringColor(message, "Decide wisely whether you want to cast ice or earth damage in a\nsmall area around you, as these two ring spells share the same\ncooldown. Both spells deal ", "#3F3F3F")
@@ -2620,19 +802,18 @@ function getBonusValueUpgrade(currentBonusID, gemID, supreme, firstBonus)
 
 	local slot = 0
 
-	if gem.lesserBonus == currentBonusID then
+	if supreme then
+		slot = 2
+	elseif gem.lesserBonus == currentBonusID then
 		slot = 0
 	elseif gem.regularBonus == currentBonusID then
 		slot = 1
-	elseif gem.supremeBonus == currentBonusID then
-		slot = 2
 	end
 
 	local effectiveLevel = GemAtelier.getEffectiveLevel(gem, currentBonusID, supreme, slot)
 	local modInfo = Workshop.getDataByBonus(currentBonusID, supreme)
-	local bonus = Workshop.getBonusValue(modInfo, effectiveLevel, firstBonus)
 
-	return bonus
+	return (Workshop.getBonusValue(modInfo, effectiveLevel, firstBonus))
 end
 
 function getValueByVocation(bonusType, steps)
@@ -2650,214 +831,192 @@ function getValueByVocation(bonusType, steps)
 	return bonus
 end
 
-function getVesselBonus()
-	local bonuses = {}
-	local defenses = {}
+local var_0_16 = "/images/game/wheel/icon-crit"
+local var_0_17 = "/images/game/wheel/icon-spelldamage"
+local var_0_18 = "If the Vessel Resonance matches the gem quality in this domain, a\nbonus of +1 to all damage and healing is granted. This bonus is\nincreased by 1 for greater gems.\n\nRegardless of the match, gems will always grant mod bonuses\nbased on the Vessel Resonance.\n- Lesser gems match Dormant Vessels (VR I)\n- Regular gems match Awakened Vessels (VR II)\n- Greater gems match Radiant Vessels (VR III)"
+local var_0_19 = "Increasing the mod grade of cooldown augmentations does not\nfurther reduce the cooldown of spells, but adds a chance to gain\nMomentum that is additive to other chances of gaining Momentum."
+local var_0_20 = {
+	["Hit Points"] = 40,
+	Capacity = 42,
+	Mana = 41
+}
 
-	local function findBonusByText(text)
-		for i, b in ipairs(bonuses) do
-			if b.text == text then
-				return b, i
-			end
-		end
-
-		return nil
+local function var_0_21(arg_33_0, arg_33_1)
+	if arg_33_0 == "integer" then
+		return formatWheelPlusInteger(arg_33_1)
+	elseif arg_33_0 == "fixedPercent" then
+		return formatWheelFixedPercent(arg_33_1)
+	elseif arg_33_0 == "seconds" then
+		return string.format("%ds", arg_33_1)
 	end
 
-	local function findDefenseByText(text)
-		for i, b in ipairs(defenses) do
-			if b.text == text then
-				return b, i
-			end
+	return formatWheelSignedPercent(arg_33_1)
+end
+
+function getVesselBonus()
+	local defenses = {}
+
+	local function var_34_1(arg_35_0, arg_35_1, arg_35_2)
+		local var_35_0 = defenses[arg_35_0]
+
+		if not var_35_0 then
+			var_35_0 = arg_35_1
+			var_35_0.amount = 0
+			defenses[arg_35_0] = var_35_0
 		end
 
-		return nil
+		var_35_0.amount = var_35_0.amount + (tonumber(arg_35_2) or 0)
 	end
 
 	for _, k in pairs(WheelOfDestiny.equipedGemBonuses) do
-		if k.bonusID == -1 then
+		local bonus = k.supreme and SupremeGemDescription[k.bonusID] or RegularGemDescription[k.bonusID]
+
+		if k.bonusID == -1 or not bonus then
 			-- block empty
 		else
-			local bonus = k.supreme and SupremeGemDescription[k.bonusID] or RegularGemDescription[k.bonusID]
-			local firstString, secondString
-			local skipIndex = bonus.text:find("\n")
-
-			if skipIndex then
-				firstString = bonus.text:sub(1, skipIndex - 1)
-				secondString = bonus.text:sub(skipIndex + 1)
-			else
-				firstString = bonus.text
-			end
+			local text = bonus.text
+			local skipIndex = text:find("\n")
+			local var_34_5 = skipIndex and text:sub(1, skipIndex - 1) or text
+			local var_34_6 = skipIndex and text:sub(skipIndex + 1) or nil
 
 			if not k.supreme then
-				if firstString then
-					if firstString:find("Mitigation") then
-						local number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, true)
-						local existingBonus = findBonusByText("Mitigation Mult.")
+				for iter_34_2 = 1, 2 do
+					local var_34_7 = iter_34_2 == 1 and var_34_5 or var_34_6
+					local var_34_8 = iter_34_2 == 1 and bonus.type1 or bonus.type2
 
-						if existingBonus then
-							existingBonus.value = existingBonus.value + tonumber(number)
-						else
-							bonuses[#bonuses + 1] = {
+					if var_34_7 and var_34_8 then
+						local number = getBonusValueUpgrade(k.bonusID, k.gemID, false, iter_34_2 == 1)
+
+						if var_34_8 == "mitigation" then
+							var_34_1("mitigation", {
+								format = "fixedPercent",
+								bonusType = "mitigation",
+								priority = 43,
 								text = "Mitigation Mult.",
-								bonusType = bonus.type1,
-								value = number,
 								tooltip = bonus.tooltip
-							}
-						end
+							}, number)
+						elseif var_34_8 == "defense" then
+							local var_34_10 = var_34_7
 
-						goto label_13_0
-					end
+							if iter_34_2 == 2 and bonus.bonus2 == -1 then
+								local unusedValue
+								local var_34_12
 
-					local number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, true)
-					local message = firstString:match("@%s*(.+)")
+								var_34_12, var_34_10 = var_34_7:match("([-]?%d+%.?%d*)%% (.+)")
+								number = tonumber(var_34_12) or 0
+							end
 
-					if bonus.type1 == "defense" then
-						number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, true)
-						message = firstString:gsub("^%+%s*%% ", "")
-					end
+							local var_34_13 = (var_34_10 or var_34_7):gsub(" Resistance$", "")
 
-					local existingBonus = findBonusByText(message)
-
-					if bonus.type1 == "defense" then
-						existingBonus = findDefenseByText(message)
-					end
-
-					if existingBonus then
-						existingBonus.value = existingBonus.value + tonumber(number)
-					elseif bonus.type1 == "defense" then
-						defenses[#defenses + 1] = {
-							bonusType = bonus.type1,
-							text = message,
-							value = number
-						}
-					else
-						bonuses[#bonuses + 1] = {
-							bonusType = bonus.type1,
-							text = message,
-							value = "+" .. number
-						}
-					end
-				end
-
-				if secondString then
-					local number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, false)
-					local message = secondString:match("@%s*(.+)")
-
-					if bonus.type2 == "defense" then
-						if bonus.bonus2 and bonus.bonus2 == -1 then
-							number, message = secondString:match("([-]?%d+%.?%d*)%% (.+)")
+							var_34_1("defense." .. var_34_13, {
+								bonusType = "defense",
+								indent = true,
+								priority = 50,
+								text = var_34_13
+							}, number)
 						else
-							number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, false)
-							message = secondString:gsub("^%+%s*%% ", "")
+							local var_34_14 = var_34_7:match("[@#]%s*(.+)") or var_34_7
+
+							var_34_1("stat." .. var_34_14, {
+								format = "integer",
+								bonusType = var_34_8,
+								text = var_34_14,
+								priority = var_0_20[var_34_14] or 44
+							}, number)
 						end
 					end
-
-					local existingBonus = findBonusByText(message)
-
-					if bonus.type2 == "defense" then
-						existingBonus = findDefenseByText(message)
-					end
-
-					if existingBonus then
-						existingBonus.value = existingBonus.value + tonumber(number)
-					elseif bonus.type2 == "defense" then
-						defenses[#defenses + 1] = {
-							bonusType = bonus.type2,
-							text = message,
-							value = number
-						}
-					else
-						bonuses[#bonuses + 1] = {
-							bonusType = bonus.type2,
-							text = message,
-							value = "+" .. number
-						}
-					end
 				end
-			elseif bonus.text:find("RM") then
-				local number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, true)
-				local existingBonus = findBonusByText(short_text(bonus.text, 17))
+			elseif text:find("^RM ") then
+				var_34_1("rm." .. text, {
+					format = "integer",
+					bonusType = "revelation",
+					priority = 10,
+					text = text,
+					tooltip = bonus.tooltip
+				}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
+			elseif not var_34_6 then
+				local var_34_15 = var_34_5:match("%%%s+(.+)$") or var_34_5
 
-				if existingBonus then
-					existingBonus.value = existingBonus.value + tonumber(number)
-				else
-					bonuses[#bonuses + 1] = {
-						bonusType = "revelation",
-						text = short_text(bonus.text, 17),
-						value = number,
-						tooltip = bonus.tooltip
-					}
-				end
-			elseif not bonus.text:find("\n") then
-				local number, message = firstString:match("([-]?%d+%.?%d*)%% (.+)")
-				local existingBonus = findBonusByText(message)
+				var_34_1("flat." .. var_34_15, {
+					bonusType = "special",
+					priority = 30,
+					text = var_34_15
+				}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
+			else
+				local var_34_16 = var_34_5:gsub("^Aug%.%s*", "")
 
-				if existingBonus then
-					existingBonus.value = existingBonus.value + tonumber(number)
-				else
-					bonuses[#bonuses + 1] = {
-						bonusType = "special",
-						text = message,
-						value = number
-					}
-				end
-			elseif bonus.text:find("Aug.") then
-				local bonusName = firstString
-				local number = getBonusValueUpgrade(k.bonusID, k.gemID, k.supreme, true)
-				local tooltip = bonus.tooltip
+				if var_34_6:find("Cooldown") then
+					local numericValue = tonumber(var_34_6:match("(%-?%d+)s")) or 0
 
-				bonusName = bonusName:gsub("Aug. ", "")
-
-				if vocation == 5 and bonusName == "Greater Flurry of Blows" then
-					tooltip = string.format("+%d%% Base Damage", number)
-				end
-
-				local existingBonus = findBonusByText(bonusName)
-
-				if existingBonus then
-					existingBonus.value = existingBonus.value + tonumber(number)
-
-					if string.find(tooltip, "%%") then
-						existingBonus.tooltip = tr(tooltip, existingBonus.value)
-					end
-				else
-					if string.find(tooltip, "%%") then
-						tooltip = tr(tooltip, number)
-					end
-
-					bonuses[#bonuses + 1] = {
+					var_34_1("cooldown." .. var_34_16, {
+						format = "seconds",
 						bonusType = "augment",
-						text = short_text(bonusName, 15),
-						value = number,
-						tooltip = tooltip
-					}
+						priority = 20,
+						text = var_34_16,
+						tooltip = var_34_6
+					}, numericValue)
+
+					local var_34_18 = getBonusValueUpgrade(k.bonusID, k.gemID, true, true)
+
+					if var_34_18 > 0 then
+						var_34_1("momentum", {
+							bonusType = "momentum",
+							text = "Momentum",
+							priority = 5,
+							tooltip = var_0_19
+						}, var_34_18)
+					end
+				else
+					local var_34_19 = var_34_6:find("Critical") and var_0_16 or var_0_17
+
+					var_34_1("augment." .. var_34_19 .. var_34_16, {
+						bonusType = "augment",
+						priority = 20,
+						text = var_34_16,
+						icon = var_34_19,
+						tooltipFormat = bonus.tooltip
+					}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
 				end
 			end
 		end
-
-		::label_13_0::
 	end
 
-	if #defenses > 0 then
-		bonuses[#bonuses + 1] = {
-			text = "Resistances:",
-			bonusType = "defense",
-			value = -1
-		}
-	end
+	local bonuses = {}
 
 	for _, v in pairs(defenses) do
-		if v.value == 0 then
-			-- block empty
-		else
-			local valueString = tonumber(v.value) > 0 and "+" .. v.value or v.value
+		if v.amount ~= 0 or v.bonusType ~= "defense" then
+			v.value = var_0_21(v.format, v.amount)
 
-			bonuses[#bonuses + 1] = {
-				bonusType = v.bonusType,
-				text = "  " .. v.text:gsub(" Resistance", ""),
-				value = valueString .. "%"
-			}
+			if v.tooltipFormat and v.tooltipFormat:find("%%") then
+				v.tooltip = tr(v.tooltipFormat, v.amount)
+			end
+
+			table.insert(bonuses, v)
+		end
+	end
+
+	table.sort(bonuses, function(arg_36_0, arg_36_1)
+		if arg_36_0.priority ~= arg_36_1.priority then
+			return arg_36_0.priority < arg_36_1.priority
+		end
+
+		if arg_36_0.text ~= arg_36_1.text then
+			return arg_36_0.text < arg_36_1.text
+		end
+
+		return (arg_36_0.icon or "") > (arg_36_1.icon or "")
+	end)
+
+	for index, bonuse in ipairs(bonuses) do
+		if bonuse.priority == 50 then
+			table.insert(bonuses, index, {
+				bonusType = "defense",
+				value = -1,
+				text = "Resistances:",
+				priority = 50
+			})
+
+			break
 		end
 	end
 
@@ -2865,10 +1024,11 @@ function getVesselBonus()
 
 	if DHcount > 0 then
 		table.insert(bonuses, 1, {
-			text = "Damage and Healing",
-			tooltip = "If the Vessel Resonance matches the gem quality in this domain, a\nbonus of +1 to all damage and healing is granted. This bonus is\nincreased by 1 for greater gems.\n\nRegardless of the match, gems will always grant mod bonuses\nbased on the Vessel Resonance.\n? Lesser gems match Dormant Vessels (VR I)\n? Regular gems match Awakened Vessels (VR II)\n? Greater gems match Radiant Vessels (VR III)",
 			bonusType = "damagehealing",
-			value = "+" .. DHcount
+			priority = 0,
+			text = "Damage and Healing",
+			value = "+" .. DHcount,
+			tooltip = var_0_18
 		})
 	end
 

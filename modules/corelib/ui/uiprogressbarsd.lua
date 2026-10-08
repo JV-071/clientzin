@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uiprogressbarsd.lua
-
-UIProgressBarSD = extends(UIWidget, "UIProgressBarSD")
+﻿UIProgressBarSD = extends(UIWidget, "UIProgressBarSD")
 
 function UIProgressBarSD.create()
 	local progressbar = UIProgressBarSD.internalCreate()
@@ -19,7 +17,7 @@ function UIProgressBarSD.create()
 	return progressbar
 end
 
-function UIProgressBarSD:setMinimum(minimum)
+function UIProgressBarSD.setMinimum(self, minimum)
 	self.minimum = minimum
 
 	if minimum > self.value then
@@ -27,7 +25,7 @@ function UIProgressBarSD:setMinimum(minimum)
 	end
 end
 
-function UIProgressBarSD:setMaximum(maximum)
+function UIProgressBarSD.setMaximum(self, maximum)
 	self.maximum = maximum
 
 	if maximum < self.value then
@@ -35,7 +33,7 @@ function UIProgressBarSD:setMaximum(maximum)
 	end
 end
 
-function UIProgressBarSD:setValue(value, minimum, maximum)
+function UIProgressBarSD.setValue(self, value, minimum, maximum)
 	if minimum then
 		self:setMinimum(minimum)
 	end
@@ -49,19 +47,19 @@ function UIProgressBarSD:setValue(value, minimum, maximum)
 	self:updateBackground()
 end
 
-function UIProgressBarSD:setPercent(percent)
+function UIProgressBarSD.setPercent(self, percent)
 	self:setValue(percent, 0, 100)
 end
 
-function UIProgressBarSD:getPercent()
+function UIProgressBarSD.getPercent(self)
 	return self.value
 end
 
-function UIProgressBarSD:getPercentPixels()
+function UIProgressBarSD.getPercentPixels(self)
 	return (self.maximum - self.minimum) / self:getWidth()
 end
 
-function UIProgressBarSD:getProgress()
+function UIProgressBarSD.getProgress(self)
 	if self.minimum == self.maximum then
 		return 1
 	end
@@ -69,13 +67,45 @@ function UIProgressBarSD:getProgress()
 	return (self.value - self.minimum) / (self.maximum - self.minimum)
 end
 
-function UIProgressBarSD:updateBackground()
+function UIProgressBarSD.updateBackground(self)
 	if self:isOn() then
-		local maxW = self:getWidth() - self.bgBorderLeft - self.bgBorderRight
 		local progress = self:getProgress()
+
+		if self.vertical then
+			local maxW = self:getHeight() - self.bgBorderTop - self.bgBorderBottom
+			local width = self:getWidth() - self.bgBorderLeft - self.bgBorderRight
+
+			if progress <= 0 or maxW <= 0 then
+				self:setImageColor("alpha")
+
+				return
+			end
+
+			self:setImageColor("white")
+
+			local var_9_3 = math.round(math.max(progress * maxW, 1))
+			local bgBorderTop = self.bgBorderTop
+
+			if not self.fillFromTop then
+				bgBorderTop = self:getHeight() - self.bgBorderBottom - var_9_3
+			end
+
+			local rect = {
+				x = self.bgBorderLeft,
+				y = bgBorderTop,
+				width = width,
+				height = var_9_3
+			}
+
+			self:setImageRect(rect)
+
+			return
+		end
+
+		local width = self:getWidth() - self.bgBorderLeft - self.bgBorderRight
 		local height = self:getHeight() - self.bgBorderTop - self.bgBorderBottom
 
-		if progress <= 0 or maxW <= 0 then
+		if progress <= 0 or width <= 0 then
 			self:setImageColor("alpha")
 
 			return
@@ -83,23 +113,23 @@ function UIProgressBarSD:updateBackground()
 
 		self:setImageColor("white")
 
-		local width = math.round(math.max(progress * maxW, 1))
-		local rect = {
+		local var_9_8 = math.round(math.max(progress * width, 1))
+		local var_9_9 = {
 			x = self.bgBorderLeft,
 			y = self.bgBorderTop,
-			width = width,
+			width = var_9_8,
 			height = height
 		}
 
-		self:setImageRect(rect)
+		self:setImageRect(var_9_9)
 	end
 end
 
-function UIProgressBarSD:onSetup()
+function UIProgressBarSD.onSetup(self)
 	self:updateBackground()
 end
 
-function UIProgressBarSD:onStyleApply(name, node)
+function UIProgressBarSD.onStyleApply(self, name, node)
 	for name, value in pairs(node) do
 		if name == "background-border-left" then
 			self.bgBorderLeft = tonumber(value)
@@ -122,7 +152,7 @@ function UIProgressBarSD:onStyleApply(name, node)
 	end
 end
 
-function UIProgressBarSD:onGeometryChange(oldRect, newRect)
+function UIProgressBarSD.onGeometryChange(self, oldRect, newRect)
 	if not self:isOn() then
 		self:setHeight(0)
 	end

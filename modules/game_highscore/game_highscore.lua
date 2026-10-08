@@ -1,6 +1,9 @@
-﻿-- chunkname: @/game_highscore/game_highscore.lua
-
-local highscoresWindow, highscoreButton, gameworldbox, vocationbox, categorybox, highscoreList
+﻿local highscoresWindow
+local highscoreButton
+local gameworldbox
+local vocationbox
+local categorybox
+local highscoreList
 local isFilled = false
 local cachedBattlEye = 0
 local currentPage = 1
@@ -8,7 +11,8 @@ local currentTotalPages = 1
 local ALL_WORLDS_LABEL = "All Game Worlds"
 local ALL_VOCATIONS_ID = 4294967295
 local ENTRIES_PER_PAGE = 20
-local preferredWorldOnOpen, requestHighscore
+local preferredWorldOnOpen
+local requestHighscore
 local highscoreRequestPending = false
 local HIGHSCORE_DEBUG = false
 local highscoreRequestSeq = 0
@@ -97,7 +101,7 @@ highscoreController = Controller:new()
 
 highscoreController:setUI("game_highscore")
 
-function highscoreController:onInit()
+function highscoreController.onInit(self)
 	highscoresWindow = highscoreController.ui
 
 	highscoresWindow:hide()
@@ -107,7 +111,7 @@ function highscoreController:onInit()
 	initInterface()
 end
 
-function highscoreController:onTerminate()
+function highscoreController.onTerminate(self)
 	resetFilters()
 
 	highscoresWindow = nil
@@ -172,7 +176,9 @@ local function getSeconds(seconds)
 end
 
 local function getTimeinWords(secs)
-	local hours, minutes, seconds = getHours(secs), getMinutes(secs), getSeconds(secs)
+	local hours = getHours(secs)
+	local minutes = getMinutes(secs)
+	local seconds = getSeconds(secs)
 
 	if minutes > 59 then
 		minutes = minutes - hours * 60
@@ -415,12 +421,8 @@ local function syncFilterSelections(selectedVocation, selectedCategory)
 	local catAfter = categorybox:getCurrentOption()
 	local worldAfter = gameworldbox:getCurrentOption()
 
-	if HIGHSCORE_DEBUG then
-		local changed = (vocBefore and vocBefore.data) ~= (vocAfter and vocAfter.data) or (catBefore and catBefore.data) ~= (catAfter and catAfter.data) or (worldBefore and worldBefore.text) ~= (worldAfter and worldAfter.text)
-
-		if changed then
-			highscoreDebugLog(string.format("syncFilterSelections ALTEROU combos: voc 0x%X->0x%X cat %s->%s world \"%s\"->\"%s\" (servidor pediu voc=0x%X cat=%d)", vocBefore and vocBefore.data or 0, vocAfter and vocAfter.data or 0, tostring(catBefore and catBefore.data), tostring(catAfter and catAfter.data), worldBefore and worldBefore.text or "?", worldAfter and worldAfter.text or "?", selectedVocation, selectedCategory))
-		end
+	if HIGHSCORE_DEBUG and ((vocBefore and vocBefore.data) ~= (vocAfter and vocAfter.data) or (catBefore and catBefore.data) ~= (catAfter and catAfter.data) or (worldBefore and worldBefore.text) ~= (worldAfter and worldAfter.text)) then
+		highscoreDebugLog(string.format("syncFilterSelections ALTEROU combos: voc 0x%X->0x%X cat %s->%s world \"%s\"->\"%s\" (servidor pediu voc=0x%X cat=%d)", vocBefore and vocBefore.data or 0, vocAfter and vocAfter.data or 0, tostring(catBefore and catBefore.data), tostring(catAfter and catAfter.data), worldBefore and worldBefore.text or "?", worldAfter and worldAfter.text or "?", selectedVocation, selectedCategory))
 	end
 end
 
@@ -524,13 +526,11 @@ function onProcessHighscores(worlds, selectedWorld, worldType, battlEye, vocatio
 	applyHighscoreResponse(page, totalPages, highscores, entriesTs)
 end
 
-function highscoreController:onGameStart()
+function highscoreController.onGameStart(unusedArgument)
 	highscoreButton = modules.game_mainpanel.addToggleButton("highscoresButton", tr("Open Highscores Dialog"), "/images/options/button_highscores", toggle)
-
-	g_keyboard.bindKeyDown("Ctrl+H", toggle)
 end
 
-function highscoreController:onGameEnd()
+function highscoreController.onGameEnd(unusedArgument)
 	if highscoreButton then
 		highscoreButton:destroy()
 
@@ -542,7 +542,6 @@ function highscoreController:onGameEnd()
 	end
 
 	resetFilters()
-	g_keyboard.unbindKeyDown("Ctrl+H")
 end
 
 function toggle()

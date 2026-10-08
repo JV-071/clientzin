@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_actionbar/logics/ActionButtonLogic.lua
-
-local function string_empty(str)
+﻿local function string_empty(str)
 	return #str == 0
 end
 
@@ -54,9 +52,7 @@ end
 
 local function getItemNameById(itemId)
 	for _, k in pairs(hotkeyItemList) do
-		local item = k[1]
-
-		if item:getId() == itemId then
+		if k[1]:getId() == itemId then
 			return k[2]
 		end
 	end
@@ -97,9 +93,7 @@ local function playerCanUseSpell(spellData)
 end
 
 local function onCheckKeyUp(button)
-	local cache = getButtonCache(button)
-
-	if cache.isSpell then
+	if getButtonCache(button).isSpell then
 		spellGroupPressed[tostring(button.cache.primaryGroup)] = nil
 	end
 end
@@ -158,9 +152,7 @@ local function setupHotkeyButton(button)
 end
 
 function onExecuteAction(button, isPress)
-	local cache = getButtonCache(button)
-
-	if cache.lastClick > g_clock.millis() then
+	if getButtonCache(button).lastClick > g_clock.millis() then
 		return true
 	end
 
@@ -238,7 +230,7 @@ function onExecuteAction(button, isPress)
 
 			g_game.talk(button.cache.param)
 		else
-			modules.game_console.sendMessage(button.cache.param)
+			modules.game_console.sendActionBarMessage(button.cache.param)
 		end
 
 		modules.game_console.getConsole():setText("")
@@ -359,38 +351,38 @@ end
 function getButtonCache(button)
 	if not button then
 		return {
-			param = "",
 			sendAutomatic = false,
+			upgradeTier = 0,
 			lastClick = 0,
 			isSpell = false,
-			upgradeTier = 0,
 			isDragging = false,
 			spellID = 0,
 			isPassive = false,
 			isRuneSpell = false,
 			cooldownTime = 0,
-			nextDownKey = 0,
 			buttonIndex = 0,
 			itemId = 0,
+			nextDownKey = 0,
+			param = "",
 			actionType = 0
 		}
 	end
 
 	if not button.cache then
 		button.cache = {
-			param = "",
 			sendAutomatic = false,
+			upgradeTier = 0,
 			lastClick = 0,
 			isSpell = false,
-			upgradeTier = 0,
 			isDragging = false,
 			spellID = 0,
 			isPassive = false,
 			isRuneSpell = false,
 			cooldownTime = 0,
-			nextDownKey = 0,
 			buttonIndex = 0,
 			itemId = 0,
+			nextDownKey = 0,
+			param = "",
 			actionType = 0
 		}
 	end
@@ -449,19 +441,19 @@ function resetButtonCache(button)
 	end
 
 	button.cache = {
-		param = "",
 		sendAutomatic = false,
+		upgradeTier = 0,
 		lastClick = 0,
 		isSpell = false,
-		upgradeTier = 0,
 		isDragging = false,
 		spellID = 0,
 		isPassive = false,
 		isRuneSpell = false,
 		cooldownTime = 0,
-		nextDownKey = 0,
 		buttonIndex = 0,
 		itemId = 0,
+		nextDownKey = 0,
+		param = "",
 		actionType = 0
 	}
 end
@@ -476,9 +468,7 @@ function setupButtonTooltip(button, isEmpty)
 	if isEmpty then
 		local tooltip = "Action Button " .. button:getId()
 		local hotkeyDesc = cache.hotkey ~= nil and formatHotkeyTooltipText(cache.hotkey) or "None"
-
-		tooltip = tooltip .. "\n\nAction:  " .. "None"
-		tooltip = tooltip .. "\nHotkeys:  " .. hotkeyDesc
+		local tooltip = (tooltip .. "\n\nAction:  " .. "None") .. "\nHotkeys:  " .. hotkeyDesc
 
 		if button.item then
 			button.item:setTooltip(tooltip)
@@ -723,7 +713,7 @@ function updateButton(button)
 		return
 	end
 
-	buttonData = ApiJson.getMapping(barIndex, buttonIndex)
+	local buttonData = ApiJson.getMapping(barIndex, buttonIndex)
 
 	resetButtonCache(button)
 	button.item.text:setTextOffset("0 0")
@@ -859,7 +849,7 @@ function updateButton(button)
 		button.cache.buttonParent = parentButton
 	end
 
-	function button.item:onDragEnter(mousePos)
+	function button.item.onDragEnter(self, mousePos)
 		if ApiJson.isBarLocked(barIndex) then
 			return false
 		end
@@ -873,7 +863,7 @@ function updateButton(button)
 		return true
 	end
 
-	function button.item:onDragMove(mousePos)
+	function button.item.onDragMove(self, mousePos)
 		if not button.cache.dragPrepared then
 			button.cache.dragPrepared = true
 
@@ -905,7 +895,7 @@ function updateButton(button)
 		lastHighlightWidget:setBorderColor("white")
 	end
 
-	function button.item:onDragLeave(widget, mousePos)
+	function button.item.onDragLeave(self, widget, mousePos)
 		if not button.cache.isDragging then
 			return false
 		end

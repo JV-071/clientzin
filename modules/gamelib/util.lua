@@ -1,6 +1,4 @@
-﻿-- chunkname: @/gamelib/util.lua
-
-function postostring(pos)
+﻿function postostring(pos)
 	return pos.x .. " " .. pos.y .. " " .. pos.z
 end
 
@@ -13,7 +11,17 @@ function dirtostring(dir)
 end
 
 function comma_value(n)
+	if type(n) == "number" then
+		n = tostring(n)
+	elseif type(n) ~= "string" then
+		n = tostring(tonumber(n) or 0)
+	end
+
 	local left, num, right = string.match(n, "^([^%d]*%d)(%d*)(.-)$")
+
+	if not left then
+		return n
+	end
 
 	return left .. num:reverse():gsub("(%d%d%d)", "%1,"):reverse() .. right
 end
@@ -164,9 +172,7 @@ function wrapTextByWords(str, n)
 		local breakAt = chunk:match("^.*()[%s,%.;:!?%-]")
 
 		if breakAt and breakAt > 1 then
-			local chunk = str:sub(i, i + breakAt - 1)
-
-			chunk = chunk:gsub("[%s,%.;:!?%-]+$", "")
+			local chunk = str:sub(i, i + breakAt - 1):gsub("[%s,%.;:!?%-]+$", "")
 
 			table.insert(result, chunk)
 
@@ -199,8 +205,8 @@ end
 function getFrameClip(id, frameWidth, frameHeight, framesPerRow)
 	if id == 0 then
 		return {
-			y = 0,
 			x = 0,
+			y = 0,
 			width = frameWidth,
 			height = frameHeight
 		}
@@ -229,9 +235,8 @@ function getFramePosition(id, frameWidth, frameHeight, fpr)
 
 	local adjustedId = id - 1
 	local row = math.floor(adjustedId / fpr) + 1
-	local col = adjustedId % fpr
 
-	return col * frameWidth .. " " .. row * frameHeight
+	return adjustedId % fpr * frameWidth .. " " .. row * frameHeight
 end
 
 function convertGold(amount, shortValue)
@@ -276,9 +281,7 @@ function getTotalMoney()
 end
 
 function math.cround(value, rd)
-	local _round = math.floor(value / rd)
-
-	return _round * rd
+	return math.floor(value / rd) * rd
 end
 
 function getHealthColorByPercent(percent)

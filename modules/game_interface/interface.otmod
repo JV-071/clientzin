@@ -1,8 +1,6 @@
 Module
   name: game_interface
   description: Create the game interface, where the ingame stuff starts
-  author: OTClient team
-  website: https://github.com/edubart/otclient
   sandboxed: true
   dependencies: [ client_styles ]
   scripts: [ widgets/uigamemap, widgets/uiitem, widgets/statsbar, gameinterface, sidebar_panels_persistence, sidebar_widgets_persistence, sidebar_widget_options_persistence ]
@@ -31,6 +29,8 @@ Module
     - game_textwindow
     - game_playertrade
     - game_bugreport
+    - game_report
+    - game_battlepass
     - game_playerdeath
     - game_playermount
     - game_ruleviolation
@@ -58,10 +58,12 @@ Module
     - game_proficiency
     - game_wheel
     - game_exaltationforge
+    - game_memorial
     - game_taskboard
     - game_analysers
     - game_offlinetraining
     - game_soulpit
+    - game_ebbflow_timer
     - game_bossdifficulty
     - game_customisepodium
   @onLoad: init()

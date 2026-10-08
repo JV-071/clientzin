@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uiminiwindow.lua
-
-UIMiniWindow = extends(UIWindow, "UIMiniWindow")
+﻿UIMiniWindow = extends(UIWindow, "UIMiniWindow")
 
 local OPEN_HIGHLIGHT_COLOR = "#FFFFFF"
 local OPEN_HIGHLIGHT_WIDTH = 2
@@ -114,7 +112,7 @@ local function playOpenHighlight(miniwindow)
 	end, OPEN_HIGHLIGHT_HOLD_TIME + OPEN_HIGHLIGHT_FADE_TIME + 60)
 end
 
-function UIMiniWindow:playOpenHighlight()
+function UIMiniWindow.playOpenHighlight(self)
 	playOpenHighlight(self)
 end
 
@@ -122,11 +120,12 @@ function UIMiniWindow.create()
 	local miniwindow = UIMiniWindow.internalCreate()
 
 	miniwindow.UIMiniWindowContainer = true
+	miniwindow.dragMoveInterval = 0
 
 	return miniwindow
 end
 
-function UIMiniWindow:open(dontSave)
+function UIMiniWindow.open(self, dontSave)
 	if self.save and (not self:getParent() or self:getParent():isDestroyed()) and SidebarPersistence and SidebarPersistence.active and modules.game_interface and modules.game_interface.getMiniWindowSidebarPanelsInOrder then
 		local panels = modules.game_interface.getMiniWindowSidebarPanelsInOrder()
 		local lastPanel
@@ -192,7 +191,7 @@ function UIMiniWindow:open(dontSave)
 	signalcall(self.onOpen, self)
 end
 
-function UIMiniWindow:close(dontSave)
+function UIMiniWindow.close(self, dontSave)
 	if not self:isExplicitlyVisible() then
 		return
 	end
@@ -239,7 +238,7 @@ function UIMiniWindow:close(dontSave)
 	end
 end
 
-function UIMiniWindow:minimize(dontSave)
+function UIMiniWindow.minimize(self, dontSave)
 	self:setOn(true)
 
 	local minimizeButton = self:getChildById("minimizeButton")
@@ -257,13 +256,9 @@ function UIMiniWindow:minimize(dontSave)
 	local selfY = self:getY()
 
 	for _, child in ipairs(self:getChildren()) do
-		if child:isExplicitlyVisible() and not child._miniwindowOpenHighlight then
-			local relativeBottom = child:getY() - selfY + child:getHeight()
-
-			if minimizedHeight < relativeBottom then
-				child:hide()
-				table.insert(self._minimizedHiddenWidgets, child)
-			end
+		if child:isExplicitlyVisible() and not child._miniwindowOpenHighlight and minimizedHeight < child:getY() - selfY + child:getHeight() then
+			child:hide()
+			table.insert(self._minimizedHiddenWidgets, child)
 		end
 	end
 
@@ -290,7 +285,7 @@ function UIMiniWindow:minimize(dontSave)
 	signalcall(self.onMinimize, self)
 end
 
-function UIMiniWindow:maximize(dontSave)
+function UIMiniWindow.maximize(self, dontSave)
 	self:setOn(false)
 
 	local minimizeButton = self:getChildById("minimizeButton")
@@ -354,7 +349,7 @@ function UIMiniWindow:maximize(dontSave)
 	signalcall(self.onMaximize, self)
 end
 
-function UIMiniWindow:setup()
+function UIMiniWindow.setup(self)
 	self:getChildById("closeButton").onClick = function()
 		self:closeAndForgetLayout()
 	end
@@ -387,7 +382,7 @@ function UIMiniWindow:setup()
 	end
 end
 
-function UIMiniWindow:setupOnStart()
+function UIMiniWindow.setupOnStart(self)
 	self._restoringOnStart = true
 
 	local char = g_game.getCharacterName()
@@ -456,13 +451,13 @@ function UIMiniWindow:setupOnStart()
 	self._restoringOnStart = nil
 end
 
-function UIMiniWindow:onVisibilityChange(visible)
+function UIMiniWindow.onVisibilityChange(self, visible)
 	self:fitOnParent()
 end
 
 local DROP_HIGHLIGHT_COLOR = "#FFFFFF"
 local DROP_HIGHLIGHT_WIDTH = 2
-local SIDEBAR_DRAG_PLACEHOLDER_IMAGE = "/images/ui/2pixel_up_frame_borderimage_dark"
+local SIDEBAR_DRAG_PLACEHOLDER_IMAGE = "/images/ui/2pixel-up-frame-borderimage-dark"
 local SIDEBAR_DRAG_PLACEHOLDER_BORDER = 2
 
 local function canDropOnContainer(widget, container)
@@ -553,6 +548,12 @@ local function destroyDropHighlightOverlay(widget)
 	end
 end
 
+local function var_0_19(widget)
+	if modules.game_interface and modules.game_interface.raiseBottomCustomisableStatsBar then
+		modules.game_interface.raiseBottomCustomisableStatsBar(widget)
+	end
+end
+
 local function clearDropHighlight(widget)
 	destroyDropHighlightOverlay(widget)
 
@@ -587,6 +588,8 @@ local function applyDropHighlight(widget, container)
 	overlay:raise()
 
 	if widget:getParent() == parent and not widget:isDestroyed() then
+		var_0_19(widget)
+		overlay:raise()
 		widget:raise()
 	end
 
@@ -677,10 +680,24 @@ local function appendToDefaultSidebar(widget)
 	return true
 end
 
-function UIMiniWindow:onDragEnter(mousePos)
+local function var_0_25(arg_36_0)
+	local miniwindowTopBar = arg_36_0:getChildById("miniwindowTopBar")
+
+	if not miniwindowTopBar or miniwindowTopBar:isDestroyed() or miniwindowTopBar:getWidth() <= 0 or miniwindowTopBar:getHeight() <= 0 then
+		return true
+	end
+
+	return miniwindowTopBar:containsPoint(arg_36_0:getLastClickPosition())
+end
+
+function UIMiniWindow.onDragEnter(self, mousePos)
 	local parent = self:getParent()
 
 	if not parent then
+		return false
+	end
+
+	if not var_0_25(self) then
 		return false
 	end
 
@@ -690,10 +707,7 @@ function UIMiniWindow:onDragEnter(mousePos)
 	if parent:getClassName() == "UIMiniWindowContainer" then
 		self._fromSidebar = true
 		self.oldParentDrag = parent
-
-		local rawIndex = parent:getChildIndex(self)
-
-		self.oldParentDragIndex = rawIndex
+		self.oldParentDragIndex = parent:getChildIndex(self)
 
 		local children = parent:getChildren()
 		local saveableCount = 0
@@ -722,6 +736,7 @@ function UIMiniWindow:onDragEnter(mousePos)
 		end
 
 		containerParent:addChild(self)
+		var_0_19(self)
 		parent:saveChildren()
 
 		if parent.isHorizontalPanel and type(parent.redistributeChildrenWidths) == "function" then
@@ -747,7 +762,7 @@ function UIMiniWindow:onDragEnter(mousePos)
 	return true
 end
 
-function UIMiniWindow:onDragLeave(droppedWidget, mousePos)
+function UIMiniWindow.onDragLeave(self, droppedWidget, mousePos)
 	self.oldParentDragLast = nil
 
 	clearDropHighlight(self)
@@ -785,19 +800,14 @@ function UIMiniWindow:onDragLeave(droppedWidget, mousePos)
 
 	local needsBounce = false
 
-	if self.moveOnlyToMain or droppedWidget and droppedWidget.onlyPhantomDrop then
-		local widgetAllowsHorizontal = self.allowHorizontalDrop and droppedWidget and droppedWidget.isHorizontalPanel
-
-		if not widgetAllowsHorizontal and (not droppedWidget or self.moveOnlyToMain and not droppedWidget.onlyPhantomDrop or not self.moveOnlyToMain and droppedWidget.onlyPhantomDrop) then
-			needsBounce = true
-		end
+	if (self.moveOnlyToMain or droppedWidget and droppedWidget.onlyPhantomDrop) and not (self.allowHorizontalDrop and droppedWidget and droppedWidget.isHorizontalPanel) and (not droppedWidget or self.moveOnlyToMain and not droppedWidget.onlyPhantomDrop or not self.moveOnlyToMain and droppedWidget.onlyPhantomDrop) then
+		needsBounce = true
 	end
 
 	if not needsBounce and self._fromSidebar then
 		local currentParent = self:getParent()
-		local landedOnSidebar = currentParent and currentParent:getClassName() == "UIMiniWindowContainer"
 
-		if not landedOnSidebar then
+		if not (currentParent and currentParent:getClassName() == "UIMiniWindowContainer") then
 			needsBounce = true
 		end
 	end
@@ -830,14 +840,20 @@ function UIMiniWindow:onDragLeave(droppedWidget, mousePos)
 		currentParent:scheduleSidebarFreeSpaceRefresh()
 	end
 
+	local _fromSidebar = self._fromSidebar
+
 	self._fromSidebar = false
 
 	self:saveParent(self:getParent())
 
+	if _fromSidebar and modules.game_interface and type(modules.game_interface.restoreCenterHudZOrder) == "function" then
+		modules.game_interface.restoreCenterHudZOrder()
+	end
+
 	return true
 end
 
-function UIMiniWindow:onDragMove(mousePos, mouseMoved)
+function UIMiniWindow.onDragMove(self, mousePos, mouseMoved)
 	local moved = UIWindow.onDragMove(self, mousePos, mouseMoved)
 
 	if self.moveOnlyToMain and not self.allowHorizontalDrop and self.oldParentDrag and not self.oldParentDrag:isDestroyed() then
@@ -998,7 +1014,8 @@ function UIMiniWindow:onDragMove(mousePos, mouseMoved)
 
 	if self.moveOnlyToMain and self.oldParentDrag and not self.oldParentDrag:isDestroyed() and self.oldParentDrag:getParent() == panel then
 		local siblings = self.oldParentDrag:getChildren()
-		local candidate, candidateIndex
+		local candidate
+		local candidateIndex
 
 		if dy ~= 0 then
 			for i = dy < 0 and #siblings or 1, dy < 0 and 1 or #siblings, dy < 0 and -1 or 1 do
@@ -1107,7 +1124,7 @@ function UIMiniWindow:onDragMove(mousePos, mouseMoved)
 	return moved
 end
 
-function UIMiniWindow:onMousePress()
+function UIMiniWindow.onMousePress(self)
 	local parent = self:getParent()
 
 	if not parent then
@@ -1121,7 +1138,7 @@ function UIMiniWindow:onMousePress()
 	end
 end
 
-function UIMiniWindow:onFocusChange(focused)
+function UIMiniWindow.onFocusChange(self, focused)
 	if not focused then
 		return
 	end
@@ -1133,7 +1150,7 @@ function UIMiniWindow:onFocusChange(focused)
 	end
 end
 
-function UIMiniWindow:resizeWithinContainer(parent, height)
+function UIMiniWindow.resizeWithinContainer(self, parent, height)
 	local children = parent:getChildren()
 	local selfIndex
 
@@ -1211,7 +1228,7 @@ function UIMiniWindow:resizeWithinContainer(parent, height)
 	end
 end
 
-function UIMiniWindow:onHeightChange(height)
+function UIMiniWindow.onHeightChange(self, height)
 	local resizeBorder = self:getChildById("bottomResizeBorder")
 	local isDraggingResize = resizeBorder and resizeBorder:isPressed()
 
@@ -1243,19 +1260,19 @@ function UIMiniWindow:onHeightChange(height)
 	end
 end
 
-function UIMiniWindow:getSettings(name)
+function UIMiniWindow.getSettings(self, name)
 	return nil
 end
 
-function UIMiniWindow:setSettings(data)
+function UIMiniWindow.setSettings(self, data)
 	return
 end
 
-function UIMiniWindow:eraseSettings(data)
+function UIMiniWindow.eraseSettings(self, data)
 	return
 end
 
-function UIMiniWindow:saveParent(parent)
+function UIMiniWindow.saveParent(self, parent)
 	parent = parent or self:getParent()
 
 	if parent then
@@ -1277,7 +1294,7 @@ function UIMiniWindow:saveParent(parent)
 	end
 end
 
-function UIMiniWindow:saveSelfIndex()
+function UIMiniWindow.saveSelfIndex(self)
 	if not self.save then
 		return
 	end
@@ -1308,12 +1325,12 @@ function UIMiniWindow:saveSelfIndex()
 	end
 end
 
-function UIMiniWindow:clearSavedLayout()
+function UIMiniWindow.clearSavedLayout(self)
 	self.miniIndex = nil
 	self.miniLoaded = nil
 end
 
-function UIMiniWindow:closeAndForgetLayout()
+function UIMiniWindow.closeAndForgetLayout(self)
 	if not self:isExplicitlyVisible() then
 		return
 	end
@@ -1358,39 +1375,39 @@ function UIMiniWindow:closeAndForgetLayout()
 	self:close()
 end
 
-function UIMiniWindow:saveParentPosition(parentId, position)
-	local selfSettings = {}
+function UIMiniWindow.saveParentPosition(self, parentId, position)
+	local var_58_0 = {
+		parentId = parentId,
+		position = pointtostring(position)
+	}
 
-	selfSettings.parentId = parentId
-	selfSettings.position = pointtostring(position)
-
-	self:setSettings(selfSettings)
+	self:setSettings(var_58_0)
 end
 
-function UIMiniWindow:saveParentIndex(parentId, index)
-	local selfSettings = {}
+function UIMiniWindow.saveParentIndex(self, parentId, index)
+	local var_59_0 = {
+		parentId = parentId,
+		index = tonumber(index) or index
+	}
 
-	selfSettings.parentId = parentId
-	selfSettings.index = index
+	self:setSettings(var_59_0)
 
-	self:setSettings(selfSettings)
-
-	self.miniIndex = index
+	self.miniIndex = tonumber(index) or index
 
 	if SidebarLayoutState and SidebarLayoutState.noteWidgetPlacement then
 		SidebarLayoutState.noteWidgetPlacement(self)
 	end
 end
 
-function UIMiniWindow:disableResize()
+function UIMiniWindow.disableResize(self)
 	self:getChildById("bottomResizeBorder"):disable()
 end
 
-function UIMiniWindow:enableResize()
+function UIMiniWindow.enableResize(self)
 	self:getChildById("bottomResizeBorder"):enable()
 end
 
-function UIMiniWindow:fitOnParent()
+function UIMiniWindow.fitOnParent(self)
 	local parent = self:getParent()
 
 	if self:isVisible() and parent and parent:getClassName() == "UIMiniWindowContainer" then
@@ -1398,7 +1415,7 @@ function UIMiniWindow:fitOnParent()
 	end
 end
 
-function UIMiniWindow:setParent(parent, dontsave)
+function UIMiniWindow.setParent(self, parent, dontsave)
 	UIWidget.setParent(self, parent)
 
 	if not dontsave then
@@ -1408,48 +1425,41 @@ function UIMiniWindow:setParent(parent, dontsave)
 	self:fitOnParent()
 end
 
-function UIMiniWindow:setHeight(height)
+function UIMiniWindow.setHeight(self, height)
 	UIWidget.setHeight(self, height)
 	signalcall(self.onHeightChange, self, height)
 end
 
-function UIMiniWindow:setContentHeight(height)
+function UIMiniWindow.setContentHeight(self, height)
 	local contentsPanel = self:getChildById("contentsPanel")
-	local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
-	local resizeBorder = self:getChildById("bottomResizeBorder")
+	local marginTop = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
 
-	resizeBorder:setParentSize(minHeight + height)
+	self:getChildById("bottomResizeBorder"):setParentSize(marginTop + height)
 end
 
-function UIMiniWindow:setContentMinimumHeight(height)
+function UIMiniWindow.setContentMinimumHeight(self, height)
 	local contentsPanel = self:getChildById("contentsPanel")
-	local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
-	local resizeBorder = self:getChildById("bottomResizeBorder")
+	local marginTop = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
 
-	resizeBorder:setMinimum(minHeight + height)
+	self:getChildById("bottomResizeBorder"):setMinimum(marginTop + height)
 end
 
-function UIMiniWindow:setContentMaximumHeight(height)
+function UIMiniWindow.setContentMaximumHeight(self, height)
 	local contentsPanel = self:getChildById("contentsPanel")
-	local minHeight = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
-	local resizeBorder = self:getChildById("bottomResizeBorder")
+	local marginTop = contentsPanel:getMarginTop() + contentsPanel:getMarginBottom() + contentsPanel:getPaddingTop() + contentsPanel:getPaddingBottom()
 
-	resizeBorder:setMaximum(minHeight + height)
+	self:getChildById("bottomResizeBorder"):setMaximum(marginTop + height)
 end
 
-function UIMiniWindow:getMinimumHeight()
-	local resizeBorder = self:getChildById("bottomResizeBorder")
-
-	return resizeBorder:getMinimum()
+function UIMiniWindow.getMinimumHeight(self)
+	return self:getChildById("bottomResizeBorder"):getMinimum()
 end
 
-function UIMiniWindow:getMaximumHeight()
-	local resizeBorder = self:getChildById("bottomResizeBorder")
-
-	return resizeBorder:getMaximum()
+function UIMiniWindow.getMaximumHeight(self)
+	return self:getChildById("bottomResizeBorder"):getMaximum()
 end
 
-function UIMiniWindow:modifyMaximumHeight(height)
+function UIMiniWindow.modifyMaximumHeight(self, height)
 	local resizeBorder = self:getChildById("bottomResizeBorder")
 	local newHeight = resizeBorder:getMaximum() + height
 	local curHeight = self:getHeight()
@@ -1461,7 +1471,7 @@ function UIMiniWindow:modifyMaximumHeight(height)
 	end
 end
 
-function UIMiniWindow:isResizeable()
+function UIMiniWindow.isResizeable(self)
 	local resizeBorder = self:getChildById("bottomResizeBorder")
 
 	if not resizeBorder then
@@ -1471,7 +1481,7 @@ function UIMiniWindow:isResizeable()
 	return resizeBorder:isExplicitlyVisible() and resizeBorder:isEnabled()
 end
 
-function UIMiniWindow:setLockedState(locked, dontSave)
+function UIMiniWindow.setLockedState(self, locked, dontSave)
 	local lockButton = self:getChildById("lockButton")
 
 	if lockButton then
@@ -1489,10 +1499,10 @@ function UIMiniWindow:setLockedState(locked, dontSave)
 	signalcall(self.onLockChange, self)
 end
 
-function UIMiniWindow:lock(dontSave)
+function UIMiniWindow.lock(self, dontSave)
 	self:setLockedState(true, dontSave)
 end
 
-function UIMiniWindow:unlock(dontSave)
+function UIMiniWindow.unlock(self, dontSave)
 	self:setLockedState(false, dontSave)
 end

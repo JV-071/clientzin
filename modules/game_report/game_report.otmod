@@ -1,0 +1,8 @@
+Module
+  name: game_report
+  description: Player report shortcut and window
+  author: Rokam
+  scripts: [ game_report ]
+  sandboxed: true
+  @onLoad: init()
+  @onUnload: terminate()

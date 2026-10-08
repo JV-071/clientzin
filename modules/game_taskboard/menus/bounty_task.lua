@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_taskboard/menus/bounty_task.lua
-
-TaskBoard.BountyTask = {}
+﻿TaskBoard.BountyTask = {}
 
 local BountyTask = TaskBoard.BountyTask
 
@@ -35,11 +33,15 @@ end
 local BOUNTY_TRACKER_TOOLTIP_FOOTER = "Click in this window to open the Task Board dialog."
 local BOUNTY_TRACKER_TOOLTIP_INACTIVE = "Inactive Task.\n\nClick in this window to open Task Board dialog. Select a monster to start a new task."
 local lastBountyTrackerData
+local var_0_7
+local var_0_8
+local var_0_9
+local var_0_10
+local var_0_11 = false
+local var_0_12 = false
 
 local function buildBountyTrackerActiveTooltip(creatureName, killed, total)
-	local header = string.format("Creature: %s\nAmount: %s / %s", capitalizeWords(creatureName), TaskBoard:formatNumberWithCommas(killed), TaskBoard:formatNumberWithCommas(total))
-
-	return header .. "\n\n" .. tr(BOUNTY_TRACKER_TOOLTIP_FOOTER)
+	return string.format("Creature: %s\nAmount: %s / %s", capitalizeWords(creatureName), TaskBoard:formatNumberWithCommas(killed), TaskBoard:formatNumberWithCommas(total)) .. "\n\n" .. tr(BOUNTY_TRACKER_TOOLTIP_FOOTER)
 end
 
 local function getBountyTrackerSlot()
@@ -67,6 +69,9 @@ local function setBountyTrackerTooltip(slot, text)
 end
 
 local function setBountyTrackerInactive()
+	var_0_7 = nil
+	var_0_8 = nil
+
 	local slot = getBountyTrackerSlot()
 
 	if not slot then
@@ -92,6 +97,7 @@ local function setBountyTrackerInactive()
 
 	if timeBar then
 		timeBar:setPercent(0)
+		timeBar:setBackgroundColor("#c28400")
 	end
 
 	setBountyTrackerTooltip(slot, tr(BOUNTY_TRACKER_TOOLTIP_INACTIVE))
@@ -114,11 +120,20 @@ local function setBountyTrackerSelected(data)
 
 	if creature then
 		if raceData and raceData.outfit then
-			creature:setOutfit(raceData.outfit)
-			creature:getCreature():setStaticWalking(1000)
+			if creature ~= var_0_7 or raceId ~= var_0_8 then
+				creature:setOutfit(raceData.outfit)
+				creature:getCreature():setStaticWalking(1000)
+
+				var_0_7 = creature
+				var_0_8 = raceId
+			end
+
 			creature:setVisible(true)
 		else
 			creature:setVisible(false)
+
+			var_0_7 = nil
+			var_0_8 = nil
 		end
 	end
 
@@ -141,6 +156,7 @@ local function setBountyTrackerSelected(data)
 		end
 
 		timeBar:setPercent(percent)
+		timeBar:setBackgroundColor(total > 0 and total <= killed and "#44ad25" or "#c28400")
 	end
 
 	local tooltip = buildBountyTrackerActiveTooltip(creatureName, killed, total)
@@ -193,7 +209,7 @@ function BountyTask.refreshKillTracker()
 	refreshBountyKillTrackerFromCache()
 end
 
-function BountyTask:fillSlotPanel(panel, data, selected)
+function BountyTask.fillSlotPanel(self, panel, data, selected)
 	if not panel or not data then
 		return
 	end
@@ -290,7 +306,7 @@ function BountyTask:fillSlotPanel(panel, data, selected)
 	end
 end
 
-function BountyTask:onSelectSlot(panel)
+function BountyTask.onSelectSlot(self, panel)
 	local data = panel and panel.bountySlotData
 
 	if not data then
@@ -300,18 +316,21 @@ function BountyTask:onSelectSlot(panel)
 	g_game.sendSelectTask(data.taskId)
 end
 
-function BountyTask:selectDifficulty(difficulty)
+function BountyTask.selectDifficulty(self, difficulty)
 	local difficulties = {
-		Expert = 2,
 		Adept = 1,
 		Beginner = 0,
-		Master = 3
+		Master = 3,
+		Expert = 2
 	}
 
 	g_game.sendSelectTaskDifficulty(difficulties[difficulty])
 end
 
-local bountyCreatureCache, selectedBountyRow, selectedBountyRace, listBuildEvent
+local bountyCreatureCache
+local selectedBountyRow
+local selectedBountyRace
+local listBuildEvent
 local BOUNTY_COLOR_EVEN = "#484848"
 local BOUNTY_COLOR_ODD = "#414141"
 local BOUNTY_COLOR_SELECTED = "#585858"
@@ -398,6 +417,14 @@ local function applyBountyCreaturePreview(creatureWidget, outfit, animate)
 	end
 
 	creatureWidget:setOutfit(outfit)
+	creatureWidget:setCenter(true)
+	creatureWidget:setCenterByBoundingBox(true)
+	creatureWidget:setFitVisibleBounds(true)
+	creatureWidget:setFixedCreatureSize(false)
+	creatureWidget:setCreatureSize(0)
+	creatureWidget:setBaseScale(false)
+	creatureWidget:setIgnoreDisplacementShift(false)
+	creatureWidget:setCreatureSmooth(false)
 
 	if animate then
 		local c = creatureWidget:getCreature()
@@ -578,11 +605,11 @@ local function getExcludedRaceIds()
 	return ids
 end
 
-function BountyTask:filterPreferredList(text)
+function BountyTask.filterPreferredList(unusedArgument, text)
 	populateBountyCreatureList(text, getExcludedRaceIds())
 end
 
-function BountyTask:clearPreferredSearch()
+function BountyTask.clearPreferredSearch(unusedArgument)
 	local preferredListPanel = TaskBoard.preferredListPanel
 
 	if not preferredListPanel then
@@ -604,7 +631,7 @@ function BountyTask:clearPreferredSearch()
 	populateBountyCreatureList("", getExcludedRaceIds())
 end
 
-function BountyTask:showPreferredList()
+function BountyTask.showPreferredList(self)
 	local preferredListPanel = TaskBoard.preferredListPanel
 
 	if not preferredListPanel then
@@ -615,6 +642,7 @@ function BountyTask:showPreferredList()
 	selectedBountyRow = nil
 	selectedBountyRace = nil
 
+	self:refreshPreferredList(true)
 	populateBountyCreatureList("", {})
 
 	local chainTransparent = TaskBoard.chainTransparent
@@ -628,7 +656,7 @@ function BountyTask:showPreferredList()
 	preferredListPanel:focus()
 end
 
-function BountyTask:closePreferredList()
+function BountyTask.closePreferredList(unusedArgument)
 	cancelListBuild()
 
 	local preferredListPanel = TaskBoard.preferredListPanel
@@ -717,7 +745,7 @@ local function wireSlotAssignButton(row, btn, slotIndex, isUnwanted)
 	end
 end
 
-function BountyTask:assignToRow(row, slotIndex, isUnwanted)
+function BountyTask.assignToRow(unusedArgument, row, slotIndex, isUnwanted)
 	if not selectedBountyRace then
 		return
 	end
@@ -749,11 +777,11 @@ function BountyTask:assignToRow(row, slotIndex, isUnwanted)
 	wireSlotClearButton(row, slotWidget, btn, costPanel, slotIndex, isUnwanted)
 end
 
-function BountyTask:AssignCreatureSlot()
+function BountyTask.AssignCreatureSlot(self)
 	return
 end
 
-function BountyTask:UnwantedCreatureSlot()
+function BountyTask.UnwantedCreatureSlot(self)
 	return
 end
 
@@ -817,7 +845,7 @@ local function buildPreferredLockedRow(container, slotIndex)
 	end
 end
 
-local function updatePreferredList(preferredListData)
+local function updatePreferredList(preferredListData, arg_48_1)
 	local preferredListPanel = TaskBoard.preferredListPanel
 
 	if not preferredListPanel then
@@ -842,30 +870,51 @@ local function updatePreferredList(preferredListData)
 		return
 	end
 
-	local lockedIndex = 1
-
-	for i, data in ipairs(preferredListData) do
-		local isUnlocked = data.unlocked or i == 1
-
-		if isUnlocked then
-			buildPreferredSlotRow(slotsList, i - 1, data)
+	for lockedIndex, data in ipairs(preferredListData) do
+		if data.unlocked or lockedIndex == 1 then
+			buildPreferredSlotRow(slotsList, lockedIndex - 1, data)
 		else
-			buildPreferredLockedRow(slotsList, lockedIndex)
-
-			lockedIndex = lockedIndex + 1
+			buildPreferredLockedRow(slotsList, lockedIndex - 1)
 		end
 	end
 
-	populateBountyCreatureList("", getExcludedRaceIds())
+	if not arg_48_1 then
+		populateBountyCreatureList("", getExcludedRaceIds())
+	end
 end
 
-function BountyTask:rerollTasks()
+function BountyTask.refreshPreferredList(unusedArgument, arg_49_1)
+	if not var_0_12 or not var_0_10 then
+		return
+	end
+
+	updatePreferredList(var_0_10, arg_49_1)
+
+	var_0_12 = false
+end
+
+local function var_0_47(arg_50_0, arg_50_1)
+	if not arg_50_0 or #arg_50_0 ~= #arg_50_1 then
+		return false
+	end
+
+	for index, entry in ipairs(arg_50_1) do
+		local var_50_0 = arg_50_0[index]
+
+		if not var_50_0 or var_50_0.unlocked ~= entry.unlocked or var_50_0.preferred ~= entry.preferred or var_50_0.unwanted ~= entry.unwanted then
+			return false
+		end
+	end
+
+	return true
+end
+
+function BountyTask.rerollTasks(unusedArgument)
 	local rerollTokens = TaskBoard.bountyTaskPanel and TaskBoard.bountyTaskPanel:recursiveGetChildById("rerollPanel")
 	local rerollButton = TaskBoard.bountyTaskPanel and TaskBoard.bountyTaskPanel:recursiveGetChildById("rerollButton")
 	local valueLabel = rerollTokens and rerollTokens:getChildById("value")
-	local tokens = valueLabel and tonumber(valueLabel:getText()) or 0
 
-	if tokens == 1 and rerollButton then
+	if (valueLabel and tonumber(valueLabel:getText()) or 0) == 1 and rerollButton then
 		rerollButton:setEnabled(false)
 		rerollButton:setTooltip(tr("You don't have more reroll tokens."))
 	end
@@ -873,24 +922,23 @@ function BountyTask:rerollTasks()
 	g_game.sendRerollTasks()
 end
 
-function BountyTask:claimDaily()
+function BountyTask.claimDaily(unusedArgument)
 	if not CLAIMED_DAILY_TASK_STATE then
 		return
 	end
 
-	local rerollBox = TaskBoard.bountyTaskPanel:recursiveGetChildById("rerollTasks")
-	local claimButton = rerollBox:getChildById("claimButton")
+	local rerollTasks = TaskBoard.bountyTaskPanel:recursiveGetChildById("rerollTasks"):getChildById("claimButton")
 
-	claimButton:setEnabled(false)
-	claimButton:setImageClip("0 40 108 20")
-	claimButton:setTooltip(tr("Already claimed today."))
+	rerollTasks:setEnabled(false)
+	rerollTasks:setImageClip("0 40 108 20")
+	rerollTasks:setTooltip(tr("Already claimed today."))
 
 	CLAIMED_DAILY_TASK_STATE = false
 
 	g_game.sendClaimDaily()
 end
 
-function BountyTask:updateTalisman(talismanId)
+function BountyTask.updateTalisman(self, talismanId)
 	g_game.sendUpgradeTalisman(talismanId)
 end
 
@@ -913,41 +961,33 @@ local function getTalismanBonus(talismanId, level)
 	talismanId = tonumber(talismanId) or 0
 
 	if talismanId <= 2 then
-		local lvl1 = math.min(level, 15)
-
-		percent = percent + lvl1 * 0.5
+		local lvl1 = percent + math.min(level, 15) * 0.5
 
 		if level > 15 then
-			local lvl2 = math.min(level - 15, 40)
-
-			percent = percent + lvl2 * 0.25
+			lvl1 = lvl1 + math.min(level - 15, 40) * 0.25
 		end
 
 		if level > 55 then
-			percent = percent + (level - 55) * 0.1
+			lvl1 = lvl1 + (level - 55) * 0.1
 		end
 
-		return math.min(percent, 50)
+		return math.min(lvl1, 50)
 	end
 
-	percent = 5
+	local percent = 5
 
 	if talismanId == 3 then
-		local lvl1 = math.min(level, 15)
-
-		percent = percent + lvl1 * 1
+		local var_55_3 = percent + math.min(level, 15) * 1
 
 		if level > 15 then
-			local lvl2 = math.min(level - 15, 40)
-
-			percent = percent + lvl2 * 0.5
+			var_55_3 = var_55_3 + math.min(level - 15, 40) * 0.5
 		end
 
 		if level > 55 then
-			percent = percent + (level - 55) * 0.2
+			var_55_3 = var_55_3 + (level - 55) * 0.2
 		end
 
-		return math.min(percent, 100)
+		return math.min(var_55_3, 100)
 	end
 
 	return 0
@@ -990,9 +1030,7 @@ local function applyBountyTalismanRow(talismanId, data, labelWidget, upgradeButt
 	end
 end
 
-function onBountyTasksDaily(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
-	updateBountyKillTracker(slots)
-
+local function var_0_51(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, arg_57_5)
 	local container = TaskBoard.bountyTaskPanel and TaskBoard.bountyTaskPanel:recursiveGetChildById("dailyTasks")
 
 	if not container then
@@ -1091,13 +1129,56 @@ function onBountyTasksDaily(slots, rerollTokens, claimUnlocked, difficultyBounty
 		applyBountyTalismanRow(3, talismanData[4], bestiaryTalisman, bestiaryButton, bountyBestiaryPanel)
 	end
 
-	if type(preferredListData) == "table" then
-		updatePreferredList(preferredListData)
+	if type(arg_57_5) == "table" and TaskBoard.preferredListPanel and TaskBoard.preferredListPanel:isVisible() then
+		BountyTask:refreshPreferredList()
 	end
+
+	var_0_11 = false
+end
+
+function BountyTask.refreshPanel(unusedArgument)
+	if not var_0_11 or not var_0_9 then
+		return
+	end
+
+	local var_58_0 = var_0_9
+
+	var_0_51(var_58_0.slots, var_58_0.rerollTokens, var_58_0.claimUnlocked, var_58_0.difficultyBountyTask, var_58_0.talismanData, var_58_0.preferredListData)
+end
+
+function onBountyTasksDaily(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
+	updateBountyKillTracker(slots)
+
+	var_0_9 = {
+		slots = slots,
+		rerollTokens = rerollTokens,
+		claimUnlocked = claimUnlocked,
+		difficultyBountyTask = difficultyBountyTask,
+		talismanData = talismanData,
+		preferredListData = preferredListData
+	}
+	var_0_11 = true
+
+	if type(preferredListData) == "table" and not var_0_47(var_0_10, preferredListData) then
+		var_0_10 = preferredListData
+		var_0_12 = true
+	end
+
+	if not TaskBoard.mainWindow or not TaskBoard.mainWindow:isVisible() or not TaskBoard.bountyTaskPanel or not TaskBoard.bountyTaskPanel:isVisible() then
+		return
+	end
+
+	var_0_51(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
 end
 
 local function onGameStartBounty()
 	bountyCreatureCache = nil
+	var_0_7 = nil
+	var_0_8 = nil
+	var_0_9 = nil
+	var_0_10 = nil
+	var_0_11 = false
+	var_0_12 = false
 
 	scheduleEvent(buildBountyCreatureCache, 500)
 	scheduleEvent(function()
@@ -1112,11 +1193,17 @@ local function onGameEndBounty()
 	selectedBountyRow = nil
 	selectedBountyRace = nil
 	lastBountyTrackerData = nil
+	var_0_7 = nil
+	var_0_8 = nil
+	var_0_9 = nil
+	var_0_10 = nil
+	var_0_11 = false
+	var_0_12 = false
 
 	setBountyTrackerInactive()
 end
 
-function BountyTask:init()
+function BountyTask.init(unusedArgument)
 	connect(g_game, {
 		onBountyTasksDaily = onBountyTasksDaily,
 		onGameStart = onGameStartBounty,
@@ -1125,7 +1212,7 @@ function BountyTask:init()
 	scheduleEvent(refreshBountyKillTrackerFromCache, 0)
 end
 
-function BountyTask:terminate()
+function BountyTask.terminate(unusedArgument)
 	disconnect(g_game, {
 		onBountyTasksDaily = onBountyTasksDaily,
 		onGameStart = onGameStartBounty,

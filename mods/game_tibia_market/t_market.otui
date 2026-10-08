@@ -1601,7 +1601,7 @@ MarketMainWindow < Panel
       text-auto-resize: true
       color: #c0c0c0
       font: $var-cip-font
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
   Panel
     id: coinPanel
@@ -1627,7 +1627,7 @@ MarketMainWindow < Panel
       text-auto-resize: true
       color: #c0c0c0
       font: $var-cip-font
-      tooltip-font: $var-cip-font-wheel
+      tooltip-font: $var-cip-font-new
 
   UIButton
     id: getCoins

@@ -1,12 +1,11 @@
-﻿-- chunkname: @/gamelib/items.lua
-
-ItemsDatabase = {}
+﻿ItemsDatabase = {}
 ItemsDatabase.rarityColors = {
-	yellow = TextColors.yellow,
-	purple = TextColors.purple,
-	blue = TextColors.blue,
-	green = TextColors.green,
-	grey = TextColors.grey
+	grey = "#aaaaaa",
+	green = "#00f000",
+	white = "#f0f0f0",
+	blue = "#20a0ff",
+	purple = "#ff68ff",
+	yellow = "#f0f000"
 }
 
 local function getColorForValue(value)
@@ -58,9 +57,8 @@ function ItemsDatabase.setRarityItem(widget, item, style, isBackground)
 
 	if item then
 		local price = type(item) == "number" and item or item and item:getMeanPrice() or 0
-		local itemRarity = getColorForValue(price)
 
-		if itemRarity then
+		if getColorForValue(price) then
 			clip = clipfunction(price)
 
 			if clip ~= "" then
@@ -233,48 +231,78 @@ function ItemsDatabase.setColorLootMessage(text)
 	return text:gsub("{(.-)}", coloringLootName)
 end
 
-function ItemsDatabase.setTier(widget, item)
-	if not g_game.getFeature(GameThingUpgradeClassification) or not widget then
+local var_0_4 = 10
+local var_0_5 = "/images/inventory/tiers-strip"
+local var_0_6 = "/images/inventory/tiers-strip-exaltation-overlord"
+local var_0_7 = "/images/inventory/tiers-strip-big"
+local var_0_8 = "/images/inventory/tiers-strip-big-exaltation-overlord"
+
+ItemsDatabase.OVERLORD_TIER_SLOTS = {
+	[InventorySlotHead] = true,
+	[InventorySlotBody] = true,
+	[InventorySlotLeg] = true,
+	[InventorySlotFeet] = true,
+	[InventorySlotLeft] = true
+}
+
+function ItemsDatabase.isOverlordActive()
+	return OtcOpCode and g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(OtcOpCode.OVERLORD_ACTIVE)
+end
+
+local function var_0_9(arg_14_0)
+	if type(arg_14_0) == "number" then
+		return arg_14_0
+	end
+
+	if type(arg_14_0) == "userdata" and arg_14_0 and arg_14_0.getTier then
+		return arg_14_0:getTier() or 0
+	end
+
+	return 0
+end
+
+local function var_0_10(arg_15_0, numericValue, arg_15_2, arg_15_3, arg_15_4, arg_15_5, arg_15_6)
+	if not arg_15_0 or not arg_15_0.setImageClip then
 		return
 	end
 
-	local tier = type(item) == "number" and item or type(item) == "userdata" and item and item:getTier() or 0
+	arg_15_0:setImageSource(arg_15_2 and arg_15_6 or arg_15_5)
 
-	if tier and tier > 0 then
-		local xOffset = (math.min(math.max(tier, 1), 10) - 1) * 9
+	numericValue = tonumber(numericValue) or 0
 
-		widget.tier:setImageClip({
-			height = 8,
-			width = 9,
+	if arg_15_2 then
+		numericValue = numericValue + 1
+	end
+
+	if numericValue > 0 then
+		local var_15_0 = math.min(math.max(numericValue, 1), var_0_4)
+
+		arg_15_0:setImageClip({
 			y = 0,
-			x = xOffset
+			x = (var_15_0 - 1) * arg_15_3,
+			width = arg_15_3,
+			height = arg_15_4
 		})
-		widget.tier:setVisible(true)
+		arg_15_0:setVisible(true)
 	else
-		widget.tier:setVisible(false)
+		arg_15_0:setVisible(false)
 	end
 end
 
-function ItemsDatabase.setBigTier(widget, item)
+function ItemsDatabase.setTier(widget, item, style)
 	if not g_game.getFeature(GameThingUpgradeClassification) or not widget then
 		return
 	end
 
-	local tier = type(item) == "number" and item or type(item) == "userdata" and item and item:getTier() or 0
+	var_0_10(widget.tier, var_0_9(item), style == true, 9, 8, var_0_5, var_0_6)
+end
 
-	if tier and tier > 0 then
-		local xOffset = (math.min(math.max(tier, 1), 10) - 1) * 18
-
-		widget.bigtier:setImageClip({
-			height = 16,
-			width = 18,
-			y = 0,
-			x = xOffset
-		})
-		widget.bigtier:setVisible(true)
-	else
-		widget.bigtier:setVisible(false)
+function ItemsDatabase.setBigTier(widget, item, style)
+	if not g_game.getFeature(GameThingUpgradeClassification) or not widget then
+		return
 	end
+
+	var_0_10(widget.bigtier, var_0_9(item), style == true, 18, 16, var_0_7, var_0_8)
 end
 
 function ItemsDatabase.setCharges(widget, item, style)
@@ -303,28 +331,37 @@ function ItemsDatabase.setCharges(widget, item, style)
 	end
 end
 
+function ItemsDatabase.setDurationText(arg_19_0, arg_19_1)
+	if not arg_19_0 or not arg_19_0.duration then
+		return
+	end
+
+	local var_19_0 = arg_19_1 and formatItemDuration(arg_19_1) or ""
+	local text = arg_19_0.duration:getText()
+
+	arg_19_0.duration:setText(var_19_0)
+
+	local var_19_2 = resolveSlotItemWidget(arg_19_0) or arg_19_0
+
+	if var_19_0 ~= "" then
+		var_19_2:setTooltip(var_19_0)
+	elseif text ~= "" and var_19_2:getTooltip() == text then
+		local item = var_19_2:getItem()
+		local tooltip = item and item:getTooltip() or ""
+
+		var_19_2:setTooltip(tooltip ~= "" and tooltip or nil)
+	end
+end
+
 function ItemsDatabase.setDuration(widget, item, style)
-	if not g_game.getFeature(GameThingClock) or not widget then
+	if not widget then
 		return
 	end
 
-	if ItemsDatabase.shouldHideExpiryForUnusedItem(item) then
-		widget.duration:setText("")
-
-		if style then
-			widget:setStyle(style)
-		end
-
-		return
-	end
-
-	if item and item:getDurationTime() > 0 then
-		local durationTimeLeft = item:getDurationTime()
-		local text = formatItemDuration(durationTimeLeft)
-
-		widget.duration:setText(text)
+	if g_game.getFeature(GameThingClock) and item and item:getDurationTime() > 0 and not ItemsDatabase.shouldHideExpiryForUnusedItem(item) then
+		ItemsDatabase.setDurationText(widget, item:getDurationTime())
 	else
-		widget.duration:setText("")
+		ItemsDatabase.setDurationText(widget, nil)
 	end
 
 	if style then
@@ -333,23 +370,17 @@ function ItemsDatabase.setDuration(widget, item, style)
 end
 
 function formatItemDuration(duration)
-	local hours = math.floor(duration / 3600)
-	local minutes = math.floor(duration % 3600 / 60)
+	local hours = math.floor(duration / 86400)
+	local var_21_1 = math.floor(duration % 86400 / 3600)
+	local var_21_2 = math.floor(duration % 3600 / 60)
 	local seconds = duration % 60
-	local text = ""
 
 	if hours > 0 then
-		if hours >= 10 then
-			return string.format("%dh", hours)
-		end
-
-		return string.format("%dh%02d", hours, minutes)
-	elseif minutes > 0 then
-		if minutes >= 10 then
-			return string.format("%dm", minutes)
-		end
-
-		return string.format("%dm%02d", minutes, seconds)
+		return string.format("%dd %dh %dmin", hours, var_21_1, var_21_2)
+	elseif var_21_1 > 0 then
+		return string.format("%dh %dmin", var_21_1, var_21_2)
+	elseif var_21_2 > 0 then
+		return string.format("%dmin", var_21_2)
 	end
 
 	return string.format("%ds", seconds)

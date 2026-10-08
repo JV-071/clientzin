@@ -1,6 +1,4 @@
-﻿-- chunkname: @/mods/game_imbuing/classes/imbuementscroll.lua
-
-if not ImbuementScroll then
+﻿if not ImbuementScroll then
 	ImbuementScroll = {
 		itemId = 51442,
 		availableImbuements = {},
@@ -33,7 +31,7 @@ function ImbuementScroll.setup(availableImbuements, needItems)
 	self.onSelectSlotImbue()
 end
 
-function ImbuementScroll:shutdown()
+function ImbuementScroll.shutdown(self)
 	self.window = nil
 	self.confirmWindow = nil
 	self.lastselectedwidget = nil
@@ -145,10 +143,7 @@ function ImbuementScroll.selectBaseType(selectedButtonId)
 	local imbuementsList = self.window:recursiveGetChildById("imbuementsList")
 
 	imbuementsList:destroyChildren()
-
-	local imbuementsDetails = self.window:recursiveGetChildById("imbuementsDetails")
-
-	imbuementsDetails:setVisible(false)
+	self.window:recursiveGetChildById("imbuementsDetails"):setVisible(false)
 
 	for id, imbuement in ipairs(self.availableImbuements) do
 		if imbuement.type == baseImbuement then
@@ -234,15 +229,13 @@ function ImbuementScroll.selectImbuementWidget(widget, imbuement)
 		costPanel.cost:setText(comma_value(cost))
 
 		local player = g_game.getLocalPlayer()
-		local playerBank = player:getResourceBalance(ResourceBank)
-		local playerInventory = player:getResourceBalance(ResourceInventary)
-		local balance = playerBank + playerInventory
+		local resourceBalance = player:getResourceBalance(ResourceBank) + player:getResourceBalance(ResourceInventary)
 
-		if balance < cost then
+		if resourceBalance < cost then
 			hasRequiredItems = false
 		end
 
-		costPanel.cost:setColor(balance < cost and "#f75f5f" or "#c0c0c0")
+		costPanel.cost:setColor(resourceBalance < cost and "#f75f5f" or "#c0c0c0")
 	end
 
 	local imbuescrollApply = self.window:recursiveGetChildById("imbuescrollApply")

@@ -1,16 +1,12 @@
-﻿-- chunkname: @/game_taskboard/menus/weekly_task.lua
-
-TaskBoard.WeeklyTask = {}
+﻿TaskBoard.WeeklyTask = {}
 
 local WeeklyTask = TaskBoard.WeeklyTask
 
 WeeklyTask.mainWindow = nil
 WeeklyTask.isWeeklyTaskActive = false
 
-function WeeklyTask:updateOverlayVisibility()
-	local canShowOverlay = self.isWeeklyTaskActive and TaskBoard.mainWindow and TaskBoard.mainWindow:isVisible() and TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:isVisible() and TaskBoard.chainTransparentWeekly and TaskBoard.weeklyProgressPanel
-
-	if canShowOverlay then
+function WeeklyTask.updateOverlayVisibility(self)
+	if self.isWeeklyTaskActive and TaskBoard.mainWindow and TaskBoard.mainWindow:isVisible() and TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:isVisible() and TaskBoard.chainTransparentWeekly and TaskBoard.weeklyProgressPanel then
 		TaskBoard.chainTransparentWeekly:show()
 		TaskBoard.weeklyProgressPanel:show()
 		TaskBoard.weeklyProgressPanel:raise()
@@ -87,8 +83,8 @@ local function setKillSlotCreature(panel, raceData)
 		outfitIcon:setVisible(true)
 		outfitIcon:setImageSource("/images/icons_big/icon-arbitrarymonster64x64")
 		outfitIcon:setImageSize({
-			width = 66,
-			height = 66
+			height = 66,
+			width = 66
 		})
 	end
 end
@@ -126,6 +122,96 @@ local function fillKillSlot(panel, name, current, target, raceData)
 	end
 end
 
+local function fillDeliverySlot(panel)
+	local game_cyclopedia = modules.game_cyclopedia
+	local var_8_1 = game_cyclopedia and game_cyclopedia.Cyclopedia
+
+	if not var_8_1 or not var_8_1.openItemInCyclopedia then
+		return
+	end
+
+	if game_cyclopedia.show then
+		game_cyclopedia.show("items")
+	end
+
+	var_8_1.openItemInCyclopedia(panel)
+end
+
+local function var_0_7(arg_9_0)
+	local game_market = modules.game_market
+
+	if not game_market then
+		return
+	end
+
+	local var_9_1 = Item.create(arg_9_0, 1)
+
+	if not var_9_1 then
+		return
+	end
+
+	if game_market.showItemInMarket then
+		game_market.showItemInMarket(var_9_1)
+	elseif game_market.onRedirect then
+		g_game.sendMarketAction(1)
+		scheduleEvent(function()
+			if game_market.show then
+				game_market.show()
+			end
+
+			game_market.onRedirect(var_9_1)
+		end, 400)
+	end
+end
+
+local function var_0_8(arg_11_0, arg_11_1)
+	if arg_11_1 <= 0 then
+		return false
+	end
+
+	local thingType = g_things.getThingType(arg_11_1, ThingCategoryItem)
+
+	if not thingType then
+		return false
+	end
+
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
+
+	gamePopupMenuWidget:setGameMenu(true)
+
+	local var_11_2 = false
+	local game_cyclopedia = modules.game_cyclopedia
+	local var_11_4 = game_cyclopedia and game_cyclopedia.Cyclopedia
+
+	if thingType.isCyclopediaItem and thingType:isCyclopediaItem() and var_11_4 and var_11_4.openItemInCyclopedia then
+		gamePopupMenuWidget:addOption(tr("Cyclopedia"), function()
+			fillDeliverySlot(arg_11_1)
+		end)
+
+		var_11_2 = true
+	end
+
+	local game_market = modules.game_market
+
+	if thingType.isMarketable and thingType:isMarketable() and game_market and (game_market.showItemInMarket or game_market.onRedirect) then
+		gamePopupMenuWidget:addOption(tr("Show in Market"), function()
+			var_0_7(arg_11_1)
+		end)
+
+		var_11_2 = true
+	end
+
+	if not var_11_2 then
+		gamePopupMenuWidget:destroy()
+
+		return false
+	end
+
+	gamePopupMenuWidget:display(arg_11_0)
+
+	return true
+end
+
 local function fillDeliverySlot(panel, entry)
 	if not panel or not entry then
 		return
@@ -146,12 +232,59 @@ local function fillDeliverySlot(panel, entry)
 	local itemIcon = panel:getChildById("itemIcon")
 
 	if itemIcon then
-		itemIcon:setItemId(entry.taskItemId or 0)
+		local var_14_3 = entry.taskItemId or 0
+
+		itemIcon:setItemId(var_14_3)
+
+		function itemIcon.onMouseRelease(arg_15_0, arg_15_1, arg_15_2)
+			if arg_15_2 ~= MouseRightButton or not g_keyboard.isCtrlPressed() or not arg_15_0:containsPoint(arg_15_1) then
+				return false
+			end
+
+			return var_0_8(arg_15_1, var_14_3)
+		end
 	end
 
+	local var_14_4 = (entry.completed or 0) ~= 0
 	local currentLabel = panel:getChildById("currentDeliveryLabel")
+	local ofDeliveryLabel = panel:getChildById("ofDeliveryLabel")
+	local totalLabel = panel:getChildById("totalDeliveryLabel")
+	local deliverButton = panel:getChildById("deliverButton")
+	local completedIcon = panel:getChildById("completedIcon")
+
+	if var_14_4 then
+		if currentLabel then
+			currentLabel:setVisible(false)
+		end
+
+		if ofDeliveryLabel then
+			ofDeliveryLabel:setVisible(false)
+		end
+
+		if totalLabel then
+			totalLabel:setVisible(false)
+		end
+
+		if deliverButton then
+			deliverButton:setVisible(false)
+			deliverButton:setEnabled(false)
+
+			deliverButton.onClick = nil
+		end
+
+		if completedIcon then
+			completedIcon:setVisible(true)
+		end
+
+		return
+	end
+
+	if completedIcon then
+		completedIcon:setVisible(false)
+	end
 
 	if currentLabel then
+		currentLabel:setVisible(true)
 		currentLabel:setText(TaskBoard:formatNumberWithCommas(entry.count or 0))
 
 		if entry.count >= entry.totalItems then
@@ -161,20 +294,21 @@ local function fillDeliverySlot(panel, entry)
 		end
 	end
 
-	local totalLabel = panel:getChildById("totalDeliveryLabel")
+	if ofDeliveryLabel then
+		ofDeliveryLabel:setVisible(true)
+	end
 
 	if totalLabel then
+		totalLabel:setVisible(true)
 		totalLabel:setText(TaskBoard:formatNumberWithCommas(entry.totalItems or 0))
 	end
 
-	local deliverButton = panel:getChildById("deliverButton")
-
 	if deliverButton then
 		local taskId = entry.taskId or 0
-		local isCompleted = (entry.completed or 0) ~= 0
-		local hasItems = (entry.count or 0) > 0
+		local isCompleted = (entry.count or 0) > 0
 
-		deliverButton:setEnabled(hasItems and not isCompleted)
+		deliverButton:setVisible(true)
+		deliverButton:setEnabled(isCompleted)
 
 		function deliverButton.onClick()
 			g_game.sendDeliveryTask(taskId)
@@ -188,9 +322,7 @@ local WEEKLY_CREATURETRACK_NO_CREATURE_IMG = "/images/game/prey/prey-noprey-smal
 local WEEKLY_TRACKER_TOOLTIP_FOOTER = "Click in this window to open the Task Board dialog."
 
 local function buildWeeklyTrackerActiveTooltip(creatureName, killed, total)
-	local header = string.format("Creature: %s\nAmount: %s / %s", creatureName, TaskBoard:formatNumberWithCommas(killed), TaskBoard:formatNumberWithCommas(total))
-
-	return header .. "\n\n" .. tr(WEEKLY_TRACKER_TOOLTIP_FOOTER)
+	return string.format("Creature: %s\nAmount: %s / %s", creatureName, TaskBoard:formatNumberWithCommas(killed), TaskBoard:formatNumberWithCommas(total)) .. "\n\n" .. tr(WEEKLY_TRACKER_TOOLTIP_FOOTER)
 end
 
 local function refreshBountyKillTrackerIfAvailable()
@@ -246,6 +378,7 @@ local function setWeeklyKillTrackerUnused(slotIndex)
 
 	if timeBar then
 		timeBar:setPercent(0)
+		timeBar:setBackgroundColor("#c28400")
 	end
 
 	slot:setTooltip("")
@@ -276,8 +409,8 @@ local function setWeeklyTrackerSelected(slotIndex, raceId, monstersKilled, total
 		if noCreature then
 			noCreature:setImageSource(WEEKLY_ANY_CREATURE_ICON)
 			noCreature:setImageSize({
-				width = 18,
-				height = 14
+				height = 14,
+				width = 18
 			})
 			noCreature:setCenter(true)
 			noCreature:setVisible(true)
@@ -290,11 +423,18 @@ local function setWeeklyTrackerSelected(slotIndex, raceId, monstersKilled, total
 
 		if creature then
 			if raceData and raceData.outfit then
-				creature:setOutfit(raceData.outfit)
-				creature:getCreature():setStaticWalking(1000)
+				if creature.weeklyTrackerRaceId ~= rid then
+					creature:setOutfit(raceData.outfit)
+					creature:getCreature():setStaticWalking(1000)
+
+					creature.weeklyTrackerRaceId = rid
+				end
+
 				creature:setVisible(true)
 			else
 				creature:setVisible(false)
+
+				creature.weeklyTrackerRaceId = nil
 			end
 		end
 
@@ -323,6 +463,7 @@ local function setWeeklyTrackerSelected(slotIndex, raceId, monstersKilled, total
 		end
 
 		timeBar:setPercent(percent)
+		timeBar:setBackgroundColor(total > 0 and total <= killed and "#44ad25" or "#c28400")
 	end
 
 	slot:setTooltip(buildWeeklyTrackerActiveTooltip(capitalizeWords(creatureName), killed, total))
@@ -337,82 +478,88 @@ local function layoutWeeklyKillTrackerSlots(usedCount)
 end
 
 local function buildKillSlots(weeklyTasks)
-	local killSlotsList = getKillSlotsList()
-
-	if not killSlotsList then
-		return
-	end
-
 	local killEntries = weeklyTasks.killEntries or {}
+	local usedTrackerSlots = 0
 
-	if #killEntries == 0 then
-		killSlotsList:updateLayout()
-		layoutWeeklyKillTrackerSlots(0)
+	if #killEntries > 0 then
+		setWeeklyTrackerSelected(1, nil, weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, true)
 
-		if modules.game_prey and modules.game_prey.updateTrackerHeight then
-			modules.game_prey.updateTrackerHeight()
+		local maxSpeciesSlots = WEEKLY_KILL_TRACKER_MAX_SLOTS - 1
+
+		for slotIndex, entry in ipairs(killEntries) do
+			if maxSpeciesSlots < slotIndex then
+				break
+			end
+
+			setWeeklyTrackerSelected(slotIndex + 1, tonumber(entry.raceId) or 0, entry.totalMonsterKilleds, entry.totalKills, false)
 		end
 
-		refreshBountyKillTrackerIfAvailable()
-
-		return
+		usedTrackerSlots = math.min(1 + #killEntries, WEEKLY_KILL_TRACKER_MAX_SLOTS)
 	end
-
-	killSlotsList:destroyChildren()
-
-	local ok, anyPanel = pcall(g_ui.createWidget, "KillSlots", killSlotsList)
-
-	if not ok then
-		print("[WeeklyTask] erro criando KillSlots (Any Creature):", tostring(anyPanel))
-
-		return
-	end
-
-	fillKillSlot(anyPanel, "Any Creature", weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, nil)
-	setWeeklyTrackerSelected(1, nil, weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, true)
-
-	local unlockKillButton = killSlotsList:getParent():getChildById("unlockKillButton")
-
-	if unlockKillButton then
-		if #killEntries > 5 then
-			unlockKillButton:setVisible(false)
-		else
-			unlockKillButton:setVisible(true)
-		end
-	end
-
-	local maxSpeciesSlots = WEEKLY_KILL_TRACKER_MAX_SLOTS - 1
-
-	for slotIndex, entry in ipairs(killEntries) do
-		local ok2, panel = pcall(g_ui.createWidget, "KillSlots", killSlotsList)
-
-		if not ok2 then
-			print("[WeeklyTask] erro criando KillSlots:", tostring(panel))
-
-			break
-		end
-
-		local rid = tonumber(entry.raceId) or 0
-		local raceData = g_things.getRaceData(rid)
-		local raceName = raceData and raceData.raceId ~= 0 and raceData.name or "?"
-
-		fillKillSlot(panel, raceName, entry.totalMonsterKilleds, entry.totalKills, raceData)
-
-		if slotIndex <= maxSpeciesSlots then
-			setWeeklyTrackerSelected(slotIndex + 1, rid, entry.totalMonsterKilleds, entry.totalKills, false)
-		end
-	end
-
-	local usedTrackerSlots = math.min(1 + #killEntries, WEEKLY_KILL_TRACKER_MAX_SLOTS)
 
 	layoutWeeklyKillTrackerSlots(usedTrackerSlots)
-	killSlotsList:updateLayout()
 
 	if modules.game_prey and modules.game_prey.updateTrackerHeight then
 		modules.game_prey.updateTrackerHeight()
 	end
 
 	refreshBountyKillTrackerIfAvailable()
+end
+
+local function var_0_21(weeklyTasks)
+	local deliverySlotsList = getKillSlotsList()
+
+	if not deliverySlotsList then
+		return
+	end
+
+	local var_24_1 = weeklyTasks.killEntries or {}
+
+	if #var_24_1 == 0 then
+		deliverySlotsList:updateLayout()
+
+		return
+	end
+
+	deliverySlotsList:destroyChildren()
+
+	local var_24_2, var_24_3 = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+
+	if not var_24_2 then
+		print("[WeeklyTask] erro criando KillSlots (Any Creature):", tostring(var_24_3))
+
+		return
+	end
+
+	fillKillSlot(var_24_3, "Any Creature", weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, nil)
+
+	local unlockKillButton = deliverySlotsList:getParent():getChildById("unlockKillButton")
+
+	if unlockKillButton then
+		if #var_24_1 > 5 then
+			unlockKillButton:setVisible(false)
+		else
+			unlockKillButton:setVisible(true)
+		end
+	end
+
+	for unusedValue, entry in ipairs(var_24_1) do
+		local var_24_5, var_24_6 = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+
+		if not var_24_5 then
+			print("[WeeklyTask] erro criando KillSlots:", tostring(var_24_6))
+
+			break
+		end
+
+		local numericValue = tonumber(entry.raceId) or 0
+		local raceData = g_things.getRaceData(numericValue)
+		local var_24_9 = raceData and raceData.raceId ~= 0 and raceData.name or "?"
+
+		fillKillSlot(var_24_6, var_24_9, entry.totalMonsterKilleds, entry.totalKills, raceData)
+	end
+
+	deliverySlotsList:updateLayout()
 end
 
 local function buildDeliverySlots(weeklyTasks)
@@ -541,8 +688,16 @@ end
 local function buildRewards(weeklyTasks)
 	local huntingPoints = weeklyTasks.totalPoints or 0
 	local soulSealsPoints = weeklyTasks.totalTasksCompleted or 0
+	local numericValue = tonumber(weeklyTasks.killTaskExp) or 0
+	local var_32_3 = tonumber(weeklyTasks.deliveryTaskExp) or 0
 
 	if TaskBoard.weeklyPanel then
+		local weeklyExperienceRewardLabel = TaskBoard.weeklyPanel:recursiveGetChildById("weeklyExperienceRewardLabel")
+
+		if weeklyExperienceRewardLabel then
+			weeklyExperienceRewardLabel:setText(tr("Each kill task will reward you with %s XP and each delivery task will reward you with %s XP.", TaskBoard:formatNumberWithCommas(numericValue), TaskBoard:formatNumberWithCommas(var_32_3)))
+		end
+
 		local huntingPointsLabel = TaskBoard.weeklyPanel:recursiveGetChildById("huntingPointsLabel")
 
 		if huntingPointsLabel then
@@ -560,9 +715,8 @@ local function buildRewards(weeklyTasks)
 	local daysRemainingLabel = TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:recursiveGetChildById("daysRemaining")
 
 	if daysRemainingLabel and timeStamp > 0 then
-		local currentTime = os.time()
-		local diffSeconds = timeStamp - currentTime
-		local daysRemaining = math.floor(diffSeconds / 86400)
+		local var_32_9 = timeStamp - os.time()
+		local daysRemaining = math.floor(var_32_9 / 86400)
 
 		if daysRemaining < 0 then
 			daysRemaining = 0
@@ -572,7 +726,7 @@ local function buildRewards(weeklyTasks)
 	end
 end
 
-function WeeklyTask:allowDifficultyWeeklyTasks(unlockedDifficulties)
+function WeeklyTask.allowDifficultyWeeklyTasks(self, unlockedDifficulties)
 	local panel = TaskBoard.weeklyProgressPanel
 
 	if not panel then
@@ -589,20 +743,20 @@ function WeeklyTask:allowDifficultyWeeklyTasks(unlockedDifficulties)
 
 	local buttons = {
 		{
-			tier = 0,
-			id = "beginnerButton"
+			id = "beginnerButton",
+			tier = 0
 		},
 		{
-			tier = 1,
-			id = "adeptButton"
+			id = "adeptButton",
+			tier = 1
 		},
 		{
-			tier = 2,
-			id = "expertButton"
+			id = "expertButton",
+			tier = 2
 		},
 		{
-			tier = 3,
-			id = "masterButton"
+			id = "masterButton",
+			tier = 3
 		}
 	}
 
@@ -619,13 +773,40 @@ function WeeklyTask:allowDifficultyWeeklyTasks(unlockedDifficulties)
 	end
 end
 
+local var_0_33
+local var_0_34 = false
+
+local function var_0_35()
+	return TaskBoard.mainWindow and TaskBoard.mainWindow:isVisible() and TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:isVisible()
+end
+
+local function var_0_36(arg_35_0)
+	var_0_21(arg_35_0)
+	buildDeliverySlots(arg_35_0)
+
+	var_0_34 = false
+end
+
+function WeeklyTask.refreshPanel(unusedArgument)
+	if var_0_34 and var_0_33 then
+		var_0_36(var_0_33)
+	end
+end
+
 function onWeeklyTasks(weeklyTasks)
 	if type(weeklyTasks) ~= "table" then
 		return
 	end
 
 	buildKillSlots(weeklyTasks)
-	buildDeliverySlots(weeklyTasks)
+
+	var_0_33 = weeklyTasks
+	var_0_34 = true
+
+	if var_0_35() then
+		var_0_36(weeklyTasks)
+	end
+
 	buildBarProgress(weeklyTasks)
 	buildRewards(weeklyTasks)
 
@@ -635,7 +816,7 @@ function onWeeklyTasks(weeklyTasks)
 	WeeklyTask:allowDifficultyWeeklyTasks(weeklyTasks.unlockedDifficulties)
 end
 
-function WeeklyTask:init()
+function WeeklyTask.init(unusedArgument)
 	connect(g_game, {
 		onWeeklyTasks = onWeeklyTasks
 	})
@@ -653,7 +834,7 @@ function WeeklyTask:init()
 	end
 end
 
-function WeeklyTask:terminate()
+function WeeklyTask.terminate(self)
 	disconnect(g_game, {
 		onWeeklyTasks = onWeeklyTasks
 	})

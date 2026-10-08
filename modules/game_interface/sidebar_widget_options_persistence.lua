@@ -1,57 +1,61 @@
-﻿-- chunkname: @/game_interface/sidebar_widget_options_persistence.lua
-
-SidebarWidgetOptionsPersistence = {}
+﻿SidebarWidgetOptionsPersistence = {}
 
 local WIDGET_TYPE_TO_ID = {
-	prey = "preyTracker",
-	bosstiaryTracker = "BosstiaryTrackerWindow",
-	battleList = "battleWindow",
+	lootAnalyser = "lootAnalyserMiniWindow",
 	dropTracker = "dropTrackerMiniWindow",
+	analyticsSelector = "analyserMiniWindow",
+	bossCooldown = "bossCdAnalyserMiniWindow",
+	helperStats = "helperStatsWindow",
+	spellList = "spellListMiniWindow",
+	unjustifiedPoints = "unjustifiedPointsWindow",
+	questTracker = "QuestLogTracker",
+	imbuementTracker = "imbuementTracker",
+	battlePassInbox = "BattlePassInboxWindow",
+	prey = "preyTracker",
+	battlePassTracker = "BattlePassTrackerWindow",
+	battleList = "battleWindow",
+	bosstiaryTracker = "BosstiaryTrackerWindow",
 	partyList = "partyWindow",
 	bestiaryTracker = "BestiaryTrackerWindow",
 	vip = "vipWindow",
 	xpAnalyser = "xpAnalyserMiniWindow",
 	skills = "skillWindow",
 	partyHuntAnalyser = "phAnalyserMiniWindow",
-	bossCooldown = "bossCdAnalyserMiniWindow",
 	huntingSessionAnalyser = "huntingAnalyserMiniWindow",
 	damageInputAnalyser = "inputAnalyserMiniWindow",
 	impactAnalyser = "impactAnalyserMiniWindow",
-	supplyAnalyser = "supplyAnalyserMiniWindow",
-	lootAnalyser = "lootAnalyserMiniWindow",
-	analyticsSelector = "analyserMiniWindow",
-	helperStats = "helperStatsWindow",
-	spellList = "spellListMiniWindow",
-	unjustifiedPoints = "unjustifiedPointsWindow",
-	questTracker = "QuestLogTracker",
-	imbuementTracker = "imbuementTracker"
+	supplyAnalyser = "supplyAnalyserMiniWindow"
 }
 local WIDGET_TYPE_TO_MODULE = {
-	prey = "game_prey",
-	bosstiaryTracker = "game_cyclopedia",
-	battleList = "game_battle",
+	lootAnalyser = "game_analysers",
 	dropTracker = "game_analysers",
+	analyticsSelector = "game_analysers",
+	bossCooldown = "game_analysers",
+	helperStats = "game_helper",
+	spellList = "game_spelllist",
+	unjustifiedPoints = "game_unjustifiedpoints",
+	questTracker = "game_questlog",
+	imbuementTracker = "game_imbuementtracker",
+	battlePassInbox = "game_battlepass",
+	prey = "game_prey",
+	battlePassTracker = "game_battlepass",
+	battleList = "game_battle",
+	bosstiaryTracker = "game_cyclopedia",
 	partyList = "game_party",
 	bestiaryTracker = "game_cyclopedia",
 	vip = "game_viplist",
 	xpAnalyser = "game_analysers",
 	skills = "game_skills",
 	partyHuntAnalyser = "game_analysers",
-	bossCooldown = "game_analysers",
 	huntingSessionAnalyser = "game_analysers",
 	damageInputAnalyser = "game_analysers",
 	impactAnalyser = "game_analysers",
-	supplyAnalyser = "game_analysers",
-	lootAnalyser = "game_analysers",
-	analyticsSelector = "game_analysers",
-	helperStats = "game_helper",
-	spellList = "game_spelllist",
-	unjustifiedPoints = "game_unjustifiedpoints",
-	questTracker = "game_questlog",
-	imbuementTracker = "game_imbuementtracker"
+	supplyAnalyser = "game_analysers"
 }
 local SIMPLE_WIDGET_SECTIONS = {}
 local OPTION_WIDGET_TYPES = {
+	battlePassInboxWidgetOptions = "battlePassInbox",
+	battlePassTrackerWidgetOptions = "battlePassTracker",
 	bossCdAnalyserOptions = "bossCooldown",
 	dropTrackerAnalyserOptions = "dropTracker",
 	xpAnalyserWidgetOptions = "xpAnalyser",
@@ -109,27 +113,29 @@ local function mergeSectionFromDocument(sectionKey, section)
 end
 
 local WIDGET_TYPE_TO_SECTION = {
-	prey = "preyWidgetOptions",
-	bosstiaryTracker = "bosstiaryTrackerWidgetOptions",
-	battleList = "battleListsOptions",
+	lootAnalyser = "lootAnalyserWidgetOptions",
 	dropTracker = "dropTrackerAnalyserOptions",
+	analyticsSelector = "analyticsSelectorOptions",
+	bossCooldown = "bossCdAnalyserOptions",
+	helperStats = "helperStatsWidgetOptions",
+	spellList = "spellListWidgetOptions",
+	unjustifiedPoints = "unjustifiedPointsOptions",
+	questTracker = "questTrackerWidgetOptions",
+	imbuementTracker = "imbuementTrackerWidgetOptions",
+	battlePassInbox = "battlePassInboxWidgetOptions",
+	prey = "preyWidgetOptions",
+	battlePassTracker = "battlePassTrackerWidgetOptions",
+	battleList = "battleListsOptions",
+	bosstiaryTracker = "bosstiaryTrackerWidgetOptions",
 	partyList = "partyWidgetOptions",
 	bestiaryTracker = "bestiaryTrackerWidgetOptions",
 	vip = "vipWidgetOptions",
 	xpAnalyser = "xpAnalyserWidgetOptions",
 	skills = "skillsWidgetOptions",
 	partyHuntAnalyser = "partyHuntAnalyserOptions",
-	bossCooldown = "bossCdAnalyserOptions",
 	huntingSessionAnalyser = "huntingSessionAnalyserWidgetOptions",
 	damageInputAnalyser = "damageInputAnalyserWidgetOptions",
-	impactAnalyser = "impactAnalyserWidgetOptions",
-	lootAnalyser = "lootAnalyserWidgetOptions",
-	analyticsSelector = "analyticsSelectorOptions",
-	helperStats = "helperStatsWidgetOptions",
-	spellList = "spellListWidgetOptions",
-	unjustifiedPoints = "unjustifiedPointsOptions",
-	questTracker = "questTrackerWidgetOptions",
-	imbuementTracker = "imbuementTrackerWidgetOptions"
+	impactAnalyser = "impactAnalyserWidgetOptions"
 }
 
 function SidebarWidgetOptionsPersistence.clearContainerOptions(containerId)
@@ -293,8 +299,7 @@ local function resolveWindowForSection(widgetType, instance)
 		for widgetId, data in pairs(SidebarLayoutState.getWidgets()) do
 			if data.type == widgetType and (data.instance or 0) == instance then
 				local rootWidget = g_ui.getRootWidget()
-
-				window = rootWidget and rootWidget:recursiveGetChildById(widgetId)
+				local window = rootWidget and rootWidget:recursiveGetChildById(widgetId)
 
 				if window and not window:isDestroyed() then
 					return window
@@ -413,7 +418,9 @@ local function collectContainersOptions()
 
 	if g_game.getContainers then
 		for _, container in pairs(g_game.getContainers()) do
-			collectForWindow(container.window, container:getId())
+			if not SidebarWidgetOptions or not SidebarWidgetOptions.isBattlePassInboxContainer or not SidebarWidgetOptions.isBattlePassInboxContainer(container) then
+				collectForWindow(container.window, container:getId())
+			end
 		end
 	end
 
@@ -556,6 +563,14 @@ end
 function SidebarWidgetOptionsPersistence.getContainerOptions(containerId)
 	if not SidebarPersistence or not SidebarPersistence.active then
 		return nil
+	end
+
+	if SidebarWidgetOptions and SidebarWidgetOptions.isBattlePassInboxContainerId and SidebarWidgetOptions.isBattlePassInboxContainerId(containerId) then
+		local section = SidebarPersistence.getSection("battlePassInboxWidgetOptions")
+
+		if type(section) == "table" then
+			return section
+		end
 	end
 
 	local section = SidebarPersistence.getSection("containersOptions")

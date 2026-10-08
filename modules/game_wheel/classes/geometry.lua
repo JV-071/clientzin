@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_wheel/classes/geometry.lua
-
-Circle = {}
+﻿Circle = {}
 Circle.__index = Circle
 
 function Circle.new(centerX, centerY, radius)
@@ -13,14 +11,14 @@ function Circle.new(centerX, centerY, radius)
 	return self
 end
 
-function Circle:inArea(point)
+function Circle.inArea(self, point)
 	local dx = point.x - self._centerX
 	local dy = point.y - self._centerY
 
 	return dx * dx + dy * dy <= self._radius * self._radius
 end
 
-function Circle:divideIntoSlices(n)
+function Circle.divideIntoSlices(self, n)
 	local slices = {}
 	local angleStep = 2 * math.pi / n
 
@@ -38,19 +36,26 @@ function Circle:divideIntoSlices(n)
 	return slices
 end
 
-function Circle:isPointInSlice(point, sliceIndex, totalSlices)
-	local angleStep = 2 * math.pi / totalSlices
-	local startAngle = sliceIndex * angleStep
-	local endAngle = startAngle + angleStep
+function Circle.isPointInSlice(self, point, sliceIndex, totalSlices)
 	local dx = point.x - self._centerX
 	local dy = point.y - self._centerY
-	local angle = math.atan2(dy, dx)
 
-	if angle < 0 then
-		angle = angle + 2 * math.pi
+	if dx * dx + dy * dy > self._radius * self._radius then
+		return false
 	end
 
-	local distanceSquared = dx * dx + dy * dy
+	local angleStep = 2 * math.pi / totalSlices
+	local startAngle = math.atan2(dy, dx)
 
-	return startAngle <= angle and angle <= endAngle and distanceSquared <= self._radius * self._radius
+	if startAngle < 0 then
+		startAngle = startAngle + 2 * math.pi
+	end
+
+	local distanceSquared = math.floor(startAngle / angleStep)
+
+	if totalSlices <= distanceSquared then
+		distanceSquared = totalSlices - 1
+	end
+
+	return distanceSquared == sliceIndex
 end

@@ -35,7 +35,7 @@ FusionHelpIcon < UIWidget
 
 FusionWindow < Panel
   visible: false
-  margin-top: 7
+  margin-top: 6
   margin-bottom: 5
 
   UIWindow
@@ -48,7 +48,6 @@ FusionWindow < Panel
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    margin-left: -1
     color: $var-text-color-disabled
     font: $var-cip-font-new
     text-offset: 1 2
@@ -641,7 +640,6 @@ FusionWindow < Panel
     anchors.left: parent.left
     anchors.right: parent.right
     margin-bottom: 32
-    margin-left: -1
     height: 75
     @onHoverChange: modules.game_exaltationforge.Forge.Fusion.onWidgetHover(self, value)
 

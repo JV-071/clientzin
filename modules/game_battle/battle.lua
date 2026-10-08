@@ -1,8 +1,12 @@
-﻿-- chunkname: @/game_battle/battle.lua
-
-local binaryTree = {}
+﻿local binaryTree = {}
 local battleButtons = {}
-local battleWindow, battleButton, battlePanel, mouseWidget, filterPanel, toggleFilterButton, lastBattleButtonSwitched
+local battleWindow
+local battleButton
+local battlePanel
+local mouseWidget
+local filterPanel
+local toggleFilterButton
+local lastBattleButtonSwitched
 local hideButtons = {}
 local BATTLE_HIDE_BUTTONS_FORMAT = 2
 local BATTLE_HIDE_BUTTON_OPTIONS = {
@@ -71,59 +75,59 @@ local BATTLE_FILTER_BUTTON_TOOLTIPS = {
 }
 local BATTLE_FILTER_JSON_ORDER = {
 	{
-		json = "hidePlayers",
-		id = "hidePlayers"
+		id = "hidePlayers",
+		json = "hidePlayers"
 	},
 	{
-		json = "hideKnights",
-		id = "hideKnights"
+		id = "hideKnights",
+		json = "hideKnights"
 	},
 	{
-		json = "hidePaladins",
-		id = "hidePaladins"
+		id = "hidePaladins",
+		json = "hidePaladins"
 	},
 	{
-		json = "hideDruids",
-		id = "hideDruids"
+		id = "hideDruids",
+		json = "hideDruids"
 	},
 	{
-		json = "hideSorcerers",
-		id = "hideSorcerers"
+		id = "hideSorcerers",
+		json = "hideSorcerers"
 	},
 	{
-		json = "hideMonks",
-		id = "hideMonks"
+		id = "hideMonks",
+		json = "hideMonks"
 	},
 	{
-		json = "hidePlayerSummons",
-		id = "hideSummons"
+		id = "hideSummons",
+		json = "hidePlayerSummons"
 	},
 	{
-		json = "hideMembersOfOwnGuild",
-		id = "hideMembersOwnGuild"
+		id = "hideMembersOwnGuild",
+		json = "hideMembersOfOwnGuild"
 	},
 	{
-		json = "hidePartyMembers",
-		id = "hideParty"
+		id = "hideParty",
+		json = "hidePartyMembers"
 	},
 	{
-		json = "hideNonSkulledPlayers",
-		id = "hideSkulls"
+		id = "hideSkulls",
+		json = "hideNonSkulledPlayers"
 	},
 	{
-		json = "hideMonsters",
-		id = "hideMonsters"
+		id = "hideMonsters",
+		json = "hideMonsters"
 	},
 	{
-		json = "hideNPCs",
-		id = "hideNPCs"
+		id = "hideNPCs",
+		json = "hideNPCs"
 	}
 }
 local BATTLE_SORT_TYPE_TO_JSON = {
-	distance = "byDistance",
 	health = "byHitpoints",
-	age = "byAge",
-	name = "byName"
+	distance = "byDistance",
+	name = "byName",
+	age = "byAge"
 }
 local eventOnCheckCreature
 local eventsConnected = false
@@ -176,9 +180,11 @@ local function getBattleListScrollbarMarginTopWithFilters(filterPanel)
 	return 17 + h - 1 + 1
 end
 
-local BATTLE_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP = -3
-local BATTLE_LIST_FILTERS_HIDDEN_SCROLLBAR_MARGIN_TOP = 15
-local onBattleButtonHoverChange, onBattleButtonMousePress, onBattleButtonMouseRelease
+local BATTLE_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP = 0
+local var_0_23 = 15
+local onBattleButtonHoverChange
+local onBattleButtonMousePress
+local onBattleButtonMouseRelease
 
 BattleListInstance = nil
 BattleButtonPool = nil
@@ -202,15 +208,6 @@ local function isBattleListCreatureClick(mousePos)
 end
 
 local function bindBattleButtonHandlers(widget)
-	local label = widget:getChildById("label")
-
-	if label then
-		label:breakAnchors()
-		label:addAnchor(AnchorLeft, "spacer", AnchorRight)
-		label:addAnchor(AnchorRight, "iconsMonsterSlot3", AnchorLeft)
-		label:addAnchor(AnchorTop, "creature", AnchorTop)
-	end
-
 	widget.onHoverChange = onBattleButtonHoverChange
 	widget.onMousePress = onBattleButtonMousePress
 	widget.onMouseRelease = onBattleButtonMouseRelease
@@ -231,24 +228,24 @@ function table.size(t)
 end
 
 local BATTLE_FILTERS = {
+	sortDescByDisplayTime = false,
+	sortAscByDisplayTime = true,
 	sortDescByName = false,
 	sortAscByName = false,
 	sortDescByHitPoints = false,
 	sortAscByHitPoints = false,
 	sortDescByDistance = false,
-	sortAscByDistance = false,
-	sortDescByDisplayTime = false,
-	sortAscByDisplayTime = true
+	sortAscByDistance = false
 }
 local BATTLE_JSON_TO_SORT_FLAG = {
+	byAgeAscending = "sortAscByDisplayTime",
+	byNameDescending = "sortDescByName",
 	byNameAscending = "sortAscByName",
 	byHitpointsDescending = "sortDescByHitPoints",
 	byHitpointsAscending = "sortAscByHitPoints",
 	byDistanceDescending = "sortDescByDistance",
 	byDistanceAscending = "sortAscByDistance",
-	byAgeDescending = "sortDescByDisplayTime",
-	byAgeAscending = "sortAscByDisplayTime",
-	byNameDescending = "sortDescByName"
+	byAgeDescending = "sortDescByDisplayTime"
 }
 
 local function getBattleListSection(id)
@@ -278,43 +275,37 @@ local function makeFiltersFromSortName(sortName)
 		filters[flag] = false
 	end
 
-	local flag = BATTLE_JSON_TO_SORT_FLAG[sortName] or "sortAscByDisplayTime"
-
-	filters[flag] = true
+	filters[BATTLE_JSON_TO_SORT_FLAG[sortName] or "sortAscByDisplayTime"] = true
 
 	return filters
 end
 
 local BattleListManager = {
-	nextId = 1,
 	isRestoring = false,
-	instances = {}
+	nextId = 1,
+	instances = {},
+	saveInstancesState = function(self)
+		return
+	end,
+	restoreInstancesState = function(self)
+		return
+	end,
+	getMainInstance = function(self)
+		return self.instances[0]
+	end,
+	createNewInstance = function(self, customName)
+		local instance = BattleListInstance:new(self.nextId, customName)
+
+		self.instances[self.nextId] = instance
+		self.nextId = self.nextId + 1
+
+		self:createWindowForInstance(instance)
+
+		return instance
+	end
 }
 
-function BattleListManager:saveInstancesState()
-	return
-end
-
-function BattleListManager:restoreInstancesState()
-	return
-end
-
-function BattleListManager:getMainInstance()
-	return self.instances[0]
-end
-
-function BattleListManager:createNewInstance(customName)
-	local instance = BattleListInstance:new(self.nextId, customName)
-
-	self.instances[self.nextId] = instance
-	self.nextId = self.nextId + 1
-
-	self:createWindowForInstance(instance)
-
-	return instance
-end
-
-function BattleListManager:createWindowForInstance(instance)
+function BattleListManager.createWindowForInstance(self, instance)
 	local newWindow = g_ui.loadUI("battle")
 
 	instance.window = newWindow
@@ -528,19 +519,19 @@ function BattleListManager:createWindowForInstance(instance)
 	end
 end
 
-function BattleListManager:getMainInstance()
+function BattleListManager.getMainInstance(self)
 	return self.instances[0]
 end
 
-function BattleListManager:getInstance(id)
+function BattleListManager.getInstance(self, id)
 	return self.instances[id]
 end
 
-function BattleListManager:getAllInstances()
+function BattleListManager.getAllInstances(self)
 	return self.instances
 end
 
-function BattleListManager:destroyInstance(id)
+function BattleListManager.destroyInstance(self, id)
 	local instance = self.instances[id]
 
 	if instance then
@@ -549,7 +540,7 @@ function BattleListManager:destroyInstance(id)
 	end
 end
 
-function BattleListManager:removeSavedInstanceState(id)
+function BattleListManager.removeSavedInstanceState(self, id)
 	local instancesData = g_settings.getNode("BattleListInstances") or {}
 
 	if instancesData[tostring(id)] then
@@ -559,7 +550,7 @@ function BattleListManager:removeSavedInstanceState(id)
 	end
 end
 
-function BattleListManager:startPeriodicSave()
+function BattleListManager.startPeriodicSave(self)
 	self:stopPeriodicSave()
 
 	self.autoSaveEvent = scheduleEvent(function()
@@ -570,7 +561,7 @@ function BattleListManager:startPeriodicSave()
 	end, 30000)
 end
 
-function BattleListManager:stopPeriodicSave()
+function BattleListManager.stopPeriodicSave(self)
 	if self.autoSaveEvent then
 		removeEvent(self.autoSaveEvent)
 
@@ -585,7 +576,7 @@ BattleListInstance = {
 	settings = {}
 }
 
-function BattleListInstance:new(id, customName)
+function BattleListInstance.new(self, id, customName)
 	local instance = {}
 
 	setmetatable(instance, {
@@ -599,9 +590,9 @@ function BattleListInstance:new(id, customName)
 	instance.lastAge = 0
 	instance.name = customName or tr("Battle List")
 	instance.settings = {
+		hidingFilters = false,
 		sortOrder = "A",
 		sortType = "name",
-		hidingFilters = false,
 		filters = table.copy(BATTLE_FILTERS),
 		customName = instance.name
 	}
@@ -609,11 +600,11 @@ function BattleListInstance:new(id, customName)
 	return instance
 end
 
-function BattleListInstance:getSettingsKey()
+function BattleListInstance.getSettingsKey(self)
 	return "BattleList_" .. self.id
 end
 
-function BattleListInstance:loadFilters()
+function BattleListInstance.loadFilters(self)
 	self.settings = self.settings or {}
 
 	if type(self.settings.filters) ~= "table" then
@@ -623,15 +614,15 @@ function BattleListInstance:loadFilters()
 	return self.settings.filters
 end
 
-function BattleListInstance:saveFilters()
+function BattleListInstance.saveFilters(self)
 	return
 end
 
-function BattleListInstance:saveHideButtonStates()
+function BattleListInstance.saveHideButtonStates(self)
 	return
 end
 
-function BattleListInstance:saveLockState()
+function BattleListInstance.saveLockState(self)
 	if self.window then
 		local isLocked = self.window:getSettings("locked") or false
 		local lockButton = self.window:getChildById("lockButton")
@@ -646,7 +637,7 @@ function BattleListInstance:saveLockState()
 	end
 end
 
-function BattleListInstance:loadLockState()
+function BattleListInstance.loadLockState(self)
 	if not self.window then
 		return false
 	end
@@ -677,7 +668,7 @@ function BattleListInstance:loadLockState()
 	return false
 end
 
-function BattleListInstance:loadHideButtonStates()
+function BattleListInstance.loadHideButtonStates(self)
 	local section = getBattleListSection(self.id)
 
 	self.settings = self.settings or {}
@@ -706,9 +697,8 @@ function BattleListInstance:loadHideButtonStates()
 	refreshAllBattleFilterButtonTooltips(self)
 end
 
-function BattleListInstance:getFilter(filter)
-	local filters = self:loadFilters()
-	local value = filters[filter]
+function BattleListInstance.getFilter(self, filter)
+	local value = self:loadFilters()[filter]
 
 	if value ~= nil then
 		return value
@@ -717,7 +707,7 @@ function BattleListInstance:getFilter(filter)
 	return BATTLE_FILTERS[filter] or false
 end
 
-function BattleListInstance:setFilter(filter)
+function BattleListInstance.setFilter(self, filter)
 	local filters = self:loadFilters()
 	local value = filters[filter]
 
@@ -739,6 +729,7 @@ function BattleListInstance:setFilter(filter)
 
 	filters[filter] = not value
 
+	tagHitchEventSource("game_battle.BattleList.checkCreatures")
 	scheduleEvent(function()
 		self:checkCreatures()
 	end, 50)
@@ -746,7 +737,7 @@ function BattleListInstance:setFilter(filter)
 	return true
 end
 
-function BattleListInstance:getSortType()
+function BattleListInstance.getSortType(self)
 	local filters = self:loadFilters()
 
 	for filterName, isActive in pairs(filters) do
@@ -766,13 +757,13 @@ function BattleListInstance:getSortType()
 	return "name"
 end
 
-function BattleListInstance:setSortType(state, oldSortType)
+function BattleListInstance.setSortType(self, state, oldSortType)
 	local order = self:getSortOrder()
 
 	self:reSort(oldSortType, state, order, order)
 end
 
-function BattleListInstance:getSortOrder()
+function BattleListInstance.getSortOrder(self)
 	local filters = self:loadFilters()
 
 	for filterName, isActive in pairs(filters) do
@@ -784,19 +775,19 @@ function BattleListInstance:getSortOrder()
 	return "A"
 end
 
-function BattleListInstance:setSortOrder(state, oldSortOrder)
+function BattleListInstance.setSortOrder(self, state, oldSortOrder)
 	self:reSort(false, false, oldSortOrder, state)
 end
 
-function BattleListInstance:isSortAsc()
+function BattleListInstance.isSortAsc(self)
 	return self:getSortOrder() == "A"
 end
 
-function BattleListInstance:isSortDesc()
+function BattleListInstance.isSortDesc(self)
 	return self:getSortOrder() == "D"
 end
 
-function BattleListInstance:getHiddenFilterNames()
+function BattleListInstance.getHiddenFilterNames(self)
 	local names = {}
 	local buttons = self.hideButtons
 
@@ -819,13 +810,11 @@ function BattleListInstance:getHiddenFilterNames()
 	return names
 end
 
-function BattleListInstance:getSortOrderName()
-	local base = BATTLE_SORT_TYPE_TO_JSON[self:getSortType()] or "byName"
-
-	return base .. (self:isSortDesc() and "Descending" or "Ascending")
+function BattleListInstance.getSortOrderName(self)
+	return (BATTLE_SORT_TYPE_TO_JSON[self:getSortType()] or "byName") .. (self:isSortDesc() and "Descending" or "Ascending")
 end
 
-function BattleListInstance:getName()
+function BattleListInstance.getName(self)
 	local settings = g_settings.getNode(self:getSettingsKey())
 
 	if settings and settings.customName then
@@ -835,7 +824,7 @@ function BattleListInstance:getName()
 	return tr("Battle List")
 end
 
-function BattleListInstance:setName(name)
+function BattleListInstance.setName(self, name)
 	local settings = g_settings.getNode(self:getSettingsKey()) or {}
 
 	settings.customName = (name == nil or name == "") and tr("Battle List") or name
@@ -848,7 +837,7 @@ function BattleListInstance:setName(name)
 	end
 end
 
-function BattleListInstance:updateTitle()
+function BattleListInstance.updateTitle(self)
 	if self.window then
 		local titleLabel = self.window:recursiveGetChildById("miniwindowTitle")
 
@@ -864,18 +853,17 @@ function BattleListInstance:updateTitle()
 	end
 end
 
-function BattleListInstance:clearAllConfigurations()
+function BattleListInstance.clearAllConfigurations(self)
 	local settingsKey = self:getSettingsKey()
-	local settings = g_settings.getNode(settingsKey)
 
-	if settings then
+	if g_settings.getNode(settingsKey) then
 		g_settings.mergeNode(settingsKey, {})
 	end
 
 	self.settings = {
+		hidingFilters = false,
 		sortOrder = "A",
 		sortType = "name",
-		hidingFilters = false,
 		filters = table.copy(BATTLE_FILTERS),
 		customName = tr("Battle List")
 	}
@@ -903,12 +891,11 @@ function BattleListInstance:clearAllConfigurations()
 	self:checkCreatures()
 end
 
-function BattleListInstance:destroy(saveSettings)
+function BattleListInstance.destroy(self, saveSettings)
 	if not saveSettings then
 		local settingsKey = self:getSettingsKey()
-		local settings = g_settings.getNode(settingsKey)
 
-		if settings then
+		if g_settings.getNode(settingsKey) then
 			g_settings.mergeNode(settingsKey, {})
 		end
 
@@ -943,14 +930,14 @@ function BattleListInstance:destroy(saveSettings)
 	BattleListManager.instances[self.id] = nil
 end
 
-function BattleListInstance:onFilterButtonClick(button)
+function BattleListInstance.onFilterButtonClick(self, button)
 	button:setChecked(not button:isChecked())
 	refreshBattleFilterButtonTooltip(button)
 	self:saveHideButtonStates()
 	self:checkCreatures()
 end
 
-function BattleListInstance:showContextMenu(widget, mousePos, mouseButton)
+function BattleListInstance.showContextMenu(self, widget, mousePos, mouseButton)
 	local menu = g_ui.createWidget("BattleListSubMenu")
 
 	menu:setGameMenu(true)
@@ -979,25 +966,23 @@ function BattleListInstance:showContextMenu(widget, mousePos, mouseButton)
 
 	local buttonPos = widget:getPosition()
 	local buttonSize = widget:getSize()
-	local menuWidth = menu:getWidth()
+	local width = menu:getWidth()
 	local buttonCenterX = buttonPos.x + buttonSize.width / 2
-	local buttonCenterY = buttonPos.y + buttonSize.height / 2
-	local menuX = buttonCenterX - menuWidth
-	local menuY = buttonCenterY
+	local var_63_7, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
 
 	if mousePos and mousePos.x and mousePos.y then
 		menu:display(mousePos)
 	else
 		menu:display({
 			x = menuX,
-			y = menuY
+			y = var_63_7
 		})
 	end
 
 	return true
 end
 
-function BattleListInstance:onMenuAction(actionId)
+function BattleListInstance.onMenuAction(self, actionId)
 	if actionId == "editBattleListName" then
 		self:openEditNameDialog()
 	elseif actionId == "openNewBattleList" then
@@ -1007,7 +992,7 @@ function BattleListInstance:onMenuAction(actionId)
 	end
 end
 
-function BattleListInstance:openEditNameDialog()
+function BattleListInstance.openEditNameDialog(self)
 	local currentName = self:getName()
 
 	if currentName == tr("Battle List") then
@@ -1055,7 +1040,7 @@ function BattleListInstance:openEditNameDialog()
 	end
 end
 
-function BattleListInstance:toggleFilterPanel()
+function BattleListInstance.toggleFilterPanel(self)
 	if self.filterPanel:isVisible() then
 		self:hideFilterPanel()
 	else
@@ -1063,7 +1048,7 @@ function BattleListInstance:toggleFilterPanel()
 	end
 end
 
-function BattleListInstance:hideFilterPanel()
+function BattleListInstance.hideFilterPanel(self)
 	self.filterPanel.originalHeight = self.filterPanel:getHeight()
 
 	self.filterPanel:setHeight(0)
@@ -1086,17 +1071,25 @@ function BattleListInstance:hideFilterPanel()
 	local contentsPanel = self.window:recursiveGetChildById("contentsPanel")
 
 	if contentsPanel then
+		contentsPanel:breakAnchors()
+		contentsPanel:addAnchor(AnchorTop, "miniwindowHeader", AnchorBottom)
 		contentsPanel:setMarginTop(BATTLE_LIST_FILTERS_HIDDEN_CONTENTS_MARGIN_TOP)
+		contentsPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
+		contentsPanel:addAnchor(AnchorRight, "miniwindowScrollBar", AnchorLeft)
+		contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		contentsPanel:setMarginLeft(3)
+		contentsPanel:setMarginRight(1)
+		contentsPanel:setMarginBottom(4)
 	end
 
-	local scrollbar = self.window:getChildById("miniwindowScrollBar")
+	local miniwindowScrollBar = self.window:getChildById("miniwindowScrollBar")
 
-	if scrollbar then
-		scrollbar:setMarginTop(BATTLE_LIST_FILTERS_HIDDEN_SCROLLBAR_MARGIN_TOP)
+	if miniwindowScrollBar then
+		miniwindowScrollBar:setMarginTop(var_0_23)
 	end
 
 	if self.window.onResize then
-		local function restrictResize()
+		(function()
 			function self.window.onResize()
 				local minHeight = 80
 
@@ -1108,13 +1101,11 @@ function BattleListInstance:hideFilterPanel()
 					self.window:setHeight(minHeight)
 				end
 			end
-		end
-
-		restrictResize()
+		end)()
 	end
 end
 
-function BattleListInstance:showFilterPanel()
+function BattleListInstance.showFilterPanel(self)
 	if self.toggleFilterButton then
 		self.toggleFilterButton:getParent():setMarginTop()
 		self.toggleFilterButton:setOn(true)
@@ -1138,17 +1129,25 @@ function BattleListInstance:showFilterPanel()
 	local contentsPanel = self.window:recursiveGetChildById("contentsPanel")
 
 	if contentsPanel then
+		contentsPanel:breakAnchors()
+		contentsPanel:addAnchor(AnchorTop, "HorizontalSeparator", AnchorBottom)
 		contentsPanel:setMarginTop(0)
+		contentsPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
+		contentsPanel:addAnchor(AnchorRight, "miniwindowScrollBar", AnchorLeft)
+		contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		contentsPanel:setMarginLeft(3)
+		contentsPanel:setMarginRight(1)
+		contentsPanel:setMarginBottom(4)
 	end
 
-	local scrollbar = self.window:getChildById("miniwindowScrollBar")
+	local miniwindowScrollBar = self.window:getChildById("miniwindowScrollBar")
 
-	if scrollbar then
-		scrollbar:setMarginTop(getBattleListScrollbarMarginTopWithFilters(self.filterPanel))
+	if miniwindowScrollBar then
+		miniwindowScrollBar:setMarginTop(getBattleListScrollbarMarginTopWithFilters(self.filterPanel))
 	end
 
 	if self.window.onResize then
-		local function restrictResize()
+		(function()
 			function self.window.onResize()
 				local minHeight = 80
 
@@ -1160,21 +1159,19 @@ function BattleListInstance:showFilterPanel()
 					self.window:setHeight(minHeight)
 				end
 			end
-		end
-
-		restrictResize()
+		end)()
 	end
 end
 
-function BattleListInstance:setHidingFilters(state)
-	local settings = {}
-
-	settings.hidingFilters = state
+function BattleListInstance.setHidingFilters(self, state)
+	local settings = {
+		hidingFilters = state
+	}
 
 	g_settings.mergeNode(self:getSettingsKey(), settings)
 end
 
-function BattleListInstance:isHidingFilters()
+function BattleListInstance.isHidingFilters(self)
 	local settings = g_settings.getNode(self:getSettingsKey())
 
 	if not settings then
@@ -1184,7 +1181,7 @@ function BattleListInstance:isHidingFilters()
 	return settings.hidingFilters
 end
 
-function BattleListInstance:onOpen()
+function BattleListInstance.onOpen(self)
 	if g_game.isOnline() then
 		connecting()
 	end
@@ -1212,11 +1209,11 @@ function BattleListInstance:onOpen()
 	end
 end
 
-function BattleListInstance:onClose()
+function BattleListInstance.onClose(self)
 	return
 end
 
-function BattleListInstance:checkCreatures()
+function BattleListInstance.checkCreatures(self)
 	if not self.panel or not g_game.isOnline() then
 		return false
 	end
@@ -1229,9 +1226,7 @@ function BattleListInstance:checkCreatures()
 		return false
 	end
 
-	local position = player:getPosition()
-
-	if not position then
+	if not player:getPosition() then
 		return false
 	end
 
@@ -1248,7 +1243,7 @@ function BattleListInstance:checkCreatures()
 	end
 end
 
-function BattleListInstance:doCreatureFitFilters(creature)
+function BattleListInstance.doCreatureFitFilters(self, creature)
 	if creature:isLocalPlayer() then
 		return false
 	end
@@ -1273,9 +1268,7 @@ function BattleListInstance:doCreatureFitFilters(creature)
 		return false
 	end
 
-	local position = localPlayer:getPosition()
-
-	if not position then
+	if not localPlayer:getPosition() then
 		return false
 	end
 
@@ -1302,7 +1295,7 @@ end
 
 local lastAge = 0
 
-function BattleListInstance:addCreature(creature, sortType)
+function BattleListInstance.addCreature(self, creature, sortType)
 	local creatureId = creature:getId()
 	local battleButton = self.battleButtons[creatureId]
 
@@ -1315,13 +1308,14 @@ function BattleListInstance:addCreature(creature, sortType)
 			return
 		end
 
-		local newCreature = {}
+		local newCreature = {
+			id = creatureId,
+			name = creature:getName():lower(),
+			healthpercent = creature:getHealthPercent(),
+			distance = getDistanceBetween(g_game.getLocalPlayer():getPosition(), creature:getPosition()),
+			age = self.lastAge + 1
+		}
 
-		newCreature.id = creatureId
-		newCreature.name = creature:getName():lower()
-		newCreature.healthpercent = creature:getHealthPercent()
-		newCreature.distance = getDistanceBetween(g_game.getLocalPlayer():getPosition(), creature:getPosition())
-		newCreature.age = self.lastAge + 1
 		self.lastAge = self.lastAge + 1
 
 		local newIndex = binaryInsert(self.binaryTree, newCreature, BSComparatorSortType, sortType, true)
@@ -1363,13 +1357,16 @@ function BattleListInstance:addCreature(creature, sortType)
 
 	battleButton:setVisible(canBeSeen(creature))
 	self.panel:getLayout():update()
+	battleButton:updateNameLabel()
+	battleButton:setLifeBarPercent(creature:getHealthPercent())
+	battleButton:update()
 end
 
-function BattleListInstance:removeAllCreatures()
+function BattleListInstance.removeAllCreatures(self)
 	self:removeCreature(false, true)
 end
 
-function BattleListInstance:removeCreature(creature, all)
+function BattleListInstance.removeCreature(self, creature, all)
 	if all then
 		self.binaryTree = {}
 		self.lastBattleButtonSwitched = nil
@@ -1435,7 +1432,7 @@ function BattleListInstance:removeCreature(creature, all)
 	return false
 end
 
-function BattleListInstance:getAttributeByOrderType(battleButton, orderType)
+function BattleListInstance.getAttributeByOrderType(self, battleButton, orderType)
 	if battleButton.data then
 		local battleButton = battleButton.data
 
@@ -1461,11 +1458,10 @@ function BattleListInstance:getAttributeByOrderType(battleButton, orderType)
 	return false
 end
 
-function BattleListInstance:correctBattleButtons(sortOrder)
+function BattleListInstance.correctBattleButtons(self, sortOrder)
 	self.panel:disableUpdateTemporarily()
 
-	local sortOrder = sortOrder or self:getSortOrder()
-	local start = sortOrder == "A" and 1 or #self.binaryTree
+	local start = (sortOrder or self:getSortOrder()) == "A" and 1 or #self.binaryTree
 	local finish = #self.binaryTree - start + 1
 	local increment = start <= finish and 1 or -1
 	local index = 1
@@ -1484,7 +1480,7 @@ function BattleListInstance:correctBattleButtons(sortOrder)
 	return true
 end
 
-function BattleListInstance:reSort(oldSortType, newSortType, oldSortOrder, newSortOrder)
+function BattleListInstance.reSort(self, oldSortType, newSortType, oldSortOrder, newSortOrder)
 	if #self.binaryTree > 1 then
 		if newSortType and newSortType ~= oldSortType then
 			self:checkCreatures()
@@ -1498,7 +1494,7 @@ function BattleListInstance:reSort(oldSortType, newSortType, oldSortOrder, newSo
 	return true
 end
 
-function BattleListInstance:swap(index, newIndex)
+function BattleListInstance.swap(self, index, newIndex)
 	local highest = newIndex
 	local lowest = index
 
@@ -1818,6 +1814,21 @@ function init()
 			callback = toggle
 		}
 	})
+	Keybind.new("Windows", "Open secondary battle list", "", "")
+	Keybind.bind("Windows", "Open secondary battle list", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if not g_game.isOnline() then
+					return false
+				end
+
+				BattleListManager:createNewInstance()
+
+				return true
+			end
+		}
+	})
 	Keybind.new("Battle List", "Attack Next Target", {
 		[CHAT_MODE.ON] = "",
 		[CHAT_MODE.OFF] = "Space"
@@ -2028,7 +2039,8 @@ function BSComparator(a, b)
 end
 
 function BSComparatorSortType(a, b, sortType, id)
-	local comparatorA, comparatorB
+	local comparatorA
+	local comparatorB
 
 	if sortType == "distance" then
 		comparatorA, comparatorB = a.distance, type(b) == "table" and b.distance or b
@@ -2060,7 +2072,8 @@ end
 function binarySearch(tbl, value, comparator, ...)
 	comparator = comparator or BSComparator
 
-	local mini, maxi = 1, #tbl
+	local mini = 1
+	local maxi = #tbl
 
 	while mini <= maxi do
 		local mid = math.floor((maxi + mini) / 2)
@@ -2081,8 +2094,10 @@ end
 function binaryInsert(tbl, value, comparator, ...)
 	comparator = comparator or BSComparator
 
-	local mini, maxi = 1, #tbl
-	local state, mid = 0, 1
+	local mini = 1
+	local maxi = #tbl
+	local state = 0
+	local mid = 1
 
 	while mini <= maxi do
 		mid = math.floor((maxi + mini) / 2)
@@ -2185,9 +2200,9 @@ function getSortType()
 end
 
 function setSortType(state, oldSortType)
-	local settings = {}
-
-	settings.sortType = state
+	local settings = {
+		sortType = state
+	}
 
 	g_settings.mergeNode("BattleList", settings)
 
@@ -2230,9 +2245,9 @@ function getSortOrder()
 end
 
 function setSortOrder(state, oldSortOrder)
-	local settings = {}
-
-	settings.sortOrder = state
+	local settings = {
+		sortOrder = state
+	}
 
 	g_settings.mergeNode("BattleList", settings)
 
@@ -2273,9 +2288,7 @@ function checkCreatures()
 		return false
 	end
 
-	local position = player:getPosition()
-
-	if not position then
+	if not player:getPosition() then
 		return false
 	end
 
@@ -2452,9 +2465,11 @@ function attackNext(previous)
 	end
 
 	local foundTarget = false
-	local firstElement, lastElement, prevElement, nextElement
-	local sortOrder = mainInstance:getSortOrder()
-	local start = sortOrder == "A" and 1 or #mainInstance.binaryTree
+	local firstElement
+	local lastElement
+	local prevElement
+	local nextElement
+	local start = mainInstance:getSortOrder() == "A" and 1 or #mainInstance.binaryTree
 	local finish = #mainInstance.binaryTree - start + 1
 	local increment = start <= finish and 1 or -1
 
@@ -2579,9 +2594,7 @@ function onCreaturePositionChange(creature, newPos, oldPos)
 		return false
 	end
 
-	local position = localPlayer:getPosition()
-
-	if not position then
+	if not localPlayer:getPosition() then
 		return false
 	end
 
@@ -2690,87 +2703,85 @@ end
 
 function onCreatureHealthPercentChange(creature, healthPercent, oldHealthPercent)
 	for _, instance in pairs(BattleListManager.instances) do
-		do
-			local creatureId = creature:getId()
-			local battleButton = instance.battleButtons[creatureId]
+		local creatureId = creature:getId()
+		local battleButton = instance.battleButtons[creatureId]
 
-			if battleButton then
-				local sortType = instance:getSortType()
-				local newHealthPercent = healthPercent or 0
-				local previousHealthPercent = oldHealthPercent
+		if battleButton then
+			local sortType = instance:getSortType()
+			local newHealthPercent = healthPercent or 0
+			local previousHealthPercent = oldHealthPercent
 
-				if previousHealthPercent == nil and battleButton.data then
-					previousHealthPercent = battleButton.data.healthpercent
+			if previousHealthPercent == nil and battleButton.data then
+				previousHealthPercent = battleButton.data.healthpercent
+			end
+
+			if previousHealthPercent == nil then
+				previousHealthPercent = newHealthPercent
+			end
+
+			if newHealthPercent <= 0 then
+				instance:removeCreature(creature)
+			else
+				if battleButton.setLifeBarPercent then
+					battleButton:setLifeBarPercent(newHealthPercent)
 				end
 
-				if previousHealthPercent == nil then
-					previousHealthPercent = newHealthPercent
+				if battleButton.data then
+					battleButton.data.healthpercent = newHealthPercent
 				end
 
-				if newHealthPercent <= 0 then
-					instance:removeCreature(creature)
-				else
-					if battleButton.setLifeBarPercent then
-						battleButton:setLifeBarPercent(newHealthPercent)
+				if sortType == "health" then
+					if newHealthPercent == previousHealthPercent then
+						goto label_165_0
 					end
 
-					if battleButton.data then
-						battleButton.data.healthpercent = newHealthPercent
-					end
+					local index = binarySearch(instance.binaryTree, {
+						healthpercent = previousHealthPercent,
+						id = creatureId
+					}, BSComparatorSortType, "health", true)
 
-					if sortType == "health" then
-						if newHealthPercent == previousHealthPercent then
-							goto label_164_0
-						end
+					if index ~= nil and creatureId == instance.binaryTree[index].id then
+						instance.binaryTree[index].healthpercent = newHealthPercent
 
-						local index = binarySearch(instance.binaryTree, {
-							healthpercent = previousHealthPercent,
-							id = creatureId
-						}, BSComparatorSortType, "health", true)
-
-						if index ~= nil and creatureId == instance.binaryTree[index].id then
-							instance.binaryTree[index].healthpercent = newHealthPercent
-
-							if previousHealthPercent < newHealthPercent then
-								if index < #instance.binaryTree then
-									for i = index, #instance.binaryTree - 1 do
-										local a = instance.binaryTree[i]
-										local b = instance.binaryTree[i + 1]
-
-										if a.healthpercent > b.healthpercent or a.healthpercent == b.healthpercent and a.id > b.id then
-											local tmp = instance.binaryTree[i]
-
-											instance.binaryTree[i] = instance.binaryTree[i + 1]
-											instance.binaryTree[i + 1] = tmp
-										end
-									end
-								end
-							elseif newHealthPercent < previousHealthPercent and index > 1 then
-								for i = index, 2, -1 do
-									local a = instance.binaryTree[i - 1]
-									local b = instance.binaryTree[i]
+						if previousHealthPercent < newHealthPercent then
+							if index < #instance.binaryTree then
+								for i = index, #instance.binaryTree - 1 do
+									local a = instance.binaryTree[i]
+									local b = instance.binaryTree[i + 1]
 
 									if a.healthpercent > b.healthpercent or a.healthpercent == b.healthpercent and a.id > b.id then
-										local tmp = instance.binaryTree[i - 1]
+										local tmp = instance.binaryTree[i]
 
-										instance.binaryTree[i - 1] = instance.binaryTree[i]
-										instance.binaryTree[i] = tmp
+										instance.binaryTree[i] = instance.binaryTree[i + 1]
+										instance.binaryTree[i + 1] = tmp
 									end
 								end
 							end
+						elseif newHealthPercent < previousHealthPercent and index > 1 then
+							for i = index, 2, -1 do
+								local a = instance.binaryTree[i - 1]
+								local b = instance.binaryTree[i]
 
-							instance:correctBattleButtons()
+								if a.healthpercent > b.healthpercent or a.healthpercent == b.healthpercent and a.id > b.id then
+									local tmp = instance.binaryTree[i - 1]
+
+									instance.binaryTree[i - 1] = instance.binaryTree[i]
+									instance.binaryTree[i] = tmp
+								end
+							end
 						end
-					end
 
-					if battleButton.creature then
-						battleButton:update()
+						instance:correctBattleButtons()
 					end
+				end
+
+				if battleButton.creature then
+					battleButton:update()
 				end
 			end
 		end
 
-		::label_164_0::
+		::label_165_0::
 	end
 end
 
@@ -3036,6 +3047,7 @@ function terminate()
 	toggleFilterButton = nil
 
 	Keybind.delete("Windows", "Show/hide battle list")
+	Keybind.delete("Windows", "Open secondary battle list")
 	Keybind.delete("Battle List", "Attack Next Target")
 	disconnect(g_game, {
 		onAttackingCreatureChange = onAttack,

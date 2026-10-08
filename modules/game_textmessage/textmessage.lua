@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_textmessage/textmessage.lua
-
-MessageSettings = {
+﻿MessageSettings = {
 	none = {},
 	consoleRed = {
 		consoleTab = "Local Chat",
@@ -62,10 +60,10 @@ MessageSettings = {
 		color = TextColors.lightblue
 	},
 	loot = {
-		consoleOption = "showInfoMessagesInConsole",
 		screenTarget = "highCenterLabel",
 		consoleTab = "Loot",
 		colored = true,
+		consoleOption = "showInfoMessagesInConsole",
 		color = TextColors.white
 	}
 }
@@ -117,6 +115,7 @@ local lastClearOldestMs = -1
 local CLEAR_OLDEST_HOTKEY = "Alt+W"
 local MAX_GAME_MESSAGE_QUEUE = 4096
 local GAME_MESSAGE_QUEUE_TRIM_TO = 2048
+local var_0_6 = 2000
 
 local function getScreenMessageOption(key)
 	if not modules.client_options or not modules.client_options.getOption then
@@ -175,10 +174,9 @@ end
 function registerStaticTextMessage(staticText, position)
 	if #gameMessageQueue >= MAX_GAME_MESSAGE_QUEUE then
 		local compactedQueue = {}
-		local firstKeptIndex = #gameMessageQueue - GAME_MESSAGE_QUEUE_TRIM_TO + 1
 
-		for index = firstKeptIndex, #gameMessageQueue do
-			compactedQueue[#compactedQueue + 1] = gameMessageQueue[index]
+		for iter_6_0 = #gameMessageQueue - GAME_MESSAGE_QUEUE_TRIM_TO + 1, #gameMessageQueue do
+			compactedQueue[#compactedQueue + 1] = gameMessageQueue[iter_6_0]
 		end
 
 		gameMessageQueue = compactedQueue
@@ -259,7 +257,8 @@ local function clearOldestVisibleLabelFallback()
 		return false
 	end
 
-	local oldestLabel, oldestSeq
+	local oldestLabel
+	local oldestSeq
 
 	for _, child in pairs(messagesPanel:recursiveGetChildren()) do
 		if child:getId():match("Label") and child:isVisible() and child.gameMessageSeq and (not oldestSeq or oldestSeq > child.gameMessageSeq) then
@@ -487,12 +486,14 @@ function displayMessage(mode, text, channelId)
 			seq = labelMessageSequence
 		})
 
+		local var_22_6 = msgtype == MessageSettings.loot and var_0_6 or calculateVisibleTime(text)
+
 		label.hideEvent = scheduleEvent(function()
 			label:setVisible(false)
 			unregisterLabelMessage(label)
 
 			label.hideEvent = nil
-		end, calculateVisibleTime(text))
+		end, var_22_6)
 	end
 end
 
@@ -517,8 +518,18 @@ function displayBroadcastMessage(text)
 end
 
 function clearMessages()
+	for unusedValue, entry in ipairs(gameMessageQueue) do
+		if entry.type == "staticText" then
+			clearOldestStaticTextEntry(entry)
+		end
+	end
+
 	gameMessageQueue = {}
 	lastClearOldestMs = -1
+
+	if not isUiWidgetValid(messagesPanel) then
+		return
+	end
 
 	for _i, child in pairs(messagesPanel:recursiveGetChildren()) do
 		if child:getId():match("Label") then
@@ -530,6 +541,6 @@ function clearMessages()
 	end
 end
 
-function LocalPlayer:onAutoWalkFail(player)
+function LocalPlayer.onAutoWalkFail(self, player)
 	modules.game_textmessage.displayFailureMessage(tr("There is no way."))
 end

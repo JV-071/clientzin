@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_console/console.lua
-
-SpeakTypesSettings = {
+﻿SpeakTypesSettings = {
 	none = {},
 	say = {
 		color = "#F0F000",
@@ -19,30 +17,30 @@ SpeakTypesSettings = {
 		speakType = MessageModes.GamemasterBroadcast
 	},
 	private = {
-		color = "#60F8F8",
 		private = true,
+		color = "#60F8F8",
 		speakType = MessageModes.PrivateTo
 	},
 	privateRed = {
-		color = "#F86060",
 		private = true,
+		color = "#F86060",
 		speakType = MessageModes.GamemasterTo
 	},
 	privatePlayerToPlayer = {
-		color = "#A0A0FF",
 		private = true,
+		color = "#A0A0FF",
 		speakType = MessageModes.PrivateTo
 	},
 	privatePlayerToNpc = {
+		npcChat = true,
 		color = "#A0A0FF",
 		private = true,
-		npcChat = true,
 		speakType = MessageModes.NpcTo
 	},
 	privateNpcToPlayer = {
+		npcChat = true,
 		color = "#60F8F8",
 		private = true,
-		npcChat = true,
 		speakType = MessageModes.NpcFrom
 	},
 	channelYellow = {
@@ -66,13 +64,13 @@ SpeakTypesSettings = {
 		speakType = MessageModes.Spell
 	},
 	monsterSay = {
-		color = "#FF6600",
 		hideInConsole = true,
+		color = "#FF6600",
 		speakType = MessageModes.MonsterSay
 	},
 	monsterYell = {
-		color = "#FF6600",
 		hideInConsole = true,
+		color = "#FF6600",
 		speakType = MessageModes.MonsterYell
 	},
 	rvrAnswerFrom = {
@@ -115,19 +113,19 @@ SpeakTypes = {
 }
 SayModes = {
 	{
-		clipPressed = "16 32 16 16",
 		clip = "0 32 16 16",
-		speakTypeDesc = "whisper"
+		speakTypeDesc = "whisper",
+		clipPressed = "16 32 16 16"
 	},
 	{
-		clipPressed = "16 0 16 16",
 		clip = "0 0 16 16",
-		speakTypeDesc = "say"
+		speakTypeDesc = "say",
+		clipPressed = "16 0 16 16"
 	},
 	{
-		clipPressed = "16 16 16 16",
 		clip = "0 16 16 16",
-		speakTypeDesc = "yell"
+		speakTypeDesc = "yell",
+		clipPressed = "16 16 16 16"
 	}
 }
 
@@ -169,6 +167,14 @@ local function updateSayModeButtonVisibility(tab)
 	end
 end
 
+local function var_0_2(arg_3_0, arg_3_1)
+	arg_3_0.isOnRedMessage = arg_3_1
+
+	if consoleTabBar then
+		consoleTabBar:setTabNavigationHighlight(arg_3_0, arg_3_1)
+	end
+end
+
 ChannelEventFormats = {
 	[ChannelEvent.Join] = "%s joined the channel.",
 	[ChannelEvent.Leave] = "%s left the channel.",
@@ -195,13 +201,14 @@ ClientOpenChannelNpcId = 65534
 consolePanel = nil
 consoleContentPanel = nil
 
-local extendedViewButtonToggleChat, extendedViewButtonShowAlphaChat, gameBottomPanel
+local extendedViewButtonToggleChat
+local extendedViewButtonShowAlphaChat
+local gameBottomPanel
 
 consoleTabBar = nil
 consoleTextEdit = nil
 
-local npcModalTextEditDocked = false
-local npcModalRestoreWasdAfterClose = false
+local var_0_7 = false
 
 consoleToggleChat = nil
 channels = nil
@@ -220,11 +227,17 @@ ignoredChannels = {}
 mutedChannels = {}
 filters = {}
 
-local readOnlyButton, readOnlyPanel
+local readOnlyButton
+local readOnlyPanel
 local activeactiveReadOnlyTabName = ""
 local readOnlyModeEnabled = false
 local temporaryChatViaEnter = false
-local npcModalProxyKeyDownSlot, isNpcModalVisible
+local npcModalProxyKeyDownSlot
+local isNpcModalVisible
+local openLootConsoleTab
+local var_0_16
+local getWordRangeAt
+local var_0_18 = 1000
 
 local function syncToggleChatToTypingButton()
 	consoleToggleChat.isChecked = false
@@ -233,6 +246,12 @@ local function syncToggleChatToTypingButton()
 end
 
 local function syncToggleChatToWASDButton()
+	consoleToggleChat.isChecked = false
+
+	consoleToggleChat:setText(tr("Chat On*"))
+end
+
+local function var_0_21()
 	consoleToggleChat.isChecked = true
 
 	consoleToggleChat:setText(tr("Chat Off"))
@@ -253,7 +272,13 @@ local function syncNpcToggleChatButton(wasdMode)
 
 	npcToggleBtn.isChecked = wasdMode
 
-	npcToggleBtn:setText(wasdMode and tr("Chat Off") or tr("Chat On"))
+	if wasdMode then
+		npcToggleBtn:setText(tr("Chat Off"))
+	elseif temporaryChatViaEnter then
+		npcToggleBtn:setText(tr("Chat On*"))
+	else
+		npcToggleBtn:setText(tr("Chat On"))
+	end
 end
 
 function setChatModeOn()
@@ -283,9 +308,239 @@ function setChatModeOff()
 
 	temporaryChatViaEnter = false
 
-	syncToggleChatToWASDButton()
+	var_0_21()
 	syncNpcToggleChatButton(true)
 	switchChat(false)
+end
+
+local function var_0_23(arg_10_0, arg_10_1, arg_10_2, arg_10_3)
+	local var_10_0 = determineKeyComboDesc(arg_10_2, arg_10_3)
+
+	if not var_10_0 or var_10_0 == "" then
+		return false
+	end
+
+	local keybindKeys = Keybind.getKeybindKeys(arg_10_0, arg_10_1)
+
+	return keybindKeys and (keybindKeys.primary == var_10_0 or keybindKeys.secondary == var_10_0)
+end
+
+local function var_0_24(arg_11_0)
+	if not arg_11_0 or arg_11_0._chatInputClickSelectionWired then
+		return
+	end
+
+	arg_11_0._chatInputClickSelectionWired = true
+
+	local onMousePress = arg_11_0.onMousePress
+	local onDoubleClick = arg_11_0.onDoubleClick
+
+	function arg_11_0.onMousePress(arg_12_0, arg_12_1, arg_12_2)
+		if arg_12_2 == MouseLeftButton then
+			local _chatInputClickSelection = arg_12_0._chatInputClickSelection
+
+			if _chatInputClickSelection and _chatInputClickSelection.mode == "word" and _chatInputClickSelection.clickedAt and g_clock.millis() - _chatInputClickSelection.clickedAt <= var_0_18 then
+				local var_12_1, var_12_2 = getWordRangeAt(arg_12_0:getText(), arg_12_0:getTextPos(arg_12_1))
+
+				if var_12_1 and _chatInputClickSelection.startPos == var_12_1 and _chatInputClickSelection.endPos == var_12_2 then
+					arg_12_0:selectAll()
+
+					arg_12_0._chatInputClickSelection = {
+						mode = "all"
+					}
+
+					return true
+				end
+			end
+
+			arg_12_0._chatInputClickSelection = nil
+		end
+
+		if onMousePress then
+			return onMousePress(arg_12_0, arg_12_1, arg_12_2)
+		end
+
+		return false
+	end
+
+	function arg_11_0.onDoubleClick(arg_13_0, arg_13_1)
+		if onDoubleClick and onDoubleClick(arg_13_0, arg_13_1) then
+			return true
+		end
+
+		if not arg_13_0:isSelectable() then
+			return false
+		end
+
+		local text = arg_13_0:getText()
+		local var_13_1, var_13_2 = getWordRangeAt(text, arg_13_0:getTextPos(arg_13_1))
+
+		if not var_13_1 then
+			arg_13_0._chatInputClickSelection = nil
+
+			return true
+		end
+
+		local _chatInputClickSelection = arg_13_0._chatInputClickSelection
+
+		if _chatInputClickSelection and _chatInputClickSelection.mode == "all" then
+			arg_13_0:selectAll()
+
+			return true
+		end
+
+		if _chatInputClickSelection and _chatInputClickSelection.mode == "word" and _chatInputClickSelection.startPos == var_13_1 and _chatInputClickSelection.endPos == var_13_2 then
+			arg_13_0:selectAll()
+
+			arg_13_0._chatInputClickSelection = {
+				mode = "all"
+			}
+
+			return true
+		end
+
+		arg_13_0:setCursorPos(var_13_2)
+		arg_13_0:setSelection(var_13_1, var_13_2)
+
+		arg_13_0._chatInputClickSelection = {
+			mode = "word",
+			startPos = var_13_1,
+			endPos = var_13_2,
+			clickedAt = g_clock.millis()
+		}
+
+		return true
+	end
+end
+
+local function var_0_25()
+	local currentTab = consoleTabBar and consoleTabBar:getCurrentTab()
+	local consoleBuffer = currentTab and currentTab.tabPanel and currentTab.tabPanel:getChildById("consoleBuffer")
+	local var_14_2 = consoleBuffer and consoleBuffer.selectionText
+
+	if not var_14_2 or var_14_2 == "" then
+		return false
+	end
+
+	g_window.setClipboardText(var_14_2)
+
+	return true
+end
+
+local function var_0_26()
+	local currentTab = consoleTabBar and consoleTabBar:getCurrentTab()
+	local consoleBuffer = currentTab and currentTab.tabPanel and currentTab.tabPanel:getChildById("consoleBuffer")
+
+	if not consoleBuffer then
+		return false
+	end
+
+	selectAll(consoleBuffer)
+
+	return true
+end
+
+local function var_0_27(arg_16_0)
+	if not consoleTabBar or not arg_16_0 then
+		return false
+	end
+
+	consoleTabBar:selectTab(arg_16_0)
+
+	return true
+end
+
+local function var_0_28()
+	return var_0_27(defaultTab)
+end
+
+local function var_0_29()
+	return var_0_27(serverTab)
+end
+
+local function var_0_30()
+	if modules.game_textmessage and modules.game_textmessage.displayFailureMessage then
+		modules.game_textmessage.displayFailureMessage(tr("Exiva options are not available in this client."))
+	end
+
+	return true
+end
+
+local var_0_31 = "temporaryChatNumpadEnterRestoredV1"
+
+local function var_0_32()
+	local boolean = not g_settings.getBoolean(var_0_31)
+
+	for unusedValue, entry in ipairs(Keybind.presets or {}) do
+		local var_20_1 = Keybind.configs.keybinds[entry]
+
+		if var_20_1 then
+			local node = var_20_1:getNode("Chat Channel_Open Help Channel")
+			local var_20_3 = var_20_1:getNode("Chat_Send current chat line")
+			local var_20_4 = var_20_1:getNode("Chat Mode_Set to Chat On*")
+
+			for iter_20_2 = CHAT_MODE.ON, CHAT_MODE.OFF do
+				local textValue = tostring(iter_20_2)
+				local var_20_6 = node and (node[iter_20_2] or node[textValue])
+
+				if var_20_6 and var_20_6.primary == "Ctrl+T" then
+					var_20_6.primary = "Ctrl+H"
+				end
+
+				local var_20_7 = var_20_3 and (var_20_3[iter_20_2] or var_20_3[textValue])
+
+				if var_20_7 and var_20_7.primary == "Enter" then
+					var_20_7.primary = ""
+				end
+
+				local var_20_8 = var_20_4 and (var_20_4[iter_20_2] or var_20_4[textValue])
+
+				if boolean and var_20_8 then
+					if var_20_8.primary == "Num+Enter" then
+						var_20_8.primary = "Enter"
+					end
+
+					if var_20_8.primary == "Enter" and (not var_20_8.secondary or var_20_8.secondary == "") then
+						var_20_8.secondary = "Num+Enter"
+					end
+				end
+			end
+
+			if node then
+				var_20_1:setNode("Chat Channel_Open Help Channel", node)
+			end
+
+			if var_20_3 then
+				var_20_1:setNode("Chat_Send current chat line", var_20_3)
+			end
+
+			if var_20_4 then
+				var_20_1:setNode("Chat Mode_Set to Chat On*", var_20_4)
+			end
+		end
+	end
+
+	if boolean then
+		g_settings.set(var_0_31, true)
+	end
+end
+
+function toggleServerMessagesInCurrentChannel()
+	local currentTab = consoleTabBar and consoleTabBar:getCurrentTab()
+
+	if not currentTab or currentTab == defaultTab or currentTab == serverTab then
+		return false
+	end
+
+	currentTab.showServerMessages = not currentTab.showServerMessages
+
+	local serverMessageButton = consolePanel and consolePanel:getChildById("serverMessageButton")
+
+	if serverMessageButton then
+		serverMessageButton:setChecked(currentTab.showServerMessages)
+	end
+
+	return true
 end
 
 local communicationSettings = {
@@ -353,9 +608,10 @@ function init()
 	consolePanel = g_ui.loadUI("console", gameBottomPanel)
 	consoleTextEdit = consolePanel:getChildById("consoleTextEdit")
 
+	var_0_24(consoleTextEdit)
 	connect(consoleTextEdit, {
 		onKeyDown = function(widget, keyCode, keyboardModifiers)
-			if g_keyboard.isEnterKey(keyCode) and keyboardModifiers == KeyboardNoModifier then
+			if var_0_23("Chat Mode", "Set to Chat On*", keyCode, keyboardModifiers) then
 				switchChatOnCall()
 
 				return true
@@ -384,28 +640,6 @@ function init()
 	consoleTabBar.onDragLeave = onDragLeave
 	consoleTabBar.onDragMove = onDragMove
 
-	function consolePanel:onKeyPress(keyCode, keyboardModifiers)
-		if keyboardModifiers ~= KeyboardCtrlModifier or keyCode ~= KeyC then
-			return false
-		end
-
-		local tab = consoleTabBar:getCurrentTab()
-
-		if not tab then
-			return false
-		end
-
-		local selection = tab.tabPanel:getChildById("consoleBuffer").selectionText
-
-		if not selection then
-			return false
-		end
-
-		g_window.setClipboardText(selection)
-
-		return true
-	end
-
 	g_keyboard.bindKeyPress("Shift+Up", function()
 		navigateMessageHistory(1)
 	end, consolePanel)
@@ -413,17 +647,22 @@ function init()
 		navigateMessageHistory(-1)
 	end, consolePanel)
 	g_keyboard.bindKeyDown("Escape", disableChatOnCall, consolePanel)
-	g_keyboard.bindKeyPress("Ctrl+A", function()
-		consoleTextEdit:clearText()
-	end, consolePanel)
 	consoleTabBar:setNavigation(consolePanel:getChildById("prevChannelButton"), consolePanel:getChildById("nextChannelButton"))
 
 	consoleTabBar.onTabChange = onTabChange
 
+	function consoleTabBar.onTabReselect(unusedArgument, arg_29_1)
+		local consoleBuffer = arg_29_1.tabPanel:getChildById("consoleBuffer")
+
+		if consoleBuffer and consoleBuffer.verticalScrollBar then
+			consoleBuffer.verticalScrollBar:setValue(0)
+		end
+	end
+
 	local sayModeBtn = consolePanel:getChildById("sayModeButton")
 
 	if sayModeBtn then
-		function sayModeBtn:onMousePress(mousePos, mouseButton)
+		function sayModeBtn.onMousePress(self, unusedArgument, mouseButton)
 			if mouseButton ~= MouseLeftButton then
 				return false
 			end
@@ -433,7 +672,7 @@ function init()
 			return false
 		end
 
-		function sayModeBtn:onMouseRelease(mousePos, mouseButton)
+		function sayModeBtn.onMouseRelease(self, mousePos, mouseButton)
 			if mouseButton ~= MouseLeftButton then
 				return false
 			end
@@ -448,6 +687,7 @@ function init()
 
 	local gameRootPanel = modules.game_interface.getRootPanel()
 
+	var_0_32()
 	Keybind.new("Chat Channel", "Next Channel", "Tab", "")
 	Keybind.bind("Chat Channel", "Next Channel", {
 		{
@@ -466,10 +706,7 @@ function init()
 			end
 		}
 	}, consolePanel)
-	Keybind.new("Chat", "Send current chat line", {
-		[CHAT_MODE.ON] = "Enter",
-		[CHAT_MODE.OFF] = "Enter"
-	}, "")
+	Keybind.new("Chat", "Send current chat line", "", "")
 	Keybind.bind("Chat", "Send current chat line", {
 		{
 			type = KEY_DOWN,
@@ -496,7 +733,39 @@ function init()
 			type = KEY_DOWN,
 			callback = openHelp
 		}
-	}, consolePanel)
+	}, gameRootPanel)
+	Keybind.new("Chat Channel", "Open Loot Channel", "", "")
+	Keybind.bind("Chat Channel", "Open Loot Channel", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				return openLootConsoleTab()
+			end
+		}
+	}, gameRootPanel)
+	Keybind.new("Chat Channel", "Open NPC Channel", "", "")
+	Keybind.bind("Chat Channel", "Open NPC Channel", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				return var_0_16()
+			end
+		}
+	}, gameRootPanel)
+	Keybind.new("Chat Channel", "Open Server Channel", "", "")
+	Keybind.bind("Chat Channel", "Open Server Channel", {
+		{
+			type = KEY_DOWN,
+			callback = var_0_29
+		}
+	}, gameRootPanel)
+	Keybind.new("Chat Channel", "Show Default Channel", "Alt+D", "")
+	Keybind.bind("Chat Channel", "Show Default Channel", {
+		{
+			type = KEY_DOWN,
+			callback = var_0_28
+		}
+	}, gameRootPanel)
 	Keybind.new("Chat Mode", "Set to Chat On", "", "")
 	Keybind.bind("Chat Mode", "Set to Chat On", {
 		{
@@ -509,6 +778,48 @@ function init()
 		{
 			type = KEY_DOWN,
 			callback = setChatModeOff
+		}
+	}, gameRootPanel)
+	Keybind.new("Chat Mode", "Set to Chat On*", "Enter", "Num+Enter")
+	Keybind.bind("Chat Mode", "Set to Chat On*", {
+		{
+			type = KEY_DOWN,
+			callback = switchChatOnCall
+		}
+	}, gameRootPanel)
+	Keybind.new("Chat Text", "Copy to clipboard", "Ctrl+C", "")
+	Keybind.bind("Chat Text", "Copy to clipboard", {
+		{
+			type = KEY_PRESS,
+			callback = var_0_25
+		}
+	}, consolePanel)
+	Keybind.new("Chat Text", "Select all", "", "")
+	Keybind.bind("Chat Text", "Select all", {
+		{
+			type = KEY_PRESS,
+			callback = var_0_26
+		}
+	}, consolePanel)
+	Keybind.new("Chat", "Show/hide Show Server messages in current channel", "Ctrl+M", "")
+	Keybind.bind("Chat", "Show/hide Show Server messages in current channel", {
+		{
+			type = KEY_DOWN,
+			callback = toggleServerMessagesInCurrentChannel
+		}
+	}, gameRootPanel)
+	Keybind.new("Dialogs", "Open Exiva Options", "", "")
+	Keybind.bind("Dialogs", "Open Exiva Options", {
+		{
+			type = KEY_DOWN,
+			callback = var_0_30
+		}
+	}, gameRootPanel)
+	Keybind.new("Dialogs", "Open Ignore List", "Ctrl+I", "")
+	Keybind.bind("Dialogs", "Open Ignore List", {
+		{
+			type = KEY_DOWN,
+			callback = onClickIgnoreButton
 		}
 	}, gameRootPanel)
 
@@ -589,14 +900,22 @@ end
 local function unbindMovingKeys()
 	local gameWalk = modules.game_walk
 
-	gameWalk.unbindWalkKey("W")
-	gameWalk.unbindWalkKey("D")
-	gameWalk.unbindWalkKey("S")
-	gameWalk.unbindWalkKey("A")
-	gameWalk.unbindWalkKey("E")
-	gameWalk.unbindWalkKey("Q")
-	gameWalk.unbindWalkKey("C")
-	gameWalk.unbindWalkKey("Z")
+	if gameWalk.unbindMovementKeys then
+		gameWalk.unbindMovementKeys()
+	else
+		for unusedValue, iter_42_1 in ipairs({
+			"W",
+			"D",
+			"S",
+			"A",
+			"E",
+			"Q",
+			"C",
+			"Z"
+		}) do
+			gameWalk.unbindWalkKey(iter_42_1)
+		end
+	end
 
 	if gameWalk.syncWasdTurnKeyLayout then
 		gameWalk.syncWasdTurnKeyLayout(false)
@@ -605,44 +924,49 @@ end
 
 local function bindMovingKeys()
 	local gameWalk = modules.game_walk
-	local keyDirs = gameWalk.getWasdMovementKeyDirs and gameWalk.getWasdMovementKeyDirs() or {
-		{
-			"W",
-			North
-		},
-		{
-			"D",
-			East
-		},
-		{
-			"S",
-			South
-		},
-		{
-			"A",
-			West
-		},
-		{
-			"E",
-			NorthEast
-		},
-		{
-			"Q",
-			NorthWest
-		},
-		{
-			"C",
-			SouthEast
-		},
-		{
-			"Z",
-			SouthWest
-		}
-	}
 
-	for _, keyDir in ipairs(keyDirs) do
-		if not gameWalk.isMovementKeyBlockedByHotkey or not gameWalk.isMovementKeyBlockedByHotkey(keyDir[1]) then
-			gameWalk.bindWalkKey(keyDir[1], keyDir[2])
+	if gameWalk.rebindMovementKeys then
+		gameWalk.rebindMovementKeys(CHAT_MODE.OFF)
+	else
+		local keyDirs = gameWalk.getWasdMovementKeyDirs and gameWalk.getWasdMovementKeyDirs() or {
+			{
+				"W",
+				North
+			},
+			{
+				"D",
+				East
+			},
+			{
+				"S",
+				South
+			},
+			{
+				"A",
+				West
+			},
+			{
+				"E",
+				NorthEast
+			},
+			{
+				"Q",
+				NorthWest
+			},
+			{
+				"C",
+				SouthEast
+			},
+			{
+				"Z",
+				SouthWest
+			}
+		}
+
+		for _, keyDir in ipairs(keyDirs) do
+			if not gameWalk.isMovementKeyBlockedByHotkey or not gameWalk.isMovementKeyBlockedByHotkey(keyDir[1]) then
+				gameWalk.bindWalkKey(keyDir[1], keyDir[2])
+			end
 		end
 	end
 
@@ -652,12 +976,23 @@ local function bindMovingKeys()
 end
 
 function syncMovingKeys()
-	if isChatEnabled() then
+	local game_walk = modules.game_walk
+
+	if game_walk.rebindMovementKeys then
+		game_walk.rebindMovementKeys(Keybind.chatMode)
+
+		if game_walk.syncWasdTurnKeyLayout then
+			game_walk.syncWasdTurnKeyLayout(Keybind.chatMode == CHAT_MODE.OFF)
+		end
+
 		return
 	end
 
 	unbindMovingKeys()
-	bindMovingKeys()
+
+	if Keybind.chatMode == CHAT_MODE.OFF then
+		bindMovingKeys()
+	end
 end
 
 local function getNpcModalChatProxy()
@@ -675,7 +1010,7 @@ local function getNpcModalChatProxy()
 end
 
 local function isNpcModalChatActive()
-	if not npcModalTextEditDocked then
+	if not var_0_7 then
 		return false
 	end
 
@@ -745,26 +1080,35 @@ local function focusActiveChatInput()
 	end
 
 	if input:isFocusable() and input:isEditable() then
+		if input ~= consoleTextEdit then
+			local var_50_1 = modules.game_npcmodal and modules.game_npcmodal.mainNpcModal
+
+			if var_50_1 and not var_50_1:isDestroyed() and var_50_1:isVisible() then
+				var_50_1:focus()
+			end
+		end
+
 		input:focus()
 	end
 end
 
 local function applyNpcModalProxyEditability()
-	if not npcModalTextEditDocked then
+	if not var_0_7 then
 		return
 	end
 
-	local proxy = getNpcModalChatProxy()
+	local var_51_0 = getNpcModalChatProxy()
 
-	if not proxy or not consoleTextEdit then
+	if not var_51_0 or not consoleTextEdit then
 		return
 	end
 
-	proxy:setVisible(true)
-	proxy:setEditable(consoleTextEdit:isEditable())
-	proxy:setFocusable(consoleTextEdit:isFocusable())
-	proxy:setCursorVisible(consoleTextEdit:isCursorVisible())
-	proxy:setColor(consoleTextEdit:getColor())
+	var_51_0:setVisible(true)
+	var_51_0:setEditable(consoleTextEdit:isEditable())
+	var_51_0:setFocusable(consoleTextEdit:isFocusable())
+	consoleTextEdit:setCursorVisible(false)
+	var_51_0:setCursorVisible(consoleTextEdit:isEditable())
+	var_51_0:setColor(consoleTextEdit:getColor())
 end
 
 function switchChat(enabled)
@@ -795,22 +1139,26 @@ function switchChat(enabled)
 		consoleTextEdit:setCursorPos(-1)
 	end
 
-	consoleTextEdit:setCursorVisible(enabled)
+	consoleTextEdit:setCursorVisible(enabled and not var_0_7)
 
 	if enabled then
 		unbindMovingKeys()
 		consoleToggleChat:setTooltip(tr("Disable chat mode, allow to walk using WASD"))
 		Keybind.setChatMode(CHAT_MODE.ON)
+
+		if modules.game_walk.rebindMovementKeys then
+			modules.game_walk.rebindMovementKeys(CHAT_MODE.ON)
+		end
 	else
-		bindMovingKeys()
 		consoleToggleChat:setTooltip(tr("Enable chat mode"))
 		Keybind.setChatMode(CHAT_MODE.OFF)
+		bindMovingKeys()
 	end
 
-	if npcModalTextEditDocked then
-		local proxy = getNpcModalChatProxy()
+	if var_0_7 then
+		local var_52_0 = getNpcModalChatProxy()
 
-		if proxy and not enabled and proxy:isFocused() then
+		if var_52_0 and not enabled and var_52_0:isFocused() then
 			modules.game_interface.getRootPanel():focus()
 		end
 
@@ -828,10 +1176,10 @@ end
 
 local function getChatInputForSend()
 	if isNpcModalChatActive() then
-		local proxy = getNpcModalChatProxy()
+		local var_54_0 = getNpcModalChatProxy()
 
-		if proxy and not proxy:isDestroyed() then
-			return proxy
+		if var_54_0 and not var_54_0:isDestroyed() then
+			return var_54_0
 		end
 	end
 
@@ -847,7 +1195,7 @@ local function healConsoleTextEditIfLeftOnNpcModal()
 		return
 	end
 
-	npcModalTextEditDocked = false
+	var_0_7 = false
 
 	consoleTextEdit:removeAnchor(AnchorLeft)
 	consoleTextEdit:removeAnchor(AnchorRight)
@@ -879,8 +1227,8 @@ end
 local function wireNpcModalProxy(proxy)
 	disconnectNpcModalProxy(proxy)
 
-	function npcModalProxyKeyDownSlot(widget, keyCode, keyboardModifiers)
-		if not npcModalTextEditDocked then
+	function npcModalProxyKeyDownSlot(unusedArgument, keyCode, keyboardModifiers)
+		if not var_0_7 then
 			return false
 		end
 
@@ -902,7 +1250,7 @@ local function wireNpcModalProxy(proxy)
 			return true
 		end
 
-		if g_keyboard.isEnterKey(keyCode) and keyboardModifiers == KeyboardNoModifier then
+		if var_0_23("Chat Mode", "Set to Chat On*", keyCode, keyboardModifiers) then
 			switchChatOnCall()
 
 			return true
@@ -923,9 +1271,15 @@ local function wireNpcModalKeyboard(npcModalWindow)
 
 	npcModalWindow.npcModalKeyPressWired = true
 
-	function npcModalWindow:onKeyPress(keyCode, keyboardModifiers)
-		if keyboardModifiers == KeyboardCtrlModifier and keyCode == KeyC then
-			local itemsPanel = self:recursiveGetChildById("itemsPanel")
+	function npcModalWindow.onKeyPress(arg_60_0, arg_60_1, arg_60_2)
+		if arg_60_2 == KeyboardNoModifier and g_keyboard.isEnterKey(arg_60_1) and not isChatEnabled() then
+			activateNpcModalChatInput()
+
+			return true
+		end
+
+		if arg_60_2 == KeyboardCtrlModifier and arg_60_1 == KeyC then
+			local itemsPanel = arg_60_0:recursiveGetChildById("itemsPanel")
 
 			if itemsPanel and itemsPanel.selectionText and #itemsPanel.selectionText > 0 then
 				g_window.setClipboardText(itemsPanel.selectionText)
@@ -936,6 +1290,42 @@ local function wireNpcModalKeyboard(npcModalWindow)
 
 		return false
 	end
+end
+
+local function var_0_50()
+	if not g_game.isOnline() or HotkeyUtils.areHotkeysDisabled() then
+		return
+	end
+
+	if not consoleToggleChat or not consoleTextEdit then
+		return
+	end
+
+	switchChat(true)
+
+	temporaryChatViaEnter = true
+
+	syncToggleChatToWASDButton()
+	syncNpcToggleChatButton(false)
+	focusActiveChatInput()
+end
+
+local function var_0_51()
+	if not isNpcModalVisible() then
+		return
+	end
+
+	scheduleEvent(function()
+		if isChatEnabled() then
+			return
+		end
+
+		local proxy = modules.game_interface and modules.game_interface.getRootPanel and modules.game_interface.getRootPanel()
+
+		if proxy and not proxy:isDestroyed() then
+			proxy:focus()
+		end
+	end, 1)
 end
 
 function switchChatOnCall()
@@ -950,32 +1340,31 @@ function switchChatOnCall()
 			return
 		end
 
-		switchChat(true)
-
-		temporaryChatViaEnter = true
-
-		syncToggleChatToTypingButton()
+		var_0_50()
 
 		return
 	end
 
-	local wasTemporary = temporaryChatViaEnter
-	local message = getChatInputForSend():getText()
+	local var_64_0 = temporaryChatViaEnter
 
-	if #message > 0 then
+	if #getChatInputForSend():getText() > 0 then
 		sendCurrentMessage()
 
-		if wasTemporary then
+		if var_64_0 then
 			switchChat(false)
-			syncToggleChatToWASDButton()
+			var_0_21()
+			syncNpcToggleChatButton(true)
+			var_0_51()
 		end
 
 		return
 	end
 
-	if wasTemporary then
+	if var_64_0 then
 		switchChat(false)
-		syncToggleChatToWASDButton()
+		var_0_21()
+		syncNpcToggleChatButton(true)
+		var_0_51()
 	end
 end
 
@@ -994,16 +1383,12 @@ function disableChatOnCall()
 
 	if temporaryChatViaEnter then
 		switchChat(false)
-		syncToggleChatToWASDButton()
+		var_0_21()
 
 		return
 	end
 
-	if not consoleToggleChat.isChecked then
-		toggleChat()
-	else
-		updateChatMode()
-	end
+	return false
 end
 
 function prepareConsoleTextEditForNpcModal()
@@ -1011,42 +1396,45 @@ function prepareConsoleTextEditForNpcModal()
 		return
 	end
 
-	if consoleTextEdit:isEditable() then
+	local var_66_0 = not consoleToggleChat.isChecked and not temporaryChatViaEnter
+
+	temporaryChatViaEnter = false
+
+	if var_66_0 then
+		syncToggleChatToTypingButton()
+		syncNpcToggleChatButton(false)
+		switchChat(true)
+
 		return
 	end
 
-	npcModalRestoreWasdAfterClose = true
-	temporaryChatViaEnter = false
-
-	syncToggleChatToTypingButton()
-
-	local npcModal = modules.game_npcmodal.mainNpcModal
-
-	if npcModal and not npcModal:isDestroyed() then
-		local npcToggleBtn = npcModal:recursiveGetChildById("toggleChat")
-
-		if npcToggleBtn then
-			npcToggleBtn.isChecked = false
-
-			npcToggleBtn:setText(tr("Chat On"))
-		end
-	end
-
-	switchChat(true)
+	var_0_21()
+	syncNpcToggleChatButton(true)
+	switchChat(false)
 end
 
 function focusConsoleTextEditAfterNpcModalShow()
 	scheduleEvent(function()
-		if not npcModalTextEditDocked then
+		if not var_0_7 then
 			return
 		end
 
-		local proxy = getNpcModalChatProxy()
-
-		if proxy and not proxy:isDestroyed() then
-			proxy:focus()
-		end
+		focusActiveChatInput()
 	end, 1)
+end
+
+function activateNpcModalChatInput()
+	if not isNpcModalVisible() then
+		return
+	end
+
+	if not isChatEnabled() then
+		var_0_50()
+
+		return
+	end
+
+	focusActiveChatInput()
 end
 
 function clearNpcModalItemsPanel()
@@ -1073,22 +1461,33 @@ local function ensureNpcChatTab()
 		return nil
 	end
 
-	local npcTab = getTab("NPCs")
+	local var_71_0 = getTab("NPCs") or addTab("NPCs", false)
 
-	npcTab = npcTab or addTab("NPCs", false)
-
-	if npcTab then
-		npcTab.npcChat = true
+	if var_71_0 then
+		var_71_0.npcChat = true
 	end
 
-	return npcTab
+	return var_71_0
 end
 
 function onNpcModalOpened()
 	ensureNpcChatTab()
 	prepareConsoleTextEditForNpcModal()
 	clearNpcModalItemsPanel()
-	focusConsoleTextEditAfterNpcModalShow()
+
+	if isChatEnabled() then
+		focusConsoleTextEditAfterNpcModalShow()
+	else
+		var_0_51()
+	end
+end
+
+function onNpcTradeOpened()
+	if isChatEnabled() then
+		focusConsoleTextEditAfterNpcModalShow()
+	else
+		var_0_51()
+	end
 end
 
 function attachConsoleTextEditToNpcModal(npcModalWindow)
@@ -1098,7 +1497,7 @@ function attachConsoleTextEditToNpcModal(npcModalWindow)
 
 	healConsoleTextEditIfLeftOnNpcModal()
 
-	if npcModalTextEditDocked then
+	if var_0_7 then
 		return
 	end
 
@@ -1108,8 +1507,9 @@ function attachConsoleTextEditToNpcModal(npcModalWindow)
 		return
 	end
 
-	npcModalTextEditDocked = true
+	var_0_7 = true
 
+	var_0_24(proxy)
 	proxy:show()
 	applyNpcModalProxyEditability()
 
@@ -1125,11 +1525,11 @@ function attachConsoleTextEditToNpcModal(npcModalWindow)
 end
 
 function detachConsoleTextEditFromNpcModal()
-	if not npcModalTextEditDocked then
+	if not var_0_7 then
 		return
 	end
 
-	npcModalTextEditDocked = false
+	var_0_7 = false
 
 	local proxy = getNpcModalChatProxy()
 
@@ -1139,29 +1539,11 @@ function detachConsoleTextEditFromNpcModal()
 		proxy:clearText()
 	end
 
-	if npcModalRestoreWasdAfterClose and consoleToggleChat then
-		npcModalRestoreWasdAfterClose = false
-
-		syncToggleChatToWASDButton()
-
-		local npcModal = modules.game_npcmodal.mainNpcModal
-
-		if npcModal and not npcModal:isDestroyed() then
-			local npcToggleBtn = npcModal:recursiveGetChildById("toggleChat")
-
-			if npcToggleBtn then
-				npcToggleBtn.isChecked = true
-
-				npcToggleBtn:setText(tr("Chat Off"))
-			end
-		end
-
-		updateChatMode()
-	end
-
 	healConsoleTextEditIfLeftOnNpcModal()
 
 	if consoleTextEdit and not consoleTextEdit:isDestroyed() and consolePanel and not consolePanel:isDestroyed() then
+		consoleTextEdit:setCursorVisible(consoleTextEdit:isEditable())
+
 		local ph = consolePanel:getChildById("placeholderLabel")
 
 		if ph then
@@ -1202,9 +1584,19 @@ function terminate()
 	Keybind.delete("Chat Channel", "Previous Channel")
 	Keybind.delete("Chat Channel", "Open Channel List")
 	Keybind.delete("Chat Channel", "Open Help Channel")
+	Keybind.delete("Chat Channel", "Open Loot Channel")
+	Keybind.delete("Chat Channel", "Open NPC Channel")
+	Keybind.delete("Chat Channel", "Open Server Channel")
+	Keybind.delete("Chat Channel", "Show Default Channel")
 	Keybind.delete("Chat", "Send current chat line")
+	Keybind.delete("Chat", "Show/hide Show Server messages in current channel")
 	Keybind.delete("Chat Mode", "Set to Chat On")
 	Keybind.delete("Chat Mode", "Set to Chat Off")
+	Keybind.delete("Chat Mode", "Set to Chat On*")
+	Keybind.delete("Chat Text", "Copy to clipboard")
+	Keybind.delete("Chat Text", "Select all")
+	Keybind.delete("Dialogs", "Open Exiva Options")
+	Keybind.delete("Dialogs", "Open Ignore List")
 	detachConsoleTextEditFromNpcModal()
 	saveCommunicationSettings()
 	clearReadOnlyTab()
@@ -1255,10 +1647,10 @@ function terminate()
 end
 
 function save()
-	local settings = {}
-
-	settings.messageHistory = messageHistory
-	settings.wasdMode = consoleToggleChat.isChecked or temporaryChatViaEnter
+	local settings = {
+		messageHistory = messageHistory,
+		wasdMode = consoleToggleChat.isChecked or temporaryChatViaEnter
+	}
 
 	g_settings.setNode("game_console", settings)
 end
@@ -1310,6 +1702,7 @@ function onTabChange(tabBar, tab)
 	if tab == defaultTab or tab == serverTab then
 		closeButton:disable()
 		closeButton:hide()
+		serverMessageButton:setChecked(false)
 		serverMessageButton:disable()
 		serverMessageButton:hide()
 
@@ -1319,6 +1712,7 @@ function onTabChange(tabBar, tab)
 	else
 		closeButton:show()
 		closeButton:enable()
+		serverMessageButton:setChecked(tab.showServerMessages == true)
 		serverMessageButton:show()
 		serverMessageButton:enable()
 
@@ -1329,8 +1723,7 @@ function onTabChange(tabBar, tab)
 
 	if tab.isOnRedMessage then
 		tab:setColor("#dfdfdfff")
-
-		tab.isOnRedMessage = false
+		var_0_2(tab, false)
 	end
 
 	if tab.newMessageEvent ~= nil then
@@ -1397,8 +1790,7 @@ local function clearNpcModalMirrorLines()
 		return
 	end
 
-	local npcModal = modules.game_npcmodal.mainNpcModal
-	local itemsPanel = npcModal:recursiveGetChildById("itemsPanel")
+	local itemsPanel = modules.game_npcmodal.mainNpcModal:recursiveGetChildById("itemsPanel")
 
 	if not itemsPanel then
 		return
@@ -1512,10 +1904,6 @@ function clear()
 		channelsWindow = nil
 	end
 
-	if g_game.getClientVersion() < 862 then
-		Keybind.delete("Dialogs", "Open Rule Violation")
-	end
-
 	updateSayModeButtonVisibility(nil)
 end
 
@@ -1584,7 +1972,8 @@ local function setElidedChatWidgetText(widget, name)
 		return false
 	end
 
-	local low, high = 0, #name
+	local low = 0
+	local high = #name
 	local displayName = CHAT_NAME_ELLIPSIS
 
 	while low <= high do
@@ -1643,7 +2032,7 @@ function addTab(name, focus)
 		consoleTabBar:selectTab(tab)
 	end
 
-	function tab:onHoverChange(hovered)
+	function tab.onHoverChange(self, hovered)
 		if consoleTabBar:getId() ~= tab then
 			if tab.isOnRedMessage then
 				tab:setColor("#f75f5fff")
@@ -1747,11 +2136,13 @@ function addChannel(name, id)
 	return tab
 end
 
-local function openLootConsoleTab()
-	if not channels[LOOT_CHANNEL] then
-		local tab = addChannel(tr("Loot"), LOOT_CHANNEL)
+function openLootConsoleTab()
+	if not g_game.isOnline() then
+		return false
+	end
 
-		tab.skipLeaveChannel = true
+	if not channels[LOOT_CHANNEL] then
+		addChannel(tr("Loot"), LOOT_CHANNEL).skipLeaveChannel = true
 	else
 		local t = getTab(channels[LOOT_CHANNEL])
 
@@ -1759,6 +2150,25 @@ local function openLootConsoleTab()
 			consoleTabBar:selectTab(t)
 		end
 	end
+
+	return true
+end
+
+function var_0_16()
+	if not g_game.isOnline() then
+		return false
+	end
+
+	local var_106_0 = getTab("NPCs")
+
+	if not var_106_0 then
+		var_106_0 = addTab("NPCs", true)
+		var_106_0.npcChat = true
+	else
+		consoleTabBar:selectTab(var_106_0)
+	end
+
+	return true
 end
 
 function addPrivateChannel(receiver)
@@ -1811,10 +2221,22 @@ function addText(text, speaktype, tabName, creatureName, statementId)
 		return
 	end
 
+	if not consoleTabBar then
+		return
+	end
+
 	local tab = getTab(tabName)
 
 	if tab ~= nil then
 		addTabText(text, speaktype, tab, creatureName, statementId)
+
+		if tab == serverTab then
+			for unusedValue, getTab in ipairs(consoleTabBar:getTabs()) do
+				if getTab ~= defaultTab and getTab ~= serverTab and getTab.showServerMessages then
+					addTabText(text, speaktype, getTab, creatureName, statementId)
+				end
+			end
+		end
 	end
 end
 
@@ -1928,7 +2350,7 @@ local function isWordChar(char)
 	return byte >= 48 and byte <= 57 or byte >= 65 and byte <= 90 or byte >= 97 and byte <= 122
 end
 
-local function getWordRangeAt(text, position)
+function getWordRangeAt(text, position)
 	if not text or text == "" or position == nil or position < 0 then
 		return nil
 	end
@@ -2025,7 +2447,7 @@ function isNpcModalVisible()
 end
 
 local function setupConsoleLabelDragMove(label, textBuffer)
-	function label:onDragMove(mousePos, mouseMoved)
+	function label.onDragMove(self, mousePos, mouseMoved)
 		local parent = self:getParent()
 		local parentRect = parent:getPaddingRect()
 		local selfIndex = parent:getChildIndex(self)
@@ -2110,7 +2532,7 @@ local function setupConsoleLabelDragMove(label, textBuffer)
 end
 
 local function setupConsoleLabelMouseHandlers(label, tab, creatureName, text, textBuffer)
-	function label:onMouseRelease(mousePos, mouseButton)
+	function label.onMouseRelease(self, mousePos, mouseButton)
 		if mouseButton == MouseLeftButton then
 			if self.skipKeywordClick then
 				self.skipKeywordClick = false
@@ -2154,7 +2576,7 @@ local function setupConsoleLabelMouseHandlers(label, tab, creatureName, text, te
 		end
 	end
 
-	function label:onDoubleClick(mousePos)
+	function label.onDoubleClick(self, mousePos)
 		self.skipKeywordClick = true
 		self.pendingKeyword = nil
 
@@ -2204,7 +2626,7 @@ local function setupConsoleLabelMouseHandlers(label, tab, creatureName, text, te
 		return true
 	end
 
-	function label:onMousePress(mousePos, button)
+	function label.onMousePress(self, mousePos, button)
 		if button == MouseLeftButton then
 			local position = self:getTextPos(mousePos)
 			local state = self.doubleClickExpandState
@@ -2225,7 +2647,7 @@ local function setupConsoleLabelMouseHandlers(label, tab, creatureName, text, te
 		end
 	end
 
-	function label:onDragEnter(mousePos)
+	function label.onDragEnter(self, mousePos)
 		self.doubleClickExpandState = nil
 
 		clearSelection(textBuffer)
@@ -2233,7 +2655,7 @@ local function setupConsoleLabelMouseHandlers(label, tab, creatureName, text, te
 		return true
 	end
 
-	function label:onDragLeave(droppedWidget, mousePos)
+	function label.onDragLeave(self, droppedWidget, mousePos)
 		updateBufferSelectionText(textBuffer)
 
 		return true
@@ -2247,8 +2669,7 @@ local function addNpcModalMirrorLine(sourceLabel, tab)
 		return
 	end
 
-	local npcModal = modules.game_npcmodal.mainNpcModal
-	local itemsPanel = npcModal:recursiveGetChildById("itemsPanel")
+	local itemsPanel = modules.game_npcmodal.mainNpcModal:recursiveGetChildById("itemsPanel")
 
 	if not itemsPanel then
 		return
@@ -2294,8 +2715,8 @@ local function changeNewNessageColor(tab)
 
 	tab.newMessageEvent = scheduleEvent(function()
 		tab:setColor("#f75f5fff")
+		var_0_2(tab, true)
 
-		tab.isOnRedMessage = true
 		tab.newMessageEvent = nil
 	end, 1000)
 end
@@ -2323,8 +2744,7 @@ function addTabText(text, speaktype, tab, creatureName, statementId)
 		text = os.date("%H:%M") .. " " .. text
 	end
 
-	local panel = consoleTabBar:getTabPanel(tab)
-	local consoleBuffer = panel:getChildById("consoleBuffer")
+	local consoleBuffer = consoleTabBar:getTabPanel(tab):getChildById("consoleBuffer")
 	local label
 
 	if consoleBuffer:getChildCount() >= MAX_LINES then
@@ -2360,7 +2780,16 @@ function addTabText(text, speaktype, tab, creatureName, statementId)
 
 	if readOnlyModeEnabled and activeactiveReadOnlyTabName == getTabChannelName(tab) then
 		local readOnlyBuffer = readOnlyPanel:getChildById("panel")
-		local readOnlyLabel = g_ui.createWidget("ConsoleLabel", readOnlyBuffer)
+		local readOnlyLabel
+
+		if readOnlyBuffer:getChildCount() >= MAX_LINES then
+			readOnlyLabel = readOnlyBuffer:getFirstChild()
+
+			recycleConsoleLabel(readOnlyLabel)
+			readOnlyBuffer:moveChildToIndex(readOnlyLabel, readOnlyBuffer:getChildCount())
+		else
+			readOnlyLabel = g_ui.createWidget("ConsoleLabel", readOnlyBuffer)
+		end
 
 		readOnlyLabel:setId("consoleLabel" .. readOnlyBuffer:getChildCount())
 
@@ -2383,7 +2812,7 @@ function addTabText(text, speaktype, tab, creatureName, statementId)
 	label.name = creatureName
 	label.statementId = statementId or 0
 
-	function consoleBuffer:onMouseRelease(mousePos, mouseButton)
+	function consoleBuffer.onMouseRelease(self, mousePos, mouseButton)
 		if mouseButton ~= MouseRightButton then
 			return
 		end
@@ -2407,8 +2836,7 @@ function addTabText(text, speaktype, tab, creatureName, statementId)
 end
 
 function removeTabLabelByName(tab, name)
-	local panel = consoleTabBar:getTabPanel(tab)
-	local consoleBuffer = panel:getChildById("consoleBuffer")
+	local consoleBuffer = consoleTabBar:getTabPanel(tab):getChildById("consoleBuffer")
 
 	for _, label in pairs(consoleBuffer:getChildren()) do
 		if label.name == name then
@@ -2636,9 +3064,11 @@ function sendMessage(message, tab)
 
 	local channel = tab.channelId
 	local originalMessage = message
-	local chatCommandSayMode, chatCommandPrivate, chatCommandPrivateReady, chatCommandMessage
-
-	chatCommandMessage = message:match("^%#[y|Y] (.*)")
+	local chatCommandSayMode
+	local unusedValue
+	local chatCommandPrivateReady
+	local unusedValue
+	local chatCommandMessage = message:match("^%#[y|Y] (.*)")
 
 	if chatCommandMessage ~= nil then
 		chatCommandSayMode = "yell"
@@ -2646,7 +3076,7 @@ function sendMessage(message, tab)
 		message = chatCommandMessage
 	end
 
-	chatCommandMessage = message:match("^%#[w|W] (.*)")
+	local chatCommandMessage = message:match("^%#[w|W] (.*)")
 
 	if chatCommandMessage ~= nil then
 		chatCommandSayMode = "whisper"
@@ -2654,7 +3084,7 @@ function sendMessage(message, tab)
 		channel = 0
 	end
 
-	chatCommandMessage = message:match("^%#[s|S] (.*)")
+	local chatCommandMessage = message:match("^%#[s|S] (.*)")
 
 	if chatCommandMessage ~= nil then
 		chatCommandSayMode = "say"
@@ -2662,14 +3092,14 @@ function sendMessage(message, tab)
 		channel = 0
 	end
 
-	chatCommandMessage = message:match("^%#[c|C] (.*)")
+	local chatCommandMessage = message:match("^%#[c|C] (.*)")
 
 	if chatCommandMessage ~= nil then
 		chatCommandSayMode = "channelRed"
 		message = chatCommandMessage
 	end
 
-	chatCommandMessage = message:match("^%#[b|B] (.*)")
+	local chatCommandMessage = message:match("^%#[b|B] (.*)")
 
 	if chatCommandMessage ~= nil then
 		chatCommandSayMode = "broadcast"
@@ -2762,6 +3192,20 @@ function sendMessage(message, tab)
 			addPrivateText(message, speaktype, tabname, isPrivateCommand, g_game.getCharacterName())
 		end
 	end
+end
+
+function sendActionBarMessage(message)
+	if not message or #message == 0 then
+		return
+	end
+
+	if isNpcModalVisible() then
+		sendNpcModalReply(message)
+
+		return
+	end
+
+	sendMessage(message)
 end
 
 function sendNpcModalReply(message)
@@ -2878,6 +3322,26 @@ function applyMessagePrefixies(name, level, message)
 	return message
 end
 
+local function var_0_77(arg_173_0, arg_173_1)
+	if not modules.client_options.getOption("showMessages") then
+		return false
+	end
+
+	if arg_173_1 == MessageModes.Spell then
+		if arg_173_0 == g_game.getCharacterName() then
+			return modules.client_options.getOption("showSpells")
+		end
+
+		return modules.client_options.getOption("showSpellsOfOthers")
+	end
+
+	if arg_173_1 == MessageModes.Potion then
+		return modules.client_options.getOption("showPotionSoundEffects")
+	end
+
+	return arg_173_1 == MessageModes.Say or arg_173_1 == MessageModes.Whisper or arg_173_1 == MessageModes.Yell or arg_173_1 == MessageModes.MonsterSay or arg_173_1 == MessageModes.MonsterYell or arg_173_1 == MessageModes.NpcFrom or arg_173_1 == MessageModes.BarkLow or arg_173_1 == MessageModes.BarkLoud or arg_173_1 == MessageModes.NpcFromStartBlock
+end
+
 function onTalk(name, level, mode, message, channelId, creaturePos, statementId)
 	statementId = statementId or 0
 
@@ -2917,10 +3381,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos, statementId)
 		channelId = violationsChannelId
 	end
 
-	local showPotionText = mode == MessageModes.Potion and modules.client_options.getOption("showPotionSoundEffects")
-	local showStaticText = mode == MessageModes.Say or mode == MessageModes.Whisper or mode == MessageModes.Yell or mode == MessageModes.Spell or mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell or mode == MessageModes.NpcFrom or mode == MessageModes.BarkLow or mode == MessageModes.BarkLoud or mode == MessageModes.NpcFromStartBlock or showPotionText
-
-	if showStaticText and creaturePos then
+	if var_0_77(name, mode) and creaturePos then
 		local staticText = StaticText.create()
 		local staticMode = mode == MessageModes.Spell and MessageModes.Say or mode == MessageModes.Potion and MessageModes.MonsterSay or mode
 		local staticMessage = message
@@ -2972,7 +3433,7 @@ function onTalk(name, level, mode, message, channelId, creaturePos, statementId)
 		elseif channelId == LOOT_CHANNEL then
 			openLootConsoleTab()
 
-			channel = channels[channelId]
+			local channel = channels[channelId]
 
 			if channel then
 				addText(composedMessage, speaktype, channel, name, statementId)
@@ -3093,10 +3554,7 @@ end
 
 function onRuleViolationChannel(channelId)
 	violationsChannelId = channelId
-
-	local tab = addChannel(tr("Rule Violations"), channelId)
-
-	tab.violations = true
+	addChannel(tr("Rule Violations"), channelId).violations = true
 end
 
 function onRuleViolationRemove(name)
@@ -3168,15 +3626,13 @@ function doChannelListSubmit()
 	local wid = selectedChannelLabel:getId() or ""
 
 	if wid == "channelListEntry_npc" then
-		if g_game.getClientVersion() >= 820 then
-			local npcTab = getTab("NPCs")
+		local npcTab = getTab("NPCs")
 
-			if not npcTab then
-				npcTab = addTab("NPCs", true)
-				npcTab.npcChat = true
-			else
-				consoleTabBar:selectTab(npcTab)
-			end
+		if not npcTab then
+			npcTab = addTab("NPCs", true)
+			npcTab.npcChat = true
+		else
+			consoleTabBar:selectTab(npcTab)
 		end
 	elseif wid == "channelListEntry_" .. tostring(65535) then
 		g_game.openOwnChannel()
@@ -3236,13 +3692,10 @@ function onChannelList(channelList)
 		end
 	end
 
-	if g_game.getClientVersion() >= 820 then
-		table.insert(displayList, {
-			ClientOpenChannelNpcId,
-			tr("NPCs")
-		})
-	end
-
+	table.insert(displayList, {
+		ClientOpenChannelNpcId,
+		tr("NPCs")
+	})
 	table.insert(displayList, {
 		LOOT_CHANNEL,
 		tr("Loot")
@@ -3488,7 +3941,7 @@ local function createInlineEditor(panel, editorId, template, getListFunction, ad
 		editor = nil
 	end
 
-	function editor:onKeyPress(keyCode)
+	function editor.onKeyPress(self, keyCode)
 		if not g_keyboard.isEnterKey(keyCode) then
 			return false
 		end
@@ -3498,13 +3951,13 @@ local function createInlineEditor(panel, editorId, template, getListFunction, ad
 		return true
 	end
 
-	function editor:onFocusChange(focused)
+	function editor.onFocusChange(self, focused)
 		if not focused then
 			confirm(self)
 		end
 	end
 
-	function editor:onEscape()
+	function editor.onEscape(self)
 		if not self:isDestroyed() then
 			self:destroy()
 
@@ -3560,21 +4013,13 @@ function onClickIgnoreButton()
 	setupRemoveButton(ignoreListPanel, removeIgnoreButton, "ignoreEditor", removeIgnoredPlayer)
 	setupRemoveButton(whiteListPanel, removeWhitelistButton, "whitelistEditor", removeWhitelistedPlayer)
 
-	local addIgnoreButton = communicationWindow:recursiveGetChildById("buttonIgnoreAdd")
-
-	function addIgnoreButton.onClick()
+	communicationWindow:recursiveGetChildById("buttonIgnoreAdd").onClick = function()
 		createInlineEditor(ignoreListPanel, "ignoreEditor", "IgnoreListLabel", getIgnoredPlayers, addIgnoredPlayer)
 	end
-
-	local addWhitelistButton = communicationWindow:recursiveGetChildById("buttonWhitelistAdd")
-
-	function addWhitelistButton.onClick()
+	communicationWindow:recursiveGetChildById("buttonWhitelistAdd").onClick = function()
 		createInlineEditor(whiteListPanel, "whitelistEditor", "WhiteListLabel", getWhitelistedPlayers, addWhitelistedPlayer)
 	end
-
-	local saveButton = communicationWindow:recursiveGetChildById("buttonSave")
-
-	function saveButton.onClick()
+	communicationWindow:recursiveGetChildById("buttonSave").onClick = function()
 		communicationSettings.useIgnoreList = useIgnoreListBox:isChecked()
 		communicationSettings.useWhiteList = useWhiteListBox:isChecked()
 		communicationSettings.yelling = ignoreYellingBox:isChecked()
@@ -3583,10 +4028,7 @@ function onClickIgnoreButton()
 
 		communicationWindow:destroy()
 	end
-
-	local cancelButton = communicationWindow:recursiveGetChildById("buttonCancel")
-
-	function cancelButton.onClick()
+	communicationWindow:recursiveGetChildById("buttonCancel").onClick = function()
 		communicationWindow:destroy()
 	end
 
@@ -3602,25 +4044,7 @@ end
 function online()
 	defaultTab = addTab(tr("Local Chat"), true)
 	serverTab = addTab(tr("Server Log"), false)
-
-	if g_game.getClientVersion() >= 820 then
-		local tab = addTab("NPCs", false)
-
-		tab.npcChat = true
-	end
-
-	if g_game.getClientVersion() < 862 then
-		Keybind.new("Dialogs", "Open Rule Violation", "Ctrl+R", "")
-
-		local gameRootPanel = modules.game_interface.getRootPanel()
-
-		Keybind.bind("Dialogs", "Open Rule Violation", {
-			{
-				type = KEY_DOWN,
-				callback = openPlayerReportRuleViolationWindow
-			}
-		}, gameRootPanel)
-	end
+	addTab("NPCs", false).npcChat = true
 
 	local lastChannelsOpen = g_settings.getNode("lastChannelsOpen")
 
@@ -3902,7 +4326,7 @@ function activateReadOnlyMode(channelName)
 				tab:setColor("#7f7f7fff")
 			end
 
-			tab.isOnRedMessage = false
+			var_0_2(tab, false)
 		end
 	end
 
@@ -3921,8 +4345,8 @@ function onReadOnlyMouseClick()
 
 		if sourceTab then
 			addClonedMenuOptions(sourceTab, contextMenu, {
-				readonly = true,
-				close = true
+				close = true,
+				readonly = true
 			})
 			contextMenu:addSeparator()
 		end
@@ -3961,10 +4385,9 @@ function copyMessagesToReadOnlyPanel(channelName)
 		end
 	end
 
-	local sourcePanel = consoleTabBar:getTabPanel(sourceTab)
-	local sourceBuffer = sourcePanel:getChildById("consoleBuffer")
+	local consoleBuffer = consoleTabBar:getTabPanel(sourceTab):getChildById("consoleBuffer")
 
-	for _, sourceLabel in pairs(sourceBuffer:getChildren()) do
+	for _, sourceLabel in pairs(consoleBuffer:getChildren()) do
 		local clonedLabel = g_ui.createWidget("ConsoleLabel", readOnlyBuffer)
 
 		clonedLabel:setId("consoleLabel" .. readOnlyBuffer:getChildCount())
@@ -4088,8 +4511,7 @@ function addClonedMenuOptions(sourceTab, targetMenu, excludedOptions)
 end
 
 function saveChannelMessages(tab, worldName, characterName, channelName)
-	local tabPanel = consoleTabBar:getTabPanel(tab)
-	local consoleBuffer = tabPanel:getChildById("consoleBuffer")
+	local consoleBuffer = consoleTabBar:getTabPanel(tab):getChildById("consoleBuffer")
 	local messageLines = {}
 
 	for _, label in pairs(consoleBuffer:getChildren()) do
@@ -4115,10 +4537,7 @@ function clearTabByName(tabName)
 	local tab = getTab(tabName)
 
 	if tab then
-		local panel = consoleTabBar:getTabPanel(tab)
-		local consoleBuffer = panel:getChildById("consoleBuffer")
-
-		consoleBuffer:destroyChildren()
+		consoleTabBar:getTabPanel(tab):getChildById("consoleBuffer"):destroyChildren()
 	end
 end
 

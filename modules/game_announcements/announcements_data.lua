@@ -1,9 +1,7 @@
-﻿-- chunkname: @/game_announcements/announcements_data.lua
-
 AnnouncementsData = {
 	syncInProgress = false,
 	cache = {
-		ptc = {}
+		clientzin = {}
 	}
 }
 
@@ -53,7 +51,7 @@ end
 local function buildReadStatus()
 	local readById = {}
 
-	for _, item in ipairs(AnnouncementsData.cache.ptc or {}) do
+	for _, item in ipairs(AnnouncementsData.cache.clientzin or {}) do
 		if item and item.id ~= nil and AnnouncementsData.isRead(item) then
 			readById[AnnouncementsData.normalizeId(item.id)] = true
 		end
@@ -79,14 +77,15 @@ local function mergeItem(remoteItem, readById)
 end
 
 local function mergeRemote(remote)
-	if type(remote) ~= "table" or type(remote.ptc) ~= "table" then
+	if type(remote) ~= "table" or type(remote.clientzin) ~= "table" then
 		return
 	end
 
 	local readById = buildReadStatus()
-	local merged, seenIds = {}, {}
+	local merged = {}
+	local seenIds = {}
 
-	for _, remoteItem in ipairs(remote.ptc) do
+	for _, remoteItem in ipairs(remote.clientzin) do
 		if remoteItem and remoteItem.id ~= nil then
 			local id = AnnouncementsData.normalizeId(remoteItem.id)
 
@@ -100,7 +99,7 @@ local function mergeRemote(remote)
 		end
 	end
 
-	AnnouncementsData.cache.ptc = merged
+	AnnouncementsData.cache.clientzin = merged
 	AnnouncementsData.cache.isreturner = remote.isreturner
 	AnnouncementsData.cache.lastupdatetimestamp = remote.lastupdatetimestamp
 	AnnouncementsData.cache.maxeditdate = remote.maxeditdate
@@ -112,7 +111,7 @@ function AnnouncementsData.load()
 	ensureCacheDir()
 
 	AnnouncementsData.cache = {
-		ptc = {}
+		clientzin = {}
 	}
 
 	if not g_resources.fileExists(CACHE_FILE) then
@@ -129,13 +128,13 @@ function AnnouncementsData.load()
 
 	if okDecode and type(data) == "table" then
 		AnnouncementsData.cache = {
-			ptc = type(data.ptc) == "table" and data.ptc or {},
+			clientzin = type(data.clientzin) == "table" and data.clientzin or {},
 			isreturner = data.isreturner,
 			lastupdatetimestamp = data.lastupdatetimestamp,
 			maxeditdate = data.maxeditdate
 		}
 
-		for _, item in ipairs(AnnouncementsData.cache.ptc or {}) do
+		for _, item in ipairs(AnnouncementsData.cache.clientzin or {}) do
 			normalizeItem(item)
 		end
 	end
@@ -166,7 +165,7 @@ end
 function AnnouncementsData.markRead(id)
 	id = AnnouncementsData.normalizeId(id)
 
-	for _, news in ipairs(AnnouncementsData.cache.ptc or {}) do
+	for _, news in ipairs(AnnouncementsData.cache.clientzin or {}) do
 		if news and AnnouncementsData.normalizeId(news.id) == id then
 			return AnnouncementsData.setRead(news)
 		end
@@ -178,7 +177,7 @@ end
 function AnnouncementsData.getByCategory(category)
 	local result = {}
 
-	for _, news in ipairs(AnnouncementsData.cache.ptc or {}) do
+	for _, news in ipairs(AnnouncementsData.cache.clientzin or {}) do
 		if news and news.category == category then
 			table.insert(result, news)
 		end
@@ -188,7 +187,7 @@ function AnnouncementsData.getByCategory(category)
 end
 
 function AnnouncementsData.hasUnread(categories)
-	for _, news in ipairs(AnnouncementsData.cache.ptc or {}) do
+	for _, news in ipairs(AnnouncementsData.cache.clientzin or {}) do
 		if news and not AnnouncementsData.isRead(news) and categories[news.category] then
 			return true
 		end
@@ -198,7 +197,7 @@ function AnnouncementsData.hasUnread(categories)
 end
 
 function AnnouncementsData.categoryHasUnread(category)
-	for _, news in ipairs(AnnouncementsData.cache.ptc or {}) do
+	for _, news in ipairs(AnnouncementsData.cache.clientzin or {}) do
 		if news and news.category == category and not AnnouncementsData.isRead(news) then
 			return true
 		end
@@ -208,13 +207,18 @@ function AnnouncementsData.categoryHasUnread(category)
 end
 
 local function getUrl()
-	local url = "http://127.0.0.1/game_announcements.php"
+	local url = "http://127.0.0.1/game_announcements_clientzin.php"
+	local gamenews
 
-	if Services and Services.gamenews and Services.gamenews ~= "" then
-		url = Services.gamenews
+	if Services then
+		gamenews = Services.gamenews
 	end
 
-	return url:gsub("%.json$", ".php")
+	if type(gamenews) == "string" and gamenews ~= "" and gamenews ~= "0" then
+		url = gamenews
+	end
+
+	return (url:gsub("%.json$", ".php"))
 end
 
 local function parseResponse(rawData, httpErr)
@@ -236,8 +240,7 @@ local function parseResponse(rawData, httpErr)
 		body = body:gsub("^[%x]+\r\n", "", 1)
 	end
 
-	body = body:gsub("\r\n[%x]+\r\n", "\r\n"):gsub("\r\n0\r\n\r\n.*$", ""):gsub("\r\n0\r\n$", "")
-
+	local body = body:gsub("\r\n[%x]+\r\n", ""):gsub("\r\n0\r\n\r\n.*$", ""):gsub("\r\n0\r\n$", "")
 	local start = body:find("{", 1, true)
 
 	if not start then
@@ -259,7 +262,7 @@ local function parseResponse(rawData, httpErr)
 		end
 	end
 
-	if not ok or type(data) ~= "table" or type(data.ptc) ~= "table" then
+	if not ok or type(data) ~= "table" or type(data.clientzin) ~= "table" then
 		return nil, "invalid JSON"
 	end
 
@@ -271,9 +274,7 @@ function AnnouncementsData.sync(callback)
 		local remote, fetchErr = parseResponse(data, err)
 
 		if fetchErr then
-			if #(AnnouncementsData.cache.ptc or {}) == 0 then
-				g_logger.warning("[game_announcements] fetch failed: " .. fetchErr)
-			end
+			g_logger.warning("[game_announcements] fetch failed: " .. fetchErr)
 		else
 			mergeRemote(remote)
 		end

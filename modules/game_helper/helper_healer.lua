@@ -1,33 +1,48 @@
-﻿-- chunkname: @/game_helper/helper_healer.lua
-
+-- Root locals stored in a lexical table to fit the LuaJIT 200-local limit.
+local ptc_root_locals = {}
 HelperHealer = HelperHealer or {}
 
-local ctx
-local healingEntries = {}
-local healingEntriesPanel, healingSpellEntriesPanel, healingPotionEntriesPanel
-local nextHealingEntryId = 1
-local addHealingWindow, addHealingSlot, editingHealingEntryId, healingPercentSaveEvent, syncAddHealingConfirmButtons, openHealingRowContextMenu, openHealingEntryActionAssign, openHealingFormWindow, refreshHealingListUI, restoreSlotData, helperAssignWindow, helperAssignPanel, helperAssignMode, helperAssignTargetSlot
-local ACTION_SLOT_SPELL_ITEM_ID = 469
-local SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
-local SLOT_CLIP_NORMAL = "0 0 34 34"
+ ptc_root_locals.ctx = nil
+ ptc_root_locals.healingEntries = {}
+ ptc_root_locals.healingEntriesPanel = nil
+ ptc_root_locals.healingSpellEntriesPanel = nil
+ ptc_root_locals.healingPotionEntriesPanel = nil
+ ptc_root_locals[5] = 1
+ ptc_root_locals[6] = nil
+ ptc_root_locals.addHealingSlot = nil
+ ptc_root_locals[8] = nil
+ ptc_root_locals[9] = nil
+ ptc_root_locals.syncAddHealingConfirmButtons = nil
+ ptc_root_locals[11] = nil
+ ptc_root_locals[12] = nil
+ ptc_root_locals[13] = nil
+ ptc_root_locals[14] = nil
+ ptc_root_locals[15] = nil
+ ptc_root_locals.helperAssignWindow = nil
+ ptc_root_locals.helperAssignPanel = nil
+ ptc_root_locals.helperAssignMode = nil
+ ptc_root_locals.helperAssignTargetSlot = nil
+ ptc_root_locals.ACTION_SLOT_SPELL_ITEM_ID = 469
+ ptc_root_locals.SLOT_IMG_EMPTY = "/images/game/actionbar/slot-actionbar-empty"
+ ptc_root_locals.SLOT_CLIP_NORMAL = "0 0 34 34"
 
-local function ensureHealingEntries()
-	if type(healingEntries) ~= "table" then
-		healingEntries = {}
+  ptc_root_locals[23] = function()
+	if type(ptc_root_locals.healingEntries) ~= "table" then
+		ptc_root_locals.healingEntries = {}
 	end
 end
 
-local function saveConfigIfReady()
-	if ctx and ctx.isLoadingConfig and ctx.isLoadingConfig() then
+  ptc_root_locals.saveConfigIfReady = function()
+	if ptc_root_locals.ctx and ptc_root_locals.ctx.isLoadingConfig and ptc_root_locals.ctx.isLoadingConfig() then
 		return
 	end
 
-	if ctx and ctx.saveConfig then
-		ctx.saveConfig()
+	if ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+		ptc_root_locals.ctx.saveConfig()
 	end
 end
 
-local function getSpellProfile()
+  ptc_root_locals[25] = function()
 	if SpelllistSettings and SpelllistSettings.Default then
 		return "Default"
 	end
@@ -41,7 +56,7 @@ local function getSpellProfile()
 	return "Default"
 end
 
-local function normalizeEntryWords(words)
+  ptc_root_locals.normalizeEntryWords = function(words)
 	if words == nil then
 		return nil
 	end
@@ -67,10 +82,10 @@ local function normalizeEntryWords(words)
 	return nil
 end
 
-local THRESHOLD_MIN = 1
-local THRESHOLD_MAX = 100
-local THRESHOLD_DEFAULT = 80
-local IGNORED_HEALING_SPELL_IDS = {
+ ptc_root_locals[27] = 1
+ ptc_root_locals[28] = 100
+ ptc_root_locals[29] = 80
+ ptc_root_locals.IGNORED_HEALING_SPELL_IDS = {
 	[144] = true,
 	[128] = true,
 	[145] = true,
@@ -80,127 +95,131 @@ local IGNORED_HEALING_SPELL_IDS = {
 	[84] = true,
 	[297] = true
 }
-local POTION_WHITELIST = {
+ ptc_root_locals.POTION_WHITELIST = {
 	{
+		name = "Mana Potion",
 		id = 268,
 		type = "mana",
-		requiredLevel = 1,
-		name = "Mana Potion"
+		requiredLevel = 1
 	},
 	{
+		name = "Strong Mana Potion",
 		id = 237,
 		type = "mana",
-		requiredLevel = 50,
-		name = "Strong Mana Potion"
+		requiredLevel = 50
 	},
 	{
+		name = "Great Mana Potion",
 		id = 238,
 		type = "mana",
-		requiredLevel = 80,
-		name = "Great Mana Potion"
+		requiredLevel = 80
 	},
 	{
+		name = "Ultimate Mana Potion",
 		id = 23373,
 		type = "mana",
-		requiredLevel = 130,
-		name = "Ultimate Mana Potion"
+		requiredLevel = 130
 	},
 	{
+		name = "Health Potion",
 		id = 266,
 		type = "health",
-		requiredLevel = 1,
-		name = "Health Potion"
+		requiredLevel = 1
 	},
 	{
+		name = "Strong Health Potion",
 		id = 236,
 		type = "health",
-		requiredLevel = 50,
-		name = "Strong Health Potion"
+		requiredLevel = 50
 	},
 	{
+		name = "Great Health Potion",
 		id = 239,
 		type = "health",
-		requiredLevel = 80,
-		name = "Great Health Potion"
+		requiredLevel = 80
 	},
 	{
+		name = "Ultimate Health Potion",
 		id = 7643,
 		type = "health",
-		requiredLevel = 130,
-		name = "Ultimate Health Potion"
+		requiredLevel = 130
 	},
 	{
+		name = "Supreme Health Potion",
 		id = 23375,
 		type = "health",
-		requiredLevel = 200,
-		name = "Supreme Health Potion"
+		requiredLevel = 200
 	},
 	{
+		name = "Great Spirit Potion",
 		id = 7642,
 		type = "health",
-		requiredLevel = 80,
-		name = "Great Spirit Potion"
+		requiredLevel = 80
 	},
 	{
+		name = "Ultimate Spirit Potion",
 		id = 23374,
 		type = "health",
-		requiredLevel = 130,
-		name = "Ultimate Spirit Potion"
+		requiredLevel = 130
 	},
 	{
+		name = "Small Health Potion",
 		id = 7876,
 		type = "health",
-		requiredLevel = 1,
-		name = "Small Health Potion"
+		requiredLevel = 1
 	},
 	{
+		name = "superior mana potion",
 		id = 53162,
 		type = "mana",
-		requiredLevel = 100,
-		name = "superior mana potion"
+		requiredLevel = 100
 	},
 	{
+		name = "distilled superior mana potion",
 		id = 53163,
 		type = "mana",
-		requiredLevel = 130,
-		name = "distilled superior mana potion"
+		requiredLevel = 130
 	},
 	{
+		name = "distilled ultimate mana potion",
 		id = 53164,
 		type = "mana",
-		requiredLevel = 200,
-		name = "distilled ultimate mana potion"
+		requiredLevel = 200
 	}
 }
-local BLOCKED_POTION_IDS = {
+ ptc_root_locals.BLOCKED_POTION_IDS = {
 	[35563] = true
 }
 
-local function isBlockedHealingPotionId(itemId)
-	return itemId and BLOCKED_POTION_IDS[tonumber(itemId) or itemId] == true
+  ptc_root_locals.isBlockedHealingPotionId = function(itemId)
+	return itemId and ptc_root_locals.BLOCKED_POTION_IDS[tonumber(itemId) or itemId] == true
 end
 
-local function isHealingFoodEntry(data)
+  ptc_root_locals.isHealingFoodEntry = function(data)
 	return data and data.useType == "use"
 end
 
-local helperCooldowns = {
+ ptc_root_locals[35] = {
 	spells = {},
 	groups = {}
 }
-local multiUseExDelay = 0
-local gameEventsConnected = false
-local POTION_TIMER_KEY = "potion"
-local POTION_EXHAUST_MS = 1000
-local GLOBAL_HEALING_CAST_COOLDOWN_MS = 250
-local DEFAULT_SPELL_EXHAUSTION_MS = 1000
-local ZEBRA_COLOR_A = "#484848"
-local ZEBRA_COLOR_B = "#414141"
-local ZEBRA_FOCUS_COLOR = "#585858"
-local ZEBRA_TEXT_COLOR = "#c0c0c0"
-local ZEBRA_FOCUS_TEXT_COLOR = "#f4f4f4"
+ ptc_root_locals.multiUseExDelay = {
+	lastHealthPotionWasPlain = false,
+	potionUntil = 0,
+	spells = {},
+	groups = {}
+}
+ ptc_root_locals[37] = 0
+ ptc_root_locals[38] = false
+ ptc_root_locals[39] = 1000
+ ptc_root_locals[40] = 1000
+ ptc_root_locals.ZEBRA_COLOR_A = "#484848"
+ ptc_root_locals.ZEBRA_COLOR_B = "#414141"
+ ptc_root_locals.ZEBRA_FOCUS_COLOR = "#585858"
+ ptc_root_locals.ZEBRA_TEXT_COLOR = "#c0c0c0"
+ ptc_root_locals.ZEBRA_FOCUS_TEXT_COLOR = "#f4f4f4"
 
-local function applyZebraToPanel(panel)
+  ptc_root_locals[46] = function(panel)
 	if not panel then
 		return
 	end
@@ -211,7 +230,7 @@ local function applyZebraToPanel(panel)
 		if child:isVisible() then
 			idx = idx + 1
 
-			local color = idx % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
+			local color = idx % 2 == 1 and ptc_root_locals.ZEBRA_COLOR_A or ptc_root_locals.ZEBRA_COLOR_B
 
 			child.zebraColor = color
 
@@ -220,7 +239,7 @@ local function applyZebraToPanel(panel)
 	end
 end
 
-local function setHealingRowTextColors(row, color)
+  ptc_root_locals.setHealingRowTextColors = function(row, color)
 	for _, childId in ipairs({
 		"healingRowValue",
 		"healingRowCondition",
@@ -235,29 +254,29 @@ local function setHealingRowTextColors(row, color)
 	end
 end
 
-local function resolveHealingEntryPanels()
-	if ctx then
-		if (not healingEntriesPanel or healingEntriesPanel:isDestroyed()) and ctx.getWidget then
-			healingEntriesPanel = ctx.getWidget("healingEntriesPanel")
+  ptc_root_locals.resolveHealingEntryPanels = function()
+	if ptc_root_locals.ctx then
+		if (not ptc_root_locals.healingEntriesPanel or ptc_root_locals.healingEntriesPanel:isDestroyed()) and ptc_root_locals.ctx.getWidget then
+			ptc_root_locals.healingEntriesPanel = ptc_root_locals.ctx.getWidget("healingEntriesPanel")
 		end
 
-		if (not healingSpellEntriesPanel or healingSpellEntriesPanel:isDestroyed()) and ctx.getWidget then
-			healingSpellEntriesPanel = ctx.getWidget("healingSpellEntriesPanel")
+		if (not ptc_root_locals.healingSpellEntriesPanel or ptc_root_locals.healingSpellEntriesPanel:isDestroyed()) and ptc_root_locals.ctx.getWidget then
+			ptc_root_locals.healingSpellEntriesPanel = ptc_root_locals.ctx.getWidget("healingSpellEntriesPanel")
 		end
 
-		if (not healingPotionEntriesPanel or healingPotionEntriesPanel:isDestroyed()) and ctx.getWidget then
-			healingPotionEntriesPanel = ctx.getWidget("healingPotionEntriesPanel")
+		if (not ptc_root_locals.healingPotionEntriesPanel or ptc_root_locals.healingPotionEntriesPanel:isDestroyed()) and ptc_root_locals.ctx.getWidget then
+			ptc_root_locals.healingPotionEntriesPanel = ptc_root_locals.ctx.getWidget("healingPotionEntriesPanel")
 		end
 	end
 end
 
-local function forEachHealingEntryPanel(callback)
-	resolveHealingEntryPanels()
+  ptc_root_locals.forEachHealingEntryPanel = function(callback)
+	ptc_root_locals.resolveHealingEntryPanels()
 
 	local panels = {
-		healingSpellEntriesPanel,
-		healingPotionEntriesPanel,
-		healingEntriesPanel
+		ptc_root_locals.healingSpellEntriesPanel,
+		ptc_root_locals.healingPotionEntriesPanel,
+		ptc_root_locals.healingEntriesPanel
 	}
 
 	for i = 1, 3 do
@@ -269,10 +288,10 @@ local function forEachHealingEntryPanel(callback)
 	end
 end
 
-local function getSelectedHealingEntryId()
+  ptc_root_locals[50] = function()
 	local entryId
 
-	forEachHealingEntryPanel(function(panel)
+	ptc_root_locals.forEachHealingEntryPanel(function(panel)
 		if entryId then
 			return
 		end
@@ -287,10 +306,10 @@ local function getSelectedHealingEntryId()
 	return entryId
 end
 
-local function findHealingRowByEntryId(entryId)
+  ptc_root_locals[51] = function(entryId)
 	local targetRow
 
-	forEachHealingEntryPanel(function(panel)
+	ptc_root_locals.forEachHealingEntryPanel(function(panel)
 		if targetRow then
 			return
 		end
@@ -307,7 +326,7 @@ local function findHealingRowByEntryId(entryId)
 	return targetRow
 end
 
-local function focusHealingPanelRow(row)
+  ptc_root_locals[52] = function(row)
 	if not row or row:isDestroyed() then
 		return
 	end
@@ -318,22 +337,22 @@ local function focusHealingPanelRow(row)
 		parent:focusChild(row, KeyboardFocusReason)
 	end
 
-	row:setBackgroundColor(ZEBRA_FOCUS_COLOR)
-	setHealingRowTextColors(row, ZEBRA_FOCUS_TEXT_COLOR)
+	row:setBackgroundColor(ptc_root_locals.ZEBRA_FOCUS_COLOR)
+	ptc_root_locals.setHealingRowTextColors(row, ptc_root_locals.ZEBRA_FOCUS_TEXT_COLOR)
 end
 
-local function resetHealingRowFocusColors()
-	forEachHealingEntryPanel(function(panel)
+  ptc_root_locals.resetHealingRowFocusColors = function()
+	ptc_root_locals.forEachHealingEntryPanel(function(panel)
 		for _, row in ipairs(panel:getChildren()) do
 			if row.zebraColor then
 				row:setBackgroundColor(row.zebraColor)
-				setHealingRowTextColors(row, ZEBRA_TEXT_COLOR)
+				ptc_root_locals.setHealingRowTextColors(row, ptc_root_locals.ZEBRA_TEXT_COLOR)
 			end
 		end
 	end)
 end
 
-local function findParentHealingRow(widget)
+  ptc_root_locals[54] = function(widget)
 	while widget do
 		if widget.healingEntryId then
 			return widget
@@ -345,51 +364,49 @@ local function findParentHealingRow(widget)
 	return nil
 end
 
-local function syncHealingActionButtons()
-	if not ctx then
+  ptc_root_locals.syncHealingActionButtons = function()
+	if not ptc_root_locals.ctx then
 		return
 	end
 
-	local addBtn = ctx.getWidget("addHealingButton")
-	local editBtn = ctx.getWidget("editHealingButton")
-	local removeBtn = ctx.getWidget("removeHealingButton")
+	local widget = ptc_root_locals.ctx.getWidget("addHealingButton")
+	local var_19_1 = ptc_root_locals.ctx.getWidget("editHealingButton")
+	local var_19_2 = ptc_root_locals.ctx.getWidget("removeHealingButton")
 
-	if not addBtn or not editBtn or not removeBtn then
+	if not widget or not var_19_1 or not var_19_2 then
 		return
 	end
 
-	local hasSelection = getSelectedHealingEntryId() ~= nil
-
-	if hasSelection then
-		removeBtn:show()
-		editBtn:show()
-		addBtn:breakAnchors()
-		addBtn:addAnchor(AnchorTop, "parent", AnchorTop)
-		addBtn:addAnchor(AnchorRight, "editHealingButton", AnchorLeft)
-		addBtn:setMarginRight(6)
+	if ptc_root_locals[50]() ~= nil then
+		var_19_2:show()
+		var_19_1:show()
+		widget:breakAnchors()
+		widget:addAnchor(AnchorTop, "parent", AnchorTop)
+		widget:addAnchor(AnchorRight, "editHealingButton", AnchorLeft)
+		widget:setMarginRight(6)
 	else
-		removeBtn:hide()
-		editBtn:hide()
-		addBtn:breakAnchors()
-		addBtn:addAnchor(AnchorTop, "parent", AnchorTop)
-		addBtn:addAnchor(AnchorRight, "parent", AnchorRight)
-		addBtn:setMarginRight(0)
+		var_19_2:hide()
+		var_19_1:hide()
+		widget:breakAnchors()
+		widget:addAnchor(AnchorTop, "parent", AnchorTop)
+		widget:addAnchor(AnchorRight, "parent", AnchorRight)
+		widget:setMarginRight(0)
 	end
 end
 
-local function connectZebraFocus(widget)
+  ptc_root_locals[56] = function(widget)
 	connect(widget, {
 		onFocusChange = function(self, focused)
 			if focused then
-				self:setBackgroundColor(ZEBRA_FOCUS_COLOR)
-				setHealingRowTextColors(self, ZEBRA_FOCUS_TEXT_COLOR)
-				syncHealingActionButtons()
+				self:setBackgroundColor(ptc_root_locals.ZEBRA_FOCUS_COLOR)
+				ptc_root_locals.setHealingRowTextColors(self, ptc_root_locals.ZEBRA_FOCUS_TEXT_COLOR)
+				ptc_root_locals.syncHealingActionButtons()
 			else
 				addEvent(function()
 					if not self:isDestroyed() then
-						self:setBackgroundColor(self.zebraColor or ZEBRA_COLOR_A)
-						setHealingRowTextColors(self, ZEBRA_TEXT_COLOR)
-						syncHealingActionButtons()
+						self:setBackgroundColor(self.zebraColor or ptc_root_locals.ZEBRA_COLOR_A)
+						ptc_root_locals.setHealingRowTextColors(self, ptc_root_locals.ZEBRA_TEXT_COLOR)
+						ptc_root_locals.syncHealingActionButtons()
 					end
 				end)
 			end
@@ -397,29 +414,29 @@ local function connectZebraFocus(widget)
 	})
 end
 
-local function clearHealingListSelection()
-	forEachHealingEntryPanel(function(panel)
+  ptc_root_locals[57] = function()
+	ptc_root_locals.forEachHealingEntryPanel(function(panel)
 		panel:focusChild(nil)
 	end)
-	resetHealingRowFocusColors()
-	syncHealingActionButtons()
+	ptc_root_locals.resetHealingRowFocusColors()
+	ptc_root_locals.syncHealingActionButtons()
 end
 
-local SPIRIT_POTION_IDS = {
+ ptc_root_locals.SPIRIT_POTION_IDS = {
 	[23374] = true,
 	[7642] = true
 }
-local POTION_TYPE_BY_ID = {}
+ ptc_root_locals.POTION_TYPE_BY_ID = {}
 
-for _, potion in ipairs(POTION_WHITELIST) do
-	POTION_TYPE_BY_ID[potion.id] = potion.type
+for _, potion in ipairs(ptc_root_locals.POTION_WHITELIST) do
+	ptc_root_locals.POTION_TYPE_BY_ID[potion.id] = potion.type
 end
 
-local function actionbar()
+  ptc_root_locals.actionbar = function()
 	return modules.game_actionbar
 end
 
-local function normalizePotionLevel(requiredLevel)
+  ptc_root_locals.normalizePotionLevel = function(requiredLevel)
 	local level = tonumber(requiredLevel) or 1
 
 	if level < 1 then
@@ -429,21 +446,21 @@ local function normalizePotionLevel(requiredLevel)
 	return level
 end
 
-local function potionMeetsLevel(requiredLevel)
+  ptc_root_locals.potionMeetsLevel = function(requiredLevel)
 	local player = g_game.getLocalPlayer()
 
 	if not player then
 		return true
 	end
 
-	return player:getLevel() >= normalizePotionLevel(requiredLevel)
+	return player:getLevel() >= ptc_root_locals.normalizePotionLevel(requiredLevel)
 end
 
-local function getPotionRequiredLevel(itemId)
-	for _, potion in ipairs(POTION_WHITELIST) do
+  ptc_root_locals[63] = function(itemId)
+	for _, potion in ipairs(ptc_root_locals.POTION_WHITELIST) do
 		if potion.id == itemId then
 			if potion.requiredLevel then
-				return normalizePotionLevel(potion.requiredLevel)
+				return ptc_root_locals.normalizePotionLevel(potion.requiredLevel)
 			end
 
 			break
@@ -459,7 +476,7 @@ local function getPotionRequiredLevel(itemId)
 			local market = thing.getMarketData and thing:getMarketData() or nil
 
 			if market and market.requiredLevel and market.requiredLevel > 0 then
-				return normalizePotionLevel(market.requiredLevel)
+				return ptc_root_locals.normalizePotionLevel(market.requiredLevel)
 			end
 		end
 	end
@@ -467,13 +484,13 @@ local function getPotionRequiredLevel(itemId)
 	return 1
 end
 
-local function potionItemMeetsLevel(itemId)
-	return potionMeetsLevel(getPotionRequiredLevel(itemId))
+  ptc_root_locals.potionItemMeetsLevel = function(arg_30_0)
+	return ptc_root_locals.potionMeetsLevel(ptc_root_locals[63](arg_30_0))
 end
 
-local shouldShowPotionLevelGray
+ ptc_root_locals.shouldShowPotionLevelGray = nil
 
-local function playerCanUseHealingSpellVocations(vocations, player)
+  ptc_root_locals.playerCanUseHealingSpellVocations = function(vocations, player)
 	if not vocations or not next(vocations) then
 		return true
 	end
@@ -486,7 +503,7 @@ local function playerCanUseHealingSpellVocations(vocations, player)
 	local translatedVoc = type(translateVocation) == "function" and translateVocation(rawVoc) or rawVoc
 
 	for _, voc in ipairs(vocations) do
-		if voc == rawVoc or voc == translatedVoc then
+		if voc == translatedVoc then
 			return true
 		end
 	end
@@ -494,8 +511,8 @@ local function playerCanUseHealingSpellVocations(vocations, player)
 	return false
 end
 
-local function shouldShowHealingSpellGray(words)
-	words = normalizeEntryWords(words)
+  ptc_root_locals.shouldShowHealingSpellGray = function(words)
+	words = ptc_root_locals.normalizeEntryWords(words)
 
 	if not words then
 		return false
@@ -513,35 +530,35 @@ local function shouldShowHealingSpellGray(words)
 
 	local player = g_game.getLocalPlayer()
 
-	if player and spell.vocations and not playerCanUseHealingSpellVocations(spell.vocations, player) then
+	if player and spell.vocations and not ptc_root_locals.playerCanUseHealingSpellVocations(spell.vocations, player) then
 		return true
 	end
 
-	if spell.level and player and not potionMeetsLevel(spell.level) then
+	if spell.level and player and not ptc_root_locals.potionMeetsLevel(spell.level) then
 		return true
 	end
 
 	return false
 end
 
-local function shouldShowHealingRowGray(entry)
+  ptc_root_locals[68] = function(entry)
 	if not entry then
 		return false
 	end
 
 	local ok, result = pcall(function()
-		local words = normalizeEntryWords(entry.words)
+		local words = ptc_root_locals.normalizeEntryWords(entry.words)
 
 		if words then
-			return shouldShowHealingSpellGray(words)
+			return ptc_root_locals.shouldShowHealingSpellGray(words)
 		end
 
 		if entry.itemId and entry.itemId > 0 then
-			if SPIRIT_POTION_IDS[tonumber(entry.itemId) or entry.itemId] == true then
+			if ptc_root_locals.SPIRIT_POTION_IDS[tonumber(entry.itemId) or entry.itemId] == true then
 				return false
 			end
 
-			return shouldShowPotionLevelGray(entry.itemId)
+			return ptc_root_locals.shouldShowPotionLevelGray(entry.itemId)
 		end
 
 		return false
@@ -558,7 +575,7 @@ local function shouldShowHealingRowGray(entry)
 	return result
 end
 
-local function slotHasHelperPotion(slot)
+  ptc_root_locals[69] = function(slot)
 	if not slot then
 		return false
 	end
@@ -569,15 +586,15 @@ local function slotHasHelperPotion(slot)
 
 	local itemId = tonumber(slot.itemId)
 
-	return itemId and itemId > 0 and itemId ~= ACTION_SLOT_SPELL_ITEM_ID
+	return itemId and itemId > 0 and itemId ~= ptc_root_locals.ACTION_SLOT_SPELL_ITEM_ID
 end
 
-local function isHealingActionSlot(slot)
-	return slot and (slot._helperHealingSlot == true or addHealingSlot and slot == addHealingSlot)
+  ptc_root_locals.isHealingActionSlot = function(slot)
+	return slot and (slot._helperHealingSlot == true or ptc_root_locals.addHealingSlot and slot == ptc_root_locals.addHealingSlot)
 end
 
-local function stackHealingActionSlotLayers(slot)
-	if not isHealingActionSlot(slot) then
+  ptc_root_locals.stackHealingActionSlotLayers = function(slot)
+	if not ptc_root_locals.isHealingActionSlot(slot) then
 		return
 	end
 
@@ -609,17 +626,16 @@ local function stackHealingActionSlotLayers(slot)
 	end
 end
 
-local function syncHealingActionSlotLayers(slot)
-	if not isHealingActionSlot(slot) then
+  ptc_root_locals.syncHealingActionSlotLayers = function(slot)
+	if not ptc_root_locals.isHealingActionSlot(slot) then
 		return
 	end
 
 	local bg = slot:getChildById("healingActionItemBackground")
 	local itemIcon = slot:getChildById("healingActionItemIcon")
 	local hasSpell = slot.words and slot.words ~= ""
-	local hasItem = slotHasHelperPotion(slot)
 
-	if hasItem then
+	if ptc_root_locals[69](slot) then
 		local displayItemId = tonumber(slot._helperDisplayItemId or slot.itemId) or 0
 
 		if slot.setItemVisible then
@@ -659,11 +675,11 @@ local function syncHealingActionSlotLayers(slot)
 		end
 	end
 
-	stackHealingActionSlotLayers(slot)
+	ptc_root_locals.stackHealingActionSlotLayers(slot)
 end
 
-local function updateHealingActionSlotGray(slot)
-	if not isHealingActionSlot(slot) then
+  ptc_root_locals.updateHealingActionSlotGray = function(slot)
+	if not ptc_root_locals.isHealingActionSlot(slot) then
 		return
 	end
 
@@ -674,7 +690,7 @@ local function updateHealingActionSlotGray(slot)
 	end
 
 	if slot.words and slot.words ~= "" then
-		local ab = actionbar()
+		local ab = ptc_root_locals.actionbar()
 
 		if ab and ab.updateSlotGray then
 			ab.updateSlotGray(slot)
@@ -683,28 +699,27 @@ local function updateHealingActionSlotGray(slot)
 		return
 	end
 
-	local displayItemId = tonumber(slot._helperDisplayItemId or slot.itemId) or 0
+	local numericValue = tonumber(slot._helperDisplayItemId or slot.itemId) or 0
 
-	if SPIRIT_POTION_IDS[displayItemId] == true then
+	if ptc_root_locals.SPIRIT_POTION_IDS[numericValue] == true then
 		gray:setVisible(false)
 
 		return
 	end
 
-	gray:setVisible(shouldShowPotionLevelGray(displayItemId))
+	gray:setVisible(ptc_root_locals.shouldShowPotionLevelGray(numericValue))
 end
 
-local function refreshSlotVisual(slot)
-	local ab = actionbar()
+  ptc_root_locals.refreshSlotVisual = function(slot)
+	local ab = ptc_root_locals.actionbar()
 
 	if not slot or not ab then
 		return
 	end
 
 	local hasSpell = slot.words and slot.words ~= ""
-	local hasItem = slotHasHelperPotion(slot)
 
-	if hasItem or hasSpell then
+	if ptc_root_locals[69](slot) or hasSpell then
 		if ab.applyActionSlotFrame then
 			ab.applyActionSlotFrame(slot)
 		end
@@ -713,21 +728,21 @@ local function refreshSlotVisual(slot)
 			ab.refreshActionSlotFrameClip(slot)
 		end
 	elseif slot._helperAssignPreview then
-		slot:setImageSource(SLOT_IMG_EMPTY)
+		slot:setImageSource(ptc_root_locals.SLOT_IMG_EMPTY)
 		slot:setImageSize(tosize("34 34"))
-		slot:setImageClip(SLOT_CLIP_NORMAL)
+		slot:setImageClip(ptc_root_locals.SLOT_CLIP_NORMAL)
 
 		slot._actionBarFilledFrame = false
 	elseif ab.applyActionSlotFrame then
 		ab.applyActionSlotFrame(slot)
 	end
 
-	syncHealingActionSlotLayers(slot)
+	ptc_root_locals.syncHealingActionSlotLayers(slot)
 
-	if isHealingActionSlot(slot) then
-		updateHealingActionSlotGray(slot)
+	if ptc_root_locals.isHealingActionSlot(slot) then
+		ptc_root_locals.updateHealingActionSlotGray(slot)
 	else
-		local abGray = actionbar()
+		local abGray = ptc_root_locals.actionbar()
 
 		if abGray and abGray.updateSlotGray then
 			abGray.updateSlotGray(slot)
@@ -742,23 +757,23 @@ local function refreshSlotVisual(slot)
 		ab.refreshActionSlotTooltip(slot)
 	end
 
-	stackHealingActionSlotLayers(slot)
+	ptc_root_locals.stackHealingActionSlotLayers(slot)
 end
 
-local function clearSlotData(slot)
-	local ab = actionbar()
+  ptc_root_locals.clearSlotData = function(slot)
+	local ab = ptc_root_locals.actionbar()
 
 	if ab and ab.clearSlotActionContent then
 		ab.clearSlotActionContent(slot)
 
 		slot._helperDisplayItemId = nil
 
-		if slot == addHealingSlot then
-			refreshSlotVisual(slot)
+		if slot == ptc_root_locals.addHealingSlot then
+			ptc_root_locals.refreshSlotVisual(slot)
 		end
 
-		if slot == addHealingSlot then
-			syncAddHealingConfirmButtons()
+		if slot == ptc_root_locals.addHealingSlot then
+			ptc_root_locals.syncAddHealingConfirmButtons()
 		end
 
 		return
@@ -783,19 +798,19 @@ local function clearSlotData(slot)
 	slot.useType = nil
 	slot.parameter = nil
 
-	refreshSlotVisual(slot)
+	ptc_root_locals.refreshSlotVisual(slot)
 
-	if slot == addHealingSlot then
-		syncAddHealingConfirmButtons()
+	if slot == ptc_root_locals.addHealingSlot then
+		ptc_root_locals.syncAddHealingConfirmButtons()
 	end
 end
 
-local function assignItemToSlot(slot, option, skipSave)
-	if not option or isHealingFoodEntry(option) or isBlockedHealingPotionId(option.itemId) then
+  ptc_root_locals.assignItemToSlot = function(slot, option, arg_42_2)
+	if not option or ptc_root_locals.isHealingFoodEntry(option) or ptc_root_locals.isBlockedHealingPotionId(option.itemId) then
 		return
 	end
 
-	clearSlotData(slot)
+	ptc_root_locals.clearSlotData(slot)
 
 	slot.itemId = option.itemId
 	slot._helperDisplayItemId = option.itemId
@@ -811,24 +826,24 @@ local function assignItemToSlot(slot, option, skipSave)
 		end
 	end
 
-	local ab = actionbar()
+	local ab = ptc_root_locals.actionbar()
 
 	if ab and ab.loadObject then
 		ab.loadObject(slot)
 	end
 
-	refreshSlotVisual(slot)
+	ptc_root_locals.refreshSlotVisual(slot)
 
-	if not skipSave and ctx and ctx.saveConfig then
-		saveConfigIfReady()
+	if not arg_42_2 and ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+		ptc_root_locals.saveConfigIfReady()
 	end
 
-	if slot == addHealingSlot then
-		syncAddHealingConfirmButtons()
+	if slot == ptc_root_locals.addHealingSlot then
+		ptc_root_locals.syncAddHealingConfirmButtons()
 	end
 end
 
-local function containsGroup(groups, targetGroup)
+  ptc_root_locals.containsGroup = function(groups, targetGroup)
 	if not groups then
 		return false
 	end
@@ -842,12 +857,12 @@ local function containsGroup(groups, targetGroup)
 	return false
 end
 
-local function isHelperHealingSpell(_, spellData)
+  ptc_root_locals[78] = function(_, spellData)
 	if not spellData then
 		return false
 	end
 
-	if IGNORED_HEALING_SPELL_IDS[spellData.id] then
+	if ptc_root_locals.IGNORED_HEALING_SPELL_IDS[spellData.id] then
 		return false
 	end
 
@@ -855,11 +870,11 @@ local function isHelperHealingSpell(_, spellData)
 		return false
 	end
 
-	return containsGroup(Spells.getGroupIds(spellData), 2)
+	return ptc_root_locals.containsGroup(Spells.getGroupIds(spellData), 2)
 end
 
-local function openHelperSpellAssign(slot, filterFn, onAssigned)
-	local ab = actionbar()
+  ptc_root_locals[79] = function(slot, filterFn, onAssigned)
+	local ab = ptc_root_locals.actionbar()
 
 	if not ab or not ab.openHelperSpellAssignWindow then
 		return
@@ -874,15 +889,14 @@ local function openHelperSpellAssign(slot, filterFn, onAssigned)
 	ab.openHelperSpellAssignWindow(slot, slotId, filterFn, function(assignedSlot)
 		if onAssigned then
 			onAssigned(assignedSlot or slot)
-		elseif ctx and ctx.saveConfig then
-			saveConfigIfReady()
+		elseif ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+			ptc_root_locals.saveConfigIfReady()
 		end
 	end)
 end
 
-local function thingDisplayName(thing, id)
-	local raw = thing:getName() or ""
-	local trim = raw:gsub("^%s+", ""):gsub("%s+$", "")
+  ptc_root_locals[80] = function(arg_47_0, id)
+	local trim = (arg_47_0:getName() or ""):gsub("^%s+", ""):gsub("%s+$", "")
 
 	if trim ~= "" then
 		return trim
@@ -891,7 +905,7 @@ local function thingDisplayName(thing, id)
 	return "#" .. tostring(id)
 end
 
-local function capitalizeWords(text)
+  ptc_root_locals[81] = function(text)
 	if not text or text == "" then
 		return ""
 	end
@@ -901,7 +915,7 @@ local function capitalizeWords(text)
 	end))
 end
 
-local function potionMeetsVocation(thing)
+  ptc_root_locals.potionMeetsVocation = function(thing)
 	if not thing then
 		return true
 	end
@@ -925,21 +939,37 @@ local function potionMeetsVocation(thing)
 	return Bit.hasBit(market.restrictVocation, vocBitMask)
 end
 
-local function formatPotionLevelText(requiredLevel)
-	return tr("Level:") .. " " .. tostring(normalizePotionLevel(requiredLevel))
+function HelperHealer.potionAllowedForVocation(arg_51_0)
+	local thingType = arg_51_0 and g_things and g_things.getThingType and g_things.getThingType(arg_51_0, ThingCategoryItem) or nil
+
+	if not thingType then
+		return nil
+	end
+
+	local marketData = thingType.getMarketData and thingType:getMarketData() or nil
+
+	if not marketData or marketData.restrictVocation == nil then
+		return nil
+	end
+
+	return ptc_root_locals.potionMeetsVocation(thingType)
 end
 
-local function buildPotionAssignList()
+  ptc_root_locals.formatPotionLevelText = function(requiredLevel)
+	return tr("Level:") .. " " .. tostring(ptc_root_locals.normalizePotionLevel(requiredLevel))
+end
+
+  ptc_root_locals.buildPotionAssignList = function()
 	local potions = {}
 
-	for _, potion in ipairs(POTION_WHITELIST) do
+	for _, potion in ipairs(ptc_root_locals.POTION_WHITELIST) do
 		local thing = g_things.getThingType(potion.id, ThingCategoryItem)
 
-		if thing and potionMeetsVocation(thing) then
+		if thing and ptc_root_locals.potionMeetsVocation(thing) then
 			table.insert(potions, {
 				id = potion.id,
 				name = potion.name,
-				requiredLevel = getPotionRequiredLevel(potion.id)
+				requiredLevel = ptc_root_locals[63](potion.id)
 			})
 		end
 	end
@@ -951,53 +981,53 @@ local function buildPotionAssignList()
 	return potions
 end
 
-local function potionItemIsAvailable(itemId)
+  ptc_root_locals.potionItemIsAvailable = function(itemId)
 	if not itemId then
 		return true
 	end
 
-	if isBlockedHealingPotionId(itemId) then
+	if ptc_root_locals.isBlockedHealingPotionId(itemId) then
 		return false
 	end
 
 	local thing = g_things.getThingType(itemId, ThingCategoryItem)
 
-	return potionItemMeetsLevel(itemId) and potionMeetsVocation(thing)
+	return ptc_root_locals.potionItemMeetsLevel(itemId) and ptc_root_locals.potionMeetsVocation(thing)
 end
 
-function shouldShowPotionLevelGray(itemId)
+ ptc_root_locals.shouldShowPotionLevelGray = function(itemId)
 	if not itemId then
 		return false
 	end
 
-	return not potionItemIsAvailable(itemId)
+	return not ptc_root_locals.potionItemIsAvailable(itemId)
 end
 
-local function closeHelperItemAssignInternal()
-	helperAssignTargetSlot = nil
-	helperAssignMode = nil
-	helperAssignPanel = nil
+  ptc_root_locals.closeHelperItemAssignInternal = function()
+	ptc_root_locals.helperAssignTargetSlot = nil
+	ptc_root_locals.helperAssignMode = nil
+	ptc_root_locals.helperAssignPanel = nil
 
-	if helperAssignWindow and not helperAssignWindow:isDestroyed() then
-		helperAssignWindow:destroy()
+	if ptc_root_locals.helperAssignWindow and not ptc_root_locals.helperAssignWindow:isDestroyed() then
+		ptc_root_locals.helperAssignWindow:destroy()
 	end
 
-	helperAssignWindow = nil
+	ptc_root_locals.helperAssignWindow = nil
 end
 
-local function helperItemAssignUsesLearntFilter()
-	return helperAssignMode == "potion"
+  ptc_root_locals.helperItemAssignUsesLearntFilter = function()
+	return ptc_root_locals.helperAssignMode == "potion"
 end
 
-local function rowMeetsLearntFilter(row)
-	if not helperItemAssignUsesLearntFilter() then
+  ptc_root_locals.rowMeetsLearntFilter = function(arg_59_0)
+	if not ptc_root_locals.helperItemAssignUsesLearntFilter() then
 		return true
 	end
 
-	return potionItemIsAvailable(row.assignItemId)
+	return ptc_root_locals.potionItemIsAvailable(arg_59_0.assignItemId)
 end
 
-local function stackHelperAssignRowLayers(row)
+  ptc_root_locals.stackHelperAssignRowLayers = function(row)
 	if not row then
 		return
 	end
@@ -1019,7 +1049,7 @@ local function stackHelperAssignRowLayers(row)
 	end
 end
 
-local function syncHelperAssignRowGray(row)
+  ptc_root_locals.syncHelperAssignRowGray = function(row)
 	if not row then
 		return
 	end
@@ -1030,21 +1060,21 @@ local function syncHelperAssignRowGray(row)
 		return
 	end
 
-	if helperAssignMode == "potion" then
-		gray:setVisible(shouldShowPotionLevelGray(row.assignItemId))
+	if ptc_root_locals.helperAssignMode == "potion" then
+		gray:setVisible(ptc_root_locals.shouldShowPotionLevelGray(row.assignItemId))
 	else
 		gray:hide()
 	end
 
-	stackHelperAssignRowLayers(row)
+	ptc_root_locals.stackHelperAssignRowLayers(row)
 end
 
-local function updateHelperItemPreview(row)
-	if not helperAssignWindow or helperAssignWindow:isDestroyed() or not row then
+  ptc_root_locals.updateHelperItemPreview = function(row)
+	if not ptc_root_locals.helperAssignWindow or ptc_root_locals.helperAssignWindow:isDestroyed() or not row then
 		return
 	end
 
-	local preview = helperAssignWindow:recursiveGetChildById("spellPreview")
+	local preview = ptc_root_locals.helperAssignWindow:recursiveGetChildById("spellPreview")
 
 	if not preview then
 		return
@@ -1085,8 +1115,8 @@ local function updateHelperItemPreview(row)
 	end
 
 	if itemGray then
-		if helperAssignMode == "potion" then
-			itemGray:setVisible(shouldShowPotionLevelGray(row.assignItemId))
+		if ptc_root_locals.helperAssignMode == "potion" then
+			itemGray:setVisible(ptc_root_locals.shouldShowPotionLevelGray(row.assignItemId))
 		else
 			itemGray:hide()
 		end
@@ -1095,12 +1125,12 @@ local function updateHelperItemPreview(row)
 	end
 end
 
-local function clearHelperItemPreview()
-	if not helperAssignWindow or helperAssignWindow:isDestroyed() then
+  ptc_root_locals.clearHelperItemPreview = function()
+	if not ptc_root_locals.helperAssignWindow or ptc_root_locals.helperAssignWindow:isDestroyed() then
 		return
 	end
 
-	local preview = helperAssignWindow:recursiveGetChildById("spellPreview")
+	local preview = ptc_root_locals.helperAssignWindow:recursiveGetChildById("spellPreview")
 
 	if not preview then
 		return
@@ -1139,30 +1169,30 @@ local function clearHelperItemPreview()
 	end
 end
 
-local function syncHelperItemAssignOkButton()
-	if not helperAssignWindow or helperAssignWindow:isDestroyed() or not helperAssignPanel then
+  ptc_root_locals.syncHelperItemAssignOkButton = function()
+	if not ptc_root_locals.helperAssignWindow or ptc_root_locals.helperAssignWindow:isDestroyed() or not ptc_root_locals.helperAssignPanel then
 		return
 	end
 
-	local okBtn = helperAssignWindow:recursiveGetChildById("okButton")
+	local okBtn = ptc_root_locals.helperAssignWindow:recursiveGetChildById("okButton")
 
 	if not okBtn then
 		return
 	end
 
-	local focused = helperAssignPanel:getFocusedChild()
+	local focused = ptc_root_locals.helperAssignPanel:getFocusedChild()
 
 	okBtn:setEnabled(focused ~= nil and focused:isVisible() and focused.assignItemId ~= nil)
 end
 
-local function focusFirstVisibleHelperAssignRow()
-	if not helperAssignPanel then
+  ptc_root_locals.focusFirstVisibleHelperAssignRow = function()
+	if not ptc_root_locals.helperAssignPanel then
 		return
 	end
 
 	local first
 
-	for _, child in ipairs(helperAssignPanel:getChildren()) do
+	for _, child in ipairs(ptc_root_locals.helperAssignPanel:getChildren()) do
 		if child:isVisible() then
 			first = child
 
@@ -1171,18 +1201,18 @@ local function focusFirstVisibleHelperAssignRow()
 	end
 
 	if first then
-		helperAssignPanel:focusChild(first, KeyboardFocusReason)
-		updateHelperItemPreview(first)
+		ptc_root_locals.helperAssignPanel:focusChild(first, KeyboardFocusReason)
+		ptc_root_locals.updateHelperItemPreview(first)
 	else
-		helperAssignPanel:focusChild(nil)
-		clearHelperItemPreview()
+		ptc_root_locals.helperAssignPanel:focusChild(nil)
+		ptc_root_locals.clearHelperItemPreview()
 	end
 
-	syncHelperItemAssignOkButton()
+	ptc_root_locals.syncHelperItemAssignOkButton()
 end
 
-local function createHelperItemAssignRow(itemId, itemName, requiredLevel)
-	local row = g_ui.createWidget("HelperAssignListLabel", helperAssignPanel)
+  ptc_root_locals.createHelperItemAssignRow = function(itemId, itemName, requiredLevel)
+	local row = g_ui.createWidget("HelperAssignListLabel", ptc_root_locals.helperAssignPanel)
 
 	row.assignItemId = itemId
 	row.assignItemName = itemName
@@ -1217,7 +1247,7 @@ local function createHelperItemAssignRow(itemId, itemName, requiredLevel)
 		itemBg:show()
 	end
 
-	syncHelperAssignRowGray(row)
+	ptc_root_locals.syncHelperAssignRowGray(row)
 
 	if nameLabel then
 		nameLabel:setText(itemName)
@@ -1229,9 +1259,9 @@ local function createHelperItemAssignRow(itemId, itemName, requiredLevel)
 	end
 
 	if levelLabel then
-		if helperAssignMode == "potion" then
+		if ptc_root_locals.helperAssignMode == "potion" then
 			levelLabel:show()
-			levelLabel:setText(formatPotionLevelText(requiredLevel))
+			levelLabel:setText(ptc_root_locals.formatPotionLevelText(requiredLevel))
 		else
 			levelLabel:hide()
 		end
@@ -1240,76 +1270,76 @@ local function createHelperItemAssignRow(itemId, itemName, requiredLevel)
 	return row
 end
 
-local function openHelperItemAssignWindow(targetSlot)
-	if helperAssignWindow and not helperAssignWindow:isDestroyed() then
-		closeHelperItemAssignInternal()
+  ptc_root_locals.openHelperItemAssignWindow = function(arg_67_0)
+	if ptc_root_locals.helperAssignWindow and not ptc_root_locals.helperAssignWindow:isDestroyed() then
+		ptc_root_locals.closeHelperItemAssignInternal()
 	end
 
-	helperAssignWindow = g_ui.loadUI("assign_helper", g_ui.getRootWidget())
+	ptc_root_locals.helperAssignWindow = g_ui.loadUI("assign_helper", g_ui.getRootWidget())
 
-	if not helperAssignWindow then
+	if not ptc_root_locals.helperAssignWindow then
 		return
 	end
 
-	helperAssignMode = "potion"
-	helperAssignTargetSlot = targetSlot
-	helperAssignPanel = helperAssignWindow:recursiveGetChildById("spellsPanel")
+	ptc_root_locals.helperAssignMode = "potion"
+	ptc_root_locals.helperAssignTargetSlot = arg_67_0
+	ptc_root_locals.helperAssignPanel = ptc_root_locals.helperAssignWindow:recursiveGetChildById("spellsPanel")
 
-	helperAssignWindow:setText(tr("Assign Potion"))
+	ptc_root_locals.helperAssignWindow:setText(tr("Assign Potion"))
 
-	local learntPanel = helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsPanel")
+	local learntPanel = ptc_root_locals.helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsPanel")
 
 	if learntPanel then
 		learntPanel:setVisible(true)
 	end
 
-	local learntCb = helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsCheckBox")
+	local learntCb = ptc_root_locals.helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsCheckBox")
 
 	if learntCb then
 		learntCb:setChecked(false)
 		learntCb:setText(tr("Only show available potions"))
 	end
 
-	local okBtn = helperAssignWindow:recursiveGetChildById("okButton")
+	local okBtn = ptc_root_locals.helperAssignWindow:recursiveGetChildById("okButton")
 
 	if okBtn then
 		okBtn:setEnabled(false)
 	end
 
-	for _, potion in ipairs(buildPotionAssignList()) do
-		createHelperItemAssignRow(potion.id, potion.name, potion.requiredLevel)
+	for _, potion in ipairs(ptc_root_locals.buildPotionAssignList()) do
+		ptc_root_locals.createHelperItemAssignRow(potion.id, potion.name, potion.requiredLevel)
 	end
 
-	connect(helperAssignPanel, {
+	connect(ptc_root_locals.helperAssignPanel, {
 		onChildFocusChange = function(_, focusedChild)
 			if not focusedChild then
-				syncHelperItemAssignOkButton()
+				ptc_root_locals.syncHelperItemAssignOkButton()
 
 				return
 			end
 
-			updateHelperItemPreview(focusedChild)
-			syncHelperItemAssignOkButton()
+			ptc_root_locals.updateHelperItemPreview(focusedChild)
+			ptc_root_locals.syncHelperItemAssignOkButton()
 		end
 	})
 	HelperHealer.filterHelperAssignEntries("")
-	focusFirstVisibleHelperAssignRow()
-	helperAssignWindow:raise()
-	helperAssignWindow:focus()
+	ptc_root_locals.focusFirstVisibleHelperAssignRow()
+	ptc_root_locals.helperAssignWindow:raise()
+	ptc_root_locals.helperAssignWindow:focus()
 
-	local edit = helperAssignWindow:recursiveGetChildById("filterTextEdit")
+	local edit = ptc_root_locals.helperAssignWindow:recursiveGetChildById("filterTextEdit")
 
 	if edit then
 		edit:focus()
 	end
 end
 
-local function openPotionAssignWindow(targetSlot)
-	openHelperItemAssignWindow(targetSlot)
+  ptc_root_locals[97] = function(targetSlot)
+	ptc_root_locals.openHelperItemAssignWindow(targetSlot)
 end
 
 function HelperHealer.isHelperItemAssignActive()
-	return helperAssignWindow and not helperAssignWindow:isDestroyed()
+	return ptc_root_locals.helperAssignWindow and not ptc_root_locals.helperAssignWindow:isDestroyed()
 end
 
 function HelperHealer.closeHelperItemAssignWindow()
@@ -1317,29 +1347,29 @@ function HelperHealer.closeHelperItemAssignWindow()
 		HelperHealer.cancelPendingHealingEntryAssign()
 	end
 
-	closeHelperItemAssignInternal()
+	ptc_root_locals.closeHelperItemAssignInternal()
 end
 
 function HelperHealer.helperItemAssignOk()
-	if not HelperHealer.isHelperItemAssignActive() or not helperAssignPanel or not helperAssignTargetSlot then
+	if not HelperHealer.isHelperItemAssignActive() or not ptc_root_locals.helperAssignPanel or not ptc_root_locals.helperAssignTargetSlot then
 		return
 	end
 
-	local focused = helperAssignPanel:getFocusedChild()
+	local focused = ptc_root_locals.helperAssignPanel:getFocusedChild()
 
 	if not focused or not focused.assignItemId then
 		return
 	end
 
-	local targetSlot = helperAssignTargetSlot
+	local targetSlot = ptc_root_locals.helperAssignTargetSlot
 	local useType = "useOnSelf"
-	local skipSave = addHealingSlot and targetSlot == addHealingSlot or targetSlot._helperAssignSkipSave == true
+	local skipSave = ptc_root_locals.addHealingSlot and targetSlot == ptc_root_locals.addHealingSlot or targetSlot._helperAssignSkipSave == true
 
-	assignItemToSlot(targetSlot, {
+	ptc_root_locals.assignItemToSlot(targetSlot, {
 		itemId = focused.assignItemId,
 		useType = useType
 	}, skipSave)
-	closeHelperItemAssignInternal()
+	ptc_root_locals.closeHelperItemAssignInternal()
 
 	if targetSlot.onHelperPotionAssigned then
 		targetSlot.onHelperPotionAssigned(targetSlot)
@@ -1347,7 +1377,7 @@ function HelperHealer.helperItemAssignOk()
 end
 
 function HelperHealer.filterHelperAssignEntries(text)
-	if not helperAssignPanel or not HelperHealer.isHelperItemAssignActive() then
+	if not ptc_root_locals.helperAssignPanel or not HelperHealer.isHelperItemAssignActive() then
 		return
 	end
 
@@ -1357,16 +1387,16 @@ function HelperHealer.filterHelperAssignEntries(text)
 	local textLower = textActive and text:lower() or ""
 	local onlyLearnt = false
 
-	if helperAssignWindow then
-		local learntCb = helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsCheckBox")
+	if ptc_root_locals.helperAssignWindow then
+		local learntCb = ptc_root_locals.helperAssignWindow:recursiveGetChildById("onlyShowLearntSpellsCheckBox")
 
 		onlyLearnt = learntCb and learntCb:isChecked() or false
 	end
 
-	for _, row in ipairs(helperAssignPanel:getChildren()) do
+	for _, row in ipairs(ptc_root_locals.helperAssignPanel:getChildren()) do
 		local visible = true
 
-		if onlyLearnt and not rowMeetsLearntFilter(row) then
+		if onlyLearnt and not ptc_root_locals.rowMeetsLearntFilter(row) then
 			visible = false
 		end
 
@@ -1377,7 +1407,7 @@ function HelperHealer.filterHelperAssignEntries(text)
 		row:setVisible(visible)
 	end
 
-	focusFirstVisibleHelperAssignRow()
+	ptc_root_locals.focusFirstVisibleHelperAssignRow()
 end
 
 function HelperHealer.clearHelperItemAssignFilter()
@@ -1385,7 +1415,7 @@ function HelperHealer.clearHelperItemAssignFilter()
 		return
 	end
 
-	local edit = helperAssignWindow:recursiveGetChildById("filterTextEdit")
+	local edit = ptc_root_locals.helperAssignWindow:recursiveGetChildById("filterTextEdit")
 
 	if edit then
 		edit:setText("")
@@ -1399,13 +1429,13 @@ function HelperHealer.onHelperAssignLearntChange()
 		return
 	end
 
-	local edit = helperAssignWindow:recursiveGetChildById("filterTextEdit")
+	local edit = ptc_root_locals.helperAssignWindow:recursiveGetChildById("filterTextEdit")
 
 	HelperHealer.filterHelperAssignEntries(edit and edit:getText() or "")
 end
 
 function HelperHealer.closePotionAssignWindow()
-	closeHelperItemAssignInternal()
+	ptc_root_locals.closeHelperItemAssignInternal()
 end
 
 function HelperHealer.potionAssignOk()
@@ -1425,10 +1455,10 @@ function HelperHealer.openPotionSelectWindow(targetSlot)
 		return
 	end
 
-	openHelperItemAssignWindow(targetSlot)
+	ptc_root_locals.openHelperItemAssignWindow(targetSlot)
 end
 
-local function actionSlotItemTier(slot)
+  ptc_root_locals[98] = function(slot)
 	if g_game.getFeature and g_game.getFeature(GameThingUpgradeClassification) then
 		local stored = slot and slot.getTier
 
@@ -1440,7 +1470,7 @@ local function actionSlotItemTier(slot)
 	return 0
 end
 
-local function resolveHealingCooldownSpellId(spellId)
+  ptc_root_locals[99] = function(spellId)
 	if Spells and Spells.resolveSpellId then
 		return Spells.resolveSpellId(spellId)
 	end
@@ -1448,260 +1478,272 @@ local function resolveHealingCooldownSpellId(spellId)
 	return spellId
 end
 
-local function resolveHealingSpellExhaustion(spell)
-	if type(spell) ~= "table" then
-		return DEFAULT_SPELL_EXHAUSTION_MS
-	end
-
-	local exhaustion = tonumber(spell.exhaustion)
+  ptc_root_locals[100] = function()
+	local exhaustion = g_game.getPing and tonumber(g_game.getPing()) or 0
 
 	if exhaustion and exhaustion > 0 then
-		return exhaustion
+		return math.max(250, math.min(2000, exhaustion * 2 + 100))
 	end
 
-	return DEFAULT_SPELL_EXHAUSTION_MS
+	return ptc_root_locals[40]
 end
 
-local function resolveHealingGroupExhaustion(spell, groupId)
-	if type(spell) == "table" and type(spell.group) == "table" then
-		local groupExhaustion = tonumber(spell.group[groupId])
-
-		if groupExhaustion and groupExhaustion > 0 then
-			return groupExhaustion
-		end
-	end
-
-	return DEFAULT_SPELL_EXHAUSTION_MS
-end
-
-local function setHelperSpellCooldownExpiry(spellId, duration, keepLonger)
-	if not spellId then
-		return
-	end
-
-	local key = resolveHealingCooldownSpellId(spellId)
-
-	if not duration or duration <= 0 then
-		helperCooldowns.spells[key] = nil
-
-		return
-	end
-
-	local expires = g_clock.millis() + duration
-
-	if keepLonger then
-		if expires > (helperCooldowns.spells[key] or 0) then
-			helperCooldowns.spells[key] = expires
-		end
-	else
-		helperCooldowns.spells[key] = expires
-	end
-end
-
-local function setHelperGroupCooldownExpiry(groupId, duration, keepLonger)
-	if not groupId then
-		return
-	end
-
-	if not duration or duration <= 0 then
-		helperCooldowns.groups[groupId] = nil
-
-		return
-	end
-
-	local expires = g_clock.millis() + duration
-
-	if keepLonger then
-		if expires > (helperCooldowns.groups[groupId] or 0) then
-			helperCooldowns.groups[groupId] = expires
-		end
-	else
-		helperCooldowns.groups[groupId] = expires
-	end
-end
-
-local function applyLocalHealingCastLock(spell)
-	if not spell then
-		return
-	end
-
-	if spell.id then
-		local spellDuration = math.max(GLOBAL_HEALING_CAST_COOLDOWN_MS, resolveHealingSpellExhaustion(spell))
-
-		setHelperSpellCooldownExpiry(spell.id, spellDuration, true)
-	end
+  ptc_root_locals[101] = function(spell, arg_84_1)
+	ptc_root_locals.multiUseExDelay.spells[ptc_root_locals[99](spell.id)] = arg_84_1
 
 	if type(spell.group) == "table" then
 		for groupId in pairs(spell.group) do
-			local groupDuration = math.max(GLOBAL_HEALING_CAST_COOLDOWN_MS, resolveHealingGroupExhaustion(spell, groupId))
-
-			setHelperGroupCooldownExpiry(groupId, groupDuration, true)
+			ptc_root_locals.multiUseExDelay.groups[groupId] = arg_84_1
 		end
 	elseif spell.group then
-		local groupDuration = math.max(GLOBAL_HEALING_CAST_COOLDOWN_MS, resolveHealingSpellExhaustion(spell))
-
-		setHelperGroupCooldownExpiry(spell.group, groupDuration, true)
+		ptc_root_locals.multiUseExDelay.groups[spell.group] = arg_84_1
 	end
 end
 
-local function onHelperSpellCooldown(spellId, delay)
-	setHelperSpellCooldownExpiry(spellId, delay, false)
+  ptc_root_locals[102] = function()
+	ptc_root_locals[35] = {
+		spells = {},
+		groups = {}
+	}
+	ptc_root_locals.multiUseExDelay = {
+		lastHealthPotionWasPlain = false,
+		potionUntil = 0,
+		spells = {},
+		groups = {}
+	}
+	ptc_root_locals[37] = 0
 end
 
-local function onHelperSpellGroupCooldown(groupId, delay)
-	setHelperGroupCooldownExpiry(groupId, delay, false)
+  ptc_root_locals[103] = function(arg_86_0, arg_86_1)
+	local var_86_0 = ptc_root_locals[99](arg_86_0)
+
+	if not var_86_0 then
+		return
+	end
+
+	ptc_root_locals.multiUseExDelay.spells[var_86_0] = nil
+	ptc_root_locals[35].spells[var_86_0] = g_clock.millis() + math.max(0, tonumber(arg_86_1) or 0)
 end
 
-local function onHelperMultiUseCooldown(time)
-	if not time or time <= 0 then
-		multiUseExDelay = 0
+  ptc_root_locals[104] = function(arg_87_0, arg_87_1)
+	if not arg_87_0 then
+		return
+	end
+
+	ptc_root_locals.multiUseExDelay.groups[arg_87_0] = nil
+	ptc_root_locals[35].groups[arg_87_0] = g_clock.millis() + math.max(0, tonumber(arg_87_1) or 0)
+end
+
+  ptc_root_locals[105] = function(arg_88_0)
+	ptc_root_locals.multiUseExDelay.potionUntil = 0
+
+	if not arg_88_0 or arg_88_0 <= 0 then
+		ptc_root_locals[37] = 0
 
 		return
 	end
 
-	multiUseExDelay = g_clock.millis() + time
+	ptc_root_locals[37] = g_clock.millis() + arg_88_0
 end
 
-local function connectGameEvents()
-	if gameEventsConnected then
+  ptc_root_locals[106] = function()
+	if ptc_root_locals[38] then
 		return
 	end
 
 	connect(g_game, {
-		onSpellCooldown = onHelperSpellCooldown,
-		onSpellGroupCooldown = onHelperSpellGroupCooldown,
-		onMultiUseCooldown = onHelperMultiUseCooldown
+		onSpellCooldown = ptc_root_locals[103],
+		onSpellGroupCooldown = ptc_root_locals[104],
+		onMultiUseCooldown = ptc_root_locals[105],
+		onGameEnd = ptc_root_locals[102]
 	})
 
-	gameEventsConnected = true
+	ptc_root_locals[38] = true
 end
 
-local function disconnectGameEvents()
-	if not gameEventsConnected then
+  ptc_root_locals[107] = function()
+	if not ptc_root_locals[38] then
 		return
 	end
 
 	disconnect(g_game, {
-		onSpellCooldown = onHelperSpellCooldown,
-		onSpellGroupCooldown = onHelperSpellGroupCooldown,
-		onMultiUseCooldown = onHelperMultiUseCooldown
+		onSpellCooldown = ptc_root_locals[103],
+		onSpellGroupCooldown = ptc_root_locals[104],
+		onMultiUseCooldown = ptc_root_locals[105],
+		onGameEnd = ptc_root_locals[102]
 	})
 
-	gameEventsConnected = false
+	ptc_root_locals[38] = false
 end
 
-local function getHelperSpellCooldown(spellId)
-	return helperCooldowns.spells[spellId] or 0
+  ptc_root_locals[108] = function(arg_91_0)
+	return ptc_root_locals[35].spells[arg_91_0] or 0
 end
 
-local function getHelperGroupCooldown(groupId)
-	return helperCooldowns.groups[groupId] or 0
+  ptc_root_locals[109] = function(arg_92_0)
+	return ptc_root_locals[35].groups[arg_92_0] or 0
 end
 
-local function isManaPotion(itemId)
-	return POTION_TYPE_BY_ID[tonumber(itemId) or itemId] == "mana"
+  ptc_root_locals[110] = function(arg_93_0)
+	return ptc_root_locals.POTION_TYPE_BY_ID[tonumber(arg_93_0) or arg_93_0] == "mana"
 end
 
-local function isHealthPotion(itemId)
-	return POTION_TYPE_BY_ID[tonumber(itemId) or itemId] == "health"
+  ptc_root_locals[111] = function(arg_94_0)
+	return ptc_root_locals.POTION_TYPE_BY_ID[tonumber(arg_94_0) or arg_94_0] == "health"
 end
 
-local function isSpiritPotion(itemId)
-	return SPIRIT_POTION_IDS[tonumber(itemId) or itemId] == true
+  ptc_root_locals[112] = function(arg_95_0)
+	return ptc_root_locals.SPIRIT_POTION_IDS[tonumber(arg_95_0) or arg_95_0] == true
 end
 
-local function canPlayerCastHealingSpell(words, player)
-	if not words or not player then
+  ptc_root_locals[113] = function(arg_96_0, arg_96_1, arg_96_2)
+	if not arg_96_0 or not arg_96_1 then
 		return false
 	end
 
-	local spell = Spells.getSpellByWords(words)
+	local spellByWords = Spells.getSpellByWords(arg_96_0)
 
-	if not spell then
-		return true
-	end
-
-	if spell.mana and player:getMana() < spell.mana then
+	if not spellByWords or not spellByWords.id or spellByWords.id <= 0 or not ptc_root_locals[78](nil, spellByWords) then
 		return false
 	end
 
-	if spell.level and player:getLevel() < spell.level then
+	if not arg_96_2 and spellByWords.mana and arg_96_1:getMana() < spellByWords.mana then
 		return false
 	end
 
-	if spell.soul and player:getSoul() < spell.soul then
+	if spellByWords.level and arg_96_1:getLevel() < spellByWords.level then
 		return false
 	end
 
-	if spell.vocations and not playerCanUseHealingSpellVocations(spell.vocations, player) then
+	if spellByWords.soul and arg_96_1:getSoul() < spellByWords.soul then
 		return false
+	end
+
+	if spellByWords.vocations and not ptc_root_locals.playerCanUseHealingSpellVocations(spellByWords.vocations, arg_96_1) then
+		return false
+	end
+
+	if GameSpellList and g_game.getFeature(GameSpellList) then
+		local spells = arg_96_1.getSpells and arg_96_1:getSpells() or {}
+		local var_96_2 = false
+
+		for unusedValue, entry in ipairs(spells) do
+			if tonumber(entry) == spellByWords.id then
+				var_96_2 = true
+
+				break
+			end
+		end
+
+		if not var_96_2 then
+			return false
+		end
 	end
 
 	return true
 end
 
-local function isHelperSpellOnCooldown(words)
-	local spell = Spells.getSpellByWords(words)
+  ptc_root_locals[114] = function(arg_97_0)
+	local spellByWords = Spells.getSpellByWords(arg_97_0)
 
-	if not spell or spell.id == 0 then
+	if not spellByWords or spellByWords.id == 0 then
 		return false
 	end
 
-	local nowMs = g_clock.millis()
-	local spellKey = resolveHealingCooldownSpellId(spell.id)
+	local var_97_1 = g_clock.millis()
+	local var_97_2 = ptc_root_locals[99](spellByWords.id)
 
-	if nowMs <= getHelperSpellCooldown(spellKey) then
+	if var_97_1 < ptc_root_locals[108](var_97_2) then
 		return true
 	end
 
-	if type(spell.group) == "table" then
-		for groupId, _ in pairs(spell.group) do
-			if nowMs <= getHelperGroupCooldown(groupId) then
+	if type(spellByWords.group) == "table" then
+		for key, unusedValue in pairs(spellByWords.group) do
+			if var_97_1 < ptc_root_locals[109](key) then
 				return true
 			end
 		end
-	elseif spell.group and nowMs <= getHelperGroupCooldown(spell.group) then
+	elseif spellByWords.group and var_97_1 < ptc_root_locals[109](spellByWords.group) then
 		return true
 	end
 
-	local ab = actionbar()
+	local var_97_3 = ptc_root_locals.actionbar()
 
-	if ab and ab.getMultiActionCooldownRemaining then
-		local spellRem, groupRem = ab.getMultiActionCooldownRemaining(spell)
+	if var_97_3 and var_97_3.getMultiActionCooldownRemaining then
+		local var_97_4, var_97_5 = var_97_3.getMultiActionCooldownRemaining(spellByWords)
 
-		if spellRem > 0 or groupRem > 0 then
+		if var_97_4 > 0 then
+			ptc_root_locals.multiUseExDelay.spells[var_97_2] = nil
+		end
+
+		if var_97_5 > 0 then
+			if type(spellByWords.group) == "table" then
+				for iter_97_2 in pairs(spellByWords.group) do
+					ptc_root_locals.multiUseExDelay.groups[iter_97_2] = nil
+				end
+			elseif spellByWords.group then
+				ptc_root_locals.multiUseExDelay.groups[spellByWords.group] = nil
+			end
+		end
+
+		if var_97_4 > 0 or var_97_5 > 0 then
 			return true
 		end
 	end
 
+	if var_97_1 < (ptc_root_locals.multiUseExDelay.spells[var_97_2] or 0) then
+		return true
+	end
+
+	if type(spellByWords.group) == "table" then
+		for iter_97_3 in pairs(spellByWords.group) do
+			if var_97_1 < (ptc_root_locals.multiUseExDelay.groups[iter_97_3] or 0) then
+				return true
+			end
+		end
+	elseif spellByWords.group and var_97_1 < (ptc_root_locals.multiUseExDelay.groups[spellByWords.group] or 0) then
+		return true
+	end
+
 	return false
 end
 
-local function isPotionUseBlocked()
-	local nowMs = g_clock.millis()
-
-	return nowMs < getHelperSpellCooldown(POTION_TIMER_KEY) or nowMs < multiUseExDelay
+function HelperHealer.isItemUsePending()
+	return ptc_root_locals.multiUseExDelay.potionUntil > g_clock.millis()
 end
 
-local function playerHasItem(player, itemId, slot)
-	if not player or not itemId or itemId <= 0 then
+  ptc_root_locals[115] = function()
+	local var_99_0 = g_clock.millis()
+	local var_99_1 = ptc_root_locals.actionbar()
+
+	if var_99_1 and var_99_1.getItemMultiUseCooldownRemaining and var_99_1.getItemMultiUseCooldownRemaining() > 0 then
+		ptc_root_locals.multiUseExDelay.potionUntil = 0
+
+		return true
+	end
+
+	return var_99_0 < ptc_root_locals[37] or var_99_0 < ptc_root_locals.multiUseExDelay.potionUntil or HelperShooter and HelperShooter.isItemUsePending and HelperShooter.isItemUsePending() or false
+end
+
+  ptc_root_locals[116] = function(arg_100_0, arg_100_1, arg_100_2)
+	if not arg_100_0 or not arg_100_1 or arg_100_1 <= 0 then
 		return false
 	end
 
-	local tier = actionSlotItemTier(slot)
+	local var_100_0 = ptc_root_locals[98](arg_100_2)
 
-	if player.getInventoryCount and player:getInventoryCount(itemId, tier) > 0 then
+	if arg_100_0.getInventoryCount and arg_100_0:getInventoryCount(arg_100_1, var_100_0) > 0 then
 		return true
 	end
 
 	if g_game.findPlayerItem then
-		return g_game.findPlayerItem(itemId, slot and slot.subType or -1, tier) ~= nil
+		return g_game.findPlayerItem(arg_100_1, arg_100_2 and arg_100_2.subType or -1, var_100_0) ~= nil
 	end
 
 	return false
 end
 
-local function compareNumber(value, threshold, condition)
+  ptc_root_locals[117] = function(value, threshold, condition)
 	if condition == "<" then
 		return value < threshold
 	end
@@ -1717,7 +1759,7 @@ local function compareNumber(value, threshold, condition)
 	return value <= threshold
 end
 
-local function comboOptionText(combo)
+  ptc_root_locals[118] = function(combo)
 	if not combo then
 		return nil
 	end
@@ -1745,7 +1787,7 @@ local function comboOptionText(combo)
 	return nil
 end
 
-local function normalizeMetric(metric)
+  ptc_root_locals[119] = function(metric)
 	metric = tostring(metric or "HP"):upper():gsub("%%", "")
 
 	if metric == "MP" or metric == "MANA" then
@@ -1755,11 +1797,11 @@ local function normalizeMetric(metric)
 	return "HP"
 end
 
-local function metricComboLabel(metric)
-	return normalizeMetric(metric) == "MP" and "MP%" or "HP%"
+  ptc_root_locals[120] = function(arg_104_0)
+	return ptc_root_locals[119](arg_104_0) == "MP" and "MP%" or "HP%"
 end
 
-local function normalizeConditionLogic(logic)
+  ptc_root_locals[121] = function(logic)
 	logic = tostring(logic or "and"):lower()
 
 	if logic == "or" then
@@ -1771,60 +1813,60 @@ end
 
 function HelperHealer.resolveLoadedSpiritMetric(raw)
 	if raw.spiritMetric then
-		return normalizeMetric(raw.spiritMetric)
+		return ptc_root_locals[119](raw.spiritMetric)
 	end
 
-	local cfg = type(raw.spiritConfig) == "table" and raw.spiritConfig or nil
+	local var_106_0 = type(raw.spiritConfig) == "table" and raw.spiritConfig or nil
 
-	if cfg then
-		if cfg.mpEnabled and not cfg.hpEnabled then
+	if var_106_0 then
+		if var_106_0.mpEnabled and not var_106_0.hpEnabled then
 			return "MP"
 		end
 
 		return "HP"
 	end
 
-	local mode = tostring(raw.spiritMode or ""):lower()
+	local textValue = tostring(raw.spiritMode or ""):lower()
 
-	if mode == "mp" or mode == "mana" then
+	if textValue == "mp" or textValue == "mana" then
 		return "MP"
 	end
 
-	if mode == "hp" or mode == "health" or mode == "both" then
+	if textValue == "hp" or textValue == "health" or textValue == "both" then
 		return "HP"
 	end
 
-	return normalizeMetric(raw.whenMetric1 or raw.metric)
+	return ptc_root_locals[119](raw.whenMetric1 or raw.metric)
 end
 
-local HEALING_RANGE_MIN = 1
-local HEALING_RANGE_MAX = 99
-local HEALING_RANGE_DEFAULT_MIN = 1
-local HEALING_RANGE_DEFAULT_MAX = 80
-local HEALING_DEFAULT_SPELL_PERCENT = 80
-local HEALING_DEFAULT_POTION_PERCENT = 50
-local HEALING_PERCENT_STEP = 1
-local HEALING_PERCENT_AUTO_PRESS_DELAY = 350
+ ptc_root_locals[122] = 1
+ ptc_root_locals[123] = 100
+ ptc_root_locals[124] = 1
+ ptc_root_locals[125] = 80
+ ptc_root_locals[126] = 80
+ ptc_root_locals[127] = 50
+ ptc_root_locals[128] = 1
+ ptc_root_locals[129] = 350
 
-local function clampHealingRange(value, fallback)
-	local n = tonumber(value)
+  ptc_root_locals[130] = function(arg_107_0, arg_107_1)
+	local numericValue = tonumber(arg_107_0)
 
-	if not n then
-		return fallback
+	if not numericValue then
+		return arg_107_1
 	end
 
-	if n < HEALING_RANGE_MIN then
-		n = HEALING_RANGE_MIN
+	if numericValue < ptc_root_locals[122] then
+		numericValue = ptc_root_locals[122]
 	end
 
-	if n > HEALING_RANGE_MAX then
-		n = HEALING_RANGE_MAX
+	if numericValue > ptc_root_locals[123] then
+		numericValue = ptc_root_locals[123]
 	end
 
-	return n
+	return numericValue
 end
 
-local function normalizeCondition(condition)
+  ptc_root_locals[131] = function(condition)
 	condition = tostring(condition or "<")
 
 	if condition:find("<=", 1, true) then
@@ -1842,82 +1884,85 @@ local function normalizeCondition(condition)
 	return "<"
 end
 
-local function migrateLegacyEntryFields(raw)
-	if raw.whenMetric1 or raw.thresholdMin ~= nil then
+  ptc_root_locals[132] = function(arg_109_0)
+	if arg_109_0.whenMetric1 or arg_109_0.thresholdMin ~= nil then
 		return {
-			whenMetric1 = normalizeMetric(raw.whenMetric1 or raw.metric),
-			whenMetric2 = normalizeMetric(raw.whenMetric2 or raw.whenMetric1 or raw.metric),
-			conditionLogic = normalizeConditionLogic(raw.conditionLogic),
-			conditionMin = normalizeCondition(raw.conditionMin or raw.condition),
-			thresholdMin = clampHealingRange(raw.thresholdMin, HEALING_RANGE_DEFAULT_MIN),
-			conditionMax = normalizeCondition(raw.conditionMax or "<="),
-			thresholdMax = clampHealingRange(raw.thresholdMax, raw.threshold or HEALING_RANGE_DEFAULT_MAX)
+			whenMetric1 = ptc_root_locals[119](arg_109_0.whenMetric1 or arg_109_0.metric),
+			whenMetric2 = ptc_root_locals[119](arg_109_0.whenMetric2 or arg_109_0.whenMetric1 or arg_109_0.metric),
+			conditionLogic = ptc_root_locals[121](arg_109_0.conditionLogic),
+			conditionMin = ptc_root_locals[131](arg_109_0.conditionMin or arg_109_0.condition),
+			thresholdMin = ptc_root_locals[130](arg_109_0.thresholdMin, ptc_root_locals[124]),
+			conditionMax = ptc_root_locals[131](arg_109_0.conditionMax or "<="),
+			thresholdMax = ptc_root_locals[130](arg_109_0.thresholdMax, arg_109_0.threshold or ptc_root_locals[125])
 		}
 	end
 
-	local metric = normalizeMetric(raw.metric)
-	local cond = normalizeCondition(raw.condition)
-	local th = clampHealingRange(raw.threshold, HEALING_RANGE_DEFAULT_MAX)
-	local conditionMin, thresholdMin, conditionMax, thresholdMax = ">=", HEALING_RANGE_MIN, "<=", HEALING_RANGE_MAX
+	local var_109_0 = ptc_root_locals[119](arg_109_0.metric)
+	local var_109_1 = ptc_root_locals[131](arg_109_0.condition)
+	local var_109_2 = ptc_root_locals[130](arg_109_0.threshold, ptc_root_locals[125])
+	local var_109_3 = ">="
+	local var_109_4 = ptc_root_locals[122]
+	local var_109_5 = "<="
+	local var_109_6 = ptc_root_locals[123]
 
-	if cond == "<=" then
-		conditionMin, thresholdMin, conditionMax, thresholdMax = ">=", HEALING_RANGE_MIN, "<=", th
-	elseif cond == "<" then
-		conditionMin, thresholdMin, conditionMax, thresholdMax = ">=", HEALING_RANGE_MIN, "<", th
-	elseif cond == ">=" then
-		conditionMin, thresholdMin, conditionMax, thresholdMax = ">=", th, "<=", HEALING_RANGE_MAX
+	if var_109_1 == "<=" then
+		var_109_3, var_109_4, var_109_5, var_109_6 = ">=", ptc_root_locals[122], "<=", var_109_2
+	elseif var_109_1 == "<" then
+		var_109_3, var_109_4, var_109_5, var_109_6 = ">=", ptc_root_locals[122], "<", var_109_2
+	elseif var_109_1 == ">=" then
+		var_109_3, var_109_4, var_109_5, var_109_6 = ">=", var_109_2, "<=", ptc_root_locals[123]
 	else
-		conditionMin, thresholdMin, conditionMax, thresholdMax = ">", th, "<=", HEALING_RANGE_MAX
+		var_109_3, var_109_4, var_109_5, var_109_6 = ">", var_109_2, "<=", ptc_root_locals[123]
 	end
 
 	return {
-		whenMetric1 = metric,
-		whenMetric2 = metric,
-		conditionLogic = normalizeConditionLogic(raw.conditionLogic),
-		conditionMin = conditionMin,
-		thresholdMin = thresholdMin,
-		conditionMax = conditionMax,
-		thresholdMax = thresholdMax
+		whenMetric1 = var_109_0,
+		whenMetric2 = var_109_0,
+		conditionLogic = ptc_root_locals[121](arg_109_0.conditionLogic),
+		conditionMin = var_109_3,
+		thresholdMin = var_109_4,
+		conditionMax = var_109_5,
+		thresholdMax = var_109_6
 	}
 end
 
-local function getMetricPercent(state, metric)
-	return normalizeMetric(metric) == "MP" and state.manaPercent or state.healthPercent
+  ptc_root_locals[133] = function(arg_110_0, arg_110_1)
+	return ptc_root_locals[119](arg_110_1) == "MP" and arg_110_0.manaPercent or arg_110_0.healthPercent
 end
 
-local function getHealingEntryGroup(entry)
-	if not entry then
+  ptc_root_locals[134] = function(arg_111_0)
+	if not arg_111_0 then
 		return "spell"
 	end
 
-	if normalizeEntryWords(entry.words) then
+	if ptc_root_locals.normalizeEntryWords(arg_111_0.words) then
 		return "spell"
 	end
 
-	local itemId = tonumber(entry.itemId)
+	local numericValue = tonumber(arg_111_0.itemId)
 
-	if itemId and itemId > 0 then
+	if numericValue and numericValue > 0 then
 		return "potion"
 	end
 
-	return entry.kind == "potion" and "potion" or "spell"
+	return arg_111_0.kind == "potion" and "potion" or "spell"
 end
 
-local function getHealingEntryDefaultPercent(entry)
-	if getHealingEntryGroup(entry) == "potion" then
-		return HEALING_DEFAULT_POTION_PERCENT
+  ptc_root_locals[135] = function(arg_112_0)
+	if ptc_root_locals[134](arg_112_0) == "potion" then
+		return ptc_root_locals[127]
 	end
 
-	return HEALING_DEFAULT_SPELL_PERCENT
+	return ptc_root_locals[126]
 end
 
-local function getHealingEntryMetric(entry)
-	if getHealingEntryGroup(entry) == "potion" then
-		if entry and entry.itemId and isSpiritPotion(entry.itemId) then
-			return normalizeMetric(entry.spiritMetric)
+  ptc_root_locals[136] = function(arg_113_0)
+	if ptc_root_locals[134](arg_113_0) == "potion" then
+		if arg_113_0 and arg_113_0.itemId and ptc_root_locals[112](arg_113_0.itemId) then
+			return ptc_root_locals[119](arg_113_0.spiritMetric)
 		end
 
-		if entry and entry.itemId and isManaPotion(entry.itemId) then
+		if arg_113_0 and arg_113_0.itemId and ptc_root_locals[110](arg_113_0.itemId) then
 			return "MP"
 		end
 
@@ -1928,52 +1973,52 @@ local function getHealingEntryMetric(entry)
 end
 
 function HelperHealer.getHealingEntryMetricText(entry)
-	return getHealingEntryMetric(entry)
+	return ptc_root_locals[136](entry)
 end
 
-local function entryConditionPercent(entry, fallback)
-	fallback = fallback or getHealingEntryDefaultPercent(entry)
+  ptc_root_locals[137] = function(arg_115_0, arg_115_1)
+	arg_115_1 = arg_115_1 or ptc_root_locals[135](arg_115_0)
 
-	if entry and entry.percent ~= nil then
-		return clampHealingRange(entry.percent, fallback)
+	if arg_115_0 and arg_115_0.percent ~= nil then
+		return ptc_root_locals[130](arg_115_0.percent, arg_115_1)
 	end
 
-	local fields = entry and migrateLegacyEntryFields(entry) or nil
+	local var_115_0 = arg_115_0 and ptc_root_locals[132](arg_115_0) or nil
 
-	if fields then
-		return clampHealingRange(fields.thresholdMax, fallback)
+	if var_115_0 then
+		return ptc_root_locals[130](var_115_0.thresholdMax, arg_115_1)
 	end
 
-	return clampHealingRange(fallback, fallback)
+	return ptc_root_locals[130](arg_115_1, arg_115_1)
 end
 
-local function setEntryConditionPercent(entry, percent)
-	if not entry then
+  ptc_root_locals[138] = function(arg_116_0, arg_116_1)
+	if not arg_116_0 then
 		return
 	end
 
-	percent = clampHealingRange(percent, getHealingEntryDefaultPercent(entry))
+	arg_116_1 = ptc_root_locals[130](arg_116_1, ptc_root_locals[135](arg_116_0))
 
-	local metric = getHealingEntryMetric(entry)
+	local var_116_0 = ptc_root_locals[136](arg_116_0)
 
-	entry.percent = percent
-	entry.whenMetric1 = metric
-	entry.whenMetric2 = metric
-	entry.conditionLogic = "and"
-	entry.conditionMin = ">="
-	entry.thresholdMin = HEALING_RANGE_MIN
-	entry.conditionMax = "<="
-	entry.thresholdMax = percent
+	arg_116_0.percent = arg_116_1
+	arg_116_0.whenMetric1 = var_116_0
+	arg_116_0.whenMetric2 = var_116_0
+	arg_116_0.conditionLogic = "and"
+	arg_116_0.conditionMin = ">="
+	arg_116_0.thresholdMin = ptc_root_locals[122]
+	arg_116_0.conditionMax = "<="
+	arg_116_0.thresholdMax = arg_116_1
 end
 
-local function entryPercentConditionMet(entry, state)
-	if not entry or not state then
+  ptc_root_locals[139] = function(arg_117_0, arg_117_1)
+	if not arg_117_0 or not arg_117_1 then
 		return false
 	end
 
-	local value = getMetricPercent(state, getHealingEntryMetric(entry))
+	local var_117_0 = ptc_root_locals[133](arg_117_1, ptc_root_locals[136](arg_117_0))
 
-	return value ~= nil and value <= entryConditionPercent(entry)
+	return var_117_0 ~= nil and var_117_0 <= ptc_root_locals[137](arg_117_0)
 end
 
 function HelperHealer.entryMetricPercentConditionMet(entry, state, metric)
@@ -1981,82 +2026,82 @@ function HelperHealer.entryMetricPercentConditionMet(entry, state, metric)
 		return false
 	end
 
-	local value = getMetricPercent(state, metric)
+	local var_118_0 = ptc_root_locals[133](state, metric)
 
-	return value ~= nil and value <= entryConditionPercent(entry)
+	return var_118_0 ~= nil and var_118_0 <= ptc_root_locals[137](entry)
 end
 
-local function clampThreshold(value)
-	local n = tonumber(value)
+  ptc_root_locals[140] = function(arg_119_0)
+	local numericValue = tonumber(arg_119_0)
 
-	if not n then
-		return THRESHOLD_DEFAULT
+	if not numericValue then
+		return ptc_root_locals[29]
 	end
 
-	if n < THRESHOLD_MIN then
-		n = THRESHOLD_MIN
+	if numericValue < ptc_root_locals[27] then
+		numericValue = ptc_root_locals[27]
 	end
 
-	if n > THRESHOLD_MAX then
-		n = THRESHOLD_MAX
+	if numericValue > ptc_root_locals[28] then
+		numericValue = ptc_root_locals[28]
 	end
 
-	return n
+	return numericValue
 end
 
-local function sanitizeThresholdDigits(text)
+  ptc_root_locals[141] = function(text)
 	return tostring(text or ""):gsub("%D", "")
 end
 
-local function readThresholdPercent(thresholdEdit)
-	if not thresholdEdit or not thresholdEdit.getText then
-		return THRESHOLD_DEFAULT
+  ptc_root_locals[142] = function(arg_121_0)
+	if not arg_121_0 or not arg_121_0.getText then
+		return ptc_root_locals[29]
 	end
 
-	local text = thresholdEdit:getText() or ""
+	local text = arg_121_0:getText() or ""
 
 	if text == "" then
-		return THRESHOLD_DEFAULT
+		return ptc_root_locals[29]
 	end
 
-	return clampThreshold(text)
+	return ptc_root_locals[140](text)
 end
 
-local function readHealingRangePercent(thresholdEdit, fallback)
-	if not thresholdEdit then
-		return fallback
+  ptc_root_locals[143] = function(arg_122_0, arg_122_1)
+	if not arg_122_0 then
+		return arg_122_1
 	end
 
-	local option = comboOptionText(thresholdEdit)
+	local var_122_0 = ptc_root_locals[118](arg_122_0)
 
-	if option and option ~= "" then
-		return clampHealingRange(option, fallback)
+	if var_122_0 and var_122_0 ~= "" then
+		return ptc_root_locals[130](var_122_0, arg_122_1)
 	end
 
-	if not thresholdEdit.getText then
-		return fallback
+	if not arg_122_0.getText then
+		return arg_122_1
 	end
 
-	local text = thresholdEdit:getText() or ""
+	local text = arg_122_0:getText() or ""
 
 	if text == "" then
-		return fallback
+		return arg_122_1
 	end
 
-	return clampHealingRange(text, fallback)
+	return ptc_root_locals[130](text, arg_122_1)
 end
 
-local function setHealingRangeWidgetValue(widget, value)
-	if not widget then
+  ptc_root_locals[144] = function(arg_123_0, textValue)
+	if not arg_123_0 then
 		return
 	end
 
-	value = tostring(clampHealingRange(value, HEALING_RANGE_DEFAULT_MAX))
+	textValue = tostring(ptc_root_locals[130](textValue, ptc_root_locals[125]))
 
-	if widget.setCurrentOption then
-		widget:setCurrentOption(value)
-	elseif widget.setText then
-		widget:setText(value)
+	if arg_123_0.setCurrentOption then
+		arg_123_0:setCurrentOption(textValue)
+	elseif arg_123_0.setText then
+		arg_123_0:setText(textValue)
 	end
 end
 
@@ -2066,41 +2111,41 @@ function HelperHealer.onThresholdChange(edit)
 	end
 
 	local text = edit:getText() or ""
-	local digits = sanitizeThresholdDigits(text)
+	local var_124_1 = ptc_root_locals[141](text)
 
-	if digits == "" then
+	if var_124_1 == "" then
 		if text ~= "" then
 			edit:setText("")
 		end
 
-		saveConfigIfReady()
+		ptc_root_locals.saveConfigIfReady()
 
 		return
 	end
 
-	local n = tonumber(digits)
+	local numericValue = tonumber(var_124_1)
 
-	if n == 0 then
-		edit:setText(tostring(THRESHOLD_MIN))
-		saveConfigIfReady()
-
-		return
-	end
-
-	if n > THRESHOLD_MAX then
-		edit:setText(tostring(THRESHOLD_MAX))
-		saveConfigIfReady()
+	if numericValue == 0 then
+		edit:setText(tostring(ptc_root_locals[27]))
+		ptc_root_locals.saveConfigIfReady()
 
 		return
 	end
 
-	if digits ~= text then
-		edit:setText(digits)
+	if numericValue > ptc_root_locals[28] then
+		edit:setText(tostring(ptc_root_locals[28]))
+		ptc_root_locals.saveConfigIfReady()
 
 		return
 	end
 
-	saveConfigIfReady()
+	if var_124_1 ~= text then
+		edit:setText(var_124_1)
+
+		return
+	end
+
+	ptc_root_locals.saveConfigIfReady()
 end
 
 function HelperHealer.onThresholdFocusChange(edit, focused)
@@ -2111,21 +2156,21 @@ function HelperHealer.onThresholdFocusChange(edit, focused)
 	local text = edit:getText() or ""
 
 	if text == "" then
-		edit:setText(tostring(THRESHOLD_DEFAULT))
-		saveConfigIfReady()
+		edit:setText(tostring(ptc_root_locals[29]))
+		ptc_root_locals.saveConfigIfReady()
 
 		return
 	end
 
-	local clamped = clampThreshold(text)
+	local var_125_1 = ptc_root_locals[140](text)
 
-	if tostring(clamped) ~= text then
-		edit:setText(tostring(clamped))
-		saveConfigIfReady()
+	if tostring(var_125_1) ~= text then
+		edit:setText(tostring(var_125_1))
+		ptc_root_locals.saveConfigIfReady()
 	end
 end
 
-local function copyActionDataFromSlot(slot)
+  ptc_root_locals[145] = function(slot)
 	if not slot then
 		return nil
 	end
@@ -2139,276 +2184,313 @@ local function copyActionDataFromSlot(slot)
 	}
 end
 
-local function entryHasAction(entry)
-	if not entry then
+  ptc_root_locals[146] = function(arg_127_0)
+	if not arg_127_0 then
 		return false
 	end
 
-	local words = normalizeEntryWords(entry.words)
-
-	if words then
+	if ptc_root_locals.normalizeEntryWords(arg_127_0.words) then
 		return true
 	end
 
-	local itemId = tonumber(entry.itemId)
+	local numericValue = tonumber(arg_127_0.itemId)
 
-	return itemId and itemId > 0 and entry.useType ~= nil and entry.useType ~= ""
+	return numericValue and numericValue > 0 and arg_127_0.useType ~= nil and arg_127_0.useType ~= ""
 end
 
-local function slotHasAssignedAction(slot)
-	return entryHasAction(copyActionDataFromSlot(slot))
+  ptc_root_locals[147] = function(arg_128_0)
+	return ptc_root_locals[146](ptc_root_locals[145](arg_128_0))
 end
 
-local function canExecuteEntryAction(entry, state)
-	if not entryHasAction(entry) then
+  ptc_root_locals[148] = function(arg_129_0, arg_129_1)
+	if not ptc_root_locals[146](arg_129_0) then
 		return false
 	end
 
-	local words = normalizeEntryWords(entry.words)
+	local var_129_0 = ptc_root_locals.normalizeEntryWords(arg_129_0.words)
 
-	if words then
-		if isHelperSpellOnCooldown(words) then
+	if var_129_0 then
+		if ptc_root_locals[114](var_129_0) then
 			return false
 		end
 
-		local player = state and state.player or g_game.getLocalPlayer()
+		local localPlayer = arg_129_1 and arg_129_1.player or g_game.getLocalPlayer()
 
-		return canPlayerCastHealingSpell(words, player)
+		return ptc_root_locals[113](var_129_0, localPlayer)
 	end
 
-	local player = state and state.player or g_game.getLocalPlayer()
+	local localPlayer = arg_129_1 and arg_129_1.player or g_game.getLocalPlayer()
 
-	if not player then
+	if not localPlayer then
 		return false
 	end
 
-	if isBlockedHealingPotionId(entry.itemId) or isHealingFoodEntry(entry) then
+	if ptc_root_locals.isBlockedHealingPotionId(arg_129_0.itemId) or ptc_root_locals.isHealingFoodEntry(arg_129_0) then
 		return false
 	end
 
-	if not playerHasItem(player, entry.itemId, entry) then
+	local numericValue = tonumber(arg_129_0.itemId)
+
+	if not ptc_root_locals.POTION_TYPE_BY_ID[numericValue] or localPlayer:getLevel() < ptc_root_locals[63](numericValue) or HelperHealer.potionAllowedForVocation(numericValue) == false then
 		return false
 	end
 
-	return not isPotionUseBlocked()
+	if not ptc_root_locals[116](localPlayer, numericValue, arg_129_0) then
+		return false
+	end
+
+	return not ptc_root_locals[115]()
 end
 
-local function canExecuteSlotAction(slot, state)
-	return canExecuteEntryAction(copyActionDataFromSlot(slot), state)
+  ptc_root_locals[149] = function(arg_130_0, arg_130_1)
+	return ptc_root_locals[148](ptc_root_locals[145](arg_130_0), arg_130_1)
 end
 
-local function castHealingSpell(slot)
-	if not slot or not slot.words or slot.words == "" then
+  ptc_root_locals[150] = function()
+	if not g_game.isOnline() or g_game.isDead and g_game.isDead() then
 		return false
 	end
 
-	if isHelperSpellOnCooldown(slot.words) then
-		return false
+	if g_game.getProtocolGame then
+		local protocolGame = g_game.getProtocolGame()
+
+		if not protocolGame or not protocolGame:isConnected() then
+			return false
+		end
 	end
-
-	local text = slot.words
-
-	if slot.parameter and slot.parameter ~= "" then
-		text = string.format("%s \"%s\"", slot.words, slot.parameter)
-	end
-
-	g_game.talk(text)
-
-	local spell = Spells.getSpellByWords(slot.words)
-
-	applyLocalHealingCastLock(spell)
 
 	return true
 end
 
-local function useHealingPotion(slot, state)
-	local player = state and state.player or g_game.getLocalPlayer()
-	local itemId = tonumber(slot and slot.itemId)
-
-	if not player or not itemId or itemId <= 0 or isBlockedHealingPotionId(itemId) then
+  ptc_root_locals[151] = function(arg_132_0)
+	if not arg_132_0 or not arg_132_0.words or arg_132_0.words == "" then
 		return false
 	end
 
-	if isPotionUseBlocked() or not playerHasItem(player, itemId, slot) then
+	if not ptc_root_locals[150]() or ptc_root_locals[114](arg_132_0.words) then
 		return false
 	end
 
-	g_game.useInventoryItemWith(itemId, player)
+	local words = arg_132_0.words
 
-	helperCooldowns.spells[POTION_TIMER_KEY] = g_clock.millis() + POTION_EXHAUST_MS
+	if arg_132_0.parameter and arg_132_0.parameter ~= "" then
+		words = string.format("%s \"%s\"", arg_132_0.words, arg_132_0.parameter)
+	end
+
+	local spellByWords = Spells.getSpellByWords(arg_132_0.words)
+
+	if not spellByWords then
+		return false
+	end
+
+	ptc_root_locals[101](spellByWords, g_clock.millis() + ptc_root_locals[100]())
+
+	local var_132_2, var_132_3 = pcall(g_game.talk, words)
+
+	if not var_132_2 or var_132_3 == false then
+		ptc_root_locals[101](spellByWords, nil)
+
+		return false
+	end
 
 	return true
 end
 
-local function findEntryById(entryId)
-	for _, entry in ipairs(healingEntries) do
-		if entry.id == entryId then
-			return entry
+  ptc_root_locals[152] = function(arg_133_0, arg_133_1)
+	local localPlayer = arg_133_1 and arg_133_1.player or g_game.getLocalPlayer()
+	local numericValue = tonumber(arg_133_0 and arg_133_0.itemId)
+
+	if not localPlayer or not numericValue or numericValue <= 0 or ptc_root_locals.isBlockedHealingPotionId(numericValue) then
+		return false
+	end
+
+	if not ptc_root_locals[150]() or not ptc_root_locals[148](arg_133_0, arg_133_1) then
+		return false
+	end
+
+	ptc_root_locals.multiUseExDelay.potionUntil = g_clock.millis() + math.max(ptc_root_locals[39], ptc_root_locals[100]())
+
+	local var_133_2, var_133_3 = pcall(g_game.useInventoryItemWith, numericValue, localPlayer)
+
+	if not var_133_2 or var_133_3 == false then
+		ptc_root_locals.multiUseExDelay.potionUntil = 0
+
+		return false
+	end
+
+	ptc_root_locals.multiUseExDelay.lastHealthPotionWasPlain = ptc_root_locals[111](numericValue) and not ptc_root_locals[112](numericValue)
+
+	return true
+end
+
+  ptc_root_locals[153] = function(arg_134_0)
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		if ptc_root_local.id == arg_134_0 then
+			return ptc_root_local
 		end
 	end
 
 	return nil
 end
 
-local function findHealingEntryIndexById(entryId)
-	for i, entry in ipairs(healingEntries) do
-		if entry.id == entryId then
-			return i, entry
+  ptc_root_locals[154] = function(arg_135_0)
+	for index, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		if ptc_root_local.id == arg_135_0 then
+			return index, ptc_root_local
 		end
 	end
 
 	return nil
 end
 
-local function focusHealingRowByEntryId(entryId)
-	resetHealingRowFocusColors()
+  ptc_root_locals[155] = function(arg_136_0)
+	ptc_root_locals.resetHealingRowFocusColors()
 
-	local targetRow = findHealingRowByEntryId(entryId)
+	local var_136_0 = ptc_root_locals[51](arg_136_0)
 
-	if not targetRow then
+	if not var_136_0 then
 		return
 	end
 
-	focusHealingPanelRow(targetRow)
-	syncHealingActionButtons()
+	ptc_root_locals[52](var_136_0)
+	ptc_root_locals.syncHealingActionButtons()
 end
 
-local function removeHealingEntryById(entryId)
-	local i = findHealingEntryIndexById(entryId)
+  ptc_root_locals[156] = function(arg_137_0)
+	local var_137_0 = ptc_root_locals[154](arg_137_0)
 
-	if not i then
+	if not var_137_0 then
 		return false
 	end
 
-	table.remove(healingEntries, i)
+	table.remove(ptc_root_locals.healingEntries, var_137_0)
 
 	return true
 end
 
-local function reorderHealingEntryByDrop(sourceId, targetId, afterTarget, targetGroup)
-	local sourceIndex, sourceEntry = findHealingEntryIndexById(sourceId)
+  ptc_root_locals[157] = function(arg_138_0, arg_138_1, arg_138_2, arg_138_3)
+	local var_138_0, var_138_1 = ptc_root_locals[154](arg_138_0)
 
-	if not sourceEntry then
+	if not var_138_1 then
 		return false
 	end
 
-	local group = getHealingEntryGroup(sourceEntry)
+	local var_138_2 = ptc_root_locals[134](var_138_1)
 
-	if targetGroup and group ~= targetGroup then
+	if arg_138_3 and var_138_2 ~= arg_138_3 then
 		return false
 	end
 
-	local targetIndex
+	local var_138_3
 
-	if targetId then
-		if sourceId == targetId then
+	if arg_138_1 then
+		if arg_138_0 == arg_138_1 then
 			return false
 		end
 
-		local targetEntry
+		local unusedValue
+		local var_138_5
 
-		targetIndex, targetEntry = findHealingEntryIndexById(targetId)
+		var_138_3, var_138_5 = ptc_root_locals[154](arg_138_1)
 
-		if not targetEntry or getHealingEntryGroup(targetEntry) ~= group then
+		if not var_138_5 or ptc_root_locals[134](var_138_5) ~= var_138_2 then
 			return false
 		end
 	end
 
-	table.remove(healingEntries, sourceIndex)
+	table.remove(ptc_root_locals.healingEntries, var_138_0)
 
-	if targetIndex then
-		if sourceIndex < targetIndex then
-			targetIndex = targetIndex - 1
+	if var_138_3 then
+		if var_138_0 < var_138_3 then
+			var_138_3 = var_138_3 - 1
 		end
 
-		table.insert(healingEntries, targetIndex + (afterTarget and 1 or 0), sourceEntry)
+		table.insert(ptc_root_locals.healingEntries, var_138_3 + (arg_138_2 and 1 or 0), var_138_1)
 
 		return true
 	end
 
-	for i = #healingEntries, 1, -1 do
-		if getHealingEntryGroup(healingEntries[i]) == group then
-			table.insert(healingEntries, i + 1, sourceEntry)
+	for iter_138_0 = #ptc_root_locals.healingEntries, 1, -1 do
+		if ptc_root_locals[134](ptc_root_locals.healingEntries[iter_138_0]) == var_138_2 then
+			table.insert(ptc_root_locals.healingEntries, iter_138_0 + 1, var_138_1)
 
 			return true
 		end
 	end
 
-	table.insert(healingEntries, sourceEntry)
+	table.insert(ptc_root_locals.healingEntries, var_138_1)
 
 	return true
 end
 
-local function saveHealingConfig()
-	if ctx and ctx.saveConfig then
-		saveConfigIfReady()
+  ptc_root_locals[158] = function()
+	if ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+		ptc_root_locals.saveConfigIfReady()
 	end
 end
 
-local function cancelHealingPercentSave()
-	if healingPercentSaveEvent then
-		removeEvent(healingPercentSaveEvent)
+  ptc_root_locals[159] = function()
+	if ptc_root_locals[9] then
+		removeEvent(ptc_root_locals[9])
 
-		healingPercentSaveEvent = nil
+		ptc_root_locals[9] = nil
 	end
 end
 
-local function flushHealingPercentSave()
-	local hadPendingSave = healingPercentSaveEvent ~= nil
+  ptc_root_locals[160] = function()
+	local var_141_0 = ptc_root_locals[9] ~= nil
 
-	cancelHealingPercentSave()
+	ptc_root_locals[159]()
 
-	if hadPendingSave then
-		saveHealingConfig()
+	if var_141_0 then
+		ptc_root_locals[158]()
 	end
 end
 
-local function scheduleHealingPercentSave()
-	cancelHealingPercentSave()
+  ptc_root_locals[161] = function()
+	ptc_root_locals[159]()
 
-	healingPercentSaveEvent = scheduleEvent(function()
-		healingPercentSaveEvent = nil
+	ptc_root_locals[9] = scheduleEvent(function()
+		ptc_root_locals[9] = nil
 
-		saveHealingConfig()
+		ptc_root_locals[158]()
 	end, 250)
 end
 
-local function copyEntryForSave(entry)
-	local percent = entryConditionPercent(entry)
-	local metric = getHealingEntryMetric(entry)
-	local var_143_0 = {
+  ptc_root_locals[162] = function(arg_144_0)
+	local var_144_0 = ptc_root_locals[137](arg_144_0)
+	local var_144_1 = ptc_root_locals[136](arg_144_0)
+	local var_144_2 = {
+		conditionLogic = "and",
 		conditionMax = "<=",
 		conditionMin = ">=",
-		conditionLogic = "and",
-		id = entry.id,
-		kind = getHealingEntryGroup(entry),
-		enabled = entry.enabled ~= false,
-		percent = percent,
-		spiritMetric = isSpiritPotion(entry.itemId) and metric or nil,
-		whenMetric1 = metric,
-		whenMetric2 = metric,
-		thresholdMin = HEALING_RANGE_MIN,
-		thresholdMax = percent,
-		words = normalizeEntryWords(entry.words)
+		id = arg_144_0.id,
+		kind = ptc_root_locals[134](arg_144_0),
+		enabled = arg_144_0.enabled ~= false,
+		percent = var_144_0,
+		spiritMetric = ptc_root_locals[112](arg_144_0.itemId) and var_144_1 or nil,
+		whenMetric1 = var_144_1,
+		whenMetric2 = var_144_1,
+		thresholdMin = ptc_root_locals[122],
+		thresholdMax = var_144_0,
+		words = ptc_root_locals.normalizeEntryWords(arg_144_0.words)
 	}
 
-	if isBlockedHealingPotionId(entry.itemId) then
+	if ptc_root_locals.isBlockedHealingPotionId(arg_144_0.itemId) then
 		-- block empty
 	end
 
-	var_143_0.itemId = entry.itemId
-	var_143_0.subType = entry.subType
+	var_144_2.itemId = arg_144_0.itemId
+	var_144_2.subType = arg_144_0.subType
 
-	if isHealingFoodEntry(entry) then
+	if ptc_root_locals.isHealingFoodEntry(arg_144_0) then
 		-- block empty
 	end
 
-	var_143_0.useType = entry.useType
-	var_143_0.parameter = entry.parameter
+	var_144_2.useType = arg_144_0.useType
+	var_144_2.parameter = arg_144_0.parameter
 
-	local copy = var_143_0
-
-	return copy
+	return var_144_2
 end
 
 function HelperHealer.copyLegacyHealingSlot(savedEntry)
@@ -2416,21 +2498,21 @@ function HelperHealer.copyLegacyHealingSlot(savedEntry)
 		return nil
 	end
 
-	local metric = savedEntry.whenMetric1 or savedEntry.whenMetric2 or savedEntry.metric or "HP"
-	local percent = savedEntry.percent or savedEntry.thresholdMax or savedEntry.threshold or HEALING_RANGE_DEFAULT_MAX
+	local var_145_0 = savedEntry.whenMetric1 or savedEntry.whenMetric2 or savedEntry.metric or "HP"
+	local var_145_1 = savedEntry.percent or savedEntry.thresholdMax or savedEntry.threshold or ptc_root_locals[125]
 
 	return {
 		condition = "<=",
 		enabled = savedEntry.enabled ~= false,
-		metric = metric,
-		whenMetric1 = savedEntry.whenMetric1 or metric,
-		whenMetric2 = savedEntry.whenMetric2 or metric,
+		metric = var_145_0,
+		whenMetric1 = savedEntry.whenMetric1 or var_145_0,
+		whenMetric2 = savedEntry.whenMetric2 or var_145_0,
 		conditionLogic = savedEntry.conditionLogic or "and",
 		conditionMin = savedEntry.conditionMin or ">=",
-		thresholdMin = savedEntry.thresholdMin or HEALING_RANGE_MIN,
+		thresholdMin = savedEntry.thresholdMin or ptc_root_locals[122],
 		conditionMax = savedEntry.conditionMax or "<=",
-		thresholdMax = savedEntry.thresholdMax or percent,
-		threshold = percent,
+		thresholdMax = savedEntry.thresholdMax or var_145_1,
+		threshold = var_145_1,
 		words = savedEntry.words,
 		itemId = savedEntry.itemId,
 		subType = savedEntry.subType,
@@ -2440,77 +2522,77 @@ function HelperHealer.copyLegacyHealingSlot(savedEntry)
 	}
 end
 
-local function normalizeLoadedEntry(raw, fallbackId)
-	if type(raw) ~= "table" then
+  ptc_root_locals[163] = function(arg_146_0, arg_146_1)
+	if type(arg_146_0) ~= "table" then
 		return nil
 	end
 
-	if isHealingFoodEntry(raw) then
+	if ptc_root_locals.isHealingFoodEntry(arg_146_0) then
 		return nil
 	end
 
-	if not entryHasAction(raw) then
+	if not ptc_root_locals[146](arg_146_0) then
 		return nil
 	end
 
-	local fields = migrateLegacyEntryFields(raw)
-	local kind = raw.kind == "potion" and "potion" or normalizeEntryWords(raw.words) and "spell" or "potion"
-	local rawItemId = tonumber(raw.itemId)
+	local var_146_0 = ptc_root_locals[132](arg_146_0)
+	local var_146_1 = arg_146_0.kind == "potion" and "potion" or ptc_root_locals.normalizeEntryWords(arg_146_0.words) and "spell" or "potion"
+	local numericValue = tonumber(arg_146_0.itemId)
 
-	if isBlockedHealingPotionId(rawItemId) then
+	if ptc_root_locals.isBlockedHealingPotionId(numericValue) then
 		-- block empty
 	end
 
-	local itemId = rawItemId
-	local entry = {
-		id = tonumber(raw.id) or fallbackId,
-		kind = kind,
-		enabled = raw.enabled ~= false,
-		whenMetric1 = fields.whenMetric1,
-		whenMetric2 = fields.whenMetric2,
-		conditionLogic = fields.conditionLogic,
-		conditionMin = fields.conditionMin,
-		thresholdMin = fields.thresholdMin,
-		conditionMax = fields.conditionMax,
-		thresholdMax = fields.thresholdMax,
-		percent = clampHealingRange(raw.percent or fields.thresholdMax, kind == "potion" and HEALING_DEFAULT_POTION_PERCENT or HEALING_DEFAULT_SPELL_PERCENT),
-		words = normalizeEntryWords(raw.words),
-		itemId = itemId,
-		subType = raw.subType,
-		useType = raw.useType,
-		parameter = raw.parameter
+	local var_146_3 = numericValue
+	local var_146_4 = {
+		id = tonumber(arg_146_0.id) or arg_146_1,
+		kind = var_146_1,
+		enabled = arg_146_0.enabled ~= false,
+		whenMetric1 = var_146_0.whenMetric1,
+		whenMetric2 = var_146_0.whenMetric2,
+		conditionLogic = var_146_0.conditionLogic,
+		conditionMin = var_146_0.conditionMin,
+		thresholdMin = var_146_0.thresholdMin,
+		conditionMax = var_146_0.conditionMax,
+		thresholdMax = var_146_0.thresholdMax,
+		percent = ptc_root_locals[130](arg_146_0.percent or var_146_0.thresholdMax, var_146_1 == "potion" and ptc_root_locals[127] or ptc_root_locals[126]),
+		words = ptc_root_locals.normalizeEntryWords(arg_146_0.words),
+		itemId = var_146_3,
+		subType = arg_146_0.subType,
+		useType = arg_146_0.useType,
+		parameter = arg_146_0.parameter
 	}
 
-	if isSpiritPotion(entry.itemId) then
-		entry.spiritMetric = HelperHealer.resolveLoadedSpiritMetric(raw)
+	if ptc_root_locals[112](var_146_4.itemId) then
+		var_146_4.spiritMetric = HelperHealer.resolveLoadedSpiritMetric(arg_146_0)
 	end
 
-	setEntryConditionPercent(entry, entry.percent)
+	ptc_root_locals[138](var_146_4, var_146_4.percent)
 
-	return entry
+	return var_146_4
 end
 
-local function formatHealingValueText(entry)
-	local words = normalizeEntryWords(entry.words)
+  ptc_root_locals[164] = function(arg_147_0)
+	local var_147_0 = ptc_root_locals.normalizeEntryWords(arg_147_0.words)
 
-	if words then
-		return words
+	if var_147_0 then
+		return var_147_0
 	end
 
-	if entry.itemId and entry.itemId > 0 then
-		local thing = g_things.getThingType(entry.itemId, ThingCategoryItem)
+	if arg_147_0.itemId and arg_147_0.itemId > 0 then
+		local thingType = g_things.getThingType(arg_147_0.itemId, ThingCategoryItem)
 
-		if thing then
-			return thingDisplayName(thing, entry.itemId)
+		if thingType then
+			return ptc_root_locals[80](thingType, arg_147_0.itemId)
 		end
 
-		return tostring(entry.itemId)
+		return tostring(arg_147_0.itemId)
 	end
 
 	return ""
 end
 
-local function clearHealingEntryAction(entry)
+  ptc_root_locals[165] = function(entry)
 	if not entry then
 		return
 	end
@@ -2523,89 +2605,89 @@ local function clearHealingEntryAction(entry)
 	entry.parameter = nil
 end
 
-local function copySlotActionToEntry(entry, slot)
-	if not entry or not slot then
+  ptc_root_locals[166] = function(arg_149_0, arg_149_1)
+	if not arg_149_0 or not arg_149_1 then
 		return
 	end
 
-	local action = copyActionDataFromSlot(slot)
-	local previousSpiritMetric = entry.spiritMetric
+	local var_149_0 = ptc_root_locals[145](arg_149_1)
+	local spiritMetric = arg_149_0.spiritMetric
 
-	clearHealingEntryAction(entry)
+	ptc_root_locals[165](arg_149_0)
 
-	local words = normalizeEntryWords(action.words)
+	local var_149_2 = ptc_root_locals.normalizeEntryWords(var_149_0.words)
 
-	if words then
-		entry.kind = "spell"
-		entry.words = words
-		entry.itemId = action.itemId or ACTION_SLOT_SPELL_ITEM_ID
-		entry.parameter = action.parameter
+	if var_149_2 then
+		arg_149_0.kind = "spell"
+		arg_149_0.words = var_149_2
+		arg_149_0.itemId = var_149_0.itemId or ptc_root_locals.ACTION_SLOT_SPELL_ITEM_ID
+		arg_149_0.parameter = var_149_0.parameter
 	else
-		local actionItemId = tonumber(action.itemId)
+		local numericValue = tonumber(var_149_0.itemId)
 
-		if not actionItemId or actionItemId <= 0 then
+		if not numericValue or numericValue <= 0 then
 			return
 		end
 
-		entry.kind = "potion"
-		entry.itemId = actionItemId
-		entry.subType = action.subType
-		entry.useType = action.useType or "useOnSelf"
+		arg_149_0.kind = "potion"
+		arg_149_0.itemId = numericValue
+		arg_149_0.subType = var_149_0.subType
+		arg_149_0.useType = var_149_0.useType or "useOnSelf"
 
-		if isSpiritPotion(actionItemId) then
-			entry.spiritMetric = normalizeMetric(previousSpiritMetric or "HP")
+		if ptc_root_locals[112](numericValue) then
+			arg_149_0.spiritMetric = ptc_root_locals[119](spiritMetric or "HP")
 		end
 	end
 
-	setEntryConditionPercent(entry, entryConditionPercent(entry))
+	ptc_root_locals[138](arg_149_0, ptc_root_locals[137](arg_149_0))
 end
 
-local function formatHealingConditionMetricText(entry)
+  ptc_root_locals[167] = function(entry)
 	return string.format("%s%%", HelperHealer.getHealingEntryMetricText(entry))
 end
 
-local function updateHealingPercentStepper(row, entry)
-	local stepper = row and row:recursiveGetChildById("healingConditionPercentStepper") or nil
+  ptc_root_locals[168] = function(arg_151_0, arg_151_1)
+	local healingConditionPercentStepper = arg_151_0 and arg_151_0:recursiveGetChildById("healingConditionPercentStepper") or nil
 
-	if not stepper then
+	if not healingConditionPercentStepper then
 		return
 	end
 
-	stepper:show()
+	healingConditionPercentStepper:show()
 
-	local percent = entryConditionPercent(entry)
-	local valueLabel = stepper:recursiveGetChildById("numberValue")
+	local var_151_1 = ptc_root_locals[137](arg_151_1)
+	local numberValue = healingConditionPercentStepper:recursiveGetChildById("numberValue")
 
-	if valueLabel then
-		valueLabel:setText(tostring(percent))
+	if numberValue then
+		numberValue:setText(tostring(var_151_1))
 	end
 
-	local decButton = stepper:recursiveGetChildById("btnDec")
+	local btnDec = healingConditionPercentStepper:recursiveGetChildById("btnDec")
 
-	if decButton then
-		decButton:setEnabled(percent > HEALING_RANGE_MIN)
+	if btnDec then
+		btnDec:setEnabled(var_151_1 > ptc_root_locals[122])
 	end
 
-	local incButton = stepper:recursiveGetChildById("btnInc")
+	local btnInc = healingConditionPercentStepper:recursiveGetChildById("btnInc")
 
-	if incButton then
-		incButton:setEnabled(percent < HEALING_RANGE_MAX)
+	if btnInc then
+		btnInc:setEnabled(var_151_1 < ptc_root_locals[123])
 	end
 end
 
 function HelperHealer.updateHealingConditionMetricLabel(row, entry)
-	local metricLabel = row and row:recursiveGetChildById("healingConditionMetricLabel") or nil
+	local healingConditionMetricLabel = row and row:recursiveGetChildById("healingConditionMetricLabel") or nil
 
-	if not metricLabel then
+	if not healingConditionMetricLabel then
 		return
 	end
 
-	metricLabel:setText(formatHealingConditionMetricText(entry))
-	metricLabel:setTooltip("")
+	healingConditionMetricLabel:setText(ptc_root_locals[167](entry))
+	healingConditionMetricLabel:setTooltip("")
 end
 
 function HelperHealer.healingMetricDropdownText(metric)
-	return normalizeMetric(metric) == "MP" and "MP%" or "HP%"
+	return ptc_root_locals[119](metric) == "MP" and "MP%" or "HP%"
 end
 
 function HelperHealer.setHealingMetricDropdownOption(dropdown, metric)
@@ -2613,16 +2695,16 @@ function HelperHealer.setHealingMetricDropdownOption(dropdown, metric)
 		return
 	end
 
-	local text = HelperHealer.healingMetricDropdownText(metric)
+	local var_154_0 = HelperHealer.healingMetricDropdownText(metric)
 
-	dropdown.currentMetric = normalizeMetric(metric)
+	dropdown.currentMetric = ptc_root_locals[119](metric)
 
-	dropdown:setTooltip(text)
+	dropdown:setTooltip(var_154_0)
 
-	local label = dropdown:recursiveGetChildById("metricText")
+	local metricText = dropdown:recursiveGetChildById("metricText")
 
-	if label then
-		label:setText(text)
+	if metricText then
+		metricText:setText(var_154_0)
 	end
 end
 
@@ -2631,43 +2713,43 @@ function HelperHealer.openHealingMetricDropdown(row, dropdown)
 		return true
 	end
 
-	local entryId = row.healingEntryId
-	local entry = findEntryById(entryId)
+	local healingEntryId = row.healingEntryId
+	local var_155_1 = ptc_root_locals[153](healingEntryId)
 
-	if not entry or not isSpiritPotion(entry.itemId) then
+	if not var_155_1 or not ptc_root_locals[112](var_155_1.itemId) then
 		return true
 	end
 
-	focusHealingPanelRow(row)
+	ptc_root_locals[52](row)
 
 	local function applyMetric(metric)
-		local current = findEntryById(entryId)
+		local var_156_0 = ptc_root_locals[153](healingEntryId)
 
-		if not current or not isSpiritPotion(current.itemId) then
+		if not var_156_0 or not ptc_root_locals[112](var_156_0.itemId) then
 			return
 		end
 
-		current.spiritMetric = normalizeMetric(metric)
+		var_156_0.spiritMetric = ptc_root_locals[119](metric)
 
-		setEntryConditionPercent(current, entryConditionPercent(current))
-		HelperHealer.setHealingMetricDropdownOption(dropdown, current.spiritMetric)
-		saveHealingConfig()
+		ptc_root_locals[138](var_156_0, ptc_root_locals[137](var_156_0))
+		HelperHealer.setHealingMetricDropdownOption(dropdown, var_156_0.spiritMetric)
+		ptc_root_locals[158]()
 	end
 
-	local menu = g_ui.createWidget("GamePopupMenu")
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
-	menu:addOption("HP%", function()
+	gamePopupMenuWidget:addOption("HP%", function()
 		applyMetric("HP")
 	end, nil, false, {
 		minWidth = 44
 	})
-	menu:addOption("MP%", function()
+	gamePopupMenuWidget:addOption("MP%", function()
 		applyMetric("MP")
 	end, nil, false, {
 		minWidth = 44
 	})
-	menu:setWidth(44)
-	menu:display({
+	gamePopupMenuWidget:setWidth(44)
+	gamePopupMenuWidget:display({
 		x = dropdown:getX(),
 		y = dropdown:getY() + dropdown:getHeight()
 	})
@@ -2680,25 +2762,25 @@ function HelperHealer.updateHealingConditionMetricSelector(row, entry)
 		return
 	end
 
-	local metricLabel = row:recursiveGetChildById("healingConditionMetricLabel")
-	local metricCombo = row:recursiveGetChildById("healingConditionMetricCombo")
+	local healingConditionMetricLabel = row:recursiveGetChildById("healingConditionMetricLabel")
+	local healingConditionMetricCombo = row:recursiveGetChildById("healingConditionMetricCombo")
 
-	if isSpiritPotion(entry.itemId) then
-		if metricLabel then
-			metricLabel:hide()
+	if ptc_root_locals[112](entry.itemId) then
+		if healingConditionMetricLabel then
+			healingConditionMetricLabel:hide()
 		end
 
-		if metricCombo then
-			metricCombo:show()
-			HelperHealer.setHealingMetricDropdownOption(metricCombo, getHealingEntryMetric(entry))
+		if healingConditionMetricCombo then
+			healingConditionMetricCombo:show()
+			HelperHealer.setHealingMetricDropdownOption(healingConditionMetricCombo, ptc_root_locals[136](entry))
 		end
 	else
-		if metricCombo then
-			metricCombo:hide()
+		if healingConditionMetricCombo then
+			healingConditionMetricCombo:hide()
 		end
 
-		if metricLabel then
-			metricLabel:show()
+		if healingConditionMetricLabel then
+			healingConditionMetricLabel:show()
 		end
 
 		HelperHealer.updateHealingConditionMetricLabel(row, entry)
@@ -2714,85 +2796,87 @@ function HelperHealer.elideHealingLabel(label, text)
 
 	label:setText(text)
 
-	local budget = label:getWidth()
+	local width = label:getWidth()
 
-	if not budget or budget < 40 then
-		budget = 114
+	if not width or width < 40 then
+		width = 114
 	end
 
-	if budget >= label:getTextSize().width then
+	if width >= label:getTextSize().width then
 		return
 	end
 
-	local dots = "..."
-	local lo, hi, best = 0, #text, dots
+	local var_160_1 = "..."
+	local var_160_2 = 0
+	local var_160_3 = #text
+	local var_160_4 = var_160_1
 
-	while lo <= hi do
-		local mid = math.floor((lo + hi) / 2)
-		local candidate = text:sub(1, mid) .. dots
+	while var_160_2 <= var_160_3 do
+		local var_160_5 = math.floor((var_160_2 + var_160_3) / 2)
+		local var_160_6 = text:sub(1, var_160_5) .. var_160_1
 
-		label:setText(candidate)
+		label:setText(var_160_6)
 
-		if budget >= label:getTextSize().width then
-			best = candidate
-			lo = mid + 1
+		if width >= label:getTextSize().width then
+			var_160_4 = var_160_6
+			var_160_2 = var_160_5 + 1
 		else
-			hi = mid - 1
+			var_160_3 = var_160_5 - 1
 		end
 	end
 
-	label:setText(best)
+	label:setText(var_160_4)
 end
 
-local function updateHealingConditionRow(row, entry)
-	if not row or not entry then
+  ptc_root_locals[169] = function(arg_161_0, arg_161_1)
+	if not arg_161_0 or not arg_161_1 then
 		return
 	end
 
-	local enabledCheck = row:recursiveGetChildById("healingConditionEnabled")
+	local healingConditionEnabled = arg_161_0:recursiveGetChildById("healingConditionEnabled")
 
-	if enabledCheck then
-		local onCheckChange = enabledCheck.onCheckChange
+	if healingConditionEnabled then
+		local var_161_1 = healingConditionEnabled.onCheckChange
 
-		enabledCheck.onCheckChange = nil
+		healingConditionEnabled.onCheckChange = nil
 
-		enabledCheck:setChecked(entry.enabled ~= false)
+		healingConditionEnabled:setChecked(arg_161_1.enabled ~= false)
 
-		enabledCheck.onCheckChange = onCheckChange
+		healingConditionEnabled.onCheckChange = var_161_1
 	end
 
-	local nameLabel = row:recursiveGetChildById("healingConditionName")
+	local healingConditionName = arg_161_0:recursiveGetChildById("healingConditionName")
 
-	if nameLabel then
-		local name = formatHealingValueText(entry)
+	if healingConditionName then
+		local var_161_3 = ptc_root_locals[164](arg_161_1)
 
-		if name == "" then
-			name = getHealingEntryGroup(entry) == "potion" and tr("Select Potion") or tr("Select Spell")
+		if var_161_3 == "" then
+			var_161_3 = ptc_root_locals[134](arg_161_1) == "potion" and tr("Select Potion") or tr("Select Spell")
 		end
 
-		nameLabel:setTooltip(name)
-		HelperHealer.elideHealingLabel(nameLabel, name)
+		healingConditionName:setTooltip(var_161_3)
+		HelperHealer.elideHealingLabel(healingConditionName, var_161_3)
 	end
 
-	HelperHealer.updateHealingConditionMetricSelector(row, entry)
-	updateHealingPercentStepper(row, entry)
+	HelperHealer.updateHealingConditionMetricSelector(arg_161_0, arg_161_1)
+	ptc_root_locals[168](arg_161_0, arg_161_1)
 
-	local slot = row:recursiveGetChildById("healingConditionActionSlot")
+	local healingConditionActionSlot = arg_161_0:recursiveGetChildById("healingConditionActionSlot")
 
-	if slot then
-		if entryHasAction(entry) and restoreSlotData then
-			restoreSlotData(slot, entry)
+	if healingConditionActionSlot then
+		if ptc_root_locals[146](arg_161_1) and ptc_root_locals[15] then
+			ptc_root_locals[15](healingConditionActionSlot, arg_161_1)
 		else
-			clearSlotData(slot)
+			ptc_root_locals.clearSlotData(healingConditionActionSlot)
 		end
 
-		local gray = slot:getChildById("gray")
+		local gray = healingConditionActionSlot:getChildById("gray")
 
 		if gray then
-			gray:setVisible(shouldShowHealingRowGray(entry))
+			gray:setVisible(ptc_root_locals[68](arg_161_1))
 		end
 
-		syncHealingActionSlotLayers(slot)
+		ptc_root_locals.syncHealingActionSlotLayers(healingConditionActionSlot)
 	end
 end
 
@@ -2851,37 +2935,37 @@ function HelperHealer.updateHealingEntryDragGhost(row, entry, mousePos)
 		return
 	end
 
-	local ghost = HelperHealer.ensureHealingEntryDragGhost(row)
+	local var_165_0 = HelperHealer.ensureHealingEntryDragGhost(row)
 
-	if not ghost then
+	if not var_165_0 then
 		return
 	end
 
-	local nameLabel = ghost:recursiveGetChildById("dragGhostName")
+	local dragGhostName = var_165_0:recursiveGetChildById("dragGhostName")
 
-	if nameLabel then
-		nameLabel:setText(formatHealingValueText(entry))
+	if dragGhostName then
+		dragGhostName:setText(ptc_root_locals[164](entry))
 	end
 
-	local conditionLabel = ghost:recursiveGetChildById("dragGhostCondition")
+	local dragGhostCondition = var_165_0:recursiveGetChildById("dragGhostCondition")
 
-	if conditionLabel then
-		conditionLabel:setText(string.format("%s %d", formatHealingConditionMetricText(entry), entryConditionPercent(entry)))
+	if dragGhostCondition then
+		dragGhostCondition:setText(string.format("%s %d", ptc_root_locals[167](entry), ptc_root_locals[137](entry)))
 	end
 
-	local slot = ghost:recursiveGetChildById("dragGhostActionSlot")
+	local dragGhostActionSlot = var_165_0:recursiveGetChildById("dragGhostActionSlot")
 
-	if slot then
-		if entryHasAction(entry) and restoreSlotData then
-			restoreSlotData(slot, entry)
+	if dragGhostActionSlot then
+		if ptc_root_locals[146](entry) and ptc_root_locals[15] then
+			ptc_root_locals[15](dragGhostActionSlot, entry)
 		else
-			clearSlotData(slot)
+			ptc_root_locals.clearSlotData(dragGhostActionSlot)
 		end
 
-		syncHealingActionSlotLayers(slot)
+		ptc_root_locals.syncHealingActionSlotLayers(dragGhostActionSlot)
 	end
 
-	ghost:setVisible(true)
+	var_165_0:setVisible(true)
 	HelperHealer.updateHealingEntryDragGhostPosition(mousePos or g_window.getMousePosition())
 end
 
@@ -2893,7 +2977,7 @@ function HelperHealer.setHealingEntryDragSourceVisual(row, dragging)
 	if dragging then
 		row:setOpacity(0.45)
 		row:setBackgroundColor("#6a6a6a")
-		setHealingRowTextColors(row, ZEBRA_FOCUS_TEXT_COLOR)
+		ptc_root_locals.setHealingRowTextColors(row, ptc_root_locals.ZEBRA_FOCUS_TEXT_COLOR)
 
 		return
 	end
@@ -2902,43 +2986,43 @@ function HelperHealer.setHealingEntryDragSourceVisual(row, dragging)
 
 	if row.zebraColor then
 		row:setBackgroundColor(row.zebraColor)
-		setHealingRowTextColors(row, ZEBRA_TEXT_COLOR)
+		ptc_root_locals.setHealingRowTextColors(row, ptc_root_locals.ZEBRA_TEXT_COLOR)
 	end
 end
 
-local function applyHealingEntryPercent(row, entry, delta, saveAfter)
-	if not row or not entry then
+  ptc_root_locals[170] = function(arg_167_0, arg_167_1, arg_167_2, arg_167_3)
+	if not arg_167_0 or not arg_167_1 then
 		return
 	end
 
-	setEntryConditionPercent(entry, entryConditionPercent(entry) + delta)
-	updateHealingPercentStepper(row, entry)
+	ptc_root_locals[138](arg_167_1, ptc_root_locals[137](arg_167_1) + arg_167_2)
+	ptc_root_locals[168](arg_167_0, arg_167_1)
 
-	if saveAfter ~= false then
-		saveHealingConfig()
+	if arg_167_3 ~= false then
+		ptc_root_locals[158]()
 	else
-		scheduleHealingPercentSave()
+		ptc_root_locals[161]()
 	end
 end
 
-local function bindHealingPercentButton(button, row, entry, delta)
-	if not button then
+  ptc_root_locals[171] = function(arg_168_0, arg_168_1, arg_168_2, arg_168_3)
+	if not arg_168_0 then
 		return
 	end
 
 	if g_mouse and g_mouse.bindAutoPress then
-		g_mouse.bindAutoPress(button, function()
-			applyHealingEntryPercent(row, entry, delta, false)
-		end, HEALING_PERCENT_AUTO_PRESS_DELAY)
+		g_mouse.bindAutoPress(arg_168_0, function()
+			ptc_root_locals[170](arg_168_1, arg_168_2, arg_168_3, false)
+		end, ptc_root_locals[129])
 	else
-		function button.onClick()
-			applyHealingEntryPercent(row, entry, delta, false)
+		function arg_168_0.onClick()
+			ptc_root_locals[170](arg_168_1, arg_168_2, arg_168_3, false)
 		end
 	end
 
-	function button.onMouseRelease(_, _, mouseButton)
-		if mouseButton == MouseLeftButton then
-			flushHealingPercentSave()
+	function arg_168_0.onMouseRelease(unusedArgument, unusedArgument, arg_171_2)
+		if arg_171_2 == MouseLeftButton then
+			ptc_root_locals[160]()
 
 			return false
 		end
@@ -2947,31 +3031,31 @@ local function bindHealingPercentButton(button, row, entry, delta)
 	end
 end
 
-local function finishHealingEntryDrop(entryId)
-	saveHealingConfig()
+  ptc_root_locals[172] = function(arg_172_0)
+	ptc_root_locals[158]()
 	addEvent(function()
-		refreshHealingListUI()
-		focusHealingRowByEntryId(entryId)
+		ptc_root_locals[14]()
+		ptc_root_locals[155](arg_172_0)
 	end)
 end
 
-local function dropHealingEntryOnRow(targetRow, draggedWidget, mousePos, forcedAfterTarget)
-	if not targetRow or not draggedWidget or not draggedWidget.healingEntryId or not targetRow.healingEntryId then
+  ptc_root_locals[173] = function(arg_174_0, arg_174_1, arg_174_2, arg_174_3)
+	if not arg_174_0 or not arg_174_1 or not arg_174_1.healingEntryId or not arg_174_0.healingEntryId then
 		return false
 	end
 
-	if draggedWidget.healingEntryKind ~= targetRow.healingEntryKind then
+	if arg_174_1.healingEntryKind ~= arg_174_0.healingEntryKind then
 		return false
 	end
 
-	local afterTarget = forcedAfterTarget
+	local y = arg_174_3
 
-	if afterTarget == nil then
-		afterTarget = mousePos and mousePos.y >= targetRow:getY() + targetRow:getHeight() / 2
+	if y == nil then
+		y = arg_174_2 and arg_174_2.y >= arg_174_0:getY() + arg_174_0:getHeight() / 2
 	end
 
-	if reorderHealingEntryByDrop(draggedWidget.healingEntryId, targetRow.healingEntryId, afterTarget, targetRow.healingEntryKind) then
-		finishHealingEntryDrop(draggedWidget.healingEntryId)
+	if ptc_root_locals[157](arg_174_1.healingEntryId, arg_174_0.healingEntryId, y, arg_174_0.healingEntryKind) then
+		ptc_root_locals[172](arg_174_1.healingEntryId)
 
 		return true
 	end
@@ -2979,17 +3063,17 @@ local function dropHealingEntryOnRow(targetRow, draggedWidget, mousePos, forcedA
 	return false
 end
 
-local function dropHealingEntryOnPanel(panel, draggedWidget)
-	if not panel or not draggedWidget or not draggedWidget.healingEntryId then
+  ptc_root_locals[174] = function(arg_175_0, arg_175_1)
+	if not arg_175_0 or not arg_175_1 or not arg_175_1.healingEntryId then
 		return false
 	end
 
-	if draggedWidget.healingEntryKind ~= panel.healingEntryKind then
+	if arg_175_1.healingEntryKind ~= arg_175_0.healingEntryKind then
 		return false
 	end
 
-	if reorderHealingEntryByDrop(draggedWidget.healingEntryId, nil, false, panel.healingEntryKind) then
-		finishHealingEntryDrop(draggedWidget.healingEntryId)
+	if ptc_root_locals[157](arg_175_1.healingEntryId, nil, false, arg_175_0.healingEntryKind) then
+		ptc_root_locals[172](arg_175_1.healingEntryId)
 
 		return true
 	end
@@ -3014,21 +3098,21 @@ function HelperHealer.getHealingDropPanel(draggedWidget, mousePos)
 		return nil
 	end
 
-	local sourceRow = findHealingRowByEntryId(draggedWidget.healingEntryId) or draggedWidget
-	local panel = sourceRow and sourceRow:getParent() or nil
+	local var_177_0 = ptc_root_locals[51](draggedWidget.healingEntryId) or draggedWidget
+	local parent = var_177_0 and var_177_0:getParent() or nil
 
-	if panel and panel.healingEntryKind == draggedWidget.healingEntryKind and HelperHealer.isMouseInsideHealingDropPanel(panel, mousePos) then
-		return panel
+	if parent and parent.healingEntryKind == draggedWidget.healingEntryKind and HelperHealer.isMouseInsideHealingDropPanel(parent, mousePos) then
+		return parent
 	end
 
-	panel = draggedWidget.healingEntryKind == "potion" and healingPotionEntriesPanel or healingSpellEntriesPanel
+	local var_177_2 = draggedWidget.healingEntryKind == "potion" and ptc_root_locals.healingPotionEntriesPanel or ptc_root_locals.healingSpellEntriesPanel
 
-	if panel and panel.healingEntryKind == draggedWidget.healingEntryKind and HelperHealer.isMouseInsideHealingDropPanel(panel, mousePos) then
-		return panel
+	if var_177_2 and var_177_2.healingEntryKind == draggedWidget.healingEntryKind and HelperHealer.isMouseInsideHealingDropPanel(var_177_2, mousePos) then
+		return var_177_2
 	end
 
-	if healingEntriesPanel and HelperHealer.isMouseInsideHealingDropPanel(healingEntriesPanel, mousePos) then
-		return healingEntriesPanel
+	if ptc_root_locals.healingEntriesPanel and HelperHealer.isMouseInsideHealingDropPanel(ptc_root_locals.healingEntriesPanel, mousePos) then
+		return ptc_root_locals.healingEntriesPanel
 	end
 
 	return nil
@@ -3065,18 +3149,18 @@ function HelperHealer.dropHealingEntryAtMouse(fallbackRow, draggedWidget, mouseP
 		return false
 	end
 
-	local panel, targetRow, afterTarget = HelperHealer.resolveHealingDropTarget(draggedWidget, mousePos)
+	local var_179_0, var_179_1, var_179_2 = HelperHealer.resolveHealingDropTarget(draggedWidget, mousePos)
 
-	if targetRow then
-		return dropHealingEntryOnRow(targetRow, draggedWidget, mousePos, afterTarget)
+	if var_179_1 then
+		return ptc_root_locals[173](var_179_1, draggedWidget, mousePos, var_179_2)
 	end
 
-	if panel then
-		return dropHealingEntryOnPanel(panel, draggedWidget)
+	if var_179_0 then
+		return ptc_root_locals[174](var_179_0, draggedWidget)
 	end
 
 	if fallbackRow then
-		return dropHealingEntryOnRow(fallbackRow, draggedWidget, mousePos)
+		return ptc_root_locals[173](fallbackRow, draggedWidget, mousePos)
 	end
 
 	return false
@@ -3089,7 +3173,7 @@ function HelperHealer.bindHealingRowDropForwarder(widget, row)
 
 	local previousOnDrop = widget.onDrop
 
-	function widget:onDrop(draggedWidget, mousePos)
+	function widget.onDrop(self, draggedWidget, mousePos)
 		if draggedWidget and draggedWidget.healingEntryId then
 			return HelperHealer.dropHealingEntryAtMouse(row, draggedWidget, mousePos)
 		end
@@ -3117,7 +3201,7 @@ function HelperHealer.queueHealingRowContextMenu(row)
 		if row and not row:isDestroyed() then
 			row._healingContextMenuQueued = nil
 
-			openHealingRowContextMenu(row)
+			ptc_root_locals[11](row)
 		end
 	end, 60)
 
@@ -3131,7 +3215,7 @@ function HelperHealer.bindHealingRowContextForwarder(widget, row)
 
 	local previousOnMousePress = widget.onMousePress
 
-	function widget:onMousePress(mousePos, mouseButton)
+	function widget.onMousePress(self, mousePos, mouseButton)
 		if mouseButton == MouseRightButton and row and not row:isDestroyed() then
 			return HelperHealer.queueHealingRowContextMenu(row)
 		end
@@ -3145,7 +3229,7 @@ function HelperHealer.bindHealingRowContextForwarder(widget, row)
 
 	local previousOnMouseRelease = widget.onMouseRelease
 
-	function widget:onMouseRelease(mousePos, mouseButton)
+	function widget.onMouseRelease(self, mousePos, mouseButton)
 		if mouseButton == MouseRightButton and row and not row:isDestroyed() then
 			return HelperHealer.queueHealingRowContextMenu(row)
 		end
@@ -3201,7 +3285,7 @@ function HelperHealer.bindHealingSlotChildContextForwarders(slot, row)
 	end
 end
 
-local function bindHealingPanelDropTarget(panel, group)
+  ptc_root_locals[175] = function(panel, group)
 	if not panel then
 		return
 	end
@@ -3213,135 +3297,135 @@ local function bindHealingPanelDropTarget(panel, group)
 	end
 end
 
-local function bindHealingConditionSlot(slot, entry)
-	if not slot or not entry then
+  ptc_root_locals[176] = function(arg_191_0, arg_191_1)
+	if not arg_191_0 or not arg_191_1 then
 		return
 	end
 
-	slot._helperHealingSlot = true
-	slot._helperAssignPreview = true
-	slot._helperAssignSkipSave = true
-	slot.healingEntryId = entry.id
-	slot.healingEntryKind = getHealingEntryGroup(entry)
+	arg_191_0._helperHealingSlot = true
+	arg_191_0._helperAssignPreview = true
+	arg_191_0._helperAssignSkipSave = true
+	arg_191_0.healingEntryId = arg_191_1.id
+	arg_191_0.healingEntryKind = ptc_root_locals[134](arg_191_1)
 
-	function slot.onHelperPotionAssigned(assignedSlot)
-		local current = findEntryById(assignedSlot.healingEntryId)
+	function arg_191_0.onHelperPotionAssigned(arg_192_0)
+		local var_192_0 = ptc_root_locals[153](arg_192_0.healingEntryId)
 
-		if not current then
+		if not var_192_0 then
 			return
 		end
 
-		current.kind = "potion"
-		current.pendingAdd = nil
+		var_192_0.kind = "potion"
+		var_192_0.pendingAdd = nil
 
-		copySlotActionToEntry(current, assignedSlot)
-		refreshHealingListUI()
-		focusHealingRowByEntryId(current.id)
-		saveHealingConfig()
+		ptc_root_locals[166](var_192_0, arg_192_0)
+		ptc_root_locals[14]()
+		ptc_root_locals[155](var_192_0.id)
+		ptc_root_locals[158]()
 	end
 
-	function slot:onMousePress(_, mouseButton)
-		if mouseButton == MouseRightButton then
-			local row = findParentHealingRow(self)
+	function arg_191_0.onMousePress(arg_193_0, unusedArgument, arg_193_2)
+		if arg_193_2 == MouseRightButton then
+			local var_193_0 = ptc_root_locals[54](arg_193_0)
 
-			if row then
-				return HelperHealer.queueHealingRowContextMenu(row)
+			if var_193_0 then
+				return HelperHealer.queueHealingRowContextMenu(var_193_0)
 			end
 		end
 
-		if mouseButton == MouseLeftButton then
+		if arg_193_2 == MouseLeftButton then
 			return true
 		end
 
 		return false
 	end
 
-	function slot:onMouseRelease(_, mouseButton)
-		if mouseButton == MouseLeftButton then
-			openHealingEntryActionAssign(self)
+	function arg_191_0.onMouseRelease(arg_194_0, unusedArgument, arg_194_2)
+		if arg_194_2 == MouseLeftButton then
+			ptc_root_locals[12](arg_194_0)
 
 			return true
 		end
 
-		if mouseButton == MouseRightButton then
-			local row = findParentHealingRow(self)
+		if arg_194_2 == MouseRightButton then
+			local var_194_0 = ptc_root_locals[54](arg_194_0)
 
-			if row then
-				return HelperHealer.queueHealingRowContextMenu(row)
+			if var_194_0 then
+				return HelperHealer.queueHealingRowContextMenu(var_194_0)
 			end
 		end
 
 		return false
 	end
 
-	if not slotHasHelperPotion(slot) then
-		local ab = actionbar()
+	if not ptc_root_locals[69](arg_191_0) then
+		local var_191_0 = ptc_root_locals.actionbar()
 
-		if ab and ab.refreshActionSlotFrameClip then
-			ab.refreshActionSlotFrameClip(slot)
+		if var_191_0 and var_191_0.refreshActionSlotFrameClip then
+			var_191_0.refreshActionSlotFrameClip(arg_191_0)
 		end
 	end
 
-	syncHealingActionSlotLayers(slot)
+	ptc_root_locals.syncHealingActionSlotLayers(arg_191_0)
 end
 
-local function bindHealingConditionRow(row, entry)
-	if not row or not entry then
+  ptc_root_locals[177] = function(row, arg_195_1)
+	if not row or not arg_195_1 then
 		return
 	end
 
-	row.healingEntryId = entry.id
-	row.healingEntryKind = getHealingEntryGroup(entry)
+	row.healingEntryId = arg_195_1.id
+	row.healingEntryKind = ptc_root_locals[134](arg_195_1)
 
 	if row.setDraggable then
 		row:setDraggable(true)
 	end
 
-	local enabledCheck = row:recursiveGetChildById("healingConditionEnabled")
+	local healingConditionEnabled = row:recursiveGetChildById("healingConditionEnabled")
 
-	if enabledCheck then
-		function enabledCheck.onCheckChange(_, checked)
-			entry.enabled = checked
+	if healingConditionEnabled then
+		function healingConditionEnabled.onCheckChange(unusedArgument, arg_196_1)
+			arg_195_1.enabled = arg_196_1
 
-			saveHealingConfig()
+			ptc_root_locals[158]()
 		end
 
-		HelperHealer.bindHealingRowDropForwarder(enabledCheck, row)
-		HelperHealer.bindHealingRowContextForwarder(enabledCheck, row)
+		HelperHealer.bindHealingRowDropForwarder(healingConditionEnabled, row)
+		HelperHealer.bindHealingRowContextForwarder(healingConditionEnabled, row)
 	end
 
-	local slot = row:recursiveGetChildById("healingConditionActionSlot")
+	local healingConditionActionSlot = row:recursiveGetChildById("healingConditionActionSlot")
 
-	bindHealingConditionSlot(slot, entry)
-	HelperHealer.bindHealingRowDropForwarder(slot, row)
-	HelperHealer.bindHealingRowContextForwarder(slot, row)
-	HelperHealer.bindHealingSlotChildContextForwarders(slot, row)
+	ptc_root_locals[176](healingConditionActionSlot, arg_195_1)
+	HelperHealer.bindHealingRowDropForwarder(healingConditionActionSlot, row)
+	HelperHealer.bindHealingRowContextForwarder(healingConditionActionSlot, row)
+	HelperHealer.bindHealingSlotChildContextForwarders(healingConditionActionSlot, row)
 
-	local stepper = row:recursiveGetChildById("healingConditionPercentStepper")
+	local healingConditionPercentStepper = row:recursiveGetChildById("healingConditionPercentStepper")
 
-	if stepper then
-		HelperHealer.bindHealingRowDropForwarder(stepper, row)
-		HelperHealer.bindHealingRowContextForwarder(stepper, row)
+	if healingConditionPercentStepper then
+		HelperHealer.bindHealingRowDropForwarder(healingConditionPercentStepper, row)
+		HelperHealer.bindHealingRowContextForwarder(healingConditionPercentStepper, row)
 
-		local decButton = stepper:recursiveGetChildById("btnDec")
+		local btnDec = healingConditionPercentStepper:recursiveGetChildById("btnDec")
 
-		bindHealingPercentButton(decButton, row, entry, -HEALING_PERCENT_STEP)
-		HelperHealer.bindHealingRowDropForwarder(decButton, row)
+		ptc_root_locals[171](btnDec, row, arg_195_1, -ptc_root_locals[128])
+		HelperHealer.bindHealingRowDropForwarder(btnDec, row)
 
-		local numberBox = stepper:recursiveGetChildById("numberBox")
+		local numberBox = healingConditionPercentStepper:recursiveGetChildById("numberBox")
 
 		HelperHealer.bindHealingRowDropForwarder(numberBox, row)
 
-		local incButton = stepper:recursiveGetChildById("btnInc")
+		local btnInc = healingConditionPercentStepper:recursiveGetChildById("btnInc")
 
-		bindHealingPercentButton(incButton, row, entry, HEALING_PERCENT_STEP)
-		HelperHealer.bindHealingRowDropForwarder(incButton, row)
+		ptc_root_locals[171](btnInc, row, arg_195_1, ptc_root_locals[128])
+		HelperHealer.bindHealingRowDropForwarder(btnInc, row)
 	end
 
-	local metricCombo = row:recursiveGetChildById("healingConditionMetricCombo")
+	local healingConditionMetricCombo = row:recursiveGetChildById("healingConditionMetricCombo")
 
-	if metricCombo then
-		function metricCombo:onMousePress(_, mouseButton)
+	if healingConditionMetricCombo then
+		function healingConditionMetricCombo.onMousePress(self, _, mouseButton)
 			if mouseButton == MouseLeftButton then
 				return HelperHealer.openHealingMetricDropdown(row, self)
 			end
@@ -3353,27 +3437,27 @@ local function bindHealingConditionRow(row, entry)
 			return false
 		end
 
-		HelperHealer.bindHealingRowDropForwarder(metricCombo, row)
+		HelperHealer.bindHealingRowDropForwarder(healingConditionMetricCombo, row)
 	end
 
-	local removeButton = row:recursiveGetChildById("healingConditionRemoveButton")
+	local healingConditionRemoveButton = row:recursiveGetChildById("healingConditionRemoveButton")
 
-	if removeButton then
-		HelperHealer.bindHealingRowDropForwarder(removeButton, row)
-		HelperHealer.bindHealingRowContextForwarder(removeButton, row)
+	if healingConditionRemoveButton then
+		HelperHealer.bindHealingRowDropForwarder(healingConditionRemoveButton, row)
+		HelperHealer.bindHealingRowContextForwarder(healingConditionRemoveButton, row)
 
-		function removeButton.onClick()
-			if removeHealingEntryById(entry.id) then
-				refreshHealingListUI()
-				clearHealingListSelection()
-				saveHealingConfig()
+		function healingConditionRemoveButton.onClick()
+			if ptc_root_locals[156](arg_195_1.id) then
+				ptc_root_locals[14]()
+				ptc_root_locals[57]()
+				ptc_root_locals[158]()
 			end
 		end
 	end
 
-	connectZebraFocus(row)
+	ptc_root_locals[56](row)
 
-	function row:onMousePress(_, mouseButton)
+	function row.onMousePress(self, _, mouseButton)
 		if mouseButton == MouseRightButton then
 			return HelperHealer.queueHealingRowContextMenu(self)
 		end
@@ -3381,8 +3465,8 @@ local function bindHealingConditionRow(row, entry)
 		return false
 	end
 
-	function row:onDragEnter(mousePos)
-		HelperHealer.updateHealingEntryDragGhost(self, findEntryById(self.healingEntryId) or entry, mousePos)
+	function row.onDragEnter(self, mousePos)
+		HelperHealer.updateHealingEntryDragGhost(self, ptc_root_locals[153](self.healingEntryId) or arg_195_1, mousePos)
 		HelperHealer.setHealingEntryDragSourceVisual(self, true)
 
 		return true
@@ -3394,7 +3478,7 @@ local function bindHealingConditionRow(row, entry)
 		return true
 	end
 
-	function row:onDragLeave()
+	function row.onDragLeave(self)
 		HelperHealer.destroyHealingEntryDragGhost()
 
 		if self:isDestroyed() then
@@ -3406,11 +3490,11 @@ local function bindHealingConditionRow(row, entry)
 		return true
 	end
 
-	function row:onDrop(draggedWidget, mousePos)
+	function row.onDrop(self, draggedWidget, mousePos)
 		return HelperHealer.dropHealingEntryAtMouse(self, draggedWidget, mousePos)
 	end
 
-	function row:onMouseRelease(_, mouseButton)
+	function row.onMouseRelease(self, _, mouseButton)
 		if mouseButton == MouseRightButton then
 			return HelperHealer.queueHealingRowContextMenu(self)
 		end
@@ -3419,285 +3503,284 @@ local function bindHealingConditionRow(row, entry)
 	end
 end
 
-function openHealingEntryActionAssign(slot)
-	if not slot then
+ ptc_root_locals[12] = function(arg_205_0)
+	if not arg_205_0 then
 		return
 	end
 
-	local entry = findEntryById(slot.healingEntryId)
+	local var_205_0 = ptc_root_locals[153](arg_205_0.healingEntryId)
 
-	if not entry then
+	if not var_205_0 then
 		return
 	end
 
-	if getHealingEntryGroup(entry) == "potion" then
-		HelperHealer.openPotionSelectWindow(slot)
+	if ptc_root_locals[134](var_205_0) == "potion" then
+		HelperHealer.openPotionSelectWindow(arg_205_0)
 
 		return
 	end
 
-	openHelperSpellAssign(slot, isHelperHealingSpell, function(assignedSlot)
-		local current = findEntryById(slot.healingEntryId)
+	ptc_root_locals[79](arg_205_0, ptc_root_locals[78], function(arg_206_0)
+		local var_206_0 = ptc_root_locals[153](arg_205_0.healingEntryId)
 
-		if not current then
+		if not var_206_0 then
 			return
 		end
 
-		current.kind = "spell"
-		current.pendingAdd = nil
+		var_206_0.kind = "spell"
+		var_206_0.pendingAdd = nil
 
-		copySlotActionToEntry(current, assignedSlot or slot)
-		refreshHealingListUI()
-		focusHealingRowByEntryId(current.id)
-		saveHealingConfig()
+		ptc_root_locals[166](var_206_0, arg_206_0 or arg_205_0)
+		ptc_root_locals[14]()
+		ptc_root_locals[155](var_206_0.id)
+		ptc_root_locals[158]()
 	end)
 end
 
-function refreshHealingListUI()
-	ensureHealingEntries()
-	resolveHealingEntryPanels()
+ ptc_root_locals[14] = function()
+	ptc_root_locals[23]()
+	ptc_root_locals.resolveHealingEntryPanels()
 
-	if not healingSpellEntriesPanel and not healingPotionEntriesPanel and not healingEntriesPanel then
+	if not ptc_root_locals.healingSpellEntriesPanel and not ptc_root_locals.healingPotionEntriesPanel and not ptc_root_locals.healingEntriesPanel then
 		return
 	end
 
-	bindHealingPanelDropTarget(healingSpellEntriesPanel, "spell")
-	bindHealingPanelDropTarget(healingPotionEntriesPanel, "potion")
+	ptc_root_locals[175](ptc_root_locals.healingSpellEntriesPanel, "spell")
+	ptc_root_locals[175](ptc_root_locals.healingPotionEntriesPanel, "potion")
 
-	if healingSpellEntriesPanel and not healingSpellEntriesPanel:isDestroyed() then
-		healingSpellEntriesPanel:destroyChildren()
+	if ptc_root_locals.healingSpellEntriesPanel and not ptc_root_locals.healingSpellEntriesPanel:isDestroyed() then
+		ptc_root_locals.healingSpellEntriesPanel:destroyChildren()
 	end
 
-	if healingPotionEntriesPanel and not healingPotionEntriesPanel:isDestroyed() then
-		healingPotionEntriesPanel:destroyChildren()
+	if ptc_root_locals.healingPotionEntriesPanel and not ptc_root_locals.healingPotionEntriesPanel:isDestroyed() then
+		ptc_root_locals.healingPotionEntriesPanel:destroyChildren()
 	end
 
-	if healingEntriesPanel and not healingEntriesPanel:isDestroyed() then
-		healingEntriesPanel:destroyChildren()
+	if ptc_root_locals.healingEntriesPanel and not ptc_root_locals.healingEntriesPanel:isDestroyed() then
+		ptc_root_locals.healingEntriesPanel:destroyChildren()
 	end
 
-	for idx, entry in ipairs(healingEntries) do
-		local group = getHealingEntryGroup(entry)
-		local parentPanel = group == "potion" and healingPotionEntriesPanel or healingSpellEntriesPanel
+	for index, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		local var_207_0 = ptc_root_locals[134](ptc_root_local) == "potion" and ptc_root_locals.healingPotionEntriesPanel or ptc_root_locals.healingSpellEntriesPanel
 
-		parentPanel = parentPanel or healingEntriesPanel
+		var_207_0 = var_207_0 or ptc_root_locals.healingEntriesPanel
 
-		if not parentPanel or parentPanel:isDestroyed() then
+		if not var_207_0 or var_207_0:isDestroyed() then
 			return
 		end
 
-		local row = g_ui.createWidget("HealingConditionRow", parentPanel)
-		local zebraColor = idx % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
+		local healingConditionRowWidget = g_ui.createWidget("HealingConditionRow", var_207_0)
+		local var_207_2 = index % 2 == 1 and ptc_root_locals.ZEBRA_COLOR_A or ptc_root_locals.ZEBRA_COLOR_B
 
-		row.zebraColor = zebraColor
+		healingConditionRowWidget.zebraColor = var_207_2
 
-		row:setBackgroundColor(zebraColor)
-		bindHealingConditionRow(row, entry)
-		updateHealingConditionRow(row, entry)
+		healingConditionRowWidget:setBackgroundColor(var_207_2)
+		ptc_root_locals[177](healingConditionRowWidget, ptc_root_local)
+		ptc_root_locals[169](healingConditionRowWidget, ptc_root_local)
 	end
 
-	syncHealingActionButtons()
+	ptc_root_locals.syncHealingActionButtons()
 end
 
-local function migrateHealingConfig(config)
-	config = config or {}
-	healingEntries = {}
-	nextHealingEntryId = 1
+  ptc_root_locals[178] = function(arg_208_0)
+	arg_208_0 = arg_208_0 or {}
+	ptc_root_locals.healingEntries = {}
+	ptc_root_locals[5] = 1
 
-	if type(config.healingEntries) == "table" then
-		for i, raw in ipairs(config.healingEntries) do
-			local entry = normalizeLoadedEntry(raw, i)
+	if type(arg_208_0.healingEntries) == "table" then
+		for index, healingEntry in ipairs(arg_208_0.healingEntries) do
+			local var_208_0 = ptc_root_locals[163](healingEntry, index)
 
-			if entry then
-				table.insert(healingEntries, entry)
+			if var_208_0 then
+				table.insert(ptc_root_locals.healingEntries, var_208_0)
 
-				if entry.id >= nextHealingEntryId then
-					nextHealingEntryId = entry.id + 1
+				if var_208_0.id >= ptc_root_locals[5] then
+					ptc_root_locals[5] = var_208_0.id + 1
 				end
 			end
 		end
 	end
 
-	if #healingEntries == 0 then
-		local legacy = config.healingSlots
+	if #ptc_root_locals.healingEntries == 0 then
+		local healingSlots = arg_208_0.healingSlots
 
-		if type(legacy) == "table" then
-			for i, slot in ipairs(legacy) do
-				local entry = normalizeLoadedEntry({
-					id = i,
-					enabled = slot.enabled ~= false,
-					whenMetric1 = slot.metric or slot.whenMetric1,
-					whenMetric2 = slot.whenMetric2 or slot.metric,
-					conditionLogic = slot.conditionLogic,
-					conditionMin = slot.conditionMin,
-					thresholdMin = slot.thresholdMin,
-					conditionMax = slot.conditionMax,
-					thresholdMax = slot.thresholdMax,
-					metric = slot.metric,
-					condition = slot.condition,
-					threshold = slot.threshold,
-					words = slot.words,
-					itemId = slot.itemId,
-					subType = slot.subType,
-					useType = slot.useType,
-					parameter = slot.parameter,
-					spiritMetric = slot.spiritMetric,
-					spiritMode = slot.spiritMode,
-					spiritConfig = slot.spiritConfig
-				}, i)
+		if type(healingSlots) == "table" then
+			for index, entry in ipairs(healingSlots) do
+				local var_208_2 = ptc_root_locals[163]({
+					id = index,
+					enabled = entry.enabled ~= false,
+					whenMetric1 = entry.metric or entry.whenMetric1,
+					whenMetric2 = entry.whenMetric2 or entry.metric,
+					conditionLogic = entry.conditionLogic,
+					conditionMin = entry.conditionMin,
+					thresholdMin = entry.thresholdMin,
+					conditionMax = entry.conditionMax,
+					thresholdMax = entry.thresholdMax,
+					metric = entry.metric,
+					condition = entry.condition,
+					threshold = entry.threshold,
+					words = entry.words,
+					itemId = entry.itemId,
+					subType = entry.subType,
+					useType = entry.useType,
+					parameter = entry.parameter,
+					spiritMetric = entry.spiritMetric,
+					spiritMode = entry.spiritMode,
+					spiritConfig = entry.spiritConfig
+				}, index)
 
-				if entry then
-					table.insert(healingEntries, entry)
+				if var_208_2 then
+					table.insert(ptc_root_locals.healingEntries, var_208_2)
 
-					if entry.id >= nextHealingEntryId then
-						nextHealingEntryId = entry.id + 1
+					if var_208_2.id >= ptc_root_locals[5] then
+						ptc_root_locals[5] = var_208_2.id + 1
 					end
 				end
 			end
 		end
 	end
 
-	for i = #healingEntries, 1, -1 do
-		local entry = healingEntries[i]
+	for iter_208_4 = #ptc_root_locals.healingEntries, 1, -1 do
+		local var_208_3 = ptc_root_locals.healingEntries[iter_208_4]
 
-		if isBlockedHealingPotionId(entry.itemId) or isHealingFoodEntry(entry) then
-			entry.itemId = nil
-			entry.useType = nil
+		if ptc_root_locals.isBlockedHealingPotionId(var_208_3.itemId) or ptc_root_locals.isHealingFoodEntry(var_208_3) then
+			var_208_3.itemId = nil
+			var_208_3.useType = nil
 
-			if not entryHasAction(entry) then
-				table.remove(healingEntries, i)
+			if not ptc_root_locals[146](var_208_3) then
+				table.remove(ptc_root_locals.healingEntries, iter_208_4)
 			end
 		end
 	end
 end
 
-local function executeEntryAction(entry, state)
-	if not canExecuteEntryAction(entry, state) then
+  ptc_root_locals[179] = function(arg_209_0, arg_209_1)
+	if not ptc_root_locals[148](arg_209_0, arg_209_1) then
 		return false
 	end
 
-	local words = normalizeEntryWords(entry.words)
+	local var_209_0 = ptc_root_locals.normalizeEntryWords(arg_209_0.words)
 
-	if words then
-		entry.words = words
+	if var_209_0 then
+		arg_209_0.words = var_209_0
 
-		return castHealingSpell(entry)
+		return ptc_root_locals[151](arg_209_0)
 	end
 
-	local itemId = tonumber(entry.itemId)
+	local numericValue = tonumber(arg_209_0.itemId)
 
-	if itemId and itemId > 0 then
-		return useHealingPotion(entry, state)
+	if numericValue and numericValue > 0 then
+		return ptc_root_locals[152](arg_209_0, arg_209_1)
 	end
 
 	return false
 end
 
-local function executeAssignedSlotAction(slot, state)
-	return executeEntryAction(copyActionDataFromSlot(slot), state)
+  ptc_root_locals[180] = function(arg_210_0, arg_210_1)
+	return ptc_root_locals[179](ptc_root_locals[145](arg_210_0), arg_210_1)
 end
 
-function openHealingRowContextMenu(row)
-	if not row or not row.healingEntryId then
+ ptc_root_locals[11] = function(arg_211_0)
+	if not arg_211_0 or not arg_211_0.healingEntryId then
 		return
 	end
 
-	local entryId = row.healingEntryId
-	local _, entry = findHealingEntryIndexById(entryId)
+	local healingEntryId = arg_211_0.healingEntryId
+	local unusedValue, var_211_2 = ptc_root_locals[154](healingEntryId)
 
-	if not entry then
+	if not var_211_2 then
 		return
 	end
 
-	focusHealingPanelRow(row)
-	syncHealingActionButtons()
+	ptc_root_locals[52](arg_211_0)
+	ptc_root_locals.syncHealingActionButtons()
 
-	local menu = g_ui.createWidget("GamePopupMenu")
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
-	menu:setWidth(150)
-	menu:addOption(getHealingEntryGroup(entry) == "potion" and tr("Assign Potion") or tr("Assign Spell"), function()
+	gamePopupMenuWidget:setWidth(150)
+	gamePopupMenuWidget:addOption(ptc_root_locals[134](var_211_2) == "potion" and tr("Assign Potion") or tr("Assign Spell"), function()
 		addEvent(function()
-			local targetRow = findHealingRowByEntryId(entryId)
-			local slot = targetRow and targetRow:recursiveGetChildById("healingConditionActionSlot") or nil
+			local var_213_0 = ptc_root_locals[51](healingEntryId)
+			local healingConditionActionSlot = var_213_0 and var_213_0:recursiveGetChildById("healingConditionActionSlot") or nil
 
-			if slot and not slot:isDestroyed() then
-				openHealingEntryActionAssign(slot)
+			if healingConditionActionSlot and not healingConditionActionSlot:isDestroyed() then
+				ptc_root_locals[12](healingConditionActionSlot)
 			end
 		end)
 	end)
-	menu:addOption(tr("Remove"), function()
-		if removeHealingEntryById(entryId) then
-			refreshHealingListUI()
-			clearHealingListSelection()
-			saveHealingConfig()
+	gamePopupMenuWidget:addOption(tr("Remove"), function()
+		if ptc_root_locals[156](healingEntryId) then
+			ptc_root_locals[14]()
+			ptc_root_locals[57]()
+			ptc_root_locals[158]()
 		end
 	end)
 
-	if entry.enabled ~= false then
-		menu:addOption(tr("Disable"), function()
-			entry.enabled = false
+	if var_211_2.enabled ~= false then
+		gamePopupMenuWidget:addOption(tr("Disable"), function()
+			var_211_2.enabled = false
 
-			refreshHealingListUI()
-			focusHealingRowByEntryId(entryId)
-			saveHealingConfig()
+			ptc_root_locals[14]()
+			ptc_root_locals[155](healingEntryId)
+			ptc_root_locals[158]()
 		end)
 	else
-		menu:addOption(tr("Enable"), function()
-			entry.enabled = true
+		gamePopupMenuWidget:addOption(tr("Enable"), function()
+			var_211_2.enabled = true
 
-			refreshHealingListUI()
-			focusHealingRowByEntryId(entryId)
-			saveHealingConfig()
+			ptc_root_locals[14]()
+			ptc_root_locals[155](healingEntryId)
+			ptc_root_locals[158]()
 		end)
 	end
 
-	menu:display()
+	gamePopupMenuWidget:display()
 end
 
-local function openHealingSlotContextMenu(slot)
-	local menu = g_ui.createWidget("GamePopupMenu")
+  ptc_root_locals[181] = function(slot)
+	local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
-	menu:setWidth(220)
+	gamePopupMenuWidget:setWidth(220)
 
-	local fromAddModal = addHealingSlot and slot == addHealingSlot
+	local var_217_1 = ptc_root_locals.addHealingSlot and slot == ptc_root_locals.addHealingSlot
 
-	menu:addOption("Assign Spell", function()
+	gamePopupMenuWidget:addOption("Assign Spell", function()
 		addEvent(function()
 			if slot and not slot:isDestroyed() then
-				openHelperSpellAssign(slot, isHelperHealingSpell, fromAddModal and syncAddHealingConfirmButtons or nil)
+				ptc_root_locals[79](slot, ptc_root_locals[78], var_217_1 and ptc_root_locals.syncAddHealingConfirmButtons or nil)
 			end
 		end)
 	end)
-	menu:addOption("Assign Potion", function()
+	gamePopupMenuWidget:addOption("Assign Potion", function()
 		addEvent(function()
 			if slot and not slot:isDestroyed() then
 				HelperHealer.openPotionSelectWindow(slot)
 			end
 		end)
 	end)
-	menu:addSeparator()
-	menu:addOption("Clear Action", function()
-		clearSlotData(slot)
+	gamePopupMenuWidget:addSeparator()
+	gamePopupMenuWidget:addOption("Clear Action", function()
+		ptc_root_locals.clearSlotData(slot)
 
-		if not fromAddModal and ctx and ctx.saveConfig then
-			saveConfigIfReady()
+		if not var_217_1 and ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+			ptc_root_locals.saveConfigIfReady()
 		end
 
-		if fromAddModal then
-			syncAddHealingConfirmButtons()
+		if var_217_1 then
+			ptc_root_locals.syncAddHealingConfirmButtons()
 		end
 	end)
-	menu:display()
+	gamePopupMenuWidget:display()
 end
 
-local function bindAddHealingSlotInput(slot)
-	if not slot then
+  ptc_root_locals[182] = function(arg_223_0)
+	if not arg_223_0 then
 		return
 	end
 
-	slot._helperAssignPreview = true
+	arg_223_0._helperAssignPreview = true
 
-	function slot.onMousePress(_, _, mouseButton)
+	function arg_223_0.onMousePress(_, _, mouseButton)
 		if mouseButton == MouseLeftButton then
 			return true
 		end
@@ -3705,341 +3788,341 @@ local function bindAddHealingSlotInput(slot)
 		return false
 	end
 
-	function slot:onMouseRelease(_, mouseButton)
-		if mouseButton == MouseRightButton then
-			openHealingSlotContextMenu(self)
+	function arg_223_0.onMouseRelease(arg_225_0, unusedArgument, arg_225_2)
+		if arg_225_2 == MouseRightButton then
+			ptc_root_locals[181](arg_225_0)
 
 			return true
 		end
 
-		if mouseButton == MouseLeftButton then
+		if arg_225_2 == MouseLeftButton then
 			return true
 		end
 
 		return false
 	end
 
-	if not slotHasHelperPotion(slot) then
-		local ab = actionbar()
+	if not ptc_root_locals[69](arg_223_0) then
+		local var_223_0 = ptc_root_locals.actionbar()
 
-		if ab and ab.refreshActionSlotFrameClip then
-			ab.refreshActionSlotFrameClip(slot)
+		if var_223_0 and var_223_0.refreshActionSlotFrameClip then
+			var_223_0.refreshActionSlotFrameClip(arg_223_0)
 		end
 	end
 
-	syncHealingActionSlotLayers(slot)
+	ptc_root_locals.syncHealingActionSlotLayers(arg_223_0)
 end
 
-function syncAddHealingConfirmButtons()
-	if not addHealingWindow or addHealingWindow:isDestroyed() then
+ ptc_root_locals.syncAddHealingConfirmButtons = function()
+	if not ptc_root_locals[6] or ptc_root_locals[6]:isDestroyed() then
 		return
 	end
 
-	local hasAction = addHealingSlot and slotHasAssignedAction(addHealingSlot)
-	local okBtn = addHealingWindow:recursiveGetChildById("addHealingOkButton")
-	local applyBtn = addHealingWindow:recursiveGetChildById("addHealingApplyButton")
+	local var_226_0 = ptc_root_locals.addHealingSlot and ptc_root_locals[147](ptc_root_locals.addHealingSlot)
+	local addHealingOkButton = ptc_root_locals[6]:recursiveGetChildById("addHealingOkButton")
+	local addHealingApplyButton = ptc_root_locals[6]:recursiveGetChildById("addHealingApplyButton")
 
-	if okBtn then
-		okBtn:setEnabled(hasAction)
+	if addHealingOkButton then
+		addHealingOkButton:setEnabled(var_226_0)
 	end
 
-	if applyBtn then
-		applyBtn:setEnabled(hasAction)
+	if addHealingApplyButton then
+		addHealingApplyButton:setEnabled(var_226_0)
 	end
 
-	bindAddHealingSlotInput(addHealingSlot)
+	ptc_root_locals[182](ptc_root_locals.addHealingSlot)
 end
 
-local function bindAddHealingSlot()
-	if not addHealingWindow or addHealingWindow:isDestroyed() then
+  ptc_root_locals[183] = function()
+	if not ptc_root_locals[6] or ptc_root_locals[6]:isDestroyed() then
 		return
 	end
 
-	addHealingSlot = addHealingWindow:recursiveGetChildById("addHealingActionSlot")
+	ptc_root_locals.addHealingSlot = ptc_root_locals[6]:recursiveGetChildById("addHealingActionSlot")
 
-	if not addHealingSlot then
+	if not ptc_root_locals.addHealingSlot then
 		return
 	end
 
-	bindAddHealingSlotInput(addHealingSlot)
-	stackHealingActionSlotLayers(addHealingSlot)
+	ptc_root_locals[182](ptc_root_locals.addHealingSlot)
+	ptc_root_locals.stackHealingActionSlotLayers(ptc_root_locals.addHealingSlot)
 end
 
-local function closeAddHealingWindowInternal()
-	if addHealingSlot and not addHealingSlot:isDestroyed() then
-		addHealingSlot._helperAssignPreview = nil
-		addHealingSlot._helperHealingSlot = nil
+  ptc_root_locals[184] = function()
+	if ptc_root_locals.addHealingSlot and not ptc_root_locals.addHealingSlot:isDestroyed() then
+		ptc_root_locals.addHealingSlot._helperAssignPreview = nil
+		ptc_root_locals.addHealingSlot._helperHealingSlot = nil
 	end
 
-	addHealingSlot = nil
-	editingHealingEntryId = nil
+	ptc_root_locals.addHealingSlot = nil
+	ptc_root_locals[8] = nil
 
-	if addHealingWindow and not addHealingWindow:isDestroyed() then
-		addHealingWindow:destroy()
+	if ptc_root_locals[6] and not ptc_root_locals[6]:isDestroyed() then
+		ptc_root_locals[6]:destroy()
 	end
 
-	addHealingWindow = nil
+	ptc_root_locals[6] = nil
 end
 
-local function findHealingEntryById(entryId)
-	for _, entry in ipairs(healingEntries) do
-		if entry.id == entryId then
-			return entry
+  ptc_root_locals[185] = function(arg_229_0)
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		if ptc_root_local.id == arg_229_0 then
+			return ptc_root_local
 		end
 	end
 
 	return nil
 end
 
-function restoreSlotData(slot, data)
-	if not slot or not data then
+ ptc_root_locals[15] = function(arg_230_0, arg_230_1)
+	if not arg_230_0 or not arg_230_1 then
 		return
 	end
 
-	clearSlotData(slot)
+	ptc_root_locals.clearSlotData(arg_230_0)
 
-	slot.words = data.words
-	slot.itemId = data.itemId
-	slot._helperDisplayItemId = data.itemId
-	slot.subType = data.subType
-	slot.useType = data.useType
-	slot.parameter = data.parameter
+	arg_230_0.words = arg_230_1.words
+	arg_230_0.itemId = arg_230_1.itemId
+	arg_230_0._helperDisplayItemId = arg_230_1.itemId
+	arg_230_0.subType = arg_230_1.subType
+	arg_230_0.useType = arg_230_1.useType
+	arg_230_0.parameter = arg_230_1.parameter
 
-	local ab = actionbar()
-	local words = normalizeEntryWords(data.words)
+	local var_230_0 = ptc_root_locals.actionbar()
+	local var_230_1 = ptc_root_locals.normalizeEntryWords(arg_230_1.words)
 
-	if words then
-		slot.words = words
+	if var_230_1 then
+		arg_230_0.words = var_230_1
 
-		if slot.setItemId then
-			slot:setItemId(ACTION_SLOT_SPELL_ITEM_ID)
+		if arg_230_0.setItemId then
+			arg_230_0:setItemId(ptc_root_locals.ACTION_SLOT_SPELL_ITEM_ID)
 		end
 
-		if ab and ab.loadSpell then
-			ab.loadSpell(slot)
+		if var_230_0 and var_230_0.loadSpell then
+			var_230_0.loadSpell(arg_230_0)
 		end
 
-		refreshSlotVisual(slot)
-	elseif data.itemId and data.itemId > 0 then
-		if slot.setItemId then
-			slot:setItemId(data.itemId)
+		ptc_root_locals.refreshSlotVisual(arg_230_0)
+	elseif arg_230_1.itemId and arg_230_1.itemId > 0 then
+		if arg_230_0.setItemId then
+			arg_230_0:setItemId(arg_230_1.itemId)
 		end
 
-		if ab and ab.loadObject then
-			ab.loadObject(slot)
+		if var_230_0 and var_230_0.loadObject then
+			var_230_0.loadObject(arg_230_0)
 		end
 
-		refreshSlotVisual(slot)
+		ptc_root_locals.refreshSlotVisual(arg_230_0)
 	end
 
-	if slot == addHealingSlot then
-		syncAddHealingConfirmButtons()
+	if arg_230_0 == ptc_root_locals.addHealingSlot then
+		ptc_root_locals.syncAddHealingConfirmButtons()
 	end
 end
 
-local function setAddHealingWindowTitle(text)
-	if not addHealingWindow or addHealingWindow:isDestroyed() then
+  ptc_root_locals[186] = function(arg_231_0)
+	if not ptc_root_locals[6] or ptc_root_locals[6]:isDestroyed() then
 		return
 	end
 
-	addHealingWindow:setText(text)
+	ptc_root_locals[6]:setText(arg_231_0)
 end
 
-local function populateAddHealingForm(entry)
-	if not addHealingWindow or addHealingWindow:isDestroyed() then
+  ptc_root_locals[187] = function(arg_232_0)
+	if not ptc_root_locals[6] or ptc_root_locals[6]:isDestroyed() then
 		return
 	end
 
-	local whenMetric1Box = addHealingWindow:recursiveGetChildById("addHealingWhenMetric1Combo")
-	local conditionLogicBox = addHealingWindow:recursiveGetChildById("addHealingConditionLogicCombo")
-	local whenMetric2Box = addHealingWindow:recursiveGetChildById("addHealingWhenMetric2Combo")
-	local conditionMinBox = addHealingWindow:recursiveGetChildById("addHealingConditionMinCombo")
-	local thresholdMinEdit = addHealingWindow:recursiveGetChildById("addHealingThresholdMinEdit")
-	local conditionMaxBox = addHealingWindow:recursiveGetChildById("addHealingConditionMaxCombo")
-	local thresholdMaxEdit = addHealingWindow:recursiveGetChildById("addHealingThresholdMaxEdit")
-	local fields = entry and migrateLegacyEntryFields(entry) or nil
+	local addHealingWhenMetric1Combo = ptc_root_locals[6]:recursiveGetChildById("addHealingWhenMetric1Combo")
+	local addHealingConditionLogicCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionLogicCombo")
+	local addHealingWhenMetric2Combo = ptc_root_locals[6]:recursiveGetChildById("addHealingWhenMetric2Combo")
+	local addHealingConditionMinCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionMinCombo")
+	local addHealingThresholdMinEdit = ptc_root_locals[6]:recursiveGetChildById("addHealingThresholdMinEdit")
+	local addHealingConditionMaxCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionMaxCombo")
+	local addHealingThresholdMaxEdit = ptc_root_locals[6]:recursiveGetChildById("addHealingThresholdMaxEdit")
+	local var_232_7 = arg_232_0 and ptc_root_locals[132](arg_232_0) or nil
 
-	if entry and fields then
-		setAddHealingWindowTitle(tr("Edit Healing"))
+	if arg_232_0 and var_232_7 then
+		ptc_root_locals[186](tr("Edit Healing"))
 
-		if whenMetric1Box then
-			whenMetric1Box:setCurrentOption(metricComboLabel(fields.whenMetric1))
+		if addHealingWhenMetric1Combo then
+			addHealingWhenMetric1Combo:setCurrentOption(ptc_root_locals[120](var_232_7.whenMetric1))
 		end
 
-		if conditionLogicBox then
-			conditionLogicBox:setCurrentOption(normalizeConditionLogic(fields.conditionLogic))
+		if addHealingConditionLogicCombo then
+			addHealingConditionLogicCombo:setCurrentOption(ptc_root_locals[121](var_232_7.conditionLogic))
 		end
 
-		if whenMetric2Box then
-			whenMetric2Box:setCurrentOption(metricComboLabel(fields.whenMetric2))
+		if addHealingWhenMetric2Combo then
+			addHealingWhenMetric2Combo:setCurrentOption(ptc_root_locals[120](var_232_7.whenMetric2))
 		end
 
-		if conditionMinBox then
-			conditionMinBox:setCurrentOption(fields.conditionMin)
+		if addHealingConditionMinCombo then
+			addHealingConditionMinCombo:setCurrentOption(var_232_7.conditionMin)
 		end
 
-		setHealingRangeWidgetValue(thresholdMinEdit, fields.thresholdMin)
+		ptc_root_locals[144](addHealingThresholdMinEdit, var_232_7.thresholdMin)
 
-		if conditionMaxBox then
-			conditionMaxBox:setCurrentOption(fields.conditionMax)
+		if addHealingConditionMaxCombo then
+			addHealingConditionMaxCombo:setCurrentOption(var_232_7.conditionMax)
 		end
 
-		setHealingRangeWidgetValue(thresholdMaxEdit, fields.thresholdMax)
+		ptc_root_locals[144](addHealingThresholdMaxEdit, var_232_7.thresholdMax)
 
-		if addHealingSlot then
-			restoreSlotData(addHealingSlot, entry)
+		if ptc_root_locals.addHealingSlot then
+			ptc_root_locals[15](ptc_root_locals.addHealingSlot, arg_232_0)
 		end
 	else
-		setAddHealingWindowTitle(tr("Add Healing"))
+		ptc_root_locals[186](tr("Add Healing"))
 
-		if whenMetric1Box then
-			whenMetric1Box:setCurrentOption("HP%")
+		if addHealingWhenMetric1Combo then
+			addHealingWhenMetric1Combo:setCurrentOption("HP%")
 		end
 
-		if conditionLogicBox then
-			conditionLogicBox:setCurrentOption("and")
+		if addHealingConditionLogicCombo then
+			addHealingConditionLogicCombo:setCurrentOption("and")
 		end
 
-		if whenMetric2Box then
-			whenMetric2Box:setCurrentOption("HP%")
+		if addHealingWhenMetric2Combo then
+			addHealingWhenMetric2Combo:setCurrentOption("HP%")
 		end
 
-		if conditionMinBox then
-			conditionMinBox:setCurrentOption(">=")
+		if addHealingConditionMinCombo then
+			addHealingConditionMinCombo:setCurrentOption(">=")
 		end
 
-		setHealingRangeWidgetValue(thresholdMinEdit, HEALING_RANGE_DEFAULT_MIN)
+		ptc_root_locals[144](addHealingThresholdMinEdit, ptc_root_locals[124])
 
-		if conditionMaxBox then
-			conditionMaxBox:setCurrentOption("<=")
+		if addHealingConditionMaxCombo then
+			addHealingConditionMaxCombo:setCurrentOption("<=")
 		end
 
-		setHealingRangeWidgetValue(thresholdMaxEdit, HEALING_RANGE_DEFAULT_MAX)
+		ptc_root_locals[144](addHealingThresholdMaxEdit, ptc_root_locals[125])
 
-		if addHealingSlot then
-			clearSlotData(addHealingSlot)
+		if ptc_root_locals.addHealingSlot then
+			ptc_root_locals.clearSlotData(ptc_root_locals.addHealingSlot)
 		end
 	end
 
-	syncAddHealingConfirmButtons()
+	ptc_root_locals.syncAddHealingConfirmButtons()
 end
 
-function openHealingFormWindow(entryId)
-	if addHealingWindow and not addHealingWindow:isDestroyed() then
-		closeAddHealingWindowInternal()
+  ptc_root_locals[188] = function(arg_233_0)
+	if ptc_root_locals[6] and not ptc_root_locals[6]:isDestroyed() then
+		ptc_root_locals[184]()
 	end
 
-	editingHealingEntryId = entryId
-	addHealingWindow = g_ui.loadUI("assign_healing", g_ui.getRootWidget())
+	ptc_root_locals[8] = arg_233_0
+	ptc_root_locals[6] = g_ui.loadUI("assign_healing", g_ui.getRootWidget())
 
-	if not addHealingWindow then
-		editingHealingEntryId = nil
+	if not ptc_root_locals[6] then
+		ptc_root_locals[8] = nil
 
 		return
 	end
 
-	if ctx and ctx.applyWidgetLanguage then
-		ctx.applyWidgetLanguage(addHealingWindow)
+	if ptc_root_locals.ctx and ptc_root_locals.ctx.applyWidgetLanguage then
+		ptc_root_locals.ctx.applyWidgetLanguage(ptc_root_locals[6])
 	end
 
-	bindAddHealingSlot()
+	ptc_root_locals[183]()
 
-	local entry = entryId and findHealingEntryById(entryId) or nil
+	local var_233_0 = arg_233_0 and ptc_root_locals[185](arg_233_0) or nil
 
-	populateAddHealingForm(entry)
-	addHealingWindow:raise()
-	addHealingWindow:focus()
+	ptc_root_locals[187](var_233_0)
+	ptc_root_locals[6]:raise()
+	ptc_root_locals[6]:focus()
 end
 
-local function readAddHealingForm()
-	if not addHealingWindow or addHealingWindow:isDestroyed() then
+  ptc_root_locals[189] = function()
+	if not ptc_root_locals[6] or ptc_root_locals[6]:isDestroyed() then
 		return nil
 	end
 
-	local whenMetric1Box = addHealingWindow:recursiveGetChildById("addHealingWhenMetric1Combo")
-	local conditionLogicBox = addHealingWindow:recursiveGetChildById("addHealingConditionLogicCombo")
-	local whenMetric2Box = addHealingWindow:recursiveGetChildById("addHealingWhenMetric2Combo")
-	local conditionMinBox = addHealingWindow:recursiveGetChildById("addHealingConditionMinCombo")
-	local thresholdMinEdit = addHealingWindow:recursiveGetChildById("addHealingThresholdMinEdit")
-	local conditionMaxBox = addHealingWindow:recursiveGetChildById("addHealingConditionMaxCombo")
-	local thresholdMaxEdit = addHealingWindow:recursiveGetChildById("addHealingThresholdMaxEdit")
+	local addHealingWhenMetric1Combo = ptc_root_locals[6]:recursiveGetChildById("addHealingWhenMetric1Combo")
+	local addHealingConditionLogicCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionLogicCombo")
+	local addHealingWhenMetric2Combo = ptc_root_locals[6]:recursiveGetChildById("addHealingWhenMetric2Combo")
+	local addHealingConditionMinCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionMinCombo")
+	local addHealingThresholdMinEdit = ptc_root_locals[6]:recursiveGetChildById("addHealingThresholdMinEdit")
+	local addHealingConditionMaxCombo = ptc_root_locals[6]:recursiveGetChildById("addHealingConditionMaxCombo")
+	local addHealingThresholdMaxEdit = ptc_root_locals[6]:recursiveGetChildById("addHealingThresholdMaxEdit")
 
-	if not whenMetric1Box or not conditionLogicBox or not whenMetric2Box or not conditionMinBox or not thresholdMinEdit or not conditionMaxBox or not thresholdMaxEdit or not addHealingSlot then
+	if not addHealingWhenMetric1Combo or not addHealingConditionLogicCombo or not addHealingWhenMetric2Combo or not addHealingConditionMinCombo or not addHealingThresholdMinEdit or not addHealingConditionMaxCombo or not addHealingThresholdMaxEdit or not ptc_root_locals.addHealingSlot then
 		return nil
 	end
 
-	if not slotHasAssignedAction(addHealingSlot) then
+	if not ptc_root_locals[147](ptc_root_locals.addHealingSlot) then
 		return nil
 	end
 
-	local action = copyActionDataFromSlot(addHealingSlot)
+	local var_234_7 = ptc_root_locals[145](ptc_root_locals.addHealingSlot)
 
 	return {
 		enabled = true,
-		whenMetric1 = normalizeMetric(comboOptionText(whenMetric1Box)),
-		conditionLogic = normalizeConditionLogic(comboOptionText(conditionLogicBox)),
-		whenMetric2 = normalizeMetric(comboOptionText(whenMetric2Box)),
-		conditionMin = normalizeCondition(comboOptionText(conditionMinBox)),
-		thresholdMin = readHealingRangePercent(thresholdMinEdit, HEALING_RANGE_DEFAULT_MIN),
-		conditionMax = normalizeCondition(comboOptionText(conditionMaxBox)),
-		thresholdMax = readHealingRangePercent(thresholdMaxEdit, HEALING_RANGE_DEFAULT_MAX),
-		words = action.words,
-		itemId = action.itemId,
-		subType = action.subType,
-		useType = action.useType,
-		parameter = action.parameter
+		whenMetric1 = ptc_root_locals[119](ptc_root_locals[118](addHealingWhenMetric1Combo)),
+		conditionLogic = ptc_root_locals[121](ptc_root_locals[118](addHealingConditionLogicCombo)),
+		whenMetric2 = ptc_root_locals[119](ptc_root_locals[118](addHealingWhenMetric2Combo)),
+		conditionMin = ptc_root_locals[131](ptc_root_locals[118](addHealingConditionMinCombo)),
+		thresholdMin = ptc_root_locals[143](addHealingThresholdMinEdit, ptc_root_locals[124]),
+		conditionMax = ptc_root_locals[131](ptc_root_locals[118](addHealingConditionMaxCombo)),
+		thresholdMax = ptc_root_locals[143](addHealingThresholdMaxEdit, ptc_root_locals[125]),
+		words = var_234_7.words,
+		itemId = var_234_7.itemId,
+		subType = var_234_7.subType,
+		useType = var_234_7.useType,
+		parameter = var_234_7.parameter
 	}
 end
 
-local function openHealingEntryAssignById(entryId)
+  ptc_root_locals[190] = function(arg_235_0)
 	addEvent(function()
-		local row = findHealingRowByEntryId(entryId)
+		local var_236_0 = ptc_root_locals[51](arg_235_0)
 
-		if not row then
+		if not var_236_0 then
 			return
 		end
 
-		focusHealingPanelRow(row)
+		ptc_root_locals[52](var_236_0)
 
-		local slot = row:recursiveGetChildById("healingConditionActionSlot")
+		local healingConditionActionSlot = var_236_0:recursiveGetChildById("healingConditionActionSlot")
 
-		if slot then
-			openHealingEntryActionAssign(slot)
+		if healingConditionActionSlot then
+			ptc_root_locals[12](healingConditionActionSlot)
 		end
 	end)
 end
 
-local function createHealingButtonEntry(kind)
-	ensureHealingEntries()
+  ptc_root_locals[191] = function(arg_237_0)
+	ptc_root_locals[23]()
 
-	local entry = {
+	local var_237_0 = {
 		pendingAdd = true,
 		enabled = true,
-		id = nextHealingEntryId,
-		kind = kind == "potion" and "potion" or "spell"
+		id = ptc_root_locals[5],
+		kind = arg_237_0 == "potion" and "potion" or "spell"
 	}
 
-	nextHealingEntryId = nextHealingEntryId + 1
+	ptc_root_locals[5] = ptc_root_locals[5] + 1
 
-	setEntryConditionPercent(entry, getHealingEntryDefaultPercent(entry))
-	table.insert(healingEntries, entry)
-	refreshHealingListUI()
-	openHealingEntryAssignById(entry.id)
+	ptc_root_locals[138](var_237_0, ptc_root_locals[135](var_237_0))
+	table.insert(ptc_root_locals.healingEntries, var_237_0)
+	ptc_root_locals[14]()
+	ptc_root_locals[190](var_237_0.id)
 
-	return entry
+	return var_237_0
 end
 
 function HelperHealer.cancelPendingHealingEntryAssign()
-	ensureHealingEntries()
+	ptc_root_locals[23]()
 
-	for i = #healingEntries, 1, -1 do
-		local entry = healingEntries[i]
+	for iter_238_0 = #ptc_root_locals.healingEntries, 1, -1 do
+		local var_238_0 = ptc_root_locals.healingEntries[iter_238_0]
 
-		if entry.pendingAdd and not entryHasAction(entry) then
-			table.remove(healingEntries, i)
-			refreshHealingListUI()
-			clearHealingListSelection()
-			saveHealingConfig()
+		if var_238_0.pendingAdd and not ptc_root_locals[146](var_238_0) then
+			table.remove(ptc_root_locals.healingEntries, iter_238_0)
+			ptc_root_locals[14]()
+			ptc_root_locals[57]()
+			ptc_root_locals[158]()
 
 			return true
 		end
@@ -4049,11 +4132,11 @@ function HelperHealer.cancelPendingHealingEntryAssign()
 end
 
 function HelperHealer.openAddHealingSpellWindow()
-	createHealingButtonEntry("spell")
+	ptc_root_locals[191]("spell")
 end
 
 function HelperHealer.openAddHealingPotionWindow()
-	createHealingButtonEntry("potion")
+	ptc_root_locals[191]("potion")
 end
 
 function HelperHealer.openAddHealingWindow()
@@ -4061,82 +4144,82 @@ function HelperHealer.openAddHealingWindow()
 end
 
 function HelperHealer.openEditHealingWindow()
-	local entryId = getSelectedHealingEntryId()
+	local var_242_0 = ptc_root_locals[50]()
 
-	if not entryId then
+	if not var_242_0 then
 		return
 	end
 
-	openHealingFormWindow(entryId)
+	ptc_root_locals[188](var_242_0)
 end
 
 function HelperHealer.closeAddHealingWindow()
-	closeAddHealingWindowInternal()
+	ptc_root_locals[184]()
 end
 
-local function applyHealingEntryFromForm(closeAfter)
-	local form = readAddHealingForm()
+  ptc_root_locals[192] = function(arg_244_0)
+	local var_244_0 = ptc_root_locals[189]()
 
-	if not form then
+	if not var_244_0 then
 		return false
 	end
 
-	local focusEntryId = editingHealingEntryId
+	local id = ptc_root_locals[8]
 
-	if editingHealingEntryId then
-		local entry = findHealingEntryById(editingHealingEntryId)
+	if ptc_root_locals[8] then
+		local var_244_2 = ptc_root_locals[185](ptc_root_locals[8])
 
-		if entry then
-			entry.whenMetric1 = form.whenMetric1
-			entry.conditionLogic = form.conditionLogic
-			entry.whenMetric2 = form.whenMetric2
-			entry.conditionMin = form.conditionMin
-			entry.thresholdMin = form.thresholdMin
-			entry.conditionMax = form.conditionMax
-			entry.thresholdMax = form.thresholdMax
-			entry.words = form.words
-			entry.itemId = form.itemId
-			entry.subType = form.subType
-			entry.useType = form.useType
-			entry.parameter = form.parameter
+		if var_244_2 then
+			var_244_2.whenMetric1 = var_244_0.whenMetric1
+			var_244_2.conditionLogic = var_244_0.conditionLogic
+			var_244_2.whenMetric2 = var_244_0.whenMetric2
+			var_244_2.conditionMin = var_244_0.conditionMin
+			var_244_2.thresholdMin = var_244_0.thresholdMin
+			var_244_2.conditionMax = var_244_0.conditionMax
+			var_244_2.thresholdMax = var_244_0.thresholdMax
+			var_244_2.words = var_244_0.words
+			var_244_2.itemId = var_244_0.itemId
+			var_244_2.subType = var_244_0.subType
+			var_244_2.useType = var_244_0.useType
+			var_244_2.parameter = var_244_0.parameter
 		end
 	else
-		form.id = nextHealingEntryId
-		nextHealingEntryId = nextHealingEntryId + 1
+		var_244_0.id = ptc_root_locals[5]
+		ptc_root_locals[5] = ptc_root_locals[5] + 1
 
-		table.insert(healingEntries, form)
+		table.insert(ptc_root_locals.healingEntries, var_244_0)
 
-		editingHealingEntryId = form.id
-		focusEntryId = form.id
+		ptc_root_locals[8] = var_244_0.id
+		id = var_244_0.id
 	end
 
-	refreshHealingListUI()
+	ptc_root_locals[14]()
 
-	if ctx and ctx.saveConfig then
-		saveConfigIfReady()
+	if ptc_root_locals.ctx and ptc_root_locals.ctx.saveConfig then
+		ptc_root_locals.saveConfigIfReady()
 	end
 
-	if closeAfter then
-		closeAddHealingWindowInternal()
+	if arg_244_0 then
+		ptc_root_locals[184]()
 	end
 
-	if focusEntryId then
+	if id then
 		addEvent(function()
-			focusHealingRowByEntryId(focusEntryId)
+			ptc_root_locals[155](id)
 		end)
 	else
-		syncHealingActionButtons()
+		ptc_root_locals.syncHealingActionButtons()
 	end
 
 	return true
 end
 
 function HelperHealer.addHealingEntryOk()
-	applyHealingEntryFromForm(true)
+	ptc_root_locals[192](true)
 end
 
 function HelperHealer.addHealingEntryApply()
-	applyHealingEntryFromForm(false)
+	ptc_root_locals[192](false)
 end
 
 function HelperHealer.addHealingEntryConfirm()
@@ -4144,16 +4227,16 @@ function HelperHealer.addHealingEntryConfirm()
 end
 
 function HelperHealer.removeSelectedEntry()
-	local entryId = getSelectedHealingEntryId()
+	local var_249_0 = ptc_root_locals[50]()
 
-	if not entryId then
+	if not var_249_0 then
 		return
 	end
 
-	if removeHealingEntryById(entryId) then
-		refreshHealingListUI()
-		clearHealingListSelection()
-		saveHealingConfig()
+	if ptc_root_locals[156](var_249_0) then
+		ptc_root_locals[14]()
+		ptc_root_locals[57]()
+		ptc_root_locals[158]()
 	end
 end
 
@@ -4163,9 +4246,9 @@ function HelperHealer.onAddHealingThresholdChange(edit)
 	end
 
 	local text = edit:getText() or ""
-	local digits = sanitizeThresholdDigits(text)
+	local var_250_1 = ptc_root_locals[141](text)
 
-	if digits == "" then
+	if var_250_1 == "" then
 		if text ~= "" then
 			edit:setText("")
 		end
@@ -4173,22 +4256,22 @@ function HelperHealer.onAddHealingThresholdChange(edit)
 		return
 	end
 
-	local n = tonumber(digits)
+	local numericValue = tonumber(var_250_1)
 
-	if not n or n < HEALING_RANGE_MIN then
-		edit:setText(tostring(HEALING_RANGE_MIN))
-
-		return
-	end
-
-	if n > HEALING_RANGE_MAX then
-		edit:setText(tostring(HEALING_RANGE_MAX))
+	if not numericValue or numericValue < ptc_root_locals[122] then
+		edit:setText(tostring(ptc_root_locals[122]))
 
 		return
 	end
 
-	if digits ~= text then
-		edit:setText(digits)
+	if numericValue > ptc_root_locals[123] then
+		edit:setText(tostring(ptc_root_locals[123]))
+
+		return
+	end
+
+	if var_250_1 ~= text then
+		edit:setText(var_250_1)
 	end
 end
 
@@ -4198,73 +4281,73 @@ function HelperHealer.onAddHealingThresholdFocusChange(edit, focused)
 	end
 
 	local text = edit:getText() or ""
-	local defaultValue = HEALING_RANGE_DEFAULT_MAX
+	local var_251_1 = ptc_root_locals[125]
 
 	if edit:getId() == "addHealingThresholdMinEdit" then
-		defaultValue = HEALING_RANGE_DEFAULT_MIN
+		var_251_1 = ptc_root_locals[124]
 	end
 
 	if text == "" then
-		edit:setText(tostring(defaultValue))
+		edit:setText(tostring(var_251_1))
 
 		return
 	end
 
-	local clamped = clampHealingRange(text, defaultValue)
+	local var_251_2 = ptc_root_locals[130](text, var_251_1)
 
-	if tostring(clamped) ~= text then
-		edit:setText(tostring(clamped))
+	if tostring(var_251_2) ~= text then
+		edit:setText(tostring(var_251_2))
 	end
 end
 
-local function isSpellHealingEntry(entry)
-	return getHealingEntryGroup(entry) == "spell" and normalizeEntryWords(entry.words) ~= nil
+  ptc_root_locals[193] = function(arg_252_0)
+	return ptc_root_locals[134](arg_252_0) == "spell" and ptc_root_locals.normalizeEntryWords(arg_252_0.words) ~= nil
 end
 
-local function isPotionHealingEntry(entry)
-	local itemId = entry and tonumber(entry.itemId)
+  ptc_root_locals[194] = function(arg_253_0)
+	local var_253_0 = arg_253_0 and tonumber(arg_253_0.itemId)
 
-	return getHealingEntryGroup(entry) == "potion" and itemId and itemId > 0 and entry.useType ~= nil and entry.useType ~= ""
+	return ptc_root_locals[134](arg_253_0) == "potion" and var_253_0 and var_253_0 > 0 and arg_253_0.useType ~= nil and arg_253_0.useType ~= ""
 end
 
-local function isManaPotionHealingEntry(entry)
-	if not isPotionHealingEntry(entry) then
+  ptc_root_locals[195] = function(arg_254_0)
+	if not ptc_root_locals[194](arg_254_0) then
 		return false
 	end
 
-	if isSpiritPotion(entry.itemId) then
-		return getHealingEntryMetric(entry) == "MP"
+	if ptc_root_locals[112](arg_254_0.itemId) then
+		return ptc_root_locals[136](arg_254_0) == "MP"
 	end
 
-	return isManaPotion(entry.itemId)
+	return ptc_root_locals[110](arg_254_0.itemId)
 end
 
-local function isHealthPotionHealingEntry(entry)
-	if not isPotionHealingEntry(entry) then
+  ptc_root_locals[196] = function(arg_255_0)
+	if not ptc_root_locals[194](arg_255_0) then
 		return false
 	end
 
-	if isSpiritPotion(entry.itemId) then
-		return getHealingEntryMetric(entry) == "HP"
+	if ptc_root_locals[112](arg_255_0.itemId) then
+		return ptc_root_locals[136](arg_255_0) == "HP"
 	end
 
-	return not isManaPotion(entry.itemId)
+	return not ptc_root_locals[110](arg_255_0.itemId)
 end
 
-local function getOrderedHealingEntries(predicate, metric)
-	local entries = {}
+  ptc_root_locals[197] = function(entryHasAction, unusedArgument)
+	local config = {}
 
-	for index, entry in ipairs(healingEntries) do
-		if entry.enabled ~= false and entryHasAction(entry) and predicate(entry) then
-			table.insert(entries, {
-				entry = entry,
-				index = index,
-				percent = entryConditionPercent(entry)
+	for _, copy in ipairs(ptc_root_locals.healingEntries) do
+		if copy.enabled ~= false and ptc_root_locals[146](copy) and entryHasAction(copy) then
+			table.insert(config, {
+				entry = copy,
+				index = _,
+				percent = ptc_root_locals[137](copy)
 			})
 		end
 	end
 
-	table.sort(entries, function(a, b)
+	table.sort(config, function(a, b)
 		if a.percent == b.percent then
 			return a.index < b.index
 		end
@@ -4272,15 +4355,14 @@ local function getOrderedHealingEntries(predicate, metric)
 		return a.percent < b.percent
 	end)
 
-	return entries
+	return config
 end
 
-local function executeFirstPercentHealingEntry(state, predicate, metric)
-	for _, item in ipairs(getOrderedHealingEntries(predicate, metric)) do
-		local entry = item.entry
-		local conditionMet = metric and HelperHealer.entryMetricPercentConditionMet(entry, state, metric) or entryPercentConditionMet(entry, state)
+  ptc_root_locals[198] = function(arg_258_0, arg_258_1, arg_258_2)
+	for unusedValue, entry in ipairs(ptc_root_locals[197](arg_258_1, arg_258_2)) do
+		local entry = entry.entry
 
-		if conditionMet and executeEntryAction(entry, state) then
+		if (arg_258_2 and HelperHealer.entryMetricPercentConditionMet(entry, arg_258_0, arg_258_2) or ptc_root_locals[139](entry, arg_258_0)) and ptc_root_locals[179](entry, arg_258_0) then
 			return true
 		end
 	end
@@ -4288,112 +4370,175 @@ local function executeFirstPercentHealingEntry(state, predicate, metric)
 	return false
 end
 
-function HelperHealer.runTick(state)
-	ensureHealingEntries()
+  ptc_root_locals[199] = function()
+	local widget = ptc_root_locals.ctx and ptc_root_locals.ctx.getWidget("enableHealingCheckBox")
 
-	local enableHealing = ctx.getWidget("enableHealingCheckBox")
+	return widget and widget:isChecked() or false
+end
 
-	if not enableHealing or not enableHealing:isChecked() then
+  ptc_root_locals[200] = function(arg_260_0, arg_260_1)
+	local var_260_0
+
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		if ptc_root_local.enabled ~= false and ptc_root_locals[193](ptc_root_local) and ptc_root_locals[139](ptc_root_local, arg_260_0) and ptc_root_locals[113](ptc_root_local.words, arg_260_0.player, true) and (not arg_260_1 or not ptc_root_locals[114](ptc_root_local.words)) then
+			local spellByWords = Spells.getSpellByWords(ptc_root_local.words)
+			local numericValue = tonumber(spellByWords.mana) or 0
+
+			var_260_0 = math.min(var_260_0 or numericValue, numericValue)
+		end
+	end
+
+	return var_260_0
+end
+
+function HelperHealer.shouldYieldToHealing(arg_261_0, arg_261_1)
+	if not arg_261_0 or not ptc_root_locals[199]() then
 		return false
 	end
 
-	local acted = false
-	local healthPotionUsed = executeFirstPercentHealingEntry(state, isHealthPotionHealingEntry, "HP")
+	local maxHealth = arg_261_0:getMaxHealth() or 0
+	local health = arg_261_0:getHealth()
+	local maxMana = arg_261_0:getMaxMana() or 0
+	local mana = arg_261_0:getMana()
+	local var_261_4 = {
+		player = arg_261_0,
+		healthPercent = maxHealth > 0 and health and health / maxHealth * 100 or arg_261_0.getHealthPercent and arg_261_0:getHealthPercent() or 100,
+		manaPercent = maxMana > 0 and mana and mana / maxMana * 100 or 100
+	}
 
-	if healthPotionUsed then
-		acted = true
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		if ptc_root_local.enabled ~= false and (ptc_root_locals[193](ptc_root_local) or ptc_root_locals[196](ptc_root_local) or ptc_root_locals[195](ptc_root_local)) and ptc_root_locals[139](ptc_root_local, var_261_4) and ptc_root_locals[148](ptc_root_local, var_261_4) then
+			return true
+		end
 	end
 
-	if executeFirstPercentHealingEntry(state, isSpellHealingEntry) then
-		acted = true
+	local var_261_5 = ptc_root_locals[200](var_261_4)
+
+	if var_261_5 ~= nil then
+		local var_261_6 = g_clock.millis()
+
+		for unusedValue, spell in pairs(ptc_root_locals.multiUseExDelay.spells) do
+			if var_261_6 < spell then
+				return true
+			end
+		end
 	end
 
-	if not healthPotionUsed and executeFirstPercentHealingEntry(state, isManaPotionHealingEntry, "MP") then
-		acted = true
+	return var_261_5 ~= nil and var_261_5 > mana - (tonumber(arg_261_1) or 0)
+end
+
+function HelperHealer.runTick(state)
+	ptc_root_locals[23]()
+
+	if not state or not state.player or not ptc_root_locals[199]() then
+		return false
 	end
 
-	return acted
+	local var_262_0 = false
+	local var_262_1 = ptc_root_locals[200](state, true)
+	local mana = var_262_1 and var_262_1 > state.player:getMana()
+
+	if not mana then
+		ptc_root_locals.multiUseExDelay.lastHealthPotionWasPlain = false
+	end
+
+	local var_262_3 = mana and ptc_root_locals.multiUseExDelay.lastHealthPotionWasPlain and ptc_root_locals[198](state, ptc_root_locals[195], "MP")
+
+	if var_262_3 then
+		var_262_0 = true
+	end
+
+	local var_262_4 = not var_262_3 and ptc_root_locals[198](state, ptc_root_locals[196], "HP")
+
+	if var_262_4 then
+		var_262_0 = true
+	end
+
+	if ptc_root_locals[198](state, ptc_root_locals[193]) then
+		var_262_0 = true
+	end
+
+	if not var_262_4 and not var_262_3 and ptc_root_locals[198](state, ptc_root_locals[195], "MP") then
+		var_262_0 = true
+	end
+
+	return var_262_0
 end
 
 function HelperHealer.init(pctx)
-	ctx = pctx
+	ptc_root_locals.ctx = pctx
 
-	ensureHealingEntries()
-	connectGameEvents()
-	resolveHealingEntryPanels()
-	forEachHealingEntryPanel(function(panel)
-		connect(panel, {
+	ptc_root_locals[23]()
+	ptc_root_locals[106]()
+	ptc_root_locals.resolveHealingEntryPanels()
+	ptc_root_locals.forEachHealingEntryPanel(function(arg_264_0)
+		connect(arg_264_0, {
 			onChildFocusChange = function()
-				syncHealingActionButtons()
+				ptc_root_locals.syncHealingActionButtons()
 			end
 		})
 	end)
-	syncHealingActionButtons()
+	ptc_root_locals.syncHealingActionButtons()
 end
 
 function HelperHealer.onGameStart()
-	connectGameEvents()
+	ptc_root_locals[106]()
 end
 
 function HelperHealer.onShow()
-	refreshHealingListUI()
-	clearHealingListSelection()
+	ptc_root_locals[14]()
+	ptc_root_locals[57]()
 end
 
 function HelperHealer.onHide()
-	flushHealingPercentSave()
+	ptc_root_locals[160]()
 	HelperHealer.destroyHealingEntryDragGhost()
-	closeHelperItemAssignInternal()
-	closeAddHealingWindowInternal()
-	clearHealingListSelection()
+	ptc_root_locals.closeHelperItemAssignInternal()
+	ptc_root_locals[184]()
+	ptc_root_locals[57]()
 end
 
 function HelperHealer.clearListSelection()
-	clearHealingListSelection()
+	ptc_root_locals[57]()
 end
 
 function HelperHealer.terminate()
-	flushHealingPercentSave()
+	ptc_root_locals[160]()
 	HelperHealer.destroyHealingEntryDragGhost()
-	closeHelperItemAssignInternal()
-	closeAddHealingWindowInternal()
-	disconnectGameEvents()
-
-	helperCooldowns = {
-		spells = {},
-		groups = {}
-	}
-	multiUseExDelay = 0
+	ptc_root_locals.closeHelperItemAssignInternal()
+	ptc_root_locals[184]()
+	ptc_root_locals[107]()
+	ptc_root_locals[102]()
 end
 
 function HelperHealer.collectConfig(config)
-	ensureHealingEntries()
+	ptc_root_locals[23]()
 
 	config.healingEntries = {}
 	config.healingSlots = {}
 
-	for _, entry in ipairs(healingEntries) do
-		local copy = copyEntryForSave(entry)
+	for unusedValue, ptc_root_local in ipairs(ptc_root_locals.healingEntries) do
+		local var_271_0 = ptc_root_locals[162](ptc_root_local)
 
-		if entryHasAction(copy) then
-			table.insert(config.healingEntries, copy)
-			table.insert(config.healingSlots, HelperHealer.copyLegacyHealingSlot(copy))
+		if ptc_root_locals[146](var_271_0) then
+			table.insert(config.healingEntries, var_271_0)
+			table.insert(config.healingSlots, HelperHealer.copyLegacyHealingSlot(var_271_0))
 		end
 	end
 end
 
 function HelperHealer.loadFromConfig(config)
-	migrateHealingConfig(config)
-	ensureHealingEntries()
+	ptc_root_locals[178](config)
+	ptc_root_locals[23]()
 	scheduleEvent(function()
-		local ok, err = pcall(refreshHealingListUI)
+		local var_273_0, var_273_1 = pcall(ptc_root_locals[14])
 
-		if not ok and g_logger and g_logger.warning then
-			g_logger.warning("[HelperHealer] refreshHealingListUI after load failed: " .. tostring(err))
+		if not var_273_0 and g_logger and g_logger.warning then
+			g_logger.warning("[HelperHealer] refreshHealingListUI after load failed: " .. tostring(var_273_1))
 		end
 	end, 50)
 end
 
-function HelperHealer.onEnableHealingChange(_, _)
-	saveConfigIfReady()
+function HelperHealer.onEnableHealingChange(unusedArgument, unusedArgument)
+	ptc_root_locals.saveConfigIfReady()
 end

@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uistatsbar.lua
-
-UIStatsBar = extends(UIWidget, "UIStatsBar")
+﻿UIStatsBar = extends(UIWidget, "UIStatsBar")
 
 local function findDescendantById(root, wantId)
 	if not root or not wantId then
@@ -83,13 +81,17 @@ function UIStatsBar.create()
 	return stats
 end
 
-function UIStatsBar:reloadBorder()
+function UIStatsBar.reloadBorder(self)
 	if not self.grade then
 		if self.statsOrientation == "horizontal" then
 			self.grade = self:getChildById("horizontalGrade")
 		elseif self.statsOrientation == "vertical" then
 			self.grade = self:getChildById("verticalGrade")
 		end
+	end
+
+	if not self.grade then
+		return
 	end
 
 	for _, child in ipairs(self.grade:getChildren()) do
@@ -164,7 +166,7 @@ function UIStatsBar:reloadBorder()
 	end
 end
 
-function UIStatsBar:onStyleApply(styleName, styleNode)
+function UIStatsBar.onStyleApply(self, styleName, styleNode)
 	for name, value in pairs(styleNode) do
 		if name == "statsbar-type" then
 			self.statsType = value
@@ -184,7 +186,7 @@ function UIStatsBar:onStyleApply(styleName, styleNode)
 	bindStatsBarTextWidgets(self)
 end
 
-function UIStatsBar:setValue(value, total)
+function UIStatsBar.setValue(self, value, total)
 	bindStatsBarTextWidgets(self)
 
 	local canDrawBar = value ~= nil and total ~= nil and total ~= 0 and self.statsType and self.statsSize and self.statsOrientation and self.bar
@@ -271,9 +273,7 @@ function UIStatsBar:setValue(value, total)
 		return
 	end
 
-	local showNumbers = self.showText ~= false
-
-	if showNumbers then
+	if self.showText ~= false then
 		if self.textRow then
 			self.textRow:show()
 			self.textRow:raise()

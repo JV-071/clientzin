@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_cyclopedia/tab/items/items.lua
-
-Cyclopedia.Items = {}
+﻿Cyclopedia.Items = {}
 Cyclopedia.CategoryItems = {
 	{
 		name = "Armors",
@@ -130,11 +128,13 @@ local itemsRenderGeneration = 0
 local itemsSearchDebounceEvent
 local ignoreSearchTextChange = false
 local itemsIndexPreloadGeneration = 0
-local itemsIndexPreloadEvent, itemsIndexPreloadScheduled
+local itemsIndexPreloadEvent
+local itemsIndexPreloadScheduled
 local itemsVirtualMode = false
 local itemsVirtualEntries = {}
 local itemsVirtualPool = {}
 local itemsVirtualFirstIndex = 1
+local var_0_20
 
 local function cancelItemsListRender()
 	itemsRenderGeneration = itemsRenderGeneration + 1
@@ -270,6 +270,21 @@ local function setupItemsSearchEdit()
 			return false
 		end
 
+		if keyCode == KeyUp or keyCode == KeyDown then
+			local text = widget:getText() or ""
+
+			if itemsSearchDebounceEvent then
+				cancelItemsSearchDebounce()
+				Cyclopedia.ItemSearch(text, false)
+			end
+
+			if var_0_20 then
+				var_0_20(keyCode == KeyDown and 1 or -1)
+			end
+
+			return true
+		end
+
 		if keyCode == KeyEscape then
 			Cyclopedia.releaseItemsSearchFocus()
 
@@ -281,6 +296,10 @@ local function setupItemsSearchEdit()
 		end
 
 		return false
+	end
+
+	if g_modalManager and g_modalManager.hookSearchEdit then
+		g_modalManager.hookSearchEdit(edit)
 	end
 end
 
@@ -727,6 +746,28 @@ function Cyclopedia.onItemTrackCheckChange(widget, checked)
 	updateItemListTrackColorForId(itemId)
 end
 
+function Cyclopedia.onItemIgnoreSellAllCheckChange(arg_49_0, arg_49_1)
+	if arg_49_0._suppressIgnoreSellAllChange then
+		return
+	end
+
+	if not UI or not UI.selectItem then
+		return
+	end
+
+	local id = tonumber(UI.selectItem:getId())
+
+	if not id then
+		return
+	end
+
+	local game_npcmodal = modules.game_npcmodal
+
+	if game_npcmodal and game_npcmodal.setSellAllItemIgnored then
+		game_npcmodal.setSellAllItemIgnored(id, arg_49_1)
+	end
+end
+
 function Cyclopedia.computeLootPrice(thingType)
 	if not thingType then
 		return 0
@@ -948,7 +989,7 @@ function showItems()
 
 		ItemCat.BaseColor = CategoryColor
 
-		function ItemCat:onClick()
+		function ItemCat.onClick(self)
 			Cyclopedia.ResetItemCategorySelection(UI.CategoryList)
 			self:setChecked(true)
 			self:setBackgroundColor("#585858")
@@ -1152,7 +1193,7 @@ function Cyclopedia.onItemListRowClick(widget)
 		UI.InfoBase.quickLootCheck:setText("Skip when Quick Looting")
 	end
 
-	function UI.InfoBase.quickLootCheck:onCheckChange(checked)
+	function UI.InfoBase.quickLootCheck.onCheckChange(self, checked)
 		if checked then
 			modules.game_quickloot.QuickLoot.addLootList(clickedItemId, modules.game_quickloot.QuickLoot.data.filter)
 		else
@@ -1161,6 +1202,20 @@ function Cyclopedia.onItemListRowClick(widget)
 	end
 
 	UI.InfoBase.quickLootCheck:setChecked(modules.game_quickloot.QuickLoot.lootExists(clickedItemId, modules.game_quickloot.QuickLoot.data.filter))
+
+	local trackCheck = UI.InfoBase.ignoreSellAllCheck
+
+	if trackCheck then
+		local game_npcmodal = modules.game_npcmodal
+		local var_69_7 = game_npcmodal and game_npcmodal.isSellAllItemIgnored and game_npcmodal.isSellAllItemIgnored(clickedItemId)
+
+		trackCheck._suppressIgnoreSellAllChange = true
+
+		trackCheck:setChecked(var_69_7 == true)
+
+		trackCheck._suppressIgnoreSellAllChange = false
+		trackCheck.onCheckChange = Cyclopedia.onItemIgnoreSellAllCheckChange
+	end
 
 	local trackCheck = UI.InfoBase.TrackCheck
 
@@ -1185,7 +1240,7 @@ function Cyclopedia.onItemListRowClick(widget)
 
 		t_widget.BaseColor = sellColor
 
-		function t_widget:onClick()
+		function t_widget.onClick(self)
 			Cyclopedia.ResetItemCategorySelection(UI.InfoBase.SellBase.List)
 			self:setChecked(true)
 			self:setBackgroundColor("#585858")
@@ -1207,7 +1262,7 @@ function Cyclopedia.onItemListRowClick(widget)
 
 		t_widget.BaseColor = buyColor
 
-		function t_widget:onClick()
+		function t_widget.onClick(self)
 			Cyclopedia.ResetItemCategorySelection(UI.InfoBase.BuyBase.List)
 			self:setChecked(true)
 			self:setBackgroundColor("#585858")
@@ -1218,27 +1273,37 @@ function Cyclopedia.onItemListRowClick(widget)
 
 	UI.selectItem = widget
 	UI.selectedItemId = clickedItemId
+
+	local SearchEdit = UI.SearchEdit
+
+	if SearchEdit and not SearchEdit:isDestroyed() then
+		addEvent(function()
+			if UI and UI.SearchEdit == SearchEdit and not SearchEdit:isDestroyed() then
+				focusItemsSearchEdit()
+			end
+		end)
+	end
 end
 
 local function bindItemListRow(item, data)
-	local thingType, entry = resolveThingType(data)
+	local var_74_0, var_74_1 = resolveThingType(data)
 
-	if not thingType or not item then
+	if not var_74_0 or not item then
 		return
 	end
 
-	local marketData = thingType:getMarketData()
-	local hasMarket = thingType:isMarketable() and marketData and not table.empty(marketData)
-	local itemId = entry and entry.id or thingType:getId()
-	local displayName = entry and entry.name or Cyclopedia.getItemDisplayName(thingType)
+	local marketData = var_74_0:getMarketData()
+	local var_74_3 = var_74_0:isMarketable() and marketData and not table.empty(marketData)
+	local id = var_74_1 and var_74_1.id or var_74_0:getId()
+	local itemDisplayName = var_74_1 and var_74_1.name or Cyclopedia.getItemDisplayName(var_74_0)
 
-	item:setId(itemId)
-	item.Sprite:setItemId(itemId)
-	item.Name:setText(displayName)
-	item.Name:setColor(getItemListNameColor(itemId))
+	item:setId(id)
+	item.Sprite:setItemId(id)
+	item.Name:setText(itemDisplayName)
+	item.Name:setColor(getItemListNameColor(id))
 
 	item.Value = 0
-	item.Vocation = hasMarket and marketData.restrictVocation or 0
+	item.Vocation = var_74_3 and marketData.restrictVocation or 0
 
 	if item.Rarity then
 		item.Rarity:setImageSource("")
@@ -1249,9 +1314,7 @@ local function bindItemListRow(item, data)
 end
 
 function Cyclopedia.internalCreateItem(data)
-	local thingType = resolveThingType(data)
-
-	if not thingType then
+	if not resolveThingType(data) then
 		return
 	end
 
@@ -1387,6 +1450,114 @@ local function onVirtualItemsScroll(scrollArea, offset)
 	end
 end
 
+local function renderItemEntriesVirtual(entries)
+	local var_80_0, var_80_1 = resolveThingType(entries)
+
+	if var_80_1 and var_80_1.id then
+		return tonumber(var_80_1.id)
+	end
+
+	return var_80_0 and tonumber(var_80_0:getId()) or nil
+end
+
+function var_0_20(arg_81_0)
+	if not UI or not UI.ItemListBase or not UI.ItemListBase.List then
+		return false
+	end
+
+	local List = UI.ItemListBase.List
+	local numericValue = tonumber(UI.selectedItemId)
+	local var_81_2
+	local var_81_3 = 0
+	local children
+
+	if itemsVirtualMode then
+		var_81_3 = #itemsVirtualEntries
+
+		if numericValue then
+			for iter_81_0 = 1, var_81_3 do
+				if renderItemEntriesVirtual(itemsVirtualEntries[iter_81_0]) == numericValue then
+					var_81_2 = iter_81_0
+
+					break
+				end
+			end
+		end
+	else
+		children = List:getChildren()
+		var_81_3 = #children
+
+		if numericValue then
+			for iter_81_1 = 1, var_81_3 do
+				if tonumber(children[iter_81_1]:getId()) == numericValue then
+					var_81_2 = iter_81_1
+
+					break
+				end
+			end
+		end
+	end
+
+	if var_81_3 == 0 then
+		return false
+	end
+
+	local var_81_5
+
+	if var_81_2 then
+		var_81_5 = math.max(1, math.min(var_81_3, var_81_2 + arg_81_0))
+	else
+		var_81_5 = arg_81_0 < 0 and var_81_3 or 1
+	end
+
+	local var_81_6
+
+	if itemsVirtualMode then
+		local var_81_7 = #itemsVirtualPool
+
+		if var_81_7 == 0 then
+			return false
+		end
+
+		local var_81_8 = itemsVirtualFirstIndex
+
+		if var_81_5 < var_81_8 then
+			var_81_8 = var_81_5
+		elseif var_81_5 >= var_81_8 + var_81_7 then
+			var_81_8 = var_81_5 - var_81_7 + 1
+		end
+
+		local value = math.max(1, math.min(var_81_8, math.max(1, var_81_3 - var_81_7 + 1)))
+		local ListScrollbar = UI.ItemListBase.ListScrollbar
+
+		if ListScrollbar then
+			ListScrollbar:setValue((value - 1) * ITEMS_ROW_HEIGHT)
+
+			value = math.floor((ListScrollbar:getValue() or 0) / ITEMS_ROW_HEIGHT) + 1
+		end
+
+		if value ~= itemsVirtualFirstIndex then
+			rebindVirtualItemPool(value)
+		end
+
+		var_81_6 = itemsVirtualPool[var_81_5 - itemsVirtualFirstIndex + 1]
+	else
+		var_81_6 = children[var_81_5]
+
+		if var_81_6 then
+			List:ensureChildVisible(var_81_6)
+		end
+	end
+
+	if not var_81_6 or var_81_6:isDestroyed() or not var_81_6:isVisible() then
+		return false
+	end
+
+	Cyclopedia.onItemListRowClick(var_81_6)
+
+	return true
+end
+
 local function renderItemEntriesVirtual(entries, options)
 	options = options or {}
 
@@ -1413,8 +1584,7 @@ local function renderItemEntriesVirtual(entries, options)
 	end
 
 	local poolSize = math.min(ITEMS_VIRTUAL_POOL_SIZE, math.max(getItemsListVisibleRows(), 1))
-
-	poolSize = math.min(poolSize, #entries)
+	local poolSize = math.min(poolSize, #entries)
 
 	for i = 1, poolSize do
 		local widget = g_ui.createWidget("ItemsListBaseItem", list)
@@ -1502,9 +1672,7 @@ local function renderItemEntries(entries, options)
 		end
 	end
 
-	local sync = options.sync or count <= ITEMS_CHUNKED_THRESHOLD
-
-	if sync then
+	if options.sync or count <= ITEMS_CHUNKED_THRESHOLD then
 		for i = 1, count do
 			Cyclopedia.internalCreateItem(entries[i])
 		end
@@ -1590,9 +1758,7 @@ function Cyclopedia.applyFilters()
 		return
 	end
 
-	local isSearching = normalizeSearchText(UI.SearchEdit:getText()) ~= ""
-
-	if not isSearching then
+	if not (normalizeSearchText(UI.SearchEdit:getText()) ~= "") then
 		if UI.selectedCategory then
 			processItemsById(tonumber(UI.selectedCategory:getId()))
 		end
@@ -1888,7 +2054,7 @@ local function buildItemsIndexChunked(forceSync)
 	processBatch()
 end
 
-function Cyclopedia.startItemsIndexPreload()
+function Cyclopedia.startItemsIndexPreload(arg_99_0)
 	if Cyclopedia.ItemsIndexBuilt and Cyclopedia.AllItemList and #Cyclopedia.AllItemList > 0 then
 		return
 	end
@@ -1897,7 +2063,7 @@ function Cyclopedia.startItemsIndexPreload()
 		return
 	end
 
-	if not g_game.isOnline() then
+	if not arg_99_0 and not g_game.isOnline() then
 		return
 	end
 
@@ -1905,6 +2071,14 @@ function Cyclopedia.startItemsIndexPreload()
 end
 
 function Cyclopedia.scheduleItemsIndexPreload()
+	if Cyclopedia.ItemsIndexBuilt and Cyclopedia.AllItemList and #Cyclopedia.AllItemList > 0 then
+		return
+	end
+
+	if Cyclopedia.ItemsIndexPreloading then
+		return
+	end
+
 	if itemsIndexPreloadScheduled then
 		removeEvent(itemsIndexPreloadScheduled)
 
@@ -1962,9 +2136,7 @@ function Cyclopedia.loadItemDetail(itemId, descriptions)
 
 	UI.InfoBase.DetailsBase.List:destroyChildren()
 
-	local internalData = g_things.getThingType(itemId, ThingCategoryItem)
-
-	if not internalData then
+	if not g_things.getThingType(itemId, ThingCategoryItem) then
 		return
 	end
 

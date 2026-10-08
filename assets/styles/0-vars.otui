@@ -1,15 +1,26 @@
 // Labels-Default
-$var-font: verdana-11px-antialised
 
+// padrao que sera seguido:
+
+// $var-font-8-antialiased: Verdana-8px-antialiased
+// $var-font-8-outline: Verdana-8px-outline
+
+// $var-font-11-regular: Verdana-11px-regular
+// $var-font-11-antialiased: Verdana-11px-antialiased
+// $var-font-11-italic: Verdana-11px-italic
+// $var-font-11-outline: Verdana-11px-outline
+// $var-font-11-strikeout: Verdana-11px-strikeout
+// $var-font-11-underline: Verdana-11px-underline
+
+// $var-font-14-antialiased: Verdana-14px-antialiased
+
+$var-font: verdana-11px-antialised
 $var-cip-font: Verdana Bold-11px
 $var-cip-font-new: Verdana Bold-11px-new
 $var-cip-font-small: Verdana Bold-9px-small
 $var-cip-font-lowspace: Verdana Bold-11-px-lowspace
-$var-cip-font-off: Verdana-Strikethrough-11px
-$var-cip-font-wheel: Verdana Bold-11px-wheel
 $var-cip-font-outline: Verdana Bold-11px-outline
 
-$var-cip-font-ttf: verdana-ttf
 
 // Colors
 $var-text-color: #dfdfdf

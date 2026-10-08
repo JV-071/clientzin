@@ -1,20 +1,9 @@
-﻿-- chunkname: @/game_wheel/classes/workshop.lua
-
-Workshop = {}
+﻿Workshop = {}
 Workshop.__index = Workshop
-fragmentList = {}
 currentWorkshopPage = 1
 
-local function matchText(text, search)
-	if not text or not search then
-		return false
-	end
-
-	return text:lower():find(search:lower(), 1, true) ~= nil
-end
-
 function Workshop.getFragmentList()
-	return fragmentList
+	return ModCatalog.getFragmentList()
 end
 
 function Workshop.setCurrentPage(index)
@@ -22,87 +11,43 @@ function Workshop.setCurrentPage(index)
 end
 
 function Workshop.getDataByBonus(bonusID, supreme)
-	for _, data in pairs(fragmentList) do
-		if supreme and data.supreme and bonusID == data.modID or not supreme and not data.supreme and bonusID == data.modID then
-			return data
-		end
-	end
-
-	return nil
+	return ModCatalog.getDataByBonus(bonusID, supreme)
 end
 
 function Workshop.createFragments()
-	local player = g_game.getLocalPlayer()
+	return ModCatalog.createFragments()
+end
 
-	if not player then
-		return true
-	end
+function Workshop.getBonusDescription(modInfo, relativeTier)
+	return ModBonusText.getBonusDescription(modInfo, relativeTier)
+end
 
-	local vocationId = translateVocation(player:getVocation())
+function Workshop.getSideBonusDescription(data, targetTier)
+	return ModBonusText.getSideBonusDescription(data, targetTier)
+end
 
-	fragmentList = {}
+function Workshop.getBonusValue(modInfo, targetTier, firstBonus)
+	return ModBonusText.getBonusValue(modInfo, targetTier, firstBonus)
+end
 
-	for id = 0, #FlatSupremeMods do
-		local info = FlatSupremeMods[id]
+function Workshop.getUpgradeBonus(baseBonus, modID, supreme, targetTier)
+	return ModBonusText.getUpgradeBonus(baseBonus, modID, supreme, targetTier)
+end
 
-		if not info or id == 4 and vocationId > 6 then
-			-- block empty
-		else
-			info.modID = id
-			info.supreme = true
+function Workshop.getGemInformationByBonus(gemBonusID, supremeMod, gemID, gemSlot)
+	return ModBonusText.getGemInformationByBonus(gemBonusID, supremeMod, gemID, gemSlot)
+end
 
-			table.insert(fragmentList, info)
-		end
-	end
+function Workshop.getEquippedGemBonus()
+	return ModCatalog.getEquippedGemBonus()
+end
 
-	local vocationMods = VocationSupremeMods[vocationId]
-	local vocationIDRanges = {
-		[8] = {
-			fromID = 6,
-			toID = 24
-		},
-		[7] = {
-			fromID = 23,
-			toID = 41
-		},
-		[5] = {
-			fromID = 42,
-			toID = 58
-		},
-		[6] = {
-			fromID = 59,
-			toID = 75
-		},
-		[9] = {
-			fromID = 76,
-			toID = 93
-		}
-	}
-	local idRange = vocationIDRanges[vocationId]
+function Workshop.getSortList(sortOption, equippedBasic, equippedSupreme, text)
+	return ModCatalog.getSortList(sortOption, equippedBasic, equippedSupreme, text)
+end
 
-	if idRange then
-		for id = idRange.fromID, idRange.toID do
-			local info = vocationMods[id]
-
-			if info then
-				info.modID = id
-				info.supreme = true
-
-				table.insert(fragmentList, info)
-			end
-		end
-	end
-
-	for id = 0, #BasicMods do
-		local info = BasicMods[id]
-
-		if info then
-			info.modID = id
-			info.supreme = false
-
-			table.insert(fragmentList, info)
-		end
-	end
+function Workshop.searchModifications(text)
+	return ModCatalog.searchModifications(text)
 end
 
 function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText, focusIndex)
@@ -122,8 +67,8 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 		lastSelectedWidget = fragmentPanel:getFocusedChild()
 	end
 
-	local currentModList = fragmentList
-	local equippedBasic, equippedSupreme = Workshop.getEquippedGemBonus()
+	local currentModList = ModCatalog.getFragmentList()
+	local equippedBasic, equippedSupreme = ModCatalog.getEquippedGemBonus()
 	local sortBox = fragmentWindow:recursiveGetChildById("affinitiesBox")
 	local maxPages = math.ceil(#currentModList / 30)
 	local modCount = #currentModList
@@ -134,7 +79,7 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 	end
 
 	if sortBox:getCurrentOption().text ~= "All" then
-		currentModList = Workshop.getSortList(sortBox:getCurrentOption(), equippedBasic, equippedSupreme, searchText)
+		currentModList = ModCatalog.getSortList(sortBox:getCurrentOption(), equippedBasic, equippedSupreme, searchText)
 		maxPages = math.ceil(#currentModList / 30)
 		modCount = #currentModList
 
@@ -142,7 +87,7 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 			currentWorkshopPage = maxPages
 		end
 	elseif searchText and not string.empty(searchText) then
-		currentModList = Workshop.searchModifications(searchText)
+		currentModList = ModCatalog.searchModifications(searchText)
 		maxPages = math.ceil(#currentModList / 30)
 		modCount = #currentModList
 
@@ -177,7 +122,7 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 			basicMod:setVisible(false)
 			supremeMod:setVisible(true)
 			supremeMod:setImageClip(getSupremeModIconClip(info.modID))
-			supremeMod:setTooltip(Workshop.getBonusDescription(info))
+			supremeMod:setTooltip(ModBonusText.getBonusDescription(info))
 
 			local supremeTier = WheelOfDestiny.supremeModsUpgrade[info.modID]
 
@@ -192,7 +137,7 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 			basicMod:setVisible(true)
 			supremeMod:setVisible(false)
 			basicMod:setImageClip(info.modID * 30 .. " 0 30 30")
-			basicMod:setTooltip(Workshop.getBonusDescription(info))
+			basicMod:setTooltip(ModBonusText.getBonusDescription(info))
 
 			local basicTier = WheelOfDestiny.basicModsUpgrade[info.modID]
 
@@ -225,7 +170,6 @@ function Workshop.showFragmentList(startUp, nextPage, selectCurrent, searchText,
 				local count = isSupreme and (WheelOfDestiny.supremeModCount[tostring(info.modID)] or 0) or WheelOfDestiny.basicModCount[tostring(info.modID)] or 0
 
 				updateWidget(widget, info, isSupreme and equippedSupreme or equippedBasic, count)
-				g_logger.debug(string.format("[WorkshopCount] modID=%d supreme=%s -> count=%d (key='%s')", info.modID, tostring(isSupreme), count, tostring(info.modID)))
 			end
 		end
 	end
@@ -319,7 +263,7 @@ function Workshop.onSelectChild(list, selected)
 			backLine:setVisible(isActive)
 		end
 
-		bonusWidget:setText(Workshop.getSideBonusDescription(selected.cache, i))
+		bonusWidget:setText(ModBonusText.getSideBonusDescription(selected.cache, i))
 	end
 
 	local fragmentWidget = fragmentWindow:recursiveGetChildById("fragmentCost")
@@ -382,42 +326,6 @@ function Workshop.onSelectChild(list, selected)
 	modDesc:setText(selected.cache.desc or "")
 end
 
-function sendgemAction(actionType, param, pos)
-	if WheelOfDestiny.isPreview then
-		return
-	end
-
-	param = param or 0
-	pos = pos or 0
-
-	g_logger.debug(string.format("[GemAtelier] Sending action -> type=%d param=%d pos=%d", actionType, param, pos))
-	g_game.gemAction(actionType, param, pos)
-
-	if actionType == 3 then
-		scheduleEvent(function()
-			local gem = GemAtelier.getGemDataById(param)
-
-			if not gem then
-				g_logger.debug(string.format("[GemAtelier] Failed to toggle lock: gem id=%d not found.", param))
-
-				return
-			end
-
-			gem.locked = gem.locked == 1 and 0 or 1
-
-			g_logger.debug(string.format("[GemAtelier] Toggled local lock of gem id=%d -> %s", param, gem.locked == 1 and "locked" or "unlocked"))
-
-			if lastSelectedGem and lastSelectedGem.locker then
-				lastSelectedGem.locker:setChecked(gem.locked == 1)
-			end
-
-			local lastIndex = lastSelectedGem and lastSelectedGem.gemIndex or 1
-
-			GemAtelier.showGems(false, lastIndex)
-		end, 300)
-	end
-end
-
 function Workshop.onUpgradeModification(button)
 	if WheelOfDestiny.isPreview then
 		return true
@@ -426,328 +334,23 @@ function Workshop.onUpgradeModification(button)
 	local selected = fragmentWindow:recursiveGetChildById("fragmentContent")
 
 	if not selected or not button:isOn() then
-		g_logger.debug("[Workshop] No fragment selected or button not active.")
-
 		return true
 	end
 
 	local selectedWidget = selected:getFocusedChild()
 
 	if not selectedWidget then
-		g_logger.debug("[Workshop] No modification widget focused.")
-
 		return true
 	end
 
-	local modID = selectedWidget.cache.modID or -1
-	local supreme = selectedWidget.cache.supreme or false
-	local fragmentType = supreme and 0 or 1
+	local fragmentType
 
-	pos = modID
+	pos, fragmentType = selectedWidget.cache.modID or -1, (selectedWidget.cache.supreme or false) and 0 or 1
 
-	g_logger.debug(string.format("[Workshop] Requesting UpgradeModification -> action=4 | fragmentType=%d | pos=%d | supreme=%s", fragmentType, pos, tostring(supreme)))
-	sendgemAction(4, fragmentType, pos)
+	WheelGemActions.send(4, fragmentType, pos)
 end
 
-function Workshop.getBonusDescription(modInfo, relativeTier)
-	local description = ""
-
-	if modInfo.desc and modInfo.showDesc then
-		description = tr("%s\n", modInfo.desc)
-	end
-
-	local targetTier = modInfo.supreme and WheelOfDestiny.supremeModsUpgrade[modInfo.modID] or WheelOfDestiny.basicModsUpgrade[modInfo.modID]
-
-	if relativeTier then
-		targetTier = relativeTier
-	end
-
-	local step = bonusStep[WheelOfDestiny.vocationId]
-
-	local function getStepBonus(baseStep, stepType)
-		if modInfo.type and modInfo.type == "cooldown" then
-			if not targetTier or targetTier == 0 then
-				return 0
-			end
-
-			local specialValue = modInfo.baseII + modInfo.baseII * (targetTier - 1)
-
-			return targetTier == 3 and math.round(specialValue) or specialValue
-		elseif not stepType then
-			return Workshop.getUpgradeBonus(baseStep, modInfo.modID, modInfo.supreme, relativeTier)
-		elseif stepType == "mana" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.mana, modInfo.modID, modInfo.supreme, relativeTier)
-		elseif stepType == "health" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.life, modInfo.modID, modInfo.supreme, relativeTier)
-		elseif stepType == "capacity" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.capacity, modInfo.modID, modInfo.supreme, relativeTier)
-		else
-			return Workshop.getUpgradeBonus(baseStep, modInfo.modID, modInfo.supreme, relativeTier)
-		end
-	end
-
-	local bonusI = getStepBonus(modInfo.baseI, modInfo.stepTypeI)
-	local bonusII = modInfo.baseII and getStepBonus(modInfo.baseII, modInfo.stepTypeII)
-
-	local function processTooltip(bonusI, bonusII)
-		if modInfo.type == "cooldown" then
-			if targetTier == 0 then
-				local str = modInfo.tooltip
-				local result = str:gsub("\n.*", "")
-
-				return result
-			end
-
-			return tr(modInfo.tooltip, bonusII)
-		end
-
-		if bonusII then
-			return tr(modInfo.tooltip, bonusI, bonusII)
-		end
-
-		return tr(modInfo.tooltip, bonusI)
-	end
-
-	description = description .. processTooltip(bonusI, bonusII)
-
-	return description
-end
-
-function Workshop.getSideBonusDescription(data, targetTier)
-	local description = ""
-	local step = bonusStep[WheelOfDestiny.vocationId]
-
-	local function calculateSpecialValue(baseII, targetTier)
-		local specialValue = baseII + baseII * (targetTier - 1)
-
-		if targetTier == 3 then
-			specialValue = math.round(specialValue)
-		end
-
-		return specialValue
-	end
-
-	local function getStepBonus(baseStep, stepType)
-		if data.type and data.type == "cooldown" then
-			if targetTier == 0 then
-				return 0
-			end
-
-			local specialValue = data.baseII + data.baseII * (targetTier - 1)
-
-			if targetTier == 3 then
-				specialValue = math.round(specialValue)
-			end
-
-			return specialValue
-		elseif not stepType then
-			return Workshop.getUpgradeBonus(baseStep, data.modID, data.supreme, targetTier)
-		elseif stepType == "mana" then
-			return Workshop.getUpgradeBonus(data.baseStepI * step.mana, data.modID, data.supreme, targetTier)
-		elseif stepType == "health" then
-			return Workshop.getUpgradeBonus(data.baseStepI * step.life, data.modID, data.supreme, targetTier)
-		elseif stepType == "capacity" then
-			return Workshop.getUpgradeBonus(data.baseStepI * step.capacity, data.modID, data.supreme, targetTier)
-		else
-			return Workshop.getUpgradeBonus(baseStep, data.modID, data.supreme, targetTier)
-		end
-	end
-
-	local bonusI = getStepBonus(data.baseI, data.stepTypeI)
-	local bonusII = data.baseII and getStepBonus(data.baseII, data.stepTypeII)
-
-	local function processTooltip(bonusI, bonusII)
-		if data.type == "cooldown" then
-			if targetTier == 0 then
-				local str = data.tooltip
-				local result = str:gsub("\n.*", "")
-
-				return result
-			end
-
-			return tr(data.tooltip, bonusII)
-		end
-
-		if bonusII then
-			return tr(data.tooltip, bonusI, bonusII)
-		end
-
-		return tr(data.tooltip, bonusI)
-	end
-
-	description = description .. processTooltip(bonusI, bonusII)
-
-	return description
-end
-
-function Workshop.getBonusValue(modInfo, targetTier, firstBonus)
-	if not modInfo then
-		return 0
-	end
-
-	local step = bonusStep[WheelOfDestiny.vocationId]
-
-	local function getStepBonus(baseStep, stepType)
-		if modInfo.type and modInfo.type == "cooldown" then
-			if not targetTier or targetTier == 0 then
-				return 0
-			end
-
-			local specialValue = modInfo.baseII + modInfo.baseII * (targetTier - 1)
-
-			return targetTier == 3 and math.round(specialValue) or specialValue
-		elseif not stepType then
-			return Workshop.getUpgradeBonus(baseStep, modInfo.modID, modInfo.supreme, targetTier)
-		elseif stepType == "mana" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.mana, modInfo.modID, modInfo.supreme, targetTier)
-		elseif stepType == "health" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.life, modInfo.modID, modInfo.supreme, targetTier)
-		elseif stepType == "capacity" then
-			return Workshop.getUpgradeBonus(modInfo.baseStepI * step.capacity, modInfo.modID, modInfo.supreme, targetTier)
-		else
-			return Workshop.getUpgradeBonus(baseStep, modInfo.modID, modInfo.supreme, targetTier)
-		end
-	end
-
-	local bonusI = getStepBonus(modInfo.baseI, modInfo.stepTypeI)
-	local bonusII = modInfo.baseII and getStepBonus(modInfo.baseII, modInfo.stepTypeII)
-
-	return firstBonus and bonusI or bonusII
-end
-
-function Workshop.getGemInformationByBonus(gemBonusID, supremeMod, gemID, gemSlot)
-	local gem = GemAtelier.getGemDataById(gemID)
-
-	if not gem then
-		return 0
-	end
-
-	local effectiveLevel = GemAtelier.getEffectiveLevel(gem, gemBonusID, supremeMod, gemSlot)
-	local modInfo = Workshop.getDataByBonus(gemBonusID, supremeMod)
-
-	if not modInfo then
-		return "(Unkown)", 0
-	end
-
-	local text = Workshop.getBonusDescription(modInfo, effectiveLevel)
-
-	if text:find("Aug.") then
-		text = text:gsub("Aug.", "Augmented")
-	end
-
-	local translateText = {
-		[0] = "(I)",
-		"(II)",
-		"(III)",
-		"(IV)"
-	}
-
-	text = text .. " " .. translateText[effectiveLevel]
-
-	return text, effectiveLevel
-end
-
-function Workshop.getUpgradeBonus(baseBonus, modID, supreme, targetTier)
-	local modTier = targetTier and targetTier or supreme and WheelOfDestiny.supremeModsUpgrade[modID] or WheelOfDestiny.basicModsUpgrade[modID]
-
-	if not modTier then
-		return baseBonus
-	end
-
-	if modTier == 3 then
-		baseBonus = baseBonus + baseBonus * 50 / 100
-	else
-		baseBonus = baseBonus + baseBonus * (10 * modTier) / 100
-	end
-
-	baseBonus = roundToTwoDecimalPlaces(baseBonus)
-
-	return baseBonus
-end
-
-function Workshop.getEquippedGemBonus()
-	local basicMods = {}
-	local supremeMods = {}
-
-	local function emplaceEquippedBonus(bonus, bonusType, gemID)
-		if bonus ~= -1 then
-			bonusType[tostring(bonus)] = gemID
-		end
-	end
-
-	for _, id in pairs(WheelOfDestiny.equipedGems) do
-		local data = GemAtelier.getGemDataById(id)
-
-		if data then
-			emplaceEquippedBonus(data.lesserBonus, basicMods, data.gemID)
-			emplaceEquippedBonus(data.regularBonus, basicMods, data.gemID)
-			emplaceEquippedBonus(data.supremeBonus, supremeMods, data.gemID)
-		end
-	end
-
-	return basicMods, supremeMods
-end
-
-function Workshop.getSortList(sortOption, equippedBasic, equippedSupreme, text)
-	local tmpList = {}
-	local sortText = sortOption.text
-	local gradesText = {
-		["Grade III"] = 2,
-		["Grade II"] = 1,
-		["Grade IV"] = 3
-	}
-
-	for _, data in pairs(fragmentList) do
-		if text and not string.empty(text) and not matchText(text, data.tooltip) then
-			-- block empty
-		else
-			local modIDStr = tostring(data.modID)
-			local grade
-
-			if data.supreme then
-				grade = WheelOfDestiny.supremeModsUpgrade[data.modID]
-			else
-				grade = WheelOfDestiny.basicModsUpgrade[data.modID]
-			end
-
-			if sortText == "Basic Mods" and not data.supreme then
-				table.insert(tmpList, data)
-			elseif sortText == "Supreme Mods" and data.supreme then
-				table.insert(tmpList, data)
-			elseif sortText == "In-Vessel Mods" then
-				if data.supreme and equippedSupreme[modIDStr] or not data.supreme and equippedBasic[modIDStr] then
-					table.insert(tmpList, data)
-				end
-			elseif sortText == "Grade I" then
-				if not grade or grade < 1 then
-					table.insert(tmpList, data)
-				end
-			elseif gradesText[sortText] then
-				local gradeLevel = gradesText[sortText]
-
-				if grade and grade == gradeLevel then
-					table.insert(tmpList, data)
-				end
-			end
-		end
-	end
-
-	return tmpList
-end
-
-function Workshop.searchModifications(text)
-	local tmpList = {}
-
-	for _, data in pairs(fragmentList) do
-		if matchText(text, data.tooltip) then
-			table.insert(tmpList, data)
-		end
-	end
-
-	return tmpList
-end
-
-function Workshop:onSearchChange()
+function Workshop.onSearchChange(self)
 	local text = self:getText()
 
 	if string.empty(text) then

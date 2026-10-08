@@ -1,12 +1,10 @@
-﻿-- chunkname: @/game_imbuementtracker/imbuementtracker.lua
-
-local IMBUEMENTTRACKER_SLOTS = {
-	INVENTORYSLOT_FEET = 8,
-	INVENTORYSLOT_LEFT = 6,
+﻿local IMBUEMENTTRACKER_SLOTS = {
 	INVENTORYSLOT_RIGHT = 5,
 	INVENTORYSLOT_ARMOR = 4,
 	INVENTORYSLOT_BACKPACK = 3,
-	INVENTORYSLOT_HEAD = 1
+	INVENTORYSLOT_HEAD = 1,
+	INVENTORYSLOT_FEET = 8,
+	INVENTORYSLOT_LEFT = 6
 }
 local IMBUEMENTTRACKER_FILTERS = {
 	showLessThan1h = true,
@@ -80,6 +78,21 @@ function initialize()
 
 	imbuementTracker = g_ui.createWidget("ImbuementTracker", modules.game_interface.getRightPanel())
 
+	Keybind.new("Windows", "Show/hide imbuement tracker", "", "")
+	Keybind.bind("Windows", "Show/hide imbuement tracker", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if not g_game.isOnline() or not imbuementTrackerButton then
+					return false
+				end
+
+				toggle()
+
+				return true
+			end
+		}
+	}, modules.game_interface.getRootPanel())
 	imbuementTracker:setContentMinimumHeight(80)
 
 	local toggleFilterButton = imbuementTracker:recursiveGetChildById("toggleFilterButton")
@@ -171,6 +184,7 @@ function onMiniWindowClose()
 end
 
 function terminate()
+	Keybind.delete("Windows", "Show/hide imbuement tracker")
 	disconnect(g_game, {
 		onGameStart = onGameStart,
 		onGameEnd = onGameEnd,
@@ -282,7 +296,7 @@ local function showTrackedItemContextMenu(itemWidget, mousePos)
 		local count = inspectItem:getCount()
 
 		if not count or count < 1 then
-			count = 1
+			local count = 1
 		end
 
 		g_game.inspectionNormalObject(pos)
@@ -460,9 +474,8 @@ local function buildSlots(trackedItem, activeSlots, totalSlots)
 			slot:setId("slot" .. imbuementSlot.id)
 
 			local iconId = imbuementSlot.iconId or 0
-			local icon = slot:getChildById("icon")
 
-			icon:setImageClip(string.format("%d 0 64 64", iconId * 64))
+			slot:getChildById("icon"):setImageClip(string.format("%d 0 64 64", iconId * 64))
 			slot:setMarginLeft(3)
 			setDuration(slot.duration, imbuementSlot.duration)
 			setImbuementSlotTooltip(slot, imbuementSlot)
@@ -558,18 +571,16 @@ function onUpdateImbuementTracker(items)
 end
 
 function onGameStart()
-	if g_game.getClientVersion() >= 1100 then
-		imbuementTrackerButton = modules.game_mainpanel.addToggleButton("imbuementTrackerButton", tr("Open Imbuement Tracker Window"), "/images/options/button_imbuement_tracker", toggle)
+	imbuementTrackerButton = modules.game_mainpanel.addToggleButton("imbuementTrackerButton", tr("Open Imbuement Tracker Window"), "/images/options/button_imbuement_tracker", toggle)
 
-		imbuementTracker:setupOnStart()
-		syncImbuementTrackerMainPanelButton()
-		addEvent(function()
-			if imbuementTrackerButton and not imbuementTrackerButton:isDestroyed() then
-				g_game.imbuementDurations(imbuementTrackerButton:isOn())
-			end
-		end)
-		loadFilters()
-	end
+	imbuementTracker:setupOnStart()
+	syncImbuementTrackerMainPanelButton()
+	addEvent(function()
+		if imbuementTrackerButton and not imbuementTrackerButton:isDestroyed() then
+			g_game.imbuementDurations(imbuementTrackerButton:isOn())
+		end
+	end)
+	loadFilters()
 end
 
 function onGameEnd()

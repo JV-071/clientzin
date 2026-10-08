@@ -130,6 +130,18 @@ ActionSlot < UIActionSlot
     visible: false
 
   UIWidget
+    id: helperBorder
+    size: 34 34
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    image-source: /images/game/actionbar/border_active_helper
+    image-size: 34 34
+    image-clip: 0 0 34 34
+    visible: false
+    phantom: true
+    focusable: false
+
+  UIWidget
     id: activeSpell
     size: 32 32
     anchors.horizontalCenter: parent.horizontalCenter

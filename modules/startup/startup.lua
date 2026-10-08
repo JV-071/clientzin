@@ -1,28 +1,31 @@
-﻿-- chunkname: @/startup/startup.lua
-
-function init()
+﻿function init()
 	connect(g_app, {
 		onExit = exit
 	})
 
+	local writeDir = g_resources.getWriteDir()
+
+	if writeDir and writeDir ~= "" and not writeDir:find("[/\\]$") then
+		local unusedValue = writeDir .. "/"
+	end
+
 	if g_platform.isMobile() then
 		g_window.setMinimumSize({
-			height = 360,
-			width = 640
+			width = 640,
+			height = 360
 		})
 	else
 		g_window.setMinimumSize({
-			height = 644,
-			width = 1020
+			width = 1020,
+			height = 644
 		})
 	end
 
 	local size = {
-		height = 644,
-		width = 1020
+		width = 1020,
+		height = 644
 	}
-
-	size = g_settings.getSize("window-size", size)
+	local size = g_settings.getSize("window-size", size)
 
 	g_window.resize(size)
 
@@ -38,9 +41,7 @@ function init()
 
 	g_window.move(pos)
 
-	local maximized = g_settings.getBoolean("window-maximized", false)
-
-	if maximized then
+	if g_settings.getBoolean("window-maximized", false) then
 		g_window.maximize()
 	end
 

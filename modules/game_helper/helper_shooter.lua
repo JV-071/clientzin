@@ -1,10 +1,16 @@
-﻿-- chunkname: @/game_helper/helper_shooter.lua
+﻿HelperShooter = HelperShooter or {}
 
-HelperShooter = HelperShooter or {}
-
-local ctx, assignSpellWindow, assignSpellsPanel, addShooterWindow, selectedShooterAction, presetWindow
+local ctx
+local assignSpellWindow
+local assignSpellsPanel
+local addShooterWindow
+local selectedShooterAction
+local presetWindow
 local assignMode = "spells"
-local editingPriorityListIndex, assignSpellPreviewById, assignSpellPreviewByName, activeAssignPreviewFrame
+local editingPriorityListIndex
+local assignSpellPreviewById
+local assignSpellPreviewByName
+local activeAssignPreviewFrame
 local hotkeyShooterStatus = false
 local magicShooterOnHold = false
 local suppressShooterCheckChange = false
@@ -23,7 +29,6 @@ local lastTickPriorityUs = 0
 local lastTickPriorityLabel = "none"
 local comboMode = false
 local comboNextIndex = 1
-local boundShooterEnableHotkey
 local boundPresetHotkeys = {}
 local SHOOTER_PZ_AUTO_ENABLED = "enabled"
 local SHOOTER_PZ_AUTO_DISABLED = "disabled"
@@ -35,12 +40,11 @@ local wasFollowingCreature = false
 local ignoredSpellsIds = {
 	[275] = true,
 	[274] = true,
-	[143] = true,
-	[159] = true,
-	[297] = true,
 	[84] = true,
-	[128] = true,
+	[143] = true,
 	[242] = true,
+	[297] = true,
+	[159] = true,
 	[144] = true,
 	[160] = true,
 	[145] = true,
@@ -49,11 +53,104 @@ local ignoredSpellsIds = {
 	[141] = true,
 	[147] = true,
 	[140] = true,
-	[296] = true,
 	[139] = true,
 	[138] = true,
 	[29] = true,
 	[276] = true
+}
+local var_0_38 = {
+	[93] = {
+		defaultIntervalMs = 2000,
+		range = 2,
+		minRange = 1
+	},
+	[237] = {
+		defaultIntervalMs = 2000,
+		range = 6,
+		minRange = 2
+	},
+	[238] = {
+		defaultIntervalMs = 16000,
+		range = 6,
+		minRange = 2
+	},
+	[280] = {
+		defaultIntervalMs = 10000,
+		range = 6,
+		minRange = 2
+	},
+	[126] = {
+		defaultIntervalMs = 60000
+	},
+	[127] = {
+		defaultIntervalMs = 60000
+	},
+	[128] = {
+		defaultIntervalMs = 60000
+	},
+	[129] = {
+		defaultIntervalMs = 60000
+	},
+	[281] = {
+		defaultIntervalMs = 60000
+	},
+	[296] = {
+		defaultIntervalMs = 12000
+	}
+}
+local var_0_39 = 261
+local var_0_40 = 3155
+local var_0_41 = {}
+
+local function var_0_42(arg_1_0)
+	return type(arg_1_0) == "table" and arg_1_0.type == "rune" and tonumber(arg_1_0.id) == var_0_40
+end
+
+local var_0_43 = {
+	spell_1 = {
+		{
+			id = 6,
+			maxPoints = 200
+		},
+		{
+			id = 21,
+			maxPoints = 50
+		}
+	},
+	spell_4 = {
+		{
+			id = 13,
+			maxPoints = 100
+		},
+		{
+			id = 29,
+			maxPoints = 100
+		}
+	},
+	spell_5 = {
+		{
+			id = 16,
+			maxPoints = 50
+		},
+		{
+			id = 31,
+			maxPoints = 200
+		}
+	}
+}
+local var_0_44 = {
+	[283] = 4,
+	[258] = 2,
+	[295] = 2,
+	[268] = 3,
+	[267] = 4,
+	[266] = 4,
+	[265] = 4,
+	[264] = 4,
+	[263] = 3,
+	[262] = 3,
+	[261] = 2,
+	[260] = 2
 }
 local ZEBRA_COLOR_A = "#484848"
 local ZEBRA_COLOR_B = "#414141"
@@ -255,6 +352,86 @@ local function playerCanUseSpellVocations(vocations)
 	return false
 end
 
+local function playerCanUseAttackSpell()
+	local var_19_0 = modules and modules.game_wheel
+	local var_19_1
+
+	if var_19_0 and type(var_19_0.getActiveWheelState) == "function" then
+		var_19_1 = var_19_0.getActiveWheelState()
+	else
+		local var_19_2 = rawget(_G, "WheelOfDestiny")
+
+		if type(var_19_2) == "table" and type(var_19_2.getActiveState) == "function" then
+			var_19_1 = var_19_2.getActiveState()
+		end
+	end
+
+	if type(var_19_1) ~= "table" or var_19_1.ready ~= true then
+		return nil
+	end
+
+	return var_19_1
+end
+
+local function var_0_69(arg_20_0)
+	local var_20_0 = playerCanUseAttackSpell()
+	local var_20_1 = var_0_43[arg_20_0]
+
+	if not var_20_0 or type(var_20_0.pointInvested) ~= "table" or not var_20_1 then
+		return 0
+	end
+
+	local var_20_2 = 0
+
+	for unusedValue, entry in ipairs(var_20_1) do
+		if (tonumber(var_20_0.pointInvested[entry.id]) or 0) >= entry.maxPoints then
+			var_20_2 = var_20_2 + 1
+		end
+	end
+
+	return var_20_2
+end
+
+local function var_0_70(arg_21_0)
+	local var_21_0 = playerCanUseAttackSpell()
+
+	if not var_21_0 then
+		return false
+	end
+
+	return (type(var_21_0.passivePoints) == "table" and (tonumber(var_21_0.passivePoints[arg_21_0]) or 0) or 0) + (type(var_21_0.extraPassivePoints) == "table" and (tonumber(var_21_0.extraPassivePoints[arg_21_0]) or 0) or 0) >= 250
+end
+
+local function var_0_71(arg_22_0)
+	if type(arg_22_0) ~= "table" then
+		return nil
+	end
+
+	local area = arg_22_0.area
+
+	if (arg_22_0.id == 22 or arg_22_0.id == 23 or arg_22_0.id == 260) and var_0_70(2) then
+		return arg_22_0.id == 22 and SpellAreas.AREA_WIDE_BEAM5 or SpellAreas.AREA_WIDE_BEAM8
+	end
+
+	if arg_22_0.id == 59 and var_0_69("spell_1") >= 2 then
+		return SpellAreas.AREA_AUGMENTED_FRONT_SWEEP
+	end
+
+	if arg_22_0.id == 13 and var_0_69("spell_4") >= 1 then
+		return SpellAreas.AREA_SQUAREWAVE6
+	end
+
+	if arg_22_0.id == 43 and var_0_69("spell_5") >= 2 then
+		return SpellAreas.AREA_SQUAREWAVE6
+	end
+
+	if arg_22_0.id == 287 and var_0_69("spell_5") >= 1 then
+		return SpellAreas.AREA_GREATER_FLURRYWAVE or area
+	end
+
+	return area
+end
+
 local function playerCanUseAttackSpell(spellData)
 	if not spellData then
 		return false
@@ -262,11 +439,27 @@ local function playerCanUseAttackSpell(spellData)
 
 	local player = g_game.getLocalPlayer()
 
-	if player and spellData.level and player:getLevel() < spellData.level then
+	if player then
+		local level = spellData.level
+
+		if level and level > player:getLevel() then
+			return false
+		end
+	end
+
+	local var_23_2 = var_0_44[spellData.id]
+
+	if var_23_2 and not var_0_70(var_23_2) then
 		return false
 	end
 
 	return playerCanUseSpellVocations(spellData.vocations)
+end
+
+function HelperShooter.isWheelSpellUnlocked(arg_24_0)
+	local var_24_0 = var_0_44[tonumber(arg_24_0)]
+
+	return not var_24_0 or var_0_70(var_24_0)
 end
 
 local function playerCanUseAttackRune(runeData)
@@ -554,6 +747,10 @@ local function isShooterAssignableSpell(spellData)
 		return false
 	end
 
+	if var_0_38[spellData.id] then
+		return true
+	end
+
 	if spellData.id == 279 then
 		return true
 	end
@@ -606,6 +803,10 @@ local function getEntityPosition(entity)
 end
 
 local function isShooterFamiliar(creature)
+	if HelperTarget and HelperTarget.isExcludedCombatCreature then
+		return HelperTarget.isExcludedCombatCreature(creature)
+	end
+
 	return HelperTarget and HelperTarget.isFamiliar and HelperTarget.isFamiliar(creature) or false
 end
 
@@ -729,8 +930,8 @@ local function clampCreatures(value)
 		return 1
 	end
 
-	if n > 8 then
-		return 8
+	if n > 12 then
+		return 12
 	end
 
 	return n
@@ -754,7 +955,29 @@ local function clampHarmony(value)
 	return n
 end
 
-local function formatHarmonyOption(value)
+local function formatHarmonyOption(value, arg_54_1)
+	local var_54_0 = var_0_38[tonumber(arg_54_1)]
+	local var_54_1 = var_54_0 and var_54_0.defaultIntervalMs or 2000
+	local var_54_2 = math.floor(tonumber(value) or var_54_1)
+
+	return math.max(1000, math.min(60000, var_54_2))
+end
+
+local function var_0_101(text, value)
+	if type(text) == "table" then
+		text = text.text
+	end
+
+	local s = tonumber(tostring(text or ""):match("%d+"))
+
+	return formatHarmonyOption(s and s * 1000 or nil, value)
+end
+
+local function var_0_102(arg_56_0, arg_56_1)
+	return tostring(math.floor(formatHarmonyOption(arg_56_0, arg_56_1) / 1000))
+end
+
+local function var_0_103(value)
 	local harmony = clampHarmony(value)
 
 	return harmony >= 5 and "5" or tostring(harmony) .. "+"
@@ -893,6 +1116,10 @@ local function sanitizePriorityList(priorityList)
 		local migrated = migratePriorityEntry(entry)
 
 		if migrated then
+			if var_0_42(migrated) then
+				migrated.useTo = "target"
+			end
+
 			if migrated.type == "spell" and spellUsesHarmonyById(migrated.id) then
 				migrated.harmony = clampHarmony(entry.harmony)
 			else
@@ -901,7 +1128,10 @@ local function sanitizePriorityList(priorityList)
 
 			if migrated.type == "spell" then
 				migrated.turnToCast = entry.turnToCast == true
+				migrated.intervalMs = var_0_38[migrated.id] and formatHarmonyOption(entry.intervalMs, migrated.id) or nil
 			end
+
+			migrated.onlyWhenAlone = entry.onlyWhenAlone == true or nil
 
 			table.insert(sanitized, migrated)
 		end
@@ -931,6 +1161,7 @@ local function normalizeProfile(profile)
 					rangeMax = tonumber(spellEntry.rangeMax) or 7,
 					creatures = clampCreatures(spellEntry.creatures),
 					harmony = tonumber(spellEntry.harmony),
+					intervalMs = spellEntry.intervalMs,
 					forceCast = spellEntry.forceCast == true,
 					useTo = spellEntry.useTo or spellEntry.selfCast == true and "self" or "target"
 				}
@@ -1056,6 +1287,7 @@ local function clearShooterCooldownState()
 	groupPendingSince = {}
 	multiUsePendingSince = 0
 	lastGlobalCastAt = 0
+	var_0_41 = {}
 end
 
 function HelperShooter.onSpellCooldown(spellId, duration)
@@ -1067,7 +1299,7 @@ function HelperShooter.onSpellGroupCooldown(groupId, duration)
 end
 
 function HelperShooter.onMultiUseCooldown(duration)
-	return
+	multiUsePendingSince = 0
 end
 
 local CAST_CONFIRM_TIMEOUT_MS = 2000
@@ -1131,7 +1363,11 @@ local function isMultiUseOnCooldown(nowMs)
 		return true
 	end
 
-	return pendingConfirmActive(multiUsePendingSince, nowMs)
+	return pendingConfirmActive(multiUsePendingSince, nowMs) or HelperHealer and HelperHealer.isItemUsePending and HelperHealer.isItemUsePending() or false
+end
+
+function HelperShooter.isItemUsePending()
+	return pendingConfirmActive(multiUsePendingSince, g_clock.millis())
 end
 
 local function applyLocalCastLock(spell)
@@ -1159,7 +1395,7 @@ local function getRuneAreaByItemId(itemId)
 		return nil
 	end
 
-	local runeAreas = {
+	return ({
 		[3161] = SpellAreas.AREA_CIRCLE3X3,
 		[3191] = SpellAreas.AREA_CIRCLE3X3,
 		[3202] = SpellAreas.AREA_CIRCLE3X3,
@@ -1169,9 +1405,7 @@ local function getRuneAreaByItemId(itemId)
 		[3173] = SpellAreas.AREA_CIRCLE1X1,
 		[3200] = SpellAreas.AREA_CIRCLE1X1,
 		[21351] = SpellAreas.AREA_CIRCLE1X1
-	}
-
-	return runeAreas[itemId]
+	})[itemId]
 end
 
 local function getRuneUsageSpell(itemId)
@@ -1185,7 +1419,7 @@ local function getRuneUsageSpell(itemId)
 		return nil
 	end
 
-	runeSpell = {
+	local runeSpell = {
 		id = runeSpell.id,
 		name = runeSpell.name,
 		icon = runeSpell.icon,
@@ -1193,7 +1427,6 @@ local function getRuneUsageSpell(itemId)
 		exhaustion = runeSpell.exhaustion,
 		area = getRuneAreaByItemId(itemId)
 	}
-
 	local conjureSpell = Spells.getSpellDataById(runeSpell.id)
 
 	if conjureSpell then
@@ -1203,14 +1436,40 @@ local function getRuneUsageSpell(itemId)
 	return runeSpell
 end
 
-local function clampPercent(value, fallback)
-	if type(value) == "table" then
-		value = value.text
+function HelperShooter.isSingleTargetSpell(arg_79_0)
+	if type(arg_79_0) ~= "table" or var_0_38[arg_79_0.id] then
+		return false
 	end
 
-	local n = tonumber(value)
+	if arg_79_0.crossHairTarget == true or arg_79_0.directional == true then
+		return false
+	end
 
-	n = n or fallback or 0
+	if type(var_0_71(arg_79_0)) == "table" then
+		return false
+	end
+
+	return arg_79_0.needTarget ~= false or (tonumber(arg_79_0.range) or 0) > 0
+end
+
+function HelperShooter.isSingleTargetAction(arg_80_0, arg_80_1)
+	if type(arg_80_0) ~= "table" or not arg_80_0.id or (arg_80_1 or "target") ~= "target" then
+		return false
+	end
+
+	if arg_80_0.type == "spell" then
+		return arg_80_0.id ~= var_0_39 and HelperShooter.isSingleTargetSpell(Spells.getSpellDataById(arg_80_0.id))
+	end
+
+	return arg_80_0.type == "rune" and type(getRuneAreaByItemId(arg_80_0.id)) ~= "table"
+end
+
+local function clampPercent(text, fallback)
+	if type(text) == "table" then
+		text = text.text
+	end
+
+	local n = tonumber(text) or fallback or 0
 
 	if n < 0 then
 		return 0
@@ -1374,6 +1633,54 @@ local function tryCastPrioritySpell(config, ctx)
 		return false
 	end
 
+	if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(player, spell.mana) then
+		return false
+	end
+
+	if not playerCanUseAttackSpell(spell) then
+		debugLog("Skip " .. tostring(spell.words) .. ": spell is not available in the active Wheel/level")
+
+		return false
+	end
+
+	local var_88_7 = var_0_71(spell)
+	local var_88_8 = var_0_38[spell.id]
+
+	if var_88_8 then
+		local var_88_9 = formatHarmonyOption(config.intervalMs, spell.id)
+		local var_88_10 = var_0_41[spell.id] or 0
+
+		if var_88_10 > 0 and var_88_9 > nowMs - var_88_10 then
+			debugLog(string.format("Skip %s: timer has %d ms remaining", spell.words, var_88_9 - (nowMs - var_88_10)))
+
+			return false
+		end
+
+		local var_88_11 = #creatureList
+
+		if var_88_8.minRange then
+			var_88_11 = 0
+
+			for unusedValue, entry in ipairs(creatureList) do
+				if entry.position then
+					local distanceBetween = HelperTarget.getDistanceBetween(position, entry.position)
+
+					if distanceBetween >= var_88_8.minRange and distanceBetween <= var_88_8.range then
+						var_88_11 = var_88_11 + 1
+					end
+				end
+			end
+		end
+
+		local var_88_13 = config.forceCast and 1 or clampCreatures(config.creatures)
+
+		if var_88_11 < var_88_13 then
+			debugLog(string.format("Skip %s: %d creatures in range < %d required", spell.words, var_88_11, var_88_13))
+
+			return false
+		end
+	end
+
 	if spell.mana and player:getMana() < spell.mana then
 		debugLog("Skip " .. spell.words .. ": not enough mana")
 
@@ -1393,11 +1700,11 @@ local function tryCastPrioritySpell(config, ctx)
 	end
 
 	if spell.useHarmony == true then
-		local requiredHarmony = clampHarmony(config.harmony)
-		local currentHarmony = player.getHarmony and player:getHarmony() or 0
+		local var_88_14 = clampHarmony(config.harmony)
+		local harmony = player.getHarmony and player:getHarmony() or 0
 
-		if currentHarmony < requiredHarmony then
-			debugLog(string.format("Skip %s: harmony %d < %d required", spell.words, currentHarmony, requiredHarmony))
+		if harmony < var_88_14 then
+			debugLog(string.format("Skip %s: harmony %d < %d required", spell.words, harmony, var_88_14))
 
 			return false
 		end
@@ -1405,10 +1712,9 @@ local function tryCastPrioritySpell(config, ctx)
 
 	local isSelfCast = config.useTo == "self" or not config.useTo and config.selfCast == true
 	local isCrossHairSpell = spell.crossHairTarget == true
-	local isSingleTargetRanged = (tonumber(spell.range) or 0) > 0 and type(spell.area) ~= "table" and spell.directional ~= true
-	local needsExternalTarget = not isSelfCast and not isCrossHairSpell and spell.directional ~= true and (spell.needTarget ~= false or isSingleTargetRanged)
+	local isSingleTargetRanged = (tonumber(spell.range) or 0) > 0 and type(var_88_7) ~= "table" and spell.directional ~= true
 
-	if needsExternalTarget then
+	if not isSelfCast and not isCrossHairSpell and spell.directional ~= true and (spell.needTarget ~= false or isSingleTargetRanged) then
 		if not isMapCreature(combatTarget) then
 			return false
 		end
@@ -1442,6 +1748,22 @@ local function tryCastPrioritySpell(config, ctx)
 
 			return false
 		end
+
+		if spell.id == var_0_39 then
+			local var_88_20 = clampCreatures(config.creatures)
+
+			if var_88_20 > #creatureList and not config.forceCast then
+				debugLog(string.format("Skip %s: %d monsters nearby < %d required", spell.words, #creatureList, var_88_20))
+
+				return false
+			end
+		end
+
+		if spell.id ~= var_0_39 and config.onlyWhenAlone == true and #creatureList > 1 and HelperShooter.isSingleTargetSpell(spell) then
+			debugLog(string.format("Skip %s: %d monsters around, Cast with 1+ is off", spell.words, #creatureList))
+
+			return false
+		end
 	end
 
 	if isCrossHairSpell then
@@ -1455,11 +1777,11 @@ local function tryCastPrioritySpell(config, ctx)
 				return false
 			end
 
-			if type(spell.area) == "table" then
+			if type(var_88_7) == "table" then
 				local spellUsage = {
 					range = spell.range
 				}
-				local bestPos, bestHits = findBestTileForRune(position, direction, spell.area, spellUsage, creatureList, combatTarget)
+				local bestPos, bestHits = findBestTileForRune(position, direction, var_88_7, spellUsage, creatureList, combatTarget)
 
 				if not bestPos then
 					debugLog("Skip " .. spell.words .. ": no valid Best Position candidate")
@@ -1517,8 +1839,8 @@ local function tryCastPrioritySpell(config, ctx)
 			return false
 		end
 
-		if useTo ~= "bestTile" and type(spell.area) == "table" then
-			local creaturesInArea = HelperTarget.countAttackableCreatures(castPos, direction, spell.area, creatureList, true)
+		if useTo ~= "bestTile" and type(var_88_7) == "table" then
+			local creaturesInArea = HelperTarget.countAttackableCreatures(castPos, direction, var_88_7, creatureList, true)
 
 			if creaturesInArea < (config.creatures or 1) and not config.forceCast then
 				debugLog(string.format("Skip %s: %d creatures in area < %d required", spell.words, creaturesInArea, config.creatures or 1))
@@ -1535,22 +1857,27 @@ local function tryCastPrioritySpell(config, ctx)
 
 		applyLocalCastLock(spell)
 
+		if var_88_8 then
+			var_0_41[spell.id] = nowMs
+		end
+
 		lastGlobalCastAt = nowMs
 
 		return true
 	end
 
-	if type(spell.area) == "table" then
+	if type(var_88_7) == "table" then
 		local required = config.creatures or 1
-		local creaturesInArea = HelperTarget.countAttackableCreatures(position, direction, spell.area, creatureList, true)
+		local creaturesInArea = HelperTarget.countAttackableCreatures(position, direction, var_88_7, creatureList, true)
 
 		if config.turnToCast == true and spell.directional == true then
-			local bestDir, bestHits = bestAreaDirection(position, spell.area, creatureList, direction, creaturesInArea)
+			local bestDir, bestHits = bestAreaDirection(position, var_88_7, creatureList, direction, creaturesInArea)
 
 			if bestDir ~= direction and creaturesInArea < bestHits and required <= bestHits then
 				g_game.turn(bestDir)
 
-				direction = bestDir
+				local direction = bestDir
+
 				creaturesInArea = bestHits
 			end
 		end
@@ -1564,6 +1891,10 @@ local function tryCastPrioritySpell(config, ctx)
 
 	g_game.talk(spell.words, true)
 	applyLocalCastLock(spell)
+
+	if var_88_8 then
+		var_0_41[spell.id] = nowMs
+	end
 
 	lastGlobalCastAt = nowMs
 
@@ -1615,9 +1946,10 @@ local function tryCastPriorityRune(config, ctx)
 		return false
 	end
 
-	local useTo = config.useTo or config.selfCast == true and "self" or "target"
-	local runeArea = runeUsage.area or getRuneAreaByItemId(config.id)
-	local useTarget, targetPos
+	local useTo = var_0_42(config) and "target" or config.useTo or config.selfCast == true and "self" or "target"
+	local profile = runeUsage.area or getRuneAreaByItemId(config.id)
+	local topMultiUseThing
+	local unusedValue
 
 	if useTo == "bestTile" then
 		if isMapCreature(combatTarget) and not isTargetHpWithinRange(config, combatTarget) then
@@ -1626,27 +1958,27 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		if type(runeArea) ~= "table" then
+		if type(profile) ~= "table" then
 			debugLog("Skip rune " .. runeName .. ": no area mapped, cannot use Best Position")
 
 			return false
 		end
 
-		local bestPos, bestHits = findBestTileForRune(position, direction, runeArea, runeUsage, creatureList, combatTarget)
+		local var_90_12, var_90_13 = findBestTileForRune(position, direction, profile, runeUsage, creatureList, combatTarget)
 
-		if not bestPos then
+		if not var_90_12 then
 			debugLog("Skip rune " .. runeName .. ": no valid Best Position candidate")
 
 			return false
 		end
 
-		if bestHits < (config.creatures or 1) and not config.forceCast then
-			debugLog(string.format("Skip rune %s: best position %d hits < %d required", runeName, bestHits, config.creatures or 1))
+		if var_90_13 < (config.creatures or 1) and not config.forceCast then
+			debugLog(string.format("Skip rune %s: best position %d hits < %d required", runeName, var_90_13, config.creatures or 1))
 
 			return false
 		end
 
-		local tile = g_map.getTile(bestPos)
+		local tile = g_map.getTile(var_90_12)
 
 		if not tile then
 			debugLog("Skip rune " .. runeName .. ": Best Position not in map")
@@ -1654,28 +1986,29 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		useTarget = tile:getTopMultiUseThing()
+		topMultiUseThing = tile:getTopMultiUseThing()
 
-		if not useTarget then
+		if not topMultiUseThing then
 			debugLog("Skip rune " .. runeName .. ": Best Position has no top thing")
 
 			return false
 		end
 
-		targetPos = bestPos
+		local unusedValue = var_90_12
 	elseif useTo == "self" then
-		useTarget = player
-		targetPos = position
+		topMultiUseThing = player
 
-		if not useTarget or not targetPos then
+		local var_90_16 = position
+
+		if not topMultiUseThing or not var_90_16 then
 			return false
 		end
 
-		if type(runeArea) == "table" then
-			local creaturesHit = HelperTarget.countAttackableCreatures(targetPos, direction, runeArea, creatureList, true)
+		if type(profile) == "table" then
+			local var_90_17 = HelperTarget.countAttackableCreatures(var_90_16, direction, profile, creatureList, true)
 
-			if creaturesHit < (config.creatures or 1) and not config.forceCast then
-				debugLog(string.format("Skip rune %s: %d creatures hit < %d required", runeName, creaturesHit, config.creatures or 1))
+			if var_90_17 < (config.creatures or 1) and not config.forceCast then
+				debugLog(string.format("Skip rune %s: %d creatures hit < %d required", runeName, var_90_17, config.creatures or 1))
 
 				return false
 			end
@@ -1691,32 +2024,36 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		targetPos = getEntityPosition(combatTarget)
+		local var_90_18 = getEntityPosition(combatTarget)
 
-		if not targetPos then
+		if not var_90_18 then
 			return false
 		end
 
-		if not isRuneTargetInRange(position, targetPos, runeUsage) then
+		if not isRuneTargetInRange(position, var_90_18, runeUsage) then
 			debugLog("Skip rune " .. runeName .. ": target out of range")
 
 			return false
 		end
 
-		if type(runeArea) == "table" then
-			local creaturesHit = HelperTarget.countAttackableCreatures(targetPos, direction, runeArea, creatureList, true)
+		if type(profile) == "table" then
+			local var_90_19 = HelperTarget.countAttackableCreatures(var_90_18, direction, profile, creatureList, true)
 
-			if creaturesHit < (config.creatures or 1) and not config.forceCast then
-				debugLog(string.format("Skip rune %s: %d creatures hit < %d required", runeName, creaturesHit, config.creatures or 1))
+			if var_90_19 < (config.creatures or 1) and not config.forceCast then
+				debugLog(string.format("Skip rune %s: %d creatures hit < %d required", runeName, var_90_19, config.creatures or 1))
 
 				return false
 			end
+		elseif config.onlyWhenAlone == true and #creatureList > 1 then
+			debugLog(string.format("Skip rune %s: %d monsters around, Cast with 1+ is off", runeName, #creatureList))
+
+			return false
 		end
 
-		useTarget = combatTarget
+		topMultiUseThing = combatTarget
 	end
 
-	g_game.useInventoryItemWith(config.id, useTarget, 0, true)
+	g_game.useInventoryItemWith(config.id, topMultiUseThing, 0, true)
 	applyLocalCastLock(runeUsage)
 
 	multiUsePendingSince = nowMs
@@ -1725,13 +2062,13 @@ local function tryCastPriorityRune(config, ctx)
 	return true
 end
 
-local function isHelperEnabled()
-	local main = widget("checkbox")
+local function var_0_131()
+	local var_91_0 = widget("checkbox")
 
-	return main and main:isChecked() or false
+	return var_91_0 and var_91_0:isChecked() or false
 end
 
-local function syncCombatSchedulerState()
+local function var_0_132()
 	local helper = modules.game_helper
 
 	if helper and helper.syncCombatSchedulerState then
@@ -1739,80 +2076,74 @@ local function syncCombatSchedulerState()
 	end
 end
 
-local function isMagicShooterEnabled()
-	if not isHelperEnabled() then
+local function var_0_133()
+	if not var_0_131() then
 		return false
 	end
 
-	local check = widget("enableShooterCheckBox")
+	local var_93_0 = widget("enableShooterCheckBox")
 
-	return check and check:isChecked() or false
+	return var_93_0 and var_93_0:isChecked() or false
 end
 
-local function setShooterCheckedSilently(enabled)
-	local check = widget("enableShooterCheckBox")
+local function var_0_134(arg_94_0)
+	local var_94_0 = widget("enableShooterCheckBox")
 
-	if check and check:isChecked() ~= enabled then
+	if var_94_0 and var_94_0:isChecked() ~= arg_94_0 then
 		suppressShooterCheckChange = true
 
-		check:setChecked(enabled)
+		var_94_0:setChecked(arg_94_0)
 
 		suppressShooterCheckChange = false
 	end
 
-	hotkeyShooterStatus = enabled == true
+	hotkeyShooterStatus = arg_94_0 == true
 
 	if not hotkeyShooterStatus then
 		clearShooterCooldownState()
 	end
 end
 
-local function setShooterCheckedFromPz(enabled)
-	setShooterCheckedSilently(enabled)
+local function var_0_135(arg_95_0)
+	var_0_134(arg_95_0)
 end
 
 local function setShooterCheckEnabled(enabled)
-	local check = widget("enableShooterCheckBox")
+	local var_96_0 = widget("enableShooterCheckBox")
 
-	if check and check.setEnabled then
-		check:setEnabled(enabled == true)
-	end
-
-	local label = widget("enableShooterLabel")
-
-	if label and label.setColor then
-		label:setColor(enabled == true and "#c0c0c0" or "#707070")
+	if var_96_0 and var_96_0.setEnabled then
+		var_96_0:setEnabled(enabled == true)
 	end
 end
 
-local function isShooterBlockedByProtectionZone()
-	local player = g_game.getLocalPlayer()
+local function var_0_137()
+	local localPlayer = g_game.getLocalPlayer()
 
-	return not isShooterPzAutoEnabled() and player and player.isInProtectionZone and player:isInProtectionZone() or false
+	return not isShooterPzAutoEnabled() and localPlayer and localPlayer.isInProtectionZone and localPlayer:isInProtectionZone() or false
 end
 
-local function blockShooterEnableInProtectionZone(silent)
-	if not isShooterBlockedByProtectionZone() then
+local function var_0_138(arg_98_0)
+	if not var_0_137() then
 		return false
 	end
 
 	shooterEnabledBeforePz = false
 
-	setShooterCheckedSilently(false)
+	var_0_134(false)
 	setShooterCheckEnabled(false)
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
 	end
 
-	if not silent then
+	if not arg_98_0 then
 		showFailure(shooterUiLanguage == "pt" and "O Shooter nao pode ser ativado dentro de uma protection zone." or "Shooter cannot be enabled inside a protection zone.")
 	end
 
 	return true
 end
 
-local function isFollowingCreature()
+local function var_0_139()
 	if g_game.isFollowing then
 		return g_game.isFollowing() == true
 	end
@@ -1820,43 +2151,43 @@ local function isFollowingCreature()
 	return g_game.getFollowingCreature and g_game.getFollowingCreature() ~= nil or false
 end
 
-local function blockShooterEnableWhileFollowing(silent)
-	if not isFollowingCreature() then
+local function var_0_140(arg_100_0)
+	if not var_0_139() then
 		return false
 	end
 
-	setShooterCheckedSilently(false)
+	var_0_134(false)
 	setShooterCheckEnabled(false)
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
 	end
 
-	if not silent then
+	if not arg_100_0 then
 		showFailure("Follow active!\nShooter disabled.")
 	end
 
 	return true
 end
 
-local function updateFollowShooter(silent)
-	local following = isFollowingCreature()
+local function var_0_141(unusedArgument)
+	local var_101_0 = var_0_139()
 
-	if isShooterBlockedByProtectionZone() then
+	if var_0_137() then
 		shooterEnabledBeforeFollow = false
-		wasFollowingCreature = following
+		wasFollowingCreature = var_101_0
 
-		blockShooterEnableInProtectionZone(true)
+		var_0_138(true)
 
 		return
 	end
 
-	if not isHelperEnabled() then
-		setShooterCheckEnabled(not following)
+	if not var_0_131() then
+		setShooterCheckEnabled(not var_101_0)
 
-		wasFollowingCreature = following
+		wasFollowingCreature = var_101_0
 
-		if not following then
+		if not var_101_0 then
 			shooterEnabledBeforeFollow = false
 		end
 
@@ -1867,15 +2198,15 @@ local function updateFollowShooter(silent)
 		return
 	end
 
-	local check = widget("enableShooterCheckBox")
+	local var_101_1 = widget("enableShooterCheckBox")
 
-	if following then
+	if var_101_0 then
 		if not wasFollowingCreature then
-			shooterEnabledBeforeFollow = check and check:isChecked() or hotkeyShooterStatus
+			shooterEnabledBeforeFollow = var_101_1 and var_101_1:isChecked() or hotkeyShooterStatus
 		end
 
-		if check and check:isChecked() then
-			setShooterCheckedSilently(false)
+		if var_101_1 and var_101_1:isChecked() then
+			var_0_134(false)
 		end
 
 		setShooterCheckEnabled(false)
@@ -1883,7 +2214,7 @@ local function updateFollowShooter(silent)
 		setShooterCheckEnabled(true)
 
 		if shooterEnabledBeforeFollow then
-			setShooterCheckedSilently(true)
+			var_0_134(true)
 		end
 
 		shooterEnabledBeforeFollow = false
@@ -1891,7 +2222,7 @@ local function updateFollowShooter(silent)
 		setShooterCheckEnabled(true)
 	end
 
-	wasFollowingCreature = following
+	wasFollowingCreature = var_101_0
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
@@ -1903,7 +2234,7 @@ function HelperShooter.setMagicShooterOnHold(value)
 end
 
 function HelperShooter.isMagicShooterActive()
-	return isMagicShooterEnabled()
+	return var_0_133()
 end
 
 function HelperShooter.isDisabledByFollow()
@@ -1915,9 +2246,9 @@ function HelperShooter.isDisabledByProtectionZone()
 end
 
 function HelperShooter.enableProtectionZonePause()
-	local player = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not player or not player.isInProtectionZone or not player:isInProtectionZone() then
+	if not localPlayer or not localPlayer.isInProtectionZone or not localPlayer:isInProtectionZone() then
 		return false
 	end
 
@@ -1928,7 +2259,7 @@ function HelperShooter.enableProtectionZonePause()
 	shooterEnabledBeforePz = true
 	wasInProtectionZone = true
 
-	setShooterCheckedFromPz(false)
+	var_0_135(false)
 
 	if ctx and ctx.saveConfig then
 		ctx.saveConfig()
@@ -1945,7 +2276,7 @@ function HelperShooter.disablePausedState()
 	shooterEnabledBeforeFollow = false
 	shooterEnabledBeforePz = false
 
-	setShooterCheckedSilently(false)
+	var_0_134(false)
 
 	if ctx and ctx.saveConfig then
 		ctx.saveConfig()
@@ -1957,9 +2288,9 @@ function HelperShooter.disablePausedState()
 end
 
 function HelperShooter.syncHotkeyStatus()
-	local check = widget("enableShooterCheckBox")
+	local var_108_0 = widget("enableShooterCheckBox")
 
-	hotkeyShooterStatus = check and check:isChecked() or false
+	hotkeyShooterStatus = var_108_0 and var_108_0:isChecked() or false
 end
 
 function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
@@ -1970,39 +2301,39 @@ function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
 			return
 		end
 
-		local newState = not checkWidget:isChecked()
+		local var_109_0 = not checkWidget:isChecked()
 
-		if newState and blockShooterEnableInProtectionZone(silent) then
-			syncCombatSchedulerState()
-
-			return
-		end
-
-		if newState and blockShooterEnableWhileFollowing(silent) then
-			syncCombatSchedulerState()
+		if var_109_0 and var_0_138(silent) then
+			var_0_132()
 
 			return
 		end
 
-		checkWidget:setChecked(newState)
+		if var_109_0 and var_0_140(silent) then
+			var_0_132()
+
+			return
+		end
+
+		checkWidget:setChecked(var_109_0)
 	end
 
 	if not checkWidget then
 		return
 	end
 
-	if checkWidget:isChecked() and blockShooterEnableInProtectionZone(silent) then
+	if checkWidget:isChecked() and var_0_138(silent) then
 		if ctx and ctx.saveConfig then
 			ctx.saveConfig()
 		end
 
-		syncCombatSchedulerState()
+		var_0_132()
 
 		return
 	end
 
-	if checkWidget:isChecked() and blockShooterEnableWhileFollowing(silent) then
-		syncCombatSchedulerState()
+	if checkWidget:isChecked() and var_0_140(silent) then
+		var_0_132()
 
 		return
 	end
@@ -2014,7 +2345,7 @@ function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
 	end
 
 	if suppressShooterCheckChange then
-		syncCombatSchedulerState()
+		var_0_132()
 
 		return
 	end
@@ -2027,81 +2358,36 @@ function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
 		ctx.saveConfig()
 	end
 
-	syncCombatSchedulerState()
+	var_0_132()
 end
 
-function HelperShooter.toggleMagicShooterFromHotkey(newState, silent)
-	local check = widget("enableShooterCheckBox")
-
-	if not check then
+local function var_0_142(arg_110_0)
+	if not arg_110_0 then
 		return
 	end
 
-	if newState == true and blockShooterEnableInProtectionZone(silent) then
-		return false
-	end
+	local var_110_0 = arg_110_0:isInProtectionZone()
 
-	if newState == true and blockShooterEnableWhileFollowing(silent) then
-		return false
-	end
-
-	if check:isChecked() ~= newState then
-		check:setChecked(newState)
-		HelperShooter.toggleMagicShooter(check, nil, silent)
-	end
-
-	return check:isChecked()
-end
-
-function HelperShooter.toggleShooterEnableHotkey()
-	local check = widget("enableShooterCheckBox")
-
-	if not check then
-		return
-	end
-
-	local newState = not check:isChecked()
-
-	if newState and blockShooterEnableInProtectionZone(false) then
-		return
-	end
-
-	if newState and blockShooterEnableWhileFollowing(false) then
-		return
-	end
-
-	check:setChecked(newState)
-	HelperShooter.toggleMagicShooter(check)
-end
-
-local function updateProtectionZoneShooter(player)
-	if not player then
-		return
-	end
-
-	local inPz = player:isInProtectionZone()
-	local shouldTurnOffInPz = not isShooterPzAutoEnabled()
-
-	if shouldTurnOffInPz then
-		local check = widget("enableShooterCheckBox")
-		local changed = shooterEnabledBeforePz == true or check and check:isChecked()
+	if not isShooterPzAutoEnabled() then
+		local var_110_1 = widget("enableShooterCheckBox")
+		local var_110_2 = shooterEnabledBeforePz == true or var_110_1 and var_110_1:isChecked()
 
 		shooterEnabledBeforePz = false
 
-		if inPz then
-			blockShooterEnableInProtectionZone(true)
+		if var_110_0 then
+			var_0_138(true)
 
-			if changed and ctx and ctx.saveConfig then
+			if var_110_2 and ctx and ctx.saveConfig then
 				ctx.saveConfig()
 			end
 		else
-			setShooterCheckEnabled(not isFollowingCreature())
+			setShooterCheckEnabled(not var_0_139())
 		end
 	else
-		setShooterCheckEnabled(not isFollowingCreature())
+		setShooterCheckEnabled(not var_0_139())
 
-		if not isHelperEnabled() then
-			wasInProtectionZone = inPz
+		if not var_0_131() then
+			wasInProtectionZone = var_110_0
 
 			if modules.game_helper and modules.game_helper.refreshHelperStats then
 				modules.game_helper.refreshHelperStats()
@@ -2111,27 +2397,27 @@ local function updateProtectionZoneShooter(player)
 		end
 
 		if isShooterPzAutoEnabled() then
-			if inPz and not wasInProtectionZone then
-				local check = widget("enableShooterCheckBox")
+			if var_110_0 and not wasInProtectionZone then
+				local var_110_3 = widget("enableShooterCheckBox")
 
-				if check and check:isChecked() then
+				if var_110_3 and var_110_3:isChecked() then
 					shooterEnabledBeforePz = true
 
-					setShooterCheckedFromPz(false)
+					var_0_135(false)
 				else
 					shooterEnabledBeforePz = false
 				end
-			elseif not inPz and wasInProtectionZone and shooterEnabledBeforePz then
+			elseif not var_110_0 and wasInProtectionZone and shooterEnabledBeforePz then
 				shooterEnabledBeforePz = false
 
-				setShooterCheckedFromPz(true)
+				var_0_135(true)
 			end
-		elseif not inPz then
+		elseif not var_110_0 then
 			shooterEnabledBeforePz = false
 		end
 	end
 
-	wasInProtectionZone = inPz
+	wasInProtectionZone = var_110_0
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
@@ -2139,10 +2425,10 @@ local function updateProtectionZoneShooter(player)
 end
 
 function HelperShooter.refreshProtectionZoneState()
-	updateProtectionZoneShooter(g_game.getLocalPlayer())
+	var_0_142(g_game.getLocalPlayer())
 end
 
-local function readDistanceRange()
+local function var_0_143()
 	return 1, 7
 end
 
@@ -2162,84 +2448,96 @@ local function getPriorityRowEnabledCheck(row)
 	return row:getChildById("shooterRowEnabled")
 end
 
-local function checkMagicShooter(nowMs, targetOverride)
-	local myCharacter = g_game.getLocalPlayer()
-
-	if not myCharacter then
+local function var_0_145(arg_114_0, arg_114_1)
+	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
 		return
 	end
 
-	updateProtectionZoneShooter(myCharacter)
+	local localPlayer = g_game.getLocalPlayer()
 
-	if myCharacter:isInProtectionZone() then
+	if not localPlayer then
 		return
 	end
 
-	updateFollowShooter(false)
+	var_0_142(localPlayer)
 
-	if isFollowingCreature() then
+	if localPlayer:isInProtectionZone() then
 		return
 	end
 
-	nowMs = nowMs or g_clock.millis()
+	var_0_141(false)
 
-	local position = getEntityPosition(myCharacter)
-
-	if not position then
+	if var_0_139() then
 		return
 	end
 
-	local minDist, maxDist = readDistanceRange()
-	local scanStartedUs = g_clock.realMicros()
-	local creatureList = buildOffensiveCreatureList(position, minDist, maxDist)
+	if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(localPlayer) then
+		return
+	end
 
-	lastTickScanUs = g_clock.realMicros() - scanStartedUs
-	lastTickCreatureCount = #creatureList
+	arg_114_0 = arg_114_0 or g_clock.millis()
 
-	local combatTarget = isOffensiveTargetInRange(targetOverride, position, minDist, maxDist) and targetOverride or getShooterCombatTarget(position, minDist, maxDist)
-	local shooterEnabled = isMagicShooterEnabled()
-	local combatActive = combatTarget ~= nil or #creatureList > 0
-	local globalCastReady = nowMs - lastGlobalCastAt >= GLOBAL_CAST_COOLDOWN_MS
+	local var_114_1 = getEntityPosition(localPlayer)
 
-	if not combatActive and globalCastReady then
-		local function postureCooldownReady(spell)
-			return not isSpellOnCooldown(spell, nowMs)
+	if not var_114_1 then
+		return
+	end
+
+	local var_114_2, var_114_3 = var_0_143()
+	local var_114_4 = g_clock.realMicros()
+	local var_114_5 = buildOffensiveCreatureList(var_114_1, var_114_2, var_114_3)
+
+	lastTickScanUs = g_clock.realMicros() - var_114_4
+	lastTickCreatureCount = #var_114_5
+
+	local var_114_6 = isOffensiveTargetInRange(arg_114_1, var_114_1, var_114_2, var_114_3) and arg_114_1 or getShooterCombatTarget(var_114_1, var_114_2, var_114_3)
+	local var_114_7 = var_0_133()
+	local var_114_8 = var_114_6 ~= nil or #var_114_5 > 0
+	local var_114_9 = arg_114_0 - lastGlobalCastAt >= GLOBAL_CAST_COOLDOWN_MS
+
+	if not var_114_8 and var_114_9 then
+		local function var_114_10(arg_115_0)
+			if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(localPlayer, arg_115_0.mana) then
+				return false
+			end
+
+			return not isSpellOnCooldown(arg_115_0, arg_114_0)
 		end
 
-		if HelperPosture and HelperPosture.castPending and HelperPosture.castPending(myCharacter, postureCooldownReady) then
-			lastGlobalCastAt = nowMs
+		if HelperPosture and HelperPosture.castPending and HelperPosture.castPending(localPlayer, var_114_10) then
+			lastGlobalCastAt = arg_114_0
 
 			return
 		end
 	end
 
-	if not shooterEnabled then
+	if not var_114_7 then
 		return
 	end
 
-	local profile = getShooterProfile()
+	local var_114_11 = getShooterProfile()
 
-	if type(profile) ~= "table" then
+	if type(var_114_11) ~= "table" then
 		return
 	end
 
-	local direction = myCharacter:getDirection()
-	local player = myCharacter
-	local castCtx = {
-		player = player,
-		position = position,
+	local direction = localPlayer:getDirection()
+	local var_114_13 = localPlayer
+	local var_114_14 = {
+		player = var_114_13,
+		position = var_114_1,
 		direction = direction,
-		creatureList = creatureList,
-		combatTarget = combatTarget,
-		nowMs = nowMs
+		creatureList = var_114_5,
+		combatTarget = var_114_6,
+		nowMs = arg_114_0
 	}
 
-	if not globalCastReady then
+	if not var_114_9 then
 		return
 	end
 
-	local list = type(profile.priorityList) == "table" and profile.priorityList or {}
-	local listSize = #list
+	local var_114_15 = type(var_114_11.priorityList) == "table" and var_114_11.priorityList or {}
+	local listSize = #var_114_15
 
 	lastTickPriorityCount = listSize
 
@@ -2247,48 +2545,48 @@ local function checkMagicShooter(nowMs, targetOverride)
 		return
 	end
 
-	local comboBase = 0
+	local var_114_17 = 0
 
 	if comboMode and listSize > 1 then
-		comboBase = ((comboNextIndex or 1) - 1) % listSize
+		var_114_17 = ((comboNextIndex or 1) - 1) % listSize
 	end
 
-	for step = 1, listSize do
+	for iter_114_0 = 1, listSize do
 		if magicShooterOnHold then
 			break
 		end
 
-		local idx = (comboBase + step - 1) % listSize + 1
-		local config = list[idx]
+		local var_114_18 = (var_114_17 + iter_114_0 - 1) % listSize + 1
+		local entry = var_114_15[var_114_18]
 
-		if type(config) ~= "table" then
+		if type(entry) ~= "table" then
 			-- block empty
-		elseif config.enabled == false then
+		elseif entry.enabled == false then
 			-- block empty
-		elseif not config.id or config.id <= 0 then
+		elseif not entry.id or entry.id <= 0 then
 			-- block empty
 		else
-			local priorityStartedUs = g_clock.realMicros()
-			local cast = false
+			local var_114_20 = g_clock.realMicros()
+			local var_114_21 = false
 
-			if config.type == "spell" then
-				cast = tryCastPrioritySpell(config, castCtx)
-			elseif config.type == "rune" then
-				cast = tryCastPriorityRune(config, castCtx)
+			if entry.type == "spell" then
+				var_114_21 = tryCastPrioritySpell(entry, var_114_14)
+			elseif entry.type == "rune" then
+				var_114_21 = tryCastPriorityRune(entry, var_114_14)
 			end
 
-			local priorityUs = g_clock.realMicros() - priorityStartedUs
+			local var_114_22 = g_clock.realMicros() - var_114_20
 
-			if priorityUs > lastTickPriorityUs then
-				lastTickPriorityUs = priorityUs
-				lastTickPriorityLabel = string.format("%d:%s:%s:%s", idx, tostring(config.type or "unknown"), tostring(config.useTo or "target"), tostring(config.id))
+			if var_114_22 > lastTickPriorityUs then
+				lastTickPriorityUs = var_114_22
+				lastTickPriorityLabel = string.format("%d:%s:%s:%s", var_114_18, tostring(entry.type or "unknown"), tostring(entry.useTo or "target"), tostring(entry.id))
 			end
 
-			if cast then
-				debugLog(string.format("Cast #%d (%s id=%d)", idx, config.type, config.id))
+			if var_114_21 then
+				debugLog(string.format("Cast #%d (%s id=%d)", var_114_18, entry.type, entry.id))
 
 				if comboMode and listSize > 1 then
-					comboNextIndex = idx % listSize + 1
+					comboNextIndex = var_114_18 % listSize + 1
 				end
 
 				return
@@ -2297,8 +2595,8 @@ local function checkMagicShooter(nowMs, targetOverride)
 	end
 end
 
-local SHOOTER_COMBAT_GRACE_MS = 2000
-local shooterIdlePollSkip = false
+local var_0_146 = 2000
+local var_0_147 = false
 
 function HelperShooter.getLastTickProfile()
 	return lastTickScanUs, lastTickCreatureCount, lastTickPriorityCount, lastTickPriorityLabel, lastTickPriorityUs
@@ -2311,36 +2609,35 @@ function HelperShooter.runTick(state)
 	lastTickPriorityUs = 0
 	lastTickPriorityLabel = "none"
 
-	local nowMs = state and state.nowMs or g_clock.millis()
-	local inCombat = g_game.getAttackingCreature() ~= nil or nowMs - lastGlobalCastAt < SHOOTER_COMBAT_GRACE_MS
+	local var_117_0 = state and state.nowMs or g_clock.millis()
 
-	if inCombat then
-		shooterIdlePollSkip = false
+	if g_game.getAttackingCreature() ~= nil or var_117_0 - lastGlobalCastAt < var_0_146 then
+		var_0_147 = false
 
-		checkMagicShooter(nowMs)
+		var_0_145(var_117_0)
 
 		return
 	end
 
-	shooterIdlePollSkip = not shooterIdlePollSkip
+	var_0_147 = not var_0_147
 
-	if shooterIdlePollSkip then
+	if var_0_147 then
 		return
 	end
 
-	checkMagicShooter(nowMs)
+	var_0_145(var_117_0)
 end
 
 function HelperShooter.onAttackingCreatureChange(creature)
-	if not creature or not g_game.isOnline() or not isHelperEnabled() then
+	if not creature or not g_game.isOnline() or not var_0_133() then
 		return
 	end
 
-	checkMagicShooter(g_clock.millis(), creature)
+	var_0_145(g_clock.millis(), creature)
 end
 
 function HelperShooter.onFollowingCreatureChange()
-	updateFollowShooter(false)
+	var_0_141(false)
 end
 
 local function connectZebraFocus(item)
@@ -2443,22 +2740,32 @@ local function getEntryConditionText(entry)
 		showUseTo = spellData and spellData.crossHairTarget == true
 	end
 
-	local conditionText
+	local conditionText = entry.useTo or entry.selfCast == true and "self" or "target"
+	local useToLabel = clampCreatures(entry.creatures) .. "+"
+
+	if HelperShooter.isSingleTargetAction(entry, conditionText) then
+		useToLabel = entry.onlyWhenAlone == true and "1" or "1+"
+	end
+
+	local formattedText
 
 	if showUseTo then
-		local useTo = entry.useTo or entry.selfCast == true and "self" or "target"
-		local useToLabel = useTo == "self" and "Yourself" or useTo == "bestTile" and "Best Position" or "Target"
+		local var_127_7 = conditionText == "self" and "Yourself" or conditionText == "bestTile" and "Best Position" or "Target"
 
-		conditionText = string.format("Creatures: %d+, Use to: %s, HP: %d-%d", clampCreatures(entry.creatures), useToLabel, hpMin, hpMax)
+		formattedText = string.format("Creatures: %s, Use to: %s, HP: %d-%d", useToLabel, var_127_7, hpMin, hpMax)
 	else
-		conditionText = string.format("Creatures: %d+, HP: %d-%d", clampCreatures(entry.creatures), hpMin, hpMax)
+		formattedText = string.format("Creatures: %s, HP: %d-%d", useToLabel, hpMin, hpMax)
 	end
 
 	if entry.type == "spell" and spellUsesHarmonyById(entry.id) then
-		conditionText = conditionText .. string.format(", Harmony: %s", formatHarmonyOption(entry.harmony))
+		formattedText = formattedText .. string.format(", Harmony: %s", var_0_103(entry.harmony))
 	end
 
-	return conditionText
+	if entry.type == "spell" and var_0_38[entry.id] then
+		formattedText = formattedText .. string.format(", Interval: %s s", var_0_102(entry.intervalMs, entry.id))
+	end
+
+	return formattedText
 end
 
 function HelperShooter.destroyPriorityDragGhost()
@@ -2728,8 +3035,7 @@ local function reorderPriorityEntryByDrop(sourceIndex, targetIndex, afterTarget)
 	sourceIndex = tonumber(sourceIndex)
 	targetIndex = tonumber(targetIndex)
 
-	local profile = getShooterProfile()
-	local list = profile.priorityList
+	local list = getShooterProfile().priorityList
 
 	if not list or not sourceIndex or not list[sourceIndex] then
 		return nil
@@ -2749,8 +3055,7 @@ local function reorderPriorityEntryByDrop(sourceIndex, targetIndex, afterTarget)
 		end
 
 		local insertIndex = targetIndex + (afterTarget and 1 or 0)
-
-		insertIndex = math.max(1, math.min(insertIndex, #list + 1))
+		local insertIndex = math.max(1, math.min(insertIndex, #list + 1))
 
 		if insertIndex == sourceIndex then
 			insertIndex = sourceIndex < originalTargetIndex and insertIndex + 1 or insertIndex - 1
@@ -2839,7 +3144,7 @@ function HelperShooter.getPriorityDropPanel(draggedWidget, mousePos)
 		return panel
 	end
 
-	panel = widget("shooterPriorityList")
+	local panel = widget("shooterPriorityList")
 
 	if panel and HelperShooter.isMouseInsidePriorityDropPanel(panel, mousePos) then
 		return panel
@@ -2903,7 +3208,7 @@ function HelperShooter.bindPriorityRowDropForwarder(widget, row)
 
 	local previousOnDrop = widget.onDrop
 
-	function widget:onDrop(draggedWidget, mousePos)
+	function widget.onDrop(self, draggedWidget, mousePos)
 		if draggedWidget and draggedWidget.shooterEntryIndex then
 			return HelperShooter.dropPriorityEntryAtMouse(row, draggedWidget, mousePos)
 		end
@@ -2932,7 +3237,7 @@ function HelperShooter.bindPriorityRowDragSource(widget, row, entry)
 		widget:setPhantom(false)
 	end
 
-	function widget:onDragEnter(mousePos)
+	function widget.onDragEnter(self, mousePos)
 		local sourceRow = self._shooterPriorityRow or row
 		local profile = getShooterProfile()
 		local current = profile.priorityList and profile.priorityList[self.shooterEntryIndex] or entry
@@ -2949,7 +3254,7 @@ function HelperShooter.bindPriorityRowDragSource(widget, row, entry)
 		return true
 	end
 
-	function widget:onDragLeave()
+	function widget.onDragLeave(self)
 		local sourceRow = self._shooterPriorityRow or row
 
 		HelperShooter.destroyPriorityDragGhost()
@@ -3005,7 +3310,7 @@ local function bindPriorityRowDrag(row, entry)
 	bindPriorityRowDragChildren(row, row, entry, enabledCheck)
 	HelperShooter.bindPriorityRowDropForwarder(enabledCheck, row)
 
-	function row:onDragEnter(mousePos)
+	function row.onDragEnter(self, mousePos)
 		local profile = getShooterProfile()
 		local current = profile.priorityList and profile.priorityList[self.shooterEntryIndex] or entry
 
@@ -3021,7 +3326,7 @@ local function bindPriorityRowDrag(row, entry)
 		return true
 	end
 
-	function row:onDragLeave()
+	function row.onDragLeave(self)
 		HelperShooter.destroyPriorityDragGhost()
 
 		if self:isDestroyed() then
@@ -3033,7 +3338,7 @@ local function bindPriorityRowDrag(row, entry)
 		return true
 	end
 
-	function row:onDrop(draggedWidget, mousePos)
+	function row.onDrop(self, draggedWidget, mousePos)
 		return HelperShooter.dropPriorityEntryAtMouse(self, draggedWidget, mousePos)
 	end
 end
@@ -3093,7 +3398,7 @@ function HelperShooter.refreshPriorityListUI()
 			connectZebraFocus(row)
 			bindPriorityRowDrag(row, item.entry)
 
-			function row:onMouseRelease(_, button)
+			function row.onMouseRelease(self, _, button)
 				if button == MouseRightButton then
 					HelperShooter.openPriorityRowContextMenu(self)
 				end
@@ -3233,8 +3538,7 @@ function HelperShooter.openPriorityRowContextMenu(row)
 end
 
 function swapPriorityEntries(indexA, indexB)
-	local profile = getShooterProfile()
-	local list = profile.priorityList
+	local list = getShooterProfile().priorityList
 
 	if not list or not list[indexA] or not list[indexB] then
 		return false
@@ -3295,9 +3599,8 @@ function HelperShooter.onMoveDownClick()
 	end
 
 	local idx = focused.shooterEntryIndex
-	local profile = getShooterProfile()
 
-	if idx >= #(profile.priorityList or {}) then
+	if idx >= #(getShooterProfile().priorityList or {}) then
 		return
 	end
 
@@ -3353,7 +3656,9 @@ local function closeAssignWindowInternal()
 	assignSpellsPanel = nil
 end
 
-local populateAssignList, updateAssignModeButtons, filterAssignRows
+local populateAssignList
+local updateAssignModeButtons
+local filterAssignRows
 
 local function updateAssignPreview(row)
 	if not assignSpellWindow or assignSpellWindow:isDestroyed() or not row then
@@ -3484,48 +3789,117 @@ local function focusAssignRow(row)
 	end
 end
 
+function HelperShooter.refreshCastOnePlusRow()
+	if not addShooterWindow or addShooterWindow:isDestroyed() then
+		return
+	end
+
+	local useToRow = addShooterWindow:recursiveGetChildById("addShooterCastOnePlusUnit")
+	local harmonyRow = addShooterWindow:recursiveGetChildById("addShooterCastOnePlusCheck")
+	local autoTurnRow = addShooterWindow:recursiveGetChildById("addShooterCreaturesCombo")
+
+	if not useToRow or not harmonyRow or not autoTurnRow then
+		return
+	end
+
+	local currentOption = "target"
+	local addShooterUseToRow = addShooterWindow:recursiveGetChildById("addShooterUseToRow")
+	local addShooterUseToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
+
+	if addShooterUseToRow and addShooterUseToRow:isVisible() and addShooterUseToCombo then
+		currentOption = normalizeUseToOption(addShooterUseToCombo:getCurrentOption())
+	end
+
+	local var_179_6 = HelperShooter.isSingleTargetAction(selectedShooterAction, currentOption)
+
+	useToRow:setVisible(var_179_6)
+
+	if var_179_6 then
+		if not autoTurnRow.castOnePlusLocked then
+			local curOpt = autoTurnRow:getCurrentOption()
+
+			autoTurnRow.castOnePlusRestore = type(curOpt) == "table" and curOpt.text or "1+"
+			autoTurnRow.castOnePlusLocked = true
+
+			autoTurnRow:setCurrentOption("1+", true)
+			autoTurnRow:setEnabled(false)
+			autoTurnRow:setColor("#909090")
+			autoTurnRow:setTooltip(shooterUiLanguage == "pt" and "Magia ou runa de alvo unico: atinge so o monstro que voce esta atacando, " .. "entao aqui nao ha quantidade minima. Mostra 1+ ou 1 conforme o Cast with 1+." or "Single-target spell or rune: it hits only the monster you are attacking, " .. "so there is no minimum count here. It shows 1+ or 1 following Cast with 1+.")
+		end
+
+		autoTurnRow:setText(harmonyRow:isChecked() and "1+" or "1")
+	elseif autoTurnRow.castOnePlusLocked then
+		autoTurnRow.castOnePlusLocked = nil
+
+		autoTurnRow:setEnabled(true)
+		autoTurnRow:setColor("#c0c0c0")
+		autoTurnRow:removeTooltip()
+		autoTurnRow:setCurrentOption(autoTurnRow.castOnePlusRestore or "1+", true)
+
+		autoTurnRow.castOnePlusRestore = nil
+
+		local currentOption = autoTurnRow:getCurrentOption()
+
+		autoTurnRow:setText(type(currentOption) == "table" and currentOption.text or "1+")
+	end
+end
+
 local function updateShooterFormRows()
 	if not addShooterWindow or addShooterWindow:isDestroyed() then
 		return
 	end
 
-	local useToRow = addShooterWindow:recursiveGetChildById("addShooterUseToRow")
-	local harmonyRow = addShooterWindow:recursiveGetChildById("addShooterHarmonyRow")
-	local autoTurnRow = addShooterWindow:recursiveGetChildById("addShooterAutoTurnRow")
+	local addShooterUseToRow = addShooterWindow:recursiveGetChildById("addShooterUseToRow")
+	local addShooterHarmonyRow = addShooterWindow:recursiveGetChildById("addShooterHarmonyRow")
+	local harmonyRow = addShooterWindow:recursiveGetChildById("addShooterAutoTurnRow")
+	local autoTurnRow = addShooterWindow:recursiveGetChildById("addShooterIntervalRow")
 	local showUseTo = selectedShooterAction ~= nil and (selectedShooterAction.type == "rune" or selectedShooterAction.type == "spell" and selectedShooterAction.crossHairTarget == true)
-	local allowBestTile = showUseTo and (selectedShooterAction.type == "rune" or not selectedShooterAction.noBestTile)
+	local var_180_5 = var_0_42(selectedShooterAction)
+	local var_180_6 = showUseTo and (selectedShooterAction.type == "rune" or not selectedShooterAction.noBestTile)
 	local showHarmony = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.useHarmony == true
-	local showAutoTurn = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.directional == true
+	local var_180_8 = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.directional == true
+	local showAutoTurn = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and var_0_38[selectedShooterAction.id] ~= nil
 
-	if useToRow then
-		useToRow:setVisible(showUseTo)
-		useToRow:setHeight(showUseTo and 20 or 0)
-		useToRow:setMarginTop(showUseTo and 6 or 0)
+	if addShooterUseToRow then
+		addShooterUseToRow:setVisible(showUseTo)
+		addShooterUseToRow:setHeight(showUseTo and 20 or 0)
+		addShooterUseToRow:setMarginTop(showUseTo and 6 or 0)
 
-		local useToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
+		local addShooterUseToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
 
-		if useToCombo then
-			local curOpt = useToCombo:getCurrentOption()
-			local curText = type(curOpt) == "table" and curOpt.text or tostring(curOpt or "Target")
+		if addShooterUseToCombo then
+			local currentOption = addShooterUseToCombo:getCurrentOption()
+			local var_180_12 = type(currentOption) == "table" and currentOption.text or tostring(currentOption or "Target")
 
-			useToCombo:clearOptions()
-			useToCombo:addOption("Target")
-			useToCombo:addOption("Yourself")
+			addShooterUseToCombo:clearOptions()
+			addShooterUseToCombo:addOption("Target")
 
-			if allowBestTile then
-				useToCombo:addOption("Best Position")
-			elseif curText == "Best Position" then
-				curText = "Target"
+			if not var_180_5 then
+				addShooterUseToCombo:addOption("Yourself")
+
+				if var_180_6 then
+					addShooterUseToCombo:addOption("Best Position")
+				end
 			end
 
-			useToCombo:setCurrentOption(curText)
+			if var_180_5 or var_180_12 == "Best Position" and not var_180_6 then
+				var_180_12 = "Target"
+			end
+
+			addShooterUseToCombo:setCurrentOption(var_180_12)
 		end
 	end
 
+	if addShooterHarmonyRow then
+		addShooterHarmonyRow:setVisible(showHarmony)
+		addShooterHarmonyRow:setHeight(showHarmony and 20 or 0)
+		addShooterHarmonyRow:setMarginTop(showHarmony and 6 or 0)
+	end
+
 	if harmonyRow then
-		harmonyRow:setVisible(showHarmony)
-		harmonyRow:setHeight(showHarmony and 20 or 0)
-		harmonyRow:setMarginTop(showHarmony and 6 or 0)
+		harmonyRow:setVisible(var_180_8)
+		harmonyRow:setHeight(var_180_8 and 20 or 0)
+		harmonyRow:setMarginTop(var_180_8 and 6 or 0)
 	end
 
 	if autoTurnRow then
@@ -3534,8 +3908,8 @@ local function updateShooterFormRows()
 		autoTurnRow:setMarginTop(showAutoTurn and 6 or 0)
 	end
 
-	local formHeight = 95 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (showAutoTurn and 26 or 0)
-	local windowHeight = 171 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (showAutoTurn and 26 or 0)
+	local formHeight = 95 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (var_180_8 and 26 or 0) + (showAutoTurn and 26 or 0)
+	local windowHeight = 171 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (var_180_8 and 26 or 0) + (showAutoTurn and 26 or 0)
 	local form = addShooterWindow:recursiveGetChildById("addShooterForm")
 
 	if form then
@@ -3543,6 +3917,7 @@ local function updateShooterFormRows()
 	end
 
 	addShooterWindow:setHeight(windowHeight)
+	HelperShooter.refreshCastOnePlusRow()
 end
 
 local function setSelectedShooterAction(action)
@@ -3553,6 +3928,12 @@ local function setSelectedShooterAction(action)
 	end
 
 	updateShooterFormRows()
+
+	local addShooterIntervalCombo = addShooterWindow:recursiveGetChildById("addShooterIntervalCombo")
+
+	if addShooterIntervalCombo and action and action.type == "spell" and var_0_38[action.id] then
+		addShooterIntervalCombo:setCurrentOption(var_0_102(nil, action.id))
+	end
 
 	local preview = addShooterWindow:recursiveGetChildById("addShooterActionPreview")
 
@@ -3728,7 +4109,8 @@ local function readShooterEntryForm()
 	local creaturesCombo = addShooterWindow:recursiveGetChildById("addShooterCreaturesCombo")
 	local useToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
 	local harmonyCombo = addShooterWindow:recursiveGetChildById("addShooterHarmonyCombo")
-	local hpMin, hpMax = normalizeHpRange({
+	local hpMin = addShooterWindow:recursiveGetChildById("addShooterIntervalCombo")
+	local var_193_6, var_193_7 = normalizeHpRange({
 		hpMin = hpMinCombo and hpMinCombo:getCurrentOption() or 0,
 		hpMax = hpMaxCombo and hpMaxCombo:getCurrentOption() or 100
 	})
@@ -3744,15 +4126,17 @@ local function readShooterEntryForm()
 	local form = {
 		type = selectedShooterAction.type,
 		id = selectedShooterAction.id,
-		hpMin = hpMin,
-		hpMax = hpMax,
+		hpMin = var_193_6,
+		hpMax = var_193_7,
 		creatures = creatures
 	}
 
 	if selectedShooterAction.type == "rune" or selectedShooterAction.type == "spell" and selectedShooterAction.crossHairTarget then
 		local useToRow = addShooterWindow:recursiveGetChildById("addShooterUseToRow")
 
-		if useToRow and useToRow:isVisible() and useToCombo then
+		if var_0_42(selectedShooterAction) then
+			form.useTo = "target"
+		elseif useToRow and useToRow:isVisible() and useToCombo then
 			form.useTo = normalizeUseToOption(useToCombo:getCurrentOption())
 		else
 			form.useTo = "target"
@@ -3763,10 +4147,20 @@ local function readShooterEntryForm()
 		form.harmony = clampHarmony(harmonyCombo and harmonyCombo:getCurrentOption() or 1)
 	end
 
+	if selectedShooterAction.type == "spell" and var_0_38[selectedShooterAction.id] then
+		form.intervalMs = var_0_101(hpMin and hpMin:getCurrentOption() or nil, selectedShooterAction.id)
+	end
+
 	if selectedShooterAction.type == "spell" and selectedShooterAction.directional == true then
 		local autoTurnCheck = addShooterWindow:recursiveGetChildById("addShooterAutoTurnCheck")
 
 		form.turnToCast = autoTurnCheck and autoTurnCheck:isChecked() or false
+	end
+
+	if HelperShooter.isSingleTargetAction(selectedShooterAction, form.useTo) then
+		local addShooterCastOnePlusCheck = addShooterWindow:recursiveGetChildById("addShooterCastOnePlusCheck")
+
+		form.onlyWhenAlone = addShooterCastOnePlusCheck and not addShooterCastOnePlusCheck:isChecked() or nil
 	end
 
 	return form
@@ -3778,10 +4172,11 @@ local function populateShooterEntryForm(entry)
 	end
 
 	local hpMinCombo = addShooterWindow:recursiveGetChildById("addShooterHpMinEdit")
-	local hpMaxCombo = addShooterWindow:recursiveGetChildById("addShooterHpMaxEdit")
-	local creaturesCombo = addShooterWindow:recursiveGetChildById("addShooterCreaturesCombo")
-	local useToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
+	local addShooterHpMaxEdit = addShooterWindow:recursiveGetChildById("addShooterHpMaxEdit")
+	local addShooterCreaturesCombo = addShooterWindow:recursiveGetChildById("addShooterCreaturesCombo")
+	local addShooterUseToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
 	local harmonyCombo = addShooterWindow:recursiveGetChildById("addShooterHarmonyCombo")
+	local addShooterIntervalCombo = addShooterWindow:recursiveGetChildById("addShooterIntervalCombo")
 	local okBtn = addShooterWindow:recursiveGetChildById("addShooterOkButton")
 	local hpMin, hpMax = normalizeHpRange(entry or {})
 
@@ -3789,15 +4184,15 @@ local function populateShooterEntryForm(entry)
 		hpMinCombo:setCurrentOption(tostring(hpMin))
 	end
 
-	if hpMaxCombo then
-		hpMaxCombo:setCurrentOption(tostring(hpMax))
+	if addShooterHpMaxEdit then
+		addShooterHpMaxEdit:setCurrentOption(tostring(hpMax))
 	end
 
-	if creaturesCombo then
-		creaturesCombo:setCurrentOption(tostring(clampCreatures(entry and entry.creatures or 1)) .. "+")
+	if addShooterCreaturesCombo then
+		addShooterCreaturesCombo:setCurrentOption(tostring(clampCreatures(entry and entry.creatures or 1)) .. "+")
 	end
 
-	if useToCombo then
+	if addShooterUseToCombo then
 		local useToText = "Target"
 
 		if entry then
@@ -3810,17 +4205,23 @@ local function populateShooterEntryForm(entry)
 			end
 		end
 
-		useToCombo:setCurrentOption(useToText)
+		addShooterUseToCombo:setCurrentOption(useToText)
 	end
 
 	if harmonyCombo then
-		harmonyCombo:setCurrentOption(formatHarmonyOption(entry and entry.harmony or 1))
+		harmonyCombo:setCurrentOption(var_0_103(entry and entry.harmony or 1))
 	end
 
 	local autoTurnCheck = addShooterWindow:recursiveGetChildById("addShooterAutoTurnCheck")
 
 	if autoTurnCheck then
 		autoTurnCheck:setChecked(entry ~= nil and entry.turnToCast == true)
+	end
+
+	local addShooterCastOnePlusCheck = addShooterWindow:recursiveGetChildById("addShooterCastOnePlusCheck")
+
+	if addShooterCastOnePlusCheck then
+		addShooterCastOnePlusCheck:setChecked(not entry or entry.onlyWhenAlone ~= true)
 	end
 
 	if okBtn then
@@ -3855,6 +4256,10 @@ local function populateShooterEntryForm(entry)
 		end
 	else
 		setSelectedShooterAction(nil)
+	end
+
+	if addShooterIntervalCombo and entry and entry.type == "spell" and var_0_38[entry.id] then
+		addShooterIntervalCombo:setCurrentOption(var_0_102(entry.intervalMs, entry.id))
 	end
 end
 
@@ -4153,6 +4558,22 @@ function HelperShooter.openAssignWindow(editIndex)
 
 	bindShooterEntryActionPreview()
 
+	local profile = addShooterWindow:recursiveGetChildById("addShooterCastOnePlusCheck")
+
+	if profile then
+		function profile.onCheckChange()
+			HelperShooter.refreshCastOnePlusRow()
+		end
+	end
+
+	local addShooterUseToCombo = addShooterWindow:recursiveGetChildById("addShooterUseToCombo")
+
+	if addShooterUseToCombo then
+		function addShooterUseToCombo.onOptionChange()
+			HelperShooter.refreshCastOnePlusRow()
+		end
+	end
+
 	local profile = getShooterProfile()
 	local editEntry = editIndex and profile.priorityList and profile.priorityList[editIndex]
 
@@ -4448,8 +4869,8 @@ function HelperShooter.openPresetMenu(combo)
 
 		editButton:setId("editHotkey")
 		editButton:setSize({
-			height = 13,
-			width = 13
+			width = 13,
+			height = 13
 		})
 		editButton:addAnchor(AnchorRight, "parent", AnchorRight)
 		editButton:addAnchor(AnchorVerticalCenter, "parent", AnchorVerticalCenter)
@@ -4752,6 +5173,7 @@ local function migrateLegacyPriorityList(data)
 					rangeMin = tonumber(entry.rangeMin) or 1,
 					rangeMax = tonumber(entry.rangeMax) or 7,
 					creatures = clampCreatures(entry.creatures),
+					intervalMs = entry.intervalMs,
 					forceCast = entry.forceCast == true,
 					useTo = entry.useTo or entry.selfCast == true and "self" or "target"
 				})
@@ -4760,35 +5182,12 @@ local function migrateLegacyPriorityList(data)
 	end
 end
 
-function HelperShooter.bindHotkeys(config, skipShooterEnableHotkey, presetHotkeyConflict)
-	if boundShooterEnableHotkey and boundShooterEnableHotkey ~= "" then
-		g_keyboard.unbindKeyPress(boundShooterEnableHotkey)
-	end
-
+function HelperShooter.bindPresetHotkeys(arg_236_0)
 	for _, binding in pairs(boundPresetHotkeys or {}) do
 		g_keyboard.unbindKeyPress(binding.key, binding.callback)
 	end
 
 	boundPresetHotkeys = {}
-	boundShooterEnableHotkey = nil
-
-	local enableHotkey = config and config.shooterEnableHotkey
-
-	if not skipShooterEnableHotkey and type(enableHotkey) == "string" and enableHotkey ~= "" then
-		boundShooterEnableHotkey = enableHotkey
-
-		g_keyboard.bindKeyPress(enableHotkey, function()
-			if not HotkeyUtils.canPerformKeyCombo(enableHotkey) then
-				return
-			end
-
-			if not isHelperEnabled() then
-				return
-			end
-
-			HelperShooter.toggleShooterEnableHotkey()
-		end)
-	end
 
 	ensureProfiles()
 
@@ -4798,9 +5197,7 @@ function HelperShooter.bindHotkeys(config, skipShooterEnableHotkey, presetHotkey
 		local hotkey = type(profile) == "table" and profile.hotkey or nil
 
 		if type(hotkey) == "string" and hotkey ~= "" then
-			local hasConflict = presetHotkeyConflict and presetHotkeyConflict(profileName, hotkey) or false
-
-			if hasConflict then
+			if arg_236_0 and arg_236_0(profileName, hotkey) or false then
 				table.insert(skippedPresetHotkeys, {
 					profile = profileName,
 					key = hotkey
@@ -4835,43 +5232,22 @@ function HelperShooter.bindHotkeys(config, skipShooterEnableHotkey, presetHotkey
 		end
 	end
 
-	HelperShooter.updateShooterHotkeyLabels(config)
-
 	return skippedPresetHotkeys
 end
 
-function HelperShooter.unbindHotkeys()
-	if boundShooterEnableHotkey and boundShooterEnableHotkey ~= "" then
-		g_keyboard.unbindKeyPress(boundShooterEnableHotkey)
-	end
-
+function HelperShooter.unbindPresetHotkeys()
 	for _, binding in pairs(boundPresetHotkeys or {}) do
 		g_keyboard.unbindKeyPress(binding.key, binding.callback)
 	end
 
 	boundPresetHotkeys = {}
-	boundShooterEnableHotkey = nil
-end
-
-function HelperShooter.updateShooterHotkeyLabels(config)
-	local enableBtn = widget("setShooterHotkeyButton")
-
-	if enableBtn then
-		local hk = config and config.shooterEnableHotkey or ""
-
-		enableBtn:setText(hk == "" and tr("Key [NONE]") or tr("Key [%s]", hk))
-	end
-end
-
-function HelperShooter.collectHotkeys(config)
-	config.shooterEnableHotkey = config.shooterEnableHotkey or "F10"
-	config.shooterPresetHotkey = nil
 end
 
 function HelperShooter.init(pctx)
 	ctx = pctx
 	lastCastIndex = 0
 	lastGlobalCastAt = 0
+	var_0_41 = {}
 
 	ensureProfiles()
 
@@ -4891,12 +5267,12 @@ function HelperShooter.onShow()
 
 	clearPriorityListSelection()
 
-	local list = widget("shooterPriorityList")
+	local var_240_0 = widget("shooterPriorityList")
 
-	if list and not list._shooterButtonsSyncConnected then
-		list._shooterButtonsSyncConnected = true
+	if var_240_0 and not var_240_0._shooterButtonsSyncConnected then
+		var_240_0._shooterButtonsSyncConnected = true
 
-		connect(list, {
+		connect(var_240_0, {
 			onChildFocusChange = function()
 				HelperShooter.syncActionButtons()
 			end
@@ -4920,12 +5296,13 @@ end
 function HelperShooter.onGameStart()
 	lastCastIndex = 0
 	lastGlobalCastAt = 0
+	var_0_41 = {}
 	comboNextIndex = 1
 	shooterEnabledBeforeFollow = false
 	wasFollowingCreature = false
 
 	HelperShooter.syncHotkeyStatus()
-	updateFollowShooter(true)
+	var_0_141(true)
 
 	if HelperPosture and HelperPosture.onGameStart then
 		HelperPosture.onGameStart()
@@ -4933,7 +5310,7 @@ function HelperShooter.onGameStart()
 end
 
 function HelperShooter.terminate()
-	HelperShooter.unbindHotkeys()
+	HelperShooter.unbindPresetHotkeys()
 	HelperShooter.onHide()
 
 	spellPendingSince = {}
@@ -4941,6 +5318,7 @@ function HelperShooter.terminate()
 	multiUsePendingSince = 0
 	lastCastIndex = 0
 	lastGlobalCastAt = 0
+	var_0_41 = {}
 	shooterEnabledBeforePz = false
 	wasInProtectionZone = false
 	shooterEnabledBeforeFollow = false
@@ -4956,10 +5334,10 @@ end
 function HelperShooter.collectConfig(config)
 	config.shooter = config.shooter or {}
 
-	local enableCheck = widget("enableShooterCheckBox")
-	local enabled = enableCheck and enableCheck:isChecked() or false
+	local var_245_0 = widget("enableShooterCheckBox")
+	local var_245_1 = var_245_0 and var_245_0:isChecked() or false
 
-	config.shooter.enableShooter = enabled or isShooterPzAutoEnabled() and shooterEnabledBeforePz == true
+	config.shooter.enableShooter = var_245_1 or isShooterPzAutoEnabled() and shooterEnabledBeforePz == true
 	config.shooter.pzAuto = readShooterPzAutoWidget()
 
 	ensureProfiles()

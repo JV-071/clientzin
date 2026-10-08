@@ -1,4 +1,4 @@
-﻿-- chunkname: @/game_announcements/game_announcements.lua
+-- chunkname: @/game_announcements/game_announcements.lua
 
 local Data = AnnouncementsData
 local Util = AnnouncementsUtil
@@ -17,11 +17,11 @@ local TAB_IDS = {
 	"tabServerUpdates"
 }
 local CATEGORIES = {
-	"PTC UPDATES",
+	"Clientzin UPDATES",
 	"SERVER UPDATES"
 }
 local ACTIVE_CATEGORIES = {
-	["PTC UPDATES"] = true,
+	["Clientzin UPDATES"] = true,
 	["SERVER UPDATES"] = true
 }
 local SECTION_GAP = 10

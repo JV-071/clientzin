@@ -1,8 +1,8 @@
-﻿-- chunkname: @/client/client.lua
-
-local musicFilename = "sounds/startup"
-local musicChannel, startupLoadBox
-local STARTUP_LOADING_DELAY_MS = 100
+﻿local musicFilename = "sounds/startup"
+local musicChannel
+local startupLoadBox
+local var_0_3 = 100
+local var_0_4 = 1500
 
 if g_sounds then
 	musicChannel = g_sounds.getChannel(SoundChannels.Music)
@@ -71,6 +71,22 @@ local function destroyStartupLoadingBox()
 	end
 end
 
+local function var_0_8(arg_4_0)
+	if not startupLoadBox or startupLoadBox:isDestroyed() then
+		return
+	end
+
+	local content = startupLoadBox:getChildById("content")
+
+	if content then
+		content:setText(arg_4_0)
+	end
+end
+
+local function var_0_9()
+	return Cyclopedia and Cyclopedia.ItemsIndexPreloading and not Cyclopedia.ItemsIndexBuilt
+end
+
 function setMusic(filename)
 	musicFilename = filename
 
@@ -96,7 +112,8 @@ function startup()
 		})
 	end
 
-	local errtitle, errmsg
+	local errtitle
+	local errmsg
 
 	if g_graphics.getRenderer():lower():match("gdi generic") then
 		errtitle = tr("Graphics card driver not detected")
@@ -117,9 +134,7 @@ function startup()
 		destroyStartupLoadingBox()
 
 		if errmsg or errtitle then
-			local msgbox = displayErrorBox(errtitle, errmsg)
-
-			msgbox.onOk = proceedToEnterGame
+			displayErrorBox(errtitle, errmsg).onOk = proceedToEnterGame
 		elseif not announcementsLoaded then
 			proceedToEnterGame()
 		else
@@ -136,7 +151,88 @@ function startup()
 
 	startupLoadBox = showStartupLoadingBox()
 
-	scheduleEvent(finishStartup, STARTUP_LOADING_DELAY_MS)
+	var_0_8(tr("Loading interface"))
+
+	local var_7_5 = g_clock.realMillis()
+
+	local function var_7_6()
+		local var_12_0 = g_clock.realMillis() - var_7_5
+
+		if var_12_0 < var_0_3 then
+			scheduleEvent(var_7_6, var_0_3 - var_12_0)
+
+			return
+		end
+
+		if not var_0_9() or var_12_0 >= var_0_4 then
+			finishStartup()
+
+			return
+		end
+
+		scheduleEvent(var_7_6, 50)
+	end
+
+	scheduleEvent(function()
+		if Cyclopedia and Cyclopedia.ensureStylesLoaded then
+			Cyclopedia.ensureStylesLoaded()
+		end
+
+		local var_13_0 = {
+			function()
+				var_0_8(tr("Loading items"))
+
+				if Cyclopedia and Cyclopedia.startItemsIndexPreload then
+					Cyclopedia.startItemsIndexPreload(true)
+				end
+			end,
+			function()
+				var_0_8(tr("Loading spells"))
+
+				if Cyclopedia and Cyclopedia.preloadMagicalArchivesSpells then
+					Cyclopedia.preloadMagicalArchivesSpells()
+				end
+			end,
+			function()
+				var_0_8(tr("Loading map"))
+
+				if modules.game_minimap and modules.game_minimap.loadPersistentMinimapData then
+					modules.game_minimap.loadPersistentMinimapData()
+				end
+			end
+		}
+		local var_13_1 = 1
+
+		local function var_13_2()
+			if var_13_1 > #var_13_0 or g_clock.realMillis() - var_7_5 >= var_0_4 then
+				if var_13_1 <= #var_13_0 then
+					local var_17_0 = {}
+
+					for iter_17_0 = var_13_1, #var_13_0 do
+						var_17_0[#var_17_0 + 1] = var_13_0[iter_17_0]
+					end
+
+					addEvent(function()
+						for iter_18_0 = 1, #var_17_0 do
+							var_17_0[iter_18_0]()
+						end
+					end)
+				end
+
+				var_7_6()
+
+				return
+			end
+
+			var_13_0[var_13_1]()
+
+			var_13_1 = var_13_1 + 1
+
+			scheduleEvent(var_13_2, 0)
+		end
+
+		var_13_2()
+	end, 0)
 
 	if g_sounds then
 		g_sounds.setAudioEnabled(true)

@@ -1,10 +1,17 @@
-﻿-- chunkname: @/client_entergame/characterlist.lua
-
 CharacterList = {}
 
-local charactersWindow, loadBox, characterList, errorBox, waitingWindow, updateWaitEvent, resendWaitEvent, loginEvent, outfitCreatureBox
+local charactersWindow
+local loadBox
+local characterList
+local errorBox
+local waitingWindow
+local updateWaitEvent
+local resendWaitEvent
+local loginEvent
+local unusedValue
 local worldLoginStartedAt = 0
 local restoreCharacterListEvent
+local websiteUrl = "http://127.0.0.1"
 local WORLD_TYPE_NAMES = {
 	[0] = "Open PvP",
 	"Optional PvP",
@@ -37,7 +44,8 @@ local AUTO_RECONNECT_FORCE_LOGOUT_AFTER = 20
 local PINNED_CHARACTERS_SETTING = "pinned-characters"
 local PIN_CLIP_OUTLINE = "0 0 12 12"
 local PIN_CLIP_ACTIVE = "0 12 12 12"
-local pendingFocusCharacterKey, pinnedCharactersData
+local pendingFocusCharacterKey
+local pinnedCharactersData
 
 local function makeCharacterKey(characterInfo)
 	return string.format("%s|%s|%s", G.account or "", characterInfo.name or "", characterInfo.worldName or "")
@@ -301,9 +309,7 @@ end
 local function tryLogin(charInfo, tries)
 	tries = tries or 1
 
-	local maxTries = autoReconnectAttempt and AUTO_RECONNECT_MAX_TRIES or 50
-
-	if maxTries < tries then
+	if tries > (autoReconnectAttempt and AUTO_RECONNECT_MAX_TRIES or 50) then
 		if autoReconnectAttempt and g_game.isOnline() then
 			g_logger.warning("[reconnect] still online after force logout, retrying later")
 
@@ -351,6 +357,11 @@ local function tryLogin(charInfo, tries)
 			g_game.cancelLogin()
 			resetReconnectBackoff()
 			CharacterList.show()
+		end,
+		onDestroy = function(destroyedLoadBox)
+			if loadBox == destroyedLoadBox then
+				loadBox = nil
+			end
 		end
 	})
 	g_settings.set("last-used-character", charInfo.characterName)
@@ -365,13 +376,9 @@ local function updateWait(timeStart, timeEnd)
 		if time <= timeEnd then
 			local percent = (time - timeStart) / (timeEnd - timeStart) * 100
 			local timeStr = string.format("%.0f", timeEnd - time)
-			local progressBar = waitingWindow:getChildById("progressBar")
 
-			progressBar:setPercent(percent)
-
-			local label = waitingWindow:getChildById("timeLabel")
-
-			label:setText(tr("Trying to reconnect in %s seconds.", timeStr))
+			waitingWindow:getChildById("progressBar"):setPercent(percent)
+			waitingWindow:getChildById("timeLabel"):setText(tr("Trying to reconnect in %s seconds.", timeStr))
 
 			updateWaitEvent = scheduleEvent(function()
 				updateWait(timeStart, timeEnd)
@@ -433,9 +440,7 @@ local function onLoginWait(message, time)
 
 	waitingWindow = g_ui.displayUI("waitinglist")
 
-	local label = waitingWindow:getChildById("infoLabel")
-
-	label:setText(message)
+	waitingWindow:getChildById("infoLabel"):setText(message)
 
 	updateWaitEvent = scheduleEvent(function()
 		updateWait(g_clock.seconds(), g_clock.seconds() + time)
@@ -464,9 +469,7 @@ function onGameLoginError(message, msgType)
 		end
 	end
 
-	local box = trackErrorBox(displayErrorBox(tr("Sorry"), message))
-
-	box.onOk = onLoginErrorOk
+	trackErrorBox(displayErrorBox(tr("Sorry"), message)).onOk = onLoginErrorOk
 end
 
 function onGameSessionEnd(reason)
@@ -485,6 +488,42 @@ function onGameSessionEnd(reason)
 	CharacterList.showAgain()
 end
 
+local function createServiceUnavailableBox()
+	local serviceUnavailableBox = displayErrorBox(tr("Error"), tr("This Service is currently not available. Please try again later or use the"))
+	local content = serviceUnavailableBox.content
+
+	content:setTextWrap(false)
+	content:resizeToText()
+
+	local messageBoxLinkWidget = g_ui.createWidget("MessageBoxLink", serviceUnavailableBox)
+
+	messageBoxLinkWidget:setId("websiteLink")
+	messageBoxLinkWidget:setText(tr("website"))
+	messageBoxLinkWidget:resizeToText()
+	messageBoxLinkWidget:addAnchor(AnchorLeft, "content", AnchorRight)
+	messageBoxLinkWidget:addAnchor(AnchorTop, "content", AnchorTop)
+	messageBoxLinkWidget:setMarginLeft(4)
+	connect(messageBoxLinkWidget, {
+		onClick = function()
+			g_platform.openUrl(websiteUrl)
+		end
+	})
+
+	local messageBoxBodyCipWidget = g_ui.createWidget("MessageBoxBodyCip", serviceUnavailableBox)
+
+	messageBoxBodyCipWidget:setText(".")
+	messageBoxBodyCipWidget:resizeToText()
+	messageBoxBodyCipWidget:addAnchor(AnchorLeft, "websiteLink", AnchorRight)
+	messageBoxBodyCipWidget:addAnchor(AnchorTop, "content", AnchorTop)
+
+	local marginLeft = messageBoxLinkWidget:getMarginLeft() + messageBoxLinkWidget:getWidth() + messageBoxBodyCipWidget:getWidth()
+
+	content:setMarginLeft(-math.floor(marginLeft / 2))
+	serviceUnavailableBox:setWidth(content:getWidth() + marginLeft + 32)
+
+	return serviceUnavailableBox
+end
+
 function onGameConnectionError(message, code)
 	CharacterList.destroyLoadBox()
 
@@ -495,8 +534,17 @@ function onGameConnectionError(message, code)
 			CharacterList.showAgain()
 		end
 	else
-		local text = translateNetworkError(code, g_game.getProtocolGame() and g_game.getProtocolGame():isConnecting(), message)
-		local box = trackErrorBox(displayErrorBox(tr("Connection Error"), text))
+		local text = g_game.getProtocolGame() and g_game.getProtocolGame():isConnecting()
+		local connectionErrorText = translateNetworkError(code, text, message)
+		local box
+
+		if text then
+			g_logger.info("[characterlist] " .. connectionErrorText)
+
+			box = trackErrorBox(createServiceUnavailableBox())
+		else
+			box = trackErrorBox(displayErrorBox(tr("Connection Error"), connectionErrorText))
+		end
 
 		function box.onOk()
 			errorBox = nil
@@ -509,9 +557,7 @@ end
 function onGameUpdateNeeded(signature)
 	CharacterList.destroyLoadBox()
 
-	local box = trackErrorBox(displayErrorBox(tr("Update needed"), tr("Enter with your account again to update your client.")))
-
-	function box.onOk()
+	trackErrorBox(displayErrorBox(tr("Update needed"), tr("Enter with your account again to update your client."))).onOk = function()
 		errorBox = nil
 
 		CharacterList.showAgain()
@@ -613,9 +659,7 @@ function CharacterList.terminate()
 
 	if loadBox then
 		g_game.cancelLogin()
-		loadBox:destroy()
-
-		loadBox = nil
+		CharacterList.destroyLoadBox()
 	end
 
 	if waitingWindow then
@@ -1050,10 +1094,16 @@ function CharacterList.doLogin(fromAutoReconnect)
 end
 
 function CharacterList.destroyLoadBox()
-	if loadBox then
-		loadBox:destroy()
+	local previousLoadBox = loadBox
 
-		loadBox = nil
+	loadBox = nil
+
+	if isWidgetAlive(previousLoadBox) then
+		if g_modalManager and g_modalManager.hide then
+			g_modalManager.hide(previousLoadBox)
+		end
+
+		previousLoadBox:destroy()
 	end
 
 	destroyCreateAccount()
@@ -1124,9 +1174,8 @@ function scheduleAutoReconnect()
 	end
 
 	local now = g_clock.millis()
-	local isDuplicateSchedule = autoReconnectEvent ~= nil or now - lastScheduleReconnectAt < RECONNECT_SCHEDULE_DEBOUNCE_MS
 
-	if not isDuplicateSchedule then
+	if not (autoReconnectEvent ~= nil or now - lastScheduleReconnectAt < RECONNECT_SCHEDULE_DEBOUNCE_MS) then
 		reconnectAttemptCount = reconnectAttemptCount + 1
 	end
 
@@ -1151,11 +1200,7 @@ function executeAutoReconnect()
 		return
 	end
 
-	if errorBox then
-		errorBox:destroy()
-
-		errorBox = nil
-	end
+	destroyTrackedErrorBox()
 
 	autoReconnectAttempt = true
 

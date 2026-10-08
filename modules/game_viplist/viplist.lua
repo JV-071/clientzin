@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_viplist/viplist.lua
-
-vipWindow = nil
+﻿vipWindow = nil
 vipButton = nil
 addVipWindow = nil
 editVipWindow = nil
@@ -11,8 +9,8 @@ maxVipGroups = 5
 editableGroupCount = 1
 
 local globalSettings = {
-	hideOfflineVips = false,
 	showGrouped = false,
+	hideOfflineVips = false,
 	vipSortOrder = {}
 }
 
@@ -140,7 +138,7 @@ end
 
 controllerVip = Controller:new()
 
-function controllerVip:onInit()
+function controllerVip.onInit(self)
 	Keybind.new("Windows", "Show/hide VIP list", "Ctrl+P", "")
 	Keybind.bind("Windows", "Show/hide VIP list", {
 		{
@@ -201,7 +199,7 @@ function controllerVip:onInit()
 	syncVipMainPanelButton()
 end
 
-function controllerVip:onTerminate()
+function controllerVip.onTerminate(self)
 	Keybind.delete("Windows", "Show/hide VIP list")
 
 	local ArrayWidgets = {
@@ -223,7 +221,7 @@ function controllerVip:onTerminate()
 	vipInfo = {}
 end
 
-function controllerVip:onGameStart()
+function controllerVip.onGameStart(self)
 	loadVipWidgetConfigFromSidebar()
 
 	if not g_game.getFeature(GameAdditionalVipInfo) then
@@ -243,7 +241,7 @@ function controllerVip:onGameStart()
 	syncVipMainPanelButton()
 end
 
-function controllerVip:onGameEnd()
+function controllerVip.onGameEnd(self)
 	saveVipWidgetConfigToSidebar()
 
 	if not g_game.getFeature(GameVipGroups) then
@@ -287,9 +285,9 @@ function saveVipInfo()
 			g_settings.setNode("VipList", {})
 		end
 
-		local settings = {}
-
-		settings.VipInfo = vipInfo
+		local settings = {
+			VipInfo = vipInfo
+		}
 
 		g_settings.mergeNode("VipList", settings)
 	end
@@ -306,9 +304,7 @@ function refresh()
 end
 
 function clear()
-	local vipList = vipWindow:getChildById("contentsPanel")
-
-	vipList:destroyChildren()
+	vipWindow:getChildById("contentsPanel"):destroyChildren()
 
 	if not g_game.isOnline() and g_game.getFeature(GameAdditionalVipInfo) then
 		vipInfo = {}
@@ -485,9 +481,8 @@ function createEditWindow(widget)
 
 	local okButton = editVipWindow:getChildById("buttonOK")
 	local cancelButton = editVipWindow:getChildById("buttonCancel")
-	local nameLabel = editVipWindow:getChildById("nameLabel")
 
-	nameLabel:setText(name)
+	editVipWindow:getChildById("nameLabel"):setText(name)
 
 	local descriptionTextId = g_game.getFeature(GameVipGroups) and "descriptionText" or "descriptionTextLegacy"
 	local descriptionText = editVipWindow:getChildById(descriptionTextId)
@@ -529,10 +524,7 @@ function createEditWindow(widget)
 		local name = widget:getText()
 		local state = widget.vipState
 		local description = descriptionText:getText()
-		local iconId = tonumber(iconRadioGroup:getSelectedWidget():getId():sub(5))
-
-		iconId = iconId or 0
-
+		local iconId = tonumber(iconRadioGroup:getSelectedWidget():getId():sub(5)) or 0
 		local notify = notifyCheckBox:isChecked()
 		local groups = {}
 
@@ -587,11 +579,10 @@ end
 
 function addVip()
 	if addVipWindow then
-		local nameInput = addVipWindow:getChildById("name")
-		local playerName = nameInput:getText()
+		local nameInput = addVipWindow:getChildById("name"):getText()
 
-		if playerName and playerName ~= "" then
-			g_game.addVip(playerName)
+		if nameInput and nameInput ~= "" then
+			g_game.addVip(nameInput)
 			destroyAddWindow()
 		end
 	end
@@ -691,9 +682,9 @@ end
 
 function sortBy(state)
 	if not g_game.getFeature(GameAdditionalVipInfo) then
-		local settings = {}
-
-		settings.sortedBy = state
+		local settings = {
+			sortedBy = state
+		}
 
 		g_settings.mergeNode("VipList", settings)
 	end
@@ -891,14 +882,13 @@ function onVipStateChange(id, state, groupID)
 
 		onAddVip(id, name, state, description, iconId, notify, groupID, true)
 	else
-		local vipList = vipWindow:getChildById("contentsPanel")
-		local label = vipList:getChildById("vip" .. id)
-		local name = label:getText()
-		local description = getStoredVipDescription(label)
-		local iconId = label.iconId
-		local notify = label.notifyLogin
+		local contentsPanel = vipWindow:getChildById("contentsPanel"):getChildById("vip" .. id)
+		local name = contentsPanel:getText()
+		local description = getStoredVipDescription(contentsPanel)
+		local iconId = contentsPanel.iconId
+		local notify = contentsPanel.notifyLogin
 
-		label:destroy()
+		contentsPanel:destroy()
 		onAddVip(id, name, state, description, iconId, notify)
 	end
 
@@ -1248,11 +1238,10 @@ end
 
 function addGroup()
 	if addGroupWindow then
-		local nameInput = addGroupWindow:getChildById("name")
-		local groupName = nameInput:getText()
+		local name = addGroupWindow:getChildById("name"):getText()
 
-		if groupName and groupName ~= "" then
-			g_game.editVipGroups(1, 0, groupName)
+		if name and name ~= "" then
+			g_game.editVipGroups(1, 0, name)
 			destroyAddGroupWindow()
 		end
 	end
@@ -1337,7 +1326,9 @@ function showGroups(sortType)
 	end
 
 	for _, group in ipairs(vipGroups) do
-		local groupId, groupName, isEditable = group[1], group[2], group[3]
+		local groupId = group[1]
+		local groupName = group[2]
+		local isEditable = group[3]
 		local playersInGroup = getPlayersByGroup(groupId)
 
 		if #playersInGroup > 0 then

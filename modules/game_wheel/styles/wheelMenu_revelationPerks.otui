@@ -1,0 +1,193 @@
+WheelMenuRevelationPerksPanel < Panel
+  size: 213 102
+  anchors.top: prev.bottom
+  anchors.right: parent.right
+  margin-top: 6
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Revelation Perks')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+  Panel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 22
+    margin-left: 6
+    margin-right: 6
+    margin-bottom: 4
+
+    Panel
+      id: damage
+      anchors.top: parent.top
+      anchors.left: parent.left
+      size: 200 16
+      Label
+        id: dmgHealing
+        !text: tr('Damage and Healing')
+        width: 140
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('+0')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    UIWidget
+      id: infoDamage
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 2
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Unlocked Revelation Perks grant a bonus to all damage and \nhealing:\n* Stage 1 grants a bonus of +4 damage and healing\n* Stage 2 increases this bonus to +9\n* Stage 3 increases this bonus to +20')
+
+    Panel
+      id: avatar
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 2
+      size: 200 16
+      Label
+        id: perk1
+        !text: tr('Avatar of Nature')
+        width: 135
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('Locked')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    UIWidget
+      id: infoAvatar
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 2
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Transforms you into a\npowerful form that reduces\ndamage taken and increases\ndamage dealt.')
+
+    Panel
+      id: spell1
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      margin-top: 2
+      Label
+        id: perk2
+        !text: tr('Blessing of the...')
+        width: 135
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('Locked')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    UIWidget
+      id: infoSpell1
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 2
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Increase your mitigation multiplicatively.')
+
+    Panel
+      id: spell2
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      margin-top: 2
+      Label
+        id: perk3
+        !text: tr('Gift of Life')
+        width: 135
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('Locked')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    UIWidget
+      id: infoSpell2
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 2
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Increase your mitigation multiplicatively.')
+
+    Panel
+      id: spell3
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      size: 200 16
+      margin-top: 2
+      Label
+        id: perk4
+        !text: tr('Twin Bursts')
+        width: 135
+        anchors.top: parent.top
+        anchors.left: parent.left
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+      Label
+        id: value
+        !text: tr('Locked')
+        width: 88
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text-align: topright
+        font: $var-cip-font-new
+        color: #c0c0c0
+        margin-right: 15
+    UIWidget
+      id: infoSpell3
+      size: 12 12
+      anchors.top: prev.top
+      anchors.right: parent.right
+      margin-top: 2
+      image-source: /images/icons/show_gui_help_grey
+      !tooltip: tr('Increase your mitigation multiplicatively.')

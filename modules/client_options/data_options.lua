@@ -1,6 +1,4 @@
-﻿-- chunkname: @/client_options/data_options.lua
-
-local WALK_DELAY_DEFAULT_MS = 100
+﻿local WALK_DELAY_DEFAULT_MS = 100
 
 local function syncAllowInspectSetting(enabled)
 	if not g_game.isOnline() or not g_game.inspectionPlayer then
@@ -145,56 +143,56 @@ local function moveChildToTop(child, targetPanel)
 end
 
 return {
+	actionBarLeftLocked = false,
+	quickLootCorpses = false,
+	bottomBarsAll = true,
+	bottomBarsBar1 = true,
+	bottomBarsBar3 = false,
+	leftBarsBar1 = false,
+	leftBarsBar3 = false,
+	rightBarsBar1 = false,
+	rightBarsBar3 = false,
+	keepBacklog = false,
+	levelUp = true,
+	valuableLoot = false,
+	bossDefeated = false,
+	deathPvE = true,
+	deathPvP = false,
+	playerKill = false,
+	playerKillAssist = false,
+	playerAttacking = false,
+	highestDamage = false,
+	highestHealing = false,
+	lowHealth = false,
+	giftOfLife = true,
+	treasureFound = false,
+	bestiaryCompleted = false,
+	bestiaryUnlocked = false,
+	achievement = true,
+	skillUp = true,
+	enableAutoScreenshots = true,
+	onlyCaptureGameWindow = false,
+	rightBarsBar2 = false,
+	rightBarsAll = false,
+	leftBarsBar2 = false,
+	leftBarsAll = false,
+	bottomBarsBar2 = false,
+	showBars = true,
+	autoChaseOff = true,
+	actionBarRightLocked = false,
+	actionBarBottomLocked = false,
+	autoSwitchPreset = false,
 	openMaximized = false,
-	showInfoMessagesInConsole = true,
-	showEventMessagesInConsole = true,
-	showStatusMessagesInConsole = true,
-	moveStack = false,
-	smartWalk = false,
 	openNewTabsWhenReceivingPrivateMessages = false,
 	showOthersStatusMessagesInConsole = false,
 	showPrivateMessagesInConsole = true,
 	showLevelsInConsole = true,
 	showTimestampsInConsole = true,
-	actionBarBottomLocked = false,
-	actionBarRightLocked = false,
-	bottomBarsBar1 = true,
-	leftBarsAll = false,
-	leftBarsBar2 = false,
-	rightBarsAll = false,
-	rightBarsBar2 = false,
-	onlyCaptureGameWindow = false,
-	giftOfLife = true,
-	highestHealing = false,
-	playerAttacking = false,
-	playerKill = false,
-	deathPvP = false,
-	deathPvE = true,
-	bossDefeated = false,
-	valuableLoot = false,
-	treasureFound = false,
-	bestiaryCompleted = false,
-	achievement = true,
-	levelUp = true,
-	keepBacklog = false,
-	rightBarsBar3 = false,
-	rightBarsBar1 = false,
-	leftBarsBar3 = false,
-	leftBarsBar1 = false,
-	bottomBarsBar3 = false,
-	bottomBarsBar2 = false,
-	bottomBarsAll = true,
-	showBars = true,
-	quickLootCorpses = false,
-	autoChaseOff = true,
-	actionBarLeftLocked = false,
-	playerKillAssist = false,
-	bestiaryUnlocked = false,
-	highestDamage = false,
-	skillUp = true,
-	lowHealth = false,
-	enableAutoScreenshots = true,
-	autoSwitchPreset = false,
+	showInfoMessagesInConsole = true,
+	showEventMessagesInConsole = true,
+	showStatusMessagesInConsole = true,
+	moveStack = false,
+	smartWalk = false,
 	vsync = {
 		deferAction = true,
 		value = false,
@@ -434,8 +432,10 @@ return {
 	},
 	showMessages = {
 		value = true,
-		action = function(value, options, controller, panels, extraWidgets)
-			if not value and modules.game_textmessage and modules.game_textmessage.clearMessages then
+		action = function(arg_41_0, unusedArgument, unusedArgument, panels, unusedArgument)
+			modules.client_options.updateGameWindowMessageOptionsAvailability(panels, arg_41_0)
+
+			if not arg_41_0 and modules.game_textmessage and modules.game_textmessage.clearMessages then
 				modules.game_textmessage.clearMessages()
 			end
 		end
@@ -488,13 +488,12 @@ return {
 	markTargetVisually = {
 		value = "frameAndHighlight",
 		action = function(value, options, controller, panels, extraWidgets)
-			local modeMap = {
-				none = 3,
-				frameAndHighlight = 0,
+			local mode = ({
 				highlightOnly = 2,
-				frameOnly = 1
-			}
-			local mode = modeMap[value] or 0
+				frameOnly = 1,
+				none = 3,
+				frameAndHighlight = 0
+			})[value] or 0
 
 			g_client.setMarkTargetVisually(mode)
 
@@ -547,8 +546,22 @@ return {
 				modules.client_options.updateLootSideVisibility(panels, value)
 			end
 
-			if panels.gameMapPanel and panels.gameMapPanel.setHighlightObjectsWithoutShift then
+			local var_48_1 = value
+
+			if var_48_1 == true then
+				var_48_1 = "classic"
+			elseif var_48_1 ~= "classic" and var_48_1 ~= "regular" and var_48_1 ~= "leftSmart" then
+				var_48_1 = "regular"
+			end
+
+			if panels.gameMapPanel and panels.gameMapPanel.setMouseControlMode then
+				panels.gameMapPanel:setMouseControlMode(var_48_1)
+			elseif panels.gameMapPanel and panels.gameMapPanel.setHighlightObjectsWithoutShift then
 				panels.gameMapPanel:setHighlightObjectsWithoutShift(value == "leftSmart")
+			end
+
+			if modules.game_interface and modules.game_interface.refreshHoveredItemInteractionCursor then
+				modules.game_interface.refreshHoveredItemInteractionCursor()
 			end
 		end
 	},
@@ -600,9 +613,7 @@ return {
 		deferAction = true,
 		value = 240,
 		action = function(value, options, controller, panels, extraWidgets)
-			local noLimit = getPendingOptionValue(options, "noFrameRateLimit")
-
-			if noLimit then
+			if getPendingOptionValue(options, "noFrameRateLimit") then
 				if value <= 0 or value > 240 then
 					value = 240
 				end
@@ -667,10 +678,7 @@ return {
 			end
 
 			panels.soundPanel:recursiveGetChildById("masterVolume"):setText(tr("Master Volume: %d %%", value) .. state)
-
-			local bar = panels.soundPanel:recursiveGetChildById("masterVolume"):getChildById("valueBar")
-
-			bar:setValue(value)
+			panels.soundPanel:recursiveGetChildById("masterVolume"):getChildById("valueBar"):setValue(value)
 		end
 	},
 	musicVolume = {
@@ -894,10 +902,10 @@ return {
 		deferAction = true,
 		value = true,
 		action = function(value, options, controller, panels, extraWidgets)
-			local showHudForOwnCharacter = getPendingOptionValue(options, "showHudForOwnCharacter")
+			local value = getPendingOptionValue(options, "showHudForOwnCharacter")
 
-			panels.gameMapPanel:setDrawOwnHealthBars(showHudForOwnCharacter and getPendingOptionValue(options, "showOwnHealth"))
-			panels.gameMapPanel:setDrawOwnManaBar(showHudForOwnCharacter and getPendingOptionValue(options, "showOwnMana"))
+			panels.gameMapPanel:setDrawOwnHealthBars(value and getPendingOptionValue(options, "showOwnHealth"))
+			panels.gameMapPanel:setDrawOwnManaBar(value and getPendingOptionValue(options, "showOwnMana"))
 
 			if g_gameConfig.isDrawingInformationByWidget() then
 				modules.game_creatureinformation.toggleInformation()
@@ -978,16 +986,16 @@ return {
 		end
 	},
 	showManaShield = {
-		value = true,
-		deferAction = true
+		deferAction = true,
+		value = true
 	},
 	manaShieldNextToHealth = {
-		value = false,
-		deferAction = true
+		deferAction = true,
+		value = false
 	},
 	manaShieldNextToMana = {
-		value = true,
-		deferAction = true
+		deferAction = true,
+		value = true
 	},
 	showOwnHarmony = {
 		deferAction = true,
@@ -1001,12 +1009,12 @@ return {
 		end
 	},
 	harmonyNextToHealth = {
-		value = true,
-		deferAction = true
+		deferAction = true,
+		value = true
 	},
 	harmonyNextToMana = {
-		value = false,
-		deferAction = true
+		deferAction = true,
+		value = false
 	},
 	showOtherMarks = {
 		deferAction = true,
@@ -1036,10 +1044,10 @@ return {
 				return
 			end
 
-			local combo = hud:recursiveGetChildById("showArcsSize")
+			local v = hud:recursiveGetChildById("showArcsSize")
 
-			if combo then
-				combo:setCurrentOptionByData(value, true)
+			if v then
+				v:setCurrentOptionByData(value, true)
 			end
 
 			syncHealthCircleModuleFromHud(options, panels)
@@ -1370,8 +1378,8 @@ return {
 		end
 	},
 	showLinkCopyWarning = {
-		value = true,
-		deferAction = true
+		deferAction = true,
+		value = true
 	},
 	useNativeMouseCursor = {
 		deferAction = true,
@@ -1382,6 +1390,13 @@ return {
 			if modules.client_options and modules.client_options.updateBigMouseCursorAvailability then
 				modules.client_options.updateBigMouseCursorAvailability(panels, value)
 			end
+		end
+	},
+	showAnimatedMouseCursor = {
+		deferAction = true,
+		value = true,
+		action = function(arg_99_0, options, controller, panels, extraWidgets)
+			g_mouse.setShowAnimatedMouseCursor(arg_99_0)
 		end
 	},
 	showBigMouseCursor = {
@@ -1414,6 +1429,10 @@ return {
 		action = function(value, options, controller, panels, extraWidgets)
 			if panels and panels.gameMapPanel then
 				panels.gameMapPanel:setAntiAliasingMode(value)
+			end
+
+			if modules.game_outfit and modules.game_outfit.onGraphicsModeChange then
+				modules.game_outfit.onGraphicsModeChange(value)
 			end
 
 			if panels and panels.graphicsPanel then
@@ -1785,7 +1804,9 @@ return {
 				allOn = true
 			end
 
-			local b1, b2, b3 = value, modules.client_options.getOption("actionBarShowBottom2"), modules.client_options.getOption("actionBarShowBottom3")
+			local b1 = value
+			local b2 = modules.client_options.getOption("actionBarShowBottom2")
+			local b3 = modules.client_options.getOption("actionBarShowBottom3")
 
 			modules.game_actionbar.setBottomBarGroupVisible(allOn, b1, b2, b3)
 		end
@@ -1803,7 +1824,9 @@ return {
 				allOn = true
 			end
 
-			local b1, b2, b3 = modules.client_options.getOption("actionBarShowBottom1"), value, modules.client_options.getOption("actionBarShowBottom3")
+			local b1 = modules.client_options.getOption("actionBarShowBottom1")
+			local b2 = value
+			local b3 = modules.client_options.getOption("actionBarShowBottom3")
 
 			modules.game_actionbar.setBottomBarGroupVisible(allOn, b1, b2, b3)
 		end
@@ -1821,7 +1844,9 @@ return {
 				allOn = true
 			end
 
-			local b1, b2, b3 = modules.client_options.getOption("actionBarShowBottom1"), modules.client_options.getOption("actionBarShowBottom2"), value
+			local b1 = modules.client_options.getOption("actionBarShowBottom1")
+			local b2 = modules.client_options.getOption("actionBarShowBottom2")
+			local b3 = value
 
 			modules.game_actionbar.setBottomBarGroupVisible(allOn, b1, b2, b3)
 		end
@@ -1834,7 +1859,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar46")
-			local c1, c2, c3 = value, modules.client_options.getOption("actionBarShowLeft2"), modules.client_options.getOption("actionBarShowLeft3")
+			local c1 = value
+			local c2 = modules.client_options.getOption("actionBarShowLeft2")
+			local c3 = modules.client_options.getOption("actionBarShowLeft3")
 
 			modules.game_actionbar.setLeftBarGroupVisible(allOn, c1, c2, c3)
 		end
@@ -1847,7 +1874,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar46")
-			local c1, c2, c3 = modules.client_options.getOption("actionBarShowLeft1"), value, modules.client_options.getOption("actionBarShowLeft3")
+			local c1 = modules.client_options.getOption("actionBarShowLeft1")
+			local c2 = value
+			local c3 = modules.client_options.getOption("actionBarShowLeft3")
 
 			modules.game_actionbar.setLeftBarGroupVisible(allOn, c1, c2, c3)
 		end
@@ -1860,7 +1889,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar46")
-			local c1, c2, c3 = modules.client_options.getOption("actionBarShowLeft1"), modules.client_options.getOption("actionBarShowLeft2"), value
+			local c1 = modules.client_options.getOption("actionBarShowLeft1")
+			local c2 = modules.client_options.getOption("actionBarShowLeft2")
+			local c3 = value
 
 			modules.game_actionbar.setLeftBarGroupVisible(allOn, c1, c2, c3)
 		end
@@ -1873,7 +1904,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar79")
-			local c1, c2, c3 = value, modules.client_options.getOption("actionBarShowRight2"), modules.client_options.getOption("actionBarShowRight3")
+			local c1 = value
+			local c2 = modules.client_options.getOption("actionBarShowRight2")
+			local c3 = modules.client_options.getOption("actionBarShowRight3")
 
 			modules.game_actionbar.setRightBarGroupVisible(allOn, c1, c2, c3)
 		end
@@ -1886,7 +1919,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar79")
-			local c1, c2, c3 = modules.client_options.getOption("actionBarShowRight1"), value, modules.client_options.getOption("actionBarShowRight3")
+			local c1 = modules.client_options.getOption("actionBarShowRight1")
+			local c2 = value
+			local c3 = modules.client_options.getOption("actionBarShowRight3")
 
 			modules.game_actionbar.setRightBarGroupVisible(allOn, c1, c2, c3)
 		end
@@ -1899,7 +1934,9 @@ return {
 			end
 
 			local allOn = modules.client_options.getOption("allActionBar79")
-			local c1, c2, c3 = modules.client_options.getOption("actionBarShowRight1"), modules.client_options.getOption("actionBarShowRight2"), value
+			local c1 = modules.client_options.getOption("actionBarShowRight1")
+			local c2 = modules.client_options.getOption("actionBarShowRight2")
+			local c3 = value
 
 			modules.game_actionbar.setRightBarGroupVisible(allOn, c1, c2, c3)
 		end

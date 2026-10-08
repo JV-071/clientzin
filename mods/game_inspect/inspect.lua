@@ -1,6 +1,4 @@
-﻿-- chunkname: @/mods/game_inspect/inspect.lua
-
-local DETAIL_LABEL_COLUMN_WIDTH = 150
+﻿local DETAIL_LABEL_COLUMN_WIDTH = 150
 local DETAIL_VALUE_COLUMN_GAP = 7
 local DETAIL_ROW_HEIGHT = 20
 local detailMeasureLabel
@@ -178,8 +176,8 @@ local function getPlayerInspectDescriptionPair(data)
 		return nil, nil
 	end
 
-	wireKey = tostring(wireKey)
-	wireValue = tostring(wireValue)
+	local wireKey = tostring(wireKey)
+	local wireValue = tostring(wireValue)
 
 	if isInspectDescriptionCategory(wireKey) then
 		return wireKey, wireValue
@@ -199,21 +197,27 @@ end
 tibiaInspect = nil
 tibiaInspectCharacter = nil
 
-local inspectedItem, inspectedItemName, inspectedDescriptions, characterInspectData, characterInspectTargetId
+local inspectedItem
+local inspectedItemName
+local inspectedDescriptions
+local characterInspectData
+local characterInspectTargetId
 local characterInspectPendingOpen = false
 local characterInspectReturnData
 local characterInventoryBySlot = {}
 local characterPlayerDescriptions = {}
-local characterInspectionOutfit, selectedCharacterSlot, selectedCharacterSlotWidget
+local characterInspectionOutfit
+local selectedCharacterSlot
+local selectedCharacterSlotWidget
 local characterInfoItemSelected = false
 local CHARACTER_BUTTON_ICON_OFFSET = {
 	player = {
-		idle = "0 0",
-		pressed = "1 1"
+		pressed = "1 1",
+		idle = "0 0"
 	},
 	outfit = {
-		idle = "-1 0",
-		pressed = "0 1"
+		pressed = "0 1",
+		idle = "-1 0"
 	}
 }
 local INSPECT_SLOT_WIDGETS = {
@@ -351,7 +355,9 @@ end
 
 local function buildPlayerDescriptionRows(descriptions)
 	local cyclopedia = modules.game_cyclopedia and modules.game_cyclopedia.Cyclopedia
-	local level, vocation, outfit
+	local level
+	local vocation
+	local outfit
 	local preyRows = {}
 
 	for _, desc in ipairs(descriptions or {}) do
@@ -630,7 +636,7 @@ local function bindCharacterButtonIcon(widget)
 
 	refreshCharacterButtonIconOffset(widget, false)
 
-	function widget:onMousePress(mousePos, mouseButton)
+	function widget.onMousePress(self, mousePos, mouseButton)
 		if mouseButton == MouseLeftButton then
 			refreshCharacterButtonIconOffset(self, true)
 		end
@@ -638,7 +644,7 @@ local function bindCharacterButtonIcon(widget)
 		return false
 	end
 
-	function widget:onMouseRelease(mousePos, mouseButton)
+	function widget.onMouseRelease(self, mousePos, mouseButton)
 		if mouseButton == MouseLeftButton then
 			refreshCharacterButtonIconOffset(self, false)
 		end
@@ -653,8 +659,8 @@ local function applyCharacterOutfitPreview(spriteWidget)
 	end
 
 	spriteWidget:setSize({
-		height = 192,
-		width = 192
+		width = 192,
+		height = 192
 	})
 	spriteWidget:setCenter(true)
 	spriteWidget:setFixedCreatureSize(true)
@@ -721,8 +727,10 @@ local function setInspectEquipmentSlot(slot, entry)
 			itemWidget:setItem(entry.item)
 			hideItemQuickLootIcon(itemWidget)
 
-			if ItemsDatabase and ItemsDatabase.setTier and entry.item.getTier then
-				ItemsDatabase.setTier(itemWidget, entry.item:getTier() or 0)
+			if ItemsDatabase and ItemsDatabase.setBigTier and entry.item.getTier then
+				local var_35_5 = isCharacterSelfInspect() and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
+
+				ItemsDatabase.setBigTier(itemWidget, entry.item:getTier() or 0, var_35_5)
 			end
 		end
 	else
@@ -733,8 +741,8 @@ local function setInspectEquipmentSlot(slot, entry)
 		if itemWidget then
 			itemWidget:setItem(nil)
 
-			if ItemsDatabase and ItemsDatabase.setTier then
-				ItemsDatabase.setTier(itemWidget, 0)
+			if ItemsDatabase and ItemsDatabase.setBigTier then
+				ItemsDatabase.setBigTier(itemWidget, 0)
 			end
 		end
 	end
@@ -966,9 +974,7 @@ function openSelfInspectProficiency()
 		return
 	end
 
-	local proficiencyId = item.getProficiencyId and item:getProficiencyId() or 0
-
-	if proficiencyId <= 0 then
+	if (item.getProficiencyId and item:getProficiencyId() or 0) <= 0 then
 		return
 	end
 
@@ -1153,6 +1159,39 @@ function openProficiency()
 	proficiencyMod.requestOpenWindow(item)
 end
 
+local function var_0_63()
+	if not tibiaInspectCharacter or not tibiaInspectCharacter:isVisible() or not isCharacterSelfInspect() then
+		return
+	end
+
+	local var_58_0 = tibiaInspectCharacter.contentPanel and tibiaInspectCharacter.contentPanel.equipmentPanel
+
+	if not var_58_0 or not ItemsDatabase or not ItemsDatabase.setBigTier then
+		return
+	end
+
+	local var_58_1 = ItemsDatabase.isOverlordActive()
+
+	for iter_58_0 in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
+		local var_58_2 = INSPECT_SLOT_WIDGETS[iter_58_0]
+		local var_58_3 = var_58_2 and var_58_0[var_58_2]
+		local equippedItem = var_58_3 and var_58_3:getChildById("equippedItem")
+		local var_58_5 = characterInventoryBySlot[iter_58_0]
+
+		if equippedItem and var_58_5 and var_58_5.item and var_58_5.item.getTier then
+			ItemsDatabase.setBigTier(equippedItem, var_58_5.item:getTier() or 0, var_58_1)
+		end
+	end
+end
+
+local function handleOtcToggle(arg_59_0)
+	if not OtcOpCode or arg_59_0 ~= OtcOpCode.OVERLORD_ACTIVE then
+		return
+	end
+
+	var_0_63()
+end
+
 function init()
 	tibiaInspect = g_ui.displayUI("styles/inspectItem")
 
@@ -1176,6 +1215,7 @@ function init()
 	connect(g_game, {
 		onInspection = onInspection,
 		onParseCyclopediaCharacterInspection = onParseCyclopediaCharacterInspection,
+		onOtcToggle = handleOtcToggle,
 		onGameStart = hideAll,
 		onGameEnd = hideAll
 	})
@@ -1196,6 +1236,7 @@ function terminate()
 
 	disconnect(g_game, {
 		onInspection = onInspection,
+		onOtcToggle = handleOtcToggle,
 		onParseCyclopediaCharacterInspection = onParseCyclopediaCharacterInspection,
 		onGameStart = hideAll,
 		onGameEnd = hideAll
@@ -1282,13 +1323,19 @@ function onInspection(inspectType, itemName, item, descriptions, imbuements)
 		tibiaInspect.contentPanel.name:setWidth(380)
 	end
 
-	tibiaInspect.contentPanel.item:setItemId(item:getId())
-	hideItemQuickLootIcon(tibiaInspect.contentPanel.item)
+	local var_65_3 = tibiaInspect.contentPanel.item
 
-	local displayItem = tibiaInspect.contentPanel.item:getItem()
+	var_65_3:setItemId(item:getId())
+	hideItemQuickLootIcon(var_65_3)
+
+	local displayItem = var_65_3:getItem()
 
 	if displayItem and item.getTier then
 		displayItem:setTier(item:getTier())
+	end
+
+	if ItemsDatabase and ItemsDatabase.setBigTier then
+		ItemsDatabase.setBigTier(var_65_3, item.getTier and item:getTier() or 0)
 	end
 
 	tibiaInspect.contentPanel.name:setText(tr("You are inspecting:") .. " " .. (itemName or ""))

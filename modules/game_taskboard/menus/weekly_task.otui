@@ -65,7 +65,7 @@ DeliverySlots < Panel
     margin-left: 8
     size: 66 66
     virtual: true
-    phantom: true
+    phantom: false
     image-source: /images/ui/item
     image-border: 10
 
@@ -80,6 +80,7 @@ DeliverySlots < Panel
     color: #d33c3c
     text-auto-resize: true
   Label
+    id: ofDeliveryLabel
     text: of
     anchors.top: prev.bottom
     anchors.horizontalCenter: prev.horizontalCenter
@@ -111,6 +112,16 @@ DeliverySlots < Panel
 
     $disabled:
       image-clip: 0 40 43 20
+
+  UIWidget
+    id: completedIcon
+    size: 12 9
+    anchors.verticalCenter: itemIcon.verticalCenter
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-left: 28
+    image-source: /modules/game_taskboard/images/completed
+    visible: false
+    phantom: true
   
 WeeklyPanel < Panel
   visible: false
@@ -399,6 +410,18 @@ WeeklyPanel < Panel
       font: verdana-11px-monochrome
       color: $var-text-cip-color
       text-auto-resize: true
+
+  Label
+    id: weeklyExperienceRewardLabel
+    text: ''
+    text-align: center
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: weeklyProgress.top
+    margin-bottom: 6
+    height: 16
+    font: $var-cip-font-new
+    color: $var-text-cip-color
 
 ChainTransparentWeekly < UIWidget
   id: chainTransparentWeekly

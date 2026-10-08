@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/hotkey_utils.lua
-
-HotkeyUtils = HotkeyUtils or {}
+﻿HotkeyUtils = HotkeyUtils or {}
 
 local hotkeyBlockingSources = {}
 local nextSourceId = 1
@@ -14,12 +12,18 @@ local HOTKEY_USEWITH = 3
 local function getCallerModule()
 	local dbg = rawget(_G, "debug")
 
-	if type(dbg) ~= "table" or type(dbg.getinfo) ~= "function" then
+	if type(dbg) ~= "table" then
+		return "unknown"
+	end
+
+	local getinfo = dbg.getinfo
+
+	if type(getinfo) ~= "function" then
 		return "unknown"
 	end
 
 	local ok, info = pcall(function()
-		return dbg.getinfo(3, "S")
+		return getinfo(3, "S")
 	end)
 
 	if not ok or type(info) ~= "table" or not info.source then
@@ -27,9 +31,8 @@ local function getCallerModule()
 	end
 
 	local source = info.source:gsub("@", "")
-	local moduleName = source:match("/modules/([^/]+)/") or source:match("\\modules\\([^\\]+)\\") or source:match("([^/\\]+)%.lua$") or "unknown"
 
-	return moduleName:gsub("_", "")
+	return (source:match("/modules/([^/]+)/") or source:match("\\modules\\([^\\]+)\\") or source:match("([^/\\]+)%.lua$") or "unknown"):gsub("_", "")
 end
 
 function HotkeyUtils.enableHotkeys(sourceId)
@@ -110,25 +113,41 @@ function HotkeyUtils.canPerformKeyCombo(keyCombo)
 	return string.match(keyCombo, "Ctrl%+") or string.match(keyCombo, "Alt%+") or string.match(keyCombo, "F%d+")
 end
 
-function HotkeyUtils.executeHotkeyItem(action, itemId, subType)
+function HotkeyUtils.executeHotkeyItem(action, itemId, subType, onItemUse)
 	if action == HOTKEY_USE then
-		if g_game.getClientVersion() < 780 or subType then
+		if subType then
 			local item = g_game.findPlayerItem(itemId, subType or -1)
 
 			if item then
+				if onItemUse then
+					onItemUse(true)
+				end
+
 				g_game.use(item)
 			end
 		else
+			if onItemUse then
+				onItemUse(true)
+			end
+
 			g_game.useInventoryItem(itemId)
 		end
 	elseif action == HOTKEY_USEONSELF then
-		if g_game.getClientVersion() < 780 or subType then
+		if subType then
 			local item = g_game.findPlayerItem(itemId, subType or -1)
 
 			if item then
+				if onItemUse then
+					onItemUse(true)
+				end
+
 				g_game.useWith(item, g_game.getLocalPlayer())
 			end
 		else
+			if onItemUse then
+				onItemUse(true)
+			end
+
 			g_game.useInventoryItemWith(itemId, g_game.getLocalPlayer())
 		end
 	elseif action == HOTKEY_USEONTARGET then
@@ -137,7 +156,7 @@ function HotkeyUtils.executeHotkeyItem(action, itemId, subType)
 		if not attackingCreature then
 			local item = Item.create(itemId)
 
-			if g_game.getClientVersion() < 780 or subType then
+			if subType then
 				local tmpItem = g_game.findPlayerItem(itemId, subType or -1)
 
 				if not tmpItem then
@@ -147,7 +166,7 @@ function HotkeyUtils.executeHotkeyItem(action, itemId, subType)
 				item = tmpItem
 			end
 
-			modules.game_interface.startUseWith(item)
+			modules.game_interface.startUseWith(item, onItemUse)
 
 			return
 		end
@@ -156,19 +175,27 @@ function HotkeyUtils.executeHotkeyItem(action, itemId, subType)
 			return
 		end
 
-		if g_game.getClientVersion() < 780 or subType then
+		if subType then
 			local item = g_game.findPlayerItem(itemId, subType or -1)
 
 			if item then
+				if onItemUse then
+					onItemUse(true)
+				end
+
 				g_game.useWith(item, attackingCreature)
 			end
 		else
+			if onItemUse then
+				onItemUse(true)
+			end
+
 			g_game.useInventoryItemWith(itemId, attackingCreature)
 		end
 	elseif action == HOTKEY_USEWITH then
 		local item = Item.create(itemId)
 
-		if g_game.getClientVersion() < 780 or subType then
+		if subType then
 			local tmpItem = g_game.findPlayerItem(itemId, subType or -1)
 
 			if not tmpItem then
@@ -178,6 +205,6 @@ function HotkeyUtils.executeHotkeyItem(action, itemId, subType)
 			item = tmpItem
 		end
 
-		modules.game_interface.startUseWith(item)
+		modules.game_interface.startUseWith(item, onItemUse)
 	end
 end

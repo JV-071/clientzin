@@ -1,6 +1,4 @@
-﻿-- chunkname: @/mods/game_proficiency/proficiency_data.lua
-
-if not ProficiencyData then
+﻿if not ProficiencyData then
 	ProficiencyData = {}
 	ProficiencyData.__index = ProficiencyData
 	ProficiencyData.content = {}
@@ -197,7 +195,7 @@ local function convertModifierRawValue(lookup, perkType, rawValue)
 	return rawValue / 10000
 end
 
-function ProficiencyData:loadProficiencyJsonContentOnly()
+function ProficiencyData.loadProficiencyJsonContentOnly(self)
 	self.content = {}
 
 	local file = "/json/proficiencies.json"
@@ -227,7 +225,7 @@ function ProficiencyData:loadProficiencyJsonContentOnly()
 	return true
 end
 
-function ProficiencyData:loadProficiencyJson()
+function ProficiencyData.loadProficiencyJson(self)
 	if not self:loadProficiencyJsonContentOnly() then
 		return
 	end
@@ -239,7 +237,7 @@ function ProficiencyData:loadProficiencyJson()
 	end
 end
 
-function ProficiencyData:isValidProfiencyId(id)
+function ProficiencyData.isValidProfiencyId(self, id)
 	return self.content[id] ~= nil
 end
 
@@ -262,7 +260,7 @@ local PROFICIENCY_WEAPON_CATEGORIES = {
 	[MarketCategory.FistWeapons] = true
 }
 
-function ProficiencyData:getMarketCategoryFromName(name)
+function ProficiencyData.getMarketCategoryFromName(self, name)
 	if not name or name == "" then
 		return nil
 	end
@@ -286,7 +284,7 @@ function ProficiencyData:getMarketCategoryFromName(name)
 	return nil
 end
 
-function ProficiencyData:resolveMarketCategory(itemType, proficiencyId)
+function ProficiencyData.resolveMarketCategory(self, itemType, proficiencyId)
 	if not itemType then
 		return nil
 	end
@@ -306,7 +304,7 @@ function ProficiencyData:resolveMarketCategory(itemType, proficiencyId)
 	return nil
 end
 
-function ProficiencyData:buildMarketDataForItem(itemType, proficiencyId)
+function ProficiencyData.buildMarketDataForItem(self, itemType, proficiencyId)
 	local category = self:resolveMarketCategory(itemType, proficiencyId)
 
 	if not category then
@@ -341,15 +339,15 @@ function ProficiencyData:buildMarketDataForItem(itemType, proficiencyId)
 	return marketData
 end
 
-function ProficiencyData:getServerClientId(entry)
+function ProficiencyData.getServerClientId(self, entry)
 	return entry and entry.marketData and entry.marketData.clientId or 0
 end
 
-function ProficiencyData:getContentById(id)
+function ProficiencyData.getContentById(self, id)
 	return self.content[id]
 end
 
-function ProficiencyData:getPerkLaneCount(id)
+function ProficiencyData.getPerkLaneCount(self, id)
 	local content = self.content[id]
 
 	if not content then
@@ -359,7 +357,7 @@ function ProficiencyData:getPerkLaneCount(id)
 	return table.size(content.Levels)
 end
 
-function ProficiencyData:formatFloatValue(value, roundFloat, perkType)
+function ProficiencyData.formatFloatValue(self, value, roundFloat, perkType)
 	if value == nil then
 		return "0"
 	end
@@ -387,12 +385,11 @@ local function buildImagePath(sheet)
 	return PROFICIENCY_IMAGE_PATH .. sheet
 end
 
-function ProficiencyData:getImageSourceAndClip(perkData)
+function ProficiencyData.getImageSourceAndClip(unusedArgument, perkData)
 	local perkType = perkData.Type
 
 	if perkType == PERK_SPELL_AUGMENT then
-		local iconIndex = SpellIcons[perkData.SpellId] or 1
-		local xOffset = (iconIndex - 1) * 32
+		local xOffset = ((SpellIcons[perkData.SpellId] or 1) - 1) * 32
 
 		return Spells.getIconFileByProfile("Default"), string.format("%d 0", xOffset)
 	end
@@ -430,7 +427,7 @@ function ProficiencyData:getImageSourceAndClip(perkData)
 	return buildImagePath(sheetData.sheet), getIconOffset(sheetData.index)
 end
 
-function ProficiencyData:getBonusNameAndTooltip(perkData)
+function ProficiencyData.getBonusNameAndTooltip(self, perkData)
 	local perkType = perkData.Type
 	local data = PerkTextData[perkType]
 	local bonusName = data and data.name or "Empty"
@@ -512,7 +509,7 @@ function ProficiencyData:getBonusNameAndTooltip(perkData)
 	return bonusName, string.format(data.desc, value)
 end
 
-function ProficiencyData:getAugmentIconClip(perkData)
+function ProficiencyData.getAugmentIconClip(self, perkData)
 	local augmentData = AugmentPerkIcons[perkData.AugmentType]
 
 	if not augmentData then
@@ -524,7 +521,7 @@ function ProficiencyData:getAugmentIconClip(perkData)
 	return string.format("%d 0 %d %d", augmentData.index * 16, 16, 16)
 end
 
-function ProficiencyData:getModifierPerkData(modifierEnum, refineLevel)
+function ProficiencyData.getModifierPerkData(self, modifierEnum, refineLevel)
 	if not modifierEnum or modifierEnum == 0 then
 		return nil
 	end
@@ -592,21 +589,40 @@ function ProficiencyData:getModifierPerkData(modifierEnum, refineLevel)
 	}
 end
 
-function ProficiencyData:getCurrentCeilExperience(exp, displayItem)
-	local best
-	local vocation = self:getWeaponProfessionType(displayItem)
-	local lastExp
+local function stage(arg_22_0, arg_22_1)
+	local var_22_0 = ExperienceTable[arg_22_0]
+
+	if not var_22_0 or type(arg_22_1) ~= "string" then
+		return nil
+	end
+
+	local var_22_1 = var_22_0[arg_22_1]
+
+	if type(var_22_1) ~= "number" then
+		return nil
+	end
+
+	return var_22_1
+end
+
+function ProficiencyData.getCurrentCeilExperience(self, exp, displayItem)
+	exp = tonumber(exp) or 0
+
+	local weaponProfessionType = self:getWeaponProfessionType(displayItem)
 	local perkLanes = self:getPerkLaneCount(displayItem:getProficiencyId())
 	local limitIndex = perkLanes + 2
-	local skipIndex = perkLanes > 0 and perkLanes + 1 or nil
+	local skipIndex
 
-	for index, stage in ipairs(ExperienceTable) do
-		if limitIndex < index then
-			break
-		end
+	if perkLanes > 0 then
+		skipIndex = perkLanes + 1
+	end
 
-		if not skipIndex or index ~= skipIndex then
-			local stageExp = stage[vocation]
+	local best
+	local lastExp = 0
+
+	for iter_23_0 = 1, math.min(limitIndex, #ExperienceTable) do
+		if iter_23_0 ~= skipIndex then
+			local stageExp = stage(iter_23_0, weaponProfessionType)
 
 			if stageExp then
 				if exp < stageExp and (not best or stageExp < best) then
@@ -618,33 +634,38 @@ function ProficiencyData:getCurrentCeilExperience(exp, displayItem)
 		end
 	end
 
-	return best or lastExp
+	if type(best) == "number" then
+		return best
+	end
+
+	return lastExp
 end
 
-function ProficiencyData:getMaxExperience(perkCount, displayItem)
-	local vocation = self:getWeaponProfessionType(displayItem)
-	local lastLevel = ExperienceTable[perkCount + 2]
+function ProficiencyData.getMaxExperience(self, perkCount, displayItem)
+	local weaponProfessionType = self:getWeaponProfessionType(displayItem)
 
-	return lastLevel[vocation] or 0
+	return stage((tonumber(perkCount) or 0) + 2, weaponProfessionType) or 0
 end
 
-function ProficiencyData:getLevelXpRange(level, displayItem)
-	local vocation = self:getWeaponProfessionType(displayItem)
+function ProficiencyData.getLevelXpRange(self, level, displayItem)
+	local weaponProfessionType = self:getWeaponProfessionType(displayItem)
 	local prevLevel = math.max(level - 1, 0)
-	local xpMin = prevLevel == 0 and 0 or ExperienceTable[prevLevel][vocation]
-	local xpMax = ExperienceTable[level][vocation] or xpMin + 1
+	local xpMin = prevLevel == 0 and 0 or stage(prevLevel, weaponProfessionType) or 0
+	local xpMax = stage(level, weaponProfessionType) or xpMin + 1
 
 	return xpMin, xpMax
 end
 
-function ProficiencyData:getLevelPercent(currentExperience, level, displayItem)
+function ProficiencyData.getLevelPercent(self, currentExperience, level, displayItem)
+	currentExperience = tonumber(currentExperience) or 0
+
 	local xpMin, xpMax = self:getLevelXpRange(level, displayItem)
 	local progress = math.max(0, math.min(1, (currentExperience - xpMin) / (xpMax - xpMin)))
 
 	return math.floor(progress * 100)
 end
 
-function ProficiencyData:getTopBarProficiencyPercent(currentExp, displayItem)
+function ProficiencyData.getTopBarProficiencyPercent(self, currentExp, displayItem)
 	local profId = displayItem.getProficiencyId and displayItem:getProficiencyId()
 
 	if not profId or not self:isValidProfiencyId(profId) then
@@ -658,12 +679,14 @@ function ProficiencyData:getTopBarProficiencyPercent(currentExp, displayItem)
 	end
 
 	local vocation = self:getWeaponProfessionType(displayItem)
-	local floorLastPerk = ExperienceTable[perkLanes][vocation]
-	local masteryXp = ExperienceTable[perkLanes + 2][vocation]
+	local floorLastPerk = stage(perkLanes, vocation)
+	local masteryXp = stage(perkLanes + 2, vocation)
 
 	if not floorLastPerk or not masteryXp or masteryXp <= floorLastPerk then
 		return 0
 	end
+
+	currentExp = tonumber(currentExp) or 0
 
 	if masteryXp <= currentExp then
 		return 100
@@ -683,21 +706,23 @@ function ProficiencyData:getTopBarProficiencyPercent(currentExp, displayItem)
 	return self:getLevelPercent(currentExp, nextBracket, displayItem)
 end
 
-function ProficiencyData:getTotalPercent(currentExperience, perkCount, displayItem)
-	local vocation = self:getWeaponProfessionType(displayItem)
-	local maxExperience = ExperienceTable[perkCount + 2][vocation] or 1
+function ProficiencyData.getTotalPercent(self, currentExperience, perkCount, displayItem)
+	currentExperience = tonumber(currentExperience) or 0
+
+	local weaponProfessionType = self:getWeaponProfessionType(displayItem)
+	local maxExperience = stage((tonumber(perkCount) or 0) + 2, weaponProfessionType) or 1
 	local progress = math.max(0, math.min(1, currentExperience / maxExperience))
 
 	return math.floor(progress * 100)
 end
 
-function ProficiencyData:getMaxExperienceByLevel(level, displayItem)
-	local vocation = self:getWeaponProfessionType(displayItem)
+function ProficiencyData.getMaxExperienceByLevel(self, level, displayItem)
+	local weaponProfessionType = self:getWeaponProfessionType(displayItem)
 
-	return ExperienceTable[level][vocation] or 0
+	return stage(level, weaponProfessionType) or 0
 end
 
-function ProficiencyData:getCurrentLevelByExp(displayItem, currentExperience, includeMastery)
+function ProficiencyData.getCurrentLevelByExp(self, displayItem, currentExperience, includeMastery)
 	local vocation = self:getWeaponProfessionType(displayItem)
 	local currentLevel = 0
 	local skipLevel
@@ -711,11 +736,13 @@ function ProficiencyData:getCurrentLevelByExp(displayItem, currentExperience, in
 		end
 	end
 
-	for level, data in ipairs(ExperienceTable) do
+	currentExperience = tonumber(currentExperience) or 0
+
+	for level = 1, #ExperienceTable do
 		if skipLevel and level == skipLevel then
 			-- block empty
 		else
-			local requiredExp = data[vocation]
+			local requiredExp = stage(level, vocation)
 
 			if requiredExp then
 				if requiredExp <= currentExperience then
@@ -738,18 +765,27 @@ function ProficiencyData:getCurrentLevelByExp(displayItem, currentExperience, in
 	return level
 end
 
-function ProficiencyData:getWeaponProfessionType(displayItem)
-	local cached = displayItem._proficiencyVocation
-
-	if cached then
-		return cached
+function ProficiencyData.getWeaponProfessionType(unusedArgument, displayItem)
+	if not displayItem then
+		return "regular"
 	end
 
-	local vocation
-	local marketData = displayItem:getMarketData()
+	local _proficiencyVocation = displayItem._proficiencyVocation
 
-	vocation = marketData.restrictVocation == 1 and "knight" or displayItem:getWeaponType() == WEAPON_CROSSBOW and "crossbow" or "regular"
-	displayItem._proficiencyVocation = vocation
+	if type(_proficiencyVocation) == "string" then
+		return _proficiencyVocation
+	end
 
-	return vocation
+	local var_31_1 = "regular"
+	local marketData = displayItem.getMarketData and displayItem:getMarketData()
+
+	if marketData and marketData.restrictVocation == 1 then
+		var_31_1 = "knight"
+	elseif displayItem.getWeaponType and displayItem:getWeaponType() == WEAPON_CROSSBOW then
+		var_31_1 = "crossbow"
+	end
+
+	displayItem._proficiencyVocation = var_31_1
+
+	return var_31_1
 end

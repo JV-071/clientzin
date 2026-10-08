@@ -1,6 +1,4 @@
-﻿-- chunkname: @/modulelib/controller.lua
-
-local TypeEvent = {
+﻿local TypeEvent = {
 	MODULE_INIT = 1,
 	GAME_INIT = 2
 }
@@ -81,7 +79,7 @@ end
 
 Controller = {}
 
-function Controller:new()
+function Controller.new(self)
 	local module = g_modules.getCurrentModule()
 	local obj = {
 		name = module and module:getName() or nil,
@@ -101,7 +99,7 @@ function Controller:new()
 	return obj
 end
 
-function Controller:init()
+function Controller.init(self)
 	if self.dataUI ~= nil then
 		self:loadUI()
 	end
@@ -145,25 +143,7 @@ function Controller:init()
 	end
 end
 
-function Controller:loadHtml(path, parent)
-	local suffix = ".html"
-
-	if path:sub(-#suffix) ~= suffix then
-		path = path .. suffix
-	end
-
-	self:setUI(path, parent)
-
-	self.htmlRoot = HtmlLoader("/" .. self.name .. "/" .. path, parent, self)
-	self.ui = self.htmlRoot.widget
-end
-
-function Controller:destroyUI()
-	if self.htmlRoot ~= nil then
-		self.htmlRoot.widget = nil
-		self.htmlRoot = nil
-	end
-
+function Controller.destroyUI(self)
 	if self.ui then
 		self.ui:destroy()
 
@@ -183,27 +163,7 @@ function Controller:destroyUI()
 	end
 end
 
-function Controller:findElements(query)
-	return self.htmlRoot and self.htmlRoot:find(query:trim()) or {}
-end
-
-function Controller:findWidgets(query)
-	return self.htmlRoot and self.htmlRoot:findWidgets(query:trim()) or {}
-end
-
-function Controller:findElement(query)
-	local els = self:findElements(query)
-
-	return #els > 0 and els[1] or nil
-end
-
-function Controller:findWidget(query)
-	local els = self:findWidgets(query)
-
-	return #els > 0 and els[1] or nil
-end
-
-function Controller:loadUI(name, parent)
+function Controller.loadUI(self, name, parent)
 	if self.ui then
 		return
 	end
@@ -215,11 +175,11 @@ function Controller:loadUI(name, parent)
 	self.ui = g_ui.loadUI("/" .. self.name .. "/" .. self.dataUI.name, self.dataUI.parent or g_ui.getRootWidget())
 end
 
-function Controller:setKeyboardAnchor(widget)
+function Controller.setKeyboardAnchor(self, widget)
 	self.keyboardAnchor = widget
 end
 
-function Controller:setUI(name, parent)
+function Controller.setUI(self, name, parent)
 	self.dataUI = {
 		name = name,
 		parent = parent,
@@ -227,7 +187,7 @@ function Controller:setUI(name, parent)
 	}
 end
 
-function Controller:terminate()
+function Controller.terminate(self)
 	if self.onGameStart then
 		disconnect(g_game, {
 			onGameStart = self.onGameStart
@@ -289,12 +249,11 @@ function Controller:terminate()
 	self.keyboardEvents = nil
 	self.keyboardAnchor = nil
 	self.scheduledEvents = nil
-	self.htmlRoot = nil
 	self.__onGameStart = nil
 	self.__onGameEnd = nil
 end
 
-function Controller:registerEvents(actor, events)
+function Controller.registerEvents(self, actor, events)
 	if self.events[self.currentTypeEvent] == nil then
 		self.events[self.currentTypeEvent] = {}
 	end
@@ -306,17 +265,17 @@ function Controller:registerEvents(actor, events)
 	return evt
 end
 
-function Controller:registerExtendedOpcode(opcode, fnc)
+function Controller.registerExtendedOpcode(self, opcode, fnc)
 	ProtocolGame.registerExtendedOpcode(opcode, fnc)
 	table.insert(self.extendedOpcodes, opcode)
 end
 
-function Controller:registerOpcode(opcode, fnc)
+function Controller.registerOpcode(self, opcode, fnc)
 	ProtocolGame.registerOpcode(opcode, fnc)
 	table.insert(self.opcodes, opcode)
 end
 
-function Controller:sendExtendedOpcode(opcode, ...)
+function Controller.sendExtendedOpcode(self, opcode, ...)
 	local protocol = g_game.getProtocolGame()
 
 	if protocol then
@@ -366,7 +325,7 @@ local function registerScheduledEvent(controller, fncRef, fnc, delay, name)
 	return evt
 end
 
-function Controller:scheduleEvent(fnc, delay, name)
+function Controller.scheduleEvent(self, fnc, delay, name)
 	if name then
 		tagControllerEventSource(self, "scheduleEvent:" .. name)
 	else
@@ -376,7 +335,7 @@ function Controller:scheduleEvent(fnc, delay, name)
 	return registerScheduledEvent(self, scheduleEvent, fnc, delay, name)
 end
 
-function Controller:cycleEvent(fnc, delay, name)
+function Controller.cycleEvent(self, fnc, delay, name)
 	if name then
 		tagControllerEventSource(self, "cycleEvent:" .. name)
 	else
@@ -386,7 +345,7 @@ function Controller:cycleEvent(fnc, delay, name)
 	return registerScheduledEvent(self, cycleEvent, fnc, delay, name)
 end
 
-function Controller:removeEvent(evt)
+function Controller.removeEvent(self, evt)
 	if self.scheduledEvents[TypeEvent.GAME_INIT] and table.removevalue(self.scheduledEvents[TypeEvent.GAME_INIT], evt) then
 		removeEvent(evt)
 
@@ -402,7 +361,7 @@ function Controller:removeEvent(evt)
 	error("The event was not registered by the controller.")
 end
 
-function Controller:bindKeyDown(...)
+function Controller.bindKeyDown(self, ...)
 	local args = {
 		...
 	}
@@ -420,7 +379,7 @@ function Controller:bindKeyDown(...)
 	g_keyboard.bindKeyDown(args[1], args[2], args[3], args[4])
 end
 
-function Controller:bindKeyUp(...)
+function Controller.bindKeyUp(self, ...)
 	local args = {
 		...
 	}
@@ -438,7 +397,7 @@ function Controller:bindKeyUp(...)
 	g_keyboard.bindKeyUp(args[1], args[2], args[3], args[4])
 end
 
-function Controller:bindKeyPress(...)
+function Controller.bindKeyPress(self, ...)
 	local args = {
 		...
 	}

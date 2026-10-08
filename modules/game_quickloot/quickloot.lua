@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_quickloot/quickloot.lua
-
-QuickLoot = {}
+﻿QuickLoot = {}
 
 local function applyQuickLootFilterSlotVisuals(slotWidget, itemOrId)
 	if not slotWidget then
@@ -51,12 +49,10 @@ local GOLD_POUCH_ITEM_ID = 23721
 local SET_OBTAIN_CONTAINER_ACTION = 4
 
 local function getFilter(id)
-	local filter = {
+	return ({
 		[1] = 0,
 		[2] = 1
-	}
-
-	return filter[id]
+	})[id]
 end
 
 local QUICKLOOT_CATEGORY_NAMES = {
@@ -148,7 +144,7 @@ quickLootController = Controller:new()
 
 quickLootController:setUI("quickloot")
 
-function quickLootController:onInit()
+function quickLootController.onInit(self)
 	QuickLoot.Define()
 
 	QuickLoot.data = {
@@ -176,7 +172,7 @@ function quickLootController:onInit()
 	g_game.openContainerQuickLoot(3, nil, {}, nil, nil, true)
 end
 
-function quickLootController:onTerminate()
+function quickLootController.onTerminate(self)
 	Keybind.delete("Loot", "Quick Loot Nearby Corpses")
 
 	if QuickLoot.mouseGrabberWidget then
@@ -200,7 +196,7 @@ function quickLootController:onTerminate()
 	QuickLoot.getQuickLootIconTooltip = quickLootBuildIconTooltip
 end
 
-function quickLootController:onGameStart()
+function quickLootController.onGameStart(self)
 	if not g_game.getFeature(GameThingQuickLoot) then
 		return
 	end
@@ -222,7 +218,7 @@ function quickLootController:onGameStart()
 	g_game.requestQuickLootBlackWhiteList(getFilter(QuickLoot.data.filter), #QuickLoot.data.loots[QuickLoot.data.filter], QuickLoot.data.loots[QuickLoot.data.filter])
 end
 
-function quickLootController:onGameEnd()
+function quickLootController.onGameEnd(self)
 	if not g_game.getFeature(GameThingQuickLoot) then
 		return
 	end
@@ -401,134 +397,134 @@ function QuickLoot.Define()
 
 		local slotBags = {
 			{
+				color = "#484848",
 				name = "Unassigned",
-				type = 31,
-				color = "#484848"
+				type = 31
 			},
 			{
+				color = "#414141",
 				name = "Gold",
-				type = 30,
-				color = "#414141"
+				type = 30
 			},
 			{
+				color = "#484848",
 				name = "Armors",
-				type = 1,
-				color = "#484848"
+				type = 1
 			},
 			{
+				color = "#414141",
 				name = "Amulets",
-				type = 2,
-				color = "#414141"
+				type = 2
 			},
 			{
+				color = "#484848",
 				name = "Boots",
-				type = 3,
-				color = "#484848"
+				type = 3
 			},
 			{
+				color = "#414141",
 				name = "Containers",
-				type = 4,
-				color = "#414141"
+				type = 4
 			},
 			{
+				color = "#484848",
 				name = "Creature\nProducts",
-				type = 24,
-				color = "#484848"
+				type = 24
 			},
 			{
+				color = "#414141",
 				name = "Decoration",
-				type = 5,
-				color = "#414141"
+				type = 5
 			},
 			{
+				color = "#484848",
 				name = "Food",
-				type = 6,
-				color = "#484848"
+				type = 6
 			},
 			{
+				color = "#414141",
 				name = "Helmets\nand Hats",
-				type = 7,
-				color = "#414141"
+				type = 7
 			},
 			{
+				color = "#484848",
 				name = "Legs",
-				type = 8,
-				color = "#484848"
+				type = 8
 			},
 			{
+				color = "#414141",
 				name = "Others",
-				type = 9,
-				color = "#414141"
+				type = 9
 			},
 			{
+				color = "#414141",
 				name = "Potions",
-				type = 10,
-				color = "#414141"
+				type = 10
 			},
 			{
+				color = "#484848",
 				name = "Rings",
-				type = 11,
-				color = "#484848"
+				type = 11
 			},
 			{
+				color = "#414141",
 				name = "Runes",
-				type = 12,
-				color = "#414141"
+				type = 12
 			},
 			{
+				color = "#484848",
 				name = "Shields",
-				type = 13,
-				color = "#484848"
+				type = 13
 			},
 			{
+				color = "#414141",
 				name = "Tools",
-				type = 14,
-				color = "#414141"
+				type = 14
 			},
 			{
+				color = "#484848",
 				name = "Valuables",
-				type = 15,
-				color = "#484848"
+				type = 15
 			},
 			{
+				color = "#414141",
 				name = "Weapons:\nAmmo",
-				type = 16,
-				color = "#414141"
+				type = 16
 			},
 			{
+				color = "#484848",
 				name = "Weapons:\nAxes",
-				type = 17,
-				color = "#484848"
+				type = 17
 			},
 			{
+				color = "#414141",
 				name = "Weapons:\nClubs",
-				type = 18,
-				color = "#414141"
+				type = 18
 			},
 			{
+				color = "#484848",
 				name = "Weapons:\nDistance",
-				type = 19,
-				color = "#484848"
+				type = 19
 			},
 			{
+				color = "#414141",
 				name = "Weapons:\nFist",
-				type = 27,
-				color = "#414141"
+				type = 27
 			},
 			{
+				color = "#484848",
 				name = "Weapons:\nSwords",
-				type = 20,
-				color = "#484848"
+				type = 20
 			},
 			{
+				color = "#414141",
 				name = "Weapons:\nWands",
-				type = 21,
-				color = "#414141"
+				type = 21
 			},
 			{
+				color = "#484848",
 				name = "Quivers",
-				type = 25,
-				color = "#484848"
+				type = 25
 			}
 		}
 
@@ -634,16 +630,14 @@ function QuickLoot.Define()
 	end
 
 	function QuickLoot.clearSearch()
-		local search = quickLootController.ui.search
-
-		search:clearText()
+		quickLootController.ui.search:clearText()
 	end
 
 	function QuickLoot.fallback(widget, isChecked)
 		g_game.openContainerQuickLoot(3, nil, {}, nil, nil, isChecked)
 	end
 
-	function QuickLoot:chooseItem()
+	function QuickLoot.chooseItem(self)
 		if g_ui.isMouseGrabbed() then
 			return
 		end
@@ -658,7 +652,7 @@ function QuickLoot.Define()
 		quickLootController.ui:hide()
 	end
 
-	function QuickLoot:onChooseItem(mousePosition, mouseButton)
+	function QuickLoot.onChooseItem(self, mousePosition, mouseButton)
 		local item
 		local userClickedSomething = false
 		local validSelection = false
@@ -671,12 +665,8 @@ function QuickLoot.Define()
 				if clickedWidget:getClassName() == "UIGameMap" then
 					local tile = clickedWidget:getTile(mousePosition)
 
-					if tile then
-						local thing = tile:getTopMoveThing()
-
-						if thing then
-							userClickedSomething = true
-						end
+					if tile and tile:getTopMoveThing() then
+						userClickedSomething = true
 					end
 				elseif clickedWidget:getClassName() == "UIItem" and not clickedWidget:isVirtual() then
 					local clickedItem = clickedWidget:getItem()
@@ -686,12 +676,12 @@ function QuickLoot.Define()
 
 						local pos = clickedItem:getPosition()
 						local inInventory = pos and pos.x == 65535
-						local isGoldPouchForObtain = clickedItem:getId() == GOLD_POUCH_ITEM_ID and QuickLoot.actionsId == SET_OBTAIN_CONTAINER_ACTION
 
-						if isGoldPouchForObtain then
+						if clickedItem:getId() == GOLD_POUCH_ITEM_ID and QuickLoot.actionsId == SET_OBTAIN_CONTAINER_ACTION then
 							invalidSelectionMessage = tr("You can only set the Gold Pouch as a loot container.")
 						elseif clickedItem:isContainer() and inInventory then
-							item = clickedItem
+							local item = clickedItem
+
 							validSelection = true
 
 							g_game.openContainerQuickLoot(QuickLoot.actionsId, QuickLoot.lastSelectBag:getId(), item:getPosition(), item:getId(), item:getStackPos())
@@ -751,7 +741,7 @@ function QuickLoot.Define()
 		end
 	end
 
-	function QuickLoot:openContainer()
+	function QuickLoot.openContainer(self)
 		for _, container in pairs(g_game.getContainers()) do
 			if container:getContainerItem():getId() == self:getItemId() then
 				return false
@@ -763,7 +753,7 @@ function QuickLoot.Define()
 		return true
 	end
 
-	function QuickLoot:clearItem()
+	function QuickLoot.clearItem(self)
 		if self.borrar == 1 then
 			self:getParent().item2:setItemId(0)
 		else
@@ -773,7 +763,7 @@ function QuickLoot.Define()
 		g_game.openContainerQuickLoot(self.borrar, self:getParent():getId(), {}, nil, nil, nil)
 	end
 
-	function QuickLoot:clearFilterItem()
+	function QuickLoot.clearFilterItem(self)
 		local parent = self:getParent()
 		local itemUi = parent.itemSlot and parent.itemSlot.item
 

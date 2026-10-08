@@ -41,8 +41,8 @@ MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 1
-    margin-left: 20
-    font: verdana-11px-monochrome
+    margin-left: 19
+    font: $var-cip-font-new
     height: 13
     !text: tr('XP Analyser')
     color: #909090
@@ -80,11 +80,16 @@ MiniWindow
       id: rawXpGain
       !text: tr('0')
       anchors.top: topParent.top
+      anchors.left: rawXpLabel.right
       anchors.right: parent.right
       text-auto-resize: true
+      text-horizontal-auto-resize: false
+      text-overflow: ellipsis
+      text-align: right
       color: $var-text-cip-color
       font: $var-cip-font
       margin-top: -2
+      margin-left: 2
       margin-right: 5
 
     Label
@@ -101,10 +106,15 @@ MiniWindow
       id: xpGain
       !text: tr('0')
       anchors.top: prev.top
+      anchors.left: xpLabel.right
       anchors.right: parent.right
       text-auto-resize: true
+      text-horizontal-auto-resize: false
+      text-overflow: ellipsis
+      text-align: right
       color: $var-text-cip-color
       font: $var-cip-font
+      margin-left: 2
       margin-right: 5
 
     Label
@@ -123,10 +133,15 @@ MiniWindow
       id: rawXpHour
       !text: tr('0')
       anchors.top: prev.top
+      anchors.left: rawXpHourLabel.right
       anchors.right: parent.right
       text-auto-resize: true
+      text-horizontal-auto-resize: false
+      text-overflow: ellipsis
+      text-align: right
       color: $var-text-cip-color
       font: $var-cip-font
+      margin-left: 2
       margin-right: 5
 
     Label
@@ -144,10 +159,15 @@ MiniWindow
       id: xpHour
       !text: tr('0')
       anchors.top: prev.top
+      anchors.left: xpHourLabel.right
       anchors.right: parent.right
       text-auto-resize: true
+      text-horizontal-auto-resize: false
+      text-overflow: ellipsis
+      text-align: right
       color: $var-text-cip-color
       font: $var-cip-font
+      margin-left: 2
       margin-right: 5
 
     Label
@@ -165,10 +185,15 @@ MiniWindow
       id: nextLevel
       !text: tr('-')
       anchors.top: prev.top
+      anchors.left: nextLevelLabel.right
       anchors.right: parent.right
       text-auto-resize: true
+      text-horizontal-auto-resize: false
+      text-overflow: ellipsis
+      text-align: right
       color: $var-text-cip-color
       font: $var-cip-font
+      margin-left: 2
       margin-right: 5
 
     ProgressBar
@@ -229,6 +254,7 @@ MiniWindow
       background-color: #383636
       color: red
       size: 129 83
+      padding-bottom: 1
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-top: 9

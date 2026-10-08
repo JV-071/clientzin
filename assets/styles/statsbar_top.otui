@@ -10,7 +10,7 @@ StatsBarTopWithShrink < UIWidget
   UIWidget
     id: statsBarTopBackground
     anchors.fill: parent
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 2
     margin-left: 1
     margin-right: 1
@@ -58,7 +58,7 @@ TopStatsSkillElement < UIWidget
     anchors.left: level.right
     margin-left: 7
 
-  // Barra ancora ao slot (irmão). Largura do slot = botão store; botão à direita do slot = mesmo que encostar ao botão.
+  // Barra ancora ao slot (irmÃ£o). Largura do slot = botÃ£o store; botÃ£o Ã  direita do slot = mesmo que encostar ao botÃ£o.
   StatsBarUpSkill
     id: bar
     anchors.verticalCenter: level.verticalCenter
@@ -71,7 +71,7 @@ TopStatsSkillElement < UIWidget
     margin-right: 2
     height: 5
 
-  // Largura 0 por omissão; em Lua expande só na linha de experiência com GameExperienceBonus.
+  // Largura 0 por omissÃ£o; em Lua expande sÃ³ na linha de experiÃªncia com GameExperienceBonus.
   Panel
     id: statsbarXpBoostSlot
     anchors.top: parent.top
@@ -87,12 +87,12 @@ TopStatsSkillElement < UIWidget
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
       visible: false
-      image-source: /images/ui/button-storexp
+      image-source: /images/ui/button-storexp-noborder-idle
       !tooltip: tr('Purchase XP Boost')
       tooltip-delayed: true
       @onClick: modules.game_store.openPremiumBoost()
       $pressed:
-        image-source: /images/ui/button-storexp-pressed
+        image-source: /images/ui/button-storexp-noborder-pressed
 
 // --- Large ---
 
@@ -135,7 +135,7 @@ TopStatsBarLargeOnTop < UIWidget
         $pressed:
           image-clip: 0 27 27 27
 
-      // Borda 2px: anel inset (origem do traco +2,+1 no painel); 92 passos, 184 segmentos em statsbar.lua.
+      // Borda 2px: anel inset 25x25 (origem +1,+1); 96 passos, 192 segmentos em statsbar.lua.
       Panel
         id: proficiencyButtonLargeProgress
         size: 27 27
@@ -392,7 +392,7 @@ TopStatsBarParallelOnTop < UIWidget
           size: 100 13
           anchors.top: parent.top
           anchors.left: parent.left
-          image-source: /images/game/topbar/proficiency-bg
+          image-source: /images/game/topbar/proficiency-bar
           !tooltip: tr('Proficiency Progress: 0 / 1750')
           tooltip-delayed: true
 
@@ -619,7 +619,7 @@ TopStatsBarDefaultOnTop < UIWidget
           size: 100 13
           anchors.top: parent.top
           anchors.left: parent.left
-          image-source: /images/game/topbar/proficiency-bg
+          image-source: /images/game/topbar/proficiency-bar
           !tooltip: tr('Proficiency Progress: 0 / 1750')
           tooltip-delayed: true
 
@@ -759,7 +759,7 @@ TopStatsBarCompactOnTop < UIWidget
 
     Panel
       id: proficiencyButtonCompactWrap
-      size: 15 14
+      size: 14 14
       fixed-size: true
       margin-right: 5
       phantom: true
@@ -770,19 +770,19 @@ TopStatsBarCompactOnTop < UIWidget
         id: proficiencyButtonCompact
         anchors.fill: parent
         image-source: /images/game/topbar/proficiency-button-compact-unequipped
-        image-clip: 0 0 15 14
+        image-clip: 0 0 14 14
         !tooltip: tr('Open Weapon Proficiency Dialog')
         tooltip-delayed: true
         @onClick: modules.game_proficiency.requestOpenWindow()
         $hover !pressed:
-          image-clip: 0 0 15 14
+          image-clip: 0 0 14 14
         $pressed:
-          image-clip: 0 14 15 14
+          image-clip: 0 14 14 14
 
-      // Borda 1px: horário (1,0)->direita->baixo->esquerda->fecha; 54 pixels via statsbar.lua.
+      // Borda 1px: horÃ¡rio (1,0)->direita->baixo->esquerda->fecha; 52 pixels via statsbar.lua.
       Panel
         id: proficiencyButtonCompactProgress
-        size: 15 14
+        size: 14 14
         anchors.fill: parent
         phantom: true
         clipping: false
@@ -791,7 +791,7 @@ TopStatsBarCompactOnTop < UIWidget
 
       UIWidget
         id: highlightProficiencyButtonCompact
-        size: 15 14
+        size: 14 14
         phantom: true
         clipping: false
         image-source: /images/animations/button-highlight-15x14
@@ -907,7 +907,6 @@ TopStatsBarCompactOnTop < UIWidget
     anchors.right: parent.right
     anchors.top: mana.bottom
     margin-top: 2
-    margin-left: 10
     margin-right: 12
     height: 0
 

@@ -1,21 +1,23 @@
-﻿-- chunkname: @/mods/game_search_locker/searchlocker.lua
-
-searchlocker = nil
+﻿searchlocker = nil
 
 local marketItems = {}
 local categoryList = {}
 local depotItemList = {}
 local titemList = {}
-local lastSelectedCategory, searchActiveCategory, lastSelectedItem
+local lastSelectedCategory
+local searchActiveCategory
+local lastSelectedItem
 local suppressSearchCallbacks = false
 local currentSearchTier = 0
 local lastDetailItemId
 local lastDetailItemTier = 0
 local showLockerOnly = false
 local playerAtDepot = false
-local searchPage, itemSearchPage
+local searchPage
+local itemSearchPage
 local searchLockerSearchActive = false
-local searchLockerOutsideHandler, refreshSearchLockerContent
+local searchLockerOutsideHandler
+local refreshSearchLockerContent
 local enableCategories = {
 	17,
 	18,
@@ -41,19 +43,19 @@ local enableClassification = {
 	32
 }
 local sortButtons = {
-	oneButton = false,
 	vocButton = false,
 	levelButton = false,
 	tierFilter = 0,
 	classFilter = -1,
-	twoButton = false
+	twoButton = false,
+	oneButton = false
 }
 local listConfig = {
-	maxFitItems = 0,
-	max = 0,
-	min = 0,
 	labelSize = 36,
 	visibleSlots = 0,
+	max = 0,
+	min = 0,
+	maxFitItems = 0,
 	labels = {},
 	displayList = {},
 	itemListSorted = {}
@@ -285,15 +287,13 @@ local function getScrollSlots(itemList)
 		return 1
 	end
 
-	local paddingTop = itemList.getPaddingTop and itemList:getPaddingTop() or 0
-	local paddingBottom = itemList.getPaddingBottom and itemList:getPaddingBottom() or 0
-	local padding = paddingTop + paddingBottom
+	local paddingTop = (itemList.getPaddingTop and itemList:getPaddingTop() or 0) + (itemList.getPaddingBottom and itemList:getPaddingBottom() or 0)
 
-	if padding == 0 then
-		padding = 2
+	if paddingTop == 0 then
+		paddingTop = 2
 	end
 
-	return math.max(1, math.floor((itemList:getHeight() - padding) / listConfig.labelSize))
+	return math.max(1, math.floor((itemList:getHeight() - paddingTop) / listConfig.labelSize))
 end
 
 local function resetItemListScrollbar()
@@ -336,7 +336,7 @@ local function setupItemListScrollbar(itemScrollMax)
 
 	scrollbar:setMaximum(itemScrollMax * listConfig.labelSize)
 
-	function scrollbar:onValueChange(scrollValue, scrollDelta)
+	function scrollbar.onValueChange(self, scrollValue, scrollDelta)
 		onItemScrollValueChange(self, scrollValue, scrollDelta, listConfig.displayList, listConfig.itemListSorted)
 	end
 end
@@ -470,10 +470,7 @@ local WEAPON_CATEGORIES = {
 }
 
 local function compareMarketItemsByNameCaseInsensitive(a, b)
-	local nameA = string.lower(a.marketData.name or "")
-	local nameB = string.lower(b.marketData.name or "")
-
-	return nameA < nameB
+	return string.lower(a.marketData.name or "") < string.lower(b.marketData.name or "")
 end
 
 local function normalizeSearchText(text)
@@ -555,13 +552,84 @@ local function setupWindow(window)
 end
 
 local function addSearchLockerToPanel()
+	if not searchlocker or searchlocker:isDestroyed() then
+		return
+	end
+
+	local parent = searchlocker:getParent()
+
+	if not parent or parent:isDestroyed() then
+		return
+	end
+
+	parent:removeChild(searchlocker)
+
+	if parent:getClassName() == "UIMiniWindowContainer" and type(parent.refreshSidebarFreeSpace) == "function" then
+		parent:refreshSidebarFreeSpace()
+	end
+end
+
+function relocateForSpace(arg_25_0)
+	if not searchlocker or searchlocker:isDestroyed() or not modules.game_interface then
+		return false
+	end
+
+	if searchlocker._relocatingForSpace then
+		return false
+	end
+
+	local game_interface = modules.game_interface
+	local height = searchlocker:getHeight()
+
+	if not height or height <= 0 then
+		height = searchlocker:getMinimumHeight() or 295
+	end
+
+	local miniWindowSidebarPanelsInOrder = game_interface.getMiniWindowSidebarPanelsInOrder and game_interface.getMiniWindowSidebarPanelsInOrder() or {}
+	local var_25_3
+
+	for unusedValue, entry in ipairs(miniWindowSidebarPanelsInOrder) do
+		if entry and entry ~= arg_25_0 and not entry:isDestroyed() and type(entry.fits) == "function" and entry:fits(searchlocker, height, 0) >= 0 then
+			var_25_3 = entry
+
+			break
+		end
+	end
+
+	if not var_25_3 then
+		return false
+	end
+
+	searchlocker._relocatingForSpace = true
+
+	if arg_25_0 and not arg_25_0:isDestroyed() then
+		arg_25_0:removeChild(searchlocker)
+
+		if type(arg_25_0.refreshSidebarFreeSpace) == "function" then
+			arg_25_0:refreshSidebarFreeSpace()
+		end
+	end
+
+	var_25_3:addChild(searchlocker)
+
+	if type(var_25_3.refreshSidebarFreeSpace) == "function" then
+		var_25_3:refreshSidebarFreeSpace()
+	end
+
+	searchlocker._relocatingForSpace = nil
+
+	return true
+end
+
+local function var_0_50()
 	if not searchlocker or not modules.game_interface then
 		return false
 	end
 
-	local existingParent = searchlocker:getParent()
+	local parent = searchlocker:getParent()
+	local rootWidget = g_ui.getRootWidget()
 
-	if existingParent and not existingParent:isDestroyed() then
+	if parent and not parent:isDestroyed() and parent ~= rootWidget and parent:getClassName() == "UIMiniWindowContainer" then
 		if searchlocker.open then
 			searchlocker:open(true)
 		else
@@ -571,25 +639,17 @@ local function addSearchLockerToPanel()
 		return true
 	end
 
-	local panel = modules.game_interface.getRightPanel and modules.game_interface.getRightPanel()
+	addSearchLockerToPanel()
 
-	if not panel and modules.game_interface.findContentPanelAvailable then
-		local ok, result = pcall(function()
-			return modules.game_interface.findContentPanelAvailable(searchlocker, searchlocker:getMinimumHeight() or 295)
-		end)
+	local game_interface = modules.game_interface
+	local minimumHeight = searchlocker:getMinimumHeight() or 295
+	local rightPanel = game_interface.findContentPanelAvailable and game_interface.findContentPanelAvailable(searchlocker, minimumHeight) or game_interface.getRightPanel and game_interface.getRightPanel()
 
-		if ok then
-			panel = result
-		end
-	end
-
-	if not panel then
+	if not rightPanel then
 		return false
 	end
 
-	if searchlocker:getParent() ~= panel then
-		searchlocker:setParent(panel)
-	end
+	rightPanel:addChild(searchlocker)
 
 	if searchlocker.open then
 		searchlocker:open(true)
@@ -707,9 +767,11 @@ end
 function hideSearch()
 	blurSearchLockerSearch()
 
-	if searchlocker then
+	if searchlocker and not searchlocker:isDestroyed() then
 		searchlocker:hide()
 	end
+
+	addSearchLockerToPanel()
 end
 
 function show()
@@ -1001,7 +1063,7 @@ function initFields()
 		colorCount = colorCount + 1
 	end
 
-	function optionList:onChildFocusChange(selected)
+	function optionList.onChildFocusChange(self, selected)
 		blurSearchLockerSearch()
 		onSelectChildCategory(self, selected)
 	end
@@ -1046,7 +1108,7 @@ function onRecvDepotLockerItems(itemList)
 
 	local isRefresh = isSearchLockerRefresh()
 
-	if not addSearchLockerToPanel() then
+	if not var_0_50() then
 		return
 	end
 
@@ -1126,7 +1188,8 @@ local function resolveLockerItemTierAndCount(itemId, tierFilter)
 		return 0, countAtZero
 	end
 
-	local bestTier, bestCount = 0, 0
+	local bestTier = 0
+	local bestCount = 0
 
 	for _, data in pairs(depotItemList) do
 		if data.itemId == itemId then
@@ -1386,9 +1449,7 @@ function refreshSearchLockerContent()
 		return
 	end
 
-	local searchText = getActiveSearchText()
-
-	if searchText ~= "" then
+	if getActiveSearchText() ~= "" then
 		resetSearchLockerBrowseState(true)
 		onTextChange()
 	else
@@ -1482,7 +1543,7 @@ function onSelectChildCategory(widget, selected, resetFilter)
 
 	clearSelectedItemPreview()
 
-	function itemList:onChildFocusChange(focused)
+	function itemList.onChildFocusChange(self, focused)
 		blurSearchLockerSearch()
 		onSelectChildItem(self, focused)
 	end
@@ -1726,14 +1787,8 @@ function onRecvSearchItem(itemId, tier, depotItemCount, depotItems, inboxItemCou
 	searchPage:setVisible(false)
 	itemSearchPage:setVisible(true)
 	setItemSearchBackButtonVisible(true)
-
-	local itemName = itemSearchPage:recursiveGetChildById("itemsNameLabel")
-
-	itemName:setText(getItemName(itemId):lower())
-
-	local depotAmount = itemSearchPage:recursiveGetChildById("depotAmount")
-
-	depotAmount:setText(comma_value(depotItemCount))
+	itemSearchPage:recursiveGetChildById("itemsNameLabel"):setText(getItemName(itemId):lower())
+	itemSearchPage:recursiveGetChildById("depotAmount"):setText(comma_value(depotItemCount))
 
 	local depotButton = itemSearchPage:recursiveGetChildById("depotButton")
 
@@ -1744,9 +1799,8 @@ function onRecvSearchItem(itemId, tier, depotItemCount, depotItems, inboxItemCou
 	end
 
 	local stashCount = getStashCount(stashItems)
-	local stashAmount = itemSearchPage:recursiveGetChildById("stashAmount")
 
-	stashAmount:setText(comma_value(stashCount))
+	itemSearchPage:recursiveGetChildById("stashAmount"):setText(comma_value(stashCount))
 
 	local stashButton = itemSearchPage:recursiveGetChildById("stashButton")
 
@@ -1756,9 +1810,7 @@ function onRecvSearchItem(itemId, tier, depotItemCount, depotItems, inboxItemCou
 		setupSearchItemList(stashButton, stashItems, itemId, stashCount)
 	end
 
-	local mailBoxAmount = itemSearchPage:recursiveGetChildById("mailBoxAmount")
-
-	mailBoxAmount:setText(comma_value(inboxItemCount))
+	itemSearchPage:recursiveGetChildById("mailBoxAmount"):setText(comma_value(inboxItemCount))
 
 	local mailBoxButton = itemSearchPage:recursiveGetChildById("mailBoxButton")
 
@@ -2041,7 +2093,12 @@ local function applySearchLockerSearchFocus(moveCursorToEnd)
 		return
 	end
 
-	searchlocker:raise()
+	local parent = searchlocker:getParent()
+
+	if not (searchlocker._fromSidebar or searchlocker.free) and (not parent or parent:getClassName() ~= "UIMiniWindowContainer") then
+		searchlocker:raise()
+	end
+
 	pcall(function()
 		searchlocker:grabKeyboard()
 	end)
@@ -2105,7 +2162,7 @@ function setupSearchField()
 	local clearButton = searchlocker:recursiveGetChildById("clearSearchButton")
 
 	if search then
-		function search:onMousePress(mousePos, button)
+		function search.onMousePress(self, mousePos, button)
 			if button == MouseLeftButton then
 				focusSearchLockerSearch(false)
 			end

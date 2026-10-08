@@ -1,6 +1,27 @@
 Font
   name: Verdana Bold-11px-new
-  texture: Verdana 11px
+  texture: verdana-11px
   height: 13
-  glyph-size: 22 13
-  space-width: 4
+  glyph-size: 16 16
+  space-width: 3
+
+// Row 15 (glyphs 256-271), row 16 (272+). Usage: setColoredText('{icon:gold-coin}')
+  icons:
+    gold-coin: 256
+    coin-no-transferable: 257
+    coin-transferable: 258
+    dust: 259
+    exalted-core: 260
+    lunar-ascension-orb: 261
+    prey-wildcard: 262
+    icon-augmentation-1-inactive: 263
+    icon-augmentation-2-inactive: 264
+    icon-augmentation-1-active: 265
+    icon-augmentation-2-active: 266
+    icon-mod-grade-1: 267
+    icon-mod-grade-2: 268
+    icon-mod-grade-3: 269
+    icon-mod-grade-4: 270
+    icon-critical: 271
+    icon-cooldown-reduction: 272
+    icon-base: 273

@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/string.lua
-
-function string:split(delim)
+﻿function string.split(self, delim)
 	local start = 1
 	local results = {}
 
@@ -22,29 +20,32 @@ function string:split(delim)
 	return results
 end
 
-function string:starts(start)
+function string.starts(self, start)
 	return string.sub(self, 1, #start) == start
 end
 
-function string:ends(test)
+function string.ends(self, test)
 	return test == "" or string.sub(self, -string.len(test)) == test
 end
 
-function string:trim()
+function string.trim(self)
 	return string.match(self, "^%s*(.*%S)") or ""
 end
 
-function string:explode(sep, limit)
+function string.explode(self, sep, limit)
 	if type(sep) ~= "string" or tostring(self):len() == 0 or sep:len() == 0 then
 		return {}
 	end
 
-	local i, pos, tmp, t = 0, 1, "", {}
+	local i = 0
+	local pos = 1
+	local unusedValue = ""
+	local t = {}
 
 	for s, e in function()
 		return string.find(self, sep, pos)
 	end do
-		tmp = self:sub(pos, s - 1):trim()
+		local tmp = self:sub(pos, s - 1):trim()
 
 		table.insert(t, tmp)
 
@@ -56,14 +57,14 @@ function string:explode(sep, limit)
 		end
 	end
 
-	tmp = self:sub(pos):trim()
+	local tmp = self:sub(pos):trim()
 
 	table.insert(t, tmp)
 
 	return t
 end
 
-function string:contains(str, checkCase, start, plain)
+function string.contains(self, str, checkCase, start, plain)
 	if not checkCase then
 		self = self:lower()
 		str = str:lower()
@@ -72,7 +73,7 @@ function string:contains(str, checkCase, start, plain)
 	return string.find(self, str, start and start or 1, plain == nil and true or false)
 end
 
-function string:wrap(width)
+function string.wrap(self, width)
 	local wrapped = ""
 	local lineWidth = 0
 
@@ -99,7 +100,7 @@ function string.searchEscape(str)
 	return (str:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1"))
 end
 
-function string:capitalize()
+function string.capitalize(self)
 	return string.gsub(self, "(%w)([%w]*)", function(firstLetter, restOfString)
 		return string.upper(firstLetter) .. string.lower(restOfString)
 	end)
@@ -195,4 +196,18 @@ end
 function setStringColor(t, text, color)
 	table.insert(t, text)
 	table.insert(t, color)
+end
+
+function tableToColoredText(arg_16_0)
+	if type(arg_16_0) ~= "table" then
+		return arg_16_0 or ""
+	end
+
+	local var_16_0 = ""
+
+	for iter_16_0 = 1, #arg_16_0, 2 do
+		var_16_0 = var_16_0 .. "{" .. (arg_16_0[iter_16_0] or "") .. ", " .. (arg_16_0[iter_16_0 + 1] or "#ffffff") .. "}"
+	end
+
+	return var_16_0
 end

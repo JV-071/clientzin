@@ -1,6 +1,5 @@
-﻿-- chunkname: @/game_cyclopedia/tab/magicalArchives/magicalArchives.lua
-
-local UI, currentSpell
+﻿local UI
+local currentSpell
 local allSpells = {}
 local filteredSpells = {}
 local activeSearchText = ""
@@ -74,6 +73,8 @@ local filters = {
 	charVocationFilter = true
 }
 local vocationIds = {
+	Monk = 9,
+	["Elite Knight"] = 8,
 	["Royal Paladin"] = 7,
 	["Elder Druid"] = 6,
 	["Master Sorcerer"] = 5,
@@ -81,9 +82,7 @@ local vocationIds = {
 	Paladin = 3,
 	Druid = 2,
 	Sorcerer = 1,
-	["Exalted Monk"] = 10,
-	Monk = 9,
-	["Elite Knight"] = 8
+	["Exalted Monk"] = 10
 }
 local promotedToBase = {
 	nil,
@@ -127,17 +126,18 @@ local baseVocNames = {
 	"Monk"
 }
 local groupNames = {
+	SPELLGROUP_FOCUS = "Support",
+	SPELLGROUP_ATTACK = "Attack",
 	SPELLGROUP_CONJURE = "Support",
 	SPELLGROUP_SPECIAL = "Support",
 	SPELLGROUP_CRIPPLING = "Support",
 	SPELLGROUP_SUPPORT = "Support",
 	SPELLGROUP_NONE = "Support",
-	SPELLGROUP_HEALING = "Healing",
-	SPELLGROUP_FOCUS = "Support",
-	SPELLGROUP_ATTACK = "Attack"
+	SPELLGROUP_HEALING = "Healing"
 }
 local damageTypeNames = {
 	DAMAGE_HEALING = "Healing",
+	DAMAGE_HOLY = "Holy",
 	DAMAGE_ICE = "Ice",
 	DAMAGE_FIRE = "Fire",
 	DAMAGE_EARTH = "Earth",
@@ -146,8 +146,7 @@ local damageTypeNames = {
 	DAMAGE_PHYSICAL = "Physical",
 	DAMAGE_LIFEDRAIN = "Life Drain",
 	DAMAGE_NONE = "-",
-	DAMAGE_DEATH = "Death",
-	DAMAGE_HOLY = "Holy"
+	DAMAGE_DEATH = "Death"
 }
 
 local function resetFiltersToDefault()
@@ -302,9 +301,7 @@ local function getIconId(entry)
 end
 
 local function getIconClip(iconId, size)
-	local id = math.max(1, tonumber(iconId) or 1)
-
-	return (id - 1) * size .. " 0 " .. size .. " " .. size
+	return (math.max(1, tonumber(iconId) or 1) - 1) * size .. " 0 " .. size .. " " .. size
 end
 
 local function normalizeSpell(entry, previewById)
@@ -765,7 +762,7 @@ local function setupFilterCheckboxesInPopup(popup)
 		local checkbox = popup:recursiveGetChildById(filterId)
 
 		if checkbox then
-			function checkbox:onCheckChange()
+			function checkbox.onCheckChange(self)
 				if not isInitializingPopup then
 					onMagicalArchivesFilterChange(self, popup)
 				end
@@ -921,7 +918,7 @@ local function setupFiltersUI()
 	if filterBtn then
 		setFilterButtonCollapsedStyle(filterBtn)
 
-		function filterBtn:onClick()
+		function filterBtn.onClick(self)
 			toggleFilterPopup(self)
 		end
 	end
@@ -966,7 +963,7 @@ local function setupSearchUI()
 		return false
 	end
 
-	function searchEdit:onTextChange()
+	function searchEdit.onTextChange(self)
 		Cyclopedia.MagicalArchivesSearchText(self:getText() or "")
 	end
 
@@ -978,33 +975,37 @@ local function setupSearchUI()
 			focusMagicalArchivesSearchEdit()
 		end
 	end
+
+	if g_modalManager and g_modalManager.hookSearchEdit then
+		g_modalManager.hookSearchEdit(searchEdit)
+	end
 end
 
 local vocationIconOrder = {
 	{
+		name = "Knight",
 		clip = "0 0 9 9",
-		baseId = 4,
-		name = "Knight"
+		baseId = 4
 	},
 	{
+		name = "Paladin",
 		clip = "9 0 9 9",
-		baseId = 3,
-		name = "Paladin"
+		baseId = 3
 	},
 	{
+		name = "Sorcerer",
 		clip = "18 0 9 9",
-		baseId = 1,
-		name = "Sorcerer"
+		baseId = 1
 	},
 	{
+		name = "Druid",
 		clip = "27 0 9 9",
-		baseId = 2,
-		name = "Druid"
+		baseId = 2
 	},
 	{
+		name = "Monk",
 		clip = "36 0 9 9",
-		baseId = 9,
-		name = "Monk"
+		baseId = 9
 	}
 }
 local VOCATION_ICON_WIDTH = 9
@@ -1029,9 +1030,7 @@ local function createVocationIcons(panel, vocations, alignLeft)
 			break
 		end
 
-		local baseVocation = normalizeBaseVocation(vocationId)
-
-		selected[baseVocation] = true
+		selected[normalizeBaseVocation(vocationId)] = true
 	end
 
 	local icons = {}
@@ -1068,10 +1067,11 @@ local function updateCombatStatsUI(spell)
 
 	if manaValue then
 		local mana = spell.isRune and spell.useMana or spell.mana
+		local numericValue
 
-		mana = tonumber(mana) or 0
+		numericValue = tonumber(mana) or 0
 
-		manaValue:setText(mana > 0 and tostring(mana) or "-")
+		manaValue:setText(numericValue > 0 and tostring(numericValue) or "-")
 	end
 
 	local groupValue = UI:recursiveGetChildById("groupValue")
@@ -1148,15 +1148,7 @@ local function getAdditionalSourceText(spell)
 end
 
 local function formatSpellDescription(description)
-	local text = tostring(description or "")
-
-	text = text:gsub("<[Bb][Rr]%s*/?>", "\n")
-	text = text:gsub("</?[Aa][^>]*>", "")
-	text = text:gsub("<[^>]->", "")
-	text = text:gsub("&nbsp;", " ")
-	text = text:gsub("&amp;", "&")
-	text = text:gsub("&quot;", "\"")
-	text = text:gsub("&#39;", "'")
+	local text = tostring(description or ""):gsub("<[Bb][Rr]%s*/?>", "\n"):gsub("</?[Aa][^>]*>", ""):gsub("<[^>]->", ""):gsub("&nbsp;", " "):gsub("&amp;", "&"):gsub("&quot;", "\""):gsub("&#39;", "'")
 
 	return text ~= "" and text or "-"
 end
@@ -1315,7 +1307,8 @@ function updateSpellListUI()
 
 	local playerLevel = getPlayerLevel()
 	local playerVocation = getPlayerVocation()
-	local firstWidget, selectedWidget
+	local firstWidget
+	local selectedWidget
 
 	for _, spell in ipairs(filteredSpells) do
 		local widget = g_ui.createWidget("MagicalArchivesSpellListItem", spellList)
@@ -1353,7 +1346,7 @@ function updateSpellListUI()
 
 			widget.spell = spell
 
-			function widget:onFocusChange(focused)
+			function widget.onFocusChange(self, focused)
 				local nameLabel = self:getChildById("spellName")
 
 				if nameLabel then
@@ -1365,7 +1358,7 @@ function updateSpellListUI()
 				end
 			end
 
-			function widget:onClick()
+			function widget.onClick(self)
 				self:focus()
 				selectSpellDetails(self.spell)
 			end
@@ -1411,10 +1404,20 @@ function updateSpellListUI()
 	end
 end
 
+local var_0_83 = false
+
 local function loadSpellsData()
+	if var_0_83 then
+		applyAllFilters()
+
+		return
+	end
+
 	allSpells = {}
 
 	local spells = readJsonFile(SPELLS_FILE)
+
+	var_0_83 = true
 
 	if type(spells) ~= "table" then
 		applyAllFilters()
@@ -1434,6 +1437,10 @@ local function loadSpellsData()
 		return (a.name or ""):lower() < (b.name or ""):lower()
 	end)
 	applyAllFilters()
+end
+
+function Cyclopedia.preloadMagicalArchivesSpells()
+	loadSpellsData()
 end
 
 local function assignSpellToActionBar()
@@ -1575,7 +1582,7 @@ function showMagicalArchives()
 			controllerCyclopedia.ui.BestiaryTrackerButton:setVisible(false)
 		end
 
-		if g_game.getClientVersion() >= 1410 and controllerCyclopedia.ui.CharmsBase1410 then
+		if controllerCyclopedia.ui.CharmsBase1410 then
 			controllerCyclopedia.ui.CharmsBase1410:setVisible(false)
 		end
 	end

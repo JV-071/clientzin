@@ -20,11 +20,11 @@ BugReportWindow < MainWindowHigh
     id: bugLabel
     margin-top: -7
     margin-left:
-    font: Verdana-11px-lowspace
+    font: Verdana Bold-11px-new
     text-auto-resize: true
     color: #c0c0c0
     !text: tr('Please use this dialog only to report bugs. Do not report rule violations here!')
-    text-offset: 0 0
+    text-offset: -1 0
     text-wrap: true
     text-auto-resize: true
     anchors.top: parent.top

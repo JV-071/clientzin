@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_analysers/analyser.lua
-
-analyserMiniWindow = nil
+﻿analyserMiniWindow = nil
 
 if not configPopupWindow then
 	configPopupWindow = {}
@@ -9,16 +7,17 @@ end
 openedWindows = {}
 
 local ANALYSER_CHAR_MINIWINDOW_IDS = {
-	lootAnalyserMiniWindow = true,
 	huntingAnalyserMiniWindow = true,
-	analyserMiniWindow = true,
+	lootAnalyserMiniWindow = true,
+	miscAnalyserMiniWindow = true,
 	bossCdAnalyserMiniWindow = true,
 	phAnalyserMiniWindow = true,
 	dropTrackerMiniWindow = true,
 	xpAnalyserMiniWindow = true,
 	inputAnalyserMiniWindow = true,
 	impactAnalyserMiniWindow = true,
-	supplyAnalyserMiniWindow = true
+	supplyAnalyserMiniWindow = true,
+	analyserMiniWindow = true
 }
 
 ANALYZER_HEAL = 0
@@ -30,11 +29,11 @@ PriceTypeEnum = {
 }
 LoadedPlayer = LoadedPlayer or {}
 
-function LoadedPlayer:isLoaded()
+function LoadedPlayer.isLoaded(self)
 	return g_game.getLocalPlayer() ~= nil
 end
 
-function LoadedPlayer:getId()
+function LoadedPlayer.getId(self)
 	local p = g_game.getLocalPlayer()
 
 	return p and p:getId() or 0
@@ -168,11 +167,10 @@ local function persistAnalyserMiniWindowsLayout()
 		end
 
 		local p
-		local okP = pcall(function()
-			p = w:getParent()
-		end)
 
-		if not okP then
+		if not pcall(function()
+			p = w:getParent()
+		end) then
 			return
 		end
 
@@ -277,19 +275,72 @@ function analyserUIGraphPushValue(graphWidget, value, lineColor)
 end
 
 local analyserWindows = {
-	damageButton = "menus/InputAnalyser",
 	bossButton = "menus/BossCooldown",
-	impactButton = "menus/ImpactAnalyser",
-	supplyButton = "menus/SupplyAnalyser",
-	lootButton = "menus/LootAnalyser",
 	huntingButton = "menus/HuntingAnalyser",
+	miscButton = "menus/MiscAnalyser",
 	partyButton = "menus/PartyHuntAnalyser",
 	dropButton = "menus/DropTrackerAnalyser",
-	xpButton = "menus/XPAnalyser"
+	xpButton = "menus/XPAnalyser",
+	damageButton = "menus/InputAnalyser",
+	impactButton = "menus/ImpactAnalyser",
+	supplyButton = "menus/SupplyAnalyser",
+	lootButton = "menus/LootAnalyser"
+}
+local var_0_8 = {
+	{
+		action = "Show/hide XP analyser",
+		buttonId = "xpButton"
+	},
+	{
+		action = "Show/hide analytics selector"
+	},
+	{
+		action = "Show/hide boss cooldowns",
+		buttonId = "bossButton"
+	},
+	{
+		action = "Show/hide drop tracker",
+		buttonId = "dropButton"
+	},
+	{
+		action = "Show/hide hunting analyser",
+		buttonId = "huntingButton"
+	},
+	{
+		action = "Show/hide impact analyser",
+		buttonId = "impactButton"
+	},
+	{
+		action = "Show/hide input analyser",
+		buttonId = "damageButton"
+	},
+	{
+		action = "Show/hide loot analyser",
+		buttonId = "lootButton"
+	},
+	{
+		action = "Show/hide misc analyser",
+		buttonId = "miscButton"
+	},
+	{
+		action = "Show/hide party hunt analyser",
+		buttonId = "partyButton"
+	},
+	{
+		action = "Show/hide supply analyser",
+		buttonId = "supplyButton"
+	}
 }
 
 function formatMoney(n)
 	local s = string.format("%.0f", n)
+	local var_17_1 = ""
+
+	if s:sub(1, 1) == "-" then
+		var_17_1 = "-"
+		s = s:sub(2)
+	end
+
 	local pos = string.len(s) % 3
 
 	if pos == 0 then
@@ -302,7 +353,7 @@ function formatMoney(n)
 		t = t .. "," .. s:sub(i, i + 2)
 	end
 
-	return t
+	return var_17_1 .. t
 end
 
 function getItemServerName(itemId)
@@ -349,18 +400,16 @@ local function analyserColumnSlack(panel, widget, minH)
 	end
 
 	local ind = containerPanel:getMarginTop() + containerPanel:getMarginBottom() + containerPanel:getPaddingTop() + containerPanel:getPaddingBottom()
-	local totalHeight = 0
+	local height = 0
 	local children = panel:getChildren()
 
 	for i = 1, #children do
 		if children[i]:isVisible() then
-			totalHeight = totalHeight + children[i]:getHeight()
+			height = height + children[i]:getHeight()
 		end
 	end
 
-	local available = panel:getHeight() - panel:getPaddingTop() - panel:getPaddingBottom() - totalHeight
-
-	return available - ind - minH
+	return panel:getHeight() - panel:getPaddingTop() - panel:getPaddingBottom() - height - ind - minH
 end
 
 local function analyserSidebarPanelsInPriorityOrder()
@@ -470,27 +519,21 @@ local function attachAnalyserToSidebarPanel(widget, panel)
 		end)
 	end
 
-	local attached = false
+	local var_26_1 = false
 
 	if panel.scheduleInsert then
-		local ok = pcall(function()
+		var_26_1 = pcall(function()
 			panel:scheduleInsert(widget, panel:getChildCount() + 1)
-		end)
-
-		attached = ok and widget:getParent() == panel
+		end) and widget:getParent() == panel
 	end
 
-	if not attached then
-		local ok = pcall(function()
-			if not panel:hasChild(widget) then
-				panel:addChild(widget)
-			end
-		end)
+	var_26_1 = var_26_1 or pcall(function()
+		if not panel:hasChild(widget) then
+			panel:addChild(widget)
+		end
+	end) and widget:getParent() == panel
 
-		attached = ok and widget:getParent() == panel
-	end
-
-	if not attached then
+	if not var_26_1 then
 		return false
 	end
 
@@ -535,9 +578,7 @@ local function addAnalyserToPanel(widget)
 		return true
 	end
 
-	local ok = attachAnalyserToSidebarPanel(widget, panel)
-
-	return ok
+	return (attachAnalyserToSidebarPanel(widget, panel))
 end
 
 local function moveAnalyserToPanelEnd(widget)
@@ -600,8 +641,7 @@ function relocateAnalyserMiniWindowIfNeeded(widget)
 	local okGp, gpRet = pcall(function()
 		return widget:getParent()
 	end)
-
-	cur = okGp and gpRet or nil
+	local cur = okGp and gpRet or nil
 
 	if analysersSidebarContainerOk(cur) then
 		return
@@ -856,6 +896,9 @@ function init()
 	PartyHuntAnalyser:updateWindow(false, true)
 	BossCooldown:create()
 	BossCooldown:updateWindow()
+	MiscAnalyser:create()
+	MiscAnalyser:updateWindow(true)
+	MiscAnalyser:registerMessageModes()
 	analyserConfigureGraphWidgets()
 	connect(g_game, {
 		onGameStart = onlineAnalyser,
@@ -882,10 +925,39 @@ function init()
 			setupAnalyserMiniWindowsOnChar()
 			syncAnalyticsSelectorRowButtons()
 		end)
+		ControllerAnalyser:startEvent()
+	end
+
+	for unusedValue, entry in ipairs(var_0_8) do
+		local buttonId = entry.buttonId
+
+		Keybind.new("Windows", entry.action, "", "")
+		Keybind.bind("Windows", entry.action, {
+			{
+				type = KEY_DOWN,
+				callback = function()
+					if not g_game.isOnline() then
+						return false
+					end
+
+					if buttonId then
+						toggleAnalysers(buttonId)
+					else
+						toggleAnalyserWindow()
+					end
+
+					return true
+				end
+			}
+		}, modules.game_interface.getRootPanel())
 	end
 end
 
 function terminate()
+	for unusedValue, entry in ipairs(var_0_8) do
+		Keybind.delete("Windows", entry.action)
+	end
+
 	if ControllerAnalyser then
 		removeEvent(ControllerAnalyser.event250)
 		removeEvent(ControllerAnalyser.event1000)
@@ -904,6 +976,7 @@ function terminate()
 		PartyHuntAnalyser.event = nil
 	end
 
+	MiscAnalyser:unregisterMessageModes()
 	persistAnalyserMiniWindowsLayout()
 
 	if analyserMiniWindow then
@@ -982,8 +1055,13 @@ function startNewSession(login)
 	end
 
 	DropTrackerAnalyser:updateWindow(true)
-	PartyHuntAnalyser:reset()
-	PartyHuntAnalyser:updateWindow(true, true)
+	MiscAnalyser:reset()
+
+	if login then
+		PartyHuntAnalyser:reset()
+		PartyHuntAnalyser:updateWindow(true, true)
+	end
+
 	ControllerAnalyser:startEvent()
 end
 
@@ -1050,10 +1128,8 @@ function hideAnalyser()
 end
 
 function onOpenAnalyser()
-	local isOn = analyserMiniWindow.isOn and analyserMiniWindow:isOn()
-
-	if not isOn then
-		analyserMiniWindow:setHeight(230)
+	if not (analyserMiniWindow.isOn and analyserMiniWindow:isOn()) then
+		analyserMiniWindow:setHeight(253)
 	end
 
 	analyserMiniWindow.isOpen = true
@@ -1061,7 +1137,10 @@ function onOpenAnalyser()
 	syncAnalyticsSelectorRowButtons()
 
 	local cp = analyserMiniWindow.getChildById and analyserMiniWindow:getChildById("contentsPanel")
-	local cpCount = cp and cp.getChildCount and cp:getChildCount() or 0
+
+	if not cp or not cp.getChildCount or not cp:getChildCount() then
+		local unusedValue = 0
+	end
 end
 
 function toggleAnalysers(buttonId)
@@ -1114,6 +1193,8 @@ function toggleAnalysers(buttonId)
 				XPAnalyser:checkAnchos()
 			elseif bid == "bossButton" then
 				widget:focus()
+			elseif bid == "miscButton" then
+				MiscAnalyser:updateWindow(true)
 			elseif bid == "xpAnalyser" then
 				XPAnalyser:checkAnchos()
 			end
@@ -1154,6 +1235,7 @@ function onImpactTracker(analyzerType, amount, effect, target)
 		ImpactAnalyser:addDealDamage(amount, effect)
 	elseif analyzerType == ANALYZER_DAMAGE_RECEIVED then
 		InputAnalyser:addInputDamage(amount, effect, target)
+		MiscAnalyser:addDamageReceived(amount)
 	end
 end
 
@@ -1248,12 +1330,12 @@ end
 
 function loadGainAndWastConfigJson()
 	local config = {
+		gainGraphVisible = true,
+		gainGaugeVisible = true,
 		gainGaugeTarget = 0,
 		wasteGraphVisible = true,
 		wasteGaugeVisible = true,
-		wasteGaugeTarget = 0,
-		gainGraphVisible = true,
-		gainGaugeVisible = true
+		wasteGaugeTarget = 0
 	}
 
 	if not LoadedPlayer:isLoaded() then

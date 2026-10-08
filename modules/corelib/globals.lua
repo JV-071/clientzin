@@ -1,23 +1,22 @@
-﻿-- chunkname: @/corelib/globals.lua
-
-rootWidget = g_ui.getRootWidget()
+﻿rootWidget = g_ui.getRootWidget()
 modules = package.loaded
 G = G or {}
+__dispatcherNative = {
+	addEvent = g_dispatcher.addEvent,
+	scheduleEvent = g_dispatcher.scheduleEvent,
+	cycleEvent = g_dispatcher.cycleEvent,
+	setNextEventSource = g_dispatcher.setNextEventSource,
+	hasNextEventSource = g_dispatcher.hasNextEventSource,
+	setActiveEventSource = g_dispatcher.setActiveEventSource
+}
 
-local _dbginfo = debug and debug.getinfo
-local _nativeAddEvent = g_dispatcher.addEvent
-local _nativeScheduleEvent = g_dispatcher.scheduleEvent
-local _nativeCycleEvent = g_dispatcher.cycleEvent
-local _setNextEventSource = g_dispatcher.setNextEventSource
-local _hasNextEventSource = g_dispatcher.hasNextEventSource
-local _setActiveEventSource = g_dispatcher.setActiveEventSource
 local _skipSourcePatterns = {
 	"corelib/globals%.lua",
 	"modulelib/controller%.lua"
 }
 local _genericSourceNames = {
-	action = true,
-	callback = true
+	callback = true,
+	action = true
 }
 
 local function _isGenericSourceName(name)
@@ -82,81 +81,93 @@ local function _formatEventSource(info)
 	return nil
 end
 
-local function _captureFunctionSource(fn)
-	if not _dbginfo or type(fn) ~= "function" then
+local function _captureFunctionSource(...)
+	local debugLibrary = debug
+
+	if type(debugLibrary) ~= "table" then
 		return nil
 	end
 
-	local ok, info = pcall(_dbginfo, fn, "Snl")
+	local callback = debugLibrary.getinfo
 
-	if not ok or not info then
+	if type(callback) ~= "function" then
 		return nil
 	end
 
-	return _formatEventSource(info)
+	local ok, err = pcall(callback, ...)
+
+	if not ok then
+		return nil
+	end
+
+	return err
 end
 
-local function _captureEventSource(startLevel, stopLevel)
-	if not _dbginfo then
+local function unusedValue(eventCallback)
+	if type(eventCallback) ~= "function" then
 		return nil
 	end
 
-	startLevel = startLevel or 3
-	stopLevel = stopLevel or 20
+	return _formatEventSource(_captureFunctionSource(eventCallback, "Snl"))
+end
 
-	local fallback
+local function captureCallerEventSource(firstStackDepth, lastStackDepth)
+	firstStackDepth = firstStackDepth or 3
+	lastStackDepth = lastStackDepth or 20
 
-	for level = startLevel, stopLevel do
-		local ok, info = pcall(_dbginfo, level, "Snl")
+	local fallbackEventSource
 
-		if not ok or not info then
+	for stackDepth = firstStackDepth, lastStackDepth do
+		local frameInfo = _captureFunctionSource(stackDepth, "Snl")
+
+		if not frameInfo then
 			break
 		end
 
-		if not _shouldSkipEventSource(info) then
-			local formatted = _formatEventSource(info)
+		if not _shouldSkipEventSource(frameInfo) then
+			local eventSource = _formatEventSource(frameInfo)
 
-			if formatted then
-				if _hasValidLine(info) then
-					return formatted
+			if eventSource then
+				if _hasValidLine(frameInfo) then
+					return eventSource
 				end
 
-				fallback = fallback or formatted
+				fallbackEventSource = fallbackEventSource or eventSource
 			end
 		end
 	end
 
-	return fallback
+	return fallbackEventSource
 end
 
 local function _tagEventSourceIfUnset()
-	if not _setNextEventSource then
+	local nativeDispatcher = __dispatcherNative
+
+	if not nativeDispatcher or type(nativeDispatcher.setNextEventSource) ~= "function" then
 		return
 	end
 
-	if _hasNextEventSource and _hasNextEventSource() then
+	if type(nativeDispatcher.hasNextEventSource) == "function" then
+		local sourceCheckSucceeded, nextSourceAlreadySet = pcall(nativeDispatcher.hasNextEventSource)
+
+		if sourceCheckSucceeded and nextSourceAlreadySet then
+			return
+		end
+	end
+
+	pcall(nativeDispatcher.setNextEventSource, captureCallerEventSource(3, 12) or "?")
+end
+
+function tagHitchEventSource(hitchSource)
+	if type(hitchSource) ~= "string" or hitchSource == "" then
 		return
 	end
 
-	_setNextEventSource(_captureEventSource(3, 12) or "?")
+	__dispatcherNative.setNextEventSource("hitch:" .. hitchSource)
 end
 
 local function _wrapEventCallback(callback)
-	if type(callback) ~= "function" then
-		return callback
-	end
-
-	return function()
-		if _setActiveEventSource then
-			_setActiveEventSource(_captureFunctionSource(callback) or _captureEventSource(3, 20) or "")
-		end
-
-		local ok, err = pcall(callback)
-
-		if not ok then
-			error(err, 0)
-		end
-	end
+	return callback
 end
 
 function scheduleEvent(callback, delay)
@@ -164,7 +175,7 @@ function scheduleEvent(callback, delay)
 
 	callback = _wrapEventCallback(callback)
 
-	local event = _nativeScheduleEvent(callback, delay)
+	local event = __dispatcherNative.scheduleEvent(callback, delay)
 
 	event._callback = callback
 
@@ -176,11 +187,11 @@ function addEvent(callback, front)
 
 	callback = _wrapEventCallback(callback)
 
-	local event = _nativeAddEvent(callback, front)
+	local immediateEvent = __dispatcherNative.addEvent(callback, front)
 
-	event._callback = callback
+	immediateEvent._callback = callback
 
-	return event
+	return immediateEvent
 end
 
 function cycleEvent(callback, interval)
@@ -188,11 +199,11 @@ function cycleEvent(callback, interval)
 
 	callback = _wrapEventCallback(callback)
 
-	local event = _nativeCycleEvent(callback, interval)
+	local repeatingEvent = __dispatcherNative.cycleEvent(callback, interval)
 
-	event._callback = callback
+	repeatingEvent._callback = callback
 
-	return event
+	return repeatingEvent
 end
 
 g_dispatcher.addEvent = addEvent
@@ -205,7 +216,7 @@ function periodicalEvent(eventFunc, conditionFunc, delay, autoRepeatDelay)
 
 	local func
 
-	function func()
+	local function func()
 		if conditionFunc and not conditionFunc() then
 			func = nil
 

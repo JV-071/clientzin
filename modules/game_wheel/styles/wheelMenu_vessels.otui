@@ -1,0 +1,51 @@
+WheelMenuVesselsPanel < Panel
+  size: 213 159
+  anchors.top: prev.bottom
+  anchors.right: parent.right
+  margin-top: 6
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Vessels')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+
+  UIWidget
+    id: headerInfo
+    size: 12 12
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: 4
+    margin-right: 4
+    image-source: /images/icons/show_gui_help_grey
+    !tooltip: tr('Gems can be revealed within the Gem Atelier. Different gem\nqualities yield different amounts of mods:\n- Lesser gem: one basic mod\n- Regular gem: two basic mods\n- Greater gem: two basic mods and one supreme mod\nYou can enhance the effects of a mod by increasing its grade in\nthe Fragment Workshop.')
+
+  ScrollablePanel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 22
+    margin-left: 6
+    margin-right: 16
+    margin-bottom: 4
+    vertical-scrollbar: tabContentScroll
+    text-wrap: true
+    layout:
+      type: verticalBox
+      align-top: true
+
+  VerticalScrollBar
+    id: tabContentScroll
+    anchors.top: tabContent.top
+    anchors.bottom: tabContent.bottom
+    anchors.right: parent.right
+    margin-right: 2
+    step: 16
+    visible: false
+    pixels-scroll: true

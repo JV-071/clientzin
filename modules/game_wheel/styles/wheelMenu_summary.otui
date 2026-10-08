@@ -1,0 +1,57 @@
+WheelMenuSummaryPanel < Panel
+  size: 213 522
+  anchors.top: parent.top
+  anchors.right: parent.right
+  anchors.bottom: parent.bottom
+  image-source: /images/ui/t2pixel-up-frame-borderimage
+  image-border: 30
+  visible: false
+  Button
+    id: summaryButton
+    size: 14 14
+    tooltip: Show a summary in which bonuses are grouped by source.
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 2
+    margin-top: 2
+    image-source: /images/game/wheel/summary
+    image-clip: 0 14 14 14
+    $pressed:
+      image-clip: 0 0 14 14
+    $hover:
+      image-clip: 0 14 14 14
+    @onClick: toggleSummary()
+  Label
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    !text: tr('Summary')
+    font: $var-cip-font-new
+    color: #909090
+    margin-top: 2
+  ScrollablePanel
+    id: tabContent
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 22
+    margin-left: 6
+    margin-right: 16
+    margin-bottom: 4
+    vertical-scrollbar: summaryContentScroll
+    text-wrap: true
+    layout:
+      type: verticalBox
+      align-top: true
+
+  VerticalScrollBar
+    id: summaryContentScroll
+    anchors.top: prev.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-right: 2
+    margin-top: -4
+    margin-bottom: 2
+    step: 16
+    visible: true
+    pixels-scroll: true

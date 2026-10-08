@@ -142,7 +142,7 @@ UIWidget
       margin-top: -1
       text-offset: 16 0
       !text: tr('Auto-Switch Hotkey Preset')
-      !tooltip: tr('If you have named your hotkey presets the same like your\ncharacters and have checked this option, the preset with the same\nname as the corresponding character will be activated upon login\nautomatically.')
+      !tooltip: tr('Automatically selects the hotkey preset matching your character name upon login.\nIf no character preset exists, a preset matching the vocation is used.')
 
   OnePixelDownFrame
     anchors.left: parent.left
@@ -208,8 +208,8 @@ UIWidget
       spacing: 4
 
     Label
-      text-offset: -1 5
-      font: $var-cip-font-lowspace
+      text-offset: -1 4
+      font: $var-cip-font-new
       color: #c0c0c0
       !text: tr('Type to search for a hotkey: ')
 

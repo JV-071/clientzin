@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_modaldialog/modaldialog.lua
-
-modalDialog = nil
+﻿modalDialog = nil
 
 local imbuementHiddenForFyiModal = false
 
@@ -213,7 +211,7 @@ function onModalDialog(id, title, message, buttons, enterButton, escapeButton, c
 			button:setMarginRight(-1)
 		end
 
-		function button:onClick()
+		function button.onClick(self)
 			answer(buttonId, currentChoiceId())
 		end
 	end
@@ -270,7 +268,7 @@ function onModalDialog(id, title, message, buttons, enterButton, escapeButton, c
 	modalDialog.onEnter = enterFunc
 	modalDialog.onEscape = escapeFunc
 
-	function modalDialog:onKeyPress(keyCode, keyboardModifiers)
+	function modalDialog.onKeyPress(self, keyCode, keyboardModifiers)
 		if keyboardModifiers ~= KeyboardNoModifier then
 			return false
 		end
@@ -306,7 +304,7 @@ function onModalDialog(id, title, message, buttons, enterButton, escapeButton, c
 		local ml = dlgRef:recursiveGetChildById("messageLabel")
 
 		if ml and ml.setFont then
-			ml:setFont("Verdana Bold-11-px-lowspace")
+			ml:setFont("Verdana Bold-11px-new")
 		end
 
 		dlgRef:setMinHeight(100)

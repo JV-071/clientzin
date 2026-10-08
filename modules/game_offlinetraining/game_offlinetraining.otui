@@ -232,15 +232,16 @@ OfflineTrainingWindow < MainWindowHigh
   HorizontalSeparator
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.bottom: parent.bottom
-    margin-bottom: 30
+    anchors.bottom: cancelButton.top
+    margin-bottom: 11
 
-  Button
-    id: closeButton
+  CipsoftButton
+    id: cancelButton
     !text: tr('Cancel')
-    anchors.top: prev.bottom
+    anchors.bottom: parent.bottom
     anchors.right: parent.right
-    margin-top: 11
-    height: 20
-    width: 43
+    margin-right: 2
+    size: 43 20
+    fixed-size: true
+    padding: 0
     @onClick: modules.game_offlinetraining.cancel()

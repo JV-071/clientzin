@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/keybind.lua
-
-CHAT_MODE = {
+﻿CHAT_MODE = {
 	ON = 1,
 	OFF = 2
 }
@@ -22,24 +20,24 @@ Keybind = {
 	},
 	chatMode = CHAT_MODE.ON,
 	reservedKeys = {
-		Right = true,
-		Left = true,
 		Down = true,
-		Up = true
+		Up = true,
+		Right = true,
+		Left = true
 	}
 }
 KEY_UP = 1
 KEY_DOWN = 2
 KEY_PRESS = 3
 HOTKEY_ACTION = {
+	TEXT = 6,
+	USE = 5,
 	EQUIP = 4,
 	USE_TARGET = 3,
 	USE_CROSSHAIR = 2,
 	USE_YOURSELF = 1,
 	SPELL = 8,
-	TEXT_AUTO = 7,
-	TEXT = 6,
-	USE = 5
+	TEXT_AUTO = 7
 }
 
 local function isMouseHotkeyCombo(combo)
@@ -98,6 +96,9 @@ function Keybind.init()
 	connect(g_game, {
 		onGameStart = Keybind.online,
 		onGameEnd = Keybind.offline
+	})
+	connect(LocalPlayer, {
+		onVocationChange = Keybind.onVocationChange
 	})
 
 	if g_settings.getBoolean("cip_import_skip_session_save") then
@@ -175,6 +176,9 @@ function Keybind.terminate()
 		onGameStart = Keybind.online,
 		onGameEnd = Keybind.offline
 	})
+	disconnect(LocalPlayer, {
+		onVocationChange = Keybind.onVocationChange
+	})
 
 	if g_settings.getBoolean("cip_import_skip_session_save") then
 		return
@@ -190,15 +194,101 @@ function Keybind.terminate()
 	g_settings.save()
 end
 
-function Keybind.online()
-	for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
-		Keybind.bindHotkey(hotkey.hotkeyId, Keybind.chatMode)
-	end
-end
-
 function Keybind.offline()
 	for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
 		Keybind.unbindHotkey(hotkey.hotkeyId, Keybind.chatMode)
+	end
+end
+
+local function var_0_7(arg_11_0)
+	if type(arg_11_0) ~= "string" or arg_11_0 == "" then
+		return nil
+	end
+
+	if Keybind.presetToIndex[arg_11_0] then
+		return arg_11_0
+	end
+
+	local var_11_0 = arg_11_0:lower()
+
+	for _, hotkey in ipairs(Keybind.presets) do
+		if type(hotkey) == "string" and hotkey:lower() == var_11_0 then
+			return hotkey
+		end
+	end
+
+	return nil
+end
+
+function Keybind.resolveAutoSwitchPreset()
+	local characterName = g_game.getCharacterName()
+	local var_12_1 = var_0_7(characterName)
+
+	if var_12_1 then
+		return var_12_1, "character", nil, characterName
+	end
+
+	local var_12_2
+	local localPlayer = g_game.getLocalPlayer()
+
+	if localPlayer and type(translateVocationName) == "function" then
+		local var_12_4, var_12_5 = pcall(translateVocationName, localPlayer:getVocation())
+
+		if var_12_4 and type(var_12_5) == "string" and var_12_5 ~= "" then
+			var_12_2 = var_12_5
+
+			local var_12_6 = var_0_7(var_12_2)
+
+			if var_12_6 then
+				return var_12_6, "vocation", var_12_2, characterName
+			end
+		end
+	end
+
+	return nil, nil, var_12_2, characterName
+end
+
+function Keybind.selectAutoSwitchPreset()
+	if not g_settings.getBoolean("autoSwitchPreset") then
+		return false
+	end
+
+	local var_13_0, var_13_1, var_13_2, var_13_3 = Keybind.resolveAutoSwitchPreset()
+
+	if not var_13_0 then
+		g_logger.info(string.format("[login] autoSwitchPreset: no preset for character \"%s\" or vocation \"%s\" (current=%s)", var_13_3 or "?", var_13_2 or "?", Keybind.currentPreset or "?"))
+
+		return false
+	end
+
+	if Keybind.currentPreset == var_13_0 then
+		return false, var_13_0
+	end
+
+	local var_13_4 = Keybind.selectPreset(var_13_0)
+
+	if var_13_4 then
+		g_logger.info(string.format("[login] autoSwitchPreset: selected \"%s\" by %s", var_13_0, var_13_1))
+	end
+
+	return var_13_4, var_13_0
+end
+
+function Keybind.onVocationChange(unusedArgument, arg_14_1, arg_14_2)
+	if arg_14_1 == arg_14_2 or not g_game.isOnline() then
+		return
+	end
+
+	Keybind.selectAutoSwitchPreset()
+end
+
+function Keybind.online()
+	if Keybind.selectAutoSwitchPreset() then
+		return
+	end
+
+	for unusedValue, entry in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset]) do
+		Keybind.bindHotkey(entry.hotkeyId, Keybind.chatMode)
 	end
 end
 
@@ -616,6 +706,15 @@ function Keybind.removePreset(presetName)
 	return true
 end
 
+local function var_0_8(arg_24_0, arg_24_1)
+	local var_24_0 = arg_24_0 and tostring(arg_24_0.primary or "") or ""
+	local var_24_1 = arg_24_0 and tostring(arg_24_0.secondary or "") or ""
+	local var_24_2 = arg_24_1 and tostring(arg_24_1.primary or "") or ""
+	local var_24_3 = arg_24_1 and tostring(arg_24_1.secondary or "") or ""
+
+	return var_24_0 == var_24_2 and var_24_1 == var_24_3
+end
+
 function Keybind.selectPreset(presetName)
 	if Keybind.currentPreset == presetName then
 		return false
@@ -626,31 +725,46 @@ function Keybind.selectPreset(presetName)
 	end
 
 	local oldPreset = Keybind.currentPreset
+	local chatMode = Keybind.chatMode
+	local var_25_2 = {}
 
 	for _, keybind in pairs(Keybind.defaultKeybinds) do
 		if keybind.callbacks then
-			Keybind.unbind(keybind.category, keybind.action)
+			local keybindKeys = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, oldPreset)
+			local var_25_4 = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, presetName)
+
+			if not var_0_8(keybindKeys, var_25_4) then
+				Keybind.unbind(keybind.category, keybind.action)
+
+				var_25_2[#var_25_2 + 1] = keybind
+			end
 		end
 	end
 
-	for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset] or {}) do
-		Keybind.unbindHotkey(hotkey.hotkeyId, Keybind.chatMode)
+	for _, hotkey in ipairs(Keybind.hotkeys[chatMode][oldPreset] or {}) do
+		Keybind.unbindHotkey(hotkey.hotkeyId, chatMode)
 	end
 
 	Keybind.currentPreset = presetName
 
-	for _, keybind in pairs(Keybind.defaultKeybinds) do
-		if keybind.callbacks then
-			Keybind.bind(keybind.category, keybind.action, keybind.callbacks, keybind.widget)
-		end
+	for unusedValue, entry in ipairs(var_25_2) do
+		Keybind.bind(entry.category, entry.action, entry.callbacks, entry.widget)
 	end
 
-	for _, hotkey in ipairs(Keybind.hotkeys[Keybind.chatMode][Keybind.currentPreset] or {}) do
-		Keybind.bindHotkey(hotkey.hotkeyId, Keybind.chatMode)
+	for unusedValue, hotkey in ipairs(Keybind.hotkeys[chatMode][presetName] or {}) do
+		Keybind.bindHotkey(hotkey.hotkeyId, chatMode)
 	end
 
 	if modules.game_actionbar and modules.game_actionbar.onHotkeyPresetChanged then
 		modules.game_actionbar.onHotkeyPresetChanged(presetName, oldPreset)
+	end
+
+	if modules.client_options and modules.client_options.syncSelectedHotkeyPreset then
+		modules.client_options.syncSelectedHotkeyPreset(presetName)
+	end
+
+	if modules.game_console and modules.game_console.syncMovingKeys then
+		modules.game_console.syncMovingKeys()
 	end
 
 	return true
@@ -773,7 +887,8 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
 	local config = presetName and Keybind.configs.keybinds[presetName]
 
 	if not config and Keybind.presets[1] then
-		presetName = Keybind.presets[1]
+		local presetName = Keybind.presets[1]
+
 		config = Keybind.configs.keybinds[presetName]
 	end
 
@@ -782,8 +897,8 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
 	if not keys or forceDefault then
 		if not keybind or not keybind.keys or not keybind.keys[chatMode] then
 			return {
-				primary = "",
-				secondary = ""
+				secondary = "",
+				primary = ""
 			}
 		end
 
@@ -796,8 +911,8 @@ function Keybind.getKeybindKeys(category, action, chatMode, preset, forceDefault
 	end
 
 	keys = keys or {
-		primary = "",
-		secondary = ""
+		secondary = "",
+		primary = ""
 	}
 
 	return keys
@@ -934,17 +1049,15 @@ function Keybind.getHotkeyKeys(hotkeyId, preset, chatMode)
 	preset = preset or Keybind.currentPreset
 
 	local keys = {
-		primary = "",
-		secondary = ""
+		secondary = "",
+		primary = ""
 	}
 
 	if not Keybind.hotkeys[chatMode][preset] then
 		return keys
 	end
 
-	local hotkey = Keybind.hotkeys[chatMode][preset][hotkeyId]
-
-	if not hotkey then
+	if not Keybind.hotkeys[chatMode][preset][hotkeyId] then
 		return keys
 	end
 
@@ -970,69 +1083,35 @@ function Keybind.hotkeyCallback(hotkeyId, chatMode)
 	local data = hotkey.data
 
 	if action == HOTKEY_ACTION.USE_YOURSELF then
-		if g_game.getClientVersion() < 780 then
-			local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-			if item then
-				g_game.useWith(item, g_game.getLocalPlayer())
-			end
-		else
-			g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
-		end
+		g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
 	elseif action == HOTKEY_ACTION.USE_CROSSHAIR then
-		local item = Item.create(data.itemId)
+		local var_38_3 = Item.create(data.itemId)
 
-		if g_game.getClientVersion() < 780 then
-			item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-		end
-
-		if item then
-			modules.game_interface.startUseWith(item, data.subType or -1)
+		if var_38_3 then
+			modules.game_interface.startUseWith(var_38_3, data.subType or -1)
 		end
 	elseif action == HOTKEY_ACTION.USE_TARGET then
-		local attackingCreature = g_game.getAttackingCreature()
+		local item = g_game.getAttackingCreature()
 
-		if not attackingCreature then
-			local item = Item.create(data.itemId)
+		if not item then
+			local var_38_5 = Item.create(data.itemId)
 
-			if g_game.getClientVersion() < 780 then
-				item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-			end
-
-			if item then
-				modules.game_interface.startUseWith(item, data.subType or -1)
+			if var_38_5 then
+				modules.game_interface.startUseWith(var_38_5, data.subType or -1)
 			end
 
 			return
 		end
 
-		if attackingCreature:getTile() then
-			if g_game.getClientVersion() < 780 then
-				local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-				if item then
-					g_game.useWith(item, attackingCreature, data.subType or -1)
-				end
-			else
-				g_game.useInventoryItemWith(data.itemId, attackingCreature, data.subType or -1)
-			end
+		if item:getTile() then
+			g_game.useInventoryItemWith(data.itemId, item, data.subType or -1)
 		end
 	elseif action == HOTKEY_ACTION.EQUIP then
-		if g_game.getClientVersion() >= 910 then
-			local item = Item.create(data.itemId)
+		local item = Item.create(data.itemId)
 
-			g_game.equipItem(item)
-		end
+		g_game.equipItem(item)
 	elseif action == HOTKEY_ACTION.USE then
-		if g_game.getClientVersion() < 780 then
-			local item = g_game.findPlayerItem(data.itemId, data.subType or -1)
-
-			if item then
-				g_game.use(item)
-			end
-		else
-			g_game.useInventoryItem(data.itemId)
-		end
+		g_game.useInventoryItem(data.itemId)
 	elseif action == HOTKEY_ACTION.TEXT then
 		if modules.game_interface.isChatVisible() then
 			modules.game_console.setTextEditText(hotkey.data.text)

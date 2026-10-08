@@ -1,35 +1,44 @@
-﻿-- chunkname: @/game_outfit/outfit.lua
-
-local statesOutft = {
-	goldenOutfitTooltip = 2,
+﻿local statesOutft = {
 	store = 1,
 	available = 0
 }
-local pendingCyclopediaFocus, activeCyclopediaPending
+local pendingCyclopediaFocus
+local activeCyclopediaPending
 local cyclopediaViewMode = false
 local restoreCyclopediaOnClose = false
 local CYClOPEDIA_VIEW_TITLES = {
-	familiars = "View Familiars",
 	mounts = "View Mounts",
+	familiars = "View Familiars",
 	outfits = "View Outfits"
 }
-local window, podiumContext, hirelingContext, appearanceGroup, colorModeGroup, colorBoxGroup, floor, movementCheck, showFloorCheck, showOutfitCheck, showFamiliarCheck, podiumPlatformCheck, podiumOutfitCheck
+local outfitwindowWidget
+local podiumContext
+local hirelingContext
+local var_0_9
+local colorModeGroup
+local colorBoxGroup
+local floor
+local movementCheck
+local showFloorCheck
+local showOutfitCheck
+local showFamiliarCheck
+local podiumPlatformCheck
+local podiumOutfitCheck
 local showPlatformBeforeOutfitOff = true
 local PODIUM_OPTION_ENABLED_COLOR = "#c0c0c0"
 local PODIUM_OPTION_DISABLED_COLOR = "#707070"
-local colorBoxes = {}
-local currentColorBox, previewCreature, previewFamiliar, previewRow, previewPodiumWidget, previewPodiumItem
+local previewCreature
+local previewFamiliar
+local previewRow
+local previewPodiumWidget
+local previewPodiumItem
 local podiumPreviewInitialized = false
-
-previewMovementWarmup = {
-	token = 0,
-	retryMs = 16
+local previewMovementWarmup = {
+	retryMs = 16,
+	token = 0
 }
-
 local pendingRenamePresetId
-
-ignoreNextOutfitWindow = 0
-
+local ignoreNextOutfitWindow = 0
 local floorTileWidth = 318
 local floorTileHeight = 128
 local floorTileColumns = 3
@@ -40,71 +49,216 @@ local floorEventRunning = false
 local floorRowWidgets = {}
 
 local function getSelectionListGrid()
-	if not window or not window.selectionList then
+	if not outfitwindowWidget or not outfitwindowWidget.selectionList then
 		return nil
 	end
 
-	local grid = window.selectionList.selectionListGrid
+	local grid = outfitwindowWidget.selectionList.selectionListGrid
 
 	if not grid or grid:isDestroyed() then
-		return window.selectionList
+		return outfitwindowWidget.selectionList
 	end
 
 	return grid
 end
 
-local function getSelectionListFocusedChild()
-	local grid = getSelectionListGrid()
+local handleCheckChange = {
+	ignoreCheck = false,
+	index = 1,
+	ranges = {
+		{
+			id = "filterDefault",
+			max = 9999,
+			min = 0
+		},
+		{
+			id = "filterCustom",
+			max = 19999,
+			min = 10000
+		},
+		{
+			id = "filterBattlePass",
+			min = 20000
+		}
+	},
+	rangeIndexForLookType = function(numericValue)
+		numericValue = tonumber(numericValue) or 0
 
-	return grid and grid:getFocusedChild() or nil
+		if numericValue >= 20000 then
+			return 3
+		end
+
+		if numericValue >= 10000 then
+			return 2
+		end
+
+		return 1
+	end
+}
+
+function handleCheckChange.lookTypeInRange(numericValue)
+	numericValue = tonumber(numericValue) or 0
+
+	local var_3_0 = handleCheckChange.ranges[handleCheckChange.index] or handleCheckChange.ranges[1]
+
+	if numericValue < (var_3_0.min or 0) then
+		return false
+	end
+
+	if var_3_0.max and numericValue > var_3_0.max then
+		return false
+	end
+
+	return true
+end
+
+function handleCheckChange.setIndex(arg_4_0, arg_4_1)
+	if arg_4_0 < 1 or arg_4_0 > #handleCheckChange.ranges then
+		return
+	end
+
+	handleCheckChange.index = arg_4_0
+
+	if not outfitwindowWidget or not outfitwindowWidget.listSearch then
+		return
+	end
+
+	handleCheckChange.ignoreCheck = true
+
+	for index, range in ipairs(handleCheckChange.ranges) do
+		local var_4_0 = outfitwindowWidget.listSearch[range.id]
+
+		if var_4_0 then
+			var_4_0:setChecked(index == arg_4_0)
+		end
+	end
+
+	handleCheckChange.ignoreCheck = false
+
+	if arg_4_1 then
+		handleCheckChange.apply()
+	end
+end
+
+function handleCheckChange.onRangeCheckChange(arg_5_0, arg_5_1)
+	if handleCheckChange.ignoreCheck or not arg_5_0 then
+		return
+	end
+
+	local index = handleCheckChange.index
+
+	for iter_5_0, range in ipairs(handleCheckChange.ranges) do
+		if outfitwindowWidget.listSearch[range.id] == arg_5_0 then
+			index = iter_5_0
+
+			break
+		end
+	end
+
+	if not arg_5_1 then
+		handleCheckChange.setIndex(index, false)
+
+		return
+	end
+
+	handleCheckChange.setIndex(index, true)
+end
+
+function handleCheckChange.bindRangeChecks()
+	if not outfitwindowWidget or not outfitwindowWidget.listSearch then
+		return
+	end
+
+	for unusedValue, range in ipairs(handleCheckChange.ranges) do
+		local var_6_0 = outfitwindowWidget.listSearch[range.id]
+
+		if var_6_0 then
+			var_6_0.onCheckChange = handleCheckChange.onRangeCheckChange
+		end
+	end
+
+	local var_6_1 = tempOutfit and tempOutfit.type
+
+	if not var_6_1 or var_6_1 == 0 then
+		local localPlayer = g_game.getLocalPlayer()
+		local outfit = localPlayer and localPlayer:getOutfit()
+
+		var_6_1 = outfit and outfit.type or 0
+	end
+
+	handleCheckChange.setIndex(handleCheckChange.rangeIndexForLookType(var_6_1), false)
+end
+
+local function getSelectionListFocusedChild()
+	local var_7_0 = getSelectionListGrid()
+
+	return var_7_0 and var_7_0:getFocusedChild() or nil
 end
 
 local function setSelectionListFocusHandler(handler)
-	if window and window.selectionList then
-		window.selectionList.onChildFocusChange = nil
+	if outfitwindowWidget and outfitwindowWidget.selectionList then
+		outfitwindowWidget.selectionList.onChildFocusChange = nil
 	end
 
-	local grid = getSelectionListGrid()
+	local var_8_0 = getSelectionListGrid()
 
-	if grid then
-		grid.onChildFocusChange = handler
+	if var_8_0 then
+		var_8_0.onChildFocusChange = handler
 	end
 end
 
 local function clearSelectionListFocus()
-	local grid = getSelectionListGrid()
+	local var_9_0 = getSelectionListGrid()
 
-	if grid and grid.focusChild then
-		grid:focusChild(nil)
+	if var_9_0 and var_9_0.focusChild then
+		var_9_0:focusChild(nil)
 	end
 end
 
 local function resetSelectionListScrollPosition()
-	if not window or not window.selectionList then
+	if not outfitwindowWidget or not outfitwindowWidget.selectionList then
 		return
 	end
 
-	local panel = window.selectionList
+	local selectionList = outfitwindowWidget.selectionList
 
-	if panel.getVirtualOffset and panel.setVirtualOffset then
-		local offset = panel:getVirtualOffset() or {
-			y = 0,
-			x = 0
+	if selectionList.getVirtualOffset and selectionList.setVirtualOffset then
+		local virtualOffset = selectionList:getVirtualOffset() or {
+			x = 0,
+			y = 0
 		}
 
-		offset.x = 0
-		offset.y = 0
+		virtualOffset.x = 0
+		virtualOffset.y = 0
 
-		panel:setVirtualOffset(offset)
+		selectionList:setVirtualOffset(virtualOffset)
 	end
 
-	if window.selectionScroll then
-		window.selectionScroll:setValue(window.selectionScroll:getMinimum())
+	if outfitwindowWidget.selectionScroll then
+		outfitwindowWidget.selectionScroll:setValue(outfitwindowWidget.selectionScroll:getMinimum())
 	end
 end
 
-local SELECTION_BUTTON_BATCH_SIZE = 20
-local SELECTION_BUTTON_CHUNKED_THRESHOLD = 20
+function getCurrentGraphicsMode()
+	local client_options = modules.client_options
+
+	if not client_options or not client_options.getOption then
+		return 0
+	end
+
+	return math.max(0, math.min(3, tonumber(client_options.getOption("antialiasingMode")) or 0))
+end
+
+function applyCreatureGraphicsMode(arg_12_0, arg_12_1)
+	if not arg_12_0 or arg_12_0:isDestroyed() then
+		return
+	end
+
+	arg_12_0:setAntiAliasingMode(arg_12_1 == nil and getCurrentGraphicsMode() or arg_12_1)
+end
+
+local var_0_45 = 20
+local var_0_46 = 20
 local selectionListBuildToken = 0
 local selectionHydrationEvent
 local SELECTION_CARD_HEIGHT = 102
@@ -116,24 +270,42 @@ local SELECTION_HYDRATION_MAX_ITEMS = 24
 local OUTFIT_CLOSE_DESTROY_BATCH_SIZE = 12
 local OUTFIT_CLOSE_CLEANUP_INTERVAL_MS = 16
 local OUTFIT_CLOSE_LUA_GC_STEP_SIZE = 256
-local isSelectionListBuildStale, selectionWarmupEvent
+
+local function var_0_58(arg_13_0, arg_13_1)
+	table.sort(arg_13_0, function(arg_14_0, arg_14_1)
+		local available = arg_14_0[arg_13_1]
+
+		if available == nil then
+			available = statesOutft.available
+		end
+
+		local var_14_1 = arg_14_1[arg_13_1]
+
+		if var_14_1 == nil then
+			var_14_1 = statesOutft.available
+		end
+
+		local var_14_2 = available == statesOutft.available
+
+		if var_14_2 ~= (var_14_1 == statesOutft.available) then
+			return var_14_2
+		end
+
+		if arg_14_0[1] ~= arg_14_1[1] then
+			return arg_14_0[1] < arg_14_1[1]
+		end
+
+		return tostring(arg_14_0[2] or "") < tostring(arg_14_1[2] or "")
+	end)
+end
+
+local isSelectionListBuildStale
 local selectionTextureCache = {
 	hydrationToken = 0,
 	hydratedButtons = {}
 }
 local outfitLuaGcEvent
 local outfitLuaGcPassesRemaining = 0
-local memoryScenarioSelectionSequence = 0
-
-local function traceMemoryScenario(eventName, details)
-	if not g_logger or not g_logger.info then
-		return
-	end
-
-	local timestamp = g_clock and g_clock.realMillis and g_clock.realMillis() or 0
-
-	g_logger.info(string.format("[memory-scenario] t=%d event=%s%s", timestamp, tostring(eventName), details and " " .. details or ""))
-end
 
 local function clearSelectionHydrationEvent()
 	selectionTextureCache.hydrationToken = selectionTextureCache.hydrationToken + 1
@@ -145,15 +317,7 @@ local function clearSelectionHydrationEvent()
 	end
 end
 
-local function clearSelectionWarmupEvent()
-	if selectionWarmupEvent then
-		removeEvent(selectionWarmupEvent)
-
-		selectionWarmupEvent = nil
-	end
-end
-
-function clearPreviewMovementReadyEvent()
+function clearPreviewAnimationReadyEvent()
 	previewMovementWarmup.token = previewMovementWarmup.token + 1
 
 	if previewMovementWarmup.event then
@@ -341,7 +505,11 @@ local function hydrateSelectionButton(button)
 	local creature = button.outfit:getCreature()
 
 	if creature then
-		creature:setAnimate(false)
+		creature:setAnimate(true)
+
+		if button.auraClientId and button.auraClientId > 0 then
+			creature:setFixedAnimationTicks(100)
+		end
 	end
 
 	requestSelectionSpriteSheets(button, payload)
@@ -388,7 +556,7 @@ function selectionTextureCache.releaseHydration()
 end
 
 local function getSelectionHydrationWindow(totalCount, bufferRows)
-	local panel = window and window.selectionList
+	local panel = outfitwindowWidget and outfitwindowWidget.selectionList
 	local grid = getSelectionListGrid()
 
 	if not panel or not grid or totalCount <= 0 then
@@ -410,18 +578,17 @@ local function getSelectionHydrationWindow(totalCount, bufferRows)
 	local columns = math.max(1, math.floor((gridWidth + SELECTION_CARD_SPACING) / (SELECTION_CARD_WIDTH + SELECTION_CARD_SPACING)))
 	local scrollY = 0
 
-	if window and window.selectionScroll then
-		scrollY = window.selectionScroll:getValue()
+	if outfitwindowWidget and outfitwindowWidget.selectionScroll then
+		scrollY = outfitwindowWidget.selectionScroll:getValue()
 	end
 
 	bufferRows = bufferRows == nil and SELECTION_HYDRATION_BUFFER_ROWS or bufferRows
 
 	local firstVisibleRow = math.max(0, math.floor(scrollY / SELECTION_CARD_HEIGHT))
 	local startRow = math.max(0, firstVisibleRow - bufferRows)
-	local visibleRows = math.max(1, math.ceil(viewportHeight / SELECTION_CARD_HEIGHT))
-	local endRow = firstVisibleRow + visibleRows + bufferRows
+	local var_29_8 = firstVisibleRow + math.max(1, math.ceil(viewportHeight / SELECTION_CARD_HEIGHT)) + bufferRows
 	local startIndex = startRow * columns + 1
-	local endIndex = math.min(totalCount, (endRow + 1) * columns)
+	local endIndex = math.min(totalCount, (var_29_8 + 1) * columns)
 
 	if startIndex <= endIndex then
 		endIndex = math.min(endIndex, startIndex + SELECTION_HYDRATION_MAX_ITEMS - 1)
@@ -500,9 +667,7 @@ local function scheduleSelectionListHydration(reason)
 		end
 
 		local pending = {}
-
-		focusedChild = getSelectionListFocusedChild()
-
+		local focusedChild = getSelectionListFocusedChild()
 		local focusedKey = selectionTextureCache.getButtonKey(focusedChild)
 
 		if focusedChild and desired[focusedKey] and not focusedChild.__selectionOutfitHydrated then
@@ -555,40 +720,90 @@ local function scheduleSelectionListHydration(reason)
 	end
 end
 
-local function startSelectionWarmupPump(context)
-	clearSelectionWarmupEvent()
+function handleCheckChange.apply()
+	if not outfitwindowWidget or not outfitwindowWidget.selectionList then
+		return
+	end
+
+	local items = getSelectionListGrid()
+
+	if not items then
+		return
+	end
+
+	local var_33_1 = items.onChildFocusChange
+
+	items.onChildFocusChange = nil
+
+	local text = ""
+
+	if outfitwindowWidget.listSearch and outfitwindowWidget.listSearch.search then
+		text = outfitwindowWidget.listSearch.search:getText():lower():trim()
+	end
+
+	local var_33_3 = outfitwindowWidget.listSearch and outfitwindowWidget.listSearch.onlyMine and outfitwindowWidget.listSearch.onlyMine:isChecked()
+
+	for index, item in ipairs(items:getChildren()) do
+		local id = item.auraClientId ~= nil or handleCheckChange.lookTypeInRange(item:getId())
+
+		if id and var_33_3 and (not item.state or item.state ~= statesOutft.available) then
+			id = false
+		end
+
+		if id and text:len() >= 1 and not (item.name and item.name:getText():lower() or ""):find(text) then
+			id = false
+		end
+
+		item:setVisible(id)
+	end
+
+	local var_33_5 = getSelectionListFocusedChild()
+
+	if var_33_5 then
+		local id = tonumber(var_33_5:getId())
+		local var_33_7 = tempOutfit and (id == tempOutfit.type or id == tempOutfit.mount or id == tempOutfit.familiar or id == ServerData.selectedAuraId)
+
+		if not var_33_5:isVisible() or not var_33_7 then
+			clearSelectionListFocus()
+		end
+	end
+
+	items.onChildFocusChange = var_33_1
+
+	scheduleSelectionListHydration("filterSelectionList")
 end
 
 local function makeThumbnailStatic(uiCreature)
+	applyCreatureGraphicsMode(uiCreature)
+
 	local creature = uiCreature and uiCreature:getCreature()
 
 	if creature then
-		creature:setAnimate(false)
+		creature:setAnimate(true)
 	end
 end
 
-local function beginSelectionListBuild()
+local function var_0_74()
 	selectionListBuildToken = selectionListBuildToken + 1
 
 	return selectionListBuildToken
 end
 
 function isSelectionListBuildStale(buildToken)
-	return not window or not window.selectionList or buildToken ~= selectionListBuildToken
+	return not outfitwindowWidget or not outfitwindowWidget.selectionList or buildToken ~= selectionListBuildToken
 end
 
-local function buildSelectionListBatched(items, buildItem, onComplete)
-	local panel = getSelectionListGrid()
-	local layout = panel:getLayout()
+local function buildSelectionListBatched(floorRowWidgets, buildItem, onComplete)
+	local layout = getSelectionListGrid():getLayout()
 
 	if layout then
 		layout:disableUpdates()
 	end
 
-	local buildToken = selectionListBuildToken
+	local var_37_1 = selectionListBuildToken
 
-	local function finish()
-		if isSelectionListBuildStale(buildToken) then
+	local function var_37_2()
+		if isSelectionListBuildStale(var_37_1) then
 			if layout then
 				layout:enableUpdates()
 			end
@@ -609,22 +824,22 @@ local function buildSelectionListBatched(items, buildItem, onComplete)
 		end
 	end
 
-	local count = #items
+	local var_37_3 = #floorRowWidgets
 
-	if count <= SELECTION_BUTTON_CHUNKED_THRESHOLD then
-		for index, item in ipairs(items) do
-			buildItem(item, index)
+	if var_37_3 <= var_0_46 then
+		for index, tile in ipairs(floorRowWidgets) do
+			buildItem(tile, index)
 		end
 
-		finish()
+		var_37_2()
 
 		return
 	end
 
-	local index = 1
+	local var_37_4 = 1
 
-	local function createNextBatch()
-		if isSelectionListBuildStale(buildToken) then
+	local function var_37_5()
+		if isSelectionListBuildStale(var_37_1) then
 			if layout then
 				layout:enableUpdates()
 			end
@@ -632,22 +847,22 @@ local function buildSelectionListBatched(items, buildItem, onComplete)
 			return
 		end
 
-		local endIndex = math.min(index + SELECTION_BUTTON_BATCH_SIZE - 1, count)
+		local var_39_0 = math.min(var_37_4 + var_0_45 - 1, var_37_3)
 
-		for i = index, endIndex do
-			buildItem(items[i], i)
+		for iter_39_0 = var_37_4, var_39_0 do
+			buildItem(floorRowWidgets[iter_39_0], iter_39_0)
 		end
 
-		index = endIndex + 1
+		var_37_4 = var_39_0 + 1
 
-		if index <= count then
-			addEvent(createNextBatch)
+		if var_37_4 <= var_37_3 then
+			addEvent(var_37_5)
 		else
-			finish()
+			var_37_2()
 		end
 	end
 
-	createNextBatch()
+	var_37_5()
 end
 
 local function applyFloorRowScrollMargins()
@@ -655,12 +870,12 @@ local function applyFloorRowScrollMargins()
 		return
 	end
 
-	for index, tile in ipairs(floorRowWidgets) do
-		local row = math.floor((index - 1) / floorTileColumns) + 1
-		local col = (index - 1) % floorTileColumns + 1
+	for index, floorRowWidget in ipairs(floorRowWidgets) do
+		local col = math.floor((index - 1) / floorTileColumns) + 1
+		local var_40_1 = (index - 1) % floorTileColumns + 1
 
-		tile:setMarginTop((row - 1) * floorTileHeight - floorOffsetY)
-		tile:setMarginLeft((col - 1) * floorTileWidth - floorOffsetX)
+		floorRowWidget:setMarginTop((col - 1) * floorTileHeight - floorOffsetY)
+		floorRowWidget:setMarginLeft((var_40_1 - 1) * floorTileWidth - floorOffsetX)
 	end
 end
 
@@ -675,26 +890,28 @@ local settingsFile = "/settings/outfit.json"
 local settings = {}
 local movementEnabledForSession = false
 local outfitWindowDefaultWidth = 756
-local outfitWindowDefaultHeight = 537
+local outfitWindowDefaultHeight = 559
 local outfitWindowDefaultMarginTop = 43
 local outfitWindowCompactMarginTop = 32
-local configurePanelDefaultHeight = 234
-local appearancePanelDefaultHeight = 234
-local appearanceSettingsDefaultHeight = 86
+local configurePanelDefaultHeight = 256
+local var_0_86 = 256
+local var_0_87 = 108
 local missingFamiliarCompactionHeight = 22
 local missingPresetCompactionHeight = 22
 local hirelingWindowHeight = 471
 local hirelingAppearanceCompactionHeight = 44
 local defaultButtonImage = "/images/ui/1pixel-down-frame"
-local storeButtonImage = "/images/ui/outfits/button_store_mount"
-local storeButtonClipNormal = "0 0 230 20"
-local storeButtonClipPressed = "0 20 230 20"
-local storeButtonIcon = "/images/icons/icon-store-16x10"
-local appearanceNameTextOffsetY = 1
-local appearanceNameStoreRowTextExtraY = 3
-local storeNameRowIconGap = 4
-local storeNameRowIconFallbackW = 12
-local storeNameRowPressNudge = 1
+local storeButtonClipPressed = {
+	iconGap = 4,
+	storeRowTextExtraY = 3,
+	textOffsetY = 1,
+	icon = "/images/icons/icon-store-16x10",
+	clipPressed = "0 20 230 20",
+	clipNormal = "0 0 230 20",
+	image = "/images/ui/outfits/button_store_mount",
+	pressNudge = 1,
+	iconFallbackW = 12
+}
 local storeNameRowLayoutBase = {}
 local storeNameRowPressed = {}
 
@@ -705,7 +922,7 @@ local function appearanceNameRowUsesStoreChrome(widget)
 
 	local src = widget:getImageSource() or ""
 
-	if src == storeButtonImage then
+	if src == storeButtonClipPressed.image then
 		return true
 	end
 
@@ -739,7 +956,7 @@ local function resetAppearanceNameRowStoreLayout(widget)
 	widget:setIconAlign(AlignNone)
 	widget:setIconOffset(topoint("0 0"))
 	widget:setTextAlign(AlignCenter)
-	widget:setTextOffset(topoint("0 " .. appearanceNameTextOffsetY))
+	widget:setTextOffset(topoint("0 " .. storeButtonClipPressed.textOffsetY))
 end
 
 local function layoutStoreAppearanceNameRowCentered(widget)
@@ -755,11 +972,11 @@ local function layoutStoreAppearanceNameRowCentered(widget)
 	local iconW = clip and clip.width or 0
 
 	if iconW <= 0 then
-		iconW = storeNameRowIconFallbackW
+		iconW = storeButtonClipPressed.iconFallbackW
 	end
 
 	local textW = widget:getTextSize().width
-	local total = iconW + storeNameRowIconGap + textW
+	local total = iconW + storeButtonClipPressed.iconGap + textW
 	local w = widget:getWidth()
 	local groupX = math.max(0, math.floor((w - total) / 2))
 
@@ -767,8 +984,8 @@ local function layoutStoreAppearanceNameRowCentered(widget)
 	widget:setIconOffset(topoint(groupX .. " 0"))
 	widget:setTextAlign(AlignLeft)
 
-	local textY = appearanceNameTextOffsetY + appearanceNameStoreRowTextExtraY
-	local textX = groupX + iconW + storeNameRowIconGap
+	local textY = storeButtonClipPressed.textOffsetY + storeButtonClipPressed.storeRowTextExtraY
+	local textX = groupX + iconW + storeButtonClipPressed.iconGap
 
 	widget:setTextOffset(topoint(textX .. " " .. textY))
 
@@ -817,7 +1034,7 @@ local function setStoreAppearanceNameRowPressNudge(widget, pressed)
 		storeNameRowPressed[key] = true
 	end
 
-	local d = pressed and storeNameRowPressNudge or 0
+	local d = pressed and storeButtonClipPressed.pressNudge or 0
 
 	widget:setIconOffset(topoint(b.iconX + d .. " " .. b.iconY + d))
 	widget:setTextOffset(topoint(b.textX + d .. " " .. b.textY + d))
@@ -861,22 +1078,22 @@ local function scheduleLayoutStoreAppearanceNameRow(widget)
 end
 
 local outfitColorCache = {
-	body = 0,
 	head = 0,
 	feet = 0,
-	legs = 0
+	legs = 0,
+	body = 0
 }
 local mountColorCache = {
-	body = 0,
 	head = 0,
 	feet = 0,
-	legs = 0
+	legs = 0,
+	body = 0
 }
 local familiarColorCache = {
-	body = 0,
 	head = 0,
 	feet = 0,
-	legs = 0
+	legs = 0,
+	body = 0
 }
 local colorPickerProgrammatic = false
 
@@ -885,9 +1102,9 @@ local function applyOutfitPreviewSpriteScale(spriteWidget)
 		return
 	end
 
-	local creature = spriteWidget:getCreature()
+	applyCreatureGraphicsMode(spriteWidget)
 
-	if not creature then
+	if not spriteWidget:getCreature() then
 		return
 	end
 
@@ -1002,11 +1219,11 @@ local function getPodiumShowMount()
 		return false
 	end
 
-	if not window or not window.configure or not window.configure.mount or not window.configure.mount.check then
+	if not outfitwindowWidget or not outfitwindowWidget.configure or not outfitwindowWidget.configure.mount or not outfitwindowWidget.configure.mount.check then
 		return false
 	end
 
-	return window.configure.mount.check:isChecked()
+	return outfitwindowWidget.configure.mount.check:isChecked()
 end
 
 local function getPodiumShowPlatform()
@@ -1104,10 +1321,14 @@ local didAcceptCustomize = false
 local clipboardChangeWatchEvent
 local lastClipboardChangeCount = 0
 local ServerData = {
+	selectedAuraClientId = 0,
+	currentAuraClientId = 0,
+	selectedAuraId = 0,
 	currentOutfit = {},
 	outfits = {},
 	mounts = {},
-	familiars = {}
+	familiars = {},
+	auras = {}
 }
 
 local function getPreferredInitialMountId(mounts)
@@ -1216,6 +1437,48 @@ local function getMountOfferIdById(mountId)
 end
 
 local function getOutfitStateById(outfitId)
+	return getMountStateById(outfitId) == statesOutft.available
+end
+
+local function var_0_133()
+	if table.empty(ServerData.mounts) then
+		return nil
+	end
+
+	for _, outfitData in ipairs(ServerData.mounts) do
+		local var_72_0 = outfitData[3]
+
+		if var_72_0 and var_72_0 ~= statesOutft.available then
+			return outfitData
+		end
+	end
+
+	return nil
+end
+
+local function initColorCachesFromOutfit()
+	if podiumContext or hirelingContext then
+		return
+	end
+
+	if not g_game.getFeature(GamePlayerMounts) then
+		return
+	end
+
+	if getOutfitStateById(tempOutfit and tempOutfit.mount) then
+		return
+	end
+
+	local var_73_0 = var_0_133()
+
+	if not var_73_0 then
+		return
+	end
+
+	tempOutfit.mount = var_73_0[1]
+end
+
+local function getOutfitOfferIdById(outfitId)
 	if not outfitId or outfitId < 1 or table.empty(ServerData.outfits) then
 		return nil
 	end
@@ -1229,13 +1492,13 @@ local function getOutfitStateById(outfitId)
 	return nil
 end
 
-local function getOutfitOfferIdById(outfitId)
-	if not outfitId or outfitId < 1 or table.empty(ServerData.outfits) then
+local function var_0_136(lookType)
+	if not lookType or lookType < 1 or table.empty(ServerData.outfits) then
 		return 0
 	end
 
 	for _, outfitData in ipairs(ServerData.outfits) do
-		if outfitData[1] == outfitId then
+		if outfitData[1] == lookType then
 			return outfitData[5] or 0
 		end
 	end
@@ -1243,13 +1506,13 @@ local function getOutfitOfferIdById(outfitId)
 	return 0
 end
 
-function getOutfitNameByLookType(lookType)
-	if not lookType or lookType < 1 or table.empty(ServerData.outfits) then
+function getOutfitNameByLookType(lookId)
+	if not lookId or lookId < 1 or table.empty(ServerData.outfits) then
 		return nil
 	end
 
-	for _, outfitData in ipairs(ServerData.outfits) do
-		if outfitData[1] == lookType then
+	for unusedValue, outfitData in ipairs(ServerData.outfits) do
+		if outfitData[1] == lookId then
 			return outfitData[2]
 		end
 	end
@@ -1262,7 +1525,7 @@ local function redirectToStoreOffer(offerId)
 		return
 	end
 
-	if window then
+	if outfitwindowWidget then
 		destroy()
 	end
 
@@ -1280,20 +1543,20 @@ end
 
 function onOutfitNameClick()
 	local outfitId = tempOutfit and tempOutfit.type or 0
-	local state = getOutfitStateById(outfitId)
-	local offerId = getOutfitOfferIdById(outfitId)
+	local var_79_1 = getOutfitOfferIdById(outfitId)
+	local offerId = var_0_136(outfitId)
 
-	if state and state ~= statesOutft.available and offerId > 0 then
+	if var_79_1 and var_79_1 ~= statesOutft.available and offerId > 0 then
 		redirectToStoreOffer(offerId)
 	end
 end
 
 function onMountNameClick()
 	local mountId = tempOutfit and tempOutfit.mount or 0
-	local state = getMountStateById(mountId)
+	local var_80_1 = getMountStateById(mountId)
 	local offerId = getMountOfferIdById(mountId)
 
-	if state and state ~= statesOutft.available and offerId > 0 then
+	if var_80_1 and var_80_1 ~= statesOutft.available and offerId > 0 then
 		redirectToStoreOffer(offerId)
 	end
 end
@@ -1303,135 +1566,114 @@ local function onMountNameMousePress(widget, mousePos, mouseButton)
 		return false
 	end
 
-	widget:setImageClip(storeButtonClipPressed)
+	widget:setImageClip(storeButtonClipPressed.clipPressed)
 	setStoreAppearanceNameRowPressNudge(widget, true)
 
 	return true
 end
 
-local function onMountNameMouseRelease(widget, mousePos, mouseButton)
-	if mouseButton ~= MouseLeftButton then
-		return false
+local function onMountNameMouseRelease(widget)
+	return function(arg_83_0, mousePos, arg_83_2)
+		if arg_83_2 ~= MouseLeftButton then
+			return false
+		end
+
+		arg_83_0:setImageClip(storeButtonClipPressed.clipNormal)
+		setStoreAppearanceNameRowPressNudge(arg_83_0, false)
+		scheduleStoreAppearanceNameRowReleaseSnap(arg_83_0)
+
+		if arg_83_0:containsPoint(mousePos) then
+			widget()
+		end
+
+		return true
 	end
-
-	widget:setImageClip(storeButtonClipNormal)
-	setStoreAppearanceNameRowPressNudge(widget, false)
-	scheduleStoreAppearanceNameRowReleaseSnap(widget)
-
-	if widget:containsPoint(mousePos) then
-		onMountNameClick()
-	end
-
-	return true
 end
+
+local handleMouseRelease = onMountNameMouseRelease(onMountNameClick)
+local var_0_141 = onMountNameMouseRelease(onOutfitNameClick)
 
 local function updateMountAppearanceNameVisual(mountId)
-	if not window or not window.appearance or not window.appearance.settings or not window.appearance.settings.mount or not window.appearance.settings.mount.name then
+	if not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings or not outfitwindowWidget.appearance.settings.mount or not outfitwindowWidget.appearance.settings.mount.name then
 		return
 	end
 
-	local mountNameWidget = window.appearance.settings.mount.name
-	local state = getMountStateById(mountId)
-	local offerId = getMountOfferIdById(mountId)
-	local isStoreMount = state ~= nil and state ~= statesOutft.available and offerId > 0
+	local name = outfitwindowWidget.appearance.settings.mount.name
+	local var_84_1 = getMountStateById(mountId)
+	local var_84_2 = getMountOfferIdById(mountId)
 
-	if isStoreMount then
-		mountNameWidget:setImageSource(storeButtonImage)
-		mountNameWidget:setImageClip(storeButtonClipNormal)
-		mountNameWidget:setIcon(storeButtonIcon)
-		mountNameWidget:setTooltip("Open store offer")
-		mountNameWidget:setPhantom(false)
-		mountNameWidget:setFocusable(true)
+	if var_84_1 ~= nil and var_84_1 ~= statesOutft.available and var_84_2 > 0 then
+		name:setImageSource(storeButtonClipPressed.image)
+		name:setImageClip(storeButtonClipPressed.clipNormal)
+		name:setIcon(storeButtonClipPressed.icon)
+		name:setTooltip("Open store offer")
+		name:setPhantom(false)
+		name:setFocusable(true)
 
-		mountNameWidget.onMousePress = onMountNameMousePress
-		mountNameWidget.onMouseRelease = onMountNameMouseRelease
+		name.onMousePress = onMountNameMousePress
+		name.onMouseRelease = handleMouseRelease
 
-		layoutStoreAppearanceNameRowCentered(mountNameWidget)
-		scheduleLayoutStoreAppearanceNameRow(mountNameWidget)
+		layoutStoreAppearanceNameRowCentered(name)
+		scheduleLayoutStoreAppearanceNameRow(name)
 	else
-		mountNameWidget:setImageSource(defaultButtonImage)
-		mountNameWidget:setImageClip(nil)
-		mountNameWidget:setIcon("")
-		resetAppearanceNameRowStoreLayout(mountNameWidget)
-		mountNameWidget:setTooltip("")
-		mountNameWidget:setPhantom(true)
-		mountNameWidget:setFocusable(false)
+		name:setImageSource(defaultButtonImage)
+		name:setImageClip(nil)
+		name:setIcon("")
+		resetAppearanceNameRowStoreLayout(name)
+		name:setTooltip("")
+		name:setPhantom(true)
+		name:setFocusable(false)
 
-		mountNameWidget.onMousePress = nil
-		mountNameWidget.onMouseRelease = nil
+		name.onMousePress = nil
+		name.onMouseRelease = nil
 	end
 end
 
-local function updateOutfitAppearanceNameVisual(outfitId)
-	if not window or not window.appearance or not window.appearance.settings or not window.appearance.settings.outfit or not window.appearance.settings.outfit.name then
+local function var_0_143(arg_85_0)
+	if not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings or not outfitwindowWidget.appearance.settings.outfit or not outfitwindowWidget.appearance.settings.outfit.name then
 		return
 	end
 
-	local outfitNameWidget = window.appearance.settings.outfit.name
-	local state = getOutfitStateById(outfitId)
-	local offerId = getOutfitOfferIdById(outfitId)
-	local isStoreOutfit = state ~= nil and state ~= statesOutft.available and offerId > 0
+	local name = outfitwindowWidget.appearance.settings.outfit.name
+	local var_85_1 = getOutfitOfferIdById(arg_85_0)
+	local var_85_2 = var_0_136(arg_85_0)
 
-	if isStoreOutfit then
-		outfitNameWidget:setImageSource(storeButtonImage)
-		outfitNameWidget:setImageClip(storeButtonClipNormal)
-		outfitNameWidget:setIcon(storeButtonIcon)
-		outfitNameWidget:setTooltip("Open store offer")
-		outfitNameWidget:setPhantom(false)
-		outfitNameWidget:setFocusable(true)
+	if var_85_1 ~= nil and var_85_1 ~= statesOutft.available and var_85_2 > 0 then
+		name:setImageSource(storeButtonClipPressed.image)
+		name:setImageClip(storeButtonClipPressed.clipNormal)
+		name:setIcon(storeButtonClipPressed.icon)
+		name:setTooltip("Open store offer")
+		name:setPhantom(false)
+		name:setFocusable(true)
 
-		function outfitNameWidget.onMousePress(widget, mousePos, mouseButton)
-			if mouseButton ~= MouseLeftButton then
-				return false
-			end
+		name.onMousePress = onMountNameMousePress
+		name.onMouseRelease = var_0_141
 
-			widget:setImageClip(storeButtonClipPressed)
-			setStoreAppearanceNameRowPressNudge(widget, true)
-
-			return true
-		end
-
-		function outfitNameWidget.onMouseRelease(widget, mousePos, mouseButton)
-			if mouseButton ~= MouseLeftButton then
-				return false
-			end
-
-			widget:setImageClip(storeButtonClipNormal)
-			setStoreAppearanceNameRowPressNudge(widget, false)
-			scheduleStoreAppearanceNameRowReleaseSnap(widget)
-
-			if widget:containsPoint(mousePos) then
-				onOutfitNameClick()
-			end
-
-			return true
-		end
-
-		layoutStoreAppearanceNameRowCentered(outfitNameWidget)
-		scheduleLayoutStoreAppearanceNameRow(outfitNameWidget)
+		layoutStoreAppearanceNameRowCentered(name)
+		scheduleLayoutStoreAppearanceNameRow(name)
 	else
-		outfitNameWidget:setImageSource(defaultButtonImage)
-		outfitNameWidget:setImageClip(nil)
-		outfitNameWidget:setIcon("")
-		resetAppearanceNameRowStoreLayout(outfitNameWidget)
-		outfitNameWidget:setTooltip("")
-		outfitNameWidget:setPhantom(true)
-		outfitNameWidget:setFocusable(false)
+		name:setImageSource(defaultButtonImage)
+		name:setImageClip(nil)
+		name:setIcon("")
+		resetAppearanceNameRowStoreLayout(name)
+		name:setTooltip("")
+		name:setPhantom(true)
+		name:setFocusable(false)
 
-		outfitNameWidget.onMousePress = nil
-		outfitNameWidget.onMouseRelease = nil
+		name.onMousePress = nil
+		name.onMouseRelease = nil
 	end
 end
 
-local function initColorCachesFromOutfit(outfit)
-	if not outfit then
+local function var_0_144(arg_86_0)
+	if not arg_86_0 then
 		return
 	end
 
-	local h = outfit.head or 0
-	local b = outfit.body or 0
-	local l = outfit.legs or 0
-	local f = outfit.feet or 0
+	local h = arg_86_0.head or 0
+	local b = arg_86_0.body or 0
+	local l = arg_86_0.legs or 0
+	local f = arg_86_0.feet or 0
 
 	outfitColorCache = {
 		head = h,
@@ -1440,25 +1682,25 @@ local function initColorCachesFromOutfit(outfit)
 		feet = f
 	}
 
-	local mh = outfit.mountHead
+	local mh = arg_86_0.mountHead
 
 	if mh == nil then
 		mh = 0
 	end
 
-	local mb = outfit.mountBody
+	local mb = arg_86_0.mountBody
 
 	if mb == nil then
 		mb = 0
 	end
 
-	local ml = outfit.mountLegs
+	local ml = arg_86_0.mountLegs
 
 	if ml == nil then
 		ml = 0
 	end
 
-	local mf = outfit.mountFeet
+	local mf = arg_86_0.mountFeet
 
 	if mf == nil then
 		mf = 0
@@ -1507,11 +1749,11 @@ local function applyGlobalColorCachesFromSettings()
 end
 
 local function getAppearanceCategoryName()
-	if not appearanceGroup or not window or not window.appearance or not window.appearance.settings then
+	if not var_0_9 or not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings then
 		return "outfit"
 	end
 
-	local w = appearanceGroup:getSelectedWidget()
+	local w = var_0_9:getSelectedWidget()
 
 	if not w then
 		return "outfit"
@@ -1600,6 +1842,42 @@ local function getColorCacheForAppearance(app)
 	return outfitColorCache
 end
 
+local function var_0_152()
+	local var_95_0 = getSelectionListGrid()
+
+	if not var_95_0 then
+		return
+	end
+
+	local var_95_1 = getColorCacheForAppearance(getAppearanceCategoryName())
+
+	if not var_95_1 then
+		return
+	end
+
+	for unusedValue, child in ipairs(var_95_0:getChildren()) do
+		local id = tonumber(child:getId())
+
+		if id and id > 0 then
+			local __selectionOutfitPayload = child.__selectionOutfitPayload
+
+			if __selectionOutfitPayload then
+				local var_95_4, var_95_5, var_95_6, var_95_7 = headBodyForListThumbnail(id, var_95_1)
+
+				__selectionOutfitPayload.head = var_95_4
+				__selectionOutfitPayload.body = var_95_5
+				__selectionOutfitPayload.legs = var_95_6
+				__selectionOutfitPayload.feet = var_95_7
+
+				if child.__selectionOutfitHydrated and child.outfit then
+					child.outfit:setOutfit(__selectionOutfitPayload)
+					makeThumbnailStatic(child.outfit)
+				end
+			end
+		end
+	end
+end
+
 local function getColorIdFromMode(cache, colorMode)
 	if not cache or not colorMode then
 		return 0
@@ -1673,7 +1951,7 @@ local function applyMountColorsToOutfitTable(outfitTable)
 end
 
 local function syncTempOutfitFromSelection()
-	if not window or not window.selectionList or not appearanceGroup then
+	if not outfitwindowWidget or not outfitwindowWidget.selectionList or not var_0_9 then
 		return
 	end
 
@@ -1694,6 +1972,9 @@ local function syncTempOutfitFromSelection()
 		tempOutfit.mount = tonumber(focusedChild:getId()) or 0
 	elseif tabId == "familiar" then
 		tempOutfit.familiar = tonumber(focusedChild:getId()) or 0
+	elseif tabId == "aura" then
+		ServerData.selectedAuraId = tonumber(focusedChild:getId()) or 0
+		ServerData.selectedAuraClientId = focusedChild.auraClientId or 0
 	end
 end
 
@@ -1701,7 +1982,37 @@ local function buildOutfitPayloadForSend()
 	syncTempOutfitFromSelection()
 	applyOutfitColorsToTemp()
 
-	local outfitToSend = table.copy(tempOutfit)
+	local outfitToSend = tonumber(tempOutfit and tempOutfit.type) or 0
+
+	if outfitToSend < 1 then
+		local var_101_1 = getSelectionListFocusedChild()
+
+		if var_101_1 then
+			if var_101_1.selectionOutfitData then
+				outfitToSend = tonumber(var_101_1.selectionOutfitData.type) or 0
+			end
+
+			if outfitToSend < 1 then
+				outfitToSend = tonumber(var_101_1:getId()) or 0
+			end
+		end
+	end
+
+	local outfitToSend = {
+		type = outfitToSend,
+		auxType = tempOutfit.auxType or 0,
+		head = tempOutfit.head or 0,
+		body = tempOutfit.body or 0,
+		legs = tempOutfit.legs or 0,
+		feet = tempOutfit.feet or 0,
+		addons = tempOutfit.addons or 0,
+		mount = tonumber(tempOutfit.mount) or 0,
+		familiar = tonumber(tempOutfit.familiar) or 0
+	}
+
+	if not getOutfitStateById(outfitToSend.mount) then
+		outfitToSend.mount = 0
+	end
 
 	applyMountColorsToOutfitTable(outfitToSend)
 
@@ -1709,11 +2020,11 @@ local function buildOutfitPayloadForSend()
 end
 
 local function selectFirstColorBoxForDisabledState()
-	if not window or not colorBoxGroup then
+	if not outfitwindowWidget or not colorBoxGroup then
 		return
 	end
 
-	local csec = window.appearance and window.appearance.colorSection
+	local csec = outfitwindowWidget.appearance and outfitwindowWidget.appearance.colorSection
 	local panel = csec and csec.colorBoxBackground and csec.colorBoxBackground.colorBoxPanel
 
 	if not panel then
@@ -1733,50 +2044,54 @@ local function selectFirstColorBoxForDisabledState()
 	colorPickerProgrammatic = false
 end
 
-local decodeCopyColoursCode, decodeCopyAllCode, refreshColorBoxForCurrentContext, setPasteButtonMode, classifyPasteClipboardCode
+local decodeCopyColoursCode
+local unusedValue
+local refreshColorBoxForCurrentContext
+local setPasteButtonMode
+local classifyPasteClipboardCode
 local currentPasteMode = "colours"
 
 local function updateColorControlsState()
-	if not window or not window.appearance then
+	if not outfitwindowWidget or not outfitwindowWidget.appearance then
 		return
 	end
 
 	local canColor = isColorContextActive()
 
-	if window.appearance.colorSection and window.appearance.colorSection.colorBoxBackground and window.appearance.colorSection.colorBoxBackground.colorBoxPanel and window.appearance.colorSection.colorBoxBackground.colorBoxPanel.setEnabled then
-		window.appearance.colorSection.colorBoxBackground.colorBoxPanel:setEnabled(canColor)
+	if outfitwindowWidget.appearance.colorSection and outfitwindowWidget.appearance.colorSection.colorBoxBackground and outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel and outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel.setEnabled then
+		outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel:setEnabled(canColor)
 	end
 
-	if window.appearance.colorSection.colorMode then
-		for _, c in pairs(window.appearance.colorSection.colorMode:getChildren()) do
+	if outfitwindowWidget.appearance.colorSection.colorMode then
+		for _, c in pairs(outfitwindowWidget.appearance.colorSection.colorMode:getChildren()) do
 			if c.setEnabled then
 				c:setEnabled(canColor)
 			end
 		end
 	end
 
-	if window.appearance.colorSection then
-		local overlay = window.appearance.colorSection.colorsDisabledOverlay
+	if outfitwindowWidget.appearance.colorSection then
+		local overlay = outfitwindowWidget.appearance.colorSection.colorsDisabledOverlay
 
 		if overlay and overlay.setVisible then
 			overlay:setVisible(not canColor)
 		end
 	end
 
-	if window.appearance.colorCopyButtons then
-		local copyAllButton = window.appearance.colorCopyButtons.copyAll
+	if outfitwindowWidget.appearance.colorCopyButtons then
+		local copyAllButton = outfitwindowWidget.appearance.colorCopyButtons.copyAll
 
 		if copyAllButton and copyAllButton.setEnabled then
 			copyAllButton:setEnabled(true)
 		end
 
-		local copyColoursButton = window.appearance.colorCopyButtons.copyColours
+		local copyColoursButton = outfitwindowWidget.appearance.colorCopyButtons.copyColours
 
 		if copyColoursButton and copyColoursButton.setEnabled then
 			copyColoursButton:setEnabled(canColor)
 		end
 
-		local pasteColoursButton = window.appearance.colorCopyButtons.pasteColours
+		local pasteColoursButton = outfitwindowWidget.appearance.colorCopyButtons.pasteColours
 
 		if pasteColoursButton and pasteColoursButton.setEnabled then
 			local hasValidClipboard = false
@@ -1826,7 +2141,7 @@ local function startClipboardChangeWatcher()
 	lastClipboardChangeCount = g_window.getClipboardChangeCount()
 
 	local function watch()
-		if not window then
+		if not outfitwindowWidget then
 			clipboardChangeWatchEvent = nil
 
 			return
@@ -2036,9 +2351,7 @@ local function looksLikeOutfitClipboardCode(code)
 		return false
 	end
 
-	local rem = #trimmed % 4
-
-	return rem ~= 1
+	return #trimmed % 4 ~= 1
 end
 
 local function readCborValue(data, pos, depth)
@@ -2065,6 +2378,7 @@ local function readCborValue(data, pos, depth)
 
 	if major == 3 then
 		local len
+		local len
 
 		len, pos = readCborUnsigned(data, pos, addl)
 
@@ -2082,6 +2396,7 @@ local function readCborValue(data, pos, depth)
 	end
 
 	if major == 5 then
+		local unusedValue
 		local mapLen
 
 		mapLen, pos = readCborUnsigned(data, pos, addl)
@@ -2094,6 +2409,7 @@ local function readCborValue(data, pos, depth)
 
 		for _ = 1, mapLen do
 			local key
+			local key
 
 			key, pos = readCborValue(data, pos, depth + 1)
 
@@ -2101,6 +2417,7 @@ local function readCborValue(data, pos, depth)
 				return nil, pos
 			end
 
+			local value
 			local value
 
 			value, pos = readCborValue(data, pos, depth + 1)
@@ -2128,7 +2445,7 @@ local function readCborValue(data, pos, depth)
 	return nil, pos
 end
 
-function decodeCopyColoursCode(code)
+local function decodeCopyColoursCode(code)
 	if not looksLikeOutfitClipboardCode(code) then
 		return nil
 	end
@@ -2146,8 +2463,7 @@ function decodeCopyColoursCode(code)
 		return nil
 	end
 
-	pos = pos + 1
-
+	local pos = pos + 1
 	local major = math.floor(first / 32)
 	local addl = first % 32
 
@@ -2156,8 +2472,7 @@ function decodeCopyColoursCode(code)
 	end
 
 	local mapSize
-
-	mapSize, pos = readCborUnsigned(raw, pos, addl)
+	local mapSize, pos = readCborUnsigned(raw, pos, addl)
 
 	if not mapSize or mapSize < 1 then
 		return nil
@@ -2181,6 +2496,7 @@ function decodeCopyColoursCode(code)
 			return nil
 		end
 
+		local keyLen
 		local keyLen
 
 		keyLen, pos = readCborUnsigned(raw, pos, keyAddl)
@@ -2213,6 +2529,7 @@ function decodeCopyColoursCode(code)
 		end
 
 		local value
+		local value
 
 		value, pos = readCborUnsigned(raw, pos, valueAddl)
 
@@ -2235,7 +2552,7 @@ function decodeCopyColoursCode(code)
 	}
 end
 
-function decodeCopyAllCode(code)
+local function decodeCopyAllCode(code)
 	if not looksLikeOutfitClipboardCode(code) then
 		return nil
 	end
@@ -2270,11 +2587,11 @@ end
 function setPasteButtonMode(mode)
 	currentPasteMode = mode == "all" and "all" or "colours"
 
-	if not window or not window.appearance or not window.appearance.colorCopyButtons then
+	if not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.colorCopyButtons then
 		return
 	end
 
-	local button = window.appearance.colorCopyButtons.pasteColours
+	local button = outfitwindowWidget.appearance.colorCopyButtons.pasteColours
 
 	if not button or not button.setStyle then
 		return
@@ -2298,9 +2615,7 @@ function classifyPasteClipboardCode(clipboardText, canColor)
 		return nil
 	end
 
-	local hasAllSignature = raw:find("mount", 1, true) and raw:find("outfit", 1, true) and raw:find("summon", 1, true)
-
-	if hasAllSignature then
+	if raw:find("mount", 1, true) and raw:find("outfit", 1, true) and raw:find("summon", 1, true) then
 		return "all"
 	end
 
@@ -2308,9 +2623,7 @@ function classifyPasteClipboardCode(clipboardText, canColor)
 		return nil
 	end
 
-	local hasColourSignature = raw:find("detail", 1, true) and raw:find("head", 1, true) and raw:find("legs", 1, true) and raw:find("torso", 1, true)
-
-	if hasColourSignature then
+	if raw:find("detail", 1, true) and raw:find("head", 1, true) and raw:find("legs", 1, true) and raw:find("torso", 1, true) then
 		return "colours"
 	end
 
@@ -2509,7 +2822,7 @@ local function onPasteColoursClick()
 end
 
 function refreshColorBoxForCurrentContext()
-	if not window or not colorBoxGroup or not colorModeGroup then
+	if not outfitwindowWidget or not colorBoxGroup or not colorModeGroup then
 		return
 	end
 
@@ -2532,7 +2845,7 @@ function refreshColorBoxForCurrentContext()
 
 	local colorMode = sm:getId()
 	local id = getColorIdFromMode(cache, colorMode)
-	local box = window.appearance.colorSection.colorBoxBackground.colorBoxPanel["colorBox" .. id]
+	local box = outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel["colorBox" .. id]
 
 	if box and colorBoxGroup then
 		colorPickerProgrammatic = true
@@ -2547,6 +2860,7 @@ local AppearanceData = {
 	"preset",
 	"outfit",
 	"mount",
+	"aura",
 	"familiar"
 }
 
@@ -2555,6 +2869,7 @@ function init()
 		onOpenOutfitWindow = onOpenPlayerOutfitWindow,
 		onOpenHirelingOutfitWindow = onOpenHirelingOutfitWindow,
 		onOpenPlayerPodiumWindow = onOpenPlayerPodiumWindow,
+		onAuraList = onAuraList,
 		onGameEnd = destroy
 	})
 end
@@ -2564,6 +2879,7 @@ function terminate()
 		onOpenOutfitWindow = onOpenPlayerOutfitWindow,
 		onOpenHirelingOutfitWindow = onOpenHirelingOutfitWindow,
 		onOpenPlayerPodiumWindow = onOpenPlayerPodiumWindow,
+		onAuraList = onAuraList,
 		onGameEnd = destroy
 	})
 	destroy()
@@ -2571,10 +2887,164 @@ end
 
 function onOpenPlayerOutfitWindow(player, outfitList, creatureMount, mountList, familiarList)
 	hirelingContext = nil
-	memoryScenarioSelectionSequence = 0
 
-	traceMemoryScenario("outfit-window-open", string.format("outfits=%d mounts=%d familiars=%d", outfitList and #outfitList or 0, mountList and #mountList or 0, familiarList and #familiarList or 0))
 	create(player, outfitList, creatureMount, mountList, familiarList)
+end
+
+function getSelectedAuraName()
+	if ServerData.auras then
+		for unusedValue, aura in ipairs(ServerData.auras) do
+			if aura[1] == ServerData.selectedAuraId then
+				return aura[2] or ""
+			end
+		end
+
+		if #ServerData.auras > 0 then
+			return ServerData.auras[1][2] or ""
+		end
+	end
+
+	return "None"
+end
+
+function applyAuraToPreview()
+	if podiumContext or hirelingContext then
+		return
+	end
+
+	if not previewCreature or not previewCreature.getCreature then
+		return
+	end
+
+	local creature = previewCreature:getCreature()
+
+	if not creature or not creature.setAuraLookType then
+		return
+	end
+
+	local var_129_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check and outfitwindowWidget.configure.aura.check:isChecked()
+
+	creature:setAuraLookType(var_129_1 and (ServerData.selectedAuraClientId or 0) or 0)
+end
+
+function applyCustomizePanelHeights()
+	if not outfitwindowWidget or podiumContext or hirelingContext or cyclopediaViewMode then
+		return
+	end
+
+	local var_130_0 = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
+	local var_130_1 = ServerData and ServerData.auras and not table.empty(ServerData.auras)
+	local var_130_2 = 0
+
+	if not var_130_0 then
+		var_130_2 = var_130_2 + missingFamiliarCompactionHeight
+	end
+
+	if not var_130_1 then
+		var_130_2 = var_130_2 + missingFamiliarCompactionHeight
+	end
+
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings then
+		outfitwindowWidget.appearance.settings:setHeight(var_0_87 - var_130_2)
+	end
+
+	if outfitwindowWidget.configure then
+		outfitwindowWidget.configure:setHeight(configurePanelDefaultHeight - var_130_2)
+	end
+
+	if outfitwindowWidget.appearance then
+		outfitwindowWidget.appearance:setHeight(var_0_86 - var_130_2)
+	end
+
+	outfitwindowWidget:setSize(string.format("%d %d", outfitWindowDefaultWidth, outfitWindowDefaultHeight - var_130_2))
+	outfitwindowWidget:setMarginTop(var_130_2 > 0 and outfitWindowCompactMarginTop or outfitWindowDefaultMarginTop)
+end
+
+function refreshAuraTabVisibility()
+	if not outfitwindowWidget then
+		return
+	end
+
+	local var_131_0 = not podiumContext and not hirelingContext and ServerData.auras and not table.empty(ServerData.auras)
+
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings and outfitwindowWidget.appearance.settings.aura then
+		local aura = outfitwindowWidget.appearance.settings.aura
+
+		if var_131_0 then
+			aura:show()
+			aura:setHeight(20)
+		else
+			aura:hide()
+			aura:setHeight(0)
+		end
+	end
+
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.aura then
+		local aura = outfitwindowWidget.configure.aura
+
+		if var_131_0 then
+			aura:setVisible(true)
+			aura:setHeight(22)
+			aura:setPadding(5)
+
+			if aura.check and not aura.check.onCheckChange then
+				aura.check:setChecked((ServerData.currentAuraClientId or 0) > 0)
+
+				aura.check.onCheckChange = onConfigureAuraChange
+			end
+		else
+			aura:setVisible(false)
+			aura:setHeight(0)
+			aura:setPadding(0)
+		end
+	end
+
+	applyCustomizePanelHeights()
+end
+
+function onAuraList(arg_132_0, arg_132_1)
+	ServerData.auras = {}
+	ServerData.currentAuraClientId = tonumber(arg_132_0) or 0
+	ServerData.selectedAuraId = 0
+	ServerData.selectedAuraClientId = 0
+
+	if type(arg_132_1) == "table" then
+		for unusedValue, entry in pairs(arg_132_1) do
+			local numericValue = tonumber(entry.id) or 0
+			local var_132_1 = tonumber(entry.clientId) or 0
+			local var_132_2 = entry.name or ""
+
+			table.insert(ServerData.auras, {
+				numericValue,
+				var_132_2,
+				var_132_1
+			})
+
+			if var_132_1 > 0 and var_132_1 == ServerData.currentAuraClientId then
+				ServerData.selectedAuraId = numericValue
+				ServerData.selectedAuraClientId = var_132_1
+			end
+		end
+
+		table.sort(ServerData.auras, function(arg_133_0, arg_133_1)
+			return (arg_133_0[1] or 0) < (arg_133_1[1] or 0)
+		end)
+
+		if (ServerData.selectedAuraId or 0) == 0 and #ServerData.auras > 0 then
+			ServerData.selectedAuraId = ServerData.auras[1][1]
+			ServerData.selectedAuraClientId = ServerData.auras[1][3] or 0
+		end
+	end
+
+	if outfitwindowWidget and not podiumContext and not hirelingContext then
+		refreshAuraTabVisibility()
+		updatePreview()
+		updateAppearanceText("aura", getSelectedAuraName())
+
+		if getAppearanceCategoryName() == "aura" then
+			showAuras()
+		end
+	end
 end
 
 function onOpenHirelingOutfitWindow(player, outfitList, creatureId)
@@ -2586,102 +3056,94 @@ function onOpenHirelingOutfitWindow(player, outfitList, creatureId)
 	applyHirelingWindowMode()
 end
 
-local function hidePreviewOption(optionWidget)
-	if not optionWidget then
+local function var_0_185(arg_135_0)
+	if not arg_135_0 then
 		return
 	end
 
-	optionWidget:setVisible(false)
-	optionWidget:setHeight(0)
-	optionWidget:setPadding(0)
-end
-
-local function hideConfigureOption(optionWidget)
-	if not optionWidget then
-		return
-	end
-
-	optionWidget:setVisible(false)
-	optionWidget:setHeight(0)
-	optionWidget:setPadding(0)
+	arg_135_0:setVisible(false)
+	arg_135_0:setHeight(0)
+	arg_135_0:setPadding(0)
 end
 
 function applyHirelingWindowMode()
-	if not window or not hirelingContext then
+	if not outfitwindowWidget or not hirelingContext then
 		return
 	end
 
-	window:setText(tr("Customise Hireling"))
-	hidePreviewOption(window.preview.options.movement)
-	hidePreviewOption(window.preview.options.showOutfit)
-	hidePreviewOption(window.preview.options.showFamiliar)
+	outfitwindowWidget:setText(tr("Customise Hireling"))
+	var_0_185(outfitwindowWidget.preview.options.movement)
+	var_0_185(outfitwindowWidget.preview.options.showOutfit)
+	var_0_185(outfitwindowWidget.preview.options.showFamiliar)
 
 	settings.movement = false
 
 	if movementCheck then
-		local movementHandler = movementCheck.onCheckChange
+		local var_136_0 = movementCheck.onCheckChange
 
 		movementCheck.onCheckChange = nil
 
 		movementCheck:setChecked(false)
 
-		movementCheck.onCheckChange = movementHandler
+		movementCheck.onCheckChange = var_136_0
 	end
 
 	syncPreviewWalkingState()
 
-	if window.appearance and window.appearance.settings then
-		local settingsPanel = window.appearance.settings
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings then
+		local settings = outfitwindowWidget.appearance.settings
 
-		for _, key in ipairs({
+		for unusedValue, iter_136_1 in ipairs({
 			"mount",
+			"aura",
 			"familiar",
 			"preset"
 		}) do
-			local row = settingsPanel[key]
+			local var_136_2 = settings[iter_136_1]
 
-			if row then
-				row:hide()
-				row:setHeight(0)
+			if var_136_2 then
+				var_136_2:hide()
+				var_136_2:setHeight(0)
 			end
 		end
 
-		settingsPanel:setHeight(settingsPanel:getHeight() - hirelingAppearanceCompactionHeight)
+		settings:setHeight(settings:getHeight() - hirelingAppearanceCompactionHeight)
 	end
 
-	if window.configure then
-		hideConfigureOption(window.configure.addon1)
-		hideConfigureOption(window.configure.addon2)
-		hideConfigureOption(window.configure.mount)
+	if outfitwindowWidget.configure then
+		var_0_185(outfitwindowWidget.configure.addon1)
+		var_0_185(outfitwindowWidget.configure.addon2)
+		var_0_185(outfitwindowWidget.configure.mount)
+		var_0_185(outfitwindowWidget.configure.aura)
 	end
 
-	if window.presetButtons then
-		window.presetButtons:hide()
-		window.presetButtons:setHeight(0)
-		window.presetButtons:setPadding(0)
+	if outfitwindowWidget.presetButtons then
+		outfitwindowWidget.presetButtons:hide()
+		outfitwindowWidget.presetButtons:setHeight(0)
+		outfitwindowWidget.presetButtons:setPadding(0)
 	end
 
-	if window.selectionList and window.listSearch then
-		window.selectionList:breakAnchors()
-		window.selectionList:addAnchor(AnchorTop, "listSearch", AnchorBottom)
-		window.selectionList:addAnchor(AnchorLeft, "listSearch", AnchorLeft)
-		window.selectionList:addAnchor(AnchorRight, "parent", AnchorRight)
-		window.selectionList:addAnchor(AnchorBottom, "separator", AnchorTop)
-		window.selectionList:setMarginTop(6)
-		window.selectionList:setMarginBottom(6)
-		window.selectionList:setMarginLeft(0)
+	if outfitwindowWidget.selectionList and outfitwindowWidget.listSearch then
+		outfitwindowWidget.selectionList:breakAnchors()
+		outfitwindowWidget.selectionList:addAnchor(AnchorTop, "listSearch", AnchorBottom)
+		outfitwindowWidget.selectionList:addAnchor(AnchorLeft, "listSearch", AnchorLeft)
+		outfitwindowWidget.selectionList:addAnchor(AnchorRight, "parent", AnchorRight)
+		outfitwindowWidget.selectionList:addAnchor(AnchorBottom, "separator", AnchorTop)
+		outfitwindowWidget.selectionList:setMarginTop(6)
+		outfitwindowWidget.selectionList:setMarginBottom(6)
+		outfitwindowWidget.selectionList:setMarginLeft(0)
 	end
 
-	if window.configure then
-		window.configure:setHeight(window.configure:getHeight() - hirelingAppearanceCompactionHeight)
+	if outfitwindowWidget.configure then
+		outfitwindowWidget.configure:setHeight(outfitwindowWidget.configure:getHeight() - hirelingAppearanceCompactionHeight)
 	end
 
-	if window.appearance then
-		window.appearance:setHeight(window.appearance:getHeight() - hirelingAppearanceCompactionHeight)
+	if outfitwindowWidget.appearance then
+		outfitwindowWidget.appearance:setHeight(outfitwindowWidget.appearance:getHeight() - hirelingAppearanceCompactionHeight)
 	end
 
-	window:setSize(string.format("%d %d", outfitWindowDefaultWidth, hirelingWindowHeight))
-	window:setMarginTop(outfitWindowCompactMarginTop)
+	outfitwindowWidget:setSize(string.format("%d %d", outfitWindowDefaultWidth, hirelingWindowHeight))
+	outfitwindowWidget:setMarginTop(outfitWindowCompactMarginTop)
 	updatePreview()
 end
 
@@ -2697,31 +3159,31 @@ function onOpenPlayerPodiumWindow(player, outfitList, creatureMount, mountList, 
 	applyPodiumWindowMode()
 end
 
-local function showConfigureOption(optionWidget)
-	if not optionWidget then
+local function var_0_186(arg_138_0)
+	if not arg_138_0 then
 		return
 	end
 
-	optionWidget:setVisible(true)
-	optionWidget:setHeight(22)
-	optionWidget:setPadding(5)
+	arg_138_0:setVisible(true)
+	arg_138_0:setHeight(22)
+	arg_138_0:setPadding(5)
 end
 
 function applyPodiumWindowMode()
-	if not window or not podiumContext then
+	if not outfitwindowWidget or not podiumContext then
 		return
 	end
 
-	window:setText(tr("Customise Podium"))
-	hidePreviewOption(window.preview.options.movement)
-	hidePreviewOption(window.preview.options.showOutfit)
-	hidePreviewOption(window.preview.options.showFamiliar)
+	outfitwindowWidget:setText(tr("Customise Podium"))
+	var_0_185(outfitwindowWidget.preview.options.movement)
+	var_0_185(outfitwindowWidget.preview.options.showOutfit)
+	var_0_185(outfitwindowWidget.preview.options.showFamiliar)
 
-	if window.configure and window.configure.outfit and window.configure.outfit.check then
-		showConfigureOption(window.configure.outfit)
-		window.configure.addon1:setMarginTop(0)
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.outfit and outfitwindowWidget.configure.outfit.check then
+		var_0_186(outfitwindowWidget.configure.outfit)
+		outfitwindowWidget.configure.addon1:setMarginTop(0)
 
-		podiumOutfitCheck = window.configure.outfit.check
+		podiumOutfitCheck = outfitwindowWidget.configure.outfit.check
 		podiumOutfitCheck.onCheckChange = onPodiumOutfitChange
 		settings.showOutfit = podiumContext.showCreature ~= false
 
@@ -2730,10 +3192,10 @@ function applyPodiumWindowMode()
 		syncShowOutfitOptionState()
 	end
 
-	if window.configure and window.configure.podium and window.configure.podium.check then
-		showConfigureOption(window.configure.podium)
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.podium and outfitwindowWidget.configure.podium.check then
+		var_0_186(outfitwindowWidget.configure.podium)
 
-		podiumPlatformCheck = window.configure.podium.check
+		podiumPlatformCheck = outfitwindowWidget.configure.podium.check
 		podiumPlatformCheck.onCheckChange = onPodiumPlatformChange
 
 		podiumPlatformCheck:setChecked(podiumContext.showPlatform ~= false)
@@ -2743,9 +3205,9 @@ function applyPodiumWindowMode()
 		syncShowPodiumOptionState()
 	end
 
-	if g_game.getFeature(GamePlayerMounts) and window.configure.mount and window.configure.mount.check then
-		window.configure.mount.check:setEnabled((tempOutfit.mount or 0) > 0 or not table.empty(ServerData.mounts))
-		window.configure.mount.check:setChecked(podiumContext.showMount == true)
+	if g_game.getFeature(GamePlayerMounts) and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check then
+		outfitwindowWidget.configure.mount.check:setEnabled((tempOutfit.mount or 0) > 0 or not table.empty(ServerData.mounts))
+		outfitwindowWidget.configure.mount.check:setChecked(podiumContext.showMount == true)
 
 		if podiumContext.showMount and (tempOutfit.mount or 0) == 0 and not table.empty(ServerData.mounts) then
 			tempOutfit.mount = getPreferredInitialMountId(ServerData.mounts)
@@ -2757,7 +3219,7 @@ function applyPodiumWindowMode()
 	updatePreview()
 end
 
-function onPodiumPlatformChange(checkBox, checked)
+function onPodiumPlatformChange(unusedArgument, checked)
 	if not podiumContext or not podiumCreatureWouldDisplay() then
 		syncShowPodiumOptionState()
 
@@ -2797,8 +3259,6 @@ function onMovementChange(checkBox, checked)
 
 	movementEnabledForSession = enabled
 	settings.movement = enabled
-
-	traceMemoryScenario("movement-change", string.format("enabled=%s", tostring(enabled)))
 
 	if previewCreature and previewCreature:getCreature() then
 		updatePreview()
@@ -2842,7 +3302,7 @@ function onShowFloorChange(checkBox, checked)
 				resetFloorScrollOffsets()
 			end
 		end, function()
-			local keepRunning = window and floor and showFloorCheck and showFloorCheck:isChecked()
+			local keepRunning = outfitwindowWidget and floor and showFloorCheck and showFloorCheck:isChecked()
 
 			if not keepRunning then
 				floorEventRunning = false
@@ -2863,9 +3323,7 @@ function onShowFloorChange(checkBox, checked)
 end
 
 function onShowFamiliarChange(checkBox, checked)
-	local hasFamiliars = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
-
-	if not hasFamiliars then
+	if not (ServerData and ServerData.familiars and not table.empty(ServerData.familiars)) then
 		settings.showFamiliar = false
 
 		if checkBox and checkBox:isChecked() then
@@ -2882,10 +3340,27 @@ function onShowFamiliarChange(checkBox, checked)
 	updatePreview()
 end
 
+local function var_0_187(arg_147_0)
+	if not showFamiliarCheck or podiumContext then
+		return
+	end
+
+	if arg_147_0 then
+		showFamiliarCheck:setEnabled(settings.showOutfit)
+		showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
+	else
+		settings.showFamiliar = false
+
+		showFamiliarCheck:setChecked(false)
+		showFamiliarCheck:setEnabled(true)
+		showFamiliarCheck:setColor("#707070")
+	end
+end
+
 function syncShowOutfitOptionState()
 	local outfitCheck = podiumContext and podiumOutfitCheck or showOutfitCheck
 
-	if not window or not outfitCheck then
+	if not outfitwindowWidget or not outfitCheck then
 		return
 	end
 
@@ -2900,27 +3375,15 @@ function syncShowOutfitOptionState()
 		return
 	end
 
-	if not g_game.getFeature(GamePlayerMounts) or not window.configure.mount or not window.configure.mount.check then
+	if not g_game.getFeature(GamePlayerMounts) or not outfitwindowWidget.configure.mount or not outfitwindowWidget.configure.mount.check then
 		outfitCheck:setEnabled(true)
 		outfitCheck:setColor("#c0c0c0")
-
-		if showFamiliarCheck and not podiumContext then
-			if hasFamiliars then
-				showFamiliarCheck:setEnabled(settings.showOutfit)
-				showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
-			else
-				settings.showFamiliar = false
-
-				showFamiliarCheck:setChecked(false)
-				showFamiliarCheck:setEnabled(true)
-				showFamiliarCheck:setColor("#707070")
-			end
-		end
+		var_0_187(hasFamiliars)
 
 		return
 	end
 
-	local mountOn = window.configure.mount.check:isChecked()
+	local mountOn = outfitwindowWidget.configure.mount.check:isChecked()
 
 	if not mountOn then
 		settings.showOutfit = true
@@ -2940,19 +3403,7 @@ function syncShowOutfitOptionState()
 
 	outfitCheck:setEnabled(mountOn)
 	outfitCheck:setColor(mountOn and "#c0c0c0" or "#707070")
-
-	if showFamiliarCheck and not podiumContext then
-		if hasFamiliars then
-			showFamiliarCheck:setEnabled(settings.showOutfit)
-			showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
-		else
-			settings.showFamiliar = false
-
-			showFamiliarCheck:setChecked(false)
-			showFamiliarCheck:setEnabled(true)
-			showFamiliarCheck:setColor("#707070")
-		end
-	end
+	var_0_187(hasFamiliars)
 end
 
 function onShowOutfitChange(checkBox, checked)
@@ -2960,17 +3411,7 @@ function onShowOutfitChange(checkBox, checked)
 
 	local hasFamiliars = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
 
-	if hasFamiliars then
-		showFamiliarCheck:setEnabled(settings.showOutfit)
-		showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
-	else
-		settings.showFamiliar = false
-
-		showFamiliarCheck:setChecked(false)
-		showFamiliarCheck:setEnabled(true)
-		showFamiliarCheck:setColor("#707070")
-	end
-
+	var_0_187(hasFamiliars)
 	updatePreview()
 end
 
@@ -2987,6 +3428,10 @@ function onConfigureMountChange(checkBox, checked)
 		syncShowOutfitOptionState()
 	end
 
+	updatePreview()
+end
+
+function onConfigureAuraChange(unusedArgument, unusedArgument)
 	updatePreview()
 end
 
@@ -3011,53 +3456,52 @@ end
 function applyCyclopediaViewMode(pending)
 	cyclopediaViewMode = true
 
-	window:setText(tr(CYClOPEDIA_VIEW_TITLES[pending.tabType] or "View Outfits"))
+	outfitwindowWidget:setText(tr(CYClOPEDIA_VIEW_TITLES[pending.tabType] or "View Outfits"))
 
-	local acceptButton = window:recursiveGetChildById("acceptButton")
+	local acceptButton = outfitwindowWidget:recursiveGetChildById("acceptButton")
 
 	if acceptButton then
 		acceptButton:hide()
 	end
 
-	local presetSetting = window.appearance and window.appearance.settings and window.appearance.settings.preset
+	local presetSetting = outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings and outfitwindowWidget.appearance.settings.preset
 
 	if presetSetting then
 		presetSetting:hide()
 		presetSetting:setHeight(0)
 	end
 
-	if window.appearance and window.appearance.settings then
-		window.appearance.settings:setHeight(window.appearance.settings:getHeight() - missingPresetCompactionHeight)
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings then
+		outfitwindowWidget.appearance.settings:setHeight(outfitwindowWidget.appearance.settings:getHeight() - missingPresetCompactionHeight)
 	end
 
-	if window.appearance then
-		window.appearance:setHeight(window.appearance:getHeight() - missingPresetCompactionHeight)
+	if outfitwindowWidget.appearance then
+		outfitwindowWidget.appearance:setHeight(outfitwindowWidget.appearance:getHeight() - missingPresetCompactionHeight)
 	end
 
-	if window.configure then
-		window.configure:setHeight(window.configure:getHeight() - missingPresetCompactionHeight)
+	if outfitwindowWidget.configure then
+		outfitwindowWidget.configure:setHeight(outfitwindowWidget.configure:getHeight() - missingPresetCompactionHeight)
 	end
 
-	window:setSize(string.format("%d %d", window:getWidth(), window:getHeight() - missingPresetCompactionHeight))
+	outfitwindowWidget:setSize(string.format("%d %d", outfitwindowWidget:getWidth(), outfitwindowWidget:getHeight() - missingPresetCompactionHeight))
 
-	function window.onEnter()
+	function outfitwindowWidget.onEnter()
 		destroy()
 	end
 end
 
 function focusCyclopediaAppearanceSelection(pending)
-	local tabWidgets = {
-		outfits = window.appearance.settings.outfit.check,
-		mounts = window.appearance.settings.mount.check,
-		familiars = window.appearance.settings.familiar.check
-	}
-	local tabWidget = tabWidgets[pending.tabType]
+	local var_155_0 = ({
+		outfits = outfitwindowWidget.appearance.settings.outfit.check,
+		mounts = outfitwindowWidget.appearance.settings.mount.check,
+		familiars = outfitwindowWidget.appearance.settings.familiar.check
+	})[pending.tabType]
 
-	if appearanceGroup and tabWidget then
-		appearanceGroup:selectWidget(tabWidget)
+	if var_0_9 and var_155_0 then
+		var_0_9:selectWidget(var_155_0)
 	end
 
-	local list = window.selectionList
+	local list = outfitwindowWidget.selectionList
 	local grid = getSelectionListGrid()
 
 	if not list or not list:isVisible() then
@@ -3078,7 +3522,7 @@ function focusCyclopediaAppearanceSelection(pending)
 	elseif pending.tabType == "mounts" then
 		tempOutfit.mount = lookId
 
-		local mountConfigureCheck = window.configure and window.configure.mount and window.configure.mount.check
+		local mountConfigureCheck = outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check
 
 		if mountConfigureCheck then
 			mountConfigureCheck:setEnabled(true)
@@ -3092,8 +3536,8 @@ function focusCyclopediaAppearanceSelection(pending)
 		setSelectionListFocusHandler(nil)
 		focusedWidget:focus()
 		list:ensureChildVisible(focusedWidget, {
-			y = 196,
-			x = 0
+			x = 0,
+			y = 196
 		})
 
 		if pending.tabType == "mounts" then
@@ -3119,7 +3563,7 @@ function focusCyclopediaAppearanceSelection(pending)
 end
 
 function applyPendingCyclopediaFocus()
-	if not pendingCyclopediaFocus or not window then
+	if not pendingCyclopediaFocus or not outfitwindowWidget then
 		return
 	end
 
@@ -3129,15 +3573,15 @@ function applyPendingCyclopediaFocus()
 	activeCyclopediaPending = pending
 
 	local tabWidgets = {
-		outfits = window.appearance.settings.outfit.check,
-		mounts = window.appearance.settings.mount.check,
-		familiars = window.appearance.settings.familiar.check
+		outfits = outfitwindowWidget.appearance.settings.outfit.check,
+		mounts = outfitwindowWidget.appearance.settings.mount.check,
+		familiars = outfitwindowWidget.appearance.settings.familiar.check
 	}
 	local tabWidget = tabWidgets[pending.tabType] or tabWidgets.outfits
 
-	appearanceGroup:selectWidget(tabWidget)
+	var_0_9:selectWidget(tabWidget)
 	addEvent(function()
-		if not window then
+		if not outfitwindowWidget then
 			activeCyclopediaPending = nil
 
 			return
@@ -3192,7 +3636,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	local restoreCyclopedia = restoreCyclopediaOnClose
 	local currentOutfit = player:getOutfit()
 
-	if window then
+	if outfitwindowWidget then
 		destroy({
 			skipCyclopediaRestore = true
 		})
@@ -3207,13 +3651,17 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 		currentOutfit = currentOutfit,
 		outfits = outfitList,
 		mounts = mountList,
-		familiars = familiarList
+		familiars = familiarList,
+		auras = ServerData.auras or {},
+		currentAuraClientId = ServerData.currentAuraClientId or 0,
+		selectedAuraId = ServerData.selectedAuraId or 0,
+		selectedAuraClientId = ServerData.selectedAuraClientId or 0
 	}
-	window = g_ui.displayUI("outfitwindow")
+	outfitwindowWidget = g_ui.displayUI("outfitwindow")
 
-	g_modalManager.show(window)
+	g_modalManager.show(outfitwindowWidget)
 
-	floor = window.preview.panel.floor
+	floor = outfitwindowWidget.preview.panel.floor
 	floorRowWidgets = {}
 
 	for r = 1, floorTileRows do
@@ -3240,21 +3688,21 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 		updateAppearanceText(appKey, "None")
 	end
 
-	previewCreature = window.preview.panel:recursiveGetChildById("creature")
-	previewFamiliar = window.preview.panel:recursiveGetChildById("UIfamiliar")
-	previewRow = window.preview.panel:recursiveGetChildById("previewRow")
+	previewCreature = outfitwindowWidget.preview.panel:recursiveGetChildById("creature")
+	previewFamiliar = outfitwindowWidget.preview.panel:recursiveGetChildById("UIfamiliar")
+	previewRow = outfitwindowWidget.preview.panel:recursiveGetChildById("previewRow")
 
 	setupPodiumPreviewWidget()
 
 	previewPodiumItem = nil
-	movementCheck = window.preview.options.movement.check
-	showFloorCheck = window.preview.options.showFloor.check
-	showOutfitCheck = window.preview.options.showOutfit.check
-	showFamiliarCheck = window.preview.options.showFamiliar.check
+	movementCheck = outfitwindowWidget.preview.options.movement.check
+	showFloorCheck = outfitwindowWidget.preview.options.showFloor.check
+	showOutfitCheck = outfitwindowWidget.preview.options.showOutfit.check
+	showFamiliarCheck = outfitwindowWidget.preview.options.showFamiliar.check
 
 	if settings.currentPreset == nil then
 		loadDefaultSettings()
-		print("game_outfit error funtion loadSettings()")
+		g_logger.error("[game_outfit] loadSettings() failed, using default settings")
 	end
 
 	settings.currentPreset = 0
@@ -3265,48 +3713,33 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 		mergeCyclopediaPendingIntoTempOutfit(cyclopediaPending, tempOutfit)
 	end
 
-	initColorCachesFromOutfit(tempOutfit)
+	initColorCachesFromOutfit()
+	var_0_144(tempOutfit)
 	applyGlobalColorCachesFromSettings()
 	applyOutfitColorsToTemp()
 
 	if g_game.getFeature(GamePlayerMounts) then
-		local cyclopediaMountPreview = cyclopediaPending and cyclopediaPending.tabType == "mounts"
-
-		if cyclopediaMountPreview then
-			window.configure.mount.check:setEnabled(true)
-			window.configure.mount.check:setChecked(true)
+		if cyclopediaPending and cyclopediaPending.tabType == "mounts" then
+			outfitwindowWidget.configure.mount.check:setEnabled(true)
+			outfitwindowWidget.configure.mount.check:setChecked(true)
 		else
 			local isMount = g_game.getLocalPlayer():isMounted()
 
 			if isMount then
-				window.configure.mount.check:setEnabled(true)
-				window.configure.mount.check:setChecked(true)
+				outfitwindowWidget.configure.mount.check:setEnabled(true)
+				outfitwindowWidget.configure.mount.check:setChecked(true)
 			else
-				window.configure.mount.check:setEnabled(currentOutfit.mount > 0)
-				window.configure.mount.check:setChecked(isMount and currentOutfit.mount > 0)
+				outfitwindowWidget.configure.mount.check:setEnabled(currentOutfit.mount > 0)
+				outfitwindowWidget.configure.mount.check:setChecked(isMount and currentOutfit.mount > 0)
 			end
 		end
 
-		window.configure.mount.check.onCheckChange = onConfigureMountChange
+		outfitwindowWidget.configure.mount.check.onCheckChange = onConfigureMountChange
 	end
-
-	if tempOutfit.addons == 3 then
-		window.configure.addon1.check:setChecked(true)
-		window.configure.addon2.check:setChecked(true)
-	elseif tempOutfit.addons == 2 then
-		window.configure.addon1.check:setChecked(false)
-		window.configure.addon2.check:setChecked(true)
-	elseif tempOutfit.addons == 1 then
-		window.configure.addon1.check:setChecked(true)
-		window.configure.addon2.check:setChecked(false)
-	end
-
-	window.configure.addon1.check.onCheckChange = onAddonChange
-	window.configure.addon2.check.onCheckChange = onAddonChange
 
 	configureAddons(tempOutfit.addons)
 
-	for _, option in ipairs(window.preview.options:getChildren()) do
+	for _, option in ipairs(outfitwindowWidget.preview.options:getChildren()) do
 		local handler = PreviewOptions[option:getId()]
 
 		if handler then
@@ -3339,7 +3772,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 
 	for j = 0, 6 do
 		for i = 0, 18 do
-			local colorBox = g_ui.createWidget("OutfitColorBox", window.appearance.colorSection.colorBoxBackground.colorBoxPanel)
+			local colorBox = g_ui.createWidget("OutfitColorBox", outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel)
 			local outfitColor = getOutfitColor(j * 19 + i)
 
 			colorBox.color:setImageColor(outfitColor)
@@ -3348,8 +3781,6 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 			colorBox.colorId = j * 19 + i
 
 			if colorBox.colorId == outfitColorCache.head then
-				currentColorBox = colorBox
-
 				colorBox:setChecked(true)
 			end
 
@@ -3358,92 +3789,72 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	end
 
 	colorBoxGroup.onSelectionChange = onColorCheckChange
-	appearanceGroup = UIRadioGroup.create()
+	var_0_9 = UIRadioGroup.create()
 
-	appearanceGroup:addWidget(window.appearance.settings.outfit.check)
-	appearanceGroup:addWidget(window.appearance.settings.mount.check)
-	appearanceGroup:addWidget(window.appearance.settings.familiar.check)
-	appearanceGroup:addWidget(window.appearance.settings.preset.check)
+	var_0_9:addWidget(outfitwindowWidget.appearance.settings.outfit.check)
+	var_0_9:addWidget(outfitwindowWidget.appearance.settings.mount.check)
 
-	appearanceGroup.onSelectionChange = onAppearanceChange
+	if outfitwindowWidget.appearance.settings.aura then
+		var_0_9:addWidget(outfitwindowWidget.appearance.settings.aura.check)
+	end
+
+	var_0_9:addWidget(outfitwindowWidget.appearance.settings.familiar.check)
+	var_0_9:addWidget(outfitwindowWidget.appearance.settings.preset.check)
+
+	var_0_9.onSelectionChange = onAppearanceChange
+
+	refreshAuraTabVisibility()
+
+	outfitwindowWidget.listSearch.search.onKeyPress = onFilterSearch
+	outfitwindowWidget.listSearch.onlyMine.onCheckChange = onFilterOnlyMine
+
+	handleCheckChange.bindRangeChecks()
 
 	if not cyclopediaPending then
-		appearanceGroup:selectWidget(window.appearance.settings.outfit.check)
+		var_0_9:selectWidget(outfitwindowWidget.appearance.settings.outfit.check)
 	end
 
 	colorModeGroup = UIRadioGroup.create()
 
-	colorModeGroup:addWidget(window.appearance.colorSection.colorMode.head)
-	colorModeGroup:addWidget(window.appearance.colorSection.colorMode.primary)
-	colorModeGroup:addWidget(window.appearance.colorSection.colorMode.secondary)
-	colorModeGroup:addWidget(window.appearance.colorSection.colorMode.detail)
+	colorModeGroup:addWidget(outfitwindowWidget.appearance.colorSection.colorMode.head)
+	colorModeGroup:addWidget(outfitwindowWidget.appearance.colorSection.colorMode.primary)
+	colorModeGroup:addWidget(outfitwindowWidget.appearance.colorSection.colorMode.secondary)
+	colorModeGroup:addWidget(outfitwindowWidget.appearance.colorSection.colorMode.detail)
 
 	colorModeGroup.onSelectionChange = onColorModeChange
 
-	colorModeGroup:selectWidget(window.appearance.colorSection.colorMode.head)
+	colorModeGroup:selectWidget(outfitwindowWidget.appearance.colorSection.colorMode.head)
 
-	if window.appearance and window.appearance.colorCopyButtons and window.appearance.colorCopyButtons.copyAll then
-		window.appearance.colorCopyButtons.copyAll.onClick = onCopyAllClick
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.colorCopyButtons and outfitwindowWidget.appearance.colorCopyButtons.copyAll then
+		outfitwindowWidget.appearance.colorCopyButtons.copyAll.onClick = onCopyAllClick
 	end
 
-	if window.appearance and window.appearance.colorCopyButtons and window.appearance.colorCopyButtons.copyColours then
-		window.appearance.colorCopyButtons.copyColours.onClick = onCopyColoursClick
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.colorCopyButtons and outfitwindowWidget.appearance.colorCopyButtons.copyColours then
+		outfitwindowWidget.appearance.colorCopyButtons.copyColours.onClick = onCopyColoursClick
 	end
 
-	if window.appearance and window.appearance.colorCopyButtons and window.appearance.colorCopyButtons.pasteColours then
-		window.appearance.colorCopyButtons.pasteColours.onClick = onPasteColoursClick
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.colorCopyButtons and outfitwindowWidget.appearance.colorCopyButtons.pasteColours then
+		outfitwindowWidget.appearance.colorCopyButtons.pasteColours.onClick = onPasteColoursClick
 	end
 
-	window.configure.mount:setVisible(g_game.getFeature(GamePlayerMounts))
-	window.appearance.settings.mount:setVisible(g_game.getFeature(GamePlayerMounts))
-	window.preview.options.showFamiliar:setVisible(g_game.getFeature(GamePlayerFamiliars))
-	window.appearance.settings.familiar:setVisible(g_game.getFeature(GamePlayerFamiliars))
+	outfitwindowWidget.configure.mount:setVisible(g_game.getFeature(GamePlayerMounts))
+	outfitwindowWidget.appearance.settings.mount:setVisible(g_game.getFeature(GamePlayerMounts))
+	outfitwindowWidget.preview.options.showFamiliar:setVisible(g_game.getFeature(GamePlayerFamiliars))
+	outfitwindowWidget.appearance.settings.familiar:setVisible(g_game.getFeature(GamePlayerFamiliars))
+	var_0_187(hasFamiliars)
 
-	if showFamiliarCheck then
-		if hasFamiliars then
-			showFamiliarCheck:setEnabled(settings.showOutfit)
-			showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
-		else
-			settings.showFamiliar = false
-
-			showFamiliarCheck:setChecked(false)
-			showFamiliarCheck:setEnabled(true)
-			showFamiliarCheck:setColor("#707070")
-		end
+	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings and outfitwindowWidget.appearance.settings.familiar then
+		outfitwindowWidget.appearance.settings.familiar:setVisible(hasFamiliars)
 	end
 
-	if window.appearance and window.appearance.settings and window.appearance.settings.familiar then
-		local familiarSetting = window.appearance.settings.familiar
-
-		familiarSetting:setVisible(hasFamiliars)
-	end
-
-	if window and window.appearance and window.appearance.settings then
-		window.appearance.settings:setHeight(hasFamiliars and appearanceSettingsDefaultHeight or appearanceSettingsDefaultHeight - missingFamiliarCompactionHeight)
-	end
-
-	if window and window.configure then
-		window.configure:setHeight(hasFamiliars and configurePanelDefaultHeight or configurePanelDefaultHeight - missingFamiliarCompactionHeight)
-	end
-
-	if window and window.appearance then
-		window.appearance:setHeight(hasFamiliars and appearancePanelDefaultHeight or appearancePanelDefaultHeight - missingFamiliarCompactionHeight)
-	end
-
-	if window then
-		window:setSize(string.format("%d %d", outfitWindowDefaultWidth, hasFamiliars and outfitWindowDefaultHeight or outfitWindowDefaultHeight - missingFamiliarCompactionHeight))
-		window:setMarginTop(hasFamiliars and outfitWindowDefaultMarginTop or outfitWindowCompactMarginTop)
-	end
+	applyCustomizePanelHeights()
 
 	if previewCreature and previewCreature:getCreature() then
 		previewCreature:getCreature():setDirection(2)
 	end
 
-	window.listSearch.search.onKeyPress = onFilterSearch
-	window.listSearch.onlyMine.onCheckChange = onFilterOnlyMine
-
-	if window.selectionScroll then
-		function window.selectionScroll.onValueChange(scrollbar, value)
+	if outfitwindowWidget.selectionScroll then
+		function outfitwindowWidget.selectionScroll.onValueChange(scrollbar, value)
 			scheduleSelectionListHydration("scroll")
 		end
 	end
@@ -3451,20 +3862,20 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	updateColorControlsState()
 	startClipboardChangeWatcher()
 
-	if window.configure and window.configure.outfit then
-		window.configure.outfit:setVisible(false)
-		window.configure.outfit:setHeight(0)
-		window.configure.outfit:setPadding(0)
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.outfit then
+		outfitwindowWidget.configure.outfit:setVisible(false)
+		outfitwindowWidget.configure.outfit:setHeight(0)
+		outfitwindowWidget.configure.outfit:setPadding(0)
 	end
 
-	if window.configure and window.configure.addon1 then
-		window.configure.addon1:setMarginTop(-3)
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.addon1 then
+		outfitwindowWidget.configure.addon1:setMarginTop(-3)
 	end
 
-	if window.configure and window.configure.podium then
-		window.configure.podium:setVisible(false)
-		window.configure.podium:setHeight(0)
-		window.configure.podium:setPadding(0)
+	if outfitwindowWidget.configure and outfitwindowWidget.configure.podium then
+		outfitwindowWidget.configure.podium:setVisible(false)
+		outfitwindowWidget.configure.podium:setHeight(0)
+		outfitwindowWidget.configure.podium:setPadding(0)
 	end
 
 	podiumOutfitCheck = nil
@@ -3478,12 +3889,11 @@ end
 function destroy(options)
 	options = options or {}
 
-	clearSelectionWarmupEvent()
 	clearSelectionHydrationEvent()
-	clearPreviewMovementReadyEvent()
+	clearPreviewAnimationReadyEvent()
 	selectionTextureCache.releaseHydration()
 
-	if not window then
+	if not outfitwindowWidget then
 		podiumContext = nil
 		hirelingContext = nil
 
@@ -3496,15 +3906,14 @@ function destroy(options)
 		restoreCyclopediaOnClose = false
 	end
 
-	local win = window
+	local var_161_1 = outfitwindowWidget
 
-	window = nil
+	outfitwindowWidget = nil
 
-	traceMemoryScenario("outfit-window-close", string.format("selections=%d movement=%s", memoryScenarioSelectionSequence, tostring(settings and settings.movement == true)))
-	win:hide()
+	var_161_1:hide()
 
 	if g_modalManager then
-		g_modalManager.hide(win)
+		g_modalManager.hide(var_161_1)
 
 		if g_modalManager.pruneOrphanBlockers then
 			g_modalManager.pruneOrphanBlockers()
@@ -3521,6 +3930,7 @@ function destroy(options)
 	activeCyclopediaPending = nil
 	cyclopediaViewMode = false
 	pendingRenamePresetId = nil
+	handleCheckChange.index = 1
 	floor = nil
 	floorRowWidgets = {}
 	movementCheck = nil
@@ -3529,8 +3939,6 @@ function destroy(options)
 	showFamiliarCheck = nil
 	podiumOutfitCheck = nil
 	podiumPlatformCheck = nil
-	colorBoxes = {}
-	currentColorBox = nil
 
 	if previewCreature then
 		previewCreature:destroy()
@@ -3549,10 +3957,10 @@ function destroy(options)
 	previewPodiumItem = nil
 	podiumPreviewInitialized = false
 
-	if appearanceGroup then
-		appearanceGroup:destroy()
+	if var_0_9 then
+		var_0_9:destroy()
 
-		appearanceGroup = nil
+		var_0_9 = nil
 	end
 
 	if colorModeGroup then
@@ -3568,10 +3976,14 @@ function destroy(options)
 	end
 
 	ServerData = {
+		selectedAuraClientId = 0,
+		currentAuraClientId = 0,
+		selectedAuraId = 0,
 		currentOutfit = {},
 		outfits = {},
 		mounts = {},
-		familiars = {}
+		familiars = {},
+		auras = {}
 	}
 
 	if didAcceptCustomize and settings and type(settings) == "table" then
@@ -3596,7 +4008,7 @@ function destroy(options)
 
 	settings = {}
 
-	destroyOutfitWindowIncrementally(win)
+	destroyOutfitWindowIncrementally(var_161_1)
 
 	podiumContext = nil
 	hirelingContext = nil
@@ -3623,24 +4035,24 @@ local function getCurrentOutfitAvailableAddons()
 end
 
 function syncPodiumAddonCheckState()
-	if not podiumContext or not window or not window.configure then
+	if not podiumContext or not outfitwindowWidget or not outfitwindowWidget.configure then
 		return
 	end
 
 	if not settings.showOutfit then
 		tempOutfit.addons = 0
-		window.configure.addon1.check.onCheckChange = nil
-		window.configure.addon2.check.onCheckChange = nil
+		outfitwindowWidget.configure.addon1.check.onCheckChange = nil
+		outfitwindowWidget.configure.addon2.check.onCheckChange = nil
 
-		window.configure.addon1.check:setChecked(false)
-		window.configure.addon2.check:setChecked(false)
-		window.configure.addon1.check:setEnabled(false)
-		window.configure.addon2.check:setEnabled(false)
-		window.configure.addon1.check:setColor("#707070")
-		window.configure.addon2.check:setColor("#707070")
+		outfitwindowWidget.configure.addon1.check:setChecked(false)
+		outfitwindowWidget.configure.addon2.check:setChecked(false)
+		outfitwindowWidget.configure.addon1.check:setEnabled(false)
+		outfitwindowWidget.configure.addon2.check:setEnabled(false)
+		outfitwindowWidget.configure.addon1.check:setColor("#707070")
+		outfitwindowWidget.configure.addon2.check:setColor("#707070")
 
-		window.configure.addon1.check.onCheckChange = onAddonChange
-		window.configure.addon2.check.onCheckChange = onAddonChange
+		outfitwindowWidget.configure.addon1.check.onCheckChange = onAddonChange
+		outfitwindowWidget.configure.addon2.check.onCheckChange = onAddonChange
 
 		return
 	end
@@ -3652,33 +4064,31 @@ function configureAddons(addons)
 	local hasAddon1 = addons == 1 or addons == 3
 	local hasAddon2 = addons == 2 or addons == 3
 
-	window.configure.addon1.check:setEnabled(hasAddon1)
-	window.configure.addon2.check:setEnabled(hasAddon2)
+	outfitwindowWidget.configure.addon1.check:setEnabled(hasAddon1)
+	outfitwindowWidget.configure.addon2.check:setEnabled(hasAddon2)
 
-	window.configure.addon1.check.onCheckChange = nil
-	window.configure.addon2.check.onCheckChange = nil
+	outfitwindowWidget.configure.addon1.check.onCheckChange = nil
+	outfitwindowWidget.configure.addon2.check.onCheckChange = nil
 
-	window.configure.addon1.check:setChecked(false)
-	window.configure.addon2.check:setChecked(false)
+	outfitwindowWidget.configure.addon1.check:setChecked(false)
+	outfitwindowWidget.configure.addon2.check:setChecked(false)
 
 	if tempOutfit.addons == 3 then
-		window.configure.addon1.check:setChecked(true)
-		window.configure.addon2.check:setChecked(true)
+		outfitwindowWidget.configure.addon1.check:setChecked(true)
+		outfitwindowWidget.configure.addon2.check:setChecked(true)
 	elseif tempOutfit.addons == 2 then
-		window.configure.addon1.check:setChecked(false)
-		window.configure.addon2.check:setChecked(true)
+		outfitwindowWidget.configure.addon1.check:setChecked(false)
+		outfitwindowWidget.configure.addon2.check:setChecked(true)
 	elseif tempOutfit.addons == 1 then
-		window.configure.addon1.check:setChecked(true)
-		window.configure.addon2.check:setChecked(false)
+		outfitwindowWidget.configure.addon1.check:setChecked(true)
+		outfitwindowWidget.configure.addon2.check:setChecked(false)
 	end
 
-	window.configure.addon1.check.onCheckChange = onAddonChange
-	window.configure.addon2.check.onCheckChange = onAddonChange
+	outfitwindowWidget.configure.addon1.check.onCheckChange = onAddonChange
+	outfitwindowWidget.configure.addon2.check.onCheckChange = onAddonChange
 
-	if podiumContext then
-		window.configure.addon1.check:setColor(hasAddon1 and "#c0c0c0" or "#707070")
-		window.configure.addon2.check:setColor(hasAddon2 and "#c0c0c0" or "#707070")
-	end
+	outfitwindowWidget.configure.addon1.check:setColor(hasAddon1 and PODIUM_OPTION_ENABLED_COLOR or PODIUM_OPTION_DISABLED_COLOR)
+	outfitwindowWidget.configure.addon2.check:setColor(hasAddon2 and PODIUM_OPTION_ENABLED_COLOR or PODIUM_OPTION_DISABLED_COLOR)
 end
 
 local function getPresetButtonCreature(widget)
@@ -3691,6 +4101,28 @@ local function getPresetButtonFamiliar(widget)
 	local row = widget.presetIconRow
 
 	return row and row.presetFamiliar
+end
+
+function onGraphicsModeChange(arg_168_0)
+	arg_168_0 = math.max(0, math.min(3, tonumber(arg_168_0) or 0))
+
+	applyCreatureGraphicsMode(previewCreature, arg_168_0)
+	applyCreatureGraphicsMode(previewFamiliar, arg_168_0)
+
+	local var_168_0 = getSelectionListGrid()
+
+	if var_168_0 then
+		for unusedValue, child in ipairs(var_168_0:getChildren()) do
+			applyCreatureGraphicsMode(child.outfit, arg_168_0)
+		end
+	end
+
+	if outfitwindowWidget and outfitwindowWidget.presetsList then
+		for unusedValue, child in ipairs(outfitwindowWidget.presetsList:getChildren()) do
+			applyCreatureGraphicsMode(getPresetButtonCreature(child), arg_168_0)
+			applyCreatureGraphicsMode(getPresetButtonFamiliar(child), arg_168_0)
+		end
+	end
 end
 
 local function layoutPresetIconRowOutfitSingleOrDual(presetWidget, dualMode)
@@ -3758,7 +4190,10 @@ local function applyPresetListFamiliarThumb(widget, preset)
 	end
 
 	local fc = preset.familiarColorCache
-	local h, b, l, f = 0, 0, 0, 0
+	local h = 0
+	local b = 0
+	local l = 0
+	local f = 0
 
 	if fc and type(fc) == "table" then
 		h = fc.head or 0
@@ -3786,11 +4221,11 @@ local function applyPresetListFamiliarThumb(widget, preset)
 end
 
 local function updatePresetManageActionButtonsEnabled()
-	if not window or not window.presetButtons then
+	if not outfitwindowWidget or not outfitwindowWidget.presetButtons then
 		return
 	end
 
-	local pb = window.presetButtons
+	local pb = outfitwindowWidget.presetButtons
 	local renameBtn = pb.presetRename
 	local saveBtn = pb.presetSave
 	local deleteBtn = pb.presetDelete
@@ -3799,7 +4234,7 @@ local function updatePresetManageActionButtonsEnabled()
 		return
 	end
 
-	local list = window.presetsList
+	local list = outfitwindowWidget.presetsList
 	local hasSelection = list and list:isVisible() and list:getFocusedChild() ~= nil
 
 	renameBtn:setEnabled(hasSelection)
@@ -3812,7 +4247,7 @@ function newPreset()
 		settings.presets = {}
 	end
 
-	local presetWidget = g_ui.createWidget("PresetButton", window.presetsList)
+	local presetWidget = g_ui.createWidget("PresetButton", outfitwindowWidget.presetsList)
 	local presetId = #settings.presets + 1
 
 	presetWidget:setId(presetId)
@@ -3829,13 +4264,13 @@ function newPreset()
 		familiar = 0,
 		title = "Preset",
 		outfit = outfitCopy,
-		mounted = window.configure.mount.check:isChecked()
+		mounted = outfitwindowWidget.configure.mount.check:isChecked()
 	}
 
 	applyPresetListFamiliarThumb(presetWidget, settings.presets[presetId])
-	window.presetsList:ensureChildVisible(presetWidget, {
-		y = 0,
-		x = 0
+	outfitwindowWidget.presetsList:ensureChildVisible(presetWidget, {
+		x = 0,
+		y = 0
 	})
 	updatePresetManageActionButtonsEnabled()
 end
@@ -3844,7 +4279,7 @@ function deletePreset()
 	local presetId = settings.currentPreset
 
 	if presetId == 0 then
-		local focused = window.presetsList:getFocusedChild()
+		local focused = outfitwindowWidget.presetsList:getFocusedChild()
 
 		if focused then
 			presetId = tonumber(focused:getId())
@@ -3856,13 +4291,13 @@ function deletePreset()
 	end
 
 	table.remove(settings.presets, presetId)
-	window.presetsList[presetId]:destroy()
+	outfitwindowWidget.presetsList[presetId]:destroy()
 
 	settings.currentPreset = 0
 
 	local newId = 1
 
-	for _, child in ipairs(window.presetsList:getChildren()) do
+	for _, child in ipairs(outfitwindowWidget.presetsList:getChildren()) do
 		child:setId(newId)
 
 		newId = newId + 1
@@ -3876,7 +4311,7 @@ function savePreset()
 	local presetId = settings.currentPreset
 
 	if presetId == 0 then
-		local focused = window.presetsList:getFocusedChild()
+		local focused = outfitwindowWidget.presetsList:getFocusedChild()
 
 		if focused then
 			presetId = tonumber(focused:getId())
@@ -3887,7 +4322,7 @@ function savePreset()
 		return
 	end
 
-	local listCreature = getPresetButtonCreature(window.presetsList[presetId])
+	local listCreature = getPresetButtonCreature(outfitwindowWidget.presetsList[presetId])
 
 	applyOutfitColorsToTemp()
 	applyMountColorsToOutfitTable(tempOutfit)
@@ -3898,7 +4333,7 @@ function savePreset()
 	makeThumbnailStatic(listCreature)
 
 	settings.presets[presetId].outfit = outfitCopy
-	settings.presets[presetId].mounted = window.configure.mount.check:isChecked()
+	settings.presets[presetId].mounted = outfitwindowWidget.configure.mount.check:isChecked()
 
 	if g_game.getFeature(GamePlayerFamiliars) then
 		local fid = tempOutfit.familiar or 0
@@ -3921,17 +4356,17 @@ function savePreset()
 
 	settings.currentPreset = presetId
 
-	applyPresetListFamiliarThumb(window.presetsList[presetId], settings.presets[presetId])
+	applyPresetListFamiliarThumb(outfitwindowWidget.presetsList[presetId], settings.presets[presetId])
 end
 
 function cancelRenamePresetModal()
 	pendingRenamePresetId = nil
 
-	if not window or not window.renamePresetModal then
+	if not outfitwindowWidget or not outfitwindowWidget.renamePresetModal then
 		return
 	end
 
-	local modal = window.renamePresetModal
+	local modal = outfitwindowWidget.renamePresetModal
 
 	if modal.renamePresetInput then
 		modal.renamePresetInput:setText("")
@@ -3941,14 +4376,14 @@ function cancelRenamePresetModal()
 end
 
 function confirmRenamePresetModal()
-	if not window or not window.renamePresetModal or not pendingRenamePresetId then
+	if not outfitwindowWidget or not outfitwindowWidget.renamePresetModal or not pendingRenamePresetId then
 		cancelRenamePresetModal()
 
 		return
 	end
 
 	local presetId = pendingRenamePresetId
-	local modal = window.renamePresetModal
+	local modal = outfitwindowWidget.renamePresetModal
 	local newTitle = modal.renamePresetInput:getText():trim()
 
 	modal.renamePresetInput:setText("")
@@ -3956,7 +4391,7 @@ function confirmRenamePresetModal()
 
 	pendingRenamePresetId = nil
 
-	local presetWidget = window.presetsList[presetId]
+	local presetWidget = outfitwindowWidget.presetsList[presetId]
 
 	if not presetWidget then
 		return
@@ -3972,14 +4407,14 @@ function confirmRenamePresetModal()
 end
 
 function renamePreset()
-	if not window then
+	if not outfitwindowWidget then
 		return
 	end
 
 	local presetId = settings.currentPreset
 
 	if presetId == 0 then
-		local focused = window.presetsList:getFocusedChild()
+		local focused = outfitwindowWidget.presetsList:getFocusedChild()
 
 		if focused then
 			presetId = tonumber(focused:getId())
@@ -3990,7 +4425,7 @@ function renamePreset()
 		return
 	end
 
-	if not window.renamePresetModal then
+	if not outfitwindowWidget.renamePresetModal then
 		return
 	end
 
@@ -3999,7 +4434,7 @@ function renamePreset()
 
 	pendingRenamePresetId = presetId
 
-	local modal = window.renamePresetModal
+	local modal = outfitwindowWidget.renamePresetModal
 
 	modal.renamePresetInput:setText(initial)
 	modal:show()
@@ -4018,22 +4453,44 @@ function onAppearanceChange(widget, selectedWidget)
 		showMounts()
 	elseif id == "familiar" then
 		showFamiliars()
+	elseif id == "aura" then
+		showAuras()
 	end
 
 	updateColorControlsState()
 	refreshColorBoxForCurrentContext()
 end
 
+local function var_0_195()
+	outfitwindowWidget.presetsList:hide()
+	outfitwindowWidget.presetsScroll:hide()
+	outfitwindowWidget.presetButtons:hide()
+
+	local var_179_0 = getSelectionListGrid()
+
+	if not var_179_0 then
+		return nil
+	end
+
+	setSelectionListFocusHandler(nil)
+	clearSelectionHydrationEvent()
+	selectionTextureCache.releaseHydration()
+	var_179_0:destroyChildren()
+	var_0_74()
+
+	return var_179_0
+end
+
 function showPresets()
 	clearSelectionHydrationEvent()
 	selectionTextureCache.releaseHydration()
-	window.listSearch:hide()
-	window.selectionList:hide()
-	window.selectionScroll:hide()
+	outfitwindowWidget.listSearch:hide()
+	outfitwindowWidget.selectionList:hide()
+	outfitwindowWidget.selectionScroll:hide()
 
-	if window.presetsList:getChildCount() == 0 and settings.presets then
+	if outfitwindowWidget.presetsList:getChildCount() == 0 and settings.presets then
 		for presetId, preset in ipairs(settings.presets) do
-			local presetWidget = g_ui.createWidget("PresetButton", window.presetsList)
+			local presetWidget = g_ui.createWidget("PresetButton", outfitwindowWidget.presetsList)
 
 			presetWidget:setId(presetId)
 			presetWidget.title:setText(preset.title)
@@ -4046,42 +4503,42 @@ function showPresets()
 		end
 	end
 
-	window.presetsList.onChildFocusChange = nil
+	outfitwindowWidget.presetsList.onChildFocusChange = nil
 
 	local pid = settings.currentPreset
 	local toFocus
 
 	if pid and pid > 0 then
-		toFocus = window.presetsList[pid]
+		toFocus = outfitwindowWidget.presetsList[pid]
 	end
 
 	if toFocus and not toFocus:isDestroyed() then
 		toFocus:focus()
 	else
-		window.presetsList:focusChild(nil)
+		outfitwindowWidget.presetsList:focusChild(nil)
 	end
 
-	window.presetsList.onChildFocusChange = onPresetSelect
+	outfitwindowWidget.presetsList.onChildFocusChange = onPresetSelect
 
-	window.presetsList:show()
-	window.presetsScroll:show()
-	window.presetButtons:show()
+	outfitwindowWidget.presetsList:show()
+	outfitwindowWidget.presetsScroll:show()
+	outfitwindowWidget.presetButtons:show()
 	updatePresetManageActionButtonsEnabled()
 	addEvent(function()
-		if not window or not window.presetsList or not window.presetsScroll then
+		if not outfitwindowWidget or not outfitwindowWidget.presetsList or not outfitwindowWidget.presetsScroll then
 			return
 		end
 
-		if window.presetsList:isVisible() and window.presetsScroll:isVisible() then
-			local min = window.presetsScroll:getMinimum()
+		if outfitwindowWidget.presetsList:isVisible() and outfitwindowWidget.presetsScroll:isVisible() then
+			local min = outfitwindowWidget.presetsScroll:getMinimum()
 
-			if window.presetsScroll:getValue() == min then
-				local vo = window.presetsList:getVirtualOffset()
+			if outfitwindowWidget.presetsScroll:getValue() == min then
+				local vo = outfitwindowWidget.presetsList:getVirtualOffset()
 
 				if vo and vo.y ~= 0 then
 					vo.y = 0
 
-					window.presetsList:setVirtualOffset(vo)
+					outfitwindowWidget.presetsList:setVirtualOffset(vo)
 				end
 			end
 		end
@@ -4089,22 +4546,11 @@ function showPresets()
 end
 
 function showOutfits()
-	window.presetsList:hide()
-	window.presetsScroll:hide()
-	window.presetButtons:hide()
+	local var_182_0 = var_0_195()
 
-	local listGrid = getSelectionListGrid()
-
-	if not listGrid then
+	if not var_182_0 then
 		return
 	end
-
-	setSelectionListFocusHandler(nil)
-	clearSelectionWarmupEvent()
-	clearSelectionHydrationEvent()
-	selectionTextureCache.releaseHydration()
-	listGrid:destroyChildren()
-	beginSelectionListBuild()
 
 	local focused
 	local sortedOutfits = {}
@@ -4113,34 +4559,9 @@ function showOutfits()
 		table.insert(sortedOutfits, outfitData)
 	end
 
-	table.sort(sortedOutfits, function(a, b)
-		local stateA = a[4]
-
-		if stateA == nil then
-			stateA = statesOutft.available
-		end
-
-		local stateB = b[4]
-
-		if stateB == nil then
-			stateB = statesOutft.available
-		end
-
-		local availableA = stateA == statesOutft.available
-		local availableB = stateB == statesOutft.available
-
-		if availableA ~= availableB then
-			return availableA
-		end
-
-		if a[1] ~= b[1] then
-			return a[1] < b[1]
-		end
-
-		return tostring(a[2] or "") < tostring(b[2] or "")
-	end)
+	var_0_58(sortedOutfits, 4)
 	buildSelectionListBatched(sortedOutfits, function(outfitData)
-		local button = g_ui.createWidget("SelectionButton", listGrid)
+		local button = g_ui.createWidget("SelectionButton", var_182_0)
 
 		button:setId(outfitData[1])
 
@@ -4148,7 +4569,7 @@ function showOutfits()
 		local availableAddons = outfitData[3] or 0
 
 		outfit.type = outfitData[1]
-		outfit.addons = 0
+		outfit.addons = availableAddons
 
 		local h, b, l, f = headBodyForListThumbnail(outfitData[1], outfitColorCache)
 
@@ -4184,37 +4605,38 @@ function showOutfits()
 		end
 
 		setSelectionListFocusHandler(nil)
+		handleCheckChange.apply()
 
 		if focused then
 			local grid = getSelectionListGrid()
-			local w = grid and grid[focused]
+			local var_184_2 = grid and grid[focused]
 
-			if w then
-				hydrateSelectionButton(w)
-				w:focus()
-				window.selectionList:ensureChildVisible(w, {
-					y = 196,
-					x = 0
+			if var_184_2 and var_184_2:isVisible() then
+				hydrateSelectionButton(var_184_2)
+				var_184_2:focus()
+				outfitwindowWidget.selectionList:ensureChildVisible(var_184_2, {
+					x = 0,
+					y = 196
 				})
 			end
 
-			local focusedId = focused
+			local var_184_3 = focused
 
 			addEvent(function()
-				if not window or not window.selectionList or not window.selectionList:isVisible() then
+				if not outfitwindowWidget or not outfitwindowWidget.selectionList or not outfitwindowWidget.selectionList:isVisible() then
 					enableOutfitSelectionHandler()
 
 					return
 				end
 
-				local grid = getSelectionListGrid()
-				local delayedFocused = grid and grid[focusedId]
+				local var_186_0 = getSelectionListGrid()
+				local var_186_1 = var_186_0 and var_186_0[var_184_3]
 
-				if delayedFocused then
-					delayedFocused:focus()
-					window.selectionList:ensureChildVisible(delayedFocused, {
-						y = 196,
-						x = 0
+				if var_186_1 and var_186_1:isVisible() then
+					var_186_1:focus()
+					outfitwindowWidget.selectionList:ensureChildVisible(var_186_1, {
+						x = 0,
+						y = 196
 					})
 				end
 
@@ -4224,22 +4646,23 @@ function showOutfits()
 			enableOutfitSelectionHandler()
 		end
 
-		window.selectionList:show()
-		window.selectionScroll:show()
+		outfitwindowWidget.selectionList:show()
+		outfitwindowWidget.selectionScroll:show()
 		resetSelectionListScrollPosition()
 		scheduleSelectionListHydration("showOutfits")
-		startSelectionWarmupPump("outfits")
-		window.listSearch:setText("Filter Outfits")
-		window.listSearch:show()
+		outfitwindowWidget.listSearch:setText("Filter Outfits")
+		outfitwindowWidget.listSearch:show()
 	end)
 end
 
 function showMounts()
-	window.presetsList:hide()
-	window.presetsScroll:hide()
-	window.presetButtons:hide()
+	local listGrid = var_0_195()
 
-	local mountCheck = window.configure and window.configure.mount and window.configure.mount.check
+	if not listGrid then
+		return
+	end
+
+	local mountCheck = outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check
 	local previousMountChecked = mountCheck and mountCheck:isChecked() or false
 	local cyclopediaMountFocus
 
@@ -4251,19 +4674,6 @@ function showMounts()
 		previousMountChecked = true
 	end
 
-	local listGrid = getSelectionListGrid()
-
-	if not listGrid then
-		return
-	end
-
-	setSelectionListFocusHandler(nil)
-	clearSelectionWarmupEvent()
-	clearSelectionHydrationEvent()
-	selectionTextureCache.releaseHydration()
-	listGrid:destroyChildren()
-	beginSelectionListBuild()
-
 	local focused
 	local sortedMounts = {}
 
@@ -4271,32 +4681,7 @@ function showMounts()
 		table.insert(sortedMounts, mountData)
 	end
 
-	table.sort(sortedMounts, function(a, b)
-		local stateA = a[3]
-
-		if stateA == nil then
-			stateA = statesOutft.available
-		end
-
-		local stateB = b[3]
-
-		if stateB == nil then
-			stateB = statesOutft.available
-		end
-
-		local availableA = stateA == statesOutft.available
-		local availableB = stateB == statesOutft.available
-
-		if availableA ~= availableB then
-			return availableA
-		end
-
-		if a[1] ~= b[1] then
-			return a[1] < b[1]
-		end
-
-		return tostring(a[2] or "") < tostring(b[2] or "")
-	end)
+	var_0_58(sortedMounts, 3)
 	buildSelectionListBatched(sortedMounts, function(mountData)
 		local button = g_ui.createWidget("SelectionButton", listGrid)
 
@@ -4350,7 +4735,9 @@ function showMounts()
 		end
 
 		if mountCheck then
-			mountCheck:setEnabled(focused ~= nil)
+			local focused = getOutfitStateById(focused)
+
+			mountCheck:setEnabled(focused)
 
 			local showMounted = previousMountChecked
 
@@ -4358,7 +4745,7 @@ function showMounts()
 				showMounted = true
 			end
 
-			mountCheck:setChecked(showMounted and focused ~= nil)
+			mountCheck:setChecked(showMounted and focused)
 		end
 
 		updatePreview()
@@ -4368,53 +4755,43 @@ function showMounts()
 			updateMountAppearanceNameVisual(tempOutfit.mount)
 		end
 
+		handleCheckChange.apply()
+
 		if focused ~= nil then
 			local grid = getSelectionListGrid()
 			local w = grid and grid[focused]
 
-			if w then
+			if w and w:isVisible() then
 				hydrateSelectionButton(w)
 				w:focus()
-				window.selectionList:ensureChildVisible(w, {
-					y = 196,
-					x = 0
+				outfitwindowWidget.selectionList:ensureChildVisible(w, {
+					x = 0,
+					y = 196
 				})
 			end
 		end
 
 		setSelectionListFocusHandler(onMountSelect)
-		window.selectionList:show()
-		window.selectionScroll:show()
+		outfitwindowWidget.selectionList:show()
+		outfitwindowWidget.selectionScroll:show()
 		resetSelectionListScrollPosition()
 		scheduleSelectionListHydration("showMounts")
-		startSelectionWarmupPump("mounts")
-		window.listSearch:setText("Filter Mounts")
-		window.listSearch:show()
+		outfitwindowWidget.listSearch:setText("Filter Mounts")
+		outfitwindowWidget.listSearch:show()
 	end)
 end
 
 function showFamiliars()
-	window.presetsList:hide()
-	window.presetsScroll:hide()
-	window.presetButtons:hide()
-
-	local listGrid = getSelectionListGrid()
+	local listGrid = var_0_195()
 
 	if not listGrid then
 		return
 	end
 
-	setSelectionListFocusHandler(nil)
-	clearSelectionWarmupEvent()
-	clearSelectionHydrationEvent()
-	selectionTextureCache.releaseHydration()
-	listGrid:destroyChildren()
-	beginSelectionListBuild()
-
 	if table.empty(ServerData.familiars) then
-		window.selectionList:hide()
-		window.selectionScroll:hide()
-		window.listSearch:hide()
+		outfitwindowWidget.selectionList:hide()
+		outfitwindowWidget.selectionScroll:hide()
+		outfitwindowWidget.listSearch:hide()
 
 		return
 	end
@@ -4449,68 +4826,146 @@ function showFamiliars()
 			clearSelectionListFocus()
 		end
 
+		handleCheckChange.apply()
+
 		if focused then
 			local grid = getSelectionListGrid()
 			local w = grid and grid[focused]
 
-			if w then
+			if w and w:isVisible() then
 				hydrateSelectionButton(w)
 				w:focus()
-				window.selectionList:ensureChildVisible(w, {
-					y = 196,
-					x = 0
+				outfitwindowWidget.selectionList:ensureChildVisible(w, {
+					x = 0,
+					y = 196
 				})
 			end
 		end
 
 		setSelectionListFocusHandler(onFamiliarSelect)
-		window.selectionList:show()
-		window.selectionScroll:show()
+		outfitwindowWidget.selectionList:show()
+		outfitwindowWidget.selectionScroll:show()
 		resetSelectionListScrollPosition()
 		scheduleSelectionListHydration("showFamiliars")
-		startSelectionWarmupPump("familiars")
-		window.listSearch:setText("Filter Familiars")
-		window.listSearch:show()
+		outfitwindowWidget.listSearch:setText("Filter Familiars")
+		outfitwindowWidget.listSearch:show()
+	end)
+end
+
+function showAuras()
+	local var_193_0 = var_0_195()
+
+	if not var_193_0 then
+		return
+	end
+
+	if podiumContext or hirelingContext or table.empty(ServerData.auras) then
+		outfitwindowWidget.selectionList:hide()
+		outfitwindowWidget.selectionScroll:hide()
+		outfitwindowWidget.listSearch:hide()
+
+		return
+	end
+
+	local var_193_1 = {}
+
+	for _, outfitData in ipairs(ServerData.auras) do
+		table.insert(var_193_1, outfitData)
+	end
+
+	local var_193_2
+
+	buildSelectionListBatched(var_193_1, function(arg_194_0)
+		local selectionButtonWidget = g_ui.createWidget("SelectionButton", var_193_0)
+
+		selectionButtonWidget:setId(arg_194_0[1])
+
+		selectionButtonWidget.auraClientId = arg_194_0[3] or 0
+
+		if selectionButtonWidget.auraClientId > 0 then
+			local var_194_1 = {
+				type = selectionButtonWidget.auraClientId
+			}
+
+			selectionButtonWidget.selectionOutfitData = var_194_1
+
+			markSelectionButtonDeferred(selectionButtonWidget, var_194_1)
+			makeThumbnailStatic(selectionButtonWidget.outfit)
+		end
+
+		selectionButtonWidget.name:setText(arg_194_0[2])
+
+		if ServerData.selectedAuraId == arg_194_0[1] then
+			var_193_2 = arg_194_0[1]
+		end
+	end, function()
+		if var_193_2 == nil and #var_193_1 > 0 then
+			ServerData.selectedAuraId = var_193_1[1][1]
+			ServerData.selectedAuraClientId = var_193_1[1][3] or 0
+			var_193_2 = var_193_1[1][1]
+
+			updateAppearanceText("aura", var_193_1[1][2] or "")
+		end
+
+		handleCheckChange.apply()
+
+		if var_193_2 ~= nil then
+			local var_195_0 = getSelectionListGrid()
+			local var_195_1 = var_195_0 and var_195_0[var_193_2]
+
+			if var_195_1 and var_195_1:isVisible() then
+				hydrateSelectionButton(var_195_1)
+				var_195_1:focus()
+				outfitwindowWidget.selectionList:ensureChildVisible(var_195_1, {
+					x = 0,
+					y = 196
+				})
+			end
+		end
+
+		setSelectionListFocusHandler(onAuraSelect)
+		outfitwindowWidget.selectionList:show()
+		outfitwindowWidget.selectionScroll:show()
+		resetSelectionListScrollPosition()
+		scheduleSelectionListHydration("showAuras")
+		outfitwindowWidget.listSearch:setText("Filter Auras")
+		outfitwindowWidget.listSearch:show()
 	end)
 end
 
 function refreshFilterListForCurrentColorChange()
-	if not appearanceGroup or not window then
+	if not var_0_9 or not outfitwindowWidget then
 		return
 	end
 
-	local w = appearanceGroup:getSelectedWidget()
+	local selectedWidget = var_0_9:getSelectedWidget()
 
-	if not w or not w.getParent then
+	if not selectedWidget or not selectedWidget.getParent then
 		return
 	end
 
-	local id = w:getParent():getId()
+	local parent = selectedWidget:getParent():getId()
 
-	if id == "outfit" then
-		showOutfits()
-	elseif id == "mount" then
-		showMounts()
-	elseif id == "familiar" then
-		showFamiliars()
+	if parent == "outfit" or parent == "mount" or parent == "familiar" then
+		var_0_152()
 	end
 end
 
-function onPresetSelect(list, focusedChild, unfocusedChild, reason)
+function onPresetSelect(unusedArgument, focusedChild, unusedArgument, unusedArgument)
 	if focusedChild then
-		local presetId = tonumber(focusedChild:getId())
-		local preset = settings.presets[presetId]
+		local id = tonumber(focusedChild:getId())
+		local var_197_1 = settings.presets[id]
 
-		tempOutfit = table.copy(preset.outfit)
+		tempOutfit = table.copy(var_197_1.outfit)
 
-		initColorCachesFromOutfit(tempOutfit)
+		var_0_144(tempOutfit)
 		applyOutfitColorsToTemp()
 
-		if preset.familiarColorCache and type(preset.familiarColorCache) == "table" then
-			familiarColorCache.head = preset.familiarColorCache.head or 0
-			familiarColorCache.body = preset.familiarColorCache.body or 0
-			familiarColorCache.legs = preset.familiarColorCache.legs or 0
-			familiarColorCache.feet = preset.familiarColorCache.feet or 0
+		if var_197_1.familiarColorCache and type(var_197_1.familiarColorCache) == "table" then
+			familiarColorCache.head = var_197_1.familiarColorCache.head or 0
+			familiarColorCache.body = var_197_1.familiarColorCache.body or 0
+			familiarColorCache.legs = var_197_1.familiarColorCache.legs or 0
+			familiarColorCache.feet = var_197_1.familiarColorCache.feet or 0
 		elseif (tempOutfit.familiar or 0) > 0 then
 			familiarColorCache.head = 0
 			familiarColorCache.body = 0
@@ -4518,19 +4973,19 @@ function onPresetSelect(list, focusedChild, unfocusedChild, reason)
 			familiarColorCache.feet = 0
 		end
 
-		for _, outfitData in ipairs(ServerData.outfits) do
-			if tempOutfit.type == outfitData[1] then
-				configureAddons(outfitData[3])
+		for unusedValue, outfit in ipairs(ServerData.outfits) do
+			if tempOutfit.type == outfit[1] then
+				configureAddons(outfit[3])
 
 				break
 			end
 		end
 
 		if g_game.getFeature(GamePlayerMounts) then
-			window.configure.mount.check:setChecked(preset.mounted and tempOutfit.mount > 0)
+			outfitwindowWidget.configure.mount.check:setChecked(var_197_1.mounted and tempOutfit.mount > 0)
 		end
 
-		settings.currentPreset = presetId
+		settings.currentPreset = id
 
 		updatePreview()
 		updateAppearanceTexts(tempOutfit)
@@ -4541,35 +4996,32 @@ function onPresetSelect(list, focusedChild, unfocusedChild, reason)
 	updatePresetManageActionButtonsEnabled()
 end
 
-function onOutfitSelect(list, focusedChild, unfocusedChild, reason)
-	if focusedChild then
+function onOutfitSelect(unusedArgument, focusedChild, unusedArgument, unusedArgument)
+	if focusedChild and focusedChild:isVisible() then
 		hydrateSelectionButton(focusedChild)
 
-		local outfit = focusedChild.selectionOutfitData
-		local availableAddons = focusedChild.selectionAvailableAddons
+		local selectionOutfitData = focusedChild.selectionOutfitData
+		local selectionAvailableAddons = focusedChild.selectionAvailableAddons
 
-		if not outfit then
+		if not selectionOutfitData then
 			local creature = focusedChild.outfit and focusedChild.outfit:getCreature()
 
-			outfit = creature and creature:getOutfit()
+			selectionOutfitData = creature and creature:getOutfit()
 		end
 
-		if not outfit then
+		if not selectionOutfitData then
 			return
 		end
 
-		if availableAddons == nil then
-			availableAddons = outfit.addons or 0
+		if selectionAvailableAddons == nil then
+			selectionAvailableAddons = selectionOutfitData.addons or 0
 		end
 
-		memoryScenarioSelectionSequence = memoryScenarioSelectionSequence + 1
+		tempOutfit.type = selectionOutfitData.type
+		tempOutfit.addons = math.min(tempOutfit.addons or 0, selectionAvailableAddons)
 
-		traceMemoryScenario("outfit-select", string.format("sequence=%d type=%s movement=%s reason=%s", memoryScenarioSelectionSequence, tostring(outfit.type or 0), tostring(settings and settings.movement == true), tostring(reason)))
-
-		tempOutfit.type = outfit.type
-		tempOutfit.addons = math.min(tempOutfit.addons or 0, availableAddons)
-
-		configureAddons(availableAddons)
+		configureAddons(selectionAvailableAddons)
+		preparePreviewThingType(selectionOutfitData.type, settings.movement == true)
 		updatePreview()
 		updateAppearanceText("outfit", focusedChild.name:getText())
 		updateColorControlsState()
@@ -4577,96 +5029,118 @@ function onOutfitSelect(list, focusedChild, unfocusedChild, reason)
 	end
 end
 
-function onMountSelect(list, focusedChild, unfocusedChild, reason)
-	if focusedChild then
-		local mountType = tonumber(focusedChild:getId())
+function onMountSelect(unusedArgument, focusedChild, unusedArgument, unusedArgument)
+	if focusedChild and focusedChild:isVisible() then
+		local id = tonumber(focusedChild:getId())
 
-		tempOutfit.mount = mountType
-
-		local mountCheck = window and window.configure and window.configure.mount and window.configure.mount.check
-
-		if mountCheck then
-			local previousMountChecked = mountCheck:isChecked()
-
-			mountCheck:setEnabled(tempOutfit.mount > 0)
-			mountCheck:setChecked(previousMountChecked and tempOutfit.mount > 0)
+		if not id or id <= 0 then
+			return
 		end
 
+		tempOutfit.mount = id
+
+		local var_199_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check
+
+		if var_199_1 then
+			local var_199_2 = var_199_1:isChecked()
+			local var_199_3 = getOutfitStateById(id)
+
+			var_199_1:setEnabled(var_199_3)
+			var_199_1:setChecked(var_199_2 and var_199_3)
+		end
+
+		preparePreviewThingType(id, settings.movement == true)
 		updatePreview()
 		updateAppearanceText("mount", focusedChild.name:getText())
-		updateMountAppearanceNameVisual(mountType)
+		updateMountAppearanceNameVisual(id)
 		updateColorControlsState()
 		refreshColorBoxForCurrentContext()
 	end
 end
 
-function onFamiliarSelect(list, focusedChild, unfocusedChild, reason)
-	if focusedChild then
-		local familiarType = tonumber(focusedChild:getId())
+function onFamiliarSelect(unusedArgument, focusedChild, unusedArgument, unusedArgument)
+	if focusedChild and focusedChild:isVisible() then
+		local id = tonumber(focusedChild:getId())
 
-		tempOutfit.familiar = familiarType
+		if not id or id <= 0 then
+			return
+		end
+
+		tempOutfit.familiar = id
 
 		previewFamiliar:setOutfit({
-			type = familiarType
+			type = id
 		})
 
 		if previewFamiliar:getCreature() then
-			local fo = previewFamiliar:getCreature():getOutfit()
+			local creature = previewFamiliar:getCreature():getOutfit()
 
-			if fo then
-				familiarColorCache.head = fo.head or 0
-				familiarColorCache.body = fo.body or 0
-				familiarColorCache.legs = fo.legs or 0
-				familiarColorCache.feet = fo.feet or 0
+			if creature then
+				familiarColorCache.head = creature.head or 0
+				familiarColorCache.body = creature.body or 0
+				familiarColorCache.legs = creature.legs or 0
+				familiarColorCache.feet = creature.feet or 0
 			end
 		end
 
 		updateColorControlsState()
 		refreshColorBoxForCurrentContext()
+		preparePreviewThingType(id, settings.movement == true)
 		updatePreview()
 		updateAppearanceText("familiar", focusedChild.name:getText())
 	end
 end
 
+function onAuraSelect(unusedArgument, arg_201_1, unusedArgument, unusedArgument)
+	if arg_201_1 and arg_201_1:isVisible() then
+		ServerData.selectedAuraId = tonumber(arg_201_1:getId()) or 0
+		ServerData.selectedAuraClientId = arg_201_1.auraClientId or 0
+
+		preparePreviewThingType(ServerData.selectedAuraClientId, false, true)
+		updatePreview()
+		updateAppearanceText("aura", arg_201_1.name:getText())
+	end
+end
+
 function updateAppearanceText(widget, text)
-	if window.appearance.settings[widget] then
-		window.appearance.settings[widget].name:setText(text)
+	if outfitwindowWidget.appearance.settings[widget] then
+		outfitwindowWidget.appearance.settings[widget].name:setText(text)
 
 		if widget == "mount" then
 			updateMountAppearanceNameVisual(tempOutfit and tempOutfit.mount or 0)
 		elseif widget == "outfit" then
-			updateOutfitAppearanceNameVisual(tempOutfit and tempOutfit.type or 0)
+			var_0_143(tempOutfit and tempOutfit.type or 0)
 		end
 	end
 end
 
 function updateAppearanceTexts(outfit)
-	for _, appKey in ipairs(AppearanceData) do
-		if appKey ~= "preset" then
-			updateAppearanceText(appKey, "None")
+	for unusedValue, entry in ipairs(AppearanceData) do
+		if entry ~= "preset" then
+			updateAppearanceText(entry, "None")
 		end
 	end
 
-	local serverListKey = {
+	local var_203_0 = {
 		familiar = "familiars",
 		mount = "mounts"
 	}
 
-	for key, value in pairs(outfit) do
-		local listKey = serverListKey[key] or key
-		local appKey = key
+	for key, unusedValue in pairs(outfit) do
+		local var_203_1 = var_203_0[key] or key
+		local var_203_2 = key
 
 		if key == "type" then
-			listKey = "outfits"
-			appKey = "outfit"
+			var_203_1 = "outfits"
+			var_203_2 = "outfit"
 		end
 
-		local dataTable = ServerData[listKey]
+		local var_203_3 = ServerData[var_203_1]
 
-		if dataTable then
-			for _, data in ipairs(dataTable) do
-				if (outfit[key] == data[1] or outfit[key] == data[2]) and appKey and data[2] then
-					updateAppearanceText(appKey, data[2])
+		if var_203_3 then
+			for unusedValue, entry in ipairs(var_203_3) do
+				if (outfit[key] == entry[1] or outfit[key] == entry[2]) and var_203_2 and entry[2] then
+					updateAppearanceText(var_203_2, entry[2])
 				end
 			end
 		end
@@ -4679,6 +5153,8 @@ function updateAppearanceTexts(outfit)
 	else
 		updateAppearanceText("preset", "No Preset")
 	end
+
+	updateAppearanceText("aura", getSelectedAuraName())
 end
 
 function onAddonChange(widget, checked)
@@ -4694,10 +5170,6 @@ function onAddonChange(widget, checked)
 	tempOutfit.addons = addons
 
 	updatePreview()
-
-	if appearanceGroup:getSelectedWidget() == window.appearance.settings.outfit.check then
-		showOutfits()
-	end
 end
 
 function onColorModeChange(widget, selectedWidget)
@@ -4718,7 +5190,7 @@ function onColorModeChange(widget, selectedWidget)
 
 	local colorMode = selectedWidget:getId()
 	local id = getColorIdFromMode(cache, colorMode)
-	local box = window.appearance.colorSection.colorBoxBackground.colorBoxPanel["colorBox" .. id]
+	local box = outfitwindowWidget.appearance.colorSection.colorBoxBackground.colorBoxPanel["colorBox" .. id]
 
 	if box and colorBoxGroup then
 		colorPickerProgrammatic = true
@@ -4757,47 +5229,59 @@ function onColorCheckChange(widget, selectedWidget)
 	refreshFilterListForCurrentColorChange()
 end
 
-function prepareMovementThingType(lookType)
-	lookType = tonumber(lookType) or 0
+function preparePreviewThingType(numericValue, arg_207_1, lookType)
+	numericValue = tonumber(numericValue) or 0
 
-	if lookType <= 0 then
+	if numericValue <= 0 then
 		return true
 	end
 
-	local thingType = g_things.getThingType(lookType, ThingCategoryCreature)
+	local thingType = g_things.getThingType(numericValue, ThingCategoryCreature)
 
 	if not thingType then
 		return true
 	end
 
-	return thingType:preparePreviewMovementTexture()
+	if lookType then
+		return thingType:preparePreviewAuraTexture()
+	end
+
+	local var_207_1 = thingType:preparePreviewIdleTexture()
+
+	if arg_207_1 and not thingType:preparePreviewMovementTexture() then
+		return false
+	end
+
+	return var_207_1
 end
 
-function isPreviewMovementReady(previewOutfit, showPreviewCreature)
-	if podiumContext or hirelingContext or not settings.movement then
-		return true
+function prefetchPreviewTextures(arg_208_0, arg_208_1)
+	if podiumContext or hirelingContext then
+		return
 	end
 
-	local ready = true
+	local var_208_0 = settings.movement == true
 
-	if showPreviewCreature then
-		if not prepareMovementThingType(previewOutfit.type) then
-			ready = false
-		end
+	if arg_208_1 then
+		preparePreviewThingType(arg_208_0.type, var_208_0)
 
-		if (previewOutfit.mount or 0) > 0 and not prepareMovementThingType(previewOutfit.mount) then
-			ready = false
+		if (arg_208_0.mount or 0) > 0 then
+			preparePreviewThingType(arg_208_0.mount, var_208_0)
 		end
 	end
 
-	if previewFamiliar and settings.showFamiliar and (previewOutfit.familiar or 0) > 0 and not prepareMovementThingType(previewOutfit.familiar) then
-		ready = false
+	if previewFamiliar and settings.showFamiliar and (arg_208_0.familiar or 0) > 0 then
+		preparePreviewThingType(arg_208_0.familiar, var_208_0)
 	end
 
-	return ready
+	local var_208_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check
+
+	if arg_208_1 and var_208_1 and var_208_1:isChecked() then
+		preparePreviewThingType(ServerData.selectedAuraClientId, false, true)
+	end
 end
 
-function schedulePreviewMovementRetry(token)
+function schedulePreviewAnimationRetry(token)
 	if token ~= previewMovementWarmup.token or previewMovementWarmup.event then
 		return
 	end
@@ -4805,7 +5289,7 @@ function schedulePreviewMovementRetry(token)
 	previewMovementWarmup.event = scheduleEvent(function()
 		previewMovementWarmup.event = nil
 
-		if token ~= previewMovementWarmup.token or not window then
+		if token ~= previewMovementWarmup.token or not outfitwindowWidget then
 			return
 		end
 
@@ -4814,7 +5298,7 @@ function schedulePreviewMovementRetry(token)
 end
 
 function applyPreviewUpdate(token)
-	if token ~= previewMovementWarmup.token or not window or not previewCreature then
+	if token ~= previewMovementWarmup.token or not outfitwindowWidget or not previewCreature then
 		return
 	end
 
@@ -4853,17 +5337,12 @@ function applyPreviewUpdate(token)
 		end
 	end
 
-	if not podiumContext and g_game.getFeature(GamePlayerMounts) and window and window.configure and window.configure.mount and window.configure.mount.check and not window.configure.mount.check:isChecked() then
+	if not podiumContext and g_game.getFeature(GamePlayerMounts) and outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check and not outfitwindowWidget.configure.mount.check:isChecked() then
 		previewOutfit.mount = 0
 	end
 
 	applyMountColorsToOutfitTable(previewOutfit)
-
-	if not isPreviewMovementReady(previewOutfit, showPreviewCreature) then
-		schedulePreviewMovementRetry(token)
-
-		return
-	end
+	prefetchPreviewTextures(previewOutfit, showPreviewCreature)
 
 	if showPreviewCreature then
 		previewCreature:show()
@@ -4906,6 +5385,7 @@ function applyPreviewUpdate(token)
 	local previewCreaturePtr = previewCreature:getCreature()
 
 	previewCreaturePtr:setDirection(direction)
+	applyAuraToPreview()
 
 	local mountShown = (previewOutfit.mount or 0) > 0
 
@@ -4933,7 +5413,7 @@ function applyPreviewUpdate(token)
 end
 
 function updatePreview()
-	clearPreviewMovementReadyEvent()
+	clearPreviewAnimationReadyEvent()
 	applyPreviewUpdate(previewMovementWarmup.token)
 end
 
@@ -4942,9 +5422,7 @@ function rotate(value)
 		return
 	end
 
-	local direction = previewCreature:getDirection()
-
-	direction = direction + value
+	local direction = previewCreature:getDirection() + value
 
 	if direction > Directions.West then
 		direction = Directions.North
@@ -4969,75 +5447,21 @@ function rotate(value)
 end
 
 function onFilterOnlyMine(self, checked)
-	addEvent(function()
-		if not window or not window.selectionList then
-			return
-		end
-
-		local grid = getSelectionListGrid()
-
-		if not grid then
-			return
-		end
-
-		local children = grid:getChildren()
-
-		for _, child in ipairs(children) do
-			if checked and (not child.state or child.state ~= 0) then
-				clearSelectionListFocus()
-				child:hide()
-			else
-				child:show()
-			end
-		end
-
-		scheduleSelectionListHydration("filterOnlyMine")
-	end)
+	addEvent(handleCheckChange.apply)
 end
 
 function onFilterSearch()
-	addEvent(function()
-		if not window or not window.listSearch or not window.listSearch.search or not window.selectionList then
-			return
-		end
-
-		local searchText = window.listSearch.search:getText():lower():trim()
-		local grid = getSelectionListGrid()
-
-		if not grid then
-			return
-		end
-
-		local children = grid:getChildren()
-
-		if searchText:len() >= 1 then
-			for _, child in ipairs(children) do
-				local text = child.name:getText():lower()
-
-				if text:find(searchText) then
-					child:show()
-				else
-					child:hide()
-				end
-			end
-		else
-			for _, child in ipairs(children) do
-				child:show()
-			end
-		end
-
-		scheduleSelectionListHydration("filterSearch")
-	end)
+	addEvent(handleCheckChange.apply)
 end
 
 function clearFilterSearch()
-	if not window or not window.listSearch then
+	if not outfitwindowWidget or not outfitwindowWidget.listSearch then
 		return
 	end
 
-	window.listSearch.search:setText("")
+	outfitwindowWidget.listSearch.search:setText("")
 	onFilterSearch()
-	window.listSearch.search:focus()
+	outfitwindowWidget.listSearch.search:focus()
 end
 
 function saveSettings()
@@ -5047,21 +5471,17 @@ function saveSettings()
 	end
 
 	local fullSettings = {}
+	local json_status, json_data = pcall(function()
+		return json.decode(g_resources.readFileContents(settingsFile))
+	end)
 
-	do
-		local json_status, json_data = pcall(function()
-			return json.decode(g_resources.readFileContents(settingsFile))
-		end)
+	if not json_status then
+		g_logger.error("[saveSettings] Couldn't load JSON: " .. json_data)
 
-		if not json_status then
-			g_logger.error("[saveSettings] Couldn't load JSON: " .. json_data)
-
-			return
-		end
-
-		fullSettings = json_data
+		return
 	end
 
+	local fullSettings = json_data
 	local persistedSettings = table.copy(settings)
 
 	persistedSettings.movement = nil
@@ -5110,14 +5530,13 @@ end
 
 function loadDefaultSettings()
 	settings = {
+		showFamiliar = true,
+		currentPreset = 0,
 		showOutfit = true,
 		showFloor = true,
-		currentPreset = 0,
-		showFamiliar = true,
 		movement = movementEnabledForSession,
 		presets = {}
 	}
-	settings.currentPreset = 0
 end
 
 function accept()
@@ -5131,9 +5550,14 @@ function accept()
 
 	local shouldToggleMount = false
 	local isMountedChecked = false
+	local var_223_2 = 0
 
-	if not podiumContext and not hirelingContext and g_game.getFeature(GamePlayerMounts) and window and window.configure and window.configure.mount and window.configure.mount.check then
-		isMountedChecked = window.configure.mount.check:isChecked()
+	if not podiumContext and not hirelingContext and outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check and outfitwindowWidget.configure.aura.check:isChecked() then
+		var_223_2 = ServerData.selectedAuraId or 0
+	end
+
+	if not podiumContext and not hirelingContext and g_game.getFeature(GamePlayerMounts) and outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check then
+		isMountedChecked = outfitwindowWidget.configure.mount.check:isChecked()
 		shouldToggleMount = true
 
 		if settings.currentPreset > 0 then
@@ -5202,6 +5626,29 @@ function accept()
 
 	ignoreNextOutfitWindow = g_clock.millis()
 
+	if podiumRequest then
+		g_game.changeOutfitPodium(podiumRequest.outfit, podiumRequest.position, podiumRequest.itemClientId, podiumRequest.stackpos, podiumRequest.direction, podiumRequest.showPlatform, podiumRequest.showOutfit)
+	elseif isHirelingOutfit then
+		g_game.changeHirelingOutfit(outfitToSend)
+	else
+		g_game.changeOutfit(outfitToSend)
+		pcall(function()
+			g_game.sendAuraSet(var_223_2)
+		end)
+
+		if shouldToggleMount then
+			local player = g_game.getLocalPlayer()
+
+			if player then
+				if not player:isMounted() and isMountedChecked then
+					player:mount()
+				elseif player:isMounted() and not isMountedChecked then
+					player:dismount()
+				end
+			end
+		end
+	end
+
 	destroy()
 	addEvent(function()
 		if g_modalManager and g_modalManager.pruneOrphanBlockers then
@@ -5226,24 +5673,4 @@ function accept()
 			draggingWidget.hoveredWho = nil
 		end
 	end)
-
-	if podiumRequest then
-		g_game.changeOutfitPodium(podiumRequest.outfit, podiumRequest.position, podiumRequest.itemClientId, podiumRequest.stackpos, podiumRequest.direction, podiumRequest.showPlatform, podiumRequest.showOutfit)
-	elseif isHirelingOutfit then
-		g_game.changeHirelingOutfit(outfitToSend)
-	else
-		g_game.changeOutfit(outfitToSend)
-
-		if shouldToggleMount then
-			local player = g_game.getLocalPlayer()
-
-			if player then
-				if not player:isMounted() and isMountedChecked then
-					player:mount()
-				elseif player:isMounted() and not isMountedChecked then
-					player:dismount()
-				end
-			end
-		end
-	end
 end

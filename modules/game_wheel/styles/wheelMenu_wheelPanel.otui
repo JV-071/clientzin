@@ -1,0 +1,1830 @@
+WheelMenuWheelPanel < UIWidget
+  size: 522 522
+  anchors.top: parent.top
+  anchors.left: selection.right
+  margin-left: 11
+  @onClick: modules.game_wheel.onWheelClick(g_window:getMousePosition())
+
+  Panel
+    id: wheelBackground
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    image-source: /images/game/wheel/backdrop_skillwheel
+
+  WheelSliceFill
+    id: focusSelectedWheel
+    visible: false
+
+  //topLeft
+  WheelSliceFillAvailable
+    id: fullColorWheel_15
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_15
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_14
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_14
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_9
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_9
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_13
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_13
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_8
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_8
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_3
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_3
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_7
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_7
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_2
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_2
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_1
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_1
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  // Top Right
+  WheelSliceFillAvailable
+    id: fullColorWheel_16
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_16
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_17
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_17
+    asize: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_10
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_10
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_4
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_4
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_11
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_11
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_18
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_18
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_12
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_12
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_5
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_5
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_6
+    asize: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_6
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  //Bottom Right
+  WheelSliceFillAvailable
+    id: fullColorWheel_22
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_22
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_28
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_28
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_23
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_23
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_34
+    asize: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_34
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_29
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_29
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_24
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_24
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_35
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_35
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_30
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_30
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_36
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_36
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  //Bottom Left
+  WheelSliceFillAvailable
+    id: fullColorWheel_21
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_21
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_20
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_20
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_27
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_27
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_19
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_19
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_26
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_26
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_33
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_33
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_25
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_25
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_32
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_32
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFillAvailable
+    id: fullColorWheel_31
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  WheelSliceFill
+    id: colorWheel_31
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+
+  Panel
+    id: socketBackground0
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_socketdisabled_0
+
+  Panel
+    id: revelationBgTL
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/wheel-colors/top_left/perkCircle/revelationBg
+
+  UIProgressRect
+    id: revelationPerkTL
+    size: 50 50
+    background: #4a5e14
+    circular: true
+    percent: 0
+    focusable: false
+    phantom: true
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 17
+    margin-top: 17
+
+  Panel
+    id: backdropLight1
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_light_TL
+
+  WheelPassiveFocus
+    id: focusPassive1
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 17
+    margin-top: 17
+
+  Panel
+    id: wheelPassive1
+    size: 178 178
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: true
+    focusable: false
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_front0_TL
+
+  UIWidget
+    id: selectPassive1
+    size: 48 48
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 17
+    margin-top: 17
+    image-source: /images/game/wheel/marker_largeperk
+    visible: false
+
+  Panel
+    id: socketBackground1
+    anchors.top: parent.top
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_socketdisabled_1
+
+  Panel
+    id: revelationBgTR
+    anchors.top: parent.top
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/wheel-colors/top_right/perkCircle/revelationBg
+
+  UIProgressRect
+    id: revelationPerkTR
+    size: 50 50
+    background: #701723
+    circular: true
+    percent: 0
+    focusable: false
+    phantom: true
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 17
+    margin-top: 17
+
+  Panel
+    id: backdropLight2
+    anchors.top: parent.top
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_light_TR
+
+  WheelPassiveFocus
+    id: focusPassive2
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 17
+    margin-top: 17
+
+  Panel
+    id: wheelPassive2
+    size: 178 178
+    anchors.top: parent.top
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_front0_TR
+
+  UIWidget
+    id: selectPassive2
+    size: 48 48
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-right: 17
+    margin-top: 17
+    image-source: /images/game/wheel/marker_largeperk
+    visible: false
+
+  Panel
+    id: socketBackground2
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_socketdisabled_2
+
+  Panel
+    id: revelationBgBL
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/wheel-colors/bottom_left/perkCircle/revelationBg
+
+  UIProgressRect
+    id: revelationPerkBL
+    size: 50 50
+    background: #166248
+    circular: true
+    percent: 0
+    focusable: false
+    phantom: true
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    margin-left: 17
+    margin-bottom: 17
+
+  Panel
+    id: backdropLight3
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_light_BL
+
+  WheelPassiveFocus
+    id: focusPassive3
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    margin-left: 17
+    margin-bottom: 17
+
+  Panel
+    id: wheelPassive3
+    size: 178 178
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_front0_BL
+
+  UIWidget
+    id: selectPassive3
+    size: 48 48
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    margin-left: 17
+    margin-bottom: 17
+    image-source: /images/game/wheel/marker_largeperk
+    visible: false
+
+  Panel
+    id: socketBackground3
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_socketdisabled_3
+
+  Panel
+    id: revelationBgBR
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/wheel-colors/bottom_right/perkCircle/revelationBg
+
+  UIProgressRect
+    id: revelationPerkBR
+    size: 50 50
+    background: #6d1667
+    circular: true
+    percent: 0
+    focusable: false
+    phantom: true
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-right: 17
+    margin-bottom: 17
+
+  Panel
+    id: backdropLight4
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_light_BR
+
+  WheelPassiveFocus
+    id: focusPassive4
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-right: 17
+    margin-bottom: 17
+
+  Panel
+    id: wheelPassive4
+    size: 178 178
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    visible: true
+    image-source: /images/game/wheel/backdrop_skillwheel_largebonus_front0_BR
+
+  UIWidget
+    id: selectPassive4
+    size: 48 48
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    margin-right: 17
+    margin-bottom: 17
+    image-source: /images/game/wheel/marker_largeperk
+    visible: false
+
+  Panel
+    id: vocationWheel
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    image-source: /images/game/wheel/wheel-vocations/backdrop_skillwheel_knight
+
+    UIWidget
+      id: icon21
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 20
+      margin-top: 20
+      phantom: true
+
+      UIWidget
+        id: smallicon21
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon22
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 20
+      margin-top: 20
+      phantom: true
+
+      UIWidget
+        id: modIcon22
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon22
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon15
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 20
+      margin-bottom: 20
+      phantom: true
+
+      UIWidget
+        id: smallicon15
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+      UIWidget
+        id: modIcon15
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+    UIWidget
+      id: icon16
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 20
+      margin-bottom: 20
+      phantom: true
+
+      UIWidget
+        id: smallicon16
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon10
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 30
+      margin-bottom: 72
+      phantom: true
+
+      UIWidget
+        id: modIcon10
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon10
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon23
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 72
+      margin-top: 30
+      phantom: true
+
+      UIWidget
+        id: smallicon23
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon17
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 72
+      margin-bottom: 30
+      phantom: true
+
+      UIWidget
+        id: smallicon17
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon28
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 30
+      margin-top: 72
+      phantom: true
+
+      UIWidget
+        id: smallicon28
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon4
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 34
+      margin-bottom: 126
+      phantom: true
+
+      UIWidget
+        id: smallicon4
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon11
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 92
+      margin-bottom: 92
+      phantom: true
+
+      UIWidget
+        id: smallicon11
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon18
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 126
+      margin-bottom: 34
+      phantom: true
+
+      UIWidget
+        id: modIcon18
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon18
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon24
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 126
+      margin-top: 34
+      phantom: true
+
+      UIWidget
+        id: smallicon24
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon34
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 34
+      margin-top: 126
+      phantom: true
+
+      UIWidget
+        id: modIcon34
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon34
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon29
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 92
+      margin-top: 92
+      phantom: true
+
+      UIWidget
+        id: smallicon29
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon5
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 91
+      margin-bottom: 158
+      phantom: true
+
+      UIWidget
+        id: modIcon5
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-supreme
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon5
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon12
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 158
+      margin-bottom: 91
+      phantom: true
+
+      UIWidget
+        id: smallicon12
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon9
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 30
+      margin-bottom: 72
+      phantom: true
+
+      UIWidget
+        id: smallicon9
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon20
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 72
+      margin-top: 30
+      phantom: true
+
+      UIWidget
+        id: smallicon20
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon14
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 72
+      margin-bottom: 30
+      phantom: true
+
+      UIWidget
+        id: smallicon14
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon27
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 30
+      margin-top: 72
+      phantom: true
+
+      UIWidget
+        id: modIcon27
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon27
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon6
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 165
+      margin-bottom: 165
+      phantom: true
+
+      UIWidget
+        id: smallicon6
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: perkIconTopRight
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-largeperks
+      image-clip: 0 0 34 34
+      size: 34 34
+      margin-left: 220
+      margin-bottom: 220
+
+
+
+
+
+
+
+    UIWidget
+      id: selectVessel1
+      size: 36 36
+      anchors.centerIn: parent
+      margin-left: 160
+      margin-bottom: 239
+      image-source: /images/game/wheel/marker_skillwheelsocket
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(1)
+      visible: false
+
+    UIWidget
+      id: gemSocketBg1
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/backdrop_skillwheel_socket_inactive
+      size: 34 34
+      margin-left: 160
+      margin-bottom: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(1)
+
+    UIWidget
+      id: gemSocket1
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-sockets
+      image-clip: 34 0 34 34
+      size: 34 34
+      margin-left: 160
+      margin-bottom: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(1)
+      visible: false
+
+      UIWidget
+        id: gemIcon1
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-gematelier-gemvariants
+        image-clip: 0 0 32 32
+        size: 32 32
+        @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(1)
+
+    UIWidget
+      id: icon35
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 91
+      margin-top: 158
+      phantom: true
+
+      UIWidget
+        id: smallicon35
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon30
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 158
+      margin-top: 91
+      phantom: true
+
+      UIWidget
+        id: modIcon30
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-supreme
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon30
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon36
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-left: 165
+      margin-top: 165
+      phantom: true
+
+      UIWidget
+        id: smallicon36
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: perkIconBottomRight
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-largeperks
+      image-clip: 0 0 34 34
+      size: 34 34
+      margin-left: 220
+      margin-top: 220
+
+    UIWidget
+      id: selectVessel3
+      size: 36 36
+      anchors.centerIn: parent
+      margin-left: 160
+      margin-top: 239
+      image-source: /images/game/wheel/marker_skillwheelsocket
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(3)
+      visible: false
+
+    UIWidget
+      id: gemSocketBg3
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/backdrop_skillwheel_socket_inactive
+      size: 34 34
+      margin-left: 160
+      margin-top: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(3)
+
+    UIWidget
+      id: gemSocket3
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-sockets
+      image-clip: 34 0 34 34
+      size: 34 34
+      margin-left: 160
+      margin-top: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(3)
+      visible: false
+
+      UIWidget
+        id: gemIcon3
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-gematelier-gemvariants
+        image-clip: 0 0 32 32
+        size: 32 32
+        @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(3)
+
+    UIWidget
+      id: icon32
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 91
+      margin-top: 158
+      phantom: true
+
+      UIWidget
+        id: modIcon32
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-supreme
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon32
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon25
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 158
+      margin-top: 91
+      phantom: true
+
+      UIWidget
+        id: smallicon25
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon31
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 165
+      margin-top: 165
+      phantom: true
+
+      UIWidget
+        id: smallicon31
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: perkIconBottomLeft
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-largeperks
+      image-clip: 0 0 34 34
+      size: 34 34
+      margin-right: 220
+      margin-top: 220
+
+    UIWidget
+      id: selectVessel2
+      size: 36 36
+      anchors.centerIn: parent
+      margin-right: 160
+      margin-top: 239
+      image-source: /images/game/wheel/marker_skillwheelsocket
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(2)
+      visible: false
+
+    UIWidget
+      id: gemSocketBg2
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/backdrop_skillwheel_socket_inactive
+      size: 34 34
+      margin-right: 160
+      margin-top: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(2)
+
+    UIWidget
+      id: gemSocket2
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-sockets
+      image-clip: 34 0 34 34
+      size: 34 34
+      margin-right: 160
+      margin-top: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(2)
+      visible: false
+
+      UIWidget
+        id: gemIcon2
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-gematelier-gemvariants
+        image-clip: 0 0 32 32
+        size: 32 32
+        @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(2)
+
+    UIWidget
+      id: icon3
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 34
+      margin-bottom: 126
+      phantom: true
+
+      UIWidget
+        id: modIcon3
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon3
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon8
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 92
+      margin-bottom: 92
+      phantom: true
+
+      UIWidget
+        id: smallicon8
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon13
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 126
+      margin-bottom: 34
+      phantom: true
+
+      UIWidget
+        id: smallicon13
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon19
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 126
+      margin-top: 34
+      phantom: true
+
+      UIWidget
+        id: modIcon19
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-basic
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon19
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon33
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 34
+      margin-top: 126
+      phantom: true
+
+      UIWidget
+        id: smallicon33
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon26
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 92
+      margin-top: 92
+      phantom: true
+
+      UIWidget
+        id: smallicon26
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon2
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 91
+      margin-bottom: 158
+      phantom: true
+
+      UIWidget
+        id: smallicon2
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon7
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 158
+      margin-bottom: 91
+      phantom: true
+
+      UIWidget
+        id: modIcon7
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icon-skillwheel-vesselresonance-supreme
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 8
+        margin-top: -8
+        phantom: true
+        visible: false
+
+      UIWidget
+        id: smallicon7
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: icon1
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-mediumperks
+      image-clip: 0 0 30 30
+      size: 30 30
+      margin-right: 165
+      margin-bottom: 165
+      phantom: true
+
+      UIWidget
+        id: smallicon1
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-skillwheel-smallperks
+        image-clip: 0 0 16 16
+        size: 16 16
+        margin-right: 10
+        margin-top: 10
+        phantom: true
+
+    UIWidget
+      id: perkIconTopLeft
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-largeperks
+      image-clip: 0 0 34 34
+      size: 34 34
+      margin-right: 220
+      margin-bottom: 220
+
+    UIWidget
+      id: selectVessel0
+      size: 36 36
+      anchors.centerIn: parent
+      margin-right: 160
+      margin-bottom: 239
+      image-source: /images/game/wheel/marker_skillwheelsocket
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(0)
+      visible: false
+
+    UIWidget
+      id: gemSocketBg0
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/backdrop_skillwheel_socket_inactive
+      size: 34 34
+      margin-right: 160
+      margin-bottom: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(0)
+
+    UIWidget
+      id: gemSocket0
+      anchors.centerIn: parent
+      image-source: /images/game/wheel/icons-skillwheel-sockets
+      image-clip: 34 0 34 34
+      size: 34 34
+      margin-right: 160
+      margin-bottom: 239
+      @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(0)
+      visible: false
+
+      UIWidget
+        id: gemIcon0
+        anchors.centerIn: parent
+        image-source: /images/game/wheel/icons-gematelier-gemvariants
+        image-clip: 0 0 32 32
+        size: 32 32
+        @onClick: modules.game_wheel.WheelOfDestiny.onGemVesselClick(0)
+
+    UIWidget
+      id: centerReferencePoint
+      anchors.centerIn: parent
+      background-color: alpha
+      width: 2
+      height: 2
+
+  Panel
+    id: borderSelectedWheel
+    size: 522 522
+    anchors.top: parent.top
+    anchors.left: parent.left
+    image-source: /images/game/wheel/wheel-border/bottom_right/1
+    visible: false

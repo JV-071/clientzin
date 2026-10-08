@@ -1,6 +1,4 @@
-﻿-- chunkname: @/gamelib/game.lua
-
-function g_game.getRsa()
+﻿function g_game.getRsa()
 	return G.currentRsa
 end
 
@@ -10,8 +8,9 @@ function g_game.findPlayerItem(itemId, subType, tier)
 	if localPlayer then
 		for slot = InventorySlotFirst, InventorySlotLast do
 			local item = localPlayer:getInventoryItem(slot)
+			local itemType = type(item)
 
-			if item and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
+			if (itemType == "userdata" or itemType == "table") and item:getId() == itemId and (subType == -1 or item:getSubType() == subType) then
 				return item
 			end
 		end
@@ -190,7 +189,7 @@ function g_game.getSupportedClients()
 end
 
 function g_game.getClientProtocolVersion(client)
-	local clients = {
+	return ({
 		[982] = 974,
 		[985] = 977,
 		[981] = 973,
@@ -200,9 +199,7 @@ function g_game.getClientProtocolVersion(client)
 		[984] = 976,
 		[986] = 978,
 		[980] = 971
-	}
-
-	return clients[client] or client
+	})[client] or client
 end
 
 if not G.currentRsa then
@@ -276,15 +273,15 @@ function g_game.requestSelectCharacterTitle(titleId)
 		return
 	end
 
-	if g_game.getClientVersion and g_game.getClientVersion() < 1412 then
-		return
-	end
-
 	if g_game.requestSetCharacterTitle then
 		g_game.requestSetCharacterTitle(titleId)
 	end
 end
 
 function g_game.onOtcToggle(opCode, enabled)
+	return
+end
+
+function g_game.onScrollTimers(unusedArgument, unusedArgument, unusedArgument, unusedArgument, unusedArgument)
 	return
 end

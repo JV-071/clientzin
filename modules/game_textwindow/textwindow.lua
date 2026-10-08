@@ -1,6 +1,4 @@
-﻿-- chunkname: @/game_textwindow/textwindow.lua
-
-local windows = {}
+﻿local windows = {}
 
 local function isTextWindowWriteable(itemId, maxLength, text)
 	local ok, itemType = pcall(function()
@@ -154,11 +152,9 @@ function onGameEditText(id, itemId, maxLength, text, writer, time)
 		desc = desc .. tr("You can enter new text.")
 	end
 
-	local lines = #{
+	if #{
 		string.find(desc, "\n")
-	}
-
-	if lines < 2 then
+	} < 2 then
 		desc = desc .. "\n"
 	end
 
@@ -241,12 +237,11 @@ function onGameEditList(id, doorId, text)
 		table.removevalue(windows, textWindow)
 	end
 
-	local function doneFunc()
+	function okButton.onClick()
 		g_game.editList(id, doorId, textEdit:getText())
 		destroy()
 	end
 
-	okButton.onClick = doneFunc
 	cancelButton.onClick = destroy
 
 	bindTextWindowEscape(textWindow, textEdit, destroy)

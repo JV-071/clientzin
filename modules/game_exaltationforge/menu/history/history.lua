@@ -1,21 +1,18 @@
-﻿-- chunkname: @/game_exaltationforge/menu/history/history.lua
-
-Forge.History = {}
+﻿Forge.History = {}
 
 local History = Forge.History
 
 History.mainWindow = nil
 
-function History:get()
+function History.get(self)
 	return self
 end
 
-function History:createButton()
-	local buttonPanel = g_ui.createWidget("ForgeHistoryButton", Forge.mainWindow)
+function History.createButton(self)
+	local buttonPanel = Forge.createTabPanel("ForgeHistoryButton", "HistoryButton")
 
-	buttonPanel:addAnchor(AnchorTop, "FusionButton", AnchorTop)
+	buttonPanel:addAnchor(AnchorTop, "parent", AnchorTop)
 	buttonPanel:addAnchor(AnchorLeft, "ConversionButton", AnchorRight)
-	buttonPanel:setId("HistoryButton")
 
 	self.buttonPanel = buttonPanel
 	self.mainButton = buttonPanel:getChildById("button")
@@ -30,10 +27,7 @@ function History:createButton()
 		self.mainWindow = g_ui.createWidget("HistoryWindow", Forge.mainWindow)
 
 		self.mainWindow:setVisible(false)
-		self.mainWindow:addAnchor(AnchorTop, "TransferButton", AnchorBottom)
-		self.mainWindow:addAnchor(AnchorLeft, "FusionButton", AnchorLeft)
-		self.mainWindow:addAnchor(AnchorRight, "parent", AnchorRight)
-		self.mainWindow:addAnchor(AnchorBottom, "parent", AnchorBottom)
+		Forge.anchorContentPanel(self.mainWindow)
 
 		self.historyListContainer = self.mainWindow:getChildById("historyListContainer")
 		self.contentPanel = self.historyListContainer:getChildById("contentPanel")
@@ -62,7 +56,7 @@ function History:createButton()
 	end
 end
 
-function History:clearList()
+function History.clearList(self)
 	if self.contentPanel then
 		self.contentPanel:destroyChildren()
 	end
@@ -74,7 +68,7 @@ function History:clearList()
 	end
 end
 
-function History:requestPage(pageIndex)
+function History.requestPage(self, pageIndex)
 	pageIndex = tonumber(pageIndex) or 0
 
 	if pageIndex < 0 then
@@ -92,7 +86,7 @@ function History:requestPage(pageIndex)
 	g_game.sendForgeHistory(pageIndex)
 end
 
-function History:updatePagination()
+function History.updatePagination(self)
 	local pageIndex = self.pageIndex or 0
 	local pageCount = math.max(self.pageCount or 1, 1)
 	local displayPage = pageIndex + 1
@@ -110,19 +104,14 @@ function History:updatePagination()
 	end
 end
 
-function History:showWindow()
+function History.showWindow(self)
 	if Forge.currentPanel then
 		Forge.currentPanel:setVisible(false)
 	end
 
-	if Forge.currentButton then
-		Forge.currentButton:setEnabled(true)
-		Forge.onTabButtonEnabled(Forge.currentButton, nil, true)
-	end
-
 	Forge.currentPanel = self.mainWindow
-	Forge.currentButton = self.mainButton
 
+	Forge.setActiveTabButton(self.mainButton)
 	Forge.firstTooltip:setVisible(false)
 	self:clearList()
 
@@ -131,8 +120,6 @@ function History:showWindow()
 	self:updatePagination()
 	self.mainWindow:setVisible(true)
 	self.mainWindow:raise()
-	self.mainButton:setEnabled(false)
-	Forge.onTabButtonEnabled(nil, self.buttonPanel, false)
 	self:requestPage(0)
 end
 
@@ -156,22 +143,9 @@ local function formatForgeHistoryTooltip(raw)
 		return nil
 	end
 
-	local text = raw
-
-	text = text:gsub("Unsuccessful", "Failed")
-	text = text:gsub("\r\n", "\n"):gsub("\r", "\n")
-	text = text:gsub("<[lL][iI][^>]*>([%s%S]-)</[lL][iI]>", function(content)
+	local text = raw:gsub("Unsuccessful", "Failed"):gsub("\r\n", "\n"):gsub("\r", "\n"):gsub("<[lL][iI][^>]*>([%s%S]-)</[lL][iI]>", function(content)
 		return "\n@@LI@@" .. stripInlineHtml(content) .. "\n"
-	end)
-	text = text:gsub("<[bB][rR]%s*/?>", "\n")
-	text = text:gsub("</?[uUoO][lL][^>]*>", "\n")
-	text = text:gsub("<[^>]+>", "")
-	text = text:gsub("&nbsp;", " ")
-	text = text:gsub("&lt;", "<")
-	text = text:gsub("&gt;", ">")
-	text = text:gsub("&quot;", "\"")
-	text = text:gsub("&amp;", "&")
-
+	end):gsub("<[bB][rR]%s*/?>", "\n"):gsub("</?[uUoO][lL][^>]*>", "\n"):gsub("<[^>]+>", ""):gsub("&nbsp;", " "):gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", "\""):gsub("&amp;", "&")
 	local tokens = {}
 
 	for line in (text .. "\n"):gmatch("([^\n]*)\n") do
@@ -254,17 +228,15 @@ local function resolveHistoryDetails(details, actionType)
 
 	local summary
 
-	summary = (details:find("Unsuccessful", 1, true) or details:find("Failed", 1, true)) and "Failed" or details:find("Successful", 1, true) and "Successful" or stripDetailsPlainText(details)
-
-	return summary, formatForgeHistoryTooltip(details)
+	return (details:find("Unsuccessful", 1, true) or details:find("Failed", 1, true)) and "Failed" or details:find("Successful", 1, true) and "Successful" or stripDetailsPlainText(details), formatForgeHistoryTooltip(details)
 end
 
-function History:addDate(date, action, detailsSummary, detailsTooltip, rowIndex, hasBonus)
-	local row = g_ui.createWidget("ForgeHistoryRow", self.contentPanel)
+function History.addDate(date, dateText, action, detailsSummary, detailsTooltip, rowIndex, hasBonus)
+	local row = g_ui.createWidget("ForgeHistoryRow", date.contentPanel)
 	local dateLabel = row:getChildById("date")
 
 	if dateLabel then
-		dateLabel:setText(date or "")
+		dateLabel:setText(dateText or "")
 	end
 
 	local actionLabel = row:getChildById("action")
@@ -316,7 +288,7 @@ function getStringByActionType(value)
 	return "Unknown"
 end
 
-function History:parse(currentPage, lastPage, data)
+function History.parse(self, currentPage, lastPage, data)
 	currentPage = tonumber(currentPage) or 0
 	lastPage = math.max(tonumber(lastPage) or 1, 1)
 	self.pageIndex = math.max(currentPage, 0)

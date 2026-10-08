@@ -78,9 +78,10 @@ XpBoostButton < UIWidget
     anchors.right: parent.right
     margin-top: -23
     margin-left: 1
+
   UIWidget
     id: xpBoostButton
-    image-source: /images/ui/button-storexp
+    image-source: /images/ui/button-storexp-noborder-idle
     !tooltip: tr('Increase your experience gain with a temporary XP Boost!')
     tooltip-delayed: true
     anchors.horizontalCenter: parent.horizontalCenter
@@ -88,4 +89,4 @@ XpBoostButton < UIWidget
     margin-top : -7
     @onClick: modules.game_store.openPremiumBoost()
     $pressed:
-      image-source: /images/ui/button-storexp-pressed
+      image-source: /images/ui/button-storexp-noborder-pressed

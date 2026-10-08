@@ -17,7 +17,7 @@ WorldWidget < UIWidget
     color: #aaaaaa
     anchors.top: parent.top
     anchors.left: parent.left
-    font: verdana-11px-monochrome
+    font: $var-cip-font-new
     text-auto-resize: true
     background-color: alpha
     text-offset: 2 0
@@ -36,7 +36,7 @@ PanelCreateYourAccount < Panel
   Label
     id: label
     text-offset: 0 2
-    font: verdana-11px-monochrome
+    font: $var-cip-font-new
 
   UIWidget
     id: field
@@ -189,7 +189,7 @@ MainWindow
         Label
           text-offset: 0 2
           margin-left: 38
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
           !text: tr('Character Name:')
         
         Label
@@ -613,7 +613,7 @@ MainWindow
         Label
           text-offset: 0 2
           margin-left: 38
-          font: verdana-11px-monochrome
+          font: $var-cip-font-new
           !text: tr('World Location:')
         QtComboBox
           id: comboBoxWorld

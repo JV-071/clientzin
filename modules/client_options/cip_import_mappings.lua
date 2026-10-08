@@ -1,177 +1,223 @@
-﻿-- chunkname: @/client_options/cip_import_mappings.lua
-
-CipImportMappings = {}
+﻿CipImportMappings = {}
 CipImportMappings.OPTION_KEYS = {
 	keyboardDelayMs = {
-		type = "number",
-		key = "hotkeyDelay"
+		key = "hotkeyDelay",
+		type = "number"
 	},
 	autoChaseEnabled = {
-		invert = true,
 		key = "autoChaseOff",
+		invert = true,
 		type = "bool"
 	},
 	actionBarShowBottom1 = {
-		type = "bool",
-		key = "actionBarShowBottom1"
+		key = "actionBarShowBottom1",
+		type = "bool"
 	},
 	actionBarShowBottom2 = {
-		type = "bool",
-		key = "actionBarShowBottom2"
+		key = "actionBarShowBottom2",
+		type = "bool"
 	},
 	actionBarShowBottom3 = {
-		type = "bool",
-		key = "actionBarShowBottom3"
+		key = "actionBarShowBottom3",
+		type = "bool"
 	},
 	actionBarShowLeft1 = {
-		type = "bool",
-		key = "actionBarShowLeft1"
+		key = "actionBarShowLeft1",
+		type = "bool"
 	},
 	actionBarShowLeft2 = {
-		type = "bool",
-		key = "actionBarShowLeft2"
+		key = "actionBarShowLeft2",
+		type = "bool"
 	},
 	actionBarShowLeft3 = {
-		type = "bool",
-		key = "actionBarShowLeft3"
+		key = "actionBarShowLeft3",
+		type = "bool"
 	},
 	actionBarShowRight1 = {
-		type = "bool",
-		key = "actionBarShowRight1"
+		key = "actionBarShowRight1",
+		type = "bool"
 	},
 	actionBarShowRight2 = {
-		type = "bool",
-		key = "actionBarShowRight2"
+		key = "actionBarShowRight2",
+		type = "bool"
 	},
 	actionBarShowRight3 = {
-		type = "bool",
-		key = "actionBarShowRight3"
+		key = "actionBarShowRight3",
+		type = "bool"
 	},
 	actionBarBottomLocked = {
-		type = "bool",
-		key = "actionBarBottomLocked"
+		key = "actionBarBottomLocked",
+		type = "bool"
 	},
 	actionBarLeftLocked = {
-		type = "bool",
-		key = "actionBarLeftLocked"
+		key = "actionBarLeftLocked",
+		type = "bool"
 	},
 	actionBarRightLocked = {
-		type = "bool",
-		key = "actionBarRightLocked"
+		key = "actionBarRightLocked",
+		type = "bool"
 	},
 	actionButtonShowHotkey = {
-		type = "bool",
-		key = "showAssignedHKButton"
+		key = "showAssignedHKButton",
+		type = "bool"
 	},
 	actionButtonShowSpellParameters = {
-		type = "bool",
-		key = "showSpellParameters"
+		key = "showSpellParameters",
+		type = "bool"
 	},
 	actionButtonShowAmount = {
-		type = "bool",
-		key = "showHKObjectsBars"
+		key = "showHKObjectsBars",
+		type = "bool"
 	},
 	actionButtonShowCooldownNumbers = {
-		type = "bool",
-		key = "showTooltips"
+		key = "showTooltips",
+		type = "bool"
 	},
 	vsyncEnabled = {
-		type = "bool",
-		key = "vsync"
+		key = "vsync",
+		type = "bool"
 	},
 	frameRateLimit = {
-		requires = "frameRateLimitEnabled",
 		key = "backgroundFrameRate",
+		requires = "frameRateLimitEnabled",
 		type = "number"
 	},
 	frameRateLimitEnabled = {
-		invert = true,
 		key = "noFrameRateLimit",
+		invert = true,
 		type = "bool"
 	},
 	antialiasingMode = {
-		type = "number",
-		key = "antialiasingMode"
+		key = "antialiasingMode",
+		type = "number"
 	},
 	alwaysTurnTowardsMoveDirection = {
-		type = "bool",
-		key = "alwaysTurnTowardsMovement"
+		key = "alwaysTurnTowardsMovement",
+		type = "bool"
 	},
 	creatureShowHealth = {
-		type = "bool",
-		key = "showOtherHealth"
+		key = "showOtherHealth",
+		type = "bool"
 	},
 	creatureShowName = {
-		type = "bool",
-		key = "showOtherName"
+		key = "showOtherName",
+		type = "bool"
 	},
 	creatureShowMarks = {
-		type = "bool",
-		key = "showOtherMarks"
+		key = "showOtherMarks",
+		type = "bool"
 	},
 	playerShowHealth = {
-		type = "bool",
-		key = "showOwnHealth"
+		key = "showOwnHealth",
+		type = "bool"
 	},
 	playerShowMana = {
-		type = "bool",
-		key = "showOwnMana"
+		key = "showOwnMana",
+		type = "bool"
 	},
 	playerShowName = {
-		type = "bool",
-		key = "showOwnName"
+		key = "showOwnName",
+		type = "bool"
 	},
-	gameWindowShowOwnSpells = {
-		type = "bool",
-		key = "showSpells"
-	},
-	gameWindowShowOthersSpells = {
-		type = "bool",
-		key = "showSpellsOfOthers"
-	},
-	gameWindowShowHotkeyUsageMessages = {
-		type = "bool",
-		key = "showHotkeyUsageNotifications"
+	gameWindowShowTextualEffects = {
+		key = "showTextualEffects",
+		type = "bool"
 	},
 	gameWindowShowMessages = {
-		type = "bool",
-		key = "consoleMessages"
+		key = "showMessages",
+		type = "bool"
+	},
+	gameWindowShowPrivateMessages = {
+		key = "showPrivateMessages",
+		type = "bool"
+	},
+	gameWindowShowPotionMessages = {
+		key = "showPotionSoundEffects",
+		type = "bool"
+	},
+	gameWindowShowOwnSpells = {
+		key = "showSpells",
+		type = "bool"
+	},
+	gameWindowShowOthersSpells = {
+		key = "showSpellsOfOthers",
+		type = "bool"
+	},
+	gameWindowShowHotkeyUsageMessages = {
+		key = "showHotkeyUsageNotifications",
+		type = "bool"
+	},
+	gameWindowShowLootMessages = {
+		key = "showLootMessages",
+		type = "bool"
+	},
+	gameWindowShowLootHighlighting = {
+		key = "showLootHighlighting",
+		type = "bool"
+	},
+	gameWindowShowBoostedCreatureMessages = {
+		key = "showBoostedCreature",
+		type = "bool"
+	},
+	gameWindowShowOfflineTrainingMessages = {
+		key = "showOfflineTrainingProgress",
+		type = "bool"
+	},
+	gameWindowShowStoreMessages = {
+		key = "showStoreNotificationsInCombat",
+		type = "bool"
+	},
+	combatShowFrames = {
+		key = "showCombatFrames",
+		type = "bool"
+	},
+	combatShowPvpFrames = {
+		key = "showPvPFrames",
+		type = "bool"
+	},
+	gameWindowShowAttackAnimation = {
+		key = "showMeleeAttackAnimation",
+		type = "bool"
+	},
+	gameWindowShowInfoBanner = {
+		key = "showInfoBanner",
+		type = "bool"
 	}
 }
 CipImportMappings.CONTROL_BUTTON_IDS = {
-	compendiumDialog = "compendiumDialog",
-	analyticsSelectorWidget = "analyticsSelectorWidget",
-	questDialog = "questLogButton",
 	bosstiaryDialog = "bosstiary",
-	questTrackerWidget = "QuestLogTracker",
-	bossslotsDialog = "bossSlot",
-	manageShortcuts = "manageShortcuts",
-	bosstiaryTrackerWidget = "bosstiarytrackerButton",
-	unjustifiedPoinsWidget = "unjustifiedPointsButton",
+	bestiaryTrackerWidget = "trackerButton",
+	analyticsSelectorWidget = "analyticsSelectorWidget",
+	cyclopediaDialog = "CyclopediaButton",
+	preyDialog = "preyButton",
+	spellListWidget = "spellListWidget",
+	preyWidget = "preyButton",
+	compendiumDialog = "compendiumDialog",
 	skillWheelDialog = "wheelButton",
+	manageShortcuts = "manageShortcuts",
 	vipWidget = "vipListButton",
 	partyWidget = "partyWidget",
-	rewardWallDialog = "rewardWall",
+	bossslotsDialog = "bossSlot",
 	battleListWidget = "battleButton",
-	taskboard = "taskBoard",
+	bosstiaryTrackerWidget = "bosstiarytrackerButton",
 	skillsWidget = "skillsButton",
+	questDialog = "questLogButton",
+	unjustifiedPoinsWidget = "unjustifiedPointsButton",
+	questTrackerWidget = "QuestLogTracker",
+	rewardWallDialog = "rewardWall",
+	taskboard = "taskBoard",
 	weaponProficiency = "ProciencyButton",
 	highscoresDialog = "highscoresButton",
 	friendsDialog = "friendsDialog",
 	exaltationForgeDialog = "forgeButton",
-	imbuementTrackerWidget = "imbuementTrackerButton",
-	bestiaryTrackerWidget = "trackerButton",
-	cyclopediaDialog = "CyclopediaButton",
-	preyDialog = "preyButton",
-	spellListWidget = "spellListWidget",
-	preyWidget = "preyButton"
+	imbuementTrackerWidget = "imbuementTrackerButton"
 }
 CipImportMappings.USE_TYPE = {
-	Use = "use",
 	SelectUseTarget = "useWith",
 	Equip = "equip",
 	UseOnTarget = "useOnTarget",
-	UseOnYourself = "useOnSelf"
+	UseOnYourself = "useOnSelf",
+	Use = "use"
 }
 CipImportMappings.USE_TYPE_TO_HOTKEY_ACTION = {
 	Equip = HOTKEY_ACTION.EQUIP,
@@ -185,9 +231,29 @@ CipImportMappings.KEYBIND_ACTIONS = {
 		"Battle List",
 		"Attack Next Target"
 	},
+	ChangeCharacter = {
+		"Misc.",
+		"Change Character"
+	},
+	ClearOldestMessage = {
+		"Misc.",
+		"Clear oldest message from Game Window"
+	},
 	Logout = {
-		"Misc",
+		"Misc.",
 		"Logout"
+	},
+	NextHotkeyPreset = {
+		"Misc.",
+		"Next Hotkey Preset"
+	},
+	ShowLenshelp = {
+		"Misc.",
+		"Activate Lenshelp"
+	},
+	TakeScreenshot = {
+		"Misc.",
+		"Take Screenshot"
 	},
 	NextChannel = {
 		"Chat Channel",
@@ -209,13 +275,61 @@ CipImportMappings.KEYBIND_ACTIONS = {
 		"Chat Channel",
 		"Open Help Channel"
 	},
+	ShowDefaultChannel = {
+		"Chat Channel",
+		"Show Default Channel"
+	},
+	ChatModeTemporaryOn = {
+		"Chat Mode",
+		"Set to Chat On*"
+	},
+	Copy = {
+		"Chat Text",
+		"Copy to clipboard"
+	},
+	SelectAll = {
+		"Chat Text",
+		"Select all"
+	},
+	PressEnterInChat = {
+		"Chat",
+		"Send current chat line"
+	},
+	ToggleShowServermessagesInCurrentChannel = {
+		"Chat",
+		"Show/hide Show Server messages in current channel"
+	},
 	ToggleBattlelist = {
 		"Windows",
 		"Show/hide battle list"
 	},
-	ShowQuestlog = {
+	ToggleSkillsWidget = {
 		"Windows",
-		"Show/hide quest Log"
+		"Show/hide skills window"
+	},
+	ToggleSpellListWidget = {
+		"Windows",
+		"Show/hide spell list"
+	},
+	ToggleVipWidget = {
+		"Windows",
+		"Show/hide VIP list"
+	},
+	ShowCyclopediaMap = {
+		"Dialogs",
+		"Open Cyclopedia - Map"
+	},
+	ShowIgnorelist = {
+		"Dialogs",
+		"Open Ignore List"
+	},
+	ShowOptionsHotkeys = {
+		"Dialogs",
+		"Open Options - Custom Hotkeys"
+	},
+	ShowQuestlog = {
+		"Dialogs",
+		"Open Questlog"
 	},
 	ShowPrey = {
 		"Dialogs",
@@ -223,24 +337,99 @@ CipImportMappings.KEYBIND_ACTIONS = {
 	},
 	Bugreport = {
 		"Dialogs",
-		"Open Bug Report"
+		"Open Bugreport"
 	},
 	QuickLootAreaAtPlayer = {
 		"Loot",
 		"Quick Loot Nearby Corpses"
 	},
-	ChatModeTemporaryOn = {
-		"Chat Mode",
-		"Set to Chat On"
-	},
 	ToggleManualSortMode = {
 		"Containers",
 		"Toggle Manual Sort Mode"
+	},
+	GoEast = {
+		"Movement",
+		"Go East"
+	},
+	GoNorth = {
+		"Movement",
+		"Go North"
+	},
+	GoNorthEast = {
+		"Movement",
+		"Go North-East"
+	},
+	GoNorthWest = {
+		"Movement",
+		"Go North-West"
+	},
+	GoSouth = {
+		"Movement",
+		"Go South"
+	},
+	GoSouthEast = {
+		"Movement",
+		"Go South-East"
+	},
+	GoSouthWest = {
+		"Movement",
+		"Go South-West"
+	},
+	GoWest = {
+		"Movement",
+		"Go West"
+	},
+	StopPlayer = {
+		"Movement",
+		"Stop All Actions"
+	},
+	ToggleMounted = {
+		"Movement",
+		"Mount/dismount"
+	},
+	MinimapCenter = {
+		"Minimap",
+		"Center"
+	},
+	MinimapFloorDown = {
+		"Minimap",
+		"One Floor Down"
+	},
+	MinimapFloorUp = {
+		"Minimap",
+		"One Floor Up"
+	},
+	MinimapScrollEast = {
+		"Minimap",
+		"Scroll East"
+	},
+	MinimapScrollNorth = {
+		"Minimap",
+		"Scroll North"
+	},
+	MinimapScrollSouth = {
+		"Minimap",
+		"Scroll South"
+	},
+	MinimapScrollWest = {
+		"Minimap",
+		"Scroll West"
+	},
+	MinimapZoomIn = {
+		"Minimap",
+		"Zoom In"
+	},
+	MinimapZoomOut = {
+		"Minimap",
+		"Zoom Out"
 	}
 }
 CipImportMappings.KEY_SEQUENCE_REPLACEMENTS = {
+	["Alt+PgUp"] = "Alt+PageUp",
 	Return = "Enter",
-	Backtab = "BackTab"
+	Esc = "Escape",
+	Backtab = "BackTab",
+	["Alt+PgDown"] = "Alt+PageDown"
 }
 CipImportMappings.PER_CHARACTER_FILES = {
 	"wheelOfDestiny.json",
@@ -306,6 +495,12 @@ CipImportMappings.SIDEBAR_WIDGET_MAP = {
 	bosstiaryTracker = {
 		widgetId = "BosstiaryTrackerWindow"
 	},
+	battlePassTracker = {
+		widgetId = "BattlePassTrackerWindow"
+	},
+	battlePassInbox = {
+		widgetId = "BattlePassInboxWindow"
+	},
 	analyticsSelector = {
 		widgetId = "analyserMiniWindow"
 	},
@@ -368,6 +563,12 @@ CipImportMappings.SIDEBAR_WIDGET_OPTIONS_KEYS = {
 	},
 	bosstiaryTracker = {
 		section = "bosstiaryTrackerWidgetOptions"
+	},
+	battlePassTracker = {
+		section = "battlePassTrackerWidgetOptions"
+	},
+	battlePassInbox = {
+		section = "battlePassInboxWidgetOptions"
 	},
 	analyticsSelector = {
 		section = "analyticsSelectorOptions"
@@ -528,9 +729,7 @@ function CipImportMappings.normalizeKeySequence(keysequence)
 		return nil
 	end
 
-	local key = CipImportMappings.KEY_SEQUENCE_REPLACEMENTS[keysequence] or keysequence
-
-	return key
+	return CipImportMappings.KEY_SEQUENCE_REPLACEMENTS[keysequence] or keysequence
 end
 
 function CipImportMappings.isValidKeyCombo(key)
@@ -587,9 +786,7 @@ function CipImportMappings.isValidItemId(itemId)
 		return true
 	end
 
-	local thingType = g_things.getThingType(itemId, ThingCategoryItem)
-
-	return thingType ~= nil
+	return g_things.getThingType(itemId, ThingCategoryItem) ~= nil
 end
 
 function CipImportMappings.convertActionSettingToSlot(setting)
@@ -654,9 +851,7 @@ function CipImportMappings.convertActionSettingToHotkey(setting)
 	end
 
 	if setting.chatText and setting.chatText ~= "" then
-		local action = setting.sendAutomatically and HOTKEY_ACTION.TEXT_AUTO or HOTKEY_ACTION.TEXT
-
-		return action, {
+		return setting.sendAutomatically and HOTKEY_ACTION.TEXT_AUTO or HOTKEY_ACTION.TEXT, {
 			text = setting.chatText
 		}
 	end
@@ -666,9 +861,7 @@ function CipImportMappings.convertActionSettingToHotkey(setting)
 			return nil, nil
 		end
 
-		local action = CipImportMappings.USE_TYPE_TO_HOTKEY_ACTION[setting.useType] or HOTKEY_ACTION.USE
-
-		return action, {
+		return CipImportMappings.USE_TYPE_TO_HOTKEY_ACTION[setting.useType] or HOTKEY_ACTION.USE, {
 			itemId = setting.useObject
 		}
 	end

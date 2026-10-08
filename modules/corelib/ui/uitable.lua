@@ -1,6 +1,4 @@
-﻿-- chunkname: @/corelib/ui/uitable.lua
-
-TABLE_SORTING_ASC = 0
+﻿TABLE_SORTING_ASC = 0
 TABLE_SORTING_DESC = 1
 UITable = extends(UIWidget, "UITable")
 
@@ -26,7 +24,7 @@ function UITable.create()
 	return table
 end
 
-function UITable:onDestroy()
+function UITable.onDestroy(self)
 	for _, row in pairs(self.rows) do
 		row.onClick = nil
 	end
@@ -45,7 +43,7 @@ function UITable:onDestroy()
 	end
 end
 
-function UITable:onSetup()
+function UITable.onSetup(self)
 	local header = self:getChildById("header")
 
 	if header then
@@ -53,7 +51,7 @@ function UITable:onSetup()
 	end
 end
 
-function UITable:onStyleApply(styleName, styleNode)
+function UITable.onStyleApply(self, styleName, styleNode)
 	for name, value in pairs(styleNode) do
 		if value ~= false then
 			if name == "table-data" then
@@ -81,7 +79,7 @@ function UITable:onStyleApply(styleName, styleNode)
 	end
 end
 
-function UITable:setColumnWidth(width)
+function UITable.setColumnWidth(self, width)
 	if self:hasHeader() then
 		return
 	end
@@ -89,27 +87,46 @@ function UITable:setColumnWidth(width)
 	self.columnWidth = width
 end
 
-function UITable:setDefaultColumnWidth(width)
+function UITable.setDefaultColumnWidth(self, width)
 	self.defaultColumnWidth = width
 end
 
-function UITable:hasHeader()
+function UITable.hasHeader(self)
 	return self.headerRow ~= nil
 end
 
-function UITable:clearData()
+function UITable.clearData(self)
 	if not self.dataSpace then
 		return
 	end
 
-	self.dataSpace:destroyChildren()
+	for colId, column in pairs(self.rows) do
+		column.onClick = nil
+		column.table = nil
+	end
+
+	for colId, column in pairs(self.columns) do
+		if type(column) == "table" then
+			for type, columnWidget in pairs(column) do
+				if columnWidget then
+					columnWidget.onClick = nil
+
+					if columnWidget.edit then
+						columnWidget.edit.onClick = nil
+					end
+				end
+			end
+		end
+	end
 
 	self.selectedRow = nil
 	self.columns = {}
 	self.rows = {}
+
+	self.dataSpace:destroyChildren()
 end
 
-function UITable:setHeader(headerWidget)
+function UITable.setHeader(self, columns)
 	self:removeHeader()
 
 	if self.dataSpace then
@@ -123,18 +140,18 @@ function UITable:setHeader(headerWidget)
 	self.headerColumns = {}
 	self.columnWidth = {}
 
-	for colId, column in pairs(headerWidget:getChildren()) do
-		column.colId = colId
+	for _, column in pairs(columns:getChildren()) do
+		column.colId = _
 		column.table = self
 
 		table.insert(self.columnWidth, column:getWidth())
 		table.insert(self.headerColumns, column)
 	end
 
-	self.headerRow = headerWidget
+	self.headerRow = columns
 end
 
-function UITable:addHeader(data)
+function UITable.addHeader(self, data)
 	if not data or type(data) ~= "table" then
 		g_logger.error("UITable:addHeaderRow - table columns must be provided in a table")
 
@@ -188,7 +205,7 @@ function UITable:addHeader(data)
 	return headerRow
 end
 
-function UITable:removeHeader()
+function UITable.removeHeader(self)
 	if self:hasHeader() then
 		if self.dataSpace then
 			local newHeight = self.dataSpace:getHeight() + self.headerRow:getHeight() + self.dataSpace:getMarginTop()
@@ -207,7 +224,7 @@ function UITable:removeHeader()
 	end
 end
 
-function UITable:addRow(data, height)
+function UITable.addRow(self, data, height)
 	if not self.dataSpace then
 		g_logger.error("UITable:addRow - table data space has not been set, cannot add rows.")
 
@@ -299,7 +316,7 @@ function UITable:addRow(data, height)
 	return row
 end
 
-function UITable:updateRows()
+function UITable.updateRows(self)
 	for rowId = 1, #self.rows do
 		local row = self.rows[rowId]
 
@@ -310,7 +327,7 @@ function UITable:updateRows()
 	end
 end
 
-function UITable:removeRow(row)
+function UITable.removeRow(self, row)
 	if self.selectedRow == row then
 		self:selectRow(nil)
 	end
@@ -324,11 +341,11 @@ function UITable:removeRow(row)
 	self:updateRows()
 end
 
-function UITable:toggleSorting(enabled)
+function UITable.toggleSorting(self, enabled)
 	self.autoSort = enabled
 end
 
-function UITable:setSorting(colId, sortType)
+function UITable.setSorting(self, colId, sortType)
 	self.headerColumns[colId]:focus()
 
 	if sortType then
@@ -346,7 +363,7 @@ function UITable:setSorting(colId, sortType)
 	self.sortColumn = colId
 end
 
-function UITable:sort()
+function UITable.sort(self)
 	if self.sortColumn <= 0 then
 		return
 	end
@@ -384,7 +401,7 @@ function UITable:sort()
 	end
 end
 
-function UITable:selectRow(selectedRow)
+function UITable.selectRow(self, selectedRow)
 	if selectedRow == self.selectedRow then
 		return
 	end
@@ -404,7 +421,7 @@ function UITable:selectRow(selectedRow)
 	signalcall(self.onSelectionChange, self, selectedRow, previousSelectedRow)
 end
 
-function UITable:setTableData(tableData)
+function UITable.setTableData(self, tableData)
 	local headerHeight = 0
 
 	if self.headerRow then
@@ -418,7 +435,7 @@ function UITable:setTableData(tableData)
 	})
 end
 
-function UITable:setRowStyle(style, dontUpdate)
+function UITable.setRowStyle(self, style, dontUpdate)
 	self.rowBaseStyle = style
 
 	if not dontUpdate then
@@ -428,7 +445,7 @@ function UITable:setRowStyle(style, dontUpdate)
 	end
 end
 
-function UITable:setColumnStyle(style, dontUpdate)
+function UITable.setColumnStyle(self, style, dontUpdate)
 	self.columBaseStyle = style
 
 	if not dontUpdate then
@@ -440,7 +457,7 @@ function UITable:setColumnStyle(style, dontUpdate)
 	end
 end
 
-function UITable:setHeaderRowStyle(style)
+function UITable.setHeaderRowStyle(self, style)
 	self.headerRowBaseStyle = style
 
 	if self.headerRow then
@@ -448,7 +465,7 @@ function UITable:setHeaderRowStyle(style)
 	end
 end
 
-function UITable:setHeaderColumnStyle(style)
+function UITable.setHeaderColumnStyle(self, style)
 	self.headerColumnBaseStyle = style
 
 	for _, col in pairs(self.headerColumns) do
@@ -458,13 +475,13 @@ end
 
 UITableRow = extends(UIWidget, "UITableRow")
 
-function UITableRow:onFocusChange(focused)
+function UITableRow.onFocusChange(self, focused)
 	if focused and self.table then
 		self.table:selectRow(self)
 	end
 end
 
-function UITableRow:onStyleApply(styleName, styleNode)
+function UITableRow.onStyleApply(self, styleName, styleNode)
 	for name, value in pairs(styleNode) do
 		if name == "even-background-color" then
 			self.evenBackgroundColor = value
@@ -474,7 +491,7 @@ function UITableRow:onStyleApply(styleName, styleNode)
 	end
 end
 
-function UITableRow:updateBackgroundColor()
+function UITableRow.updateBackgroundColor(self)
 	self.backgroundColor = nil
 
 	local isEven = self.rowId % 2 == 0
@@ -494,7 +511,7 @@ end
 
 UITableHeaderColumn = extends(UIButton, "UITableHeaderColumn")
 
-function UITableHeaderColumn:onClick()
+function UITableHeaderColumn.onClick(self)
 	if self.table then
 		self.table:setSorting(self.colId)
 		self.table:sort()

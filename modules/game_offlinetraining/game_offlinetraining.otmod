@@ -2,6 +2,7 @@ Module
   name: game_offlinetraining
   description: Offline Training
   author: Clientzin
+  sandboxed: true
   scripts: [ game_offlinetraining ]
   @onLoad: init()
   @onUnload: terminate()

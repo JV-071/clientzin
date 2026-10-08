@@ -1,0 +1,788 @@
+BattlePassTabButton < UIButton
+  size: 483 34
+  image-source: /images/ui/button-grey-up
+  image-border: 5
+  font: $var-cip-font
+  color: $var-text-cip-color
+  text-offset: 7 1
+  icon-align: left
+  icon-offset: 6 0
+
+  $pressed:
+    image-source: /images/ui/button-grey-down
+    text-offset: 8 2
+    icon-offset: 7 1
+
+  $checked:
+    image-source: /images/ui/button-grey-down
+    text-offset: 8 2
+    icon-offset: 7 1
+
+  $on:
+    image-source: /images/ui/button-grey-down
+    text-offset: 8 2
+    icon-offset: 7 1
+
+// Componentes compartilhados dos cards Daily/Weekly
+BattlePassMissionStars < UIWidget
+  id: stars
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  phantom: true
+
+  UILabel
+    id: creatureName
+    !text: tr('Mission')
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 15
+    font: verdana-11px-monochrome
+    color: #ffffff
+    text-auto-resize: true
+
+BattlePassMissionIconSlot < UIWidget
+  id: iconSlot
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  size: 66 66
+  padding: 1
+  image-source: /images/game/forge/slot-forge.png
+
+  UIWidget
+    id: icon
+    size: 64 64
+    image-size: 64 64
+    anchors.centerIn: parent
+    phantom: true
+    image-source: /images/game/battlepass/icon_battle_pass_default
+    image-clip: 0 0 32 32
+    image-smooth: false
+
+BattlePassMissionPointsBanner < UIWidget
+  id: pointsBanner
+  size: 164 85
+  anchors.horizontalCenter: iconSlot.horizontalCenter
+  anchors.top: iconSlot.top
+  margin-top: -2
+  image-source: /images/game/battlepass/banner_points_mission
+  phantom: true
+
+  Label
+    id: rewardPoints
+    !text: '0'
+    anchors.centerIn: parent
+    margin-top: 34
+    font: verdana-11px-monochrome
+    color: white
+    text-auto-resize: true
+    phantom: true
+
+BattlePassMissionSep < UIWidget
+  id: missionSep
+  anchors.top: pointsBanner.bottom
+  anchors.left: parent.left
+  anchors.right: parent.right
+  height: 2
+  phantom: true
+  focusable: false
+  image-source: /images/ui/separator_horizontal
+  image-border: 1
+
+BattlePassMissionTextArea < Panel
+  id: missionTextArea
+  height: 32
+  anchors.top: missionSep.bottom
+  anchors.left: missionSep.left
+  anchors.right: parent.right
+  margin-top: 3
+  phantom: true
+
+  UILabel
+    id: missionBullet
+    !text: ''
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: parent.left
+    margin-left: 1
+    font: verdana-11px-monochrome
+    color: $var-text-cip-color
+    text-auto-resize: true
+    phantom: true
+
+  UILabel
+    id: missionText
+    !text: tr('Kill 50 rats')
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.left: missionBullet.right
+    anchors.right: parent.right
+    margin-left: 4
+    font: verdana-11px-monochrome
+    color: $var-text-cip-color
+    text-wrap: true
+    text-overflow: ellipsis
+    text-align: left
+    text-auto-resize: false
+    phantom: false
+
+BattlePassMissionProgressTrack < Panel
+  id: missionProgressTrack
+  height: 14
+  anchors.left: parent.left
+  anchors.right: parent.right
+  anchors.bottom: parent.bottom
+  image-source: /images/ui/button-verydarkgrey-down
+  image-border: 3
+  phantom: true
+
+  ProgressBarSD
+    id: missionProgress
+    anchors.fill: parent
+    margin: 1
+    image-source: /images/bars/progressbar-yellow-small
+    phantom: true
+    percent: 0
+
+  Label
+    id: missionProgressLabel
+    anchors.centerIn: parent
+    !text: '0 / 0'
+    font: verdana-11px-monochrome
+    color: $var-text-cip-color
+    text-auto-resize: true
+    margin-top: 1
+    phantom: true
+
+BattlePassMissionDeluxeIcon < UIWidget
+  id: deluxeIcon
+  size: 44 29
+  anchors.bottom: missionProgressTrack.top
+  anchors.right: parent.right
+  margin-bottom: 3
+  image-source: /images/game/battlepass/icon_deluxe_disabled
+  visible: false
+
+BattlePassMissionReroll < UIWidget
+  id: reroll
+  size: 44 32
+  image-source: /images/game/battlepass/backdrop_battlepass_reroll
+  image-size: 44 32
+  anchors.top: parent.top
+  anchors.right: parent.right
+  margin-top: -10
+  margin-right: -12
+  phantom: false
+  !tooltip: tr('Use this option to reroll this mission.')
+
+// Card Daily
+BattlePassDailyCard < Panel
+  size: 296 193
+  anchors.top: parent.top
+  anchors.left: parent.left
+  margin-top: 6
+  margin-left: 19
+  image-source: /images/ui/2pixel-up-frame-borderimage
+  image-border: 3
+  focusable: false
+  padding: 10
+
+  BattlePassMissionStars
+    image-source: /images/game/battlepass/backdrop_battlepass_bronze_mission
+    margin-top: -16
+    margin-left: 3
+
+  BattlePassMissionIconSlot
+    margin-top: 31
+
+  BattlePassMissionPointsBanner
+
+  BattlePassMissionSep
+    margin-top: 11
+
+  BattlePassMissionTextArea
+
+  BattlePassMissionProgressTrack
+
+  BattlePassMissionDeluxeIcon
+    margin-right: -13
+    margin-bottom: 3
+
+  BattlePassMissionReroll
+
+// Chrome compartilhado das 3 secoes (Progress / Daily / Weekly)
+BattlePassSectionPanel < UIWindow
+  text-align: top
+  image-source: /images/ui/popupwindow-sem-borda-interna
+  text-offset: 0 2
+  image-border: 6
+  image-border-top: 27
+  draggable: false
+  color: #909090
+  font: verdana-11px-monochrome
+  padding-top: 20
+
+BattlePassDailyPanel < Panel
+  padding: 5
+  padding-right: 4
+
+  BattlePassSectionPanel
+    id: progressPanel
+    !text: tr('Progress')
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-left: -5
+    margin-right: -4
+    height: 104
+
+    UIWidget
+      id: iconLevel
+      size: 150 75
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 1
+      image-source: /images/game/battlepass/icon_level
+      phantom: true
+
+      Label
+        id: levelLabel
+        !text: '0'
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        font: verdana-11px-monochrome
+        color: white
+        text-auto-resize: true
+        phantom: true
+
+    Panel
+      id: dailyResetTrack
+      height: 20
+      anchors.left: parent.left
+      anchors.right: iconLevel.left
+      anchors.bottom: parent.bottom
+      margin-left: 16
+      margin-right: 6
+      margin-bottom: 8
+      image-source: /images/ui/button-verydarkgrey-down
+      image-border: 3
+      phantom: true
+
+      ProgressBarSD
+        id: dailyReset
+        anchors.fill: parent
+        margin: 1
+        image-source: /images/bars/progressbar-orange-large
+        phantom: true
+
+      Label
+        id: dailyResetLabel
+        anchors.centerIn: parent
+        !text: '0 Hours Left'
+        font: verdana-11px-monochrome
+        color: $var-text-cip-color
+        text-auto-resize: true
+        margin-top: 1
+        phantom: true
+
+    Label
+      id: dailyResetCaption
+      !text: tr('Daily Missions')
+      anchors.bottom: dailyResetTrack.top
+      anchors.horizontalCenter: dailyResetTrack.horizontalCenter
+      margin-bottom: 2
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+      text-auto-resize: true
+      phantom: true
+
+    Panel
+      id: weeklyResetTrack
+      height: 20
+      anchors.left: iconLevel.right
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-left: 6
+      margin-right: 16
+      margin-bottom: 8
+      image-source: /images/ui/button-verydarkgrey-down
+      image-border: 3
+      phantom: true
+
+      ProgressBarSD
+        id: weeklyReset
+        anchors.fill: parent
+        margin: 1
+        image-source: /images/bars/progressbar-orange-large
+        phantom: true
+
+      Label
+        id: weeklyResetLabel
+        anchors.centerIn: parent
+        !text: '0 Days Left'
+        font: verdana-11px-monochrome
+        color: $var-text-cip-color
+        text-auto-resize: true
+        margin-top: 1
+        phantom: true
+
+    Label
+      id: weeklyResetCaption
+      !text: tr('Weekly Missions')
+      anchors.bottom: weeklyResetTrack.top
+      anchors.horizontalCenter: weeklyResetTrack.horizontalCenter
+      margin-bottom: 2
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+      text-auto-resize: true
+      phantom: true
+
+    Panel
+      id: stageProgressTrack
+      height: 20
+      anchors.left: parent.left
+      anchors.right: iconLevel.left
+      anchors.bottom: dailyResetTrack.top
+      margin-left: 16
+      margin-right: 6
+      margin-bottom: 20
+      image-source: /images/ui/button-verydarkgrey-down
+      image-border: 3
+      phantom: true
+
+      ProgressBarSD
+        id: stageProgress
+        anchors.fill: parent
+        margin: 1
+        image-source: /images/bars/progressbar-orange-large
+        phantom: true
+
+      Label
+        id: stageProgressLabel
+        anchors.centerIn: parent
+        !text: '0 / 50'
+        font: verdana-11px-monochrome
+        color: $var-text-cip-color
+        text-auto-resize: true
+        margin-top: 1
+        phantom: true
+
+    Label
+      id: stageProgressCaption
+      !text: tr('Level Progress')
+      anchors.bottom: stageProgressTrack.top
+      anchors.horizontalCenter: stageProgressTrack.horizontalCenter
+      margin-bottom: 2
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+      text-auto-resize: true
+      phantom: true
+
+    Panel
+      id: durationProgressTrack
+      height: 20
+      anchors.left: iconLevel.right
+      anchors.right: parent.right
+      anchors.bottom: weeklyResetTrack.top
+      margin-left: 6
+      margin-right: 16
+      margin-bottom: 20
+      image-source: /images/ui/button-verydarkgrey-down
+      image-border: 3
+      phantom: true
+
+      ProgressBarSD
+        id: durationProgress
+        anchors.fill: parent
+        margin: 1
+        image-source: /images/bars/progressbar-orange-large
+        phantom: true
+
+      Label
+        id: durationProgressLabel
+        anchors.centerIn: parent
+        !text: '0 Days left'
+        font: verdana-11px-monochrome
+        color: $var-text-cip-color
+        text-auto-resize: true
+        margin-top: 1
+        phantom: true
+
+    Label
+      id: durationProgressCaption
+      !text: tr('Season ends in')
+      anchors.bottom: durationProgressTrack.top
+      anchors.horizontalCenter: durationProgressTrack.horizontalCenter
+      margin-bottom: 2
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+      text-auto-resize: true
+      phantom: true
+
+  BattlePassSectionPanel
+    id: dailyMissionsPanel
+    !text: tr('Daily Missions')
+    anchors.top: progressPanel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    margin-left: -5
+    margin-right: -4
+    height: 228
+    padding-top: 0
+
+    Panel
+      id: dailyTasks
+      anchors.fill: parent
+      margin-top: 22
+      margin-bottom: 4
+      margin-left: 2
+      margin-right: 2
+
+    UIWidget
+      id: dailyMissionsHelp
+      image-source: /images/icons/show_gui_help_grey
+      size: 12 12
+      focusable: false
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-top: 3
+      margin-right: 3
+      !tooltip: tr('Missions Free:<br><li>Mission 1</li><li>Mission 2</li><br>Mission Deluxe:<br><li>Mission 3</li><br>Reroll costs:<br><li>Bronze: 25,000 + 250 gps × level</li><li>Silver: 50,000 + 375 gps × level</li><li>Gold: 75,000 + 500 gps × level</li>')
+      @onSetup: self:raise()
+
+  BattlePassSectionPanel
+    id: weeklyMissionsPanel
+    !text: tr('Weekly Missions')
+    anchors.top: dailyMissionsPanel.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    margin-left: -5
+    margin-right: -4
+    height: 228
+    padding-top: 0
+
+    Panel
+      id: weeklyList
+      anchors.fill: parent
+      margin-top: 22
+      margin-bottom: 4
+      margin-left: 2
+      margin-right: 2
+
+    UIWidget
+      id: weeklyMissionsHelp
+      image-source: /images/icons/show_gui_help_grey
+      size: 12 12
+      focusable: false
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-top: 3
+      margin-right: 3
+      !tooltip: tr('Missions Free:<br><li>Mission 1</li><li>Mission 2</li><li>Mission 3</li><br>Mission Deluxe:<br><li>Mission 4</li><li>Mission 5</li><br>Reroll costs:<br><li>Bronze: 50,000 + 500 gps × level</li><li>Silver: 100,000 + 750 gps × level</li><li>Gold: 150,000 + 1,000 gps × level</li>')
+      @onSetup: self:raise()
+
+// Card weekly ? mesmo layout do Daily; só largura 186 e backdrop _small
+BattlePassWeeklyCard < Panel
+  size: 186 193
+  anchors.top: parent.top
+  anchors.left: parent.left
+  margin-top: 6
+  image-source: /images/ui/2pixel-up-frame-borderimage
+  image-border: 3
+  focusable: false
+  padding: 10
+
+  BattlePassMissionStars
+    image-source: /images/game/battlepass/backdrop_battlepass_bronze_mission_small
+    margin-top: -16
+    margin-left: 3
+
+  BattlePassMissionIconSlot
+    margin-top: 31
+
+  BattlePassMissionPointsBanner
+
+  BattlePassMissionSep
+    margin-top: 11
+
+  BattlePassMissionTextArea
+
+  BattlePassMissionProgressTrack
+
+  BattlePassMissionDeluxeIcon
+    margin-right: -13
+    margin-bottom: 3
+
+  BattlePassMissionReroll
+
+BattlePassRewardsPanel < Panel
+  Panel
+    id: rewardsFrame
+    size: 968 570
+    anchors.top: parent.top
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 5
+    image-source: /images/ui/1pixel-down-frame
+    image-border: 3
+
+    VerticalQtScrollBar
+      id: rewardsScrollBar
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      anchors.right: parent.right
+      margin-top: 1
+      margin-bottom: 1
+      margin-right: 1
+      width: 12
+      step: 1
+      pixels-scroll: true
+      parent-scroll: false
+
+    UIMap
+      id: rewardsMap
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: rewardsScrollBar.left
+      anchors.bottom: parent.bottom
+      margin: 1
+      focusable: false
+      clipping: true
+      draggable: false
+      standalone: true
+      draw-lights: false
+
+    Button
+      id: rewardsFocusButton
+      size: 33 33
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 10
+      margin-left: 10
+      icon-source: /images/icons_big/icon-friends-accountsearch
+      icon-offset: 0 0
+      focusable: false
+      !tooltip: tr('Center on your character')
+      @onClick: modules.game_battlepass.focusRewardsMapCharacter()
+
+      $pressed:
+        icon-offset: 1 1
+
+BattlePassElementButton < UIButton
+  size: 64 64
+  image-source: /images/ui/button-grey-up
+  image-border: 5
+  checkable: true
+  focusable: false
+  border: 1 alpha
+
+  $hover:
+    image-source: /images/ui/button-grey-up
+
+  $pressed:
+    image-source: /images/ui/button-grey-up
+
+  $checked:
+    image-source: /images/ui/button-grey-up
+    border: 1 white
+
+  UIItem
+    id: item
+    size: 32 32
+    virtual: true
+    phantom: true
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    show-count: false
+
+  UICreature
+    id: creature
+    size: 48 48
+    phantom: true
+    visible: false
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    fixed-creature-size: true
+    base-scale: true
+    creature-center: true
+    ignore-displacement-shift: true
+
+BattlePassElementSelector < MainLogoWindow
+  id: battlePassElementSelector
+  size: 303 220
+  !text: ''
+  padding-top: 8
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
+  clipping: false
+  anchors.centerIn: parent
+  @onEscape: modules.game_battlepass.cancelRewardChoice()
+  @onEnter: modules.game_battlepass.confirmRewardChoice()
+
+  Button
+    id: cancelButton
+    !text: tr('Close')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    @onClick: modules.game_battlepass.cancelRewardChoice()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  Button
+    id: selectButton
+    !text: tr('Ok')
+    size: 43 20
+    text-offset: 0 0
+    enabled: false
+    anchors.bottom: parent.bottom
+    anchors.right: cancelButton.left
+    margin-right: 6
+    @onClick: modules.game_battlepass.confirmRewardChoice()
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: cancelButton.top
+    margin-bottom: 11
+
+  Panel
+    id: elements
+    anchors.top: logoBackdropCrest.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: separator.top
+    margin-top: 6
+    margin-bottom: 8
+    clipping: true
+
+BattlePassWalkConfirm < MainLogoWindow
+  id: battlePassWalkConfirm
+  size: 320 100
+  !text: ''
+  padding-top: 8
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
+  clipping: false
+  anchors.centerIn: parent
+
+  Button
+    id: noButton
+    !text: tr('Cancel')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  Button
+    id: yesButton
+    !text: tr('Ok')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: noButton.left
+    margin-right: 6
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: noButton.top
+    margin-bottom: 11
+
+  Label
+    id: message
+    anchors.top: logoBackdropCrest.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+    font: verdana-11px-monochrome
+    color: $var-text-cip-color
+    text-wrap: false
+    text-align: center
+    text-auto-resize: true
+
+BattlePassRerollConfirm < MainLogoWindow
+  id: battlePassRerollConfirm
+  size: 420 100
+  !text: ''
+  padding-top: 8
+  padding-left: 16
+  padding-right: 16
+  padding-bottom: 16
+  clipping: false
+  anchors.centerIn: parent
+
+  Button
+    id: noButton
+    !text: tr('Cancel')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  Button
+    id: yesButton
+    !text: tr('Ok')
+    size: 43 20
+    text-offset: 0 0
+    anchors.bottom: parent.bottom
+    anchors.right: noButton.left
+    margin-right: 6
+
+    $pressed:
+      image-source: /images/ui/button-grey-down
+      text-offset: 0 0
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: noButton.top
+    margin-bottom: 11
+
+  Panel
+    id: messageRow
+    anchors.top: logoBackdropCrest.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 6
+    size: 380 16
+    phantom: true
+
+    Label
+      id: message
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      font: verdana-11px-monochrome
+      color: $var-text-cip-color
+      text-wrap: false
+      text-align: left
+      text-auto-resize: true
+
+    UIWidget
+      id: goldIcon
+      anchors.left: message.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 4
+      image-source: /images/icons/icon-goldcoin
+      !tooltip: tr('Gold Coins')

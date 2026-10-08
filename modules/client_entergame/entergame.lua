@@ -1,10 +1,13 @@
-﻿-- chunkname: @/client_entergame/entergame.lua
+﻿EnterGame = {}
 
-EnterGame = {}
-
-local loadBox, enterGame, motdWindow, enterGameButton, clientBox
+local loadBox
+local enterGame
+local motdWindow
+local unusedValue
+local clientBox
 local motdEnabled = true
-local twoFactorWindow, hostInfos
+local twoFactorWindow
+local hostInfos
 
 local function buildLoginBody(token)
 	local body = {
@@ -196,12 +199,13 @@ function EnterGame.init()
 		if editWidget and not editWidget.keyPressEventFixed then
 			local originalOnKeyPress = editWidget.onKeyPress
 
-			function editWidget:onKeyPress(keyCode, keyboardModifiers, autoRepeatTicks)
+			function editWidget.onKeyPress(self, keyCode, keyboardModifiers, autoRepeatTicks)
 				if keyCode == KeyTab and (self == emailEdit or self == passwordEdit) then
 					local target = self == emailEdit and passwordEdit or emailEdit
 
 					if target and not target:isDestroyed() then
 						target:focus()
+						target:setCursorPos(-1)
 					end
 
 					return true
@@ -259,7 +263,7 @@ function EnterGame.showPanels()
 end
 
 function EnterGame.loadStartupData()
-	if Services and Services.status and g_modules.getModule("client_bottommenu"):isLoaded() then
+	if Services and type(Services.status) == "string" and Services.status ~= "" and Services.status ~= "0" and g_modules.getModule("client_bottommenu"):isLoaded() then
 		EnterGame.postCacheInfo()
 		EnterGame.postEventScheduler()
 		EnterGame.postShowCreatureBoost()
@@ -371,9 +375,9 @@ function EnterGame.postCacheInfo()
 		modules.client_topmenu.setPlayersOnline(response.playersonline)
 	end
 
-	HTTP.post(Services.status, json.encode({
+	HTTP.post(Services.status, {
 		type = requestType
-	}), onRecvInfo, false)
+	}, onRecvInfo, false)
 end
 
 function EnterGame.postEventScheduler()
@@ -414,9 +418,9 @@ function EnterGame.postEventScheduler()
 		modules.client_bottommenu.setEventsSchedulerCalender(response.eventlist)
 	end
 
-	HTTP.post(Services.status, json.encode({
+	HTTP.post(Services.status, {
 		type = requestType
-	}), onRecvInfo, false)
+	}, onRecvInfo, false)
 end
 
 function EnterGame.postShowOff()
@@ -456,9 +460,9 @@ function EnterGame.postShowOff()
 		modules.client_bottommenu.setShowOffData(response)
 	end
 
-	HTTP.post(Services.status, json.encode({
+	HTTP.post(Services.status, {
 		type = requestType
-	}), onRecvInfo, false)
+	}, onRecvInfo, false)
 end
 
 function EnterGame.postShowCreatureBoost()
@@ -498,9 +502,9 @@ function EnterGame.postShowCreatureBoost()
 		modules.client_bottommenu.setBoostedCreatureAndBoss(response)
 	end
 
-	HTTP.post(Services.status, json.encode({
+	HTTP.post(Services.status, {
 		type = requestType
-	}), onRecvInfo, false)
+	}, onRecvInfo, false)
 end
 
 function EnterGame.show()
@@ -898,9 +902,7 @@ function EnterGame.setUniqueServer(host, port, protocol, windowWidth, windowHeig
 end
 
 function EnterGame.setServerInfo(message)
-	local label = enterGame:getChildById("serverInfoLabel")
-
-	label:setText(message)
+	enterGame:getChildById("serverInfoLabel"):setText(message)
 end
 
 function EnterGame.disableMotd()

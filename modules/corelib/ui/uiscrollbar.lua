@@ -1,12 +1,11 @@
-﻿-- chunkname: @/corelib/ui/uiscrollbar.lua
-
-UIScrollBar = extends(UIWidget, "UIScrollBar")
+﻿UIScrollBar = extends(UIWidget, "UIScrollBar")
 
 local function calcValues(self)
 	local slider = self:getChildById("sliderButton")
 	local decrementButton = self:getChildById("decrementButton")
 	local incrementButton = self:getChildById("incrementButton")
-	local pxrange, center
+	local pxrange
+	local center
 
 	if self.orientation == "vertical" then
 		pxrange = self:getHeight() - decrementButton:getHeight() - decrementButton:getMarginTop() - decrementButton:getMarginBottom() - incrementButton:getHeight() - incrementButton:getMarginTop() - incrementButton:getMarginBottom()
@@ -41,6 +40,10 @@ local function calcValues(self)
 
 	if not noScrollableRange and self.scrollSize and self:getParent() and self:getParent().scrollSize then
 		px = math.max(self:getParent().scrollSize, minSliderSize)
+	end
+
+	if self.fixedSliderSize then
+		px = math.min(pxrange, math.max(self.fixedSliderSize, minSliderSize))
 	end
 
 	local offset = 0
@@ -103,7 +106,8 @@ local function updateSlider(self)
 end
 
 local function parseSliderPos(self, slider, pos, move)
-	local delta, hotDistance
+	local delta
+	local hotDistance
 
 	if self.orientation == "vertical" then
 		delta = move.y
@@ -204,11 +208,12 @@ function UIScrollBar.create()
 	scrollbar.symbol = nil
 	scrollbar.mouseScroll = true
 	scrollbar.scrollSize = nil
+	scrollbar.fixedSliderSize = nil
 
 	return scrollbar
 end
 
-function UIScrollBar:onSetup()
+function UIScrollBar.onSetup(self)
 	self.setupDone = true
 
 	local sliderButton = self:getChildById("sliderButton")
@@ -238,7 +243,7 @@ function UIScrollBar:onSetup()
 	end
 end
 
-function UIScrollBar:onStyleApply(styleName, styleNode)
+function UIScrollBar.onStyleApply(self, styleName, styleNode)
 	for name, value in pairs(styleNode) do
 		if name == "maximum" then
 			self:setMaximum(tonumber(value))
@@ -260,13 +265,15 @@ function UIScrollBar:onStyleApply(styleName, styleNode)
 			self.mouseScroll = value
 		elseif name == "parent-scroll" then
 			self.scrollSize = value
+		elseif name == "fixed-slider-size" then
+			self.fixedSliderSize = tonumber(value)
 		elseif name == "increment" then
 			self.incrementValue = value
 		end
 	end
 end
 
-function UIScrollBar:onDecrement()
+function UIScrollBar.onDecrement(self)
 	local count = self.incrementValue
 
 	if g_keyboard.isShiftPressed() and g_keyboard.isCtrlPressed() then
@@ -280,7 +287,7 @@ function UIScrollBar:onDecrement()
 	self:decrement(count)
 end
 
-function UIScrollBar:onIncrement()
+function UIScrollBar.onIncrement(self)
 	local count = self.incrementValue
 
 	if g_keyboard.isShiftPressed() and g_keyboard.isCtrlPressed() then
@@ -294,19 +301,19 @@ function UIScrollBar:onIncrement()
 	self:increment(count)
 end
 
-function UIScrollBar:decrement(count)
+function UIScrollBar.decrement(self, count)
 	count = count or self.step
 
 	self:setValue(self.value - count)
 end
 
-function UIScrollBar:increment(count)
+function UIScrollBar.increment(self, count)
 	count = count or self.step
 
 	self:setValue(self.value + count)
 end
 
-function UIScrollBar:setMaximum(maximum)
+function UIScrollBar.setMaximum(self, maximum)
 	if maximum == self.maximum then
 		return
 	end
@@ -324,7 +331,7 @@ function UIScrollBar:setMaximum(maximum)
 	end
 end
 
-function UIScrollBar:setMinimum(minimum)
+function UIScrollBar.setMinimum(self, minimum)
 	if minimum == self.minimum then
 		return
 	end
@@ -342,12 +349,12 @@ function UIScrollBar:setMinimum(minimum)
 	end
 end
 
-function UIScrollBar:setRange(minimum, maximum)
+function UIScrollBar.setRange(self, minimum, maximum)
 	self:setMinimum(minimum)
 	self:setMaximum(maximum)
 end
 
-function UIScrollBar:setValue(value)
+function UIScrollBar.setValue(self, value)
 	value = math.max(math.min(value, self.maximum), self.minimum)
 
 	if self.value == value then
@@ -365,19 +372,19 @@ function UIScrollBar:setValue(value)
 	end
 end
 
-function UIScrollBar:setMouseScroll(scroll)
+function UIScrollBar.setMouseScroll(self, scroll)
 	self.mouseScroll = scroll
 end
 
-function UIScrollBar:setStep(step)
+function UIScrollBar.setStep(self, step)
 	self.step = step
 end
 
-function UIScrollBar:setOrientation(orientation)
+function UIScrollBar.setOrientation(self, orientation)
 	self.orientation = orientation
 end
 
-function UIScrollBar:setText(text)
+function UIScrollBar.setText(self, text)
 	local valueLabel = self:getChildById("valueLabel")
 
 	if valueLabel then
@@ -385,11 +392,11 @@ function UIScrollBar:setText(text)
 	end
 end
 
-function UIScrollBar:onGeometryChange()
+function UIScrollBar.onGeometryChange(self)
 	updateSlider(self)
 end
 
-function UIScrollBar:onMousePress(mousePos, mouseButton)
+function UIScrollBar.onMousePress(self, mousePos, mouseButton)
 	if mouseButton ~= MouseLeftButton or not self.setupDone or not self:isOn() then
 		return false
 	end
@@ -423,7 +430,7 @@ function UIScrollBar:onMousePress(mousePos, mouseButton)
 	return true
 end
 
-function UIScrollBar:onMouseMove(mousePos, mouseMoved)
+function UIScrollBar.onMouseMove(self, mousePos, mouseMoved)
 	if not self._trackDragActive or not g_mouse.isPressed(MouseLeftButton) or not self:isOn() then
 		return false
 	end
@@ -433,7 +440,7 @@ function UIScrollBar:onMouseMove(mousePos, mouseMoved)
 	return true
 end
 
-function UIScrollBar:onMouseRelease(mousePos, mouseButton)
+function UIScrollBar.onMouseRelease(self, mousePos, mouseButton)
 	if mouseButton == MouseLeftButton then
 		self._trackDragActive = false
 	end
@@ -441,7 +448,7 @@ function UIScrollBar:onMouseRelease(mousePos, mouseButton)
 	return false
 end
 
-function UIScrollBar:onMouseWheel(mousePos, mouseWheel)
+function UIScrollBar.onMouseWheel(self, mousePos, mouseWheel)
 	if not self.mouseScroll or not self:isOn() then
 		return false
 	end
@@ -477,52 +484,52 @@ function UIScrollBar:onMouseWheel(mousePos, mouseWheel)
 	return true
 end
 
-function UIScrollBar:getMaximum()
+function UIScrollBar.getMaximum(self)
 	return self.maximum
 end
 
-function UIScrollBar:getMinimum()
+function UIScrollBar.getMinimum(self)
 	return self.minimum
 end
 
-function UIScrollBar:getValue()
+function UIScrollBar.getValue(self)
 	return math.round(self.value)
 end
 
-function UIScrollBar:getStep()
+function UIScrollBar.getStep(self)
 	return self.step
 end
 
-function UIScrollBar:getOrientation()
+function UIScrollBar.getOrientation(self)
 	return self.orientation
 end
 
-function UIScrollBar:getShowValue()
+function UIScrollBar.getShowValue(self)
 	return self.showValue
 end
 
-function UIScrollBar:getSymbol()
+function UIScrollBar.getSymbol(self)
 	return self.symbol
 end
 
-function UIScrollBar:getMouseScroll()
+function UIScrollBar.getMouseScroll(self)
 	return self.mouseScroll
 end
 
-function UIScrollBar:getIncrementValue()
+function UIScrollBar.getIncrementValue(self)
 	return self.incrementValue
 end
 
-function UIScrollBar:setIncrementStep(value)
+function UIScrollBar.setIncrementStep(self, value)
 	self.incrementValue = value
 end
 
-function UIScrollBar:setVirtualChilds(value)
+function UIScrollBar.setVirtualChilds(self, value)
 	self.virtualChilds = value
 
 	updateSlider(self)
 end
 
-function UIScrollBar:setVisibleItems(value)
+function UIScrollBar.setVisibleItems(self, value)
 	self.visibleItems = value
 end

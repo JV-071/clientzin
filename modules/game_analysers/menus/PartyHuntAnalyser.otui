@@ -67,7 +67,7 @@ Info < UIWidget
     text-auto-resize: true
     color: $var-text-cip-color-green
     font: $var-cip-font
-    tooltip-font: $var-cip-font-wheel
+    tooltip-font: $var-cip-font-new
     tooltip-delayed: true
   Label
     id: damage
@@ -132,8 +132,8 @@ MiniWindow
     anchors.left: parent.left
     anchors.right: parent.right
     margin-top: 1
-    margin-left: 20
-    font: verdana-11px-monochrome
+    margin-left: 19
+    font: $var-cip-font-new
     height: 13
     !text: tr('Party Hunt')
     color: #909090

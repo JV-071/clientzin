@@ -16,17 +16,248 @@ HelperMenuButton < Button
     text-offset: 1 1
 
 HelperMenuButtonFrame < OnePixelDownFrame
-  size: 106 24
+  size: 106 22
   padding: 1
   anchors.left: parent.left
   margin-left: 7
-  margin-top: 11
+  margin-top: 6
 
 HelperSideMenuButton < HelperMenuButton
   anchors.fill: parent
-  height: 22
+  height: 20
   color: #c0c0c0
-  text-offset: 0 0
+  text-align: left
+  text-offset: 28 0
+
+  $pressed:
+    text-offset: 29 1
+
+  $on:
+    text-offset: 29 1
+
+CavebotWaypointRow < Panel
+  height: 22
+  focusable: true
+
+  $hover:
+    background-color: $var-textlist-selected
+
+  UIWidget
+    id: waypointTypeIcon
+    size: 14 14
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 4
+    image-size: 14 14
+    image-auto-resize: true
+    phantom: true
+    focusable: false
+
+  Label
+    id: waypointTitle
+    height: 14
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.left: waypointTypeIcon.right
+    anchors.right: waypointPosition.left
+    margin-left: 5
+    margin-right: 3
+    font: $var-cip-font
+    color: $var-text-cip-color
+    text-auto-resize: false
+    text-overflow: ellipsis
+    phantom: true
+
+  Label
+    id: waypointPosition
+    width: 104
+    height: 14
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.right: parent.right
+    margin-right: 4
+    font: $var-cip-font
+    color: $var-text-cip-color-grey
+    text-auto-resize: false
+    text-align: right
+    text-overflow: ellipsis
+    phantom: true
+
+CavebotMapWaypointMarker < UIWidget
+  size: 16 16
+  image-size: 16 16
+  image-auto-resize: true
+  phantom: false
+  focusable: false
+
+CavebotGoldChip < UIWidget
+  size: 106 20
+  image-source: /images/ui/item66
+  image-border: 10
+
+  UIWidget
+    id: goldIcon
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 3
+    margin-bottom: -1
+    image-source: /images/icons/icon-goldcoin
+    !tooltip: tr('Gold Coins')
+
+  Label
+    id: goldValue
+    anchors.right: goldIcon.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-right: 2
+    margin-bottom: -2
+    font: verdana-11px-monochrome
+    color: $var-text-cip-color
+    text: 10,000,000
+    text-auto-resize: true
+
+CavebotEchoRaidButton < MainToggleButton
+  size: 20 20
+  image-source: /images/options/button_options
+  image-clip: 0 0 20 20
+  change-cursor-image: true
+  cursor: pointer
+  focusable: false
+
+CavebotEchoRaidWindow < MainWindowHigh
+  id: cavebotEchoRaidWindow
+  !text: tr('General Cavebot Settings')
+  size: 320 210
+  font: $var-cip-font-new
+  color: $var-text-cip-color-grey
+  text-offset: 0 2
+  @onEscape: modules.game_helper.closeCavebotEchoRaidWindow()
+  @onEnter: modules.game_helper.confirmCavebotEchoRaidWindow()
+
+  Panel
+    id: cavebotEchoRaidModeRow
+    height: 20
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    margin-left: 6
+    margin-right: 6
+
+    Label
+      id: cavebotEchoRaidModeLabel
+      width: 108
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Echo Raid Mode:')
+      font: $var-cip-font
+      color: $var-text-cip-color
+      text-auto-resize: false
+
+    QtComboBox
+      id: cavebotEchoRaidModeCombo
+      size: 160 17
+      anchors.left: cavebotEchoRaidModeLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      @onOptionChange: modules.game_helper.onCavebotEchoRaidModeChange(self)
+
+  Panel
+    id: cavebotRecordDistanceRow
+    height: 22
+    auto-focus: none
+    anchors.top: cavebotEchoRaidModeRow.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 6
+    margin-left: 6
+    margin-right: 6
+
+    Label
+      id: cavebotRecordDistanceLabel
+      width: 108
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      !text: tr('Record every:')
+      font: $var-cip-font
+      color: $var-text-cip-color
+      text-auto-resize: false
+
+    HorizontalQtScrollBar
+      id: cavebotRecordDistanceScrollBar
+      width: 96
+      anchors.left: cavebotRecordDistanceLabel.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      minimum: 1
+      maximum: 50
+      step: 1
+      fixed-slider-size: 21
+      mouse-scroll: true
+      !tooltip: tr('Number of tiles walked between automatically recorded waypoints (1-50).')
+
+    Label
+      id: cavebotRecordDistanceValueLabel
+      anchors.left: cavebotRecordDistanceScrollBar.right
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 6
+      text: 5
+      font: $var-cip-font
+      color: $var-text-cip-color
+      text-auto-resize: true
+
+  QtCheckBox
+    id: cavebotStartNearestWaypointCheckBox
+    anchors.top: cavebotRecordDistanceRow.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    margin-left: 6
+    margin-right: 6
+    !text: tr('Start at nearest waypoint')
+    !tooltip: tr('Start from the nearest reachable positional waypoint on the current floor whenever Cavebot or Helper is enabled.')
+    font: $var-cip-font
+    color: $var-text-cip-color
+    text-offset: 16 0
+    @onCheckChange: modules.game_helper.onCavebotStartNearestWaypointChange(self, self:isChecked())
+
+  QtCheckBox
+    id: cavebotDiagonalWalkCheckBox
+    anchors.top: cavebotStartNearestWaypointCheckBox.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 8
+    margin-left: 6
+    margin-right: 6
+    !text: tr('Walk diagonally')
+    !tooltip: tr('Walk diagonally:<br><li>Checked: the Cavebot takes diagonal steps to reach each waypoint in the fewest steps.</li><li>Unchecked (default): it takes the fastest route, which avoids diagonal steps because each one takes longer than a straight step.</li>')
+    font: $var-cip-font
+    color: $var-text-cip-color
+    text-offset: 16 0
+    @onCheckChange: modules.game_helper.onCavebotDiagonalWalkChange(self, self:isChecked())
+
+  HorizontalSeparator
+    id: cavebotEchoRaidSeparator
+    height: 2
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: cancelButton.top
+    margin-bottom: 11
+
+  // EXCEPTION: The user requested the primary Ok button to the left of Cancel.
+  CipsoftButton
+    id: okButton
+    size: 43 20
+    anchors.right: cancelButton.left
+    anchors.bottom: parent.bottom
+    margin-right: 6
+    !text: tr('Ok')
+    @onClick: modules.game_helper.confirmCavebotEchoRaidWindow()
+
+  CipsoftButton
+    id: cancelButton
+    size: 43 20
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    !text: tr('Cancel')
+    @onClick: modules.game_helper.closeCavebotEchoRaidWindow()
 
 HelperActionSlot < ActionSlot
   visible: true
@@ -511,6 +742,9 @@ HelperStatsWindow < MiniWindow
         id: helperStatsShooterRow
 
       HelperStatsToggleRow
+        id: helperStatsCavebotRow
+
+      HelperStatsToggleRow
         id: helperStatsAutoInviteRow
 
       HelperStatsToggleRow
@@ -575,6 +809,19 @@ HelperSectionHelpIcon < UIWidget
   margin-right: 3
   @onSetup: self:raise()
 
+HelperModuleEnableFrame < OnePixelDownFrame
+  size: 122 20
+  padding: 4
+
+HelperModuleEnableLabel < Label
+  anchors.top: parent.top
+  anchors.left: parent.left
+  font: $var-cip-font
+  color: $var-text-cip-color
+  text-offset: 16 -1
+  text-auto-resize: true
+  phantom: true
+
 PainelHealing < Panel
   anchors.top: presetBar.bottom
   anchors.left: MainMenuLeft.right
@@ -594,19 +841,15 @@ PainelHealing < Panel
 
     Panel
       id: activeHealingPanel
-      width: 132
       height: 20
       anchors.bottom: parent.bottom
       anchors.left: parent.left
       anchors.right: parent.right
 
-      OnePixelDownFrame
+      HelperModuleEnableFrame
         id: enableHealingFrame
-        width: 122
-        height: 20
         anchors.top: parent.top
         anchors.left: parent.left
-        padding: 4
 
         OptionCheckBox
           id: enableHealingCheckBox
@@ -614,13 +857,8 @@ PainelHealing < Panel
           anchors.left: parent.left
           @onCheckChange: modules.game_helper.onEnableHealingChange(self, self:isChecked())
 
-        Label
+        HelperModuleEnableLabel
           !text: tr('Enable Healing')
-          font: $var-cip-font
-          color: #c0c0c0
-          anchors.top: parent.top
-          anchors.left: parent.left
-          text-offset: 16 -1
 
     Panel
       id: healingGroupsPanel
@@ -810,6 +1048,34 @@ PainelHealFriend < Panel
   image-border: 20
   padding: 7
 
+  HelperSectionHelpIcon
+    id: healFriendHelp
+    anchors.top: parent.top
+    anchors.right: parent.right
+    !tooltip: tr('Heal Friend:<br><li>Only confirmed party members are added automatically.</li><li>Players at the top have higher healing priority than players below. Drag a player up or down to reorder.</li><li>Only party members visible on the map can be healed.</li>')
+
+  Panel
+    id: activeHealFriendPanel
+    height: 20
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+    HelperModuleEnableFrame
+      id: enableHealFriendFrame
+      anchors.top: parent.top
+      anchors.left: parent.left
+
+      OptionCheckBox
+        id: enableHealFriendCheckBox
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        @onCheckChange: modules.game_helper.onEnableHealFriendChange(self, self:isChecked())
+
+      HelperModuleEnableLabel
+        id: enableHealFriendLabel
+        !text: tr('Enable Heal')
+
   Panel
     id: mainPanel1
     text: Exura Sio
@@ -903,7 +1169,7 @@ PainelHealFriend < Panel
       anchors.left: parent.left
       margin-top: 3
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendKnightCheckBox1
         anchors.top: parent.top
@@ -919,7 +1185,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -943,7 +1209,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendPaladinCheckBox1
         anchors.top: parent.top
@@ -959,7 +1225,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -968,7 +1234,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 19
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -983,7 +1249,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendSorcererCheckBox1
         anchors.top: parent.top
@@ -1008,7 +1274,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 7
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1023,7 +1289,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendDruidCheckBox1
         anchors.top: parent.top
@@ -1039,7 +1305,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1048,7 +1314,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 31
-    
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1063,7 +1329,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendMonkCheckBox1
         anchors.top: parent.top
@@ -1079,7 +1345,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1187,7 +1453,7 @@ PainelHealFriend < Panel
       anchors.left: parent.left
       margin-top: 3
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendKnightCheckBox2
         anchors.top: parent.top
@@ -1203,7 +1469,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1227,7 +1493,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendPaladinCheckBox2
         anchors.top: parent.top
@@ -1243,7 +1509,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1252,7 +1518,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 19
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1267,7 +1533,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendSorcererCheckBox2
         anchors.top: parent.top
@@ -1292,7 +1558,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 7
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1307,7 +1573,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendDruidCheckBox2
         anchors.top: parent.top
@@ -1323,7 +1589,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1332,7 +1598,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 31
-    
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1347,7 +1613,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendMonkCheckBox2
         anchors.top: parent.top
@@ -1363,7 +1629,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1471,7 +1737,7 @@ PainelHealFriend < Panel
       anchors.left: parent.left
       margin-top: 3
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendKnightCheckBox3
         anchors.top: parent.top
@@ -1487,7 +1753,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1511,7 +1777,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendPaladinCheckBox3
         anchors.top: parent.top
@@ -1527,7 +1793,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1536,7 +1802,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 19
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1551,7 +1817,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendSorcererCheckBox3
         anchors.top: parent.top
@@ -1576,7 +1842,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 7
-      
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1591,7 +1857,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendDruidCheckBox3
         anchors.top: parent.top
@@ -1607,7 +1873,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1616,7 +1882,7 @@ PainelHealFriend < Panel
         anchors.left: prev.right
         text-align: center
         margin-left: 31
-    
+
       HealFriendPriorityStepper
         anchors.top: parent.top
         anchors.left: prev.right
@@ -1631,7 +1897,7 @@ PainelHealFriend < Panel
       anchors.top: prev.bottom
       anchors.left: parent.left
       margin-left: 2
-      
+
       HealFriendClassCheckBox
         id: enableHealFriendMonkCheckBox3
         anchors.top: parent.top
@@ -1647,7 +1913,7 @@ PainelHealFriend < Panel
         anchors.left: parent.left
         margin-left: 19
         text-align: center
-      
+
       Label
         !text: tr('Priority: ')
         font: $var-cip-font
@@ -1666,15 +1932,6 @@ PainelHealFriend < Panel
 
   Panel
     id: healFriendPlayerModePanel
-    !text: tr('Party Players')
-    color: $var-text-color-disabled
-    font: $var-cip-font-new
-    text-align: top
-    text-offset: 1 2
-    image-source: /images/ui/popupwindow-sem-borda-interna
-    image-border: 6
-    image-border-top: 27
-    padding-top: 15
     focusable: false
     visible: false
     anchors.top: parent.top
@@ -1684,93 +1941,11 @@ PainelHealFriend < Panel
     margin-top: 15
     margin-left: 5
     margin-right: 5
-    margin-bottom: 7
+    margin-bottom: 6
 
-    Panel
-      id: healFriendPlayerSettingsHeader
-      height: 16
-      anchors.top: parent.top
-      anchors.left: parent.left
-      anchors.right: parent.right
-      margin-top: 3
-      margin-left: 4
-      margin-right: 4
-      background-color: #363636
-
-      Label
-        id: friendPlayerEnabledHeader
-        width: 18
-        !text: tr('...')
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        margin-left: 4
-        font: $var-cip-font
-        color: #c0c0c0
-        text-offset: 0 -1
-        text-align: center
-        text-auto-resize: false
-
-      HelperListColumnSeparator
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        margin-left: 23
-
-      Label
-        id: friendPlayerNameHeader
-        width: 160
-        !text: tr('Player')
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        margin-left: 28
-        font: $var-cip-font
-        color: #c0c0c0
-        text-offset: 0 -1
-        text-align: center
-        text-auto-resize: false
-
-      HelperListColumnSeparator
-        id: friendPlayerSpellHeaderSeparator1
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        margin-left: 191
-
-      Label
-        id: friendPlayerSpellHeader1
-        width: 100
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        margin-left: 194
-        font: $var-cip-font
-        color: #c0c0c0
-        text-offset: 0 -1
-        text-align: left
-        text-auto-resize: false
-
-      HelperListColumnSeparator
-        id: friendPlayerSpellHeaderSeparator2
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        margin-left: 301
-
-      Label
-        id: friendPlayerSpellHeader2
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        margin-left: 304
-        margin-right: 4
-        font: $var-cip-font
-        color: #c0c0c0
-        text-offset: 0 -1
-        text-align: left
-        text-auto-resize: false
-
-    Panel
+    OnePixelDownFrame
       id: healFriendPlayerSettingsFrame
-      anchors.top: healFriendPlayerSettingsHeader.bottom
+      anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: friendPlayerCountLabel.top
@@ -1778,16 +1953,15 @@ PainelHealFriend < Panel
       margin-left: 4
       margin-right: 4
       margin-bottom: 5
-      image-source: /images/ui/1pixel-down-frame
-      image-border: 3
+      padding: 1
 
       ScrollablePanel
         id: healFriendPlayerSettingsList
         vertical-scrollbar: healFriendPlayerSettingsScrollbar
         anchors.fill: parent
-        padding: 1
-        padding-right: 12
-        background-color: alpha
+        margin-right: 12
+        padding-top: 17
+        background-color: #404040
         clipping: true
         layout:
           type: verticalBox
@@ -1800,7 +1974,95 @@ PainelHealFriend < Panel
         anchors.right: parent.right
         step: 36
         pixels-scroll: true
-        margin: 1 1 1 0
+
+      Panel
+        id: healFriendPlayerSettingsHeader
+        height: 16
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-right: 12
+        background-color: #363636
+        @onSetup: self:raise()
+
+        Label
+          id: friendPlayerEnabledHeader
+          width: 18
+          !text: tr('...')
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 4
+          font: $var-cip-font
+          color: #c0c0c0
+          text-offset: 0 -1
+          text-align: center
+          text-auto-resize: false
+
+        HelperListColumnSeparator
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          margin-left: 23
+
+        Label
+          id: friendPlayerNameHeader
+          width: 160
+          !text: tr('Player')
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 28
+          font: $var-cip-font
+          color: #c0c0c0
+          text-offset: 0 -1
+          text-align: center
+          text-auto-resize: false
+
+        HelperListColumnSeparator
+          id: friendPlayerSpellHeaderSeparator1
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          margin-left: 190
+
+        Label
+          id: friendPlayerSpellHeader1
+          width: 100
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 193
+          font: $var-cip-font
+          color: #c0c0c0
+          text-offset: 0 -1
+          text-align: left
+          text-auto-resize: false
+
+        HelperListColumnSeparator
+          id: friendPlayerSpellHeaderSeparator2
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          margin-left: 300
+
+        Label
+          id: friendPlayerSpellHeader2
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 303
+          margin-right: 4
+          font: $var-cip-font
+          color: #c0c0c0
+          text-offset: 0 -1
+          text-align: left
+          text-auto-resize: false
+
+      HorizontalSeparator
+        anchors.top: healFriendPlayerSettingsHeader.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: -1
+        margin-right: 12
+        @onSetup: self:raise()
 
       Label
         id: friendPlayerSettingsEmptyLabel
@@ -1826,45 +2088,6 @@ PainelHealFriend < Panel
       color: #909090
       !text: tr('Party players: 0')
       text-auto-resize: true
-
-  Panel
-    id: activeHealFriendPanel
-    width: 163
-    height: 20
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
-    margin-left: 2
-
-    OnePixelDownFrame
-      id: enableHealFriendFrame
-      width: 163
-      height: 20
-      anchors.top: parent.top
-      anchors.left: parent.left
-      padding: 4
-
-      OptionCheckBox
-        id: enableHealFriendCheckBox
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        @onCheckChange: modules.game_helper.onEnableHealFriendChange(self, self:isChecked())
-
-      Label
-        !text: tr('Enable Heal Friend')
-        font: $var-cip-font
-        color: #c0c0c0
-        anchors.top: parent.top
-        anchors.left: parent.left
-        text-offset: 16 -1
-
-      UIWidget
-        image-source: /images/icons/show_gui_help_grey
-        size: 12 12
-        anchors.top: parent.top
-        anchors.right: parent.right
-        margin-right: 1
-        !tooltip: tr('Heal Friend:<br><li>Only confirmed party members are added automatically.</li><li>Players at the top have higher healing priority than players below. Drag a player up or down to reorder.</li><li>Only party members visible on the map can be healed.</li>')
 
 HelperSectionTitle < Label
   font: $var-cip-font-new
@@ -2285,6 +2508,71 @@ HealingPercentStepper < Panel
     anchors.left: numberBox.right
     anchors.verticalCenter: parent.verticalCenter
     margin-left: 3
+
+CavebotCompactStepper < Panel
+  size: 54 20
+  focusable: false
+
+  HelperPriorityQtyButtonBackOne
+    id: btnDec
+    size: 16 16
+    image-size: 16 16
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+
+  UIWidget
+    id: numberBox
+    size: 20 18
+    anchors.left: btnDec.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 1
+    background-color: #2a2a2aff
+    border-width-top: 1
+    border-width-left: 1
+    border-width-right: 1
+    border-width-bottom: 1
+    border-color-bottom: #808080
+    border-color-right: #808080
+    border-color-left: #131313
+    border-color-top: #131313
+
+    Label
+      id: numberValue
+      anchors.fill: parent
+      font: $var-cip-font-new
+      color: $var-text-cip-color-white
+      $disabled:
+        color: $var-cip-inactive-color
+      text-align: center
+      text: 5
+      phantom: true
+      focusable: false
+
+  HelperPriorityQtyButtonForwardOne
+    id: btnInc
+    size: 16 16
+    image-size: 16 16
+    anchors.left: numberBox.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 1
+
+CavebotClippedComboBoxPopupMenuButton < QtComboBoxPopupMenuButton
+  padding-right: 4
+  text-overflow: ellipsis
+
+CavebotClippedComboBoxPopupMenu < QtComboBoxPopupMenu
+
+CavebotClippedComboBox < QtComboBox
+  padding-right: 22
+  text-align: left
+  text-offset: 4 0
+  text-overflow: ellipsis
+
+  $pressed !disabled:
+    text-offset: 5 1
+
+  $on:
+    text-offset: 5 1
 
 HealingMetricDropdown < UIWidget
   size: 41 16
@@ -2754,7 +3042,8 @@ PainelTarget < Panel
   HelperPopupSection
     id: targetSettingsWindow
     !text: tr('Target Settings')
-    height: 142
+    // EXCEPTION: Extend the settings frame 1px downward to align with the Healing and Cavebot bottom edge.
+    height: 143
     anchors.top: targetListWindow.bottom
     anchors.left: targetContentArea.left
     anchors.right: targetContentArea.right
@@ -2888,14 +3177,10 @@ PainelTarget < Panel
       anchors.left: parent.left
       anchors.right: parent.right
 
-
-      OnePixelDownFrame
+      HelperModuleEnableFrame
         id: enableTargetFrame
-        width: 122
-        height: 20
         anchors.top: parent.top
         anchors.left: parent.left
-        padding: 4
 
         OptionCheckBox
           id: enableTargetCheckBox
@@ -2903,23 +3188,9 @@ PainelTarget < Panel
           anchors.left: parent.left
           @onCheckChange: modules.game_helper.onEnableTargetChange(self, self:isChecked())
 
-        Label
+        HelperModuleEnableLabel
           id: enableTargetLabel
           !text: tr('Enable Target')
-          font: $var-cip-font
-          color: #c0c0c0
-          anchors.top: parent.top
-          anchors.left: parent.left
-          text-offset: 16 -1
-
-      Button
-        id: setTargetHotkeyButton
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: enableTargetFrame.right
-        size: 67 20
-        margin-left: 6
-        text: Key [NONE]
-        @onClick: modules.game_helper.openTargetHotkeyWindow()
 
   HelperSectionHelpIcon
     id: targetSettingsHelp
@@ -3039,7 +3310,8 @@ PainelShooter < Panel
   HelperPopupSection
     id: shooterControlWindow
     !text: tr('Shooter Settings')
-    height: 98
+    // EXCEPTION: Extend the settings frame 1px downward to align with the Healing and Cavebot bottom edge.
+    height: 99
     anchors.top: shooterListWindow.bottom
     anchors.left: shooterContentArea.left
     anchors.right: shooterContentArea.right
@@ -3167,14 +3439,13 @@ PainelShooter < Panel
       anchors.bottom: parent.bottom
       anchors.left: parent.left
       anchors.right: parent.right
+      // EXCEPTION: Lower the complete Shooter control row by 4px to match the Target tab baseline.
+      margin-bottom: -4
 
-      OnePixelDownFrame
+      HelperModuleEnableFrame
         id: enableShooterFrame
-        width: 122
-        height: 20
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        padding: 4
 
         OptionCheckBox
           id: enableShooterCheckBox
@@ -3182,23 +3453,9 @@ PainelShooter < Panel
           anchors.left: parent.left
           @onCheckChange: modules.game_helper.onEnableShooterChange(self, self:isChecked())
 
-        Label
+        HelperModuleEnableLabel
           id: enableShooterLabel
           !text: tr('Enable Shooter')
-          font: $var-cip-font
-          color: #c0c0c0
-          anchors.top: parent.top
-          anchors.left: parent.left
-          text-offset: 16 -1
-
-      Button
-        id: setShooterHotkeyButton
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: enableShooterFrame.right
-        size: 67 20
-        margin-left: 6
-        text: Key [NONE]
-        @onClick: modules.game_helper.openShooterEnableHotkeyWindow()
 
       Label
         id: postureLabel
@@ -3207,8 +3464,8 @@ PainelShooter < Panel
         font: $var-cip-font
         color: #c0c0c0
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: setShooterHotkeyButton.right
-        margin-left: 12
+        anchors.left: enableShooterFrame.right
+        margin-left: 6
         text-auto-resize: false
 
       Panel
@@ -3228,6 +3485,724 @@ PainelShooter < Panel
     anchors.right: shooterControlWindow.right
     !tooltip: tr('Shooter settings:<br><li>Presets save independent shooter lists.</li><li>Use the pencil beside a preset to assign a hotkey that selects it.</li><li>PZ Auto enabled: pauses Shooter inside a protection zone and restores it after leaving.</li><li>PZ Auto disabled: turns Shooter off in a protection zone. It stays off after leaving and cannot be enabled while you are inside.</li>')
 
+PainelCavebot < Panel
+  anchors.top: presetBar.bottom
+  anchors.left: MainMenuLeft.right
+  anchors.right: parent.right
+  anchors.bottom: botSeparator.top
+  margin-top: 5
+  margin-left: 10
+  margin-bottom: 10
+
+  HelperPopupSection
+    id: cavebotMapSection
+    !text: tr('Cavebot Map')
+    height: 204
+    padding: 19 4 4 4
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+    OnePixelDownFrame
+      id: cavebotMapFrame
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      padding: 1
+
+      UIMinimap
+        id: cavebotMapPreview
+        anchors.fill: parent
+        margin: 1
+        clipping: true
+        draggable: true
+        focusable: false
+        cross: true
+        color: black
+        autowalk: false
+        max-zoom: 4
+        !tooltip: tr('Right-click this Cavebot map to add Position or Passage waypoints.')
+
+        HelperStdButton
+          id: cavebotAutoRouteButton
+          size: 70 17
+          anchors.left: parent.left
+          anchors.top: parent.top
+          margin-left: 3
+          margin-top: 3
+          text-offset: 0 -1
+          !text: tr('Auto Route')
+          !tooltip: tr('Scan the connected hunt and generate a geometric Position-only route.')
+          @onClick: modules.game_helper.toggleCavebotAutoRoute()
+
+          $on:
+            image-source: /images/ui/button-grey-down
+            color: $var-text-cip-color-blue
+            text-offset: 1 0
+
+        UIWidget
+          id: cavebotRosePanel
+          anchors.right: parent.right
+          anchors.top: parent.top
+          margin-right: 3
+          margin-top: 3
+          size: 43 43
+
+          UIWidget
+            id: cavebotRoseAmbients
+            anchors.centerIn: parent
+            size: 31 31
+
+            UIWidget
+              id: cavebotRoseMain
+              image-source: /images/automap/timedisplay_scroll
+              anchors.left: parent.left
+              anchors.top: parent.top
+              image-clip: 100 0 24 31
+              size: 24 31
+
+            UIWidget
+              id: cavebotRoseSecondary
+              image-source: /images/automap/timedisplay_scroll
+              anchors.left: cavebotRoseMain.right
+              anchors.top: parent.top
+              image-clip: 0 0 7 31
+              size: 7 31
+
+            Button
+              image-source: /images/automap/automap_phantom
+              image-border: 0
+              padding: 0
+              anchors.fill: parent
+              !tooltip: tr('Center the Cavebot map on the player.')
+              @onClick: modules.game_helper.centerCavebotMap()
+
+              $pressed:
+                image-source: /images/automap/automap_phantom
+
+              $hover !pressed:
+                image-source: /images/automap/automap_phantom
+
+          UIWidget
+            id: cavebotRose
+            anchors.fill: parent
+            image-source: /images/automap/automap_rose
+            image-clip: 0 0 43 43
+            phantom: true
+
+          UIWidget
+            id: cavebotRoseGlass
+            image-source: /images/automap/timedisplay-glass
+            anchors.centerIn: parent
+            size: 43 43
+            phantom: true
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 14 0 15 8
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-left: 14
+            size: 15 8
+            @onClick: modules.game_helper.navigateCavebotMap('north')
+
+            $pressed !disabled:
+              image-clip: 57 0 15 8
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 28 0 15 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-left: 28
+            size: 15 15
+            @onClick: modules.game_helper.navigateCavebotMap('north-east')
+
+            $pressed !disabled:
+              image-clip: 114 0 15 15
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 35 14 8 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-left: 35
+            margin-top: 14
+            size: 8 15
+            @onClick: modules.game_helper.navigateCavebotMap('east')
+
+            $pressed !disabled:
+              image-clip: 164 14 8 15
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 28 28 15 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-left: 28
+            margin-top: 28
+            size: 15 15
+            @onClick: modules.game_helper.navigateCavebotMap('south-east')
+
+            $pressed !disabled:
+              image-clip: 200 28 15 15
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 14 35 15 8
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-left: 14
+            margin-top: 35
+            size: 15 8
+            @onClick: modules.game_helper.navigateCavebotMap('south')
+
+            $pressed !disabled:
+              image-clip: 229 35 15 8
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 0 28 15 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-top: 28
+            size: 15 15
+            @onClick: modules.game_helper.navigateCavebotMap('south-west')
+
+            $pressed !disabled:
+              image-clip: 258 28 15 15
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 0 14 8 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            margin-top: 14
+            size: 8 15
+            @onClick: modules.game_helper.navigateCavebotMap('west')
+
+            $pressed !disabled:
+              image-clip: 301 14 8 15
+
+          UIWidget
+            image-source: /images/automap/automap_rose
+            image-clip: 0 0 15 15
+            anchors.left: parent.left
+            anchors.top: parent.top
+            size: 15 15
+            @onClick: modules.game_helper.navigateCavebotMap('north-west')
+
+            $pressed !disabled:
+              image-clip: 344 0 15 15
+
+        UIWidget
+          id: cavebotMinimapControls
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          margin-right: 3
+          margin-bottom: 3
+          size: 44 44
+
+          Button
+            id: layerDown
+            image-source: /images/automap/automap_buttons
+            image-clip: 0 80 20 20
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            size: 20 20
+            !tooltip: tr('Show the floor below.')
+            @onClick: modules.game_helper.changeCavebotMapFloor(1)
+
+            $pressed !disabled:
+              image-source: /images/automap/automap_buttons
+              image-clip: 20 80 20 20
+
+          Button
+            id: zoomIn
+            image-source: /images/automap/automap_buttons
+            image-clip: 0 40 20 20
+            anchors.right: layerDown.left
+            anchors.bottom: parent.bottom
+            margin-right: 2
+            size: 20 20
+            !tooltip: tr('Zoom in.')
+            @onClick: modules.game_helper.zoomCavebotMap(1)
+
+            $pressed !disabled:
+              image-source: /images/automap/automap_buttons
+              image-clip: 20 40 20 20
+
+          Button
+            id: layerUp
+            image-source: /images/automap/automap_buttons
+            image-clip: 0 60 20 20
+            anchors.right: parent.right
+            anchors.bottom: layerDown.top
+            margin-bottom: 2
+            size: 20 20
+            !tooltip: tr('Show the floor above.')
+            @onClick: modules.game_helper.changeCavebotMapFloor(-1)
+
+            $pressed !disabled:
+              image-source: /images/automap/automap_buttons
+              image-clip: 20 60 20 20
+
+          Button
+            id: zoomOut
+            image-source: /images/automap/automap_buttons
+            image-clip: 0 20 20 20
+            anchors.right: layerUp.left
+            anchors.bottom: layerUp.bottom
+            margin-right: 2
+            size: 20 20
+            !tooltip: tr('Zoom out.')
+            @onClick: modules.game_helper.zoomCavebotMap(-1)
+
+            $pressed !disabled:
+              image-source: /images/automap/automap_buttons
+              image-clip: 20 20 20 20
+
+  HelperSectionHelpIcon
+    id: cavebotMapHelp
+    anchors.top: cavebotMapSection.top
+    anchors.right: cavebotMapSection.right
+    !tooltip: tr('This map belongs to Cavebot. Right-click it to add Position, Box or Passage waypoints; drag to move the camera.')
+
+  HelperPopupSection
+    id: cavebotWaypointsSection
+    !text: tr('Waypoints')
+    anchors.top: cavebotMapSection.bottom
+    anchors.left: parent.left
+    anchors.right: cavebotActionsSection.left
+    anchors.bottom: parent.bottom
+    margin-top: 6
+    margin-right: 6
+
+    Panel
+      id: cavebotStatusPanel
+      height: 14
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 2
+
+      Label
+        id: cavebotWaypointCountLabel
+        height: 14
+        anchors.top: parent.top
+        anchors.right: parent.right
+        font: $var-cip-font
+        color: $var-text-cip-color-grey
+        text: 0 WP
+        text-auto-resize: true
+        phantom: true
+
+      Label
+        id: cavebotStatusLabel
+        height: 14
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: cavebotWaypointCountLabel.left
+        margin-right: 4
+        font: $var-cip-font
+        color: $var-text-cip-color-grey
+        text: Cavebot disabled
+        text-auto-resize: false
+        text-overflow: ellipsis
+        phantom: true
+
+    OnePixelDownFrame
+      id: cavebotWaypointsListFrame
+      anchors.top: cavebotStatusPanel.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: cavebotListButtonsPanel.top
+      margin-top: 4
+      margin-bottom: 4
+      padding: 1
+
+      ScrollablePanel
+        id: cavebotWaypointsList
+        anchors.fill: parent
+        margin-right: 12
+        vertical-scrollbar: cavebotWaypointsScrollBar
+        background-color: $var-textlist-even
+        clipping: true
+        layout:
+          type: verticalBox
+          spacing: 0
+
+      VerticalQtScrollBar
+        id: cavebotWaypointsScrollBar
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        step: 22
+        pixels-scroll: true
+
+    Panel
+      id: cavebotListButtonsPanel
+      height: 42
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+
+      Panel
+        id: cavebotWaypointPrimaryActionsPanel
+        height: 20
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        HelperStdButton
+          id: cavebotRemoveButton
+          size: 40 17
+          anchors.top: parent.top
+          anchors.left: parent.left
+          margin-top: 1
+          text-offset: 0 -1
+          !text: tr('Del.')
+          @onClick: modules.game_helper.removeCavebotWaypoint()
+
+        HelperStdButton
+          id: cavebotRecordButton
+          size: 40 17
+          anchors.top: cavebotRemoveButton.top
+          anchors.left: cavebotRemoveButton.right
+          margin-left: 3
+          text-offset: 0 -1
+          !text: tr('Record')
+          !tooltip: tr('Start recording waypoints while you walk.')
+          @onClick: modules.game_helper.toggleCavebotRecording()
+
+          $on:
+            image-source: /images/ui/button-grey-down
+            color: $var-text-cip-color-light-red
+            text-offset: 1 0
+
+        HelperStdButton
+          id: cavebotClearButton
+          size: 40 17
+          anchors.top: cavebotRemoveButton.top
+          anchors.left: cavebotRecordButton.right
+          margin-left: 3
+          text-offset: 0 -1
+          !text: tr('Clear')
+          !tooltip: tr('Remove every waypoint from the current route.')
+          @onClick: modules.game_helper.clearCavebotWaypoints()
+
+        HelperStdButton
+          id: cavebotAddPositionButton
+          size: 40 17
+          anchors.top: cavebotRemoveButton.top
+          anchors.left: cavebotClearButton.right
+          margin-left: 3
+          text-offset: 0 -1
+          !text: tr('Pos')
+          !tooltip: tr('Add a Position waypoint at your current position.')
+          @onClick: modules.game_helper.addCavebotWaypoint('position')
+
+        HelperStdButton
+          id: cavebotAddBoxButton
+          size: 40 17
+          anchors.top: cavebotRemoveButton.top
+          anchors.left: cavebotAddPositionButton.right
+          margin-left: 3
+          text-offset: 0 -1
+          !text: tr('Box')
+          !tooltip: tr('Add a Box waypoint at your current position. The route holds there while monsters are around.')
+          @onClick: modules.game_helper.addCavebotWaypoint('box')
+
+      Panel
+        id: cavebotWaypointTogglePanel
+        height: 20
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+
+        HelperModuleEnableFrame
+          id: enableCavebotFrame
+          anchors.top: parent.top
+          anchors.left: parent.left
+
+          OptionCheckBox
+            id: enableCavebotCheckBox
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            @onCheckChange: modules.game_helper.onEnableCavebotChange(self, self:isChecked())
+
+          HelperModuleEnableLabel
+            id: enableCavebotLabel
+            !text: tr('Enable Cavebot')
+
+  HelperPopupSection
+    id: cavebotActionsSection
+    !text: tr('Route Configuration')
+    width: 222
+    anchors.top: cavebotMapSection.bottom
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 6
+
+    Panel
+      id: cavebotPresetRow
+      width: 194
+      height: 20
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 8
+
+      CavebotClippedComboBox
+        id: cavebotPresetCombo
+        size: 85 17
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-top: 1
+        color: $var-text-cip-color
+        menu-scroll: false
+        menu-height: 126
+        menu-scroll-step: 18
+        !tooltip: tr('Select a saved route configuration to load it.')
+
+      HelperStdButton
+        id: cavebotPresetNewButton
+        size: 43 17
+        anchors.top: cavebotPresetCombo.top
+        anchors.left: cavebotPresetCombo.right
+        margin-left: 4
+        text-offset: 0 -1
+        !text: tr('New')
+        @onClick: modules.game_helper.newCavebotPreset()
+
+      HelperStdButton
+        id: cavebotPresetDeleteButton
+        size: 58 17
+        anchors.top: cavebotPresetCombo.top
+        anchors.right: parent.right
+        text-offset: 0 -1
+        !text: tr('Remove')
+        @onClick: modules.game_helper.deleteCavebotPreset()
+
+    HorizontalSeparator
+      id: cavebotConfigurationSeparator
+      height: 2
+      anchors.top: cavebotPresetRow.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      margin-left: 10
+      margin-right: 10
+
+    Panel
+      id: cavebotLuringSettingsPanel
+      height: 68
+      anchors.top: cavebotConfigurationSeparator.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+
+      Panel
+        id: cavebotLuringModePanel
+        width: 194
+        height: 20
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        Label
+          id: cavebotLuringModeLabel
+          size: 54 20
+          anchors.top: parent.top
+          anchors.left: parent.left
+          font: $var-cip-font
+          color: $var-text-cip-color
+          !text: tr('Luring:')
+          text-auto-resize: false
+          phantom: true
+
+        CavebotClippedComboBox
+          id: cavebotLuringModeCombo
+          size: 118 17
+          anchors.top: parent.top
+          anchors.left: cavebotLuringModeLabel.right
+          margin-top: 1
+          margin-left: 4
+          color: $var-text-cip-color
+
+        HelperSectionHelpIcon
+          id: cavebotLuringHelp
+          anchors.left: cavebotLuringModeCombo.right
+          anchors.top: parent.top
+          margin-left: 6
+          margin-top: 4
+          margin-right: 0
+          !tooltip: tr('Luring modes:<br><li>Disabled: follows the route normally and pauses while Target attacks.</li><li>Continuous: follows the route while Target attacks, without monster-count or Anti-Lost stops; only Speed controls walking.</li><li>Stop / Run: stops the route when the reachable monster count reaches Stop and resumes when it falls to Run.</li><li>Anti-Lost: advances in controlled sections and waits for reachable trailing monsters.</li><br>Stop and Run also control Box waypoints in every mode except Continuous, which passes through them without holding.<br>Only visible, reachable monsters on the player floor are considered.')
+
+      Panel
+        id: cavebotLuringThresholdPanel
+        width: 194
+        height: 20
+        anchors.top: cavebotLuringModePanel.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-top: 4
+
+        Label
+          id: cavebotLuringStopLabel
+          size: 40 20
+          anchors.top: parent.top
+          anchors.left: parent.left
+          font: $var-cip-font
+          color: $var-text-cip-color-grey
+          $disabled:
+            color: $var-cip-inactive-color
+          text: Stop
+          text-auto-resize: false
+          text-align: left
+          phantom: true
+
+        CavebotCompactStepper
+          id: cavebotLuringStopStepper
+          anchors.left: cavebotLuringStopLabel.right
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 2
+          !tooltip: tr('Number of monsters that stops the route in Stop / Run mode, or that holds a Box waypoint outside Continuous mode.')
+
+        Label
+          id: cavebotLuringRunLabel
+          size: 40 20
+          anchors.top: parent.top
+          anchors.left: cavebotLuringStopStepper.right
+          margin-left: 2
+          font: $var-cip-font
+          color: $var-text-cip-color-grey
+          $disabled:
+            color: $var-cip-inactive-color
+          text: Run
+          text-auto-resize: false
+          text-align: left
+          phantom: true
+
+        CavebotCompactStepper
+          id: cavebotLuringRunStepper
+          anchors.left: cavebotLuringRunLabel.right
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 2
+          !tooltip: tr('Number of monsters that resumes the route, and that releases a Box waypoint outside Continuous mode.')
+
+      Panel
+        id: cavebotLuringSpeedPanel
+        width: 194
+        height: 20
+        anchors.top: cavebotLuringThresholdPanel.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        margin-top: 4
+
+        Label
+          id: cavebotLuringSpeedLabel
+          size: 72 20
+          anchors.verticalCenter: parent.verticalCenter
+          anchors.left: parent.left
+          font: $var-cip-font
+          color: $var-text-cip-color-grey
+          text: Speed: 100%
+          text-auto-resize: false
+          text-align: left
+          phantom: true
+
+        HorizontalQtScrollBar
+          id: cavebotLuringSpeedScrollBar
+          width: 96
+          minimum: 1
+          maximum: 20
+          step: 1
+          fixed-slider-size: 21
+          mouse-scroll: true
+          anchors.left: cavebotLuringSpeedLabel.right
+          anchors.verticalCenter: parent.verticalCenter
+          margin-left: 4
+          !tooltip: tr('Route walking speed from 5%% to 100%% in 5%% steps. Lower values walk in short sections and give monsters more time to follow; 100%% walks the whole path at once. Use the mouse wheel over the bar to adjust it.')
+
+        HelperSectionHelpIcon
+          id: cavebotLuringSpeedHelp
+          anchors.right: parent.right
+          anchors.top: parent.top
+          margin-top: 4
+          !tooltip: tr('Route walking speed from 5%% to 100%% in 5%% steps. Lower values walk in short sections and give monsters more time to follow; 100%% walks the whole path at once. Use the mouse wheel over the bar to adjust it.')
+
+    HorizontalSeparator
+      id: cavebotAccessSeparator
+      height: 2
+      anchors.top: cavebotLuringSettingsPanel.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 6
+      margin-left: 10
+      margin-right: 10
+
+    Panel
+      id: cavebotAccessPanel
+      width: 180
+      height: 44
+      anchors.top: cavebotAccessSeparator.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      margin-top: 6
+
+      Panel
+        id: cavebotTimeRow
+        height: 20
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        Label
+          id: cavebotTimeLabel
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          font: $var-cip-font
+          color: $var-text-cip-color-grey
+          text: Time left:
+          text-auto-resize: true
+
+        Label
+          id: cavebotTimeValueLabel
+          anchors.right: parent.right
+          anchors.verticalCenter: parent.verticalCenter
+          font: $var-cip-font
+          color: $var-text-cip-color-green
+          text: 0:00 hours
+          text-auto-resize: true
+
+      Panel
+        id: cavebotRenewRow
+        height: 20
+        anchors.top: cavebotTimeRow.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 4
+
+        CavebotEchoRaidButton
+          id: cavebotEchoRaidButton
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          !tooltip: tr('Configure Echo Raid behavior.')
+          @onClick: modules.game_helper.openCavebotEchoRaidWindow()
+
+        HelperStdButton
+          id: cavebotRenewButton
+          size: 58 20
+          anchors.right: parent.right
+          anchors.top: parent.top
+          text: Renew
+          @onClick: modules.game_helper.openCavebotRenewWindow()
+
+        CavebotGoldChip
+          id: cavebotRenewPrice
+          anchors.left: cavebotEchoRaidButton.right
+          anchors.right: cavebotRenewButton.left
+          anchors.top: parent.top
+          margin-left: 4
+          margin-right: 6
+
 PainelParty < Panel
   anchors.top: presetBar.bottom
   anchors.left: MainMenuLeft.right
@@ -3243,7 +4218,7 @@ PainelParty < Panel
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    height: 151
+    height: 122
 
     Label
       id: autoPartySendLabel
@@ -3315,36 +4290,6 @@ PainelParty < Panel
         @onFocusChange: |
           if not self:isFocused() then self:setCursorVisible(false) end
 
-    Panel
-      id: toolsAutoPartyRow
-      height: 22
-      anchors.top: prev.bottom
-      anchors.left: parent.left
-      anchors.right: parent.right
-      margin-top: 7
-
-      OnePixelDownFrame
-        id: toolsAutoPartyFrame
-        width: 445
-        height: 20
-        anchors.top: parent.top
-        anchors.left: parent.left
-        padding: 4
-
-        OptionCheckBox
-          id: toolsAutoPartyCheckBox
-          anchors.verticalCenter: parent.verticalCenter
-          anchors.left: parent.left
-          @onCheckChange: modules.game_helper.onToolsAutoPartyChange(self, self:isChecked())
-
-        Label
-          !text: tr('Enable Auto Invite')
-          font: $var-cip-font
-          color: #c0c0c0
-          anchors.top: parent.top
-          anchors.left: parent.left
-          text-offset: 16 -1
-
   HelperSectionHelpIcon
     id: autoInviteHelp
     anchors.top: autoInviteSection.top
@@ -3357,7 +4302,7 @@ PainelParty < Panel
     anchors.top: autoInviteSection.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    height: 88
+    height: 60
     margin-top: 10
 
     Label
@@ -3383,36 +4328,6 @@ PainelParty < Panel
       @onMousePress: modules.game_helper.focusAutoPartyTextEdit(self)
       @onFocusChange: |
         if not self:isFocused() then self:setCursorVisible(false) end
-
-    Panel
-      id: toolsAutoPartyAcceptRow
-      height: 22
-      anchors.top: prev.bottom
-      anchors.left: parent.left
-      anchors.right: parent.right
-      margin-top: 6
-
-      OnePixelDownFrame
-        id: toolsAutoPartyAcceptFrame
-        width: 445
-        height: 20
-        anchors.top: parent.top
-        anchors.left: parent.left
-        padding: 4
-
-        OptionCheckBox
-          id: toolsAutoPartyAcceptCheckBox
-          anchors.verticalCenter: parent.verticalCenter
-          anchors.left: parent.left
-          @onCheckChange: modules.game_helper.onToolsAutoPartyAcceptChange(self, self:isChecked())
-
-        Label
-          !text: tr('Enable Auto Accept')
-          font: $var-cip-font
-          color: #c0c0c0
-          anchors.top: parent.top
-          anchors.left: parent.left
-          text-offset: 16 -1
 
   HelperSectionHelpIcon
     id: autoAcceptHelp
@@ -3697,7 +4612,7 @@ PainelTools < Panel
       anchors.top: toolsManaTrainingSection.top
       anchors.right: toolsManaTrainingSection.right
       margin-right: 3
-      !tooltip: tr('Mana Training:<br><li>Left-click the action slot to select a learned spell; right-click to clear it.</li><li>Casts when current mana is strictly above the selected percentage and the spell cooldown is ready.</li>')
+      !tooltip: tr('Mana Training:<br><li>Left-click the action slot to select a learned spell, rune-conjure spell or ammo-conjure spell for your vocation; right-click to clear it.</li><li>Casts when current mana is strictly above the selected percentage and the spell cooldown is ready.</li><li>The spell is only cast with enough mana and soul. Spells that create runes also need at least one blank rune in your inventory or accessible containers.</li>')
 
     HelperPopupSection
       id: toolsChangeGoldSection
@@ -3968,53 +4883,12 @@ PainelConfigs < Panel
     anchors.bottom: parent.bottom
 
     OnePixelDownFrame
-      id: configsSharedHotkeyFrame
+      id: configsAutoSaveFrame
       height: 28
       anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
       margin-top: 12
-      margin-left: 10
-      margin-right: 10
-      padding: 5
-
-      Label
-        id: configsSharedHotkeyLabel
-        !text: tr('Target + Shooter Hotkey')
-        height: 14
-        font: $var-cip-font
-        color: #c0c0c0
-        anchors.left: parent.left
-        anchors.right: configsSharedHotkeyButton.left
-        anchors.verticalCenter: parent.verticalCenter
-        margin-right: 8
-        text-align: left
-        text-auto-resize: false
-
-      Button
-        id: configsSharedHotkeyButton
-        !text: tr('Key [NONE]')
-        size: 94 20
-        anchors.right: configsSharedHotkeyHelp.left
-        anchors.verticalCenter: parent.verticalCenter
-        margin-right: 8
-        @onClick: modules.game_helper.openSharedCombatHotkeyWindow()
-
-      UIWidget
-        id: configsSharedHotkeyHelp
-        image-source: /images/icons/show_gui_help_grey
-        size: 12 12
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        !tooltip: tr('Target + Shooter hotkey:<br><li>Assigns an independent key that toggles Target and Shooter together.</li><li>Does not change the individual hotkeys in either tab.</li><li>The key must be available; occupied keys cannot be overwritten.</li>')
-
-    OnePixelDownFrame
-      id: configsAutoSaveFrame
-      height: 28
-      anchors.top: prev.bottom
-      anchors.left: parent.left
-      anchors.right: parent.right
-      margin-top: 8
       margin-left: 10
       margin-right: 10
       padding: 5
@@ -4045,7 +4919,7 @@ PainelConfigs < Panel
         size: 12 12
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        !tooltip: tr('Auto Save:<br><li>Saves every change automatically in the active profile.</li><li>When disabled, changes remain temporary until you use Save.</li>')
+        !tooltip: tr('Auto Save:<br><li>Saves every change automatically in the active shared profile.</li><li>All characters and accounts in this client can use the updated profile.</li><li>When disabled, changes remain temporary until you use Save.</li>')
 
     OnePixelDownFrame
       id: configsAutoSwitchHotkeyPresetFrame
@@ -4084,7 +4958,46 @@ PainelConfigs < Panel
         size: 12 12
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        !tooltip: tr('Auto-Switch Hotkey Preset:<br><li>On login, selects the client hotkey preset and Helper preset whose name exactly matches the character name.</li><li>All Helper tabs, profiles and hotkeys are always stored separately for each character.</li><li>If there is no matching preset, each system keeps its current preset.</li>')
+        !tooltip: tr('Auto-Switch Hotkey Preset:<br><li>On login, selects the client hotkey preset and shared Helper profile whose name exactly matches the character name.</li><li>Helper profiles are shared by all characters and accounts in this client; the active selection and local preferences remain per character.</li><li>If there is no matching preset, each system keeps its current preset.</li>')
+
+    OnePixelDownFrame
+      id: configsPrioritizeHotkeysFrame
+      height: 28
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 8
+      margin-left: 10
+      margin-right: 10
+      padding: 5
+
+      OptionCheckBox
+        id: configsPrioritizeHotkeysCheckBox
+        checked: false
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        @onCheckChange: modules.game_helper.onConfigsPrioritizeHotkeysChange(self, self:isChecked())
+
+      Label
+        id: configsPrioritizeHotkeysLabel
+        !text: tr('Prioritize Hotkeys')
+        height: 14
+        font: $var-cip-font
+        color: $var-text-cip-color
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 22
+        margin-right: 20
+        text-align: left
+        text-auto-resize: false
+
+      UIWidget
+        image-source: /images/icons/show_gui_help_grey
+        size: 12 12
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        !tooltip: tr('Prioritize Hotkeys:<br><li>When an Action Bar hotkey uses an item or casts a spell, the Helper briefly pauses its automatic actions.</li><li>The pause lasts 200-400 ms based on ping and does not override server cooldowns.</li>')
 
 // Janela do Helper
 HelperWindow < MainLogoWindow
@@ -4108,7 +5021,7 @@ HelperWindow < MainLogoWindow
     anchors.left: parent.left
     anchors.bottom: botSeparator.top
     width: 120
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-border: 5
     margin-top: -7
     margin-bottom: 10
@@ -4125,7 +5038,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 12
         icon-height: 11
-        icon-offset: 8 6
+        icon-offset: 8 5
+        $pressed:
+          icon-offset: 9 6
+        $on:
+          icon-offset: 9 6
         @onClick: modules.game_helper.showTab('healing')
 
     HelperMenuButtonFrame
@@ -4139,7 +5056,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 11
         icon-height: 11
-        icon-offset: 8 6
+        icon-offset: 8 5
+        $pressed:
+          icon-offset: 9 6
+        $on:
+          icon-offset: 9 6
         @onClick: modules.game_helper.showTab('healFriend')
 
     HelperMenuButtonFrame
@@ -4153,7 +5074,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 12
         icon-height: 12
-        icon-offset: 8 6
+        icon-offset: 8 5
+        $pressed:
+          icon-offset: 9 6
+        $on:
+          icon-offset: 9 6
         @onClick: modules.game_helper.showTab('target')
 
     HelperMenuButtonFrame
@@ -4167,8 +5092,31 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 9
         icon-height: 9
-        icon-offset: 8 7
+        icon-offset: 8 6
+        $pressed:
+          icon-offset: 9 7
+        $on:
+          icon-offset: 9 7
         @onClick: modules.game_helper.showTab('shooter')
+
+    HelperMenuButtonFrame
+      id: cavebotButtonFrame
+      anchors.top: prev.bottom
+      visible: false
+
+      HelperSideMenuButton
+        id: cavebotButton
+        text: Cavebot(Beta)
+        icon: /game_cyclopedia/images/icon-map-passage-idle
+        icon-align: left
+        icon-width: 13
+        icon-height: 13
+        icon-offset: 8 4
+        $pressed:
+          icon-offset: 9 5
+        $on:
+          icon-offset: 9 5
+        @onClick: modules.game_helper.showTab('cavebot')
 
     HelperMenuButtonFrame
       id: partyButtonFrame
@@ -4181,7 +5129,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 13
         icon-height: 13
-        icon-offset: 8 7
+        icon-offset: 8 4
+        $pressed:
+          icon-offset: 9 5
+        $on:
+          icon-offset: 9 5
         @onClick: modules.game_helper.showTab('party')
 
     HelperMenuButtonFrame
@@ -4195,7 +5147,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 13
         icon-height: 10
-        icon-offset: 8 7
+        icon-offset: 8 6
+        $pressed:
+          icon-offset: 9 7
+        $on:
+          icon-offset: 9 7
         @onClick: modules.game_helper.showTab('tools')
 
     HelperMenuButtonFrame
@@ -4209,7 +5165,11 @@ HelperWindow < MainLogoWindow
         icon-align: left
         icon-width: 13
         icon-height: 13
-        icon-offset: 8 5
+        icon-offset: 8 4
+        $pressed:
+          icon-offset: 9 5
+        $on:
+          icon-offset: 9 5
         @onClick: modules.game_helper.showTab('configs')
 
     Panel
@@ -4222,7 +5182,7 @@ HelperWindow < MainLogoWindow
       margin-left: 7
       margin-right: 7
       margin-bottom: 8
-      image-source: /images/ui/2pixel_up_frame_borderimage
+      image-source: /images/ui/2pixel-up-frame-borderimage
       image-border: 5
 
       UICreature
@@ -4426,12 +5386,13 @@ HelperWindow < MainLogoWindow
     anchors.right: parent.right
     margin-top: -7
     margin-left: 10
-    image-source: /images/ui/2pixel_up_frame_borderimage
+    image-source: /images/ui/2pixel-up-frame-borderimage
     image-border: 5
 
     Label
       id: quickProfileLabel
       !text: tr('Preset:')
+      !tooltip: tr('Shared Helper profile. Saving changes updates it for every character and account in this client.')
       anchors.left: parent.left
       anchors.verticalCenter: parent.verticalCenter
       margin-left: 8
@@ -4441,9 +5402,10 @@ HelperWindow < MainLogoWindow
 
     QtComboBox
       id: quickProfileCombo
+      !tooltip: tr('Shared Helper profile. Saving changes updates it for every character and account in this client.')
       height: 20
       anchors.left: quickProfileLabel.right
-      anchors.right: quickProfileNewButton.left
+      anchors.right: quickProfileAutoButton.left
       anchors.verticalCenter: parent.verticalCenter
       margin-left: 6
       margin-right: 6
@@ -4452,22 +5414,44 @@ HelperWindow < MainLogoWindow
       menu-scroll-step: 18
 
     HelperStdButton
+      id: quickProfileAutoButton
+      width: 44
+      anchors.right: quickProfileNewButton.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      !text: tr('Auto')
+      !tooltip: tr('Auto preset:<br><li>Builds a Shooter rotation, Healing entries, Target defaults, posture and Auto Haste from this character vocation and level.</li><li>Only spells the character already meets the level for are added. Wheel of Destiny spells are only added when they are unlocked on the active wheel.</li><li>Attack runes are added disabled - enable them if you carry runes.</li><li>The result is saved as its own profile (e.g. Auto RP), so the current profile is not changed.</li>')
+      @onClick: modules.game_helper.onQuickProfileAutoGenerate()
+
+    HelperStdButton
       id: quickProfileNewButton
-      width: 52
+      width: 44
       anchors.right: quickProfileSaveButton.left
       anchors.verticalCenter: parent.verticalCenter
       margin-right: 4
       !text: tr('New')
+      !tooltip: tr('Creates a new empty shared profile. The current profile is kept as it is.')
       @onClick: modules.game_helper.onQuickProfileNew()
 
     HelperStdButton
       id: quickProfileSaveButton
       width: 52
-      anchors.right: quickProfileDeleteButton.left
+      anchors.right: quickProfileRenameButton.left
       anchors.verticalCenter: parent.verticalCenter
       margin-right: 4
       !text: tr('Save')
+      !tooltip: tr('Saves changes to this shared profile for every character.')
       @onClick: modules.game_helper.onQuickProfileSave()
+
+    HelperStdButton
+      id: quickProfileRenameButton
+      width: 60
+      anchors.right: quickProfileDeleteButton.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-right: 4
+      !text: tr('Rename')
+      !tooltip: tr('Renames this shared profile for every character.')
+      @onClick: modules.game_helper.onQuickProfileRename()
 
     HelperStdButton
       id: quickProfileDeleteButton
@@ -4476,10 +5460,11 @@ HelperWindow < MainLogoWindow
       anchors.verticalCenter: parent.verticalCenter
       margin-right: 6
       !text: tr('Delete')
+      !tooltip: tr('Deletes this shared profile for every character.')
       @onClick: modules.game_helper.onQuickProfileDelete()
 
   // PAINEIS
-  
+
   PainelHealing
     id: healingPanel
     visible: false
@@ -4492,6 +5477,9 @@ HelperWindow < MainLogoWindow
   PainelShooter
     id: shooterPanel
     visible: false
+  PainelCavebot
+    id: cavebotPanel
+    visible: false
   PainelParty
     id: partyPanel
     visible: false
@@ -4501,6 +5489,29 @@ HelperWindow < MainLogoWindow
   PainelConfigs
     id: configsPanel
     visible: false
+
+  // Internal state only for module toggles without in-tab controls.
+  Panel
+    id: helperModuleStateStore
+    size: 1 1
+    anchors.top: parent.top
+    anchors.left: parent.left
+    visible: false
+    focusable: false
+
+    // Legacy compatibility sentinel. Helper no longer has a global on/off control.
+    OptionCheckBox
+      id: checkbox
+      checked: true
+
+    OptionCheckBox
+      id: toolsAutoPartyCheckBox
+      @onCheckChange: modules.game_helper.onToolsAutoPartyChange(self, self:isChecked())
+
+    OptionCheckBox
+      id: toolsAutoPartyAcceptCheckBox
+      @onCheckChange: modules.game_helper.onToolsAutoPartyAcceptChange(self, self:isChecked())
+
   // Bottom Configuration Panel
   HorizontalSeparator
     id: botSeparator
@@ -4508,45 +5519,34 @@ HelperWindow < MainLogoWindow
     anchors.left: parent.left
     anchors.right: parent.right
     margin-bottom: 30
-  
-  OnePixelDownFrame
-    id: activeHelperPanel
-    width: 132
-    height: 20
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    padding: 4
-    
-    OptionCheckBox
-      id: checkbox
-      anchors.verticalCenter: parent.verticalCenter
-      anchors.left: parent.left
-      @onCheckChange: modules.game_helper.onEnableHelperChange(self, self:isChecked())
 
-    Label
-      !text: tr('Enable Helper')
-      font: $var-cip-font
-      color: #c0c0c0
-      anchors.top: parent.top
-      anchors.left: parent.left
-      text-offset: 16 -1
+  UIWidget
+    id: helperGoldBalancePanel
+    size: 130 20
+    anchors.left: parent.left
+    anchors.bottom: parent.bottom
+    image-source: /images/ui/item
+    image-border: 10
 
     UIWidget
-      id: toolTipWidget
-      image-source: /images/icons/show_gui_help_grey
-      size: 12 12
+      id: helperGoldIcon
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
-      !tooltip: tr('Check this box to activate the Helper.')
+      margin-right: 5
+      image-source: /images/icons/icon-goldcoin
 
-  Button
-    id: setHotkeyButton
-    anchors.left: activeHelperPanel.right
-    anchors.bottom: parent.bottom
-    size: 67 20
-    margin-left: 6
-    text: Key
-    @onClick: modules.game_helper.openHelperHotkeyWindow()
+    Label
+      id: helperGoldBalance
+      anchors.left: parent.left
+      anchors.right: helperGoldIcon.left
+      anchors.verticalCenter: parent.verticalCenter
+      margin-left: 5
+      margin-right: 5
+      font: $var-cip-font
+      color: $var-text-cip-color
+      text-align: right
+      text-auto-resize: false
+      text: '?'
 
   Button
     id: close
@@ -4554,4 +5554,4 @@ HelperWindow < MainLogoWindow
     anchors.right: parent.right
     text: Close
     size: 43 20
-    @onClick: modules.game_helper.onHelperClose() 
+    @onClick: modules.game_helper.onHelperClose()

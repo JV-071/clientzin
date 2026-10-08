@@ -1,0 +1,297 @@
+WheelMenuInfoPanel < Panel
+  size: 213 267
+  anchors.left: parent.left
+  anchors.top: prev.bottom
+  image-source: /images/ui/2pixel-up-frame-borderimage
+  image-border: 30
+  margin-top: 6
+
+  Panel
+    id: presetTabBar
+    size: 209 36
+    image-source: /images/game/wheel/preset_bg
+    image-border: 1
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    margin-top: 2
+    margin-left: 2
+    margin-right: 2
+
+    UIButton
+      id: informationButton
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 1
+      margin-left: 1
+      tooltip: Information
+      tooltip-delayed: true
+      @onHoverChange: modules.game_wheel.onPresetTabButtonHoverChange(self, hovered)
+      @onMousePress: modules.game_wheel.onPresetTabButtonPressChange(self)
+      @onMouseRelease: modules.game_wheel.onPresetTabButtonPressChange(self)
+      @onClick: toggleTabBarButtons('informationButton')
+
+    UIButton
+      id: managePresetsButton
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-right: 1
+      margin-top: 1
+      tooltip: Manage Presets
+      tooltip-delayed: true
+      @onHoverChange: modules.game_wheel.onPresetTabButtonHoverChange(self, hovered)
+      @onMousePress: modules.game_wheel.onPresetTabButtonPressChange(self)
+      @onMouseRelease: modules.game_wheel.onPresetTabButtonPressChange(self)
+      @onClick: toggleTabBarButtons('managePresetsButton')
+
+  Panel
+    id: tabContent
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    margin-top: 5
+    margin-left: 1
+    margin-right: 1
+    margin-bottom: 1
+    Panel
+      id: information
+      anchors.fill: parent
+      Label
+        id: defaultDescription
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-top: 1
+        margin-left: 5
+        width: 197
+        text-wrap: true
+        text-auto-resize: true
+        text-align: topleft
+        font: $var-cip-font-new
+        color: #c0c0c0
+        !text: tr('Fill or empty a slice with a right-click.\n\nHold Alt, Shift, Ctrl, or Ctrl+Shift to modify the step size.')
+
+      Panel
+        id: tabContent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-left: 6
+        margin-right: 6
+        margin-bottom: 2
+        visible: false
+
+        UIWidget
+          image-source: /images/game/wheel/progressBg
+          anchors.top: parent.top
+          anchors.left: parent.left
+          anchors.right: parent.right
+
+        ProgressBarSD
+          id: dedicationPB2
+          size: 200 15
+          !text: tr('0 / 0')
+          font: $var-cip-font-new
+          color: #c0c0c0
+          image-source: /images/game/wheel/progressBar
+          anchors.top: prev.top
+          anchors.left: prev.left
+          anchors.right: prev.right
+          anchors.bottom: prev.bottom
+          margin: 1 1 1 1
+
+        Label
+          id: dedicationTitle2
+          size: 200 20
+          !text: tr('Dedication Perk')
+          font: $var-cip-font-new
+          color: #c0c0c0
+          anchors.top: prev.bottom
+          anchors.left: prev.left
+          margin-top: 7
+          margin-left: 46
+        Label
+          id: dedication2
+          size: 185 29
+          text-align: topleft
+          font: $var-cip-font-new
+          color: #c0c0c0
+          anchors.top: prev.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: -4
+          margin-left: -1
+
+        Label
+          id: convictionTitle2
+          size: 200 20
+          !text: tr('Conviction Perk')
+          font: $var-cip-font-new
+          color: #c0c0c0
+          anchors.top: prev.bottom
+          anchors.left: prev.left
+          margin-top: 3
+          margin-left: 48
+        Label
+          id: convictionName2
+          size: 185 20
+          text-align: topleft
+          font: $var-cip-font-new
+          color: #c0c0c0
+          anchors.top: prev.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          margin-top: -4
+          margin-left: -1
+
+        Label
+          id: conviction2
+          size: 185 85
+          text-align: topleft
+          font: $var-cip-font-new
+          color: #c0c0c0
+          anchors.top: prev.bottom
+          anchors.left: parent.left
+          anchors.right: parent.right
+          text-wrap: true
+          text-auto-resize: true
+          margin-top: 3
+          margin-left: -1
+
+    Panel
+      id: manage
+      anchors.fill: parent
+      visible: false
+      UIWidget
+        id: new
+        size: 65 20
+        anchors.top: parent.top
+        anchors.left: parent.left
+        margin-top: 2
+        margin-left: 6
+        image-source: /images/game/wheel/new_button
+        image-clip: 0 0 65 20
+        $pressed:
+          image-clip: 0 20 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.showNewPreset(true)
+      UIWidget
+        id: renamePreset
+        size: 65 20
+        anchors.top: parent.top
+        anchors.left: prev.right
+        margin-top: 2
+        margin-left: 3
+        image-source: /images/game/wheel/rename_button
+        image-clip: 0 0 65 20
+        $pressed:
+          image-clip: 0 20 65 20
+        $disabled:
+          image-clip: 0 40 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.onRenamePreset()
+      UIWidget
+        id: deletePreset
+        size: 65 20
+        anchors.top: parent.top
+        anchors.left: prev.right
+        margin-top: 2
+        margin-left: 3
+        image-source: /images/game/wheel/delete_button
+        image-clip: 0 0 65 20
+        $pressed:
+          image-clip: 0 20 65 20
+        $disabled:
+          image-clip: 0 40 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.onDeletePreset()
+      UIWidget
+        id: applyPresetChanges
+        size: 65 20
+        anchors.top: new.bottom
+        anchors.left: parent.left
+        margin-top: 3
+        margin-left: 6
+        image-source: /images/game/wheel/apply_button
+        image-clip: 0 0 65 20
+        enabled: false
+        $pressed:
+          image-clip: 0 20 65 20
+        $disabled:
+          image-clip: 0 40 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.onWheelOfDestinyApply(false)
+      UIWidget
+        id: import
+        size: 65 20
+        anchors.top: new.bottom
+        anchors.left: prev.right
+        margin-top: 3
+        margin-left: 3
+        image-source: /images/game/wheel/import_button
+        image-clip: 0 0 65 20
+        $pressed:
+          image-clip: 0 20 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.onImportPreset()
+      UIWidget
+        id: export
+        size: 65 20
+        anchors.top: new.bottom
+        anchors.left: prev.right
+        margin-top: 3
+        margin-left: 3
+        image-source: /images/game/wheel/export_button
+        image-clip: 0 0 65 20
+        $pressed:
+          image-clip: 0 20 65 20
+        @onClick: modules.game_wheel.WheelOfDestiny.onExportPreset()
+      UIWidget
+        anchors.top: applyPresetChanges.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        margin-top: 4
+        margin-left: 1
+        margin-right: 1
+        height: 16
+        background-color: #363636
+        border-color-top: #141414
+        border-color-left: #141414
+        border-color-right: #747474
+        border-color-bottom: #141414
+        border-width: 1
+        UIWidget
+          size: 157 14
+          anchors.top: parent.top
+          anchors.left: parent.left
+          !text: tr("Name")
+          text-align: left
+          text-offset: 2 0
+          font: $var-cip-font-new
+          color: #c0c0c0
+        UIWidget
+          anchors.top: parent.top
+          anchors.left: prev.right
+          image-source: /images/ui/separator_vertical
+          margin-left: 2
+          margin-top: 1
+          margin-bottom: 1
+        UIWidget
+          id: points
+          size: 48 14
+          anchors.top: parent.top
+          anchors.left: prev.right
+          !text: tr("Points")
+          font: $var-cip-font-new
+          text-align: left
+          text-offset: 4 1
+          color: #c0c0c0
+
+      TextList
+        id: presetList
+        size: 209 163
+        anchors.top: prev.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        margin-left: 1
+        margin-right: 1
+        margin-bottom: 1
+        layout:
+          type: verticalBox

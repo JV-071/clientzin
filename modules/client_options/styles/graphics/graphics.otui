@@ -30,7 +30,7 @@ UIWidget
     margin-right: 6
 
   Label
-    !text: 'Antialiasing Mode:'
+    !text: 'Graphics Mode:'
     anchors.left: parent.left
     color: #c0c0c0
     anchors.top: graphicsEngine.bottom
@@ -41,7 +41,7 @@ UIWidget
     id: antialiasingMode
     width: 200
     text-offset: -10 1
-    margin-left: 7
+    margin-left: 27
     margin-top: 26
     anchors.top: parent.top
     anchors.left: prev.right
@@ -55,7 +55,7 @@ UIWidget
     anchors.right: parent.right
     anchors.verticalCenter: antialiasingMode.verticalCenter
     margin-right: 6
-    !tooltip: tr('If you select "Antialiasing", the Tibia graphics will appear in a smoother look. However, if you are a fan of retro games, you should choose "None" to enjoy a pixelated old-school look. "Smooth Retro" combines the other two modes - it is offering a smooth pixelated look.')
+    !tooltip: tr('Choose how the game looks on your screen. Each option changes the visual style of Tibia.<br><br><li>None<br>The classic pixelated look of Tibia, just as it was originally designed. Great if you enjoy the old-school retro style.</li><li>Antialiasing<br>Smooths out the edges of sprites and tiles, making the game look softer and less pixelated. A good choice if you prefer a cleaner appearance.</li><li>Smooth Retro<br>A mix between the two options above: keeps the retro feel but with smoother edges. Best of both worlds.</li><li>High Definition<br>Makes sprites look sharper and more detailed, giving the game a modern appearance. Recommended if you want the best visual quality.</li>')
 
   OnePixelDownFrame
     anchors.left: parent.left
@@ -107,11 +107,14 @@ UIWidget
 
     OptionCheckBoxMarked
       id: noFrameRateLimit
+      enabled: false
       anchors.top: prev.bottom
       margin-top: 5
       text-offset: 16 0
+      color: $var-cip-inactive-color
+      image-color: $var-text-color-disabled
       !text: tr('No Frame Rate Limit')
-      !tooltip: tr('If you check this option, the client will try to produce as many frames as possible. If you find your computer\'s performance is bad when running Tibia, you should rather try to set a frame rate limit.')
+      !tooltip: tr('This option is currently unavailable. A frame rate limit is always applied.')
 
     OptionScaleScroll
       id: backgroundFrameRate

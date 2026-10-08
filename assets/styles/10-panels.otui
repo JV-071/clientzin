@@ -26,7 +26,7 @@ QtPanel < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 2 0 96 2
     margin-left: -6
     margin-right: -6
@@ -37,7 +37,7 @@ QtPanel < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 2 2 96
     margin-left: -6
     margin-top: -6
@@ -48,7 +48,7 @@ QtPanel < UIWidget
     anchors.bottom: parent.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 2 98 96 2
     margin-left: -6
     margin-right: -6
@@ -59,7 +59,7 @@ QtPanel < UIWidget
     anchors.right: parent.right
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 2 2 96
     margin-top: -6
     margin-right: -6
@@ -69,7 +69,7 @@ QtPanel < UIWidget
   UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 0 2 2
     margin-top: -6
     margin-left: -6
@@ -78,7 +78,7 @@ QtPanel < UIWidget
   UIWidget
     anchors.top: parent.top
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 0 2 2
     margin-top: -6
     margin-right: -6
@@ -87,7 +87,7 @@ QtPanel < UIWidget
   UIWidget
     anchors.bottom: parent.bottom
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 0 98 2 2
     margin-bottom: -6
     margin-left: -6
@@ -96,7 +96,7 @@ QtPanel < UIWidget
   UIWidget
     anchors.bottom: parent.bottom
     anchors.right: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark
     image-clip: 98 98 2 2
     margin-bottom: -6
     margin-right: -6
@@ -110,7 +110,7 @@ SmallReversedQtPanel < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 2 0 96 2
     margin-left: -4
     margin-right: -4
@@ -121,7 +121,7 @@ SmallReversedQtPanel < UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 0 2 2 96
     margin-left: -4
     margin-top: -4
@@ -132,7 +132,7 @@ SmallReversedQtPanel < UIWidget
     anchors.bottom: parent.bottom
     anchors.left: parent.left
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 2 98 96 2
     margin-left: -4
     margin-right: -4
@@ -143,7 +143,7 @@ SmallReversedQtPanel < UIWidget
     anchors.right: parent.right
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 98 2 2 96
     margin-top: -4
     margin-right: -4
@@ -153,7 +153,7 @@ SmallReversedQtPanel < UIWidget
   UIWidget
     anchors.top: parent.top
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 0 0 2 2
     margin-top: -4
     margin-left: -4
@@ -162,7 +162,7 @@ SmallReversedQtPanel < UIWidget
   UIWidget
     anchors.top: parent.top
     anchors.right: parent.right
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 98 0 2 2
     margin-top: -4
     margin-right: -4
@@ -171,7 +171,7 @@ SmallReversedQtPanel < UIWidget
   UIWidget
     anchors.bottom: parent.bottom
     anchors.left: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 0 98 2 2
     margin-bottom: -4
     margin-left: -4
@@ -180,7 +180,7 @@ SmallReversedQtPanel < UIWidget
   UIWidget
     anchors.bottom: parent.bottom
     anchors.right: parent.left
-    image-source: /images/ui/2pixel_up_frame_borderimage_dark_reversed
+    image-source: /images/ui/2pixel-up-frame-borderimage-dark-upside-down
     image-clip: 98 98 2 2
     margin-bottom: -4
     margin-right: -4

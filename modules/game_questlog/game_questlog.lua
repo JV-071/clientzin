@@ -1,8 +1,8 @@
-﻿-- chunkname: @/game_questlog/game_questlog.lua
+﻿questLogController = Controller:new()
 
-questLogController = Controller:new()
-
-local trackerMiniWindow, questLogButton, buttonQuestLogTrackerButton
+local trackerMiniWindow
+local questLogButton
+local buttonQuestLogTrackerButton
 local UICheckBox = {}
 local UIlabel = {}
 local UITextList = {}
@@ -16,22 +16,27 @@ local missionToQuestMap = {}
 local isNavigating = false
 local isUpdatingCheckbox = false
 local questLogCache = {
-	completed = 0,
 	visible = 0,
 	hidden = 0,
+	completed = 0,
 	items = {}
 }
 local COLORS = {
-	BASE_1 = "#484848",
+	BASE_2 = "#414141",
 	SELECTED = "#585858",
-	BASE_2 = "#414141"
+	BASE_1 = "#484848"
 }
 local COMPLETED_QUEST_ICON = "/game_cyclopedia/images/checkmark-icon"
 local file = "/settings/questtracking.json"
+local save
+local var_0_20
+local var_0_21
 local DEBUG_QUESTLOG = false
 local questLogDebugCounts = {}
 local questLogDataLoaded = false
-local lastQuestLogSignature, pendingQuestLogApplyEvent, pendingQuestLogData
+local lastQuestLogSignature
+local pendingQuestLogApplyEvent
+local pendingQuestLogData
 local isSearchFilterUpdating = false
 
 local function qlog(tag, fmt, ...)
@@ -80,9 +85,7 @@ local function getMissionDisplayName(missionName)
 		return ""
 	end
 
-	local name = missionName:gsub("%s*%([Cc]ompleted%)%s*", "")
-
-	return name:gsub("^%s+", ""):gsub("%s+$", "")
+	return missionName:gsub("%s*%([Cc]ompleted%)%s*", ""):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
 local function addUniqueIdQuest(key, questId, missionId, missionName, missionDescription)
@@ -122,9 +125,8 @@ local function autoUntrackCompletedQuests()
 			if trackerLabel and trackerLabel.description then
 				local description = trackerLabel.description:getText()
 				local missionId = tonumber(trackerLabel:getId())
-				local isCompleted = description and (string.find(string.lower(description), "%(completed%)") or string.find(string.lower(description), "complete") and (string.find(string.lower(description), "quest") or string.find(string.lower(description), "mission")))
 
-				if isCompleted then
+				if description and (string.find(string.lower(description), "%(completed%)") or string.find(string.lower(description), "complete") and (string.find(string.lower(description), "quest") or string.find(string.lower(description), "mission"))) then
 					table.insert(removedMissionIds, missionId)
 					removeNumber(namePlayer, missionId)
 					trackerLabel:destroy()
@@ -156,7 +158,13 @@ local function load()
 	end
 end
 
-local function save()
+function save()
+	if var_0_20 then
+		removeEvent(var_0_20)
+
+		var_0_20 = nil
+	end
+
 	local status, result = pcall(function()
 		return json.encode(settings, 2)
 	end)
@@ -170,6 +178,40 @@ local function save()
 	end
 
 	g_resources.writeFileContents(file, result)
+end
+
+local function var_0_37()
+	if var_0_20 then
+		return
+	end
+
+	var_0_20 = scheduleEvent(function()
+		var_0_20 = nil
+
+		save()
+	end, 3000)
+end
+
+local function var_0_38(result)
+	if var_0_21 then
+		removeEvent(var_0_21)
+
+		var_0_21 = nil
+	end
+
+	local function file()
+		var_0_21 = nil
+
+		if not settings.autoUntrackCompleted then
+			return
+		end
+
+		autoUntrackCompletedQuests()
+
+		var_0_21 = scheduleEvent(file, 30000)
+	end
+
+	var_0_21 = scheduleEvent(file, result)
 end
 
 local sortFunctions = {
@@ -256,8 +298,7 @@ local function findQuestIdForMission(missionId)
 	end
 
 	for i = 1, UITextList.questLogList:getChildCount() do
-		local questItem = UITextList.questLogList:getChildByIndex(i)
-		local questId = questItem:getId()
+		local questItem = UITextList.questLogList:getChildByIndex(i):getId()
 	end
 
 	return nil
@@ -539,7 +580,7 @@ local function sortQuestList(questList, sortOrder)
 end
 
 local function setupQuestItemClickHandler(item, isQuestList)
-	function item:onClick()
+	function item.onClick(self)
 		local list = isQuestList and UITextList.questLogList or UITextList.questLogLine
 
 		qlog("onClick", "isQuestList=%s id=%s", tostring(isQuestList), self:getId())
@@ -584,7 +625,7 @@ local function setupQuestItemClickHandler(item, isQuestList)
 	end
 
 	if isQuestList then
-		function item.iconPin:onClick(mousePos)
+		function item.iconPin.onClick(self, mousePos)
 			local parent = self:getParent()
 
 			parent.isPinned = not parent.isPinned
@@ -608,7 +649,7 @@ local function setupQuestItemClickHandler(item, isQuestList)
 			return true
 		end
 
-		function item.iconShow:onClick(mousePos, mouseButton)
+		function item.iconShow.onClick(self, mousePos, mouseButton)
 			local parent = self:getParent()
 
 			parent.isHiddenQuestLog = not parent.isHiddenQuestLog
@@ -1065,17 +1106,11 @@ local function showQuestTracker()
 				save()
 
 				if checked then
-					scheduleEvent(function()
-						local function periodicAutoUntrack()
-							autoUntrackCompletedQuests()
+					var_0_38(1000)
+				elseif var_0_21 then
+					removeEvent(var_0_21)
 
-							if settings.autoUntrackCompleted then
-								scheduleEvent(periodicAutoUntrack, 30000)
-							end
-						end
-
-						periodicAutoUntrack()
-					end, 1000)
+					var_0_21 = nil
 				end
 			end)
 			menu:display(mousePos)
@@ -1103,17 +1138,7 @@ local function showQuestTracker()
 	syncQuestLogTrackerMainPanelButton()
 
 	if settings.autoUntrackCompleted then
-		scheduleEvent(function()
-			local function periodicAutoUntrack()
-				autoUntrackCompletedQuests()
-
-				if settings.autoUntrackCompleted then
-					scheduleEvent(periodicAutoUntrack, 30000)
-				end
-			end
-
-			periodicAutoUntrack()
-		end, 5000)
+		var_0_38(5000)
 	end
 end
 
@@ -1141,8 +1166,8 @@ local function applyQuestLogFromServer(questList)
 
 	questLogDataLoaded = true
 	questLogCache = {
-		completed = 0,
 		hidden = 0,
+		completed = 0,
 		items = {},
 		visible = #questList
 	}
@@ -1365,7 +1390,7 @@ local function onQuestTracker(remainingQuests, missions)
 	end
 
 	if settingsDirty then
-		save()
+		var_0_37()
 	end
 
 	if settings.autoUntrackCompleted then
@@ -1406,14 +1431,18 @@ local function onUpdateQuestTracker(questId, missionId, questName, missionName, 
 		if settings[namePlayer] then
 			for i, entry in ipairs(settings[namePlayer]) do
 				if entry[1] == missionIdNum then
-					settings[namePlayer][i] = {
-						missionIdNum,
-						missionName,
-						missionDesc or missionName,
-						questId
-					}
+					local var_76_2 = missionDesc or missionName
 
-					save()
+					if entry[2] ~= missionName or entry[3] ~= var_76_2 or entry[4] ~= questId then
+						settings[namePlayer][i] = {
+							missionIdNum,
+							missionName,
+							var_76_2,
+							questId
+						}
+
+						var_0_37()
+					end
 
 					break
 				end
@@ -1426,15 +1455,11 @@ local function onUpdateQuestTracker(questId, missionId, questName, missionName, 
 			layout:update()
 		end
 
-		if settings.autoUntrackCompleted then
-			local isCompleted = missionDesc and (string.find(string.lower(missionDesc), "%(completed%)") or string.find(string.lower(missionDesc), "complete") and (string.find(string.lower(missionDesc), "quest") or string.find(string.lower(missionDesc), "mission")))
-
-			if isCompleted then
-				removeNumber(namePlayer, missionId)
-				save()
-				trackerLabel:destroy()
-				trackerMiniWindow.contentsPanel.list:getLayout():update()
-			end
+		if settings.autoUntrackCompleted and missionDesc and (string.find(string.lower(missionDesc), "%(completed%)") or string.find(string.lower(missionDesc), "complete") and (string.find(string.lower(missionDesc), "quest") or string.find(string.lower(missionDesc), "mission"))) then
+			removeNumber(namePlayer, missionId)
+			save()
+			trackerLabel:destroy()
+			trackerMiniWindow.contentsPanel.list:getLayout():update()
 		end
 	end
 end
@@ -1484,7 +1509,7 @@ function filterQuestList(searchText)
 	recolorVisibleItems()
 end
 
-function questLogController:onCheckChangeQuestTracker(widget)
+function questLogController.onCheckChangeQuestTracker(unusedArgument, widget)
 	if not widget then
 		return
 	end
@@ -1573,7 +1598,7 @@ function questLogController:onCheckChangeQuestTracker(widget)
 	save()
 end
 
-function questLogController:onFilterQuestLog(widget, optionText)
+function questLogController.onFilterQuestLog(unusedArgument, widget, optionText)
 	if not widget then
 		return
 	end
@@ -1618,11 +1643,11 @@ local function setupQuestLogFilterCombo()
 	end
 end
 
-function questLogController:close()
+function questLogController.close(unusedArgument)
 	hide()
 end
 
-function questLogController:toggleMiniWindowsTracker()
+function questLogController.toggleMiniWindowsTracker(unusedArgument)
 	if not trackerMiniWindow then
 		showQuestTracker()
 		syncQuestLogTrackerMainPanelButton()
@@ -1641,11 +1666,11 @@ function questLogController:toggleMiniWindowsTracker()
 	syncQuestLogTrackerMainPanelButton()
 end
 
-function questLogController:filterQuestListShowComplete()
+function questLogController.filterQuestListShowComplete(self)
 	filterQuestList()
 end
 
-function questLogController:filterQuestListShowHidden()
+function questLogController.filterQuestListShowHidden(self)
 	filterQuestList()
 end
 
@@ -1835,7 +1860,7 @@ local function setupQuestLogFilterCheckboxes()
 	UICheckBox.showComplete:setChecked(true, true)
 end
 
-function questLogController:onInit()
+function questLogController.onInit(unusedArgument)
 	questLogController.ui = g_ui.loadUI("game_questlog", g_ui.getRootWidget())
 
 	if not questLogController.ui then
@@ -1860,8 +1885,8 @@ function questLogController:onInit()
 		toggle()
 	end, false, 1000)
 
-	Keybind.new("Windows", "Show/hide quest Log", "", "")
-	Keybind.bind("Windows", "Show/hide quest Log", {
+	Keybind.new("Dialogs", "Open Questlog", "Ctrl+U", "")
+	Keybind.bind("Dialogs", "Open Questlog", {
 		{
 			type = KEY_DOWN,
 			callback = function()
@@ -1869,64 +1894,82 @@ function questLogController:onInit()
 			end
 		}
 	})
+	Keybind.new("Windows", "Show/hide quest tracker", "", "")
+	Keybind.bind("Windows", "Show/hide quest tracker", {
+		{
+			type = KEY_DOWN,
+			callback = function()
+				if not g_game.isOnline() then
+					return false
+				end
+
+				questLogController:toggleMiniWindowsTracker()
+
+				return true
+			end
+		}
+	})
 end
 
-function questLogController:onTerminate()
+function questLogController.onTerminate(unusedArgument)
+	if var_0_20 then
+		save()
+	end
+
+	if var_0_21 then
+		removeEvent(var_0_21)
+
+		var_0_21 = nil
+	end
+
 	questLogButton, trackerMiniWindow, buttonQuestLogTrackerButton = destroyWindows({
 		questLogButton,
 		trackerMiniWindow,
 		buttonQuestLogTrackerButton
 	})
 
-	Keybind.delete("Windows", "Show/hide quest Log")
+	Keybind.delete("Dialogs", "Open Questlog")
+	Keybind.delete("Windows", "Show/hide quest tracker")
 end
 
-function questLogController:onGameStart()
-	if g_game.getClientVersion() >= 1280 then
-		namePlayer = g_game.getCharacterName():lower()
-		settings = load() or {}
+function questLogController.onGameStart(unusedArgument)
+	namePlayer = g_game.getCharacterName():lower()
+	settings = load() or {}
 
-		if settings.autoTrackNewQuests == nil then
-			settings.autoTrackNewQuests = false
-		end
-
-		if settings.autoUntrackCompleted == nil then
-			settings.autoUntrackCompleted = false
-		end
-
-		if not settings[namePlayer] then
-			settings[namePlayer] = {}
-		end
-
-		if not buttonQuestLogTrackerButton then
-			buttonQuestLogTrackerButton = modules.game_mainpanel.addToggleButton("questTrackerButton", tr("Open Quest Tracker Window"), "/images/options/button_questlog_tracker", function()
-				questLogController:toggleMiniWindowsTracker()
-			end, false, 1001)
-		end
-
-		if trackerMiniWindow then
-			trackerMiniWindow:setupOnStart()
-			addEvent(function()
-				if trackerMiniWindow and not trackerMiniWindow:isDestroyed() then
-					rebuildTrackerFromSettings()
-				end
-			end)
-		elseif settings[namePlayer] and #settings[namePlayer] > 0 then
-			sendQuestTracker(settings[namePlayer])
-		end
-
-		syncQuestLogTrackerMainPanelButton()
-	else
-		UICheckBox.showInQuestTracker:setVisible(false)
-		questLogController.ui.trackerButton:setVisible(false)
+	if settings.autoTrackNewQuests == nil then
+		settings.autoTrackNewQuests = false
 	end
+
+	if settings.autoUntrackCompleted == nil then
+		settings.autoUntrackCompleted = false
+	end
+
+	if not settings[namePlayer] then
+		settings[namePlayer] = {}
+	end
+
+	if not buttonQuestLogTrackerButton then
+		buttonQuestLogTrackerButton = modules.game_mainpanel.addToggleButton("questTrackerButton", tr("Open Quest Tracker Window"), "/images/options/button_questlog_tracker", function()
+			questLogController:toggleMiniWindowsTracker()
+		end, false, 1001)
+	end
+
+	if trackerMiniWindow then
+		trackerMiniWindow:setupOnStart()
+		addEvent(function()
+			if trackerMiniWindow and not trackerMiniWindow:isDestroyed() then
+				rebuildTrackerFromSettings()
+			end
+		end)
+	elseif settings[namePlayer] and #settings[namePlayer] > 0 then
+		sendQuestTracker(settings[namePlayer])
+	end
+
+	syncQuestLogTrackerMainPanelButton()
 end
 
-function questLogController:onGameEnd()
-	if g_game.getClientVersion() >= 1280 then
-		save()
-	end
-
+function questLogController.onGameEnd(unusedArgument)
+	save()
 	hide()
 
 	if trackerMiniWindow then
