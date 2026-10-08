@@ -14,6 +14,7 @@
 #include "client/gameconfig.h"
 #include "client/localplayer.h"
 #include <sstream>
+#include "framework/platform/platformwindow.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -217,4 +218,24 @@ TEST_F(RuntimeEventTest, ReadsPartyPricesWithoutChangingTheStack)
     ASSERT_TRUE(luavalue_cast(2, first));
     EXPECT_EQ(expected.front(), first);
     EXPECT_EQ(2, g_lua.getTop());
+}
+
+TEST(PlatformWindowKeyBounds, IncludesEveryKeyDeclaredByLua)
+{
+    EXPECT_EQ(151, static_cast<int>(Fw::KeyNumpadEnter));
+    EXPECT_EQ(167, static_cast<int>(Fw::KeyNumpadDivide));
+    EXPECT_EQ(168, static_cast<int>(Fw::KeyLast));
+    for (int code = 0; code <= 167; ++code) {
+        SCOPED_TRACE(code);
+        EXPECT_NO_THROW(g_window.isKeyPressed(static_cast<Fw::Key>(code)));
+    }
+}
+
+TEST(PlatformWindowKeyBounds, RejectsOutOfRangeQueriesWithoutIndexing)
+{
+    EXPECT_THROW(g_window.isKeyPressed(static_cast<Fw::Key>(-1)), std::out_of_range);
+    EXPECT_THROW(g_window.isKeyPressed(Fw::KeyLast), std::out_of_range);
+    EXPECT_THROW(g_window.isKeyPressed(static_cast<Fw::Key>(999)), std::out_of_range);
+    EXPECT_NO_THROW(g_window.setKeyDelay(static_cast<Fw::Key>(-1), 30));
+    EXPECT_NO_THROW(g_window.setKeyDelay(Fw::KeyLast, 30));
 }
