@@ -284,3 +284,45 @@ TEST(EventSourceDiagnostics, SourceIsConsumedOnceAndDoesNotLeakToFollowingEvents
     EXPECT_EQ("active callback", dispatcher.getActiveEventSource());
     dispatcher.setActiveEventSource("");
 }
+
+TEST_F(RuntimeEventTest, NativeExceptionRetainsCauseAndLuaCallsiteAndAllowsFollowingCalls)
+{
+    bool fail = true;
+    g_lua.pushCppFunction([&](LuaInterface* lua) -> int {
+        if (fail) {
+            fail = false;
+            throw std::runtime_error("reconnect diagnostic sentinel");
+        }
+        lua->pushInteger(7);
+        return 1;
+    });
+    g_lua.setGlobal("nativeReconnectProbe");
+    g_lua.loadFunction("local ok, err = pcall(nativeReconnectProbe); return ok, err, nativeReconnectProbe()",
+                       "@reconnect_exception_probe.lua");
+    ASSERT_EQ(3, g_lua.safeCall());
+    EXPECT_EQ(7, g_lua.popInteger());
+    const auto error = g_lua.popString();
+    EXPECT_NE(std::string::npos, error.find("reconnect diagnostic sentinel"));
+    EXPECT_NE(std::string::npos, error.find("reconnect_exception_probe.lua"));
+    EXPECT_FALSE(g_lua.popBoolean());
+    EXPECT_EQ(0, g_lua.getTop());
+}
+TEST_F(RuntimeEventTest, UnknownNativeExceptionRetainsLuaCallsiteAndAllowsFollowingCalls)
+{
+    bool fail = true;
+    g_lua.pushCppFunction([&](LuaInterface* lua) -> int {
+        if (fail) { fail = false; throw 42; }
+        lua->pushInteger(9);
+        return 1;
+    });
+    g_lua.setGlobal("nativeReconnectProbe");
+    g_lua.loadFunction("local ok, err = pcall(nativeReconnectProbe); return ok, err, nativeReconnectProbe()",
+                       "@unknown_reconnect_exception_probe.lua");
+    ASSERT_EQ(3, g_lua.safeCall());
+    EXPECT_EQ(9, g_lua.popInteger());
+    const auto error = g_lua.popString();
+    EXPECT_NE(std::string::npos, error.find("Unknown C++ exception"));
+    EXPECT_NE(std::string::npos, error.find("unknown_reconnect_exception_probe.lua"));
+    EXPECT_FALSE(g_lua.popBoolean());
+    EXPECT_EQ(0, g_lua.getTop());
+}
