@@ -4,8 +4,8 @@ local DEFAULT_OVERLAY_COLOR = "#00000080"
 local TRANSPARENT_COLOR = "#00000000"
 local BLOCKER_ID = "modalBlocker"
 local modalStack = {}
-local MODAL_HOTKEY_BLOCK_SOURCE = {}
-local var_0_5 = "g_modal_manager"
+local keyboardKeeperWidgets = {}
+local MODAL_HOTKEY_BLOCK_SOURCE = "g_modal_manager"
 local modalHotkeyBlockId
 
 local function acquireModalHotkeyBlock()
@@ -14,7 +14,7 @@ local function acquireModalHotkeyBlock()
 	end
 
 	if HotkeyUtils and HotkeyUtils.disableHotkeys then
-		modalHotkeyBlockId = HotkeyUtils.disableHotkeys(var_0_5)
+		modalHotkeyBlockId = HotkeyUtils.disableHotkeys(MODAL_HOTKEY_BLOCK_SOURCE)
 	end
 
 	if modules.game_actionbar and modules.game_actionbar.pauseHotkeys then
@@ -97,19 +97,19 @@ local function createBlocker(widget, opts)
 	return blocker
 end
 
-local function var_0_13()
-	for iter_8_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
-		if not isWidgetAlive(iter_8_0) then
-			MODAL_HOTKEY_BLOCK_SOURCE[iter_8_0] = nil
+local function pruneDeadKeyboardKeepers()
+	for keeperWidget in pairs(keyboardKeeperWidgets) do
+		if not isWidgetAlive(keeperWidget) then
+			keyboardKeeperWidgets[keeperWidget] = nil
 		end
 	end
 end
 
-local function var_0_14()
-	var_0_13()
+local function hasVisibleKeyboardKeeper()
+	pruneDeadKeyboardKeepers()
 
-	for iter_9_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
-		if iter_9_0:isVisible() then
+	for keeperWidget in pairs(keyboardKeeperWidgets) do
+		if keeperWidget:isVisible() then
 			return true
 		end
 	end
@@ -127,12 +127,12 @@ local function activateTop()
 	top.widget:raise()
 	top.widget:focus()
 
-	if var_0_14() then
-		var_0_13()
+	if hasVisibleKeyboardKeeper() then
+		pruneDeadKeyboardKeepers()
 
-		for iter_10_0 in pairs(MODAL_HOTKEY_BLOCK_SOURCE) do
-			if iter_10_0:isVisible() then
-				iter_10_0:raise()
+		for keeperWidget in pairs(keyboardKeeperWidgets) do
+			if keeperWidget:isVisible() then
+				keeperWidget:raise()
 			end
 		end
 
@@ -142,15 +142,15 @@ local function activateTop()
 	top.widget:grabKeyboard()
 end
 
-function g_modalManager.addKeyboardKeeper(arg_11_0)
-	if isWidgetAlive(arg_11_0) then
-		MODAL_HOTKEY_BLOCK_SOURCE[arg_11_0] = true
+function g_modalManager.addKeyboardKeeper(widget)
+	if isWidgetAlive(widget) then
+		keyboardKeeperWidgets[widget] = true
 	end
 end
 
-function g_modalManager.removeKeyboardKeeper(arg_12_0)
-	if arg_12_0 then
-		MODAL_HOTKEY_BLOCK_SOURCE[arg_12_0] = nil
+function g_modalManager.removeKeyboardKeeper(widget)
+	if widget then
+		keyboardKeeperWidgets[widget] = nil
 	end
 end
 
@@ -159,7 +159,7 @@ function g_modalManager.restoreKeyboard()
 
 	local top = modalStack[#modalStack]
 
-	if top and isWidgetAlive(top.widget) and not var_0_14() then
+	if top and isWidgetAlive(top.widget) and not hasVisibleKeyboardKeeper() then
 		top.widget:grabKeyboard()
 	end
 end

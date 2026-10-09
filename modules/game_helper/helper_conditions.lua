@@ -105,8 +105,8 @@ local function getCachedManaTrainingSpell(words)
 end
 
 local ACTION_SLOT_SPELL_ITEM_ID = 469
-local HASTE_SPELL_WORDS = 3147
-local var_0_25 = {
+local BLANK_RUNE_ITEM_ID = 3147
+local HASTE_SPELL_WORDS = {
 	["utamo tempo san"] = true,
 	["utani tempo hur"] = true,
 	["utani gran hur"] = true,
@@ -398,22 +398,22 @@ local function restoreSlotData(slot, data)
 	refreshHasteLabel()
 end
 
-local function isHelperHasteSpell(_)
-	if not _ or not next(_) then
+local function spellSupportsPlayerVocation(allowedVocations)
+	if not allowedVocations or not next(allowedVocations) then
 		return true
 	end
 
-	local spellData = g_game.getLocalPlayer()
+	local localPlayer = g_game.getLocalPlayer()
 
-	if not spellData then
+	if not localPlayer then
 		return false
 	end
 
-	local words = spellData:getVocation()
-	local playerVoc = ctx and ctx.getPlayerVoc and ctx.getPlayerVoc() or 0
+	local playerVocationId = localPlayer:getVocation()
+	local helperVocationId = ctx and ctx.getPlayerVoc and ctx.getPlayerVoc() or 0
 
-	for unusedValue, entry in ipairs(_) do
-		if entry == words or entry == playerVoc then
+	for unusedValue, entry in ipairs(allowedVocations) do
+		if entry == playerVocationId or entry == helperVocationId then
 			return true
 		end
 	end
@@ -430,7 +430,7 @@ local function var_0_43(arg_24_0)
 		return false
 	end
 
-	if tonumber(arg_24_0.source) == HASTE_SPELL_WORDS then
+	if tonumber(arg_24_0.source) == BLANK_RUNE_ITEM_ID then
 		return true
 	end
 
@@ -450,33 +450,33 @@ local function var_0_45(arg_26_0)
 		return false
 	end
 
-	if arg_26_0.getItemsCount and arg_26_0:getItemsCount(HASTE_SPELL_WORDS) > 0 then
+	if arg_26_0.getItemsCount and arg_26_0:getItemsCount(BLANK_RUNE_ITEM_ID) > 0 then
 		return true
 	end
 
-	if arg_26_0.getInventoryCount and arg_26_0:getInventoryCount(HASTE_SPELL_WORDS, 0) > 0 then
+	if arg_26_0.getInventoryCount and arg_26_0:getInventoryCount(BLANK_RUNE_ITEM_ID, 0) > 0 then
 		return true
 	end
 
 	if g_game.findPlayerItem then
-		return g_game.findPlayerItem(HASTE_SPELL_WORDS, -1, 0) ~= nil
+		return g_game.findPlayerItem(BLANK_RUNE_ITEM_ID, -1, 0) ~= nil
 	end
 
 	return false
 end
 
-local function var_0_46(unusedArgument, spellData)
+local function isHelperHasteSpell(unusedArgument, spellData)
 	if not spellData then
 		return false
 	end
 
 	local words = (spellData.words or ""):lower()
 
-	if not var_0_25[words] then
+	if not HASTE_SPELL_WORDS[words] then
 		return false
 	end
 
-	return isHelperHasteSpell(spellData.vocations)
+	return spellSupportsPlayerVocation(spellData.vocations)
 end
 
 local function isHelperManaTrainingSpell(unusedArgument, spellData)
@@ -489,12 +489,12 @@ local function isHelperManaTrainingSpell(unusedArgument, spellData)
 	end
 
 	if var_0_43(spellData) or var_0_44(spellData) then
-		return isHelperHasteSpell(spellData.vocations)
+		return spellSupportsPlayerVocation(spellData.vocations)
 	end
 
 	local words = (spellData.words or ""):lower()
 
-	if var_0_25[words] then
+	if HASTE_SPELL_WORDS[words] then
 		return false
 	end
 
@@ -508,7 +508,7 @@ local function isHelperManaTrainingSpell(unusedArgument, spellData)
 		return false
 	end
 
-	return isHelperHasteSpell(spellData.vocations)
+	return spellSupportsPlayerVocation(spellData.vocations)
 end
 
 local function openHelperSpellAssign(slot, filterFn)
@@ -560,7 +560,7 @@ local function openHasteSlotContextMenu(slot)
 
 	menu:setWidth(220)
 	menu:addOption(conditionsText("assignSpell"), function()
-		openHelperSpellAssign(slot, var_0_46)
+		openHelperSpellAssign(slot, isHelperHasteSpell)
 	end)
 	menu:addSeparator()
 	menu:addOption(conditionsText("clearAction"), function()
@@ -636,7 +636,7 @@ local function bindHasteSlot()
 		end
 
 		if button == MouseLeftButton then
-			openHelperSpellAssign(self, var_0_46)
+			openHelperSpellAssign(self, isHelperHasteSpell)
 
 			return true
 		end
@@ -858,7 +858,7 @@ local function runManaTraining()
 		return
 	end
 
-	if not isHelperHasteSpell(spell.vocations) then
+	if not spellSupportsPlayerVocation(spell.vocations) then
 		return
 	end
 

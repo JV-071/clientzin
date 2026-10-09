@@ -7,8 +7,8 @@ local cursorName
 local var_0_6
 local var_0_7 = 2
 
-local function var_0_8(arg_1_0)
-	if cursorName == arg_1_0 then
+local function syncItemCursor(desiredCursorName)
+	if cursorName == desiredCursorName then
 		return
 	end
 
@@ -18,8 +18,8 @@ local function var_0_8(arg_1_0)
 		cursorName = nil
 	end
 
-	if arg_1_0 and g_mouse.pushCursor(arg_1_0) then
-		cursorName = arg_1_0
+	if desiredCursorName and g_mouse.pushCursor(desiredCursorName) then
+		cursorName = desiredCursorName
 	end
 end
 
@@ -94,7 +94,7 @@ function UIItem.refreshHoveredInteractionCursor()
 		return
 	end
 
-	var_0_8(var_0_11(var_5_0:getItem()))
+	syncItemCursor(var_0_11(var_5_0:getItem()))
 end
 
 function UIItem.clearHoveredInteractionCursor()
@@ -106,7 +106,7 @@ function UIItem.clearHoveredInteractionCursor()
 		var_0_6 = nil
 	end
 
-	var_0_8(nil)
+	syncItemCursor(nil)
 end
 
 local function var_0_12(arg_7_0)

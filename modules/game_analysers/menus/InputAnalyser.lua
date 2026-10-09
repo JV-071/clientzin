@@ -32,21 +32,21 @@ local effectsFiles = {
 	"agony"
 }
 
-local function applyDamageTypesAnchors(contentsPanel, arg_1_1)
+local function bindAnalyserSectionContextMenu(contentsPanel, sectionKind)
 	if not contentsPanel then
 		return
 	end
 
-	function contentsPanel.onMousePress(unusedArgument, arg_2_1, arg_2_2)
-		if arg_2_2 == MouseRightButton then
-			onInputExtra(arg_2_1, arg_1_1)
+	function contentsPanel.onMousePress(unusedArgument, mousePosition, mouseButton)
+		if mouseButton == MouseRightButton then
+			onInputExtra(mousePosition, sectionKind)
 
 			return true
 		end
 	end
 end
 
-local function var_0_3(contentsPanel)
+local function applyDamageTypesAnchors(contentsPanel)
 	if not contentsPanel.damageTypeLabel:isVisible() then
 		return
 	end
@@ -108,7 +108,7 @@ local function valueInSeconds(t)
 				widget = g_ui.createWidget("DamagePanel", d)
 
 				widget:setId(var_5_4)
-				applyDamageTypesAnchors(widget, "sources")
+				bindAnalyserSectionContextMenu(widget, "sources")
 				widget.icon:setImageSource(string.format(imageDir, effectsFiles[iter_5_0]))
 				widget.icon:setTooltip(getCombatName(iter_5_0))
 			end
@@ -178,7 +178,7 @@ function InputAnalyser.create(unusedArgument)
 		contentsPanel.graphPanel,
 		contentsPanel.horizontalGraph
 	}) do
-		applyDamageTypesAnchors(iter_7_1, "graph")
+		bindAnalyserSectionContextMenu(iter_7_1, "graph")
 	end
 
 	for unusedValue, iter_7_3 in ipairs({
@@ -186,7 +186,7 @@ function InputAnalyser.create(unusedArgument)
 		contentsPanel.noDataLabel1,
 		contentsPanel.dmgTypes
 	}) do
-		applyDamageTypesAnchors(iter_7_3, "types")
+		bindAnalyserSectionContextMenu(iter_7_3, "types")
 	end
 
 	for unusedValue, iter_7_5 in ipairs({
@@ -196,7 +196,7 @@ function InputAnalyser.create(unusedArgument)
 		contentsPanel.dmgSrc,
 		contentsPanel.dmgSourceTypes
 	}) do
-		applyDamageTypesAnchors(iter_7_5, "sources")
+		bindAnalyserSectionContextMenu(iter_7_5, "sources")
 	end
 end
 
@@ -246,7 +246,7 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 		if not widget then
 			widget = g_ui.createWidget("DamagePanel", contentsPanel.dmgTypes)
 
-			applyDamageTypesAnchors(widget, "types")
+			bindAnalyserSectionContextMenu(widget, "types")
 		end
 
 		local percent = damage * 100 / InputAnalyser.total
@@ -286,7 +286,7 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 		end
 	end
 
-	var_0_3(contentsPanel)
+	applyDamageTypesAnchors(contentsPanel)
 
 	local count = 1
 	local widgets = {}
@@ -303,7 +303,7 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 		if not damageSourcePanelWidget then
 			damageSourcePanelWidget = g_ui.createWidget("DamageSourcePanel", contentsPanel.dmgSrc)
 
-			applyDamageTypesAnchors(damageSourcePanelWidget, "sources")
+			bindAnalyserSectionContextMenu(damageSourcePanelWidget, "sources")
 		end
 
 		count = count + 1
@@ -423,10 +423,10 @@ function onInputExtra(arg_16_0, mousePosition)
 
 	mousePosition = mousePosition or "full"
 
-	local graphVisible = InputAnalyser.window.contentsPanel
-	local var_16_1 = graphVisible.graphPanel:isVisible()
-	local typesVisible = graphVisible.damageTypeLabel:isVisible()
-	local sourceVisible = graphVisible.damageSource:isVisible()
+	local contentsPanel = InputAnalyser.window.contentsPanel
+	local isGraphVisible = contentsPanel.graphPanel:isVisible()
+	local typesVisible = contentsPanel.damageTypeLabel:isVisible()
+	local sourceVisible = contentsPanel.damageSource:isVisible()
 	local menu = g_ui.createWidget("PopupMenu")
 
 	menu:setGameMenu(true)
@@ -440,8 +440,8 @@ function onInputExtra(arg_16_0, mousePosition)
 
 	if mousePosition == "full" or mousePosition == "graph" then
 		menu:addCheckBoxOption(tr("Show Damage Graph"), function()
-			InputAnalyser:setDamageGraph(not var_16_1, true)
-		end, "", var_16_1)
+			InputAnalyser:setDamageGraph(not isGraphVisible, true)
+		end, "", isGraphVisible)
 	end
 
 	if mousePosition == "full" or mousePosition == "types" then

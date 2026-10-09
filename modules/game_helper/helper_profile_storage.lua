@@ -284,8 +284,8 @@ local function var_0_36(arg_19_0, arg_19_1)
 	}
 end
 
-local function var_0_37(fileName, arg_20_1)
-	if not g_resources.fileExists(fileName) or g_resources.fileExists(arg_20_1) then
+local function var_0_37(fileName, backupFileName)
+	if not g_resources.fileExists(fileName) or g_resources.fileExists(backupFileName) then
 		return true
 	end
 
@@ -297,10 +297,10 @@ local function var_0_37(fileName, arg_20_1)
 		return false
 	end
 
-	local var_20_2, var_20_3 = pcall(g_resources.writeFileContents, arg_20_1, var_20_1)
+	local var_20_2, var_20_3 = pcall(g_resources.writeFileContents, backupFileName, var_20_1)
 
 	if not var_20_2 or var_20_3 == false then
-		var_0_19("warning", "Could not create backup " .. arg_20_1 .. ".")
+		var_0_19("warning", "Could not create backup " .. backupFileName .. ".")
 
 		return false
 	end

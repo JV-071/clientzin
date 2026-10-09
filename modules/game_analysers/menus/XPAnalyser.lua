@@ -28,10 +28,10 @@ local function formatXpShown(n)
 	return formatMoney(math.floor((tonumber(n) or 0) + 0.5))
 end
 
-local function var_0_3(arg_4_0, arg_4_1)
-	if arg_4_0 then
-		arg_4_0:setText(arg_4_1)
-		arg_4_0:setTooltip(arg_4_1)
+local function setLabelTextIfPresent(label, text)
+	if label then
+		label:setText(text)
+		label:setTooltip(text)
 	end
 end
 
@@ -163,19 +163,19 @@ function XPAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	XPAnalyser:refreshXpRatesFromSession()
 
 	if contentsPanel.xpGain then
-		var_0_3(contentsPanel.xpGain, formatXpShown(XPAnalyser.xpGain))
+		setLabelTextIfPresent(contentsPanel.xpGain, formatXpShown(XPAnalyser.xpGain))
 	end
 
 	if contentsPanel.rawXpGain then
-		var_0_3(contentsPanel.rawXpGain, formatXpShown(XPAnalyser.rawXPGain))
+		setLabelTextIfPresent(contentsPanel.rawXpGain, formatXpShown(XPAnalyser.rawXPGain))
 	end
 
 	if contentsPanel.xpHour then
-		var_0_3(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
+		setLabelTextIfPresent(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
 	end
 
 	if contentsPanel.rawXpHour then
-		var_0_3(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
+		setLabelTextIfPresent(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
 	end
 
 	updateXpTargetArrow()
@@ -192,7 +192,7 @@ function XPAnalyser.setupLevel(unusedArgument, level, arg_18_2)
 	XPAnalyser.level = level
 
 	XPAnalyser.window.contentsPanel.percent:setPercent(math.floor(percent(arg_18_2)))
-	var_0_3(XPAnalyser.window.contentsPanel.nextLevel, "-")
+	setLabelTextIfPresent(XPAnalyser.window.contentsPanel.nextLevel, "-")
 end
 
 function XPAnalyser.updateNextLevel(unusedArgument, hours, minutes)
@@ -204,7 +204,7 @@ function XPAnalyser.updateNextLevel(unusedArgument, hours, minutes)
 	end
 
 	if XPAnalyser.xpHour == 0 then
-		var_0_3(nl, text)
+		setLabelTextIfPresent(nl, text)
 
 		return
 	end
@@ -219,7 +219,7 @@ function XPAnalyser.updateNextLevel(unusedArgument, hours, minutes)
 		end
 	end
 
-	var_0_3(nl, text)
+	setLabelTextIfPresent(nl, text)
 end
 
 function XPAnalyser.pushGraphSample(self)
@@ -256,11 +256,11 @@ function XPAnalyser.checkExpHour(unusedArgument)
 	XPAnalyser:refreshXpRatesFromSession()
 
 	if contentsPanel.xpHour then
-		var_0_3(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
+		setLabelTextIfPresent(contentsPanel.xpHour, formatXpShown(XPAnalyser.xpHour))
 	end
 
 	if contentsPanel.rawXpHour then
-		var_0_3(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
+		setLabelTextIfPresent(contentsPanel.rawXpHour, formatXpShown(XPAnalyser.rawXpHour))
 	end
 
 	local xpHr = tonumber(XPAnalyser.xpHour) or 0

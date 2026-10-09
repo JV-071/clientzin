@@ -4,8 +4,8 @@ tutorialMainlandWindow = nil
 tutorialStartWindow = nil
 
 local lockedTutorialWindow
-local TUTORIAL_HINT_BASE_PATH
-local var_0_2 = "/images/game/tutorial/"
+local currentTutorialHintStyleName
+local TUTORIAL_HINT_BASE_PATH = "/images/game/tutorial/"
 local WORLD_MAP = {
 	OFFSET_Y = 256,
 	OFFSET_X = 129,
@@ -17,7 +17,7 @@ local WORLD_MAP = {
 	PIN_WIDTH = 126,
 	PIN_TIP_Y = 15,
 	PIN_TIP_X = 64,
-	IMAGE = var_0_2 .. "global-map-tutorial"
+	IMAGE = TUTORIAL_HINT_BASE_PATH .. "global-map-tutorial"
 }
 local mainlandPositionConn
 local mainlandMapWidgets
@@ -147,7 +147,7 @@ local function makeArrivalInThaisTutorial()
 	return {
 		title = "Arrival in Thais",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_07_arrivalmain.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_07_arrivalmain.png",
 		size = {
 			582,
 			487
@@ -163,7 +163,7 @@ local TUTORIALS = {
 	{
 		title = "Alternative Controls",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_01_alternativecontrols.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_01_alternativecontrols.png",
 		size = {
 			432,
 			427
@@ -184,7 +184,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_03_vocationknight.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_03_vocationknight.png",
 		size = {
 			432,
 			487
@@ -197,7 +197,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_04_vocationpaladin.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_04_vocationpaladin.png",
 		size = {
 			432,
 			487
@@ -210,7 +210,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_05_vocationsorcerer.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_05_vocationsorcerer.png",
 		size = {
 			432,
 			487
@@ -223,7 +223,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_06_vocationdruid.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_06_vocationdruid.png",
 		size = {
 			432,
 			487
@@ -240,7 +240,7 @@ local TUTORIALS = {
 	{
 		title = "Combat Basics",
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_11_vocationmonk.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_11_vocationmonk.png",
 		size = {
 			432,
 			487
@@ -271,7 +271,7 @@ local TUTORIALS = {
 		title = "Action Bar Helper Hotkey",
 		passiveOverlay = true,
 		type = TUTORIAL_TYPE.HINT,
-		image = var_0_2 .. "hint_helper_actionbar.png",
+		image = TUTORIAL_HINT_BASE_PATH .. "hint_helper_actionbar.png",
 		size = {
 			582,
 			487
@@ -311,7 +311,7 @@ local function applyHintImage(hintImage, imagePath, imageSize)
 end
 
 local function resolveHintImagePath(hintKey)
-	local directoryPath = var_0_2 .. hintKey
+	local directoryPath = TUTORIAL_HINT_BASE_PATH .. hintKey
 
 	if g_resources.directoryExists(directoryPath) then
 		local files = g_resources.listDirectoryFiles(directoryPath)
@@ -1128,7 +1128,7 @@ local function showTutorialHint(tutorialId)
 
 	local styleName = config.windowStyle or "TutorialPopupWindow"
 
-	if tutorialHintWindow and not tutorialHintWindow:isDestroyed() and TUTORIAL_HINT_BASE_PATH ~= styleName then
+	if tutorialHintWindow and not tutorialHintWindow:isDestroyed() and currentTutorialHintStyleName ~= styleName then
 		hideTutorialHintWindow()
 		tutorialHintWindow:destroy()
 
@@ -1137,7 +1137,7 @@ local function showTutorialHint(tutorialId)
 
 	if not tutorialHintWindow or tutorialHintWindow:isDestroyed() then
 		tutorialHintWindow = g_ui.createWidget(styleName, rootWidget)
-		TUTORIAL_HINT_BASE_PATH = styleName
+		currentTutorialHintStyleName = styleName
 	end
 
 	if config.title then
@@ -1233,7 +1233,7 @@ function terminate()
 	end
 
 	tutorialHintWindow = nil
-	TUTORIAL_HINT_BASE_PATH = nil
+	currentTutorialHintStyleName = nil
 	tutorialVocationWindow = nil
 	tutorialMainlandWindow = nil
 	tutorialStartWindow = nil
