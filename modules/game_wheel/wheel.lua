@@ -11,16 +11,16 @@ selectedNewPresetRadio = nil
 
 local summaryVisible = false
 local presetTabSelection = "informationButton"
-local var_0_2
+local pendingActiveStateRequestEvent
 
 wheelPanel = nil
 centerReferencePoint = nil
 
 local function onGameStart()
-	if var_0_2 then
-		removeEvent(var_0_2)
+	if pendingActiveStateRequestEvent then
+		removeEvent(pendingActiveStateRequestEvent)
 
-		var_0_2 = nil
+		pendingActiveStateRequestEvent = nil
 	end
 
 	WheelOfDestiny.cancelActiveStateRequest()
@@ -30,8 +30,8 @@ local function onGameStart()
 		print("[wheel] Error loading wheel presets")
 	end
 
-	var_0_2 = scheduleEvent(function()
-		var_0_2 = nil
+	pendingActiveStateRequestEvent = scheduleEvent(function()
+		pendingActiveStateRequestEvent = nil
 
 		WheelOfDestiny.requestActiveState()
 	end, 250)
@@ -154,10 +154,10 @@ end
 function terminate()
 	Keybind.delete("Dialogs", "Open Wheel of Destiny")
 
-	if var_0_2 then
-		removeEvent(var_0_2)
+	if pendingActiveStateRequestEvent then
+		removeEvent(pendingActiveStateRequestEvent)
 
-		var_0_2 = nil
+		pendingActiveStateRequestEvent = nil
 	end
 
 	WheelOfDestiny.cancelActiveStateRequest()
@@ -207,7 +207,7 @@ function hideWheelWindow()
 	wheelWindow:hide()
 end
 
-local function var_0_4(playerId)
+local function requestCharacterWheel(playerId)
 	WheelOfDestiny.cancelActiveStateRequest()
 	setWheelButtonOn(true)
 	g_game.openWheel(playerId)
@@ -228,7 +228,7 @@ function toggle()
 			fragmentWindow:hide()
 		end
 
-		var_0_4(g_game.getLocalPlayer():getId())
+		requestCharacterWheel(g_game.getLocalPlayer():getId())
 		wheelWindow:recursiveGetChildById("tabContent"):setVisible(false)
 		WheelOfDestiny.onRemoveClick()
 	end
@@ -254,10 +254,10 @@ function hide()
 end
 
 function onGameEnd()
-	if var_0_2 then
-		removeEvent(var_0_2)
+	if pendingActiveStateRequestEvent then
+		removeEvent(pendingActiveStateRequestEvent)
 
-		var_0_2 = nil
+		pendingActiveStateRequestEvent = nil
 	end
 
 	WheelOfDestiny.cancelActiveStateRequest()
@@ -289,7 +289,7 @@ function onGameEnd()
 end
 
 function show()
-	var_0_4(g_game.getLocalPlayer():getId())
+	requestCharacterWheel(g_game.getLocalPlayer():getId())
 end
 
 function openForPlayer(playerId)
@@ -320,7 +320,7 @@ function openForPlayer(playerId)
 		fragmentWindow:hide()
 	end
 
-	var_0_4(id)
+	requestCharacterWheel(id)
 	wheelWindow:recursiveGetChildById("tabContent"):setVisible(false)
 	WheelOfDestiny.onRemoveClick()
 end
@@ -450,8 +450,8 @@ local function refreshPresetTabButtonClip(button)
 	end
 end
 
-function onPresetTabButtonPressChange(arg_28_0)
-	refreshPresetTabButtonClip(arg_28_0)
+function onPresetTabButtonPressChange(presetTabButton)
+	refreshPresetTabButtonClip(presetTabButton)
 end
 
 function onPresetTabButtonHoverChange(button, hovered)

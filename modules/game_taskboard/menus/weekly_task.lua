@@ -232,16 +232,16 @@ local function fillDeliverySlot(panel, entry)
 	local itemIcon = panel:getChildById("itemIcon")
 
 	if itemIcon then
-		local var_14_3 = entry.taskItemId or 0
+		local itemId = entry.taskItemId or 0
 
-		itemIcon:setItemId(var_14_3)
+		itemIcon:setItemId(itemId)
 
 		function itemIcon.onMouseRelease(arg_15_0, arg_15_1, arg_15_2)
 			if arg_15_2 ~= MouseRightButton or not g_keyboard.isCtrlPressed() or not arg_15_0:containsPoint(arg_15_1) then
 				return false
 			end
 
-			return var_0_8(arg_15_1, var_14_3)
+			return var_0_8(arg_15_1, itemId)
 		end
 	end
 

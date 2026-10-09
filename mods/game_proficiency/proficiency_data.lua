@@ -589,20 +589,20 @@ function ProficiencyData.getModifierPerkData(self, modifierEnum, refineLevel)
 	}
 end
 
-local function stage(arg_22_0, arg_22_1)
-	local var_22_0 = ExperienceTable[arg_22_0]
+local function stage(stageIndex, weaponProfessionType)
+	local experienceThresholdRow = ExperienceTable[stageIndex]
 
-	if not var_22_0 or type(arg_22_1) ~= "string" then
+	if not experienceThresholdRow or type(weaponProfessionType) ~= "string" then
 		return nil
 	end
 
-	local var_22_1 = var_22_0[arg_22_1]
+	local stageThreshold = experienceThresholdRow[weaponProfessionType]
 
-	if type(var_22_1) ~= "number" then
+	if type(stageThreshold) ~= "number" then
 		return nil
 	end
 
-	return var_22_1
+	return stageThreshold
 end
 
 function ProficiencyData.getCurrentCeilExperience(self, exp, displayItem)
@@ -620,9 +620,9 @@ function ProficiencyData.getCurrentCeilExperience(self, exp, displayItem)
 	local best
 	local lastExp = 0
 
-	for iter_23_0 = 1, math.min(limitIndex, #ExperienceTable) do
-		if iter_23_0 ~= skipIndex then
-			local stageExp = stage(iter_23_0, weaponProfessionType)
+	for stageIndex = 1, math.min(limitIndex, #ExperienceTable) do
+		if stageIndex ~= skipIndex then
+			local stageExp = stage(stageIndex, weaponProfessionType)
 
 			if stageExp then
 				if exp < stageExp and (not best or stageExp < best) then

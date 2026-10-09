@@ -86,11 +86,11 @@ local function var_0_11()
 	end
 end
 
-local function var_0_12(arg_11_0)
+local function var_0_12(enabled)
 	local var_11_0 = var_0_5("cavebotRosePanel")
 
 	if var_11_0 and not var_11_0:isDestroyed() then
-		var_11_0:setEnabled(arg_11_0)
+		var_11_0:setEnabled(enabled)
 	end
 end
 

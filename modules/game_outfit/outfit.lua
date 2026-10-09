@@ -5043,10 +5043,10 @@ function onMountSelect(unusedArgument, focusedChild, unusedArgument, unusedArgum
 
 		if var_199_1 then
 			local var_199_2 = var_199_1:isChecked()
-			local var_199_3 = getOutfitStateById(id)
+			local enabled = getOutfitStateById(id)
 
-			var_199_1:setEnabled(var_199_3)
-			var_199_1:setChecked(var_199_2 and var_199_3)
+			var_199_1:setEnabled(enabled)
+			var_199_1:setChecked(var_199_2 and enabled)
 		end
 
 		preparePreviewThingType(id, settings.movement == true)

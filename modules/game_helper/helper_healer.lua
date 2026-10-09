@@ -370,23 +370,23 @@ end
 	end
 
 	local widget = healerState.ctx.getWidget("addHealingButton")
-	local var_19_1 = healerState.ctx.getWidget("editHealingButton")
-	local var_19_2 = healerState.ctx.getWidget("removeHealingButton")
+	local editHealingButton = healerState.ctx.getWidget("editHealingButton")
+	local removeHealingButton = healerState.ctx.getWidget("removeHealingButton")
 
-	if not widget or not var_19_1 or not var_19_2 then
+	if not widget or not editHealingButton or not removeHealingButton then
 		return
 	end
 
 	if healerState[50]() ~= nil then
-		var_19_2:show()
-		var_19_1:show()
+		removeHealingButton:show()
+		editHealingButton:show()
 		widget:breakAnchors()
 		widget:addAnchor(AnchorTop, "parent", AnchorTop)
 		widget:addAnchor(AnchorRight, "editHealingButton", AnchorLeft)
 		widget:setMarginRight(6)
 	else
-		var_19_2:hide()
-		var_19_1:hide()
+		removeHealingButton:hide()
+		editHealingButton:hide()
 		widget:breakAnchors()
 		widget:addAnchor(AnchorTop, "parent", AnchorTop)
 		widget:addAnchor(AnchorRight, "parent", AnchorRight)
@@ -2695,16 +2695,16 @@ function HelperHealer.setHealingMetricDropdownOption(dropdown, metric)
 		return
 	end
 
-	local var_154_0 = HelperHealer.healingMetricDropdownText(metric)
+	local text = HelperHealer.healingMetricDropdownText(metric)
 
 	dropdown.currentMetric = healerState[119](metric)
 
-	dropdown:setTooltip(var_154_0)
+	dropdown:setTooltip(text)
 
 	local metricText = dropdown:recursiveGetChildById("metricText")
 
 	if metricText then
-		metricText:setText(var_154_0)
+		metricText:setText(text)
 	end
 end
 
@@ -2813,12 +2813,12 @@ function HelperHealer.elideHealingLabel(label, text)
 
 	while var_160_2 <= var_160_3 do
 		local var_160_5 = math.floor((var_160_2 + var_160_3) / 2)
-		local var_160_6 = text:sub(1, var_160_5) .. var_160_1
+		local text = text:sub(1, var_160_5) .. var_160_1
 
-		label:setText(var_160_6)
+		label:setText(text)
 
 		if width >= label:getTextSize().width then
-			var_160_4 = var_160_6
+			var_160_4 = text
 			var_160_2 = var_160_5 + 1
 		else
 			var_160_3 = var_160_5 - 1
@@ -3818,16 +3818,16 @@ end
 		return
 	end
 
-	local var_226_0 = healerState.addHealingSlot and healerState[147](healerState.addHealingSlot)
+	local enabled = healerState.addHealingSlot and healerState[147](healerState.addHealingSlot)
 	local addHealingOkButton = healerState[6]:recursiveGetChildById("addHealingOkButton")
 	local addHealingApplyButton = healerState[6]:recursiveGetChildById("addHealingApplyButton")
 
 	if addHealingOkButton then
-		addHealingOkButton:setEnabled(var_226_0)
+		addHealingOkButton:setEnabled(enabled)
 	end
 
 	if addHealingApplyButton then
-		addHealingApplyButton:setEnabled(var_226_0)
+		addHealingApplyButton:setEnabled(enabled)
 	end
 
 	healerState[182](healerState.addHealingSlot)
@@ -3920,12 +3920,12 @@ end
 	end
 end
 
-  healerState[186] = function(arg_231_0)
+  healerState[186] = function(text)
 	if not healerState[6] or healerState[6]:isDestroyed() then
 		return
 	end
 
-	healerState[6]:setText(arg_231_0)
+	healerState[6]:setText(text)
 end
 
   healerState[187] = function(arg_232_0)

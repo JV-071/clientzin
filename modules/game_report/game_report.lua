@@ -11,7 +11,7 @@ local var_0_9 = {}
 local var_0_10
 local var_0_11 = false
 local var_0_12 = false
-local var_0_13 = false
+local visible = false
 local var_0_14 = false
 local var_0_15
 local var_0_16
@@ -143,12 +143,12 @@ local function var_0_55()
 	return var_0_52(gameReportWidget) and gameReportWidget:isVisible()
 end
 
-local function var_0_56(arg_5_0, arg_5_1)
+local function var_0_56(arg_5_0, visible)
 	for unusedValue, entry in ipairs(arg_5_0) do
 		local var_5_0 = var_0_53(entry)
 
 		if var_5_0 then
-			var_5_0:setVisible(arg_5_1)
+			var_5_0:setVisible(visible)
 		end
 	end
 end
@@ -340,23 +340,23 @@ local function var_0_73()
 	local var_23_0 = var_0_71(var_0_1, REPORT_SHORTCUT_HIGHLIGHT_ID, var_0_45)
 
 	if var_23_0 then
-		var_23_0:setVisible(var_0_13)
+		var_23_0:setVisible(visible)
 	end
 
 	if var_0_52(uIButtonWidget) then
-		if not var_0_13 then
+		if not visible then
 			var_0_72(false)
 		end
 
-		uIButtonWidget:setVisible(var_0_13)
+		uIButtonWidget:setVisible(visible)
 
 		local var_23_1 = var_0_71(uIButtonWidget, REPORT_MAP_HIGHLIGHT_ID, var_0_46)
 
 		if var_23_1 then
-			var_23_1:setVisible(var_0_13)
+			var_23_1:setVisible(visible)
 		end
 
-		if var_0_13 then
+		if visible then
 			uIButtonWidget:raise()
 		end
 	end
@@ -367,9 +367,9 @@ local function var_0_73()
 end
 
 local function var_0_74(arg_24_0, arg_24_1)
-	var_0_13 = arg_24_0 == true or arg_24_0 == 1
+	visible = arg_24_0 == true or arg_24_0 == 1
 
-	if var_0_13 then
+	if visible then
 		local var_24_0 = var_0_59(arg_24_1)
 
 		if var_24_0 > 0 then
@@ -885,11 +885,11 @@ local function var_0_95(arg_58_0)
 	var_58_2:setVisible(textValue)
 
 	local var_58_4 = var_0_58(arg_58_0.targetName)
-	local var_58_5 = var_58_4 ~= ""
+	local visible = var_58_4 ~= ""
 
-	var_58_0:setVisible(var_58_5)
+	var_58_0:setVisible(visible)
 
-	var_58_0.gotoCommand = var_58_5 and "/goto " .. var_58_4 or nil
+	var_58_0.gotoCommand = visible and "/goto " .. var_58_4 or nil
 
 	local var_58_6 = var_0_68(arg_58_0.mapPosition)
 	local var_58_7 = var_58_6 ~= ""
@@ -898,7 +898,7 @@ local function var_0_95(arg_58_0)
 
 	var_58_1.gotoCommand = var_58_7 and "/gotopos " .. var_58_6 or nil
 
-	var_0_94(textValue, var_58_7, var_58_5)
+	var_0_94(textValue, var_58_7, visible)
 end
 
 local function var_0_96()
@@ -924,18 +924,18 @@ local function var_0_96()
 	var_0_92()
 end
 
-local function var_0_97(arg_60_0, arg_60_1, arg_60_2, arg_60_3)
+local function var_0_97(arg_60_0, arg_60_1, arg_60_2, visible)
 	local var_60_0 = var_0_53(arg_60_0)
 	local var_60_1 = var_0_53(arg_60_1)
 
 	if var_60_0 then
-		var_60_0:setVisible(arg_60_3)
-		var_60_0:setText(arg_60_3 and var_0_66(arg_60_2) or "")
+		var_60_0:setVisible(visible)
+		var_60_0:setText(visible and var_0_66(arg_60_2) or "")
 	end
 
 	if var_60_1 then
-		var_60_1:setVisible(arg_60_3)
-		var_60_1:setText(arg_60_3 and var_0_67(arg_60_2) or "")
+		var_60_1:setVisible(visible)
+		var_60_1:setText(visible and var_0_67(arg_60_2) or "")
 	end
 end
 
@@ -992,10 +992,10 @@ local function var_0_98(arg_61_0)
 	local var_61_8 = var_0_53("sideStatusValue")
 
 	if var_61_8 then
-		local var_61_9, var_61_10 = formatReportStatus(arg_61_0.status)
+		local text, var_61_10 = formatReportStatus(arg_61_0.status)
 
 		var_61_8:setVisible(true)
-		var_61_8:setText(var_61_9)
+		var_61_8:setText(text)
 		var_61_8:setColor(var_61_10)
 	end
 
@@ -1066,19 +1066,19 @@ local function var_0_103(arg_66_0)
 end
 
 local function var_0_104(arg_67_0)
-	local var_67_0 = arg_67_0 and var_0_10 and var_0_10.report and not var_0_103(var_0_10.report)
+	local visible = arg_67_0 and var_0_10 and var_0_10.report and not var_0_103(var_0_10.report)
 	local var_67_1 = var_0_53("reportListBase")
 
 	if var_67_1 then
-		var_67_1:setMarginBottom(var_67_0 and 19 or -2)
+		var_67_1:setMarginBottom(visible and 19 or -2)
 	end
 
 	local var_67_2 = var_0_53("reportReplyEdit")
 
 	if var_67_2 then
-		var_67_2:setVisible(var_67_0)
+		var_67_2:setVisible(visible)
 
-		if not var_67_0 then
+		if not visible then
 			var_67_2:setText("")
 		end
 	end
@@ -1086,7 +1086,7 @@ local function var_0_104(arg_67_0)
 	local var_67_3 = var_0_53("reportSendButton")
 
 	if var_67_3 then
-		var_67_3:setVisible(var_67_0)
+		var_67_3:setVisible(visible)
 	end
 end
 
@@ -1288,10 +1288,10 @@ local function var_0_113()
 	var_77_1.reportInfoLabel:setText(string.format("Level %d\n%s", localPlayer:getLevel(), localPlayer:getVocationNameByClientId()))
 
 	local reportOutfit = var_77_1.reportOutfit
-	local var_77_3 = reportOutfit and var_0_112(localPlayer)
+	local outfit = reportOutfit and var_0_112(localPlayer)
 
-	if reportOutfit and var_77_3 then
-		reportOutfit:setOutfit(var_77_3)
+	if reportOutfit and outfit then
+		reportOutfit:setOutfit(outfit)
 	end
 end
 
@@ -1376,14 +1376,14 @@ local function var_0_118(arg_82_0)
 		local playerLabel = reportListRowWidget:getChildById("playerLabel")
 		local typeLabel = reportListRowWidget:getChildById("typeLabel")
 		local statusLabel = reportListRowWidget:getChildById("statusLabel")
-		local var_82_9 = "#" .. tostring(reportId)
+		local text = "#" .. tostring(reportId)
 
 		if var_0_60(entry) then
-			var_82_9 = "* " .. var_82_9
+			text = "* " .. text
 		end
 
 		if ticketLabel then
-			ticketLabel:setText(var_82_9)
+			ticketLabel:setText(text)
 		end
 
 		if playerLabel then
@@ -1395,9 +1395,9 @@ local function var_0_118(arg_82_0)
 		end
 
 		if statusLabel then
-			local var_82_10, var_82_11 = formatReportStatus(entry.status)
+			local text, var_82_11 = formatReportStatus(entry.status)
 
-			statusLabel:setText(var_82_10)
+			statusLabel:setText(text)
 			statusLabel:setColor(var_82_11)
 		end
 
@@ -1504,15 +1504,15 @@ local function handleGameEnd()
 	var_0_82()
 end
 
-local function handleOutfitChange(arg_91_0, arg_91_1)
+local function handleOutfitChange(arg_91_0, outfit)
 	if not var_0_55() or arg_91_0 ~= g_game.getLocalPlayer() then
 		return
 	end
 
 	local var_91_0 = var_0_53("reportCharacterBase")
 
-	if var_91_0 and var_91_0.reportOutfit and arg_91_1 then
-		var_91_0.reportOutfit:setOutfit(arg_91_1)
+	if var_91_0 and var_91_0.reportOutfit and outfit then
+		var_91_0.reportOutfit:setOutfit(outfit)
 	end
 end
 

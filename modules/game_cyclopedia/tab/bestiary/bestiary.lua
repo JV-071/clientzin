@@ -1609,7 +1609,7 @@ function Cyclopedia.SetBestiaryProgress(fitCenter, firstBar, secondBar, thirdBar
 		return math.min(math.floor(value / max * fit), fit)
 	end
 
-	local var_90_1 = thirdGoal > 0 and thirdGoal <= killCount and "/images/bars/progressbar-green-large" or "/images/bars/progressbar-orange-large"
+	local imageSourcePath = thirdGoal > 0 and thirdGoal <= killCount and "/images/bars/progressbar-green-large" or "/images/bars/progressbar-orange-large"
 
 	local function setBarVisibility(bar, isVisible, width)
 		if not bar then
@@ -1630,7 +1630,7 @@ function Cyclopedia.SetBestiaryProgress(fitCenter, firstBar, secondBar, thirdBar
 
 			bar:setImageRect(rect)
 			bar:setImageClip(rect)
-			bar:setImageSource(var_90_1)
+			bar:setImageSource(imageSourcePath)
 		end
 	end
 
@@ -1715,10 +1715,10 @@ function Cyclopedia.CreateCreatureItems(data)
 		end
 
 		local lootEntries = data[index] or {}
-		local var_95_8 = itemsPerRow < math.min(#lootEntries, maxItemsPerDifficulty)
+		local visible = itemsPerRow < math.min(#lootEntries, maxItemsPerDifficulty)
 
-		widget.ItemsSecond:setVisible(var_95_8)
-		widget:setHeight(var_95_8 and 78 or 44)
+		widget.ItemsSecond:setVisible(visible)
+		widget:setHeight(visible and 78 or 44)
 
 		for itemIndex, itemData in ipairs(lootEntries) do
 			if maxItemsPerDifficulty < itemIndex then
@@ -2489,7 +2489,7 @@ local var_0_65 = {}
 local var_0_66 = {}
 local var_0_67 = "/images/icons/icon-cooldown-running"
 local var_0_68 = "/images/icons/icon-cooldown-finished"
-local var_0_69 = 2
+local marginRight = 2
 local var_0_70 = 16
 local var_0_71 = 1000
 local var_0_72 = tr("No Cooldown")
@@ -2594,7 +2594,7 @@ local function var_0_78(arg_126_0, arg_126_1)
 	arg_126_1:removeTooltip()
 
 	if arg_126_0.label then
-		arg_126_0.label:setMarginRight(var_0_69)
+		arg_126_0.label:setMarginRight(marginRight)
 	end
 
 	arg_126_0.cooldownState = "hidden"

@@ -245,9 +245,9 @@ local function var_0_34(arg_9_0)
 	end
 
 	local var_9_5 = 5
-	local var_9_6 = math.floor((barMarginRight - var_9_5) / 2)
+	local height = math.floor((barMarginRight - var_9_5) / 2)
 
-	if var_9_6 < 1 then
+	if height < 1 then
 		return
 	end
 
@@ -257,14 +257,14 @@ local function var_0_34(arg_9_0)
 	widget:addAnchor(AnchorRight, "parent", AnchorRight)
 	widget:setMarginTop(0)
 	widget:setMarginBottom(0)
-	widget:setHeight(var_9_6)
+	widget:setHeight(height)
 	bar:breakAnchors()
 	bar:addAnchor(AnchorBottom, "parent", AnchorBottom)
 	bar:addAnchor(AnchorLeft, "parent", AnchorLeft)
 	bar:addAnchor(AnchorRight, "parent", AnchorRight)
 	bar:setMarginTop(0)
 	bar:setMarginBottom(0)
-	bar:setHeight(var_9_6)
+	bar:setHeight(height)
 end
 
 local function var_0_35(arg_10_0)
@@ -287,7 +287,7 @@ local function var_0_36(arg_11_0)
 	return var_11_0.width or var_11_0.height or 35
 end
 
-local var_0_37 = 19
+local width = 19
 local var_0_38 = {
 	compactOnLeft = 10,
 	parallelOnRight = 11,
@@ -381,14 +381,14 @@ local function var_0_43(parentWidget, parent)
 			widget:addAnchor(AnchorLeft, "parent", AnchorLeft)
 		end
 
-		widget:setWidth(var_0_37)
+		widget:setWidth(width)
 
 		local var_15_10
 
 		if lastPlacement == "top" then
-			var_15_10 = lines * var_0_37
+			var_15_10 = lines * width
 		else
-			var_15_10 = (lines - 1) * var_0_37
+			var_15_10 = (lines - 1) * width
 		end
 
 		if var_15_6 then
@@ -488,14 +488,14 @@ local function var_0_43(parentWidget, parent)
 		var_0_42(widget, skillTuple, localPlayer)
 	end
 
-	local var_15_15 = lines * var_0_37
+	local width = lines * width
 
 	parentWidget:updateLayout()
-	parentWidget:setWidth(var_15_15)
+	parentWidget:setWidth(width)
 
 	local var_15_16 = var_0_36(var_0_41(parent))
 	local var_15_17 = var_0_38[id] or 0
-	local totalH = var_15_16 + var_15_15 + var_15_17 - 1 + (var_0_39[id] or 0)
+	local totalH = var_15_16 + width + var_15_17 - 1 + (var_0_39[id] or 0)
 
 	if totalH < 1 then
 		totalH = 1

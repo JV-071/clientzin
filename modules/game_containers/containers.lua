@@ -1412,10 +1412,10 @@ local function var_0_91(arg_76_0, arg_76_1, arg_76_2)
 		return
 	end
 
-	local var_76_0 = var_0_90(arg_76_0, arg_76_1, arg_76_2)
+	local height = var_0_90(arg_76_0, arg_76_1, arg_76_2)
 
-	if var_76_0 > 0 and var_76_0 > arg_76_0:getHeight() then
-		arg_76_0:setHeight(var_76_0)
+	if height > 0 and height > arg_76_0:getHeight() then
+		arg_76_0:setHeight(height)
 	end
 end
 
@@ -2014,23 +2014,23 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 	menu:setGameMenu(true)
 
 	local var_99_2 = var_0_39(sourceContainer)
-	local var_99_3 = var_0_42(sourceContainer)
+	local visible = var_0_42(sourceContainer)
 	local autoLoot = menu:getChildById("autoLoot")
 	local autoLootSeparator = menu:getChildById("autoLootSeparator")
 
 	if autoLootSeparator then
-		autoLootSeparator:setVisible(var_99_3)
+		autoLootSeparator:setVisible(visible)
 	end
 
 	if autoLoot then
-		autoLoot:setVisible(var_99_3)
+		autoLoot:setVisible(visible)
 
-		if var_99_3 then
+		if visible then
 			local var_99_6 = OtcOpCode and OtcOpCode.TOGGLE_AUTOLOOT or 1
-			local var_99_7 = g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(var_99_6) and true or false
+			local checked = g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(var_99_6) and true or false
 			local unusedValue = true
 
-			autoLoot:setChecked(var_99_7)
+			autoLoot:setChecked(checked)
 
 			local var_99_9 = false
 
@@ -2242,7 +2242,7 @@ function applyContainerContextLayout(containerWindow)
 	contents:setMarginRight(1)
 end
 
-local var_0_100 = 1
+local marginRight = 1
 local CONTAINER_HEADER_BUTTON_MARGIN = 5
 local CONTAINER_SLOT_BATCH_SIZE = 50
 
@@ -2286,9 +2286,9 @@ function applyContainerHeaderButtonLayout(containerWindow, container)
 	end
 
 	local var_112_7 = var_0_42(container)
-	local var_112_8 = not showDepotSearch and not var_0_38(container) and (showStoreInboxFilter or not isStoreInboxContainer(container)) and (not var_0_39(container) or var_112_7)
+	local visible = not showDepotSearch and not var_0_38(container) and (showStoreInboxFilter or not isStoreInboxContainer(container)) and (not var_0_39(container) or var_112_7)
 
-	contextMenuButton:setVisible(var_112_8)
+	contextMenuButton:setVisible(visible)
 
 	local var_112_9 = container and modules.game_interface.canContainerShowUpButton and modules.game_interface.canContainerShowUpButton(container)
 
@@ -2296,14 +2296,14 @@ function applyContainerHeaderButtonLayout(containerWindow, container)
 	upButton:breakAnchors()
 	upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
 	upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
-	upButton:setMarginRight(var_0_100)
+	upButton:setMarginRight(marginRight)
 	upButton:setMarginTop(0)
 
 	local var_112_10
 
 	if showDepotSearch and searchButton then
 		var_112_10 = searchButton
-	elseif var_112_8 then
+	elseif visible then
 		var_112_10 = contextMenuButton
 	end
 
@@ -2343,7 +2343,7 @@ function toggleContainerPages(containerWindow, container)
 	local pagePanel = containerWindow:getChildById("pagePanel")
 	local separator = containerWindow:getChildById("separator")
 	local contentsPanel = containerWindow:getChildById("contentsPanel")
-	local var_113_5 = pages and var_0_86 or var_0_85
+	local marginBottom = pages and var_0_86 or var_0_85
 
 	if pages then
 		scrollbar:breakAnchors()
@@ -2352,14 +2352,14 @@ function toggleContainerPages(containerWindow, container)
 		scrollbar:addAnchor(AnchorBottom, "parent", AnchorBottom)
 		scrollbar:setMarginTop(2)
 		scrollbar:setMarginRight(4)
-		scrollbar:setMarginBottom(var_113_5)
+		scrollbar:setMarginBottom(marginBottom)
 		contentsPanel:breakAnchors()
 		contentsPanel:addAnchor(AnchorTop, "miniwindowTopBar", AnchorBottom)
 		contentsPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
 		contentsPanel:addAnchor(AnchorRight, "miniwindowScrollBar", AnchorLeft)
 		contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
 		contentsPanel:setMarginLeft(isContainerInHorizontalContext(containerWindow) and 1 or 5)
-		contentsPanel:setMarginBottom(var_113_5)
+		contentsPanel:setMarginBottom(marginBottom)
 		contentsPanel:setMarginTop(-2)
 		contentsPanel:setMarginRight(1)
 		contentsPanel:setPaddingTop(var_0_82)
@@ -2375,14 +2375,14 @@ function toggleContainerPages(containerWindow, container)
 		scrollbar:addAnchor(AnchorBottom, "parent", AnchorBottom)
 		scrollbar:setMarginTop(15)
 		scrollbar:setMarginRight(4)
-		scrollbar:setMarginBottom(var_113_5)
+		scrollbar:setMarginBottom(marginBottom)
 		contentsPanel:breakAnchors()
 		contentsPanel:addAnchor(AnchorTop, "miniwindowTopBar", AnchorBottom)
 		contentsPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
 		contentsPanel:addAnchor(AnchorRight, "miniwindowScrollBar", AnchorLeft)
 		contentsPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
 		contentsPanel:setMarginLeft(isContainerInHorizontalContext(containerWindow) and 1 or 5)
-		contentsPanel:setMarginBottom(var_113_5)
+		contentsPanel:setMarginBottom(marginBottom)
 		contentsPanel:setMarginTop(-2)
 		contentsPanel:setMarginRight(1)
 		contentsPanel:setPaddingTop(var_0_82)

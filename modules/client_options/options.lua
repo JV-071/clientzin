@@ -1,4 +1,4 @@
-﻿local options = dofile("data_options")
+local options = dofile("data_options")
 local CATEGORY_BASE_HEIGHT = 22
 local SUBCATEGORY_HEIGHT = 20
 local ROTATE_HOLD_KEYS = {
@@ -105,7 +105,7 @@ local var_0_24 = {
 	"showStoreNotificationsInCombat"
 }
 
-function updateGameWindowMessageOptionsAvailability(arg_3_0, arg_3_1)
+function updateGameWindowMessageOptionsAvailability(arg_3_0, enabled)
 	local var_3_0 = arg_3_0 or panels
 	local var_3_1 = var_3_0 and var_3_0.interfaceGameWindow
 
@@ -117,7 +117,7 @@ function updateGameWindowMessageOptionsAvailability(arg_3_0, arg_3_1)
 		local var_3_2 = var_3_1:recursiveGetChildById(entry)
 
 		if var_3_2 then
-			var_3_2:setEnabled(arg_3_1)
+			var_3_2:setEnabled(enabled)
 		end
 	end
 end

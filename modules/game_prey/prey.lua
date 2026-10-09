@@ -502,21 +502,21 @@ end
 local PREY_DESCRIPTION_DEFAULT_COLOR = "#c0c0c0"
 local PREY_DESCRIPTION_LINK_COLOR = "#1872c3"
 local PREY_DESCRIPTION_WARN_COLOR = "#d33c3c"
-local var_0_70 = "{icon:prey-wildcard}"
+local PREY_WILDCARD_ICON_MARKUP = "{icon:prey-wildcard}"
 
-local function var_0_71(arg_30_0, iconColor)
-	if not arg_30_0:find(var_0_70, 1, true) then
-		return "{" .. arg_30_0 .. ", " .. iconColor .. "}"
+local function colorizePreyDescription(descriptionText, iconColor)
+	if not descriptionText:find(PREY_WILDCARD_ICON_MARKUP, 1, true) then
+		return "{" .. descriptionText .. ", " .. iconColor .. "}"
 	end
 
 	local parts = {}
 	local pos = 1
 
-	while pos <= #arg_30_0 do
-		local iconPos = arg_30_0:find(var_0_70, pos, true)
+	while pos <= #descriptionText do
+		local iconPos = descriptionText:find(PREY_WILDCARD_ICON_MARKUP, pos, true)
 
 		if not iconPos then
-			local segment = arg_30_0:sub(pos)
+			local segment = descriptionText:sub(pos)
 
 			if segment ~= "" then
 				parts[#parts + 1] = "{" .. segment .. ", " .. iconColor .. "}"
@@ -525,14 +525,14 @@ local function var_0_71(arg_30_0, iconColor)
 			break
 		end
 
-		local before = arg_30_0:sub(pos, iconPos - 1)
+		local before = descriptionText:sub(pos, iconPos - 1)
 
 		if before ~= "" then
 			parts[#parts + 1] = "{" .. before .. ", " .. iconColor .. "}"
 		end
 
-		parts[#parts + 1] = var_0_70
-		pos = iconPos + #var_0_70
+		parts[#parts + 1] = PREY_WILDCARD_ICON_MARKUP
+		pos = iconPos + #PREY_WILDCARD_ICON_MARKUP
 	end
 
 	return table.concat(parts)
@@ -542,7 +542,7 @@ local function setPreyCheckboxWarnDescription(mainKey, bewareKey, lineBreak)
 	local main = tr(descriptionTable[mainKey])
 	local beware = tr(descriptionTable[bewareKey])
 
-	preyWindow.description:setColoredText("{" .. main .. ", " .. PREY_DESCRIPTION_DEFAULT_COLOR .. "}" .. (lineBreak or "\n") .. var_0_71(beware, PREY_DESCRIPTION_WARN_COLOR))
+	preyWindow.description:setColoredText("{" .. main .. ", " .. PREY_DESCRIPTION_DEFAULT_COLOR .. "}" .. (lineBreak or "\n") .. colorizePreyDescription(beware, PREY_DESCRIPTION_WARN_COLOR))
 end
 
 local function setPickSpecificPreyDisabledDescription()
@@ -1407,10 +1407,10 @@ local function clearPreySlotSelection(slot)
 
 	resetPreySelectionTitle(prey)
 
-	local var_76_1 = getPreyButtonsRow(prey.select.buttonsPanel, false).choose.button.choosePreyButton
+	local choosePreyButton = getPreyButtonsRow(prey.select.buttonsPanel, false).choose.button.choosePreyButton
 
-	var_76_1:setOn(false)
-	var_76_1:setActionId(0)
+	choosePreyButton:setOn(false)
+	choosePreyButton:setActionId(0)
 
 	local list = prey.select.list
 
@@ -1451,10 +1451,10 @@ function onItemBoxChecked(widget, lastWidget, slot)
 		preyWindow["slot" .. slot].title:setTextAlign(AlignLeft)
 		preyWindow["slot" .. slot].title:setTextOffset(topoint("3 1"))
 
-		local var_77_1 = getPreyButtonsRow(preyWindow["slot" .. slot].select.buttonsPanel, false).choose.button.choosePreyButton
+		local choosePreyButton = getPreyButtonsRow(preyWindow["slot" .. slot].select.buttonsPanel, false).choose.button.choosePreyButton
 
-		var_77_1:setOn(true)
-		var_77_1:setActionId(slot)
+		choosePreyButton:setOn(true)
+		choosePreyButton:setActionId(slot)
 	end
 
 	if widget.highlight then

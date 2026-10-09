@@ -1,4 +1,4 @@
-﻿local characterPanel
+local characterPanel
 local UI
 local CATEGORY_BASE_HEIGHT = 22
 local SUBCATEGORY_HEIGHT = 20
@@ -1870,24 +1870,24 @@ function Cyclopedia.setCharacterSkillTooltip(id, tooltip)
 end
 
 function Cyclopedia.setCharacterSkillValue(id, value, color)
-	local var_82_0 = UI.CharacterStats:recursiveGetChildById(id):getChildById("value")
+	local valueWidget = UI.CharacterStats:recursiveGetChildById(id):getChildById("value")
 
-	var_82_0:setText(value)
-	var_82_0:setColor(color or "#C0C0C0")
+	valueWidget:setText(value)
+	valueWidget:setColor(color or "#C0C0C0")
 end
 
 function Cyclopedia.setCharacterSkillPercent(id, percent, tooltip, color)
-	local var_83_0 = UI.CharacterStats:recursiveGetChildById(id):getChildById("percent")
+	local percentWidget = UI.CharacterStats:recursiveGetChildById(id):getChildById("percent")
 
-	if var_83_0 then
-		var_83_0:setPercent(math.floor((percent or 0) / 100))
+	if percentWidget then
+		percentWidget:setPercent(math.floor((percent or 0) / 100))
 
 		if tooltip then
-			var_83_0:setTooltip(tooltip)
+			percentWidget:setTooltip(tooltip)
 		end
 
 		if color then
-			var_83_0:setBackgroundColor(color)
+			percentWidget:setBackgroundColor(color)
 		end
 	end
 end

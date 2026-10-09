@@ -1,4 +1,4 @@
-﻿questLogController = Controller:new()
+questLogController = Controller:new()
 
 local trackerMiniWindow
 local questLogButton
@@ -29,8 +29,8 @@ local COLORS = {
 local COMPLETED_QUEST_ICON = "/game_cyclopedia/images/checkmark-icon"
 local file = "/settings/questtracking.json"
 local save
-local var_0_20
-local var_0_21
+local pendingSettingsSaveEvent
+local autoUntrackEvent
 local DEBUG_QUESTLOG = false
 local questLogDebugCounts = {}
 local questLogDataLoaded = false
@@ -159,10 +159,10 @@ local function load()
 end
 
 function save()
-	if var_0_20 then
-		removeEvent(var_0_20)
+	if pendingSettingsSaveEvent then
+		removeEvent(pendingSettingsSaveEvent)
 
-		var_0_20 = nil
+		pendingSettingsSaveEvent = nil
 	end
 
 	local status, result = pcall(function()
@@ -180,27 +180,27 @@ function save()
 	g_resources.writeFileContents(file, result)
 end
 
-local function var_0_37()
-	if var_0_20 then
+local function scheduleDebouncedQuestSave()
+	if pendingSettingsSaveEvent then
 		return
 	end
 
-	var_0_20 = scheduleEvent(function()
-		var_0_20 = nil
+	pendingSettingsSaveEvent = scheduleEvent(function()
+		pendingSettingsSaveEvent = nil
 
 		save()
 	end, 3000)
 end
 
-local function var_0_38(result)
-	if var_0_21 then
-		removeEvent(var_0_21)
+local function scheduleAutoUntrack(result)
+	if autoUntrackEvent then
+		removeEvent(autoUntrackEvent)
 
-		var_0_21 = nil
+		autoUntrackEvent = nil
 	end
 
 	local function file()
-		var_0_21 = nil
+		autoUntrackEvent = nil
 
 		if not settings.autoUntrackCompleted then
 			return
@@ -208,10 +208,10 @@ local function var_0_38(result)
 
 		autoUntrackCompletedQuests()
 
-		var_0_21 = scheduleEvent(file, 30000)
+		autoUntrackEvent = scheduleEvent(file, 30000)
 	end
 
-	var_0_21 = scheduleEvent(file, result)
+	autoUntrackEvent = scheduleEvent(file, result)
 end
 
 local sortFunctions = {
@@ -1106,11 +1106,11 @@ local function showQuestTracker()
 				save()
 
 				if checked then
-					var_0_38(1000)
-				elseif var_0_21 then
-					removeEvent(var_0_21)
+					scheduleAutoUntrack(1000)
+				elseif autoUntrackEvent then
+					removeEvent(autoUntrackEvent)
 
-					var_0_21 = nil
+					autoUntrackEvent = nil
 				end
 			end)
 			menu:display(mousePos)
@@ -1138,7 +1138,7 @@ local function showQuestTracker()
 	syncQuestLogTrackerMainPanelButton()
 
 	if settings.autoUntrackCompleted then
-		var_0_38(5000)
+		scheduleAutoUntrack(5000)
 	end
 end
 
@@ -1390,7 +1390,7 @@ local function onQuestTracker(remainingQuests, missions)
 	end
 
 	if settingsDirty then
-		var_0_37()
+		scheduleDebouncedQuestSave()
 	end
 
 	if settings.autoUntrackCompleted then
@@ -1431,17 +1431,17 @@ local function onUpdateQuestTracker(questId, missionId, questName, missionName, 
 		if settings[namePlayer] then
 			for i, entry in ipairs(settings[namePlayer]) do
 				if entry[1] == missionIdNum then
-					local var_76_2 = missionDesc or missionName
+					local storedMissionDescription = missionDesc or missionName
 
-					if entry[2] ~= missionName or entry[3] ~= var_76_2 or entry[4] ~= questId then
+					if entry[2] ~= missionName or entry[3] ~= storedMissionDescription or entry[4] ~= questId then
 						settings[namePlayer][i] = {
 							missionIdNum,
 							missionName,
-							var_76_2,
+							storedMissionDescription,
 							questId
 						}
 
-						var_0_37()
+						scheduleDebouncedQuestSave()
 					end
 
 					break
@@ -1912,14 +1912,14 @@ function questLogController.onInit(unusedArgument)
 end
 
 function questLogController.onTerminate(unusedArgument)
-	if var_0_20 then
+	if pendingSettingsSaveEvent then
 		save()
 	end
 
-	if var_0_21 then
-		removeEvent(var_0_21)
+	if autoUntrackEvent then
+		removeEvent(autoUntrackEvent)
 
-		var_0_21 = nil
+		autoUntrackEvent = nil
 	end
 
 	questLogButton, trackerMiniWindow, buttonQuestLogTrackerButton = destroyWindows({

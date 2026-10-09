@@ -21,7 +21,7 @@ local NameBorderColors = {
 }
 local var_0_2 = 11
 local var_0_3 = 2
-local var_0_4 = "..."
+local text = "..."
 local var_0_5 = {
 	"iconsMonsterSlot3",
 	"iconsMonsterSlot2",
@@ -42,12 +42,12 @@ local function var_0_7(arg_2_0, arg_2_1, arg_2_2, arg_2_3)
 		return
 	end
 
-	local var_2_1 = arg_2_2 ~= nil
+	local visible = arg_2_2 ~= nil
 
-	var_2_0:setVisible(var_2_1)
+	var_2_0:setVisible(visible)
 	var_2_0:setImageSource(arg_2_2 or "")
 
-	if var_2_1 and arg_2_3 then
+	if visible and arg_2_3 then
 		var_2_0:setImageClip(torect(arg_2_3))
 	end
 end
@@ -182,7 +182,7 @@ function UICreatureButton.updateNameLabel(self)
 		return
 	end
 
-	labelWidget:setText(var_0_4)
+	labelWidget:setText(text)
 
 	if width < labelWidget:getTextSize().width then
 		labelWidget:setText("")
@@ -192,16 +192,16 @@ function UICreatureButton.updateNameLabel(self)
 
 	local var_11_3 = 0
 	local var_11_4 = #name
-	local var_11_5 = var_0_4
+	local var_11_5 = text
 
 	while var_11_3 <= var_11_4 do
 		local var_11_6 = math.floor((var_11_3 + var_11_4) / 2)
-		local var_11_7 = name:sub(1, var_11_6) .. var_0_4
+		local text = name:sub(1, var_11_6) .. text
 
-		labelWidget:setText(var_11_7)
+		labelWidget:setText(text)
 
 		if width >= labelWidget:getTextSize().width then
-			var_11_5 = var_11_7
+			var_11_5 = text
 			var_11_3 = var_11_6 + 1
 		else
 			var_11_4 = var_11_6 - 1
@@ -228,9 +228,9 @@ function UICreatureButton.updateStatusIconLayout(arg_12_0)
 		end
 	end
 
-	local var_12_3 = var_12_1 > 0 and var_12_1 * var_0_2 + (var_12_1 - 1) * var_0_3 or 0
+	local width = var_12_1 > 0 and var_12_1 * var_0_2 + (var_12_1 - 1) * var_0_3 or 0
 
-	statusIcons:setWidth(var_12_3)
+	statusIcons:setWidth(width)
 	statusIcons:getLayout():update()
 
 	local layout = arg_12_0:getLayout()

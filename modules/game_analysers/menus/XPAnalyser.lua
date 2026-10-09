@@ -14,7 +14,7 @@ if not XPAnalyser then
 end
 
 local targetMaxMargin = 144
-local var_0_1 = 900000
+local XP_RATE_WINDOW_MILLIS = 900000
 
 function expForLevel(level)
 	return math.floor(50 * level * level * level / 3 - 100 * level * level + 850 * level / 3 - 200)
@@ -36,12 +36,12 @@ local function setLabelTextIfPresent(label, text)
 end
 
 function XPAnalyser.refreshXpRatesFromSession(unusedArgument)
-	XPAnalyser.xpHour = AnalyserSession:rollingRate(XPAnalyser.xpWindow, var_0_1, 3600000)
-	XPAnalyser.rawXpHour = AnalyserSession:rollingRate(XPAnalyser.rawXpWindow, var_0_1, 3600000)
+	XPAnalyser.xpHour = AnalyserSession:rollingRate(XPAnalyser.xpWindow, XP_RATE_WINDOW_MILLIS, 3600000)
+	XPAnalyser.rawXpHour = AnalyserSession:rollingRate(XPAnalyser.rawXpWindow, XP_RATE_WINDOW_MILLIS, 3600000)
 end
 
-local function percent(arg_6_0)
-	local numericValue = tonumber(arg_6_0) or 0
+local function percent(rawLevelPercent)
+	local numericValue = tonumber(rawLevelPercent) or 0
 
 	if g_game.getFeature and g_game.getFeature(GameLevelPercentU16) then
 		numericValue = numericValue / 100
@@ -73,15 +73,15 @@ local function updateXpTargetArrow()
 		return
 	end
 
-	local var_7_4 = current / math.max(1, target)
+	local targetProgressRatio = current / math.max(1, target)
 
-	if var_7_4 < 0 then
-		var_7_4 = 0
-	elseif var_7_4 > 1 then
-		var_7_4 = 1
+	if targetProgressRatio < 0 then
+		targetProgressRatio = 0
+	elseif targetProgressRatio > 1 then
+		targetProgressRatio = 1
 	end
 
-	arrow:setMarginLeft(math.floor(targetMaxMargin * var_7_4 + 0.5))
+	arrow:setMarginLeft(math.floor(targetMaxMargin * targetProgressRatio + 0.5))
 end
 
 function XPAnalyser.create()
@@ -93,8 +93,8 @@ function XPAnalyser.create()
 	XPAnalyser.xpGain = 0
 	XPAnalyser.xpHour = 0
 	XPAnalyser.rawXpHour = 0
-	XPAnalyser.rawXpWindow = AnalyserSession:newRollingWindow(var_0_1, true)
-	XPAnalyser.xpWindow = AnalyserSession:newRollingWindow(var_0_1, true)
+	XPAnalyser.rawXpWindow = AnalyserSession:newRollingWindow(XP_RATE_WINDOW_MILLIS, true)
+	XPAnalyser.xpWindow = AnalyserSession:newRollingWindow(XP_RATE_WINDOW_MILLIS, true)
 	XPAnalyser.level = 0
 	XPAnalyser.target = 0
 
@@ -127,8 +127,8 @@ function XPAnalyser.reset(unusedArgument, unusedArgument, unusedArgument)
 	XPAnalyser.xpGain = 0
 	XPAnalyser.xpHour = 0
 	XPAnalyser.rawXpHour = 0
-	XPAnalyser.rawXpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.rawXpWindow, var_0_1, true)
-	XPAnalyser.xpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.xpWindow, var_0_1, true)
+	XPAnalyser.rawXpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.rawXpWindow, XP_RATE_WINDOW_MILLIS, true)
+	XPAnalyser.xpWindow = AnalyserSession:resetRollingWindow(XPAnalyser.xpWindow, XP_RATE_WINDOW_MILLIS, true)
 	XPAnalyser.level = 0
 	XPAnalyser.target = 0
 
@@ -188,10 +188,10 @@ function XPAnalyser.setupStartExp(self, value)
 	end
 end
 
-function XPAnalyser.setupLevel(unusedArgument, level, arg_18_2)
+function XPAnalyser.setupLevel(unusedArgument, level, rawLevelPercent)
 	XPAnalyser.level = level
 
-	XPAnalyser.window.contentsPanel.percent:setPercent(math.floor(percent(arg_18_2)))
+	XPAnalyser.window.contentsPanel.percent:setPercent(math.floor(percent(rawLevelPercent)))
 	setLabelTextIfPresent(XPAnalyser.window.contentsPanel.nextLevel, "-")
 end
 

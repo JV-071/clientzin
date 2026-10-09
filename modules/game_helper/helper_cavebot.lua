@@ -785,34 +785,34 @@ end
 	return "Pos"
 end
 
-  cavebotState[110] = function(arg_39_0)
-	local var_39_0 = cavebotState[85]("cavebotStatusLabel")
+  cavebotState[110] = function(text)
+	local cavebotStatusLabel = cavebotState[85]("cavebotStatusLabel")
 
-	if var_39_0 and not var_39_0:isDestroyed() then
-		arg_39_0 = arg_39_0 or ""
+	if cavebotStatusLabel and not cavebotStatusLabel:isDestroyed() then
+		text = text or ""
 
-		if var_39_0:getText() ~= arg_39_0 then
-			var_39_0:setText(arg_39_0)
-			var_39_0:setTooltip(arg_39_0)
+		if cavebotStatusLabel:getText() ~= text then
+			cavebotStatusLabel:setText(text)
+			cavebotStatusLabel:setTooltip(text)
 		end
 	end
 end
 
  cavebotState[57].refreshButton = function()
-	local var_40_0 = cavebotState[85]("cavebotEchoRaidButton")
+	local cavebotEchoRaidButton = cavebotState[85]("cavebotEchoRaidButton")
 
-	if not var_40_0 or var_40_0:isDestroyed() then
+	if not cavebotEchoRaidButton or cavebotEchoRaidButton:isDestroyed() then
 		return
 	end
 
-	var_40_0.onClick = cavebotState[57].openWindow
+	cavebotEchoRaidButton.onClick = cavebotState[57].openWindow
 
-	var_40_0:setOn(false)
+	cavebotEchoRaidButton:setOn(false)
 
 	if cavebotState[57].enabled then
-		var_40_0:setTooltip(cavebotState[86]("Echo Raid: step on nearby triggers. Click to configure.", "Echo Raid: pisar nos portais proximos. Clique para configurar."))
+		cavebotEchoRaidButton:setTooltip(cavebotState[86]("Echo Raid: step on nearby triggers. Click to configure.", "Echo Raid: pisar nos portais proximos. Clique para configurar."))
 	else
-		var_40_0:setTooltip(cavebotState[86]("Echo Raid: avoid triggers. Click to configure.", "Echo Raid: evitar os portais. Clique para configurar."))
+		cavebotEchoRaidButton:setTooltip(cavebotState[86]("Echo Raid: avoid triggers. Click to configure.", "Echo Raid: evitar os portais. Clique para configurar."))
 	end
 end
 
@@ -999,55 +999,55 @@ end
 		return
 	end
 
-	local var_53_1 = comma_value(math.floor(tonumber(arg_53_1) or 0))
+	local text = comma_value(math.floor(tonumber(arg_53_1) or 0))
 
-	if not goldValue.getText or goldValue:getText() ~= var_53_1 then
-		goldValue:setText(var_53_1)
+	if not goldValue.getText or goldValue:getText() ~= text then
+		goldValue:setText(text)
 	end
 end
 
   cavebotState[124] = function()
-	local var_54_0 = cavebotState[85]("cavebotTimeValueLabel")
+	local cavebotTimeValueLabel = cavebotState[85]("cavebotTimeValueLabel")
 
-	if not var_54_0 or var_54_0.isDestroyed and var_54_0:isDestroyed() then
+	if not cavebotTimeValueLabel or cavebotTimeValueLabel.isDestroyed and cavebotTimeValueLabel:isDestroyed() then
 		return
 	end
 
 	local var_54_1 = cavebotState[118]()
-	local var_54_2 = cavebotState[122](var_54_1)
+	local text = cavebotState[122](var_54_1)
 
-	if var_54_0.getText and var_54_0:getText() ~= var_54_2 then
-		var_54_0:setText(var_54_2)
-	elseif not var_54_0.getText then
-		var_54_0:setText(var_54_2)
+	if cavebotTimeValueLabel.getText and cavebotTimeValueLabel:getText() ~= text then
+		cavebotTimeValueLabel:setText(text)
+	elseif not cavebotTimeValueLabel.getText then
+		cavebotTimeValueLabel:setText(text)
 	end
 
-	if var_54_0.setColor then
-		var_54_0:setColor((cavebotState[113]() or var_54_1 > 0) and "#00ff00" or "#ff6464")
+	if cavebotTimeValueLabel.setColor then
+		cavebotTimeValueLabel:setColor((cavebotState[113]() or var_54_1 > 0) and "#00ff00" or "#ff6464")
 	end
 end
 
   cavebotState[125] = function()
 	local var_55_0 = cavebotState[113]()
-	local var_55_1 = cavebotState[85]("cavebotTimeRow")
-	local var_55_2 = cavebotState[85]("cavebotRenewRow")
-	local var_55_3 = cavebotState[85]("cavebotAccessPanel")
-	local var_55_4 = cavebotState[85]("cavebotAccessSeparator")
+	local cavebotTimeRowWidget = cavebotState[85]("cavebotTimeRow")
+	local cavebotRenewRowWidget = cavebotState[85]("cavebotRenewRow")
+	local cavebotAccessPanel = cavebotState[85]("cavebotAccessPanel")
+	local cavebotAccessSeparatorWidget = cavebotState[85]("cavebotAccessSeparator")
 
-	if var_55_1 then
-		var_55_1:setVisible(not var_55_0)
+	if cavebotTimeRowWidget then
+		cavebotTimeRowWidget:setVisible(not var_55_0)
 	end
 
-	if var_55_2 then
-		var_55_2:setVisible(not var_55_0)
+	if cavebotRenewRowWidget then
+		cavebotRenewRowWidget:setVisible(not var_55_0)
 	end
 
-	if var_55_3 then
-		var_55_3:setVisible(true)
+	if cavebotAccessPanel then
+		cavebotAccessPanel:setVisible(true)
 	end
 
-	if var_55_4 then
-		var_55_4:setVisible(true)
+	if cavebotAccessSeparatorWidget then
+		cavebotAccessSeparatorWidget:setVisible(true)
 	end
 
 	cavebotState[57].refreshButton()
@@ -1058,10 +1058,10 @@ end
 
 	cavebotState[124]()
 
-	local var_55_5 = cavebotState[85]("cavebotRenewButton")
+	local cavebotRenewButton = cavebotState[85]("cavebotRenewButton")
 
-	if var_55_5 then
-		var_55_5:setEnabled(cavebotState[120]())
+	if cavebotRenewButton then
+		cavebotRenewButton:setEnabled(cavebotState[120]())
 	end
 
 	cavebotState[123](cavebotState[85]("cavebotRenewPrice"), cavebotState[17])
@@ -1091,15 +1091,15 @@ end
 end
 
   cavebotState[127] = function()
-	local var_57_0 = cavebotState[85]("enableCavebotCheckBox")
-	local var_57_1 = cavebotState[18] or var_57_0 and var_57_0:isChecked()
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
+	local var_57_1 = cavebotState[18] or enableCavebotCheckBox and enableCavebotCheckBox:isChecked()
 
 	cavebotState[126](false)
 
-	if var_57_0 and var_57_0:isChecked() then
+	if enableCavebotCheckBox and enableCavebotCheckBox:isChecked() then
 		cavebotState[9] = true
 
-		var_57_0:setChecked(false)
+		enableCavebotCheckBox:setChecked(false)
 
 		cavebotState[9] = false
 	end
@@ -1119,15 +1119,15 @@ end
 		return false
 	end
 
-	local var_58_0 = cavebotState[85]("enableCavebotCheckBox")
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-	return var_58_0 and var_58_0:isChecked() or false
+	return enableCavebotCheckBox and enableCavebotCheckBox:isChecked() or false
 end
 
   cavebotState[129] = function()
-	local var_59_0 = cavebotState[85]("checkbox")
+	local checkbox = cavebotState[85]("checkbox")
 
-	return var_59_0 and var_59_0:isChecked() or false
+	return checkbox and checkbox:isChecked() or false
 end
 
  cavebotState[25] = function()
@@ -1252,42 +1252,42 @@ end
 end
 
   cavebotState[135] = function()
-	local var_68_0 = cavebotState[85]("cavebotLuringModeCombo")
-	local var_68_1 = cavebotState[85]("cavebotLuringThresholdPanel")
-	local var_68_2 = cavebotState[85]("cavebotLuringStopStepper")
-	local var_68_3 = cavebotState[85]("cavebotLuringRunStepper")
-	local var_68_4 = cavebotState[85]("cavebotLuringSpeedScrollBar")
-	local var_68_5 = cavebotState[85]("cavebotLuringSpeedLabel")
+	local cavebotLuringModeComboWidget = cavebotState[85]("cavebotLuringModeCombo")
+	local cavebotLuringThresholdPanel = cavebotState[85]("cavebotLuringThresholdPanel")
+	local cavebotLuringStopStepperWidget = cavebotState[85]("cavebotLuringStopStepper")
+	local cavebotLuringRunStepperWidget = cavebotState[85]("cavebotLuringRunStepper")
+	local cavebotLuringSpeedScrollBar = cavebotState[85]("cavebotLuringSpeedScrollBar")
+	local cavebotLuringSpeedLabel = cavebotState[85]("cavebotLuringSpeedLabel")
 
 	cavebotState[46] = true
 
-	if var_68_0 then
-		var_68_0:clearOptions()
-		var_68_0:addOption(cavebotState[86]("Disabled", "Desativado"), "disabled")
-		var_68_0:addOption(cavebotState[86]("Continuous", "Continuo"), "continuous")
-		var_68_0:addOption(cavebotState[86]("Stop / Run", "Parar / Voltar"), "runstop")
-		var_68_0:addOption("Anti-Lost", "antilost")
+	if cavebotLuringModeComboWidget then
+		cavebotLuringModeComboWidget:clearOptions()
+		cavebotLuringModeComboWidget:addOption(cavebotState[86]("Disabled", "Desativado"), "disabled")
+		cavebotLuringModeComboWidget:addOption(cavebotState[86]("Continuous", "Continuo"), "continuous")
+		cavebotLuringModeComboWidget:addOption(cavebotState[86]("Stop / Run", "Parar / Voltar"), "runstop")
+		cavebotLuringModeComboWidget:addOption("Anti-Lost", "antilost")
 
-		if var_68_0.setCurrentOptionByData then
-			var_68_0:setCurrentOptionByData(cavebotState[47].mode, true)
+		if cavebotLuringModeComboWidget.setCurrentOptionByData then
+			cavebotLuringModeComboWidget:setCurrentOptionByData(cavebotState[47].mode, true)
 		else
-			var_68_0:setCurrentOption(cavebotState[47].mode == "runstop" and cavebotState[86]("Stop / Run", "Parar / Voltar") or cavebotState[47].mode == "antilost" and "Anti-Lost" or cavebotState[47].mode == "continuous" and cavebotState[86]("Continuous", "Continuo") or cavebotState[86]("Disabled", "Desativado"), true)
+			cavebotLuringModeComboWidget:setCurrentOption(cavebotState[47].mode == "runstop" and cavebotState[86]("Stop / Run", "Parar / Voltar") or cavebotState[47].mode == "antilost" and "Anti-Lost" or cavebotState[47].mode == "continuous" and cavebotState[86]("Continuous", "Continuo") or cavebotState[86]("Disabled", "Desativado"), true)
 		end
 	end
 
-	cavebotState[134](var_68_2, cavebotState[47].stopAt, 1, 20)
-	cavebotState[134](var_68_3, cavebotState[47].resumeAt, 0, math.max(0, cavebotState[47].stopAt - 1))
+	cavebotState[134](cavebotLuringStopStepperWidget, cavebotState[47].stopAt, 1, 20)
+	cavebotState[134](cavebotLuringRunStepperWidget, cavebotState[47].resumeAt, 0, math.max(0, cavebotState[47].stopAt - 1))
 
-	if var_68_1 then
-		var_68_1:setEnabled(cavebotState[47].mode ~= "antilost" and cavebotState[47].mode ~= "continuous")
+	if cavebotLuringThresholdPanel then
+		cavebotLuringThresholdPanel:setEnabled(cavebotState[47].mode ~= "antilost" and cavebotState[47].mode ~= "continuous")
 	end
 
-	if var_68_5 then
-		var_68_5:setText(string.format("%s: %s", cavebotState[86]("Speed", "Vel."), cavebotState[133](cavebotState[47].walkSpeed)))
+	if cavebotLuringSpeedLabel then
+		cavebotLuringSpeedLabel:setText(string.format("%s: %s", cavebotState[86]("Speed", "Vel."), cavebotState[133](cavebotState[47].walkSpeed)))
 	end
 
-	if var_68_4 then
-		var_68_4:setValue(cavebotState[47].walkSpeed)
+	if cavebotLuringSpeedScrollBar then
+		cavebotLuringSpeedScrollBar:setValue(cavebotState[47].walkSpeed)
 	end
 
 	cavebotState[46] = false
@@ -1332,10 +1332,10 @@ end
 
 	cavebotState[47] = cavebotState[102](var_70_0)
 
-	local var_70_1 = cavebotState[85]("cavebotLuringSpeedLabel")
+	local cavebotLuringSpeedLabel = cavebotState[85]("cavebotLuringSpeedLabel")
 
-	if var_70_1 then
-		var_70_1:setText(string.format("%s: %s", cavebotState[86]("Speed", "Vel."), cavebotState[133](cavebotState[47].walkSpeed)))
+	if cavebotLuringSpeedLabel then
+		cavebotLuringSpeedLabel:setText(string.format("%s: %s", cavebotState[86]("Speed", "Vel."), cavebotState[133](cavebotState[47].walkSpeed)))
 	end
 
 	if cavebotState[53] then
@@ -1351,13 +1351,13 @@ end
 end
 
   cavebotState[138] = function()
-	local var_72_0 = cavebotState[85]("cavebotLuringModeCombo")
-	local var_72_1 = cavebotState[85]("cavebotLuringStopStepper")
-	local var_72_2 = cavebotState[85]("cavebotLuringRunStepper")
-	local var_72_3 = cavebotState[85]("cavebotLuringSpeedScrollBar")
+	local cavebotLuringModeComboWidget = cavebotState[85]("cavebotLuringModeCombo")
+	local cavebotLuringStopStepperWidget = cavebotState[85]("cavebotLuringStopStepper")
+	local cavebotLuringRunStepperWidget = cavebotState[85]("cavebotLuringRunStepper")
+	local cavebotLuringSpeedScrollBar = cavebotState[85]("cavebotLuringSpeedScrollBar")
 
-	if var_72_0 then
-		function var_72_0.onOptionChange(unusedArgument, arg_73_1, arg_73_2)
+	if cavebotLuringModeComboWidget then
+		function cavebotLuringModeComboWidget.onOptionChange(unusedArgument, arg_73_1, arg_73_2)
 			if cavebotState[46] then
 				return
 			end
@@ -1371,9 +1371,9 @@ end
 		end
 	end
 
-	if var_72_1 then
-		local btnDec = var_72_1:recursiveGetChildById("btnDec")
-		local btnInc = var_72_1:recursiveGetChildById("btnInc")
+	if cavebotLuringStopStepperWidget then
+		local btnDec = cavebotLuringStopStepperWidget:recursiveGetChildById("btnDec")
+		local btnInc = cavebotLuringStopStepperWidget:recursiveGetChildById("btnInc")
 
 		if btnDec then
 			function btnDec.onClick()
@@ -1388,9 +1388,9 @@ end
 		end
 	end
 
-	if var_72_2 then
-		local btnDec = var_72_2:recursiveGetChildById("btnDec")
-		local btnInc = var_72_2:recursiveGetChildById("btnInc")
+	if cavebotLuringRunStepperWidget then
+		local btnDec = cavebotLuringRunStepperWidget:recursiveGetChildById("btnDec")
+		local btnInc = cavebotLuringRunStepperWidget:recursiveGetChildById("btnInc")
 
 		if btnDec then
 			function btnDec.onClick()
@@ -1405,12 +1405,12 @@ end
 		end
 	end
 
-	if var_72_3 then
-		var_72_3:setRange(cavebotState[72], cavebotState[73])
-		var_72_3:setStep(1)
-		var_72_3:setMouseScroll(true)
+	if cavebotLuringSpeedScrollBar then
+		cavebotLuringSpeedScrollBar:setRange(cavebotState[72], cavebotState[73])
+		cavebotLuringSpeedScrollBar:setStep(1)
+		cavebotLuringSpeedScrollBar:setMouseScroll(true)
 
-		function var_72_3.onValueChange(unusedArgument, arg_78_1)
+		function cavebotLuringSpeedScrollBar.onValueChange(unusedArgument, arg_78_1)
 			cavebotState[137](arg_78_1)
 		end
 	end
@@ -1422,18 +1422,18 @@ end
 	arg_79_0 = cavebotState[101](arg_79_0)
 
 	local var_79_0 = cavebotState[38][arg_79_0] ~= nil
-	local var_79_1 = cavebotState[85]("cavebotPresetDeleteButton")
+	local cavebotPresetDeleteButton = cavebotState[85]("cavebotPresetDeleteButton")
 
-	if var_79_1 then
-		var_79_1:setEnabled(var_79_0 and arg_79_0 ~= cavebotState[63])
+	if cavebotPresetDeleteButton then
+		cavebotPresetDeleteButton:setEnabled(var_79_0 and arg_79_0 ~= cavebotState[63])
 	end
 end
 
   cavebotState[140] = function()
-	local var_80_0 = cavebotState[85]("cavebotPresetCombo")
+	local cavebotPresetComboWidget = cavebotState[85]("cavebotPresetCombo")
 
-	if var_80_0 and not var_80_0:isDestroyed() and var_80_0.getCurrentOption then
-		local currentOption = var_80_0:getCurrentOption()
+	if cavebotPresetComboWidget and not cavebotPresetComboWidget:isDestroyed() and cavebotPresetComboWidget.getCurrentOption then
+		local currentOption = cavebotPresetComboWidget:getCurrentOption()
 
 		if type(currentOption) == "table" then
 			return cavebotState[101](currentOption.data or currentOption.text)
@@ -1444,9 +1444,9 @@ end
 end
 
   cavebotState[141] = function(arg_81_0)
-	local var_81_0 = cavebotState[85]("cavebotPresetCombo")
+	local cavebotPresetComboWidget = cavebotState[85]("cavebotPresetCombo")
 
-	if not var_81_0 or var_81_0:isDestroyed() then
+	if not cavebotPresetComboWidget or cavebotPresetComboWidget:isDestroyed() then
 		return
 	end
 
@@ -1466,19 +1466,19 @@ end
 
 	local var_81_2 = cavebotState[106]()
 
-	var_81_0.menuScroll = #var_81_2 > cavebotState[64]
+	cavebotPresetComboWidget.menuScroll = #var_81_2 > cavebotState[64]
 	cavebotState[40] = true
 
-	var_81_0:clearOptions()
+	cavebotPresetComboWidget:clearOptions()
 
 	for unusedValue, entry in ipairs(var_81_2) do
-		var_81_0:addOption(entry, entry)
+		cavebotPresetComboWidget:addOption(entry, entry)
 	end
 
-	if var_81_0.setCurrentOptionByData then
-		var_81_0:setCurrentOptionByData(var_81_1, true)
+	if cavebotPresetComboWidget.setCurrentOptionByData then
+		cavebotPresetComboWidget:setCurrentOptionByData(var_81_1, true)
 	else
-		var_81_0:setCurrentOption(var_81_1, true)
+		cavebotPresetComboWidget:setCurrentOption(var_81_1, true)
 	end
 
 	cavebotState[40] = false
@@ -1487,13 +1487,13 @@ end
 end
 
   cavebotState[142] = function()
-	local var_82_0 = cavebotState[85]("cavebotPresetCombo")
+	local cavebotPresetComboWidget = cavebotState[85]("cavebotPresetCombo")
 
-	if not var_82_0 or var_82_0:isDestroyed() then
+	if not cavebotPresetComboWidget or cavebotPresetComboWidget:isDestroyed() then
 		return
 	end
 
-	function var_82_0.onOptionChange(unusedArgument, arg_83_1, arg_83_2)
+	function cavebotPresetComboWidget.onOptionChange(unusedArgument, arg_83_1, arg_83_2)
 		if cavebotState[40] then
 			return
 		end
@@ -1868,30 +1868,30 @@ end
   cavebotState[158] = function()
 	cavebotState[157]()
 
-	local var_109_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if var_109_0 and not var_109_0:isDestroyed() then
+	if cavebotMapPreviewWidget and not cavebotMapPreviewWidget:isDestroyed() then
 		for index, ptc_root_local in ipairs(cavebotState[1]) do
-			cavebotState[156](var_109_0, index, ptc_root_local, cavebotState[7])
+			cavebotState[156](cavebotMapPreviewWidget, index, ptc_root_local, cavebotState[7])
 		end
 
-		cavebotState[152](var_109_0)
+		cavebotState[152](cavebotMapPreviewWidget)
 	end
 
 	HelperCavebot.refreshExternalMapMarkers()
 end
 
   cavebotState[159] = function()
-	local var_110_0 = cavebotState[2] ~= nil and cavebotState[1][cavebotState[2]] ~= nil
-	local var_110_1 = cavebotState[85]("cavebotRemoveButton")
-	local var_110_2 = cavebotState[85]("cavebotClearButton")
+	local enabled = cavebotState[2] ~= nil and cavebotState[1][cavebotState[2]] ~= nil
+	local cavebotRemoveButton = cavebotState[85]("cavebotRemoveButton")
+	local cavebotClearButton = cavebotState[85]("cavebotClearButton")
 
-	if var_110_1 then
-		var_110_1:setEnabled(var_110_0)
+	if cavebotRemoveButton then
+		cavebotRemoveButton:setEnabled(enabled)
 	end
 
-	if var_110_2 then
-		var_110_2:setEnabled(#cavebotState[1] > 0)
+	if cavebotClearButton then
+		cavebotClearButton:setEnabled(#cavebotState[1] > 0)
 	end
 end
 
@@ -1908,15 +1908,15 @@ end
 end
 
   cavebotState[161] = function()
-	local var_112_0 = cavebotState[85]("cavebotRecordButton")
+	local cavebotRecordButton = cavebotState[85]("cavebotRecordButton")
 
-	if not var_112_0 then
+	if not cavebotRecordButton then
 		return
 	end
 
-	var_112_0:setOn(cavebotState[33])
-	var_112_0:setText(cavebotState[86](cavebotState[33] and "Stop" or "Record", cavebotState[33] and "Parar" or "Gravar"))
-	var_112_0:setTooltip(cavebotState[86](cavebotState[33] and "Stop recording waypoints and object uses." or "Start recording waypoints while you walk and use doors, ladders and holes.", cavebotState[33] and "Para de gravar waypoints e uses de objetos." or "Inicia a gravacao enquanto voce caminha e usa portas, escadas e buracos."))
+	cavebotRecordButton:setOn(cavebotState[33])
+	cavebotRecordButton:setText(cavebotState[86](cavebotState[33] and "Stop" or "Record", cavebotState[33] and "Parar" or "Gravar"))
+	cavebotRecordButton:setTooltip(cavebotState[86](cavebotState[33] and "Stop recording waypoints and object uses." or "Start recording waypoints while you walk and use doors, ladders and holes.", cavebotState[33] and "Para de gravar waypoints e uses de objetos." or "Inicia a gravacao enquanto voce caminha e usa portas, escadas e buracos."))
 end
 
   cavebotState[162] = function(parentWidget, waypointIndex, arg_113_2)
@@ -1963,35 +1963,35 @@ end
 end
 
   cavebotState[163] = function()
-	local var_115_0 = cavebotState[85]("cavebotWaypointsList")
+	local cavebotWaypointsList = cavebotState[85]("cavebotWaypointsList")
 
-	if not var_115_0 or var_115_0:isDestroyed() then
+	if not cavebotWaypointsList or cavebotWaypointsList:isDestroyed() then
 		cavebotState[8] = {}
 
 		return
 	end
 
-	var_115_0:destroyChildren()
+	cavebotWaypointsList:destroyChildren()
 
 	cavebotState[8] = {}
 
 	local var_115_1
 
 	for index, ptc_root_local in ipairs(cavebotState[1]) do
-		local var_115_2 = cavebotState[162](var_115_0, index, ptc_root_local)
+		local var_115_2 = cavebotState[162](cavebotWaypointsList, index, ptc_root_local)
 
 		if index == cavebotState[2] then
 			var_115_1 = var_115_2
 		end
 	end
 
-	if var_115_1 and var_115_0.ensureChildVisible then
+	if var_115_1 and cavebotWaypointsList.ensureChildVisible then
 		addEvent(function()
-			if var_115_0:isDestroyed() or var_115_1:isDestroyed() then
+			if cavebotWaypointsList:isDestroyed() or var_115_1:isDestroyed() then
 				return
 			end
 
-			var_115_0:ensureChildVisible(var_115_1)
+			cavebotWaypointsList:ensureChildVisible(var_115_1)
 		end)
 	end
 end
@@ -2003,25 +2003,25 @@ end
 		return
 	end
 
-	local var_117_1 = cavebotState[85]("cavebotWaypointsList")
+	local cavebotWaypointsList = cavebotState[85]("cavebotWaypointsList")
 
-	if var_117_1 and not var_117_1:isDestroyed() then
-		local var_117_2 = cavebotState[162](var_117_1, arg_117_0, var_117_0)
+	if cavebotWaypointsList and not cavebotWaypointsList:isDestroyed() then
+		local var_117_2 = cavebotState[162](cavebotWaypointsList, arg_117_0, var_117_0)
 
-		if var_117_1.ensureChildVisible then
+		if cavebotWaypointsList.ensureChildVisible then
 			addEvent(function()
-				if not var_117_1:isDestroyed() and not var_117_2:isDestroyed() then
-					var_117_1:ensureChildVisible(var_117_2)
+				if not cavebotWaypointsList:isDestroyed() and not var_117_2:isDestroyed() then
+					cavebotWaypointsList:ensureChildVisible(var_117_2)
 				end
 			end)
 		end
 	end
 
-	local var_117_3 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if var_117_3 and not var_117_3:isDestroyed() then
-		cavebotState[156](var_117_3, arg_117_0, var_117_0, cavebotState[7])
-		cavebotState[152](var_117_3)
+	if cavebotMapPreviewWidget and not cavebotMapPreviewWidget:isDestroyed() then
+		cavebotState[156](cavebotMapPreviewWidget, arg_117_0, var_117_0, cavebotState[7])
+		cavebotState[152](cavebotMapPreviewWidget)
 	end
 
 	local externalMapPreview = HelperCavebot.externalMapPreview
@@ -2034,7 +2034,7 @@ end
 
   cavebotState[165] = function(arg_119_0, arg_119_1)
 	local var_119_0 = cavebotState[128]()
-	local var_119_1 = cavebotState[85]("cavebotWaypointsList")
+	local cavebotWaypointsList = cavebotState[85]("cavebotWaypointsList")
 	local var_119_2 = {}
 
 	local function var_119_3(arg_120_0)
@@ -2083,8 +2083,8 @@ end
 
 	local var_119_4 = cavebotState[8][cavebotState[2]]
 
-	if var_119_1 and not var_119_1:isDestroyed() and var_119_4 and not var_119_4:isDestroyed() and var_119_1.ensureChildVisible then
-		var_119_1:ensureChildVisible(var_119_4)
+	if cavebotWaypointsList and not cavebotWaypointsList:isDestroyed() and var_119_4 and not var_119_4:isDestroyed() and cavebotWaypointsList.ensureChildVisible then
+		cavebotWaypointsList:ensureChildVisible(var_119_4)
 	end
 end
 
@@ -2160,10 +2160,10 @@ end
 end
 
   cavebotState[167] = function()
-	local var_123_0 = cavebotState[85]("cavebotWaypointCountLabel")
+	local cavebotWaypointCountLabel = cavebotState[85]("cavebotWaypointCountLabel")
 
-	if var_123_0 then
-		var_123_0:setText(string.format("%d WP", #cavebotState[1]))
+	if cavebotWaypointCountLabel then
+		cavebotWaypointCountLabel:setText(string.format("%d WP", #cavebotState[1]))
 	end
 end
 
@@ -2177,21 +2177,21 @@ end
 end
 
   cavebotState[169] = function(arg_125_0)
-	local var_125_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
 	arg_125_0 = cavebotState[88](arg_125_0)
 
-	if not var_125_0 or var_125_0:isDestroyed() or not arg_125_0 then
+	if not cavebotMapPreviewWidget or cavebotMapPreviewWidget:isDestroyed() or not arg_125_0 then
 		return false
 	end
 
-	var_125_0:setCameraPosition(arg_125_0)
+	cavebotMapPreviewWidget:setCameraPosition(arg_125_0)
 
 	return true
 end
 
   cavebotState[170] = function(arg_126_0)
-	local var_126_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
 	arg_126_0 = cavebotState[88](arg_126_0)
 
@@ -2211,7 +2211,7 @@ end
 		end
 	end
 
-	var_126_1(var_126_0)
+	var_126_1(cavebotMapPreviewWidget)
 	var_126_1(HelperCavebot.externalMapPreview)
 end
 
@@ -2229,37 +2229,37 @@ end
 		m = arg_128_1
 	}
 
-	local var_128_0 = cavebotState[85]("cavebotRoseMain")
-	local var_128_1 = cavebotState[85]("cavebotRoseSecondary")
+	local cavebotRoseMainWidget = cavebotState[85]("cavebotRoseMain")
+	local cavebotRoseSecondaryWidget = cavebotState[85]("cavebotRoseSecondary")
 
-	if not var_128_0 or not var_128_1 or var_128_0:isDestroyed() or var_128_1:isDestroyed() then
+	if not cavebotRoseMainWidget or not cavebotRoseSecondaryWidget or cavebotRoseMainWidget:isDestroyed() or cavebotRoseSecondaryWidget:isDestroyed() then
 		return false
 	end
 
 	local var_128_2 = math.floor(0.08611111111111111 * (numericValue * 60 + arg_128_1))
-	local var_128_3 = 31
+	local width = 31
 	local var_128_4 = 0
 
 	if var_128_2 + 31 >= 124 then
 		var_128_4 = var_128_2 + 31 - 124 + 1
-		var_128_3 = 31 - var_128_4
+		width = 31 - var_128_4
 	end
 
-	var_128_0:setWidth(var_128_3)
-	var_128_1:setWidth(var_128_4)
+	cavebotRoseMainWidget:setWidth(width)
+	cavebotRoseSecondaryWidget:setWidth(var_128_4)
 
 	if var_128_4 == 0 then
-		var_128_1:hide()
+		cavebotRoseSecondaryWidget:hide()
 	else
-		var_128_1:setImageClip("0 0 " .. var_128_4 .. " 31")
-		var_128_1:show()
+		cavebotRoseSecondaryWidget:setImageClip("0 0 " .. var_128_4 .. " 31")
+		cavebotRoseSecondaryWidget:show()
 	end
 
-	if var_128_3 == 0 then
-		var_128_0:hide()
+	if width == 0 then
+		cavebotRoseMainWidget:hide()
 	else
-		var_128_0:setImageClip(var_128_2 .. " 0 " .. var_128_3 .. " 31")
-		var_128_0:show()
+		cavebotRoseMainWidget:setImageClip(var_128_2 .. " 0 " .. width .. " 31")
+		cavebotRoseMainWidget:show()
 	end
 
 	return true
@@ -2278,19 +2278,19 @@ end
 	local ambients = rosePanel and rosePanel:getChildById("ambients")
 	local main = ambients and ambients:getChildById("main")
 	local secondary = ambients and ambients:getChildById("secondary")
-	local var_129_7 = cavebotState[85]("cavebotRoseMain")
-	local var_129_8 = cavebotState[85]("cavebotRoseSecondary")
+	local cavebotRoseMainWidget = cavebotState[85]("cavebotRoseMain")
+	local cavebotRoseSecondaryWidget = cavebotState[85]("cavebotRoseSecondary")
 
-	if not main or not secondary or not var_129_7 or not var_129_8 then
+	if not main or not secondary or not cavebotRoseMainWidget or not cavebotRoseSecondaryWidget then
 		return false
 	end
 
-	var_129_7:setWidth(main:getWidth())
-	var_129_7:setImageClip(main:getImageClip())
-	var_129_7:setVisible(main:isExplicitlyVisible())
-	var_129_8:setWidth(secondary:getWidth())
-	var_129_8:setImageClip(secondary:getImageClip())
-	var_129_8:setVisible(secondary:isExplicitlyVisible())
+	cavebotRoseMainWidget:setWidth(main:getWidth())
+	cavebotRoseMainWidget:setImageClip(main:getImageClip())
+	cavebotRoseMainWidget:setVisible(main:isExplicitlyVisible())
+	cavebotRoseSecondaryWidget:setWidth(secondary:getWidth())
+	cavebotRoseSecondaryWidget:setImageClip(secondary:getImageClip())
+	cavebotRoseSecondaryWidget:setVisible(secondary:isExplicitlyVisible())
 
 	return true
 end
@@ -2757,20 +2757,20 @@ function HelperCavebot.toggleAutoRouteSelection()
 end
 
   cavebotState[179] = function(arg_153_0)
-	local var_153_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if not var_153_0 or var_153_0:isDestroyed() then
+	if not cavebotMapPreviewWidget or cavebotMapPreviewWidget:isDestroyed() then
 		return
 	end
 
-	var_153_0.autowalk = false
+	cavebotMapPreviewWidget.autowalk = false
 
-	if not var_153_0.cavebotSetupDone then
-		var_153_0.cavebotSetupDone = true
+	if not cavebotMapPreviewWidget.cavebotSetupDone then
+		cavebotMapPreviewWidget.cavebotSetupDone = true
 
-		var_153_0:setZoom(2)
+		cavebotMapPreviewWidget:setZoom(2)
 
-		function var_153_0.onMouseRelease(arg_154_0, arg_154_1, arg_154_2)
+		function cavebotMapPreviewWidget.onMouseRelease(arg_154_0, arg_154_1, arg_154_2)
 			if not arg_154_0.allowNextRelease then
 				return true
 			end
@@ -2797,10 +2797,10 @@ end
 	local position = cavebotState[88](localPlayer and localPlayer.getPosition and localPlayer:getPosition())
 
 	if position then
-		var_153_0:setCrossPosition(position)
+		cavebotMapPreviewWidget:setCrossPosition(position)
 
-		if arg_153_0 or not var_153_0:getCameraPosition() then
-			var_153_0:setCameraPosition(position)
+		if arg_153_0 or not cavebotMapPreviewWidget:getCameraPosition() then
+			cavebotMapPreviewWidget:setCameraPosition(position)
 		end
 	end
 
@@ -4589,10 +4589,10 @@ function HelperCavebot.init(arg_212_0)
 			prepare = function()
 				cavebotState[26](false)
 
-				local var_213_0 = cavebotState[85]("enableCavebotCheckBox")
+				local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-				if var_213_0 and var_213_0:isChecked() then
-					var_213_0:setChecked(false)
+				if enableCavebotCheckBox and enableCavebotCheckBox:isChecked() then
+					enableCavebotCheckBox:setChecked(false)
 				else
 					cavebotState[25]()
 				end
@@ -5067,10 +5067,10 @@ function HelperCavebot.loadFromConfig(arg_231_0)
 
 	cavebotState[10] = var_231_0.enabled == true
 
-	local var_231_2 = cavebotState[85]("enableCavebotCheckBox")
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-	if var_231_2 then
-		var_231_2:setChecked(cavebotState[10] and cavebotState[112]() and cavebotState[119]())
+	if enableCavebotCheckBox then
+		enableCavebotCheckBox:setChecked(cavebotState[10] and cavebotState[112]() and cavebotState[119]())
 	end
 
 	cavebotState[57].enabled = var_231_0.echoRaid == nil or var_231_0.echoRaid == true
@@ -5097,10 +5097,10 @@ function HelperCavebot.onAuthorized(arg_232_0, arg_232_1, arg_232_2)
 
 	cavebotState[9] = true
 
-	local var_232_0 = cavebotState[85]("enableCavebotCheckBox")
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-	if var_232_0 then
-		var_232_0:setChecked(cavebotState[10] and cavebotState[119]())
+	if enableCavebotCheckBox then
+		enableCavebotCheckBox:setChecked(cavebotState[10] and cavebotState[119]())
 	end
 
 	if cavebotState[128]() then
@@ -5136,14 +5136,14 @@ end
 function HelperCavebot.disableForSessionBoundary()
 	cavebotState[10] = false
 
-	local var_234_0 = cavebotState[85]("enableCavebotCheckBox")
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-	if var_234_0 and var_234_0:isChecked() then
+	if enableCavebotCheckBox and enableCavebotCheckBox:isChecked() then
 		local var_234_1 = cavebotState[9]
 
 		cavebotState[9] = true
 
-		var_234_0:setChecked(false)
+		enableCavebotCheckBox:setChecked(false)
 
 		cavebotState[9] = var_234_1
 	end
@@ -5174,10 +5174,10 @@ function HelperCavebot.onEnableChange(unusedArgument, arg_237_1)
 	end
 
 	if arg_237_1 and (not cavebotState[112]() or not cavebotState[119]()) then
-		local var_237_0 = cavebotState[85]("enableCavebotCheckBox")
+		local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-		if var_237_0 then
-			var_237_0:setChecked(false)
+		if enableCavebotCheckBox then
+			enableCavebotCheckBox:setChecked(false)
 		end
 
 		if arg_237_1 and cavebotState[112]() and not cavebotState[119]() then
@@ -5234,10 +5234,10 @@ function HelperCavebot.toggleRecording()
 		return false
 	end
 
-	local var_238_1 = cavebotState[85]("enableCavebotCheckBox")
+	local enableCavebotCheckBox = cavebotState[85]("enableCavebotCheckBox")
 
-	if var_238_1 and var_238_1:isChecked() then
-		var_238_1:setChecked(false)
+	if enableCavebotCheckBox and enableCavebotCheckBox:isChecked() then
+		enableCavebotCheckBox:setChecked(false)
 	end
 
 	local position = cavebotState[88](localPlayer:getPosition())
@@ -5672,40 +5672,40 @@ function HelperCavebot.centerMapOnPlayer()
 		return false
 	end
 
-	local var_260_2 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if var_260_2 and not var_260_2:isDestroyed() then
-		var_260_2:setCrossPosition(position)
+	if cavebotMapPreviewWidget and not cavebotMapPreviewWidget:isDestroyed() then
+		cavebotMapPreviewWidget:setCrossPosition(position)
 	end
 
 	return cavebotState[169](position)
 end
 
 function HelperCavebot.navigateMap(arg_261_0, arg_261_1)
-	local var_261_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if not var_261_0 or var_261_0:isDestroyed() then
+	if not cavebotMapPreviewWidget or cavebotMapPreviewWidget:isDestroyed() then
 		return false
 	end
 
 	arg_261_1 = arg_261_1 or 1
 
 	if arg_261_0 == "north" then
-		var_261_0:move(0, arg_261_1)
+		cavebotMapPreviewWidget:move(0, arg_261_1)
 	elseif arg_261_0 == "north-east" then
-		var_261_0:move(-arg_261_1, arg_261_1)
+		cavebotMapPreviewWidget:move(-arg_261_1, arg_261_1)
 	elseif arg_261_0 == "east" then
-		var_261_0:move(-arg_261_1, 0)
+		cavebotMapPreviewWidget:move(-arg_261_1, 0)
 	elseif arg_261_0 == "south-east" then
-		var_261_0:move(-arg_261_1, -arg_261_1)
+		cavebotMapPreviewWidget:move(-arg_261_1, -arg_261_1)
 	elseif arg_261_0 == "south" then
-		var_261_0:move(0, -arg_261_1)
+		cavebotMapPreviewWidget:move(0, -arg_261_1)
 	elseif arg_261_0 == "south-west" then
-		var_261_0:move(arg_261_1, -arg_261_1)
+		cavebotMapPreviewWidget:move(arg_261_1, -arg_261_1)
 	elseif arg_261_0 == "west" then
-		var_261_0:move(arg_261_1, 0)
+		cavebotMapPreviewWidget:move(arg_261_1, 0)
 	elseif arg_261_0 == "north-west" then
-		var_261_0:move(arg_261_1, arg_261_1)
+		cavebotMapPreviewWidget:move(arg_261_1, arg_261_1)
 	else
 		return false
 	end
@@ -5714,29 +5714,29 @@ function HelperCavebot.navigateMap(arg_261_0, arg_261_1)
 end
 
 function HelperCavebot.zoomMap(arg_262_0)
-	local var_262_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if not var_262_0 then
+	if not cavebotMapPreviewWidget then
 		return false
 	end
 
 	if tonumber(arg_262_0) and tonumber(arg_262_0) > 0 then
-		return var_262_0:zoomIn()
+		return cavebotMapPreviewWidget:zoomIn()
 	end
 
-	return var_262_0:zoomOut()
+	return cavebotMapPreviewWidget:zoomOut()
 end
 
 function HelperCavebot.changeMapFloor(arg_263_0)
-	local var_263_0 = cavebotState[85]("cavebotMapPreview")
+	local cavebotMapPreviewWidget = cavebotState[85]("cavebotMapPreview")
 
-	if not var_263_0 then
+	if not cavebotMapPreviewWidget then
 		return false
 	end
 
 	if tonumber(arg_263_0) and tonumber(arg_263_0) < 0 then
-		return var_263_0:floorUp()
+		return cavebotMapPreviewWidget:floorUp()
 	end
 
-	return var_263_0:floorDown()
+	return cavebotMapPreviewWidget:floorDown()
 end

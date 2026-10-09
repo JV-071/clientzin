@@ -1,4 +1,4 @@
-﻿local AUTO_SCREENSHOTS_ENABLED = false
+local AUTO_SCREENSHOTS_ENABLED = false
 local CLIENT_EVENT_TYPE_SIMPLE = 1
 local CLIENT_EVENT_TYPE_ACHIEVEMENT = 2
 local CLIENT_EVENT_TYPE_LEVEL = 4
@@ -134,7 +134,7 @@ local SIMPLE_EVENT_SCREENSHOTS = {
 	}
 }
 local autoScreenshotDir = "/auto_screenshots"
-local var_0_17 = "/screenshots"
+local MANUAL_SCREENSHOT_DIRECTORY = "/screenshots"
 
 screenshotController = Controller:new()
 
@@ -150,14 +150,14 @@ local function getScreenshotDirPath()
 	return g_resources.getWriteDir():gsub("[/\\]+$", ""):gsub("/", "\\") .. "\\auto_screenshots"
 end
 
-local function var_0_20()
-	if not g_resources.directoryExists(var_0_17) then
-		g_resources.makeDir(var_0_17)
+local function ensureManualScreenshotDirectory()
+	if not g_resources.directoryExists(MANUAL_SCREENSHOT_DIRECTORY) then
+		g_resources.makeDir(MANUAL_SCREENSHOT_DIRECTORY)
 	end
 end
 
-local function var_0_21()
-	var_0_20()
+local function getManualScreenshotDirectoryPath()
+	ensureManualScreenshotDirectory()
 
 	return g_resources.getWriteDir():gsub("[/\\]+$", ""):gsub("/", "\\") .. "\\screenshots"
 end
@@ -318,21 +318,21 @@ function takeManualScreenshot()
 		return
 	end
 
-	var_0_20()
+	ensureManualScreenshotDirectory()
 
 	local name = (localPlayer:getName() or "player"):gsub("[^%w%-_]", "_")
 	local formattedText = string.format("%s_%s_%03d.png", name, os.date("%Y%m%d_%H%M%S"), g_clock.millis() % 1000)
-	local var_16_3 = var_0_17 .. "/" .. formattedText
+	local screenshotFilePath = MANUAL_SCREENSHOT_DIRECTORY .. "/" .. formattedText
 
 	screenshotController:scheduleEvent(function()
 		if getScreenshotOption("onlyCaptureGameWindow") then
-			g_app.doMapScreenshot(var_16_3)
+			g_app.doMapScreenshot(screenshotFilePath)
 		else
-			g_app.doScreenshot(var_16_3)
+			g_app.doScreenshot(screenshotFilePath)
 		end
 
 		if modules.game_textmessage and modules.game_textmessage.displayStatusMessage then
-			modules.game_textmessage.displayStatusMessage(tr("Screenshot has been saved to location '%s'.", var_0_21()))
+			modules.game_textmessage.displayStatusMessage(tr("Screenshot has been saved to location '%s'.", getManualScreenshotDirectoryPath()))
 		end
 	end, 50, "manualScreenshotScheduleEvent")
 end

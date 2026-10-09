@@ -1,4 +1,4 @@
-﻿MarketOwnOffers = {
+MarketOwnOffers = {
 	ownBuyPool = 14,
 	ownSellPool = 14,
 	labelSize = 16,
@@ -321,17 +321,17 @@ function MarketOwnOffers.cancelMarketOffer(selling)
 		return true
 	end
 
-	local var_9_3 = (selling and MarketOwnOffers.mySellOffers or MarketOwnOffers.myBuyOffers)[selling and MarketOwnOffers.selectedSellCounter.action or MarketOwnOffers.selectedBuyCounter.action]
+	local selectedOffer = (selling and MarketOwnOffers.mySellOffers or MarketOwnOffers.myBuyOffers)[selling and MarketOwnOffers.selectedSellCounter.action or MarketOwnOffers.selectedBuyCounter.action]
 
-	if not var_9_3 then
+	if not selectedOffer then
 		return true
 	end
 
-	if selling and var_9_3.itemId then
-		adjustDepotLockerItemCount(var_9_3.itemId, var_9_3.itemTier or 0, var_9_3.amount or 0)
+	if selling and selectedOffer.itemId then
+		adjustDepotLockerItemCount(selectedOffer.itemId, selectedOffer.itemTier or 0, selectedOffer.amount or 0)
 	end
 
-	g_game.cancelMarketOffer(var_9_3.timestamp, var_9_3.counter)
+	g_game.cancelMarketOffer(selectedOffer.timestamp, selectedOffer.counter)
 	g_game.sendMarketAction(2)
 	requestMarketGoldRefresh()
 	refreshSelectedMarketBrowse()

@@ -924,9 +924,9 @@ local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, 
 	local icon = previewWidget:getChildById("icon")
 
 	if icon then
-		local var_43_3, var_43_4 = ProficiencyData:getImageSourceAndClip(effectivePerkData)
+		local imageSourcePath, var_43_4 = ProficiencyData:getImageSourceAndClip(effectivePerkData)
 
-		icon:setImageSource(var_43_3)
+		icon:setImageSource(imageSourcePath)
 		icon:setImageClip(string.format("%s 32 32", var_43_4))
 	end
 

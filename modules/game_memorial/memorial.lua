@@ -1,23 +1,23 @@
-﻿local rootWidget
+local rootWidget
 local contentTextList
 local goldenOutfitButton
 local royalCostumeButton
 local var_0_4
 local var_0_5
 
-local function var_0_6(arg_1_0, arg_1_1, arg_1_2)
-	if arg_1_2 and arg_1_2 > 0 then
+local function var_0_6(text, marginTop, width)
+	if width and width > 0 then
 		local mEIndentedLabelRowWidget = g_ui.createWidget("MEIndentedLabelRow", contentTextList)
 
-		if arg_1_1 then
-			mEIndentedLabelRowWidget:setMarginTop(arg_1_1)
+		if marginTop then
+			mEIndentedLabelRowWidget:setMarginTop(marginTop)
 		end
 
-		mEIndentedLabelRowWidget:recursiveGetChildById("indentSpacer"):setWidth(arg_1_2)
+		mEIndentedLabelRowWidget:recursiveGetChildById("indentSpacer"):setWidth(width)
 
 		local label = mEIndentedLabelRowWidget:recursiveGetChildById("label")
 
-		label:setText(arg_1_0)
+		label:setText(text)
 		mEIndentedLabelRowWidget:setHeight(label:getHeight())
 
 		return
@@ -25,11 +25,11 @@ local function var_0_6(arg_1_0, arg_1_1, arg_1_2)
 
 	local mEListLabelWidget = g_ui.createWidget("MEListLabel", contentTextList)
 
-	if arg_1_1 then
-		mEListLabelWidget:setMarginTop(arg_1_1)
+	if marginTop then
+		mEListLabelWidget:setMarginTop(marginTop)
 	end
 
-	mEListLabelWidget:setText(arg_1_0)
+	mEListLabelWidget:setText(text)
 end
 
 local function var_0_7(arg_2_0, arg_2_1, arg_2_2, arg_2_3)

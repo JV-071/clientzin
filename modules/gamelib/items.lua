@@ -1,4 +1,4 @@
-﻿ItemsDatabase = {}
+ItemsDatabase = {}
 ItemsDatabase.rarityColors = {
 	grey = "#aaaaaa",
 	green = "#00f000",

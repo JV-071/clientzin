@@ -21,7 +21,7 @@ if not MiscAnalyser then
 	MiscAnalyser.__index = MiscAnalyser
 end
 
-local var_0_0 = "/modules/game_cyclopedia/images/charms/monster-bonus-effects"
+local imageSourcePath = "/modules/game_cyclopedia/images/charms/monster-bonus-effects"
 local var_0_1 = "/modules/game_analysers/images/misc-analyser-icons"
 local var_0_2 = {
 	numb = 10,
@@ -252,8 +252,8 @@ local function build(arg_19_0)
 	return tostring(arg_19_0.count), var_19_0
 end
 
-local function var_0_15(arg_20_0, arg_20_1)
-	local hasDetail = arg_20_1 ~= nil
+local function var_0_15(arg_20_0, text)
+	local hasDetail = text ~= nil
 
 	if arg_20_0.hasDetail ~= hasDetail then
 		arg_20_0.hasDetail = hasDetail
@@ -264,23 +264,23 @@ local function var_0_15(arg_20_0, arg_20_1)
 	end
 
 	if hasDetail then
-		arg_20_0.detailValue:setText(arg_20_1)
+		arg_20_0.detailValue:setText(text)
 	end
 end
 
-local function var_0_16(arg_21_0, arg_21_1, arg_21_2, arg_21_3, arg_21_4)
-	arg_21_0:setVisible(arg_21_1)
+local function var_0_16(arg_21_0, visible, arg_21_2, arg_21_3, arg_21_4)
+	arg_21_0:setVisible(visible)
 
-	if not arg_21_1 then
+	if not visible then
 		return false
 	end
 
 	if arg_21_0.shownA ~= arg_21_2 or arg_21_0.shownB ~= arg_21_3 then
 		arg_21_0.shownA, arg_21_0.shownB = arg_21_2, arg_21_3
 
-		local var_21_0, var_21_1, var_21_2 = arg_21_0.build(arg_21_4 or MiscAnalyser, arg_21_2, arg_21_3)
+		local text, var_21_1, var_21_2 = arg_21_0.build(arg_21_4 or MiscAnalyser, arg_21_2, arg_21_3)
 
-		arg_21_0.value:setText(var_21_0)
+		arg_21_0.value:setText(text)
 		arg_21_0:setTooltip(var_21_1)
 		var_0_15(arg_21_0, var_21_2)
 	end
@@ -562,7 +562,7 @@ local function var_0_28(parentWidget, arg_36_1)
 	local var_36_1 = var_0_2[arg_36_1.key]
 
 	if var_36_1 then
-		miscAnalyserRowWidget.icon:setImageSource(var_0_0)
+		miscAnalyserRowWidget.icon:setImageSource(imageSourcePath)
 		miscAnalyserRowWidget.icon:setImageClip(string.format("%d 0 32 32", var_36_1 * 32))
 	end
 

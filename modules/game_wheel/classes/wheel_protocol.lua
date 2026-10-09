@@ -306,12 +306,12 @@ function WheelOfDestiny.openPreviewWheel(arg_16_0, arg_16_1)
 
 	local resourceBalance = localPlayer:getResourceBalance(ResourceTypes.BANK_BALANCE)
 	local var_16_13 = localPlayer:getResourceBalance(ResourceTypes.GOLD_EQUIPPED)
-	local var_16_14 = localPlayer:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
+	local text = localPlayer:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
 	local var_16_15 = localPlayer:getResourceBalance(ResourceTypes.GREATER_FRAGMENTS)
 	local var_16_16 = resourceBalance + var_16_13
 
 	wheelWindow.moneyPanel.gold:setText(formatMoney(var_16_16, ","))
-	wheelWindow.lesserFragmentPanel.gold:setText(var_16_14)
+	wheelWindow.lesserFragmentPanel.gold:setText(text)
 	wheelWindow.greaterFragmentPanel.gold:setText(var_16_15)
 	WheelOfDestiny.create(arg_16_0, var_16_1, var_16_0, arg_16_1, var_16_2, var_16_3, var_16_4, var_16_5, var_16_6, var_16_7, var_16_8, var_16_9, var_16_10)
 
@@ -321,14 +321,14 @@ function WheelOfDestiny.openPreviewWheel(arg_16_0, arg_16_1)
 
 	wheelPanel.onMouseRelease = WheelOfDestiny.onMouseRelease
 
-	local var_16_17 = var_16_0 == 1
+	local enabled = var_16_0 == 1
 	local managePresetsButton = wheelWindow.mainPanel.wheelMenu.info.presetTabBar:getChildById("managePresetsButton")
 
-	if not var_16_17 then
+	if not enabled then
 		toggleTabBarButtons("informationButton")
 	end
 
-	managePresetsButton:setEnabled(var_16_17)
+	managePresetsButton:setEnabled(enabled)
 	refreshPresetTabBarButtons()
 
 	if arg_16_1 == 1 then
@@ -479,12 +479,12 @@ function WheelOfDestiny.onDestinyWheel(arg_17_0, arg_17_1, arg_17_2, vocation, a
 	local localPlayer = g_game.getLocalPlayer()
 	local resourceBalance = localPlayer:getResourceBalance(ResourceTypes.BANK_BALANCE)
 	local var_17_8 = localPlayer:getResourceBalance(ResourceTypes.GOLD_EQUIPPED)
-	local var_17_9 = localPlayer:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
+	local text = localPlayer:getResourceBalance(ResourceTypes.LESSER_FRAGMENTS)
 	local var_17_10 = localPlayer:getResourceBalance(ResourceTypes.GREATER_FRAGMENTS)
 	local var_17_11 = resourceBalance + var_17_8
 
 	wheelWindow.moneyPanel.gold:setText(formatMoney(var_17_11, ","))
-	wheelWindow.lesserFragmentPanel.gold:setText(var_17_9)
+	wheelWindow.lesserFragmentPanel.gold:setText(text)
 	wheelWindow.greaterFragmentPanel.gold:setText(var_17_10)
 	WheelOfDestiny.create(arg_17_0, arg_17_1, arg_17_2, vocation, arg_17_4, arg_17_5, arg_17_6, arg_17_7, arg_17_8, arg_17_9, arg_17_10, arg_17_11, arg_17_12)
 
@@ -494,14 +494,14 @@ function WheelOfDestiny.onDestinyWheel(arg_17_0, arg_17_1, arg_17_2, vocation, a
 
 	wheelPanel.onMouseRelease = WheelOfDestiny.onMouseRelease
 
-	local var_17_12 = arg_17_2 == 1
+	local enabled = arg_17_2 == 1
 	local managePresetsButton = wheelWindow.mainPanel.wheelMenu.info.presetTabBar:getChildById("managePresetsButton")
 
-	if not var_17_12 then
+	if not enabled then
 		toggleTabBarButtons("informationButton")
 	end
 
-	managePresetsButton:setEnabled(var_17_12)
+	managePresetsButton:setEnabled(enabled)
 	refreshPresetTabBarButtons()
 
 	if vocation == 1 then

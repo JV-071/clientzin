@@ -736,16 +736,16 @@ local function var_0_62()
 	end
 
 	local localPlayer = g_game.isOnline() and g_game.getLocalPlayer() or nil
-	local var_25_1 = helperLanguage == "pt"
-	local var_25_2 = getWidget("helperCharacterOutfit")
+	local visible = helperLanguage == "pt"
+	local helperCharacterOutfitWidget = getWidget("helperCharacterOutfit")
 
-	if var_25_2 then
-		var_25_2:setVisible(localPlayer ~= nil)
+	if helperCharacterOutfitWidget then
+		helperCharacterOutfitWidget:setVisible(localPlayer ~= nil)
 
 		if localPlayer then
-			var_25_2:setOutfit(localPlayer:getOutfit())
+			helperCharacterOutfitWidget:setOutfit(localPlayer:getOutfit())
 
-			local creature = var_25_2:getCreature()
+			local creature = helperCharacterOutfitWidget:getCreature()
 
 			if creature and creature.setDirection then
 				creature:setDirection(South)
@@ -753,59 +753,59 @@ local function var_0_62()
 		end
 	end
 
-	local name = localPlayer and localPlayer:getName() or var_25_1 and "Desconectado" or "Offline"
+	local name = localPlayer and localPlayer:getName() or visible and "Desconectado" or "Offline"
 
 	setCharacterCardName(name)
 
-	local level = var_25_1 and "Nivel: -" or "Level: -"
+	local level = visible and "Nivel: -" or "Level: -"
 
 	if localPlayer then
-		level = string.format(var_25_1 and "Nivel: %d" or "Level: %d", localPlayer:getLevel())
+		level = string.format(visible and "Nivel: %d" or "Level: %d", localPlayer:getLevel())
 	end
 
 	setCharacterCardText("helperCharacterLevel", level)
-	setCharacterCardText("helperAccountCaption", var_25_1 and "Status da Conta:" or "Account Status:")
+	setCharacterCardText("helperAccountCaption", visible and "Status da Conta:" or "Account Status:")
 
-	local var_25_6 = var_25_1 and "Desconectado" or "Offline"
-	local var_25_7 = "/images/game/entergame/nopremium"
+	local var_25_6 = visible and "Desconectado" or "Offline"
+	local imageSourcePath = "/images/game/entergame/nopremium"
 
 	if localPlayer then
 		if isCurrentAccountPremium(localPlayer) then
-			var_25_6 = var_25_1 and "Conta Premium" or "Premium Account"
-			var_25_7 = "/images/game/entergame/premium"
+			var_25_6 = visible and "Conta Premium" or "Premium Account"
+			imageSourcePath = "/images/game/entergame/premium"
 		else
-			var_25_6 = var_25_1 and "Conta Gratuita" or "Free Account"
+			var_25_6 = visible and "Conta Gratuita" or "Free Account"
 		end
 	end
 
 	setCharacterCardText("helperAccountStatus", var_25_6, var_25_6)
 
-	local var_25_8 = getWidget("helperAccountStatusIcon")
+	local helperAccountStatusIconWidget = getWidget("helperAccountStatusIcon")
 
-	if var_25_8 then
-		var_25_8:setImageSource(var_25_7)
-		var_25_8:setTooltip(var_25_6)
+	if helperAccountStatusIconWidget then
+		helperAccountStatusIconWidget:setImageSource(imageSourcePath)
+		helperAccountStatusIconWidget:setTooltip(var_25_6)
 	end
 
 	refreshHelperCharacterCard()
 
-	local var_25_9 = getWidget("helperLanguageButton")
+	local helperLanguageButton = getWidget("helperLanguageButton")
 
-	if var_25_9 then
-		var_25_9:setText(var_25_1 and "Portugues" or "English")
-		var_25_9:setTooltip(var_25_1 and "Mudar idioma para ingles." or "Switch language to Portuguese.")
+	if helperLanguageButton then
+		helperLanguageButton:setText(visible and "Portugues" or "English")
+		helperLanguageButton:setTooltip(visible and "Mudar idioma para ingles." or "Switch language to Portuguese.")
 	end
 
-	local var_25_10 = getWidget("helperLanguageFlagPt")
+	local helperLanguageFlagPtWidget = getWidget("helperLanguageFlagPt")
 
-	if var_25_10 then
-		var_25_10:setVisible(var_25_1)
+	if helperLanguageFlagPtWidget then
+		helperLanguageFlagPtWidget:setVisible(visible)
 	end
 
-	local var_25_11 = getWidget("helperLanguageFlagEn")
+	local helperLanguageFlagEnWidget = getWidget("helperLanguageFlagEn")
 
-	if var_25_11 then
-		var_25_11:setVisible(not var_25_1)
+	if helperLanguageFlagEnWidget then
+		helperLanguageFlagEnWidget:setVisible(not visible)
 	end
 end
 
@@ -977,10 +977,10 @@ local function refreshHelperStatsWindow()
 			end
 
 			if entry.id == "autoHaste" and var_33_5 then
-				local var_33_7 = getWidget("toolsAutoHastePzCastCheckBox")
+				local toolsAutoHastePzCastCheckBox = getWidget("toolsAutoHastePzCastCheckBox")
 				local localPlayer = g_game.getLocalPlayer()
 
-				if localPlayer and localPlayer.isInProtectionZone and localPlayer:isInProtectionZone() and var_33_7 and not var_33_7:isChecked() then
+				if localPlayer and localPlayer.isInProtectionZone and localPlayer:isInProtectionZone() and toolsAutoHastePzCastCheckBox and not toolsAutoHastePzCastCheckBox:isChecked() then
 					var_33_6 = true
 				end
 			end
@@ -1140,28 +1140,28 @@ local function var_0_73()
 end
 
 function isAutoSaveEnabled()
-	local var_44_0 = getWidget("configsAutoSaveCheckBox")
+	local configsAutoSaveCheckBox = getWidget("configsAutoSaveCheckBox")
 
-	if var_44_0 then
-		return var_44_0:isChecked()
+	if configsAutoSaveCheckBox then
+		return configsAutoSaveCheckBox:isChecked()
 	end
 
 	return readHelperJSON().autoSaveEnabled ~= false
 end
 
 local function var_0_74(arg_45_0)
-	local var_45_0 = getWidget("configsAutoSaveCheckBox")
+	local configsAutoSaveCheckBox = getWidget("configsAutoSaveCheckBox")
 
-	if not var_45_0 then
+	if not configsAutoSaveCheckBox then
 		return
 	end
 
-	local var_45_1 = arg_45_0 ~= false
+	local checked = arg_45_0 ~= false
 
-	if var_45_0:isChecked() ~= var_45_1 then
+	if configsAutoSaveCheckBox:isChecked() ~= checked then
 		loadingConfig = true
 
-		var_45_0:setChecked(var_45_1)
+		configsAutoSaveCheckBox:setChecked(checked)
 
 		loadingConfig = false
 	end
@@ -1180,18 +1180,18 @@ local function isAutoSwitchHotkeyPresetEnabled()
 end
 
 local function applyAutoSwitchHotkeyPresetToCheckbox(enabled)
-	local var_47_0 = getWidget("configsAutoSwitchHotkeyPresetCheckBox")
+	local configsAutoSwitchHotkeyPresetCheckBox = getWidget("configsAutoSwitchHotkeyPresetCheckBox")
 
-	if not var_47_0 then
+	if not configsAutoSwitchHotkeyPresetCheckBox then
 		return
 	end
 
-	local var_47_1 = enabled == true
+	local checked = enabled == true
 
-	if var_47_0:isChecked() ~= var_47_1 then
+	if configsAutoSwitchHotkeyPresetCheckBox:isChecked() ~= checked then
 		loadingConfig = true
 
-		var_47_0:setChecked(var_47_1)
+		configsAutoSwitchHotkeyPresetCheckBox:setChecked(checked)
 
 		loadingConfig = false
 	end
@@ -1246,9 +1246,9 @@ local function var_0_78()
 	helperConfig.enableHealing = getWidget("enableHealingCheckBox") and getWidget("enableHealingCheckBox"):isChecked() or false
 	helperConfig.enableHealFriend = getWidget("enableHealFriendCheckBox") and getWidget("enableHealFriendCheckBox"):isChecked() or false
 
-	local var_50_0 = getWidget("configsPrioritizeHotkeysCheckBox")
+	local configsPrioritizeHotkeysCheckBox = getWidget("configsPrioritizeHotkeysCheckBox")
 
-	helperConfig.prioritizeHotkeys = var_50_0 and var_50_0:isChecked() or false
+	helperConfig.prioritizeHotkeys = configsPrioritizeHotkeysCheckBox and configsPrioritizeHotkeysCheckBox:isChecked() or false
 
 	var_0_43(helperConfig)
 
@@ -1484,15 +1484,15 @@ local function var_0_88(arg_59_0, arg_59_1, arg_59_2)
 		end
 
 		local var_60_0 = presetHotkey or ""
-		local var_60_1, var_60_2 = var_0_87(var_60_0, var_0_33)
+		local visible, var_60_2 = var_0_87(var_60_0, var_0_33)
 
 		if errorLabel then
 			errorLabel:setText(var_60_2 or helperLanguage == "pt" and "Esta hotkey ja esta em uso." or "This hotkey is already in use.")
-			errorLabel:setVisible(var_60_1)
+			errorLabel:setVisible(visible)
 		end
 
 		if applyButton then
-			applyButton:setEnabled(var_60_0 ~= "" and not var_60_1)
+			applyButton:setEnabled(var_60_0 ~= "" and not visible)
 		end
 	end
 
@@ -1581,26 +1581,26 @@ local function var_0_89(arg_65_0)
 
 	loadingConfig = true
 
-	local var_65_0 = getWidget("checkbox")
-	local var_65_1 = getWidget("enableHealingCheckBox")
-	local var_65_2 = getWidget("enableHealFriendCheckBox")
+	local checkbox = getWidget("checkbox")
+	local enableHealingCheckBox = getWidget("enableHealingCheckBox")
+	local enableHealFriendCheckBox = getWidget("enableHealFriendCheckBox")
 
-	if var_65_0 then
-		var_65_0:setChecked(true)
+	if checkbox then
+		checkbox:setChecked(true)
 	end
 
-	if var_65_1 then
-		var_65_1:setChecked(helperConfig.enableHealing == true)
+	if enableHealingCheckBox then
+		enableHealingCheckBox:setChecked(helperConfig.enableHealing == true)
 	end
 
-	if var_65_2 then
-		var_65_2:setChecked(helperConfig.enableHealFriend == true)
+	if enableHealFriendCheckBox then
+		enableHealFriendCheckBox:setChecked(helperConfig.enableHealFriend == true)
 	end
 
-	local var_65_3 = getWidget("configsPrioritizeHotkeysCheckBox")
+	local configsPrioritizeHotkeysCheckBox = getWidget("configsPrioritizeHotkeysCheckBox")
 
-	if var_65_3 then
-		var_65_3:setChecked(helperConfig.prioritizeHotkeys == true)
+	if configsPrioritizeHotkeysCheckBox then
+		configsPrioritizeHotkeysCheckBox:setChecked(helperConfig.prioritizeHotkeys == true)
 	end
 
 	if helperConfig.prioritizeHotkeys ~= true and HelperActionCoordinator then
@@ -1763,10 +1763,10 @@ local function var_0_94()
 		return false, false
 	end
 
-	local var_70_0 = getWidget("enableTargetCheckBox")
-	local var_70_1 = getWidget("enableShooterCheckBox")
+	local enableTargetCheckBox = getWidget("enableTargetCheckBox")
+	local enableShooterCheckBox = getWidget("enableShooterCheckBox")
 
-	return var_70_0 and var_70_0:isChecked() or false, var_70_1 and var_70_1:isChecked() or false
+	return enableTargetCheckBox and enableTargetCheckBox:isChecked() or false, enableShooterCheckBox and enableShooterCheckBox:isChecked() or false
 end
 
 local function var_0_95()
@@ -2210,41 +2210,41 @@ local function var_0_108()
 end
 
 local function var_0_109(arg_109_0)
-	local var_109_0 = getWidget("partyButtonFrame")
+	local partyButtonFrameWidget = getWidget("partyButtonFrame")
 
-	if not var_109_0 then
+	if not partyButtonFrameWidget then
 		return
 	end
 
 	local var_109_1 = arg_109_0 and "cavebotButtonFrame" or "shooterButtonFrame"
 
-	var_109_0:breakAnchors()
-	var_109_0:addAnchor(AnchorTop, var_109_1, AnchorBottom)
-	var_109_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
-	var_109_0:setMarginLeft(7)
-	var_109_0:setMarginTop(5)
+	partyButtonFrameWidget:breakAnchors()
+	partyButtonFrameWidget:addAnchor(AnchorTop, var_109_1, AnchorBottom)
+	partyButtonFrameWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	partyButtonFrameWidget:setMarginLeft(7)
+	partyButtonFrameWidget:setMarginTop(5)
 end
 
-local function refreshHelperCharacterCard(arg_110_0)
-	local var_110_0 = getWidget("cavebotButtonFrame")
-	local var_110_1 = getWidget("cavebotButton")
-	local var_110_2 = getWidget("cavebotPanel")
+local function refreshHelperCharacterCard(visible)
+	local cavebotButtonFrameWidget = getWidget("cavebotButtonFrame")
+	local cavebotButton = getWidget("cavebotButton")
+	local cavebotPanel = getWidget("cavebotPanel")
 
-	if var_110_0 then
-		var_110_0:setVisible(arg_110_0)
+	if cavebotButtonFrameWidget then
+		cavebotButtonFrameWidget:setVisible(visible)
 	end
 
-	if var_110_1 then
-		var_110_1:setVisible(arg_110_0)
+	if cavebotButton then
+		cavebotButton:setVisible(visible)
 	end
 
-	if var_110_2 and not arg_110_0 then
-		var_110_2:setVisible(false)
+	if cavebotPanel and not visible then
+		cavebotPanel:setVisible(false)
 	end
 
-	var_0_109(arg_110_0)
+	var_0_109(visible)
 
-	if not arg_110_0 and currentTab == "cavebot" then
+	if not visible and currentTab == "cavebot" then
 		currentTab = nil
 
 		showTab("healing")
@@ -2283,16 +2283,16 @@ function showTab(tab)
 	currentTab = tab
 
 	for key, entry in pairs(TABS) do
-		local var_113_1 = key == tab
+		local visible = key == tab
 		local var_113_2 = getWidget(entry.buttonId)
 		local var_113_3 = getWidget(entry.panelId)
 
 		if var_113_2 then
-			var_113_2:setOn(var_113_1)
+			var_113_2:setOn(visible)
 		end
 
 		if var_113_3 then
-			var_113_3:setVisible(var_113_1)
+			var_113_3:setVisible(visible)
 		end
 	end
 
@@ -2551,21 +2551,21 @@ function toggleHelperStatsEntry(itemId)
 			local var_130_0 = getWidget(entry.widgetId)
 
 			if var_130_0 then
-				local var_130_1 = not var_130_0:isChecked()
+				local checked = not var_130_0:isChecked()
 
-				if var_130_1 and entry.id == "target" and HelperTarget and HelperTarget.enableProtectionZonePause and HelperTarget.enableProtectionZonePause() then
+				if checked and entry.id == "target" and HelperTarget and HelperTarget.enableProtectionZonePause and HelperTarget.enableProtectionZonePause() then
 					refreshHelperStatsWindow()
 
 					return
 				end
 
-				if var_130_1 and entry.id == "shooter" and HelperShooter and HelperShooter.enableProtectionZonePause and HelperShooter.enableProtectionZonePause() then
+				if checked and entry.id == "shooter" and HelperShooter and HelperShooter.enableProtectionZonePause and HelperShooter.enableProtectionZonePause() then
 					refreshHelperStatsWindow()
 
 					return
 				end
 
-				var_130_0:setChecked(var_130_1)
+				var_130_0:setChecked(checked)
 				refreshHelperStatsWindow()
 			end
 

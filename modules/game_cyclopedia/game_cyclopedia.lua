@@ -1,4 +1,4 @@
-﻿Cyclopedia = {}
+Cyclopedia = {}
 
 local DETAIL_LABEL_COLUMN_WIDTH = 150
 local DETAIL_ROW_HEIGHT = 20
@@ -478,7 +478,7 @@ local tabStack = {}
 local previousType
 local windowTypes = {}
 local magicalArchives
-local var_0_29 = {
+local CYCLOPEDIA_WINDOW_KEYBINDS = {
 	{
 		action = "Open Cyclopedia - Bestiary",
 		primary = "",
@@ -514,20 +514,20 @@ local var_0_29 = {
 	}
 }
 
-local function var_0_30(arg_13_0)
-	if not g_game.isOnline() or not controllerCyclopedia.ui or not windowTypes[arg_13_0] then
+local function showCyclopediaWindowFromKeybind(windowType)
+	if not g_game.isOnline() or not controllerCyclopedia.ui or not windowTypes[windowType] then
 		return false
 	end
 
 	if controllerCyclopedia.ui:isVisible() then
-		if previousType ~= arg_13_0 then
-			SelectWindow(arg_13_0, false)
+		if previousType ~= windowType then
+			SelectWindow(windowType, false)
 		end
 
 		controllerCyclopedia.ui:raise()
 		controllerCyclopedia.ui:focus()
 	else
-		show(arg_13_0)
+		show(windowType)
 	end
 
 	return true
@@ -743,7 +743,7 @@ function controllerCyclopedia.onInit(unusedArgument)
 		onLoadDat = Cyclopedia.invalidateItemsIndex
 	})
 
-	for unusedValue, entry in ipairs(var_0_29) do
+	for unusedValue, entry in ipairs(CYCLOPEDIA_WINDOW_KEYBINDS) do
 		local window = entry.window
 
 		Keybind.new("Dialogs", entry.action, entry.primary, "")
@@ -751,7 +751,7 @@ function controllerCyclopedia.onInit(unusedArgument)
 			{
 				type = KEY_DOWN,
 				callback = function()
-					return var_0_30(window)
+					return showCyclopediaWindowFromKeybind(window)
 				end
 			}
 		}, modules.game_interface.getRootPanel())
@@ -837,8 +837,8 @@ function controllerCyclopedia.onGameStart(unusedArgument)
 		onParseCyclopediaStoreSummary = Cyclopedia.onParseCyclopediaStoreSummary,
 		onParseCyclopediaCharacterAchievements = Cyclopedia.onParseCyclopediaCharacterAchievements,
 		onParseCyclopediaCharacterInspection = Cyclopedia.loadCharacterInspection,
-		onOtcToggle = function(arg_37_0)
-			if OtcOpCode and arg_37_0 == OtcOpCode.OVERLORD_ACTIVE then
+		onOtcToggle = function(toggleOpcode)
+			if OtcOpCode and toggleOpcode == OtcOpCode.OVERLORD_ACTIVE then
 				Cyclopedia.refreshOverlordTiers()
 			end
 		end,
@@ -1130,7 +1130,7 @@ function controllerCyclopedia.onGameEnd(unusedArgument)
 end
 
 function controllerCyclopedia.onTerminate(unusedArgument)
-	for unusedValue, entry in ipairs(var_0_29) do
+	for unusedValue, entry in ipairs(CYCLOPEDIA_WINDOW_KEYBINDS) do
 		Keybind.delete("Dialogs", entry.action)
 	end
 

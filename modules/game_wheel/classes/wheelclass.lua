@@ -33,7 +33,7 @@ local var_0_0 = false
 local var_0_1 = {}
 local focusSelectedWheel
 local t = {}
-local var_0_4 = 1
+local opacity = 1
 local var_0_5 = 0.29
 local var_0_6 = 0.20392156862745098
 local var_0_7 = {
@@ -208,7 +208,7 @@ function WheelOfDestiny.initSliceFills()
 		if colorWheel then
 			var_0_10(colorWheel, i, 0, 1)
 			colorWheel:setVisible(false)
-			colorWheel:setOpacity(var_0_4)
+			colorWheel:setOpacity(opacity)
 		end
 
 		if fullColorWheel then
@@ -358,7 +358,7 @@ function WheelOfDestiny.updateSliceFill(index, arg_8_1)
 
 	var_0_10(color, index, 0, math.max(var_8_4, 0.001))
 	color:setVisible(true)
-	color:setOpacity(var_0_4)
+	color:setOpacity(opacity)
 
 	if var_8_4 < 0.999 then
 		var_0_10(full, index, var_8_4, 1, WheelButtons.getSliceAvailableColor(index))
@@ -721,17 +721,17 @@ function WheelOfDestiny.configureRevelationPerks()
 
 	for _, value in ipairs(pointInvested) do
 		local packedValue = (WheelOfDestiny.passivePoints[value.domain] or 0) + (WheelOfDestiny.extraPassivePoints[value.domain] or 0)
-		local var_19_4 = "Locked"
+		local text = "Locked"
 
 		if packedValue >= 1000 then
-			var_19_4 = "Stage 3"
+			text = "Stage 3"
 		elseif packedValue >= 500 then
-			var_19_4 = "Stage 2"
+			text = "Stage 2"
 		elseif packedValue >= 250 then
-			var_19_4 = "Stage 1"
+			text = "Stage 1"
 		end
 
-		value.panel.value:setText(var_19_4)
+		value.panel.value:setText(text)
 
 		local var_19_5 = getRevelationDisplayName(value.domain)
 		local var_19_6 = value.panel[value.label]

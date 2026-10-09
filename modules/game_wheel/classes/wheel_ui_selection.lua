@@ -102,11 +102,11 @@ function WheelOfDestiny.configureConvictionAugmentBody(arg_3_0, arg_3_1, arg_3_2
 				var_4_4:setColoredText(tier.text)
 
 				local textSize = var_4_4:getTextSize()
-				local var_4_6 = math.max(13, textSize and textSize.height or 13)
+				local height = math.max(13, textSize and textSize.height or 13)
 
-				var_4_2:setHeight(var_4_6)
+				var_4_2:setHeight(height)
 
-				var_4_1 = var_4_1 + var_4_6 + (index > 1 and 2 or 0)
+				var_4_1 = var_4_1 + height + (index > 1 and 2 or 0)
 			end
 
 			if var_4_1 > 0 then

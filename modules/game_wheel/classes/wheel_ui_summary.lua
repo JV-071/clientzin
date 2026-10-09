@@ -1,4 +1,4 @@
-﻿function WheelOfDestiny.configureSummary()
+function WheelOfDestiny.configureSummary()
 	if not wheelOfDestinyWindow.summary.tabContent:isVisible() then
 		return
 	end
@@ -260,14 +260,14 @@
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 
-	local var_1_31 = getRevelationDisplayName(4)
+	local text = getRevelationDisplayName(4)
 	local var_1_32 = getRevelationDisplayName(2)
 	local var_1_33 = getRevelationDisplayName(3)
 	local unusedValue, var_1_35 = getPassiveInfo(4)
 	local var_1_36 = WheelOfDestiny.passivePoints[4]
 	local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
-	perksPanelWidget.perk:setText(var_1_31)
+	perksPanelWidget.perk:setText(text)
 
 	if var_1_36 >= 1000 then
 		perksPanelWidget.value:setText("Stage 3")

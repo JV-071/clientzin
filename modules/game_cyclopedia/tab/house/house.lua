@@ -1,4 +1,4 @@
-﻿local UI
+local UI
 local setupHouseLayersPanelWheel
 local updateHouseLayerUI
 
@@ -2661,7 +2661,7 @@ end
 
 function Cyclopedia.rejectTransfer()
 	local house = Cyclopedia.House.lastSelectedHouse.data
-	local var_99_1 = os.date("%Y-%m-%d, %H:%M BRA", house.transferTime)
+	local text = os.date("%Y-%m-%d, %H:%M BRA", house.transferTime)
 
 	openSubArea(UI.rejectTransferHouse)
 
@@ -2679,7 +2679,7 @@ function Cyclopedia.rejectTransfer()
 
 	Cyclopedia.House.fillHouseSummary(UI.rejectTransferHouse, house)
 	UI.rejectTransferHouse.owner:setText(house.transferName)
-	UI.rejectTransferHouse.transferDate:setText(var_99_1)
+	UI.rejectTransferHouse.transferDate:setText(text)
 	UI.rejectTransferHouse.transferPrice:setText(comma_value(house.transferValue))
 end
 

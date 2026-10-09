@@ -433,24 +433,24 @@ function WheelOfDestiny.onEditCode(arg_13_0)
 	newPresetWindow.contentPanel.importTooltip:setVisible(false)
 
 	local text = newPresetWindow.contentPanel.presetName:getText()
-	local var_13_2 = var_0_1(text)
+	local enabled = var_0_1(text)
 
-	newPresetWindow.contentPanel.ok:setEnabled(var_13_2)
+	newPresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
 function WheelOfDestiny.onEditName(arg_14_0)
 	newPresetWindow.contentPanel.presetNameTooltip:setVisible(not var_0_1(arg_14_0))
 
-	local var_14_0 = var_0_1(arg_14_0)
+	local enabled = var_0_1(arg_14_0)
 	local text = string.empty(WheelOfDestiny.validateImportCode(newPresetWindow.contentPanel.presetCode:getText()))
 
 	if selectedNewPresetRadio:getSelectedWidget() == newPresetWindow.contentPanel.import then
-		newPresetWindow.contentPanel.ok:setEnabled(var_14_0 and text)
+		newPresetWindow.contentPanel.ok:setEnabled(enabled and text)
 
 		return
 	end
 
-	newPresetWindow.contentPanel.ok:setEnabled(var_14_0)
+	newPresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
 function WheelOfDestiny.onNewPresetSelectionChange()
@@ -461,18 +461,18 @@ function WheelOfDestiny.onNewPresetSelectionChange()
 	end
 
 	local text = newPresetWindow.contentPanel.presetName:getText()
-	local var_15_2 = var_0_1(text)
+	local enabled = var_0_1(text)
 
 	if selectedWidget == newPresetWindow.contentPanel.import then
 		local text = newPresetWindow.contentPanel.presetCode:getText()
 		local var_15_4 = string.empty(WheelOfDestiny.validateImportCode(text))
 
-		newPresetWindow.contentPanel.ok:setEnabled(var_15_2 and var_15_4)
+		newPresetWindow.contentPanel.ok:setEnabled(enabled and var_15_4)
 
 		return
 	end
 
-	newPresetWindow.contentPanel.ok:setEnabled(var_15_2)
+	newPresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
 function WheelOfDestiny.onConfirmCreatePreset()
@@ -627,11 +627,11 @@ function WheelOfDestiny.onRenamePreset()
 end
 
 function WheelOfDestiny.onPresetNameChange(arg_22_0)
-	local var_22_0 = var_0_1(arg_22_0)
+	local enabled = var_0_1(arg_22_0)
 	local var_22_1 = selectedNewPresetRadio:getSelectedWidget()
 
-	renamePresetWindow.contentPanel.presetNameTooltip:setVisible(not var_22_0)
-	renamePresetWindow.contentPanel.ok:setEnabled(var_22_0)
+	renamePresetWindow.contentPanel.presetNameTooltip:setVisible(not enabled)
+	renamePresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
 function WheelOfDestiny.onConfirmRenamePreset(arg_23_0)
@@ -1013,16 +1013,16 @@ function WheelOfDestiny.checkApplyButton()
 	end
 
 	local var_41_0 = WheelOfDestiny.currentPreset.pointInvested or {}
-	local var_41_1 = table.compare(var_41_0, WheelOfDestiny.pointInvested)
+	local enabled = table.compare(var_41_0, WheelOfDestiny.pointInvested)
 	local manage = wheelWindow:recursiveGetChildById("manage")
 
-	manage.applyPresetChanges:setEnabled(not var_41_1)
-	manage.renamePreset:setEnabled(var_41_1)
+	manage.applyPresetChanges:setEnabled(not enabled)
+	manage.renamePreset:setEnabled(enabled)
 
 	local close = wheelWindow:recursiveGetChildById("close")
 	local ok = wheelWindow:recursiveGetChildById("ok")
 
-	close:setText(var_41_1 and "Close" or "Cancel")
+	close:setText(enabled and "Close" or "Cancel")
 	ok:setEnabled(true)
 end
 

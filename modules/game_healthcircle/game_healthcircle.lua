@@ -1,4 +1,4 @@
-﻿imageSizeBroad = 0
+imageSizeBroad = 0
 imageSizeThin = 0
 mapPanel = modules.game_interface.getMapPanel()
 
@@ -1299,10 +1299,10 @@ local function updateManaShieldDisplay()
 			maxShield = remainingShield
 		end
 
-		local var_65_5 = 100 * math.max(math.min(remainingShield, maxShield), 0) / maxShield
+		local percent = 100 * math.max(math.min(remainingShield, maxShield), 0) / maxShield
 
 		manaShieldCircle:setVisible(true)
-		manaShieldCircle:setPercent(var_65_5)
+		manaShieldCircle:setPercent(percent)
 
 		if pair ~= lastManaShieldSplitKey then
 			lastManaShieldSplitKey = pair
@@ -1673,21 +1673,21 @@ function syncShowArcsFromClientOptions(show, options)
 	local op = hudOptionValue(options, "showArcsOpacityScroll")
 
 	if type(op) == "number" then
-		local var_76_3 = math.max(20, math.min(100, op)) / 100
+		local opacity = math.max(20, math.min(100, op)) / 100
 
-		healthCircle:setOpacity(var_76_3)
-		manaCircle:setOpacity(var_76_3)
+		healthCircle:setOpacity(opacity)
+		manaCircle:setOpacity(opacity)
 
 		if manaShieldCircle then
-			manaShieldCircle:setOpacity(var_76_3)
+			manaShieldCircle:setOpacity(opacity)
 		end
 
 		if harmonyCircle then
-			harmonyCircle:setOpacity(var_76_3)
+			harmonyCircle:setOpacity(opacity)
 		end
 
 		if sereneCircle then
-			sereneCircle:setOpacity(var_76_3)
+			sereneCircle:setOpacity(opacity)
 		end
 	end
 

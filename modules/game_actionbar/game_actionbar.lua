@@ -612,15 +612,15 @@ function refreshActionSlotEquipmentTypeIcon(slot)
 		return
 	end
 
-	local var_30_1 = actionbarState.equipmentTypeIconSource(slot.equipmentTypeIndex)
+	local imageSourcePath = actionbarState.equipmentTypeIconSource(slot.equipmentTypeIndex)
 
-	if not var_30_1 then
+	if not imageSourcePath then
 		var_30_0:setVisible(false)
 
 		return
 	end
 
-	var_30_0:setImageSource(var_30_1)
+	var_30_0:setImageSource(imageSourcePath)
 	var_30_0:setImageSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
 
 	local multiIcon = slot:getChildById("multiIcon")
@@ -775,10 +775,10 @@ end
 	local equipmentTypeIcon = assignActionSlot:recursiveGetChildById("equipmentTypeIcon")
 
 	if equipmentTypeIcon then
-		local var_35_3 = actionbarState.equipmentTypeIconSource(actionbarState.equipmentAssignTypeIndex)
+		local imageSourcePath = actionbarState.equipmentTypeIconSource(actionbarState.equipmentAssignTypeIndex)
 
-		if var_35_3 then
-			equipmentTypeIcon:setImageSource(var_35_3)
+		if imageSourcePath then
+			equipmentTypeIcon:setImageSource(imageSourcePath)
 			equipmentTypeIcon:setImageSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
 			equipmentTypeIcon:show()
 		else
@@ -1206,14 +1206,14 @@ function equipmentAssignUpdateButtons()
 
 	local okButton = equipmentAssignWindow:getChildById("okButton")
 	local applyButton = equipmentAssignWindow:getChildById("applyButton")
-	local var_62_2 = actionbarState.isEquipmentAssignIconDetermined()
+	local enabled = actionbarState.isEquipmentAssignIconDetermined()
 
 	if okButton then
-		okButton:setEnabled(var_62_2)
+		okButton:setEnabled(enabled)
 	end
 
 	if applyButton then
-		applyButton:setEnabled(var_62_2)
+		applyButton:setEnabled(enabled)
 	end
 end
 
@@ -1880,17 +1880,17 @@ end
 
  actionbarState.SPELL_PARAM_MAX_WIDTH_PX = 34
 
-  actionbarState.ellipsizeSpellParameterLabelText = function(arg_106_0, arg_106_1)
-	if not arg_106_0 or not arg_106_1 or arg_106_1 == "" then
+  actionbarState.ellipsizeSpellParameterLabelText = function(arg_106_0, text)
+	if not arg_106_0 or not text or text == "" then
 		return ""
 	end
 
-	arg_106_0:setText(arg_106_1)
+	arg_106_0:setText(text)
 
 	local textSize = arg_106_0:getTextSize()
 
 	if not textSize or textSize.width <= actionbarState.SPELL_PARAM_MAX_WIDTH_PX then
-		return arg_106_1
+		return text
 	end
 
 	local var_106_1 = "..."
@@ -1906,17 +1906,17 @@ end
 	end
 
 	local var_106_5 = 1
-	local var_106_6 = #arg_106_1
+	local var_106_6 = #text
 	local var_106_7 = ""
 
 	while var_106_5 <= var_106_6 do
 		local var_106_8 = math.floor((var_106_5 + var_106_6) / 2)
-		local var_106_9 = string.sub(arg_106_1, 1, var_106_8)
+		local text = string.sub(text, 1, var_106_8)
 
-		arg_106_0:setText(var_106_9)
+		arg_106_0:setText(text)
 
 		if var_106_4 >= arg_106_0:getTextSize().width then
-			var_106_7 = var_106_9
+			var_106_7 = text
 			var_106_5 = var_106_8 + 1
 		else
 			var_106_6 = var_106_8 - 1
@@ -1927,22 +1927,22 @@ end
 		return var_106_1
 	end
 
-	local var_106_10 = var_106_7 .. var_106_1
+	local text = var_106_7 .. var_106_1
 
-	arg_106_0:setText(var_106_10)
+	arg_106_0:setText(text)
 
 	local var_106_11 = 0
 
 	while var_106_7 ~= "" and arg_106_0:getTextSize().width > actionbarState.SPELL_PARAM_MAX_WIDTH_PX and var_106_11 < 64 do
 		var_106_7 = string.sub(var_106_7, 1, #var_106_7 - 1)
-		var_106_10 = var_106_7 ~= "" and var_106_7 .. var_106_1 or var_106_1
+		text = var_106_7 ~= "" and var_106_7 .. var_106_1 or var_106_1
 
-		arg_106_0:setText(var_106_10)
+		arg_106_0:setText(text)
 
 		var_106_11 = var_106_11 + 1
 	end
 
-	return var_106_10
+	return text
 end
 
   actionbarState.refreshActionSlotSpellParameter = function(arg_107_0)
@@ -2029,11 +2029,11 @@ function refreshActionSlotInventoryQuantity(slot)
 		return
 	end
 
-	local var_108_4 = slot._actionBarShowCount == true
+	local visible = slot._actionBarShowCount == true
 
-	lbl:setVisible(var_108_4)
+	lbl:setVisible(visible)
 
-	if var_108_4 then
+	if visible then
 		lbl:setText(tostring(var_108_3))
 	else
 		lbl:setText("")
@@ -4525,15 +4525,15 @@ end
 	end
 
 	if actionbarState.isSideBar(barId) then
-		local var_218_5 = actionbarState[155](barId)
+		local marginTop = actionbarState[155](barId)
 		local var_218_6 = actionbarState.isRightBar(barId) and 2 or 0
-		local var_218_7 = actionbarState.isRightBar(barId) and 2 or 0
-		local var_218_8 = actionbarState.isLeftBar(barId) and 2 or 0
+		local marginLeft = actionbarState.isRightBar(barId) and 2 or 0
+		local marginRight = actionbarState.isLeftBar(barId) and 2 or 0
 		local var_218_9 = barWidgetChild(bar, "prevButton")
 
 		if var_218_9 then
-			var_218_9:setMarginTop(var_218_5)
-			var_218_9:setMarginLeft(var_218_7)
+			var_218_9:setMarginTop(marginTop)
+			var_218_9:setMarginLeft(marginLeft)
 		end
 
 		local var_218_10 = barWidgetChild(bar, "sideLockButton")
@@ -4552,7 +4552,7 @@ end
 		local var_218_12 = barWidgetChild(bar, "nextSkipButton")
 
 		if var_218_12 then
-			var_218_12:setMarginRight(var_218_8)
+			var_218_12:setMarginRight(marginRight)
 			var_218_12:setMarginBottom(1)
 		end
 
@@ -9875,9 +9875,9 @@ function updateCooldown(progressRect, duration, spellId, count)
 	end
 
 	local var_431_2, var_431_3 = resolveActionBarCooldownTiming(progressRect, duration, count, percent, var_431_1)
-	local var_431_4 = var_431_3 <= 0 and 100 or math.min(99.99, math.max(0, (var_431_2 - var_431_3) * 100 / var_431_2))
+	local percent = var_431_3 <= 0 and 100 or math.min(99.99, math.max(0, (var_431_2 - var_431_3) * 100 / var_431_2))
 
-	progressRect:setPercent(var_431_4)
+	progressRect:setPercent(percent)
 
 	if actionbarState.shouldShowCooldownSeconds() and var_431_3 > 0 then
 		progressRect:setText(formatActionBarCooldownTime(var_431_3))
@@ -9886,7 +9886,7 @@ function updateCooldown(progressRect, duration, spellId, count)
 		progressRect:setText("")
 	end
 
-	if var_431_4 < 100 then
+	if percent < 100 then
 		removeEvent(progressRect.event)
 
 		cooldown[spellId] = var_431_3

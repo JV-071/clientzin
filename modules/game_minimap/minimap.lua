@@ -1,11 +1,11 @@
-﻿local unusedValue
+local unusedValue
 local oldPos
 local fullscreenWidget
 local virtualFloor = 7
 local dragStartMouseY = 0
 local dragStartMargin = 0
 local persistentMinimapDataLoaded = false
-local var_0_7 = false
+local visible = false
 local currentDayTime = {
 	m = 0,
 	h = 12
@@ -493,7 +493,7 @@ local function var_0_35(arg_34_0)
 end
 
 local function var_0_36()
-	if var_0_7 then
+	if visible then
 		local var_35_0 = syncMinimapLayoutAliases(mapController.ui)
 
 		if var_35_0 and not var_35_0:isDestroyed() then
@@ -518,8 +518,8 @@ local function var_0_37()
 		local var_36_1 = getLayoutWidget(getLayoutRoot(ui, iter_36_1), "cavebotMap")
 
 		if var_36_1 and not var_36_1:isDestroyed() then
-			var_36_1:setOn(var_0_7)
-			var_36_1:setTooltip(tr(var_0_7 and "Show the regular minimap." or "Show the Cavebot route map."))
+			var_36_1:setOn(visible)
+			var_36_1:setTooltip(tr(visible and "Show the regular minimap." or "Show the Cavebot route map."))
 		end
 	end
 end
@@ -529,17 +529,17 @@ local function var_0_38()
 	local var_37_1 = syncMinimapLayoutAliases(mapController.ui)
 
 	if var_37_0 and not var_37_0:isDestroyed() then
-		var_37_0:setVisible(not var_0_7)
+		var_37_0:setVisible(not visible)
 
-		if not var_0_7 then
+		if not visible then
 			var_37_0:raise()
 		end
 	end
 
 	if var_37_1 and not var_37_1:isDestroyed() then
-		var_37_1:setVisible(var_0_7)
+		var_37_1:setVisible(visible)
 
-		if var_0_7 then
+		if visible then
 			var_37_1:raise()
 		end
 	end
@@ -551,7 +551,7 @@ local function var_0_39(arg_38_0)
 	local var_38_0 = findMinimapWidget(mapController.ui)
 	local var_38_1 = syncMinimapLayoutAliases(mapController.ui)
 	local game_helper = modules.game_helper
-	local var_38_3 = var_0_7
+	local var_38_3 = visible
 
 	arg_38_0 = arg_38_0 == true
 
@@ -560,9 +560,9 @@ local function var_0_39(arg_38_0)
 
 		local zoom = var_38_0 and not var_38_0:isDestroyed() and var_38_0:getZoom()
 
-		var_0_7 = (var_38_1 and not var_38_1:isDestroyed() and game_helper and game_helper.setCavebotMinimapView and game_helper.setCavebotMinimapView(var_38_1, true)) == true
+		visible = (var_38_1 and not var_38_1:isDestroyed() and game_helper and game_helper.setCavebotMinimapView and game_helper.setCavebotMinimapView(var_38_1, true)) == true
 
-		if var_0_7 then
+		if visible then
 			if zoom then
 				var_38_1:setZoom(zoom)
 			end
@@ -586,13 +586,13 @@ local function var_0_39(arg_38_0)
 			game_helper.setCavebotMinimapView(var_38_1, false)
 		end
 
-		var_0_7 = false
+		visible = false
 	end
 
 	var_0_38()
 	refreshVirtualFloors()
 
-	return var_0_7 == arg_38_0
+	return visible == arg_38_0
 end
 
 local function var_0_40(layoutRoot)
@@ -934,7 +934,7 @@ local function applyLayoutMode(isHorizontal, container)
 
 	setPhantomStyleBackgroundVisible(var_51_0, not showHorizontal)
 
-	if not showHorizontal and var_0_7 then
+	if not showHorizontal and visible then
 		var_0_39(false)
 	end
 
@@ -1210,7 +1210,7 @@ function zoomOut()
 end
 
 function toggleCavebotMap()
-	return var_0_39(not var_0_7)
+	return var_0_39(not visible)
 end
 
 function getMinimapZoomLevel()

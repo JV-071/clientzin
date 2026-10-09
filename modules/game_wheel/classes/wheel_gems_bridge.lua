@@ -1,6 +1,6 @@
-﻿local var_0_0 = "/images/game/wheel/backdrop_skillwheel_socket_inactive"
+local var_0_0 = "/images/game/wheel/backdrop_skillwheel_socket_inactive"
 local var_0_1 = "/images/game/wheel/backdrop_skillwheel_socket_active"
-local var_0_2 = "/images/game/wheel/icons-skillwheel-sockets"
+local imageSourcePath = "/images/game/wheel/icons-skillwheel-sockets"
 
 function WheelOfDestiny.configureEquippedGems()
 	if not wheelPanel then
@@ -16,8 +16,8 @@ function WheelOfDestiny.configureEquippedGems()
 		if gemSocket then
 			local gemIcon = gemSocket:recursiveGetChildById("gemIcon" .. iter_1_0)
 			local vesselSocketLevel = WheelGemState.getVesselSocketLevel(iter_1_0)
-			local var_1_6 = equipedGem ~= nil
-			local var_1_7 = var_1_6 and vesselSocketLevel == equipedGem.gemType + 1
+			local visible = equipedGem ~= nil
+			local var_1_7 = visible and vesselSocketLevel == equipedGem.gemType + 1
 
 			if socketBackground then
 				local var_1_8 = vesselSocketLevel == 0 and "backdrop_skillwheel_largebonus_socketdisabled_" .. iter_1_0 or "backdrop_skillwheel_largebonus_socketenabled_" .. iter_1_0
@@ -30,14 +30,14 @@ function WheelOfDestiny.configureEquippedGems()
 				gemSocketBg:setVisible(true)
 			end
 
-			gemSocket:setImageSource(var_0_2)
+			gemSocket:setImageSource(imageSourcePath)
 			gemSocket:setImageClip(WheelGemState.getSocketImageClip(iter_1_0, vesselSocketLevel, var_1_7))
-			gemSocket:setVisible(vesselSocketLevel > 0 or var_1_6)
+			gemSocket:setVisible(vesselSocketLevel > 0 or visible)
 
 			if gemIcon then
-				gemIcon:setVisible(var_1_6)
+				gemIcon:setVisible(visible)
 
-				if var_1_6 then
+				if visible then
 					local var_1_9 = equipedGem.gemType * 32
 					local var_1_10 = equipedGem.gemDomain * 96
 					local var_1_11 = (WheelOfDestiny.vocationId - 1) * 384
@@ -102,7 +102,7 @@ function WheelOfDestiny.onGemVesselClick(arg_3_0)
 	wheelOfDestinyWindow.selection.gemContent.modification2:setText("")
 
 	if equipedGem then
-		local var_3_5 = GemVocations[WheelOfDestiny.vocationId][equipedGem.gemType].name:gsub(" %(x 0%)", "")
+		local text = GemVocations[WheelOfDestiny.vocationId][equipedGem.gemType].name:gsub(" %(x 0%)", "")
 		local unusedValue = 0
 		local unusedValue
 		local unusedValue
@@ -151,7 +151,7 @@ function WheelOfDestiny.onGemVesselClick(arg_3_0)
 
 		setStringColor(var_3_28, tr("+%s Damage and Healing", equipedGem.gemType == 2 and 2 or 1), var_3_29 and "#c0c0c0" or "#707070")
 		wheelOfDestinyWindow.selection.gemContent.VRBonus:setColoredText(var_3_28)
-		wheelOfDestinyWindow.selection.gemContent.gemName:setText(var_3_5)
+		wheelOfDestinyWindow.selection.gemContent.gemName:setText(text)
 	end
 end
 

@@ -69,7 +69,7 @@ local VOCATION_BUTTON_SIZE = "108 20"
 local VOCATION_BORDER_SIZE = "120 33"
 local VOCATION_BUTTON_MARGIN_LEFT = 6
 local VOCATION_BUTTON_MARGIN_BOTTOM = 7
-local var_0_19 = {
+local CLIENT_VOCATION_IDS = {
 	monk = 5,
 	druid = 4,
 	sorcerer = 3,
@@ -86,7 +86,7 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationKnightConfirmBorder",
 		selectButtonId = "buttonSelectKnight",
 		selectBorderId = "vocationKnightSelectBorder",
-		clientVocationId = var_0_19.knight
+		clientVocationId = CLIENT_VOCATION_IDS.knight
 	},
 	{
 		containerId = "vocationSorcererHover",
@@ -97,7 +97,7 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationSorcererConfirmBorder",
 		selectButtonId = "buttonSelectSorcerer",
 		selectBorderId = "vocationSorcererSelectBorder",
-		clientVocationId = var_0_19.sorcerer
+		clientVocationId = CLIENT_VOCATION_IDS.sorcerer
 	},
 	{
 		containerId = "vocationDruidHover",
@@ -108,7 +108,7 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationDruidConfirmBorder",
 		selectButtonId = "buttonSelectDruid",
 		selectBorderId = "vocationDruidSelectBorder",
-		clientVocationId = var_0_19.druid
+		clientVocationId = CLIENT_VOCATION_IDS.druid
 	},
 	{
 		containerId = "vocationPaladinHover",
@@ -119,7 +119,7 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationPaladinConfirmBorder",
 		selectButtonId = "buttonSelectPaladin",
 		selectBorderId = "vocationPaladinSelectBorder",
-		clientVocationId = var_0_19.paladin
+		clientVocationId = CLIENT_VOCATION_IDS.paladin
 	},
 	{
 		containerId = "vocationMonkHover",
@@ -130,7 +130,7 @@ local VOCATION_HOVER_ENTRIES = {
 		confirmBorderId = "vocationMonkConfirmBorder",
 		selectButtonId = "buttonSelectMonk",
 		selectBorderId = "vocationMonkSelectBorder",
-		clientVocationId = var_0_19.monk
+		clientVocationId = CLIENT_VOCATION_IDS.monk
 	}
 }
 local VOCATION_INFO_SLIDE = {
@@ -333,17 +333,17 @@ local function resolveHintImagePath(hintKey)
 end
 
 local function unlockTutorialModal(window)
-	local var_8_0 = lockedTutorialWindow == window
+	local wasLockedTutorialWindow = lockedTutorialWindow == window
 
 	if window and not window:isDestroyed() then
-		if var_8_0 and g_modalManager then
+		if wasLockedTutorialWindow and g_modalManager then
 			g_modalManager.hide(window)
 		end
 
 		window:hide()
 	end
 
-	if var_8_0 then
+	if wasLockedTutorialWindow then
 		lockedTutorialWindow = nil
 
 		g_client.setInputLockWidget(nil)

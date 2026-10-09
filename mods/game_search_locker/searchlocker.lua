@@ -1,4 +1,4 @@
-﻿searchlocker = nil
+searchlocker = nil
 
 local marketItems = {}
 local categoryList = {}
@@ -569,7 +569,7 @@ local function addSearchLockerToPanel()
 	end
 end
 
-function relocateForSpace(arg_25_0)
+function relocateForSpace(sourcePanel)
 	if not searchlocker or searchlocker:isDestroyed() or not modules.game_interface then
 		return false
 	end
@@ -586,34 +586,34 @@ function relocateForSpace(arg_25_0)
 	end
 
 	local miniWindowSidebarPanelsInOrder = game_interface.getMiniWindowSidebarPanelsInOrder and game_interface.getMiniWindowSidebarPanelsInOrder() or {}
-	local var_25_3
+	local destinationPanel
 
 	for unusedValue, entry in ipairs(miniWindowSidebarPanelsInOrder) do
-		if entry and entry ~= arg_25_0 and not entry:isDestroyed() and type(entry.fits) == "function" and entry:fits(searchlocker, height, 0) >= 0 then
-			var_25_3 = entry
+		if entry and entry ~= sourcePanel and not entry:isDestroyed() and type(entry.fits) == "function" and entry:fits(searchlocker, height, 0) >= 0 then
+			destinationPanel = entry
 
 			break
 		end
 	end
 
-	if not var_25_3 then
+	if not destinationPanel then
 		return false
 	end
 
 	searchlocker._relocatingForSpace = true
 
-	if arg_25_0 and not arg_25_0:isDestroyed() then
-		arg_25_0:removeChild(searchlocker)
+	if sourcePanel and not sourcePanel:isDestroyed() then
+		sourcePanel:removeChild(searchlocker)
 
-		if type(arg_25_0.refreshSidebarFreeSpace) == "function" then
-			arg_25_0:refreshSidebarFreeSpace()
+		if type(sourcePanel.refreshSidebarFreeSpace) == "function" then
+			sourcePanel:refreshSidebarFreeSpace()
 		end
 	end
 
-	var_25_3:addChild(searchlocker)
+	destinationPanel:addChild(searchlocker)
 
-	if type(var_25_3.refreshSidebarFreeSpace) == "function" then
-		var_25_3:refreshSidebarFreeSpace()
+	if type(destinationPanel.refreshSidebarFreeSpace) == "function" then
+		destinationPanel:refreshSidebarFreeSpace()
 	end
 
 	searchlocker._relocatingForSpace = nil
@@ -621,7 +621,7 @@ function relocateForSpace(arg_25_0)
 	return true
 end
 
-local function var_0_50()
+local function ensureSearchLockerVisibleInSidebar()
 	if not searchlocker or not modules.game_interface then
 		return false
 	end
@@ -1108,7 +1108,7 @@ function onRecvDepotLockerItems(itemList)
 
 	local isRefresh = isSearchLockerRefresh()
 
-	if not var_0_50() then
+	if not ensureSearchLockerVisibleInSidebar() then
 		return
 	end
 

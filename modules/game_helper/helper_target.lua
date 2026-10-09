@@ -1833,12 +1833,12 @@ local function applyCreaturePreview(creatureWidget, outfit)
 	creatureWidget:setCreatureSize(math.min(255, math.ceil(var_103_9 * 100 / var_103_11)))
 end
 
-local function var_0_117(arg_106_0, arg_106_1)
-	if not arg_106_0 or not arg_106_1 then
+local function var_0_117(arg_106_0, outfit)
+	if not arg_106_0 or not outfit then
 		return
 	end
 
-	arg_106_0:setOutfit(arg_106_1)
+	arg_106_0:setOutfit(outfit)
 
 	if arg_106_0.setFixedCreatureSize then
 		arg_106_0:setFixedCreatureSize(false)
@@ -1856,7 +1856,7 @@ local function var_0_117(arg_106_0, arg_106_1)
 		arg_106_0:setCreatureSize(0)
 	end
 
-	applyCreaturePreview(arg_106_0, arg_106_1)
+	applyCreaturePreview(arg_106_0, outfit)
 end
 
 local function var_0_118(arg_107_0, arg_107_1)
@@ -1893,9 +1893,9 @@ local function var_0_119(arg_108_0, arg_108_1)
 	local targetRowEnabled = arg_108_0:recursiveGetChildById("targetRowEnabled")
 
 	if targetRowEnabled then
-		local var_108_1 = arg_108_1 and arg_108_1.enabled ~= false or allCreaturesEnabled
+		local checked = arg_108_1 and arg_108_1.enabled ~= false or allCreaturesEnabled
 
-		targetRowEnabled:setChecked(var_108_1)
+		targetRowEnabled:setChecked(checked)
 	end
 
 	local creatureSprite = arg_108_0:recursiveGetChildById("creatureSprite")

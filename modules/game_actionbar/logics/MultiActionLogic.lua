@@ -1,4 +1,4 @@
-﻿local AB = modules.game_actionbar
+local AB = modules.game_actionbar
 local multiPanel
 local multiPanelPositionEvent
 local cacheMultiActionSlots = {}
@@ -163,7 +163,7 @@ local function shouldShowMultiActionGraphicalCooldown()
 	return modules.client_options.getOption("graphicalCooldown") ~= false
 end
 
-local function clearSubSlotProgressWidgets(subSlot, arg_11_1)
+local function clearSubSlotProgressWidgets(subSlot, retainedProgressWidgetId)
 	if not subSlot then
 		return
 	end
@@ -171,7 +171,7 @@ local function clearSubSlotProgressWidgets(subSlot, arg_11_1)
 	for _, ch in pairs(subSlot:getChildren()) do
 		local cid = ch:getId()
 
-		if cid and cid ~= arg_11_1 and tostring(cid):sub(1, 8) == "progress" then
+		if cid and cid ~= retainedProgressWidgetId and tostring(cid):sub(1, 8) == "progress" then
 			if ch.event then
 				removeEvent(ch.event)
 
@@ -214,9 +214,9 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 			return
 		end
 
-		local var_12_6, groupRem = getMultiActionCooldownRemaining(spell)
+		local spellCooldownRemaining, groupRem = getMultiActionCooldownRemaining(spell)
 
-		remaining = math.max(var_12_6, groupRem)
+		remaining = math.max(spellCooldownRemaining, groupRem)
 
 		if remaining <= 0 then
 			clearSubSlotProgressWidgets(subSlot)
@@ -224,7 +224,7 @@ local function refreshMultiSubSlotCooldownDisplay(subSlot, data, onlyIfMissing)
 			return
 		end
 
-		useGroupCooldown = var_12_6 < groupRem
+		useGroupCooldown = spellCooldownRemaining < groupRem
 
 		if useGroupCooldown then
 			groupId = getMultiActionActiveGroupId and getMultiActionActiveGroupId(spell)

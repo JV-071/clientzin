@@ -8,7 +8,7 @@ local var_0_3 = "verdana-11px-rounded"
 local var_0_4 = 100
 local var_0_5 = 30000
 local var_0_6 = 1000
-local var_0_7 = "/images/game/ranked-queue/game-hud-ui"
+local imageSourcePath = "/images/game/ranked-queue/game-hud-ui"
 local ebbFlowTimerPanelWidget
 local var_0_9
 local numericValue = 0
@@ -212,7 +212,7 @@ function var_0_12()
 		return nil
 	end
 
-	ebbFlowTimerPanelWidget:setImageSource(var_0_7)
+	ebbFlowTimerPanelWidget:setImageSource(imageSourcePath)
 
 	ebbFlowTimerPanelWidget.onMouseRelease = handleMouseRelease
 

@@ -478,7 +478,7 @@ local STEP2_STATEMENT_LAYOUT = {
 	statementBlockHeight = 91,
 	commentTextHeight = 188
 }
-local var_0_12 = {
+local STEP2_NON_STATEMENT_LAYOUT = {
 	commentBlockHeight = 328,
 	statementBlockHeight = 0,
 	translationTextHeight = 0,
@@ -499,7 +499,7 @@ local function configurePlayerReportStep2Layout(reportType, targetName)
 	local commentText = getPlayerReportWidget("commentText")
 	local commentCaption = getPlayerReportWidget("commentCaption")
 	local step2Label = getPlayerReportWidget("step2Label")
-	local layout = reportType == ReportType.Statement and STEP2_STATEMENT_LAYOUT or var_0_12
+	local layout = reportType == ReportType.Statement and STEP2_STATEMENT_LAYOUT or STEP2_NON_STATEMENT_LAYOUT
 
 	if reportType == ReportType.Statement then
 		statementBlock:setVisible(true)
@@ -645,25 +645,25 @@ local function setPlayerReportSummaryFieldText(field, text)
 	end)
 end
 
-local function var_0_19()
+local function configureSummaryWithoutTranslation()
 	local translationBlock = getPlayerReportWidget("summaryTranslationBlock")
-	local var_31_1 = getPlayerReportWidget("summaryCommentBlock")
-	local var_31_2 = getPlayerReportWidget("summaryCommentText")
+	local summaryCommentBlock = getPlayerReportWidget("summaryCommentBlock")
+	local summaryCommentText = getPlayerReportWidget("summaryCommentText")
 
-	if not translationBlock or not var_31_1 or not var_31_2 then
+	if not translationBlock or not summaryCommentBlock or not summaryCommentText then
 		return
 	end
 
 	translationBlock:breakAnchors()
 	translationBlock:setVisible(false)
 	translationBlock:setHeight(0)
-	var_31_1:breakAnchors()
-	var_31_1:addAnchor(AnchorTop, "summaryReasonRow", AnchorBottom)
-	var_31_1:addAnchor(AnchorLeft, "parent", AnchorLeft)
-	var_31_1:addAnchor(AnchorRight, "parent", AnchorRight)
-	var_31_1:setMarginTop(0)
-	var_31_1:setHeight(275)
-	var_31_2:setHeight(271)
+	summaryCommentBlock:breakAnchors()
+	summaryCommentBlock:addAnchor(AnchorTop, "summaryReasonRow", AnchorBottom)
+	summaryCommentBlock:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	summaryCommentBlock:addAnchor(AnchorRight, "parent", AnchorRight)
+	summaryCommentBlock:setMarginTop(0)
+	summaryCommentBlock:setHeight(275)
+	summaryCommentText:setHeight(271)
 end
 
 local function updatePlayerReportSummary()
@@ -677,7 +677,7 @@ local function updatePlayerReportSummary()
 	local statementBlock = getPlayerReportWidget("summaryStatementBlock")
 	local translationBlock = getPlayerReportWidget("summaryTranslationBlock")
 
-	var_0_19()
+	configureSummaryWithoutTranslation()
 	statementBlock:setVisible(false)
 	statementBlock:setHeight(0)
 	translationBlock:setVisible(false)

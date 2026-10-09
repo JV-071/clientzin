@@ -508,7 +508,7 @@ local var_0_77 = "Verdana Bold-11px-new"
 local var_0_78 = "Verdana-11px-lowspace-italic"
 local var_0_79 = "Verdana-11px-lowspace-underline"
 local var_0_80 = "#f4f4f4"
-local var_0_81 = "/images/icons/store-icons-inline"
+local imageSourcePath = "/images/icons/store-icons-inline"
 local var_0_82 = string.char(1)
 local var_0_83 = string.char(2)
 local var_0_84 = string.char(3)
@@ -750,7 +750,7 @@ local function var_0_95(arg_37_0)
 	return (arg_37_0:match("^%s*(.-)%s*$") or arg_37_0):gsub("<i>", ""):gsub("</i>", ""):gsub("<I>", ""):gsub("</I>", ""):gsub("<u>", ""):gsub("</u>", ""):gsub("<U>", ""):gsub("</U>", ""):gsub("<[^>]+>", "")
 end
 
-local var_0_96 = 17
+local marginLeft = 17
 local labelWidget
 
 local function var_0_98(arg_38_0)
@@ -852,9 +852,9 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 	local var_43_0 = arg_43_1:match("^%s*(.-)%s*$") or arg_43_1
 	local var_43_1 = var_43_0:find("<i>") or var_43_0:find("<I>")
 	local var_43_2 = var_43_0:find("<u>") or var_43_0:find("<U>")
-	local var_43_3 = var_0_95(var_43_0)
+	local text = var_0_95(var_43_0)
 
-	if var_43_3 == "" then
+	if text == "" then
 		arg_43_0:setText("")
 
 		return
@@ -868,11 +868,11 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 		arg_43_0:setFont(var_0_77)
 	end
 
-	arg_43_0:setText(var_43_3)
+	arg_43_0:setText(text)
 	arg_43_0:setColor(arg_43_2 or var_0_80)
 end
 
-local function var_0_104(parentWidget, arg_44_1, arg_44_2, arg_44_3)
+local function var_0_104(parentWidget, arg_44_1, arg_44_2, imageClipRect)
 	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", parentWidget)
 
 	if not storeDescriptionLineWidget then
@@ -888,11 +888,11 @@ local function var_0_104(parentWidget, arg_44_1, arg_44_2, arg_44_3)
 		return false
 	end
 
-	if arg_44_3 and icon then
+	if imageClipRect and icon then
 		icon:setVisible(true)
-		icon:setImageSource(var_0_81)
-		icon:setImageClip(arg_44_3)
-		text:setMarginLeft(var_0_96)
+		icon:setImageSource(imageSourcePath)
+		icon:setImageClip(imageClipRect)
+		text:setMarginLeft(marginLeft)
 		text:setTextWrap(false)
 	else
 		if icon then
@@ -906,7 +906,7 @@ local function var_0_104(parentWidget, arg_44_1, arg_44_2, arg_44_3)
 	var_0_103(text, arg_44_1, arg_44_2)
 	storeDescriptionLineWidget:setHeight(math.max(14, text:getTextSize().height + 2))
 
-	return text:getText() ~= "" or arg_44_3 ~= nil
+	return text:getText() ~= "" or imageClipRect ~= nil
 end
 
 local function addStoreDescriptionLine(container, lineText, color)
@@ -945,7 +945,7 @@ local function addStoreDescriptionLine(container, lineText, color)
 		local var_45_7 = var_0_98(var_45_6)
 		local var_45_8 = var_0_95(var_45_6:match("^%s*(.-)%s*$") or var_45_6)
 		local var_45_9 = var_0_100(container)
-		local var_45_10 = math.max(1, var_45_9 - var_0_96)
+		local var_45_10 = math.max(1, var_45_9 - marginLeft)
 		local var_45_11 = var_0_101(var_45_8, var_45_7, var_45_9, var_45_10)
 		local var_45_12 = var_45_6:find("<i>") or var_45_6:find("<I>")
 		local var_45_13 = var_45_6:find("<u>") or var_45_6:find("<U>")
@@ -1060,15 +1060,15 @@ local function showStoreDescriptionFallback(scroll, html, errorText)
 		table.insert(var_52_1, var_52_2)
 	end
 
-	local var_52_3 = table.concat(var_52_1, "\n")
+	local text = table.concat(var_52_1, "\n")
 
 	if errorText and errorText ~= "" then
-		var_52_3 = errorText .. (var_52_3 ~= "" and "\n\n" .. var_52_3 or "")
+		text = errorText .. (text ~= "" and "\n\n" .. text or "")
 	end
 
 	lblDescription:setFont(var_0_77)
 	lblDescription:setColor(var_0_80)
-	lblDescription:setText(var_52_3)
+	lblDescription:setText(text)
 end
 
 local createProductImage
@@ -1547,7 +1547,7 @@ local function getHomeBannerWidget()
 	return homeImagenFrame:getChildById("HomeImagen")
 end
 
-local function var_0_134(arg_76_0, arg_76_1, arg_76_2, arg_76_3, arg_76_4)
+local function var_0_134(arg_76_0, arg_76_1, imageSourcePath, arg_76_3, arg_76_4)
 	if not arg_76_0 or arg_76_0:isDestroyed() then
 		return
 	end
@@ -1566,9 +1566,9 @@ local function var_0_134(arg_76_0, arg_76_1, arg_76_2, arg_76_3, arg_76_4)
 	end
 
 	if arg_76_1 then
-		arg_76_0:setIcon(arg_76_2)
+		arg_76_0:setIcon(imageSourcePath)
 	else
-		arg_76_0:setImageSource(arg_76_2)
+		arg_76_0:setImageSource(imageSourcePath)
 	end
 end
 
@@ -3260,10 +3260,10 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
 		return
 	end
 
-	local var_149_0 = purchaseStatus
+	local text = purchaseStatus
 
-	if not var_149_0 or var_149_0 == "" then
-		var_149_0 = tr("Purchase completed successfully.")
+	if not text or text == "" then
+		text = tr("Purchase completed successfully.")
 	end
 
 	local box = messageBox:recursiveGetChildById("Box")
@@ -3272,7 +3272,7 @@ function onParseStoreGetPurchaseStatus(purchaseStatus)
 		box:setTextAutoResize(true)
 		box:setTextWrap(true)
 		box:setWidth(192)
-		box:setText(var_149_0)
+		box:setText(text)
 
 		if box.resizeToText then
 			box:resizeToText()
@@ -5571,9 +5571,9 @@ function transferPoints()
 			recipient = textEdit:getText()
 		end
 
-		local var_258_2 = (recipient or ""):trim():len() >= 1
+		local enabled = (recipient or ""):trim():len() >= 1
 
-		transferPointsWindow.buttonOk:setEnabled(var_258_2)
+		transferPointsWindow.buttonOk:setEnabled(enabled)
 	end
 
 	local function scheduleGiftTransferButtonState(recipientText)

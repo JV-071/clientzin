@@ -2086,18 +2086,18 @@ local function var_0_133()
 	return var_93_0 and var_93_0:isChecked() or false
 end
 
-local function var_0_134(arg_94_0)
+local function var_0_134(checked)
 	local var_94_0 = widget("enableShooterCheckBox")
 
-	if var_94_0 and var_94_0:isChecked() ~= arg_94_0 then
+	if var_94_0 and var_94_0:isChecked() ~= checked then
 		suppressShooterCheckChange = true
 
-		var_94_0:setChecked(arg_94_0)
+		var_94_0:setChecked(checked)
 
 		suppressShooterCheckChange = false
 	end
 
-	hotkeyShooterStatus = arg_94_0 == true
+	hotkeyShooterStatus = checked == true
 
 	if not hotkeyShooterStatus then
 		clearShooterCooldownState()
@@ -2301,21 +2301,21 @@ function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
 			return
 		end
 
-		local var_109_0 = not checkWidget:isChecked()
+		local checked = not checkWidget:isChecked()
 
-		if var_109_0 and var_0_138(silent) then
+		if checked and var_0_138(silent) then
 			var_0_132()
 
 			return
 		end
 
-		if var_109_0 and var_0_140(silent) then
+		if checked and var_0_140(silent) then
 			var_0_132()
 
 			return
 		end
 
-		checkWidget:setChecked(var_109_0)
+		checkWidget:setChecked(checked)
 	end
 
 	if not checkWidget then
@@ -3810,11 +3810,11 @@ function HelperShooter.refreshCastOnePlusRow()
 		currentOption = normalizeUseToOption(addShooterUseToCombo:getCurrentOption())
 	end
 
-	local var_179_6 = HelperShooter.isSingleTargetAction(selectedShooterAction, currentOption)
+	local visible = HelperShooter.isSingleTargetAction(selectedShooterAction, currentOption)
 
-	useToRow:setVisible(var_179_6)
+	useToRow:setVisible(visible)
 
-	if var_179_6 then
+	if visible then
 		if not autoTurnRow.castOnePlusLocked then
 			local curOpt = autoTurnRow:getCurrentOption()
 
@@ -3857,7 +3857,7 @@ local function updateShooterFormRows()
 	local var_180_5 = var_0_42(selectedShooterAction)
 	local var_180_6 = showUseTo and (selectedShooterAction.type == "rune" or not selectedShooterAction.noBestTile)
 	local showHarmony = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.useHarmony == true
-	local var_180_8 = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.directional == true
+	local visible = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and selectedShooterAction.directional == true
 	local showAutoTurn = selectedShooterAction ~= nil and selectedShooterAction.type == "spell" and var_0_38[selectedShooterAction.id] ~= nil
 
 	if addShooterUseToRow then
@@ -3897,9 +3897,9 @@ local function updateShooterFormRows()
 	end
 
 	if harmonyRow then
-		harmonyRow:setVisible(var_180_8)
-		harmonyRow:setHeight(var_180_8 and 20 or 0)
-		harmonyRow:setMarginTop(var_180_8 and 6 or 0)
+		harmonyRow:setVisible(visible)
+		harmonyRow:setHeight(visible and 20 or 0)
+		harmonyRow:setMarginTop(visible and 6 or 0)
 	end
 
 	if autoTurnRow then
@@ -3908,8 +3908,8 @@ local function updateShooterFormRows()
 		autoTurnRow:setMarginTop(showAutoTurn and 6 or 0)
 	end
 
-	local formHeight = 95 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (var_180_8 and 26 or 0) + (showAutoTurn and 26 or 0)
-	local windowHeight = 171 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (var_180_8 and 26 or 0) + (showAutoTurn and 26 or 0)
+	local formHeight = 95 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (visible and 26 or 0) + (showAutoTurn and 26 or 0)
+	local windowHeight = 171 + (showUseTo and 26 or 0) + (showHarmony and 26 or 0) + (visible and 26 or 0) + (showAutoTurn and 26 or 0)
 	local form = addShooterWindow:recursiveGetChildById("addShooterForm")
 
 	if form then

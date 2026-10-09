@@ -2321,7 +2321,7 @@ local function var_0_114(arg_117_0)
 	var_0_56 = arg_117_0
 end
 
-local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPanelKind, arg_118_4, arg_118_5)
+local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPanelKind, text, arg_118_5)
 	if not parentWidget or not sellAllItemId then
 		return
 	end
@@ -2348,8 +2348,8 @@ local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPane
 	local hoverOverlay = var_118_1:recursiveGetChildById("hoverOverlay")
 
 	if hoverOverlay then
-		function var_118_1.onHoverChange(unusedArgument, arg_119_1)
-			hoverOverlay:setVisible(arg_119_1)
+		function var_118_1.onHoverChange(unusedArgument, visible)
+			hoverOverlay:setVisible(visible)
 		end
 	end
 
@@ -2368,7 +2368,7 @@ local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPane
 	local itemName = var_118_1:recursiveGetChildById("itemName")
 
 	if itemName then
-		itemName:setText(arg_118_4)
+		itemName:setText(text)
 	end
 
 	local itemDetails = var_118_1:recursiveGetChildById("itemDetails")
@@ -2393,7 +2393,7 @@ local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPane
 			totalValue:setText(var_118_11 > 0 and formatNumberWithCommas(var_118_12) or "-")
 		end
 
-		var_118_9 = tr("%s\nRight-click for options. Double-click to ignore this item.", arg_118_4)
+		var_118_9 = tr("%s\nRight-click for options. Double-click to ignore this item.", text)
 
 		local function handleDoubleClick()
 			if not var_118_1.sellAllItemId then
@@ -2410,7 +2410,7 @@ local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPane
 			itemDetails:setText(tr("Double-click to restore"))
 		end
 
-		var_118_9 = tr("%s\nRight-click for options. Double-click to include this item in the sale.", arg_118_4)
+		var_118_9 = tr("%s\nRight-click for options. Double-click to include this item in the sale.", text)
 
 		local function handleDoubleClick()
 			if not var_118_1.sellAllItemId then

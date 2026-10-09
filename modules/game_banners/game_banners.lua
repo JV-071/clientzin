@@ -155,7 +155,7 @@ for _, eventId in ipairs(ANIM_FRAMES) do
 	eventId.path = IMAGE_BASE .. eventId.frame
 end
 
-local var_0_25 = {
+local imageClipRect = {
 	width = 0,
 	y = 0,
 	x = 0,
@@ -901,9 +901,9 @@ local function refreshBannerTextLayout(width)
 	if var_41_0.backdropAnim then
 		var_41_0.backdropAnim:setWidth(width)
 
-		var_0_25.width = width
+		imageClipRect.width = width
 
-		var_41_0.backdropAnim:setImageClip(var_0_25)
+		var_41_0.backdropAnim:setImageClip(imageClipRect)
 	end
 
 	if var_41_0.textClip then
@@ -983,11 +983,11 @@ local function var_0_92()
 		return
 	end
 
-	local var_43_1 = BANNER_BODY_WIDTH - var_0_18 - TEXT_MARGIN_RIGHT
+	local width = BANNER_BODY_WIDTH - var_0_18 - TEXT_MARGIN_RIGHT
 
 	var_43_0.description:setTextAutoResize(false)
 	var_43_0.description:setTextWrap(true)
-	var_43_0.description:setWidth(var_43_1)
+	var_43_0.description:setWidth(width)
 	var_43_0.textPanel:setHeight(math.max(20, var_43_0.description:getTextSize().height + 5))
 end
 
@@ -1077,16 +1077,16 @@ local function applyAnimationFrame(frameIndex)
 
 	refreshBannerTextLayout(var_45_2)
 
-	local var_45_3 = BACKDROP_MARGIN_LEFT + var_45_2 - var_0_15
+	local marginLeft = BACKDROP_MARGIN_LEFT + var_45_2 - var_0_15
 
-	if var_45_3 ~= var_0_28 then
-		var_0_28 = var_45_3
+	if marginLeft ~= var_0_28 then
+		var_0_28 = marginLeft
 
-		var_45_0.roll:setMarginLeft(var_45_3)
+		var_45_0.roll:setMarginLeft(marginLeft)
 	end
 end
 
-local function var_0_95(arg_46_0, arg_46_1)
+local function var_0_95(opacity, arg_46_1)
 	if not bannerWidget() then
 		if arg_46_1 then
 			arg_46_1()
@@ -1097,7 +1097,7 @@ local function var_0_95(arg_46_0, arg_46_1)
 
 	g_effects.cancelFade(gameBannerPanelWidget)
 
-	if arg_46_0 >= 1 then
+	if opacity >= 1 then
 		gameBannerPanelWidget:setOpacity(0)
 		g_effects.fadeIn(gameBannerPanelWidget, ANIM_FRAME_MS)
 	else
@@ -1107,7 +1107,7 @@ local function var_0_95(arg_46_0, arg_46_1)
 
 	scheduleBannerEvent(function()
 		if bannerWidget() then
-			gameBannerPanelWidget:setOpacity(arg_46_0)
+			gameBannerPanelWidget:setOpacity(opacity)
 		end
 
 		if arg_46_1 then
@@ -1406,7 +1406,7 @@ local var_0_112
 local var_0_113
 local var_0_114 = false
 local var_0_115
-local var_0_116 = {
+local imageClipRect = {
 	width = 0,
 	y = 0,
 	x = 0,
@@ -1576,9 +1576,9 @@ local function var_0_128(width)
 	if var_80_0.backdropAnim then
 		var_80_0.backdropAnim:setWidth(width)
 
-		var_0_116.width = width
+		imageClipRect.width = width
 
-		var_80_0.backdropAnim:setImageClip(var_0_116)
+		var_80_0.backdropAnim:setImageClip(imageClipRect)
 	end
 
 	if var_80_0.textClip then
@@ -1671,16 +1671,16 @@ local function var_0_130(arg_82_0)
 
 	var_0_128(var_82_2)
 
-	local var_82_3 = BACKDROP_MARGIN_LEFT + var_82_2 - var_0_15
+	local marginLeft = BACKDROP_MARGIN_LEFT + var_82_2 - var_0_15
 
-	if var_82_3 ~= var_0_113 then
-		var_0_113 = var_82_3
+	if marginLeft ~= var_0_113 then
+		var_0_113 = marginLeft
 
-		var_82_0.roll:setMarginLeft(var_82_3)
+		var_82_0.roll:setMarginLeft(marginLeft)
 	end
 end
 
-local function var_0_131(arg_83_0, arg_83_1)
+local function var_0_131(opacity, arg_83_1)
 	if not var_0_121() then
 		if arg_83_1 then
 			arg_83_1()
@@ -1691,7 +1691,7 @@ local function var_0_131(arg_83_0, arg_83_1)
 
 	g_effects.cancelFade(gameBannerPanelWidget)
 
-	if arg_83_0 >= 1 then
+	if opacity >= 1 then
 		gameBannerPanelWidget:setOpacity(0)
 		g_effects.fadeIn(gameBannerPanelWidget, var_0_117)
 	else
@@ -1701,7 +1701,7 @@ local function var_0_131(arg_83_0, arg_83_1)
 
 	var_0_124(function()
 		if var_0_121() then
-			gameBannerPanelWidget:setOpacity(arg_83_0)
+			gameBannerPanelWidget:setOpacity(opacity)
 		end
 
 		if arg_83_1 then
