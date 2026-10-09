@@ -21,6 +21,7 @@
  */
 
 #include "thingtype.h"
+#include <climits>
 
 #include "animator.h"
 #include "game.h"
@@ -97,6 +98,19 @@ void ThingType::unserializeAppearance(const uint16_t clientId, const ThingCatego
         for (const auto& framegroup : appearance.frame_group()) {
             const int frameGroupType = framegroup.fixed_frame_group();
             const auto& spriteInfo = framegroup.sprite_info();
+            if (frameGroupType >= 0 && frameGroupType < static_cast<int>(m_appearanceBounds.size())) {
+                auto& bounds = m_appearanceBounds[frameGroupType];
+                bounds.clear();
+                for (const auto& box : spriteInfo.bounding_box_per_direction()) {
+                    if (box.width() > 0 && box.height() > 0 &&
+                        uint64_t(box.x()) + box.width() <= INT_MAX &&
+                        uint64_t(box.y()) + box.height() <= INT_MAX)
+                        bounds.emplace_back(box.x(), box.y(), box.width(), box.height());
+                    else
+                        bounds.emplace_back();
+                }
+            }
+
             const auto& animation = spriteInfo.animation();
             spriteInfo.sprite_id(); // sprites
             const auto& spritesPhases = animation.sprite_phase();
@@ -1082,6 +1096,28 @@ uint32_t ThingType::getTextureIndex(const int l, const int x, const int y, const
     return ((l * m_numPatternZ + z)
         * m_numPatternY + y)
         * m_numPatternX + x;
+}
+
+Rect ThingType::getBoundingBox(int frameGroup, int direction, int zPattern) const
+{
+    if (frameGroup < 0 || frameGroup >= static_cast<int>(m_appearanceBounds.size()) ||
+        direction < Otc::North || direction > Otc::NorthWest || zPattern < 0)
+        return {};
+    if (direction == Otc::NorthEast || direction == Otc::SouthEast)
+        direction = Otc::East;
+    else if (direction == Otc::SouthWest || direction == Otc::NorthWest)
+        direction = Otc::West;
+    const auto& bounds = m_appearanceBounds[frameGroup].empty()
+        ? m_appearanceBounds[FrameGroupMoving] : m_appearanceBounds[frameGroup];
+    if (bounds.empty() || m_numPatternX == 0)
+        return {};
+    const size_t directionIndex = static_cast<size_t>(direction) % m_numPatternX;
+    // Some catalogs supply separate boxes for depth patterns; others supply
+    // one conservative box per direction covering every depth pattern.
+    const size_t index = bounds.size() >= size_t(m_numPatternX) * m_numPatternZ
+        ? size_t(std::min(zPattern, std::max(0, int(m_numPatternZ) - 1))) * m_numPatternX + directionIndex
+        : directionIndex;
+    return index < bounds.size() ? bounds[index] : Rect();
 }
 
 int ThingType::getExactSize(const int layer, const int xPattern, const int yPattern, const int zPattern, const int animationPhase)

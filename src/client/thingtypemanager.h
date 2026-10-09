@@ -81,6 +81,7 @@ public:
     const ThingTypePtr& getNullThingType() { return m_nullThingType; }
 
     const ThingTypePtr& getThingType(uint16_t id, ThingCategory category);
+    Rect getCreatureBoundingBox(uint16_t id, int frameGroup, int direction, int zPattern = 0);
     ThingType* getRawThingType(uint16_t id, ThingCategory category);
 
     const ThingTypeList& getThingTypes(ThingCategory category);

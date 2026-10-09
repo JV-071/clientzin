@@ -225,7 +225,20 @@ TEST_F(RuntimeEventTest, DecoKitPreviewRetainsPacketContentWithoutChangingTheInv
     } library;
     ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR) + "/assets"));
     ASSERT_TRUE(g_things.loadAppearances("/things/assets/"));
+    g_lua.registerClass<UIWidget>();
+    g_lua.registerClass<UIItem, UIWidget>();
+    g_lua.registerClass<Item>();
     g_game.enableFeature(Otc::GameWrapKit);
+
+    const auto northBounds = g_things.getCreatureBoundingBox(3, 0, Otc::North, 0);
+    EXPECT_TRUE(northBounds.isValid());
+    EXPECT_NE(northBounds, g_things.getCreatureBoundingBox(3, 0, Otc::East, 0));
+    EXPECT_EQ(g_things.getCreatureBoundingBox(3, 0, Otc::East, 0),
+              g_things.getCreatureBoundingBox(3, 0, Otc::NorthEast, 0));
+    EXPECT_EQ(g_things.getCreatureBoundingBox(3, 0, Otc::West, 0),
+              g_things.getCreatureBoundingBox(3, 0, Otc::NorthWest, 0));
+    EXPECT_FALSE(g_things.getCreatureBoundingBox(0, 0, Otc::South, 0).isValid());
+    EXPECT_FALSE(g_things.getCreatureBoundingBox(3, 0, -1, 0).isValid());
 
     // Actual asset IDs: decoration kit 23398, ground 7594 as a valid preview target.
     auto message = std::make_shared<InputMessage>();

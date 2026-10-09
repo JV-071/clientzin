@@ -72,6 +72,7 @@ public:
 
     int getWidth() { return m_size.width(); }
     int getHeight() { return m_size.height(); }
+    Rect getBoundingBox(int frameGroup, int direction, int zPattern = 0) const;
     int getExactSize(int layer = 0, int xPattern = 0, int yPattern = 0, int zPattern = 0, int animationPhase = 0);
     int getRealSize() { return m_realSize; }
     int getLayers() { return m_layers; }
@@ -230,6 +231,7 @@ private:
     uint32_t getSpriteIndex(int w, int h, int l, int x, int y, int z, int a) const;
     uint32_t getTextureIndex(int l, int x, int y, int z) const;
 
+    std::array<std::vector<Rect>, 3> m_appearanceBounds;
     ThingCategory m_category{ ThingInvalidCategory };
 
     bool m_null{ true };

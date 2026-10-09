@@ -457,6 +457,13 @@ const ThingTypePtr& ThingTypeManager::getThingType(const uint16_t id, const Thin
     return m_thingTypes[category][id];
 }
 
+Rect ThingTypeManager::getCreatureBoundingBox(uint16_t id, int frameGroup, int direction, int zPattern)
+{
+    if (!isValidDatId(id, ThingCategoryCreature))
+        return {};
+    return getThingType(id, ThingCategoryCreature)->getBoundingBox(frameGroup, direction, zPattern);
+}
+
 ThingType* ThingTypeManager::getRawThingType(uint16_t id, ThingCategory category) {
     if (category >= ThingLastCategory || id >= m_thingTypes[category].size()) {
         g_logger.error("invalid thing type client id {} in category {}", id, static_cast<uint8_t>(category));
