@@ -26,8 +26,25 @@
 #include "framework/otml/otmlnode.h"
 #include "gameconfig.h"
 #include "item.h"
+#include "thingtypemanager.h"
+#include "thingtype.h"
 
 UIItem::UIItem() { setProp(PropDraggable, true, false); }
+
+const ItemPtr& UIItem::resolveDisplayItem()
+{
+    if (!m_item || m_useDecoKitContainerSprite || !m_item->isDecoKit() ||
+        !g_things.isValidDatId(m_item->getUnwrapId(), ThingCategoryItem) ||
+        g_things.getThingType(m_item->getUnwrapId(), ThingCategoryItem)->isNull()) {
+        m_unwrappedPreview.reset();
+        return m_item;
+    }
+    if (!m_unwrappedPreview || m_unwrappedPreview->getId() != m_item->getUnwrapId()) {
+        m_unwrappedPreview = m_item->clone();
+        m_unwrappedPreview->setId(m_item->getUnwrapId());
+    }
+    return m_unwrappedPreview;
+}
 
 void UIItem::drawSelf(const DrawPoolType drawPane)
 {
@@ -48,11 +65,12 @@ void UIItem::drawSelf(const DrawPoolType drawPane)
             m_item->setId(m_itemId);
         }
 
-        const int exactSize = std::max<int>(g_gameConfig.getSpriteSize(), m_item->getExactSize());
+        const auto& displayItem = resolveDisplayItem();
+        const int exactSize = std::max<int>(g_gameConfig.getSpriteSize(), displayItem->getExactSize());
 
         g_drawPool.bindFrameBuffer(exactSize);
-        m_item->setColor(m_color);
-        m_item->draw(Point(exactSize - g_gameConfig.getSpriteSize()) + m_item->getDisplacement());
+        displayItem->setColor(m_color);
+        displayItem->draw(Point(exactSize - g_gameConfig.getSpriteSize()) + displayItem->getDisplacement());
 
         // Blit the item at its native size, centered in the slot. Slots larger than the
         // sprite (e.g. the 66x66 task-board and 70x70 store cells) used to upscale it and
@@ -159,6 +177,7 @@ void UIItem::setTier(const int tier)
 void UIItem::setItem(const ItemPtr& item)
 {
     m_item = item;
+    m_unwrappedPreview.reset();
     m_displayCount = 0;
     if (item)
         m_itemId = item->getClientId();
@@ -194,6 +213,7 @@ int UIItem::getItemSubType() { return m_item ? m_item->getSubType() : 0; }
 int UIItem::getItemCountOrSubType() { return m_item ? m_item->getCountOrSubType() : 0; }
 
 void UIItem::setShader(std::string_view name) {
+    m_unwrappedPreview.reset();
     m_shaderName = name;
     if (getItem()) getItem()->setShader(name);
 }

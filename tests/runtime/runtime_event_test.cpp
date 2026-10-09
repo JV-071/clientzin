@@ -13,6 +13,9 @@
 #include "client/game.h"
 #include "client/gameconfig.h"
 #include "client/localplayer.h"
+#include "client/uiitem.h"
+#include "client/item.h"
+#include "client/thingtypemanager.h"
 #include <sstream>
 #include "framework/platform/platformwindow.h"
 #ifdef _WIN32
@@ -96,6 +99,15 @@ protected:
         g_lua.terminate();
         g_textures.terminate();
         g_resources.terminate();
+    }
+    ItemPtr displayItem(UIItem& widget)
+    {
+        return widget.resolveDisplayItem();
+    }
+    ItemPtr parseItem(const InputMessagePtr& message)
+    {
+        ProtocolGame protocol;
+        return protocol.getItem(message);
     }
     void parsePrey(const InputMessagePtr& message)
     {
@@ -203,6 +215,52 @@ TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
     EXPECT_EQ(2, g_lua.popInteger());
     g_game.setClientVersion(previousVersion);
     g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
+}
+
+TEST_F(RuntimeEventTest, DecoKitPreviewRetainsPacketContentWithoutChangingTheInventoryItem)
+{
+    struct ThingLibrary {
+        ThingLibrary() { g_things.init(); }
+        ~ThingLibrary() { g_things.terminate(); }
+    } library;
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR) + "/assets"));
+    ASSERT_TRUE(g_things.loadAppearances("/things/assets/"));
+    g_game.enableFeature(Otc::GameWrapKit);
+
+    // Actual asset IDs: decoration kit 23398, ground 7594 as a valid preview target.
+    auto message = std::make_shared<InputMessage>();
+    const auto start = message->getReadPos();
+    std::string packet;
+    for (const uint16_t id : {uint16_t(23398), uint16_t(7594)}) {
+        packet.push_back(static_cast<char>(id & 0xff));
+        packet.push_back(static_cast<char>(id >> 8));
+    }
+    message->setBuffer(packet);
+    message->setReadPos(start);
+    const auto kit = parseItem(message);
+    ASSERT_NE(nullptr, kit);
+    EXPECT_TRUE(message->eof());
+    EXPECT_TRUE(kit->isDecoKit());
+    EXPECT_EQ(7594, kit->getUnwrapId());
+
+    auto widget = std::make_shared<UIItem>();
+    widget->setItem(kit);
+    widget->setUseDecoKitContainerSprite(true);
+    EXPECT_EQ(kit, displayItem(*widget));
+    widget->setUseDecoKitContainerSprite(false);
+    const auto preview = displayItem(*widget);
+    ASSERT_NE(nullptr, preview);
+    EXPECT_NE(kit, preview);
+    EXPECT_EQ(7594, preview->getId());
+    EXPECT_EQ(23398, kit->getId());
+    EXPECT_EQ(kit, widget->getItem());
+    widget->setUseDecoKitContainerSprite(true);
+    EXPECT_EQ(kit, displayItem(*widget));
+    kit->setUnwrapId(0);
+    widget->setUseDecoKitContainerSprite(false);
+    EXPECT_EQ(kit, displayItem(*widget));
+    widget->destroy();
+    g_game.disableFeature(Otc::GameWrapKit);
 }
 
 TEST_F(RuntimeEventTest, ColorUsesGlobalPaletteAtRequestedStackIndex)

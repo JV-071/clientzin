@@ -93,6 +93,8 @@ public:
     uint32_t getQuickLootFlags() const { return m_quickLootFlags; }
     void setObtainLootFlags(uint32_t flags) { m_obtainLootFlags = flags; }
     uint32_t getObtainLootFlags() const { return m_obtainLootFlags; }
+    void setUnwrapId(uint16_t id) { m_unwrapId = id; }
+    uint16_t getUnwrapId() const { return m_unwrapId; }
     void setTier(const uint8_t tier) { m_tier = tier; }
 
     int getCountOrSubType() { return m_countOrSubType; }
@@ -188,6 +190,7 @@ private:
     bool m_decaying{ false };
     uint32_t m_charges{ 0 };
     uint8_t m_tier{ 0 };
+    uint16_t m_unwrapId{ 0 };
     uint8_t m_phase{ 0 };
 
     Color m_color{ Color::white };

@@ -27,6 +27,7 @@
 
 class UIItem final : public UIWidget
 {
+    friend class RuntimeEventTest;
 public:
     UIItem();
     void drawSelf(DrawPoolType drawPane) override;
@@ -43,6 +44,8 @@ public:
     void setVirtual(const bool virt) { m_virtual = virt; }
     void setFlipDirection(const uint8_t direction) { m_flipDirection = direction; repaint(); }
     void setMirrorHorizontal(const bool mirror) { setFlipDirection(mirror ? 1 : 0); }
+    void setUseDecoKitContainerSprite(bool enabled) { m_useDecoKitContainerSprite = enabled; repaint(); }
+    bool isUsingDecoKitContainerSprite() const { return m_useDecoKitContainerSprite; }
     void setFixedItemSize(const bool fixed) { m_fixedItemSize = fixed; repaint(); }
     void setTier(int tier);
     void clearItem() { setItemId(0); }
@@ -60,10 +63,13 @@ public:
     bool hasShader() override;
 
 protected:
+    const ItemPtr& resolveDisplayItem();
     void onStyleApply(std::string_view styleName, const OTMLNodePtr& styleNode) override;
 
     std::string m_shaderName;
     ItemPtr m_item;
+    ItemPtr m_unwrappedPreview;
+    bool m_useDecoKitContainerSprite{ true };
     uint32_t m_itemId{ 0 };
     bool m_virtual{ false };
     bool m_showId{ false };

@@ -4583,7 +4583,7 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
 
     if (g_game.getFeature(Otc::GameWrapKit)) {
         if (item->isDecoKit() || item->getId() == 23398) {
-            msg->getU16();
+            item->setUnwrapId(msg->getU16());
         }
     }
 
