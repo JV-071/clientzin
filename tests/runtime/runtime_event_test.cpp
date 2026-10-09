@@ -4,6 +4,7 @@
 #include "framework/util/crypt.h"
 #include "framework/otml/otmldocument.h"
 #include "framework/graphics/coordsbuffer.h"
+#include "framework/graphics/drawpoolmanager.h"
 #include "framework/graphics/texture.h"
 #include "framework/net/inputmessage.h"
 #include "framework/core/resourcemanager.h"
@@ -84,6 +85,14 @@ TEST(RepeatedImage, BottomAlignmentClipsTheTopOfTheFirstTile)
 
 class RuntimeEventTest : public ::testing::Test {
 protected:
+    // Use the real CPU-side draw pool; preserve any prior singleton state.
+    struct ForegroundPool {
+        static constexpr auto index = static_cast<uint8_t>(DrawPoolType::FOREGROUND);
+        DrawPool* previous{ g_drawPool.m_pools[index] };
+        std::unique_ptr<DrawPool> owned{ DrawPool::create(DrawPoolType::FOREGROUND) };
+        ForegroundPool() { g_drawPool.m_pools[index] = owned.get(); }
+        ~ForegroundPool() { g_drawPool.m_pools[index] = previous; }
+    };
     void SetUp() override
     {
         g_lua.init();
@@ -256,6 +265,7 @@ TEST_F(RuntimeEventTest, DecoKitPreviewRetainsPacketContentWithoutChangingTheInv
     EXPECT_TRUE(kit->isDecoKit());
     EXPECT_EQ(7594, kit->getUnwrapId());
 
+    ForegroundPool foreground;
     auto widget = std::make_shared<UIItem>();
     widget->setItem(kit);
     widget->setUseDecoKitContainerSprite(true);

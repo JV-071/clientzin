@@ -28,6 +28,7 @@
 
 class DrawPoolManager
 {
+    friend class RuntimeEventTest;
 public:
     DrawPool* get(const DrawPoolType type) const { return m_pools[static_cast<uint8_t>(type)]; }
 
