@@ -1,10 +1,10 @@
-﻿local iconTopMenu
+local iconTopMenu
 local inventoryShrink = false
 local itemSlotsWithDuration = {}
 local updateSlotsDurationEvent
 local DURATION_UPDATE_INTERVAL = 1000
 local pvpModeRadioGroup
-local var_0_6 = {
+local PVP_MODE_ACTIONS = {
 	{
 		action = "Set to Dove",
 		mode = PVPWhiteDove
@@ -355,10 +355,10 @@ local function inventoryEvent(player, slot, item, oldItem)
 		ItemsDatabase.setCharges(slotPanel.item, item)
 	end
 
-	local var_23_7 = mirrorShieldSlot and displayItem or item
-	local var_23_8 = var_23_7 and not mirrorShieldSlot and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
+	local tierItem = mirrorShieldSlot and displayItem or item
+	local overlordTierActive = tierItem and not mirrorShieldSlot and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
 
-	ItemsDatabase.setTier(slotPanel.item, var_23_7, var_23_8)
+	ItemsDatabase.setTier(slotPanel.item, tierItem, overlordTierActive)
 
 	if slot == InventorySlotRight and item and inventoryItemIsQuiver(item) and not mirrorShieldSlot then
 		for _, container in pairs(g_game.getContainers()) do
@@ -586,30 +586,30 @@ local function refreshInventory_panel()
 	end
 end
 
-local function var_0_34()
+local function refreshOverlordTierBadges()
 	if inventoryShrink then
 		return
 	end
 
 	local localPlayer = g_game.getLocalPlayer()
-	local var_37_1 = getInventoryUi()
+	local inventoryUi = getInventoryUi()
 
-	if not localPlayer or not var_37_1 then
+	if not localPlayer or not inventoryUi then
 		return
 	end
 
-	local var_37_2 = ItemsDatabase.isOverlordActive()
+	local overlordActive = ItemsDatabase.isOverlordActive()
 
-	for iter_37_0 in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
-		local var_37_3 = getSlotPanelBySlot[iter_37_0]
+	for slot in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
+		local getSlotPanel = getSlotPanelBySlot[slot]
 
-		if var_37_3 then
-			local var_37_4 = var_37_3(var_37_1)
+		if getSlotPanel then
+			local slotPanel = getSlotPanel(inventoryUi)
 
-			if var_37_4 and var_37_4.item then
-				local inventoryItem = localPlayer:getInventoryItem(iter_37_0)
+			if slotPanel and slotPanel.item then
+				local inventoryItem = localPlayer:getInventoryItem(slot)
 
-				ItemsDatabase.setTier(var_37_4.item, inventoryItem, inventoryItem and var_37_2)
+				ItemsDatabase.setTier(slotPanel.item, inventoryItem, inventoryItem and overlordActive)
 			end
 		end
 	end
@@ -792,7 +792,7 @@ function inventoryController.onInit(unusedArgument)
 		onBlessingsChange = onBlessingsChange
 	})
 
-	for unusedValue, entry in ipairs(var_0_6) do
+	for unusedValue, entry in ipairs(PVP_MODE_ACTIONS) do
 		local mode = entry.mode
 
 		Keybind.new("PvP Mode", entry.action, "", "")
@@ -833,9 +833,9 @@ function inventoryController.onGameStart(unusedArgument)
 		onChaseModeChange = combatEvent,
 		onSafeFightChange = combatEvent,
 		onPVPModeChange = combatEvent,
-		onOtcToggle = function(arg_49_0)
-			if OtcOpCode and arg_49_0 == OtcOpCode.OVERLORD_ACTIVE then
-				var_0_34()
+		onOtcToggle = function(toggleId)
+			if OtcOpCode and toggleId == OtcOpCode.OVERLORD_ACTIVE then
+				refreshOverlordTierBadges()
 			end
 		end
 	}):execute()
@@ -962,7 +962,7 @@ function inventoryController.onGameEnd(unusedArgument)
 end
 
 function inventoryController.onTerminate(unusedArgument)
-	for unusedValue, entry in ipairs(var_0_6) do
+	for unusedValue, entry in ipairs(PVP_MODE_ACTIONS) do
 		Keybind.delete("PvP Mode", entry.action)
 	end
 
@@ -1111,10 +1111,10 @@ function reloadInventory()
 	end
 
 	for key, entry in pairs(getSlotPanelBySlot) do
-		local var_62_0 = getInventoryUi()
-		local var_62_1, unusedValue = entry(var_62_0)
+		local inventoryUi = getInventoryUi()
+		local slotPanel, unusedValue = entry(inventoryUi)
 
-		if var_62_1 then
+		if slotPanel then
 			local localPlayer = g_game.getLocalPlayer()
 
 			if localPlayer then

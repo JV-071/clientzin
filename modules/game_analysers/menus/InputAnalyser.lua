@@ -94,71 +94,71 @@ end
 
 local function valueInSeconds(t)
 	local d = t.dmgSourceTypes
-	local var_5_1 = {}
-	local var_5_2 = InputAnalyser.inputValues[InputAnalyser.monsterName]
+	local activeEffectWidgets = {}
+	local monsterDamageByEffect = InputAnalyser.inputValues[InputAnalyser.monsterName]
 
-	if var_5_2 then
-		local var_5_3 = 1
+	if monsterDamageByEffect then
+		local rowCount = 1
 
-		for iter_5_0, damage in pairs(var_5_2) do
-			local var_5_4 = "sourceEffect" .. tostring(iter_5_0)
-			local widget = d:getChildById(var_5_4)
+		for effectId, damage in pairs(monsterDamageByEffect) do
+			local effectWidgetId = "sourceEffect" .. tostring(effectId)
+			local widget = d:getChildById(effectWidgetId)
 
 			if not widget then
 				widget = g_ui.createWidget("DamagePanel", d)
 
-				widget:setId(var_5_4)
+				widget:setId(effectWidgetId)
 				bindAnalyserSectionContextMenu(widget, "sources")
-				widget.icon:setImageSource(string.format(imageDir, effectsFiles[iter_5_0]))
-				widget.icon:setTooltip(getCombatName(iter_5_0))
+				widget.icon:setImageSource(string.format(imageDir, effectsFiles[effectId]))
+				widget.icon:setTooltip(getCombatName(effectId))
 			end
 
-			var_5_1[var_5_4] = true
-			var_5_3 = var_5_3 + 1
+			activeEffectWidgets[effectWidgetId] = true
+			rowCount = rowCount + 1
 
 			local percent = damage * 100 / InputAnalyser.total
 
 			widget.desc:setText(formatMoney(damage, ",") .. " (" .. string.format("%.1f", percent) .. "%)")
 		end
 
-		d:setHeight(15 * var_5_3)
+		d:setHeight(15 * rowCount)
 	elseif table.empty(InputAnalyser.inputValues) then
 		d:setHeight(1)
 	end
 
 	for unusedValue, noData in pairs(d:getChildren()) do
-		if not var_5_1[noData:getId()] then
+		if not activeEffectWidgets[noData:getId()] then
 			noData:destroy()
 		end
 	end
 end
 
-local function var_0_6(t)
-	local d = 0
-	local time = 0
+local function calculateRecentDps(damageTicks)
+	local damageTotal = 0
+	local firstTick = 0
 	local now = g_clock.millis()
 
-	if #t > 0 then
+	if #damageTicks > 0 then
 		local itemsToBeRemoved = 0
 
-		for i, v in ipairs(t) do
+		for i, v in ipairs(damageTicks) do
 			if now - v.tick <= 3000 then
-				if time == 0 then
-					time = v.tick
+				if firstTick == 0 then
+					firstTick = v.tick
 				end
 
-				d = d + v.amount
+				damageTotal = damageTotal + v.amount
 			else
 				itemsToBeRemoved = itemsToBeRemoved + 1
 			end
 		end
 
 		for i = 1, itemsToBeRemoved do
-			table.remove(t, 1)
+			table.remove(damageTicks, 1)
 		end
 	end
 
-	return math.ceil(d / ((now - time) / 1000))
+	return math.ceil(damageTotal / ((now - firstTick) / 1000))
 end
 
 function InputAnalyser.create(unusedArgument)
@@ -174,29 +174,29 @@ function InputAnalyser.create(unusedArgument)
 
 	local contentsPanel = InputAnalyser.window.contentsPanel
 
-	for unusedValue, iter_7_1 in ipairs({
+	for unusedValue, graphWidget in ipairs({
 		contentsPanel.graphPanel,
 		contentsPanel.horizontalGraph
 	}) do
-		bindAnalyserSectionContextMenu(iter_7_1, "graph")
+		bindAnalyserSectionContextMenu(graphWidget, "graph")
 	end
 
-	for unusedValue, iter_7_3 in ipairs({
+	for unusedValue, typeWidget in ipairs({
 		contentsPanel.damageTypeLabel,
 		contentsPanel.noDataLabel1,
 		contentsPanel.dmgTypes
 	}) do
-		bindAnalyserSectionContextMenu(iter_7_3, "types")
+		bindAnalyserSectionContextMenu(typeWidget, "types")
 	end
 
-	for unusedValue, iter_7_5 in ipairs({
+	for unusedValue, sourceWidget in ipairs({
 		contentsPanel.damageSource,
 		contentsPanel.noDataLabel2,
 		contentsPanel.damageSourceName,
 		contentsPanel.dmgSrc,
 		contentsPanel.dmgSourceTypes
 	}) do
-		bindAnalyserSectionContextMenu(iter_7_5, "sources")
+		bindAnalyserSectionContextMenu(sourceWidget, "sources")
 	end
 end
 
@@ -292,10 +292,10 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	local widgets = {}
 
 	for key, inputValue in pairs(InputAnalyser.inputValues) do
-		local var_9_9 = 0
+		local monsterDamageTotal = 0
 
 		for unusedValue, entry in pairs(inputValue) do
-			var_9_9 = var_9_9 + entry
+			monsterDamageTotal = monsterDamageTotal + entry
 		end
 
 		local damageSourcePanelWidget = contentsPanel.dmgSrc:recursiveGetChildById(key)
@@ -312,7 +312,7 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 		damageSourcePanelWidget.name:setText(short_text(string.capitalize(key), 17))
 		damageSourcePanelWidget:setTooltip(string.capitalize(key))
 
-		local percent = var_9_9 * 100 / InputAnalyser.total
+		local percent = monsterDamageTotal * 100 / InputAnalyser.total
 
 		damageSourcePanelWidget.desc:setText(string.format("%.1f", percent) .. "%")
 
@@ -362,7 +362,7 @@ function InputAnalyser.updateWindow(unusedArgument, ignoreVisible)
 end
 
 function InputAnalyser.checkDPS(unusedArgument)
-	local curDPS = var_0_6(InputAnalyser.damageTicks)
+	local curDPS = calculateRecentDps(InputAnalyser.damageTicks)
 
 	if not curDPS or not tonumber(curDPS) then
 		curDPS = 0
@@ -414,14 +414,14 @@ function InputAnalyser.toggleDamageSource(unusedArgument, bool)
 	syncDamageSourcesEmptyState(cp)
 end
 
-function onInputExtra(arg_16_0, mousePosition)
+function onInputExtra(menuPosition, menuSection)
 	if cancelNextRelease then
 		cancelNextRelease = false
 
 		return false
 	end
 
-	mousePosition = mousePosition or "full"
+	menuSection = menuSection or "full"
 
 	local contentsPanel = InputAnalyser.window.contentsPanel
 	local isGraphVisible = contentsPanel.graphPanel:isVisible()
@@ -431,39 +431,39 @@ function onInputExtra(arg_16_0, mousePosition)
 
 	menu:setGameMenu(true)
 
-	if mousePosition == "full" then
+	if menuSection == "full" then
 		menu:addOption(tr("Reset Data"), function()
 			InputAnalyser:reset()
 		end)
 		menu:addSeparator()
 	end
 
-	if mousePosition == "full" or mousePosition == "graph" then
+	if menuSection == "full" or menuSection == "graph" then
 		menu:addCheckBoxOption(tr("Show Damage Graph"), function()
 			InputAnalyser:setDamageGraph(not isGraphVisible, true)
 		end, "", isGraphVisible)
 	end
 
-	if mousePosition == "full" or mousePosition == "types" then
+	if menuSection == "full" or menuSection == "types" then
 		menu:addCheckBoxOption(tr("Show Damage Types"), function()
 			InputAnalyser:setDamageTypes(not typesVisible, true)
 		end, "", typesVisible)
 	end
 
-	if mousePosition == "full" or mousePosition == "sources" then
+	if menuSection == "full" or menuSection == "sources" then
 		menu:addCheckBoxOption(tr("Show Damage Sources"), function()
 			InputAnalyser:setDamageSource(not sourceVisible, true)
 		end, "", sourceVisible)
 	end
 
-	if mousePosition == "full" then
+	if menuSection == "full" then
 		menu:addSeparator()
 		menu:addOption(tr("Copy to Clipboard"), function()
 			InputAnalyser:clipboardData()
 		end)
 	end
 
-	menu:display(arg_16_0)
+	menu:display(menuPosition)
 
 	return true
 end

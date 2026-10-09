@@ -1,18 +1,18 @@
-﻿skillsWindow = nil
+skillsWindow = nil
 skillsButton = nil
 skillsSettings = nil
 
 local ExpRating = {}
 local updateExperienceRate
 local lastDefenseInfo
-local var_0_3
-local var_0_4
+local lastForgeBonuses
+local lastAbsorbValues
 local magicLevelBonuses
 local lastMagicLevelBonuses
-local var_0_7
-local var_0_8 = "#44ad25"
-local var_0_9 = "#c0c0c0"
-local var_0_10 = {
+local refreshForgeBonusColors
+local ACTIVE_FORGE_COLOR = "#44ad25"
+local DEFAULT_SKILL_COLOR = "#c0c0c0"
+local FORGE_BONUS_WIDGET_IDS = {
 	amplification = true,
 	transcendence = true,
 	momentum = true,
@@ -21,21 +21,21 @@ local var_0_10 = {
 	onslaught = true
 }
 
-local function var_0_11(arg_1_0)
-	if not var_0_10[arg_1_0] then
+local function getForgeBonusColor(skillId)
+	if not FORGE_BONUS_WIDGET_IDS[skillId] then
 		return nil
 	end
 
 	if ItemsDatabase and ItemsDatabase.isOverlordActive and ItemsDatabase.isOverlordActive() then
-		return var_0_8
+		return ACTIVE_FORGE_COLOR
 	end
 
-	return var_0_9
+	return DEFAULT_SKILL_COLOR
 end
 
-local function handleOtcToggle(arg_2_0)
-	if OtcOpCode and arg_2_0 == OtcOpCode.OVERLORD_ACTIVE and var_0_7 then
-		var_0_7()
+local function handleOtcToggle(toggleId)
+	if OtcOpCode and toggleId == OtcOpCode.OVERLORD_ACTIVE and refreshForgeBonusColors then
+		refreshForgeBonusColors()
 	end
 end
 
@@ -529,8 +529,8 @@ function toggleDefenceStatsVisibility()
 			onDefenseInfoChange(player, lastDefenseInfo[1], lastDefenseInfo[2], lastDefenseInfo[3], lastDefenseInfo[4], lastDefenseInfo[5])
 		end
 
-		if player and var_0_4 then
-			onCombatAbsorbValuesChange(player, var_0_4)
+		if player and lastAbsorbValues then
+			onCombatAbsorbValuesChange(player, lastAbsorbValues)
 		end
 	else
 		for _, skillId in pairs(allDefenceWidgets) do
@@ -1552,8 +1552,8 @@ local function resetExtendedStats()
 	ExpRating = {}
 	skillRawPercents = {}
 	lastDefenseInfo = nil
-	var_0_3 = nil
-	var_0_4 = nil
+	lastForgeBonuses = nil
+	lastAbsorbValues = nil
 	magicLevelBonuses = nil
 	lastMagicLevelBonuses = nil
 end
@@ -2035,7 +2035,7 @@ local function setSkillValueWithTooltips(id, value, tooltip, showPercentage, col
 			return
 		end
 
-		local color = color or var_0_11(id)
+		local color = color or getForgeBonusColor(id)
 
 		if color then
 			widget:setColor(color)
@@ -2189,7 +2189,7 @@ function onMagicLevelBonusesChange(localPlayer, bonuses)
 end
 
 function onCombatAbsorbValuesChange(localPlayer, absorbValues)
-	var_0_4 = absorbValues
+	lastAbsorbValues = absorbValues
 
 	for id, widgetId in pairs(combatIdToWidgetId) do
 		local skill = skillsWindow:recursiveGetChildById(widgetId)
@@ -2271,7 +2271,7 @@ function onDefenseInfoChange(localPlayer, defense, armor, mitigation, dodge, dam
 end
 
 function onForgeBonusesChange(localPlayer, momentum, transcendence, amplification)
-	var_0_3 = {
+	lastForgeBonuses = {
 		momentum,
 		transcendence,
 		amplification
@@ -2289,19 +2289,19 @@ function onForgeBonusesChange(localPlayer, momentum, transcendence, amplificatio
 	updateHeight()
 end
 
-function var_0_7()
+function refreshForgeBonusColors()
 	if not skillsWindow then
 		return
 	end
 
-	local var_105_0 = ItemsDatabase and ItemsDatabase.isOverlordActive and ItemsDatabase.isOverlordActive() and var_0_8 or var_0_9
+	local forgeColor = ItemsDatabase and ItemsDatabase.isOverlordActive and ItemsDatabase.isOverlordActive() and ACTIVE_FORGE_COLOR or DEFAULT_SKILL_COLOR
 
-	for iter_105_0 in pairs(var_0_10) do
-		local var_105_1 = skillsWindow:recursiveGetChildById(iter_105_0)
-		local value = var_105_1 and var_105_1:getChildById("value")
+	for skillId in pairs(FORGE_BONUS_WIDGET_IDS) do
+		local skillWidget = skillsWindow:recursiveGetChildById(skillId)
+		local value = skillWidget and skillWidget:getChildById("value")
 
 		if value then
-			value:setColor(var_105_0)
+			value:setColor(forgeColor)
 		end
 	end
 end
