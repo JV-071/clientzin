@@ -1,4 +1,4 @@
-﻿function WheelOfDestiny.setConvictionText(arg_1_0, arg_1_1, arg_1_2)
+function WheelOfDestiny.setConvictionText(arg_1_0, arg_1_1, arg_1_2)
 	if not arg_1_0 then
 		return
 	end
@@ -14,8 +14,8 @@
 	end
 end
 
-local function var_0_0(arg_2_0, arg_2_1)
-	local panelWidget = g_ui.createWidget("Panel", arg_2_0)
+local function var_0_0(parentWidget, arg_2_1)
+	local panelWidget = g_ui.createWidget("Panel", parentWidget)
 
 	panelWidget:setHeight(13)
 

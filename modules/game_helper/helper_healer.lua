@@ -939,8 +939,8 @@ end
 	return Bit.hasBit(market.restrictVocation, vocBitMask)
 end
 
-function HelperHealer.potionAllowedForVocation(arg_51_0)
-	local thingType = arg_51_0 and g_things and g_things.getThingType and g_things.getThingType(arg_51_0, ThingCategoryItem) or nil
+function HelperHealer.potionAllowedForVocation(thingId)
+	local thingType = thingId and g_things and g_things.getThingType and g_things.getThingType(thingId, ThingCategoryItem) or nil
 
 	if not thingType then
 		return nil
@@ -3561,15 +3561,15 @@ end
 	end
 
 	for index, ptc_root_local in ipairs(healerState.healingEntries) do
-		local var_207_0 = healerState[134](ptc_root_local) == "potion" and healerState.healingPotionEntriesPanel or healerState.healingSpellEntriesPanel
+		local parentWidget = healerState[134](ptc_root_local) == "potion" and healerState.healingPotionEntriesPanel or healerState.healingSpellEntriesPanel
 
-		var_207_0 = var_207_0 or healerState.healingEntriesPanel
+		parentWidget = parentWidget or healerState.healingEntriesPanel
 
-		if not var_207_0 or var_207_0:isDestroyed() then
+		if not parentWidget or parentWidget:isDestroyed() then
 			return
 		end
 
-		local healingConditionRowWidget = g_ui.createWidget("HealingConditionRow", var_207_0)
+		local healingConditionRowWidget = g_ui.createWidget("HealingConditionRow", parentWidget)
 		local zebraColor = index % 2 == 1 and healerState.ZEBRA_COLOR_A or healerState.ZEBRA_COLOR_B
 
 		healingConditionRowWidget.zebraColor = zebraColor

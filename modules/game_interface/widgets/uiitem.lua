@@ -3,23 +3,23 @@ local dragPreviewIsActionSlot = false
 local dragPreviewStyleName
 local hoveredActionTargetSlot
 local var_0_4
-local var_0_5
+local cursorName
 local var_0_6
 local var_0_7 = 2
 
 local function var_0_8(arg_1_0)
-	if var_0_5 == arg_1_0 then
+	if cursorName == arg_1_0 then
 		return
 	end
 
-	if var_0_5 then
-		g_mouse.popCursor(var_0_5)
+	if cursorName then
+		g_mouse.popCursor(cursorName)
 
-		var_0_5 = nil
+		cursorName = nil
 	end
 
 	if arg_1_0 and g_mouse.pushCursor(arg_1_0) then
-		var_0_5 = arg_1_0
+		cursorName = arg_1_0
 	end
 end
 

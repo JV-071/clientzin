@@ -337,3 +337,24 @@ TEST_F(RuntimeEventTest, UnknownNativeExceptionRetainsLuaCallsiteAndAllowsFollow
     EXPECT_FALSE(g_lua.popBoolean());
     EXPECT_EQ(0, g_lua.getTop());
 }
+
+TEST(NativeExceptionIntegrity, StandardExceptionRetainsItsMessageWithoutLua)
+{
+    std::runtime_error error("native exception integrity sentinel");
+    EXPECT_STREQ("native exception integrity sentinel", error.what());
+    try {
+        throw std::runtime_error("native exception integrity sentinel");
+    } catch (const std::exception& caught) {
+        EXPECT_STREQ("native exception integrity sentinel", caught.what());
+    }
+}
+TEST_F(RuntimeEventTest, StandardExceptionRetainsItsMessageAfterLuaInitialization)
+{
+    std::runtime_error error("initialized exception integrity sentinel");
+    EXPECT_STREQ("initialized exception integrity sentinel", error.what());
+    try {
+        throw std::runtime_error("initialized exception integrity sentinel");
+    } catch (const std::exception& caught) {
+        EXPECT_STREQ("initialized exception integrity sentinel", caught.what());
+    }
+}

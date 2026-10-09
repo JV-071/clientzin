@@ -164,12 +164,12 @@ local function var_0_7(arg_9_0)
 	end
 end
 
-local function var_0_8(arg_11_0, arg_11_1)
-	if arg_11_1 <= 0 then
+local function var_0_8(arg_11_0, thingId)
+	if thingId <= 0 then
 		return false
 	end
 
-	local thingType = g_things.getThingType(arg_11_1, ThingCategoryItem)
+	local thingType = g_things.getThingType(thingId, ThingCategoryItem)
 
 	if not thingType then
 		return false
@@ -185,7 +185,7 @@ local function var_0_8(arg_11_0, arg_11_1)
 
 	if thingType.isCyclopediaItem and thingType:isCyclopediaItem() and var_11_4 and var_11_4.openItemInCyclopedia then
 		gamePopupMenuWidget:addOption(tr("Cyclopedia"), function()
-			fillDeliverySlot(arg_11_1)
+			fillDeliverySlot(thingId)
 		end)
 
 		var_11_2 = true
@@ -195,7 +195,7 @@ local function var_0_8(arg_11_0, arg_11_1)
 
 	if thingType.isMarketable and thingType:isMarketable() and game_market and (game_market.showItemInMarket or game_market.onRedirect) then
 		gamePopupMenuWidget:addOption(tr("Show in Market"), function()
-			var_0_7(arg_11_1)
+			var_0_7(thingId)
 		end)
 
 		var_11_2 = true

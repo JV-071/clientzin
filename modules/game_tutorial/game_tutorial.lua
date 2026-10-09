@@ -1126,9 +1126,9 @@ local function showTutorialHint(tutorialId)
 		return
 	end
 
-	local var_50_2 = config.windowStyle or "TutorialPopupWindow"
+	local styleName = config.windowStyle or "TutorialPopupWindow"
 
-	if tutorialHintWindow and not tutorialHintWindow:isDestroyed() and TUTORIAL_HINT_BASE_PATH ~= var_50_2 then
+	if tutorialHintWindow and not tutorialHintWindow:isDestroyed() and TUTORIAL_HINT_BASE_PATH ~= styleName then
 		hideTutorialHintWindow()
 		tutorialHintWindow:destroy()
 
@@ -1136,8 +1136,8 @@ local function showTutorialHint(tutorialId)
 	end
 
 	if not tutorialHintWindow or tutorialHintWindow:isDestroyed() then
-		tutorialHintWindow = g_ui.createWidget(var_50_2, rootWidget)
-		TUTORIAL_HINT_BASE_PATH = var_50_2
+		tutorialHintWindow = g_ui.createWidget(styleName, rootWidget)
+		TUTORIAL_HINT_BASE_PATH = styleName
 	end
 
 	if config.title then

@@ -1,4 +1,4 @@
-﻿HelperShooter = HelperShooter or {}
+HelperShooter = HelperShooter or {}
 
 local ctx
 local assignSpellWindow
@@ -1964,9 +1964,9 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		local var_90_12, var_90_13 = findBestTileForRune(position, direction, profile, runeUsage, creatureList, combatTarget)
+		local tilePosition, var_90_13 = findBestTileForRune(position, direction, profile, runeUsage, creatureList, combatTarget)
 
-		if not var_90_12 then
+		if not tilePosition then
 			debugLog("Skip rune " .. runeName .. ": no valid Best Position candidate")
 
 			return false
@@ -1978,7 +1978,7 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		local tile = g_map.getTile(var_90_12)
+		local tile = g_map.getTile(tilePosition)
 
 		if not tile then
 			debugLog("Skip rune " .. runeName .. ": Best Position not in map")
@@ -1994,7 +1994,7 @@ local function tryCastPriorityRune(config, ctx)
 			return false
 		end
 
-		local unusedValue = var_90_12
+		local unusedValue = tilePosition
 	elseif useTo == "self" then
 		topMultiUseThing = player
 

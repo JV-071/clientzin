@@ -1,11 +1,11 @@
-﻿HelperProfileStorage = HelperProfileStorage or {}
+HelperProfileStorage = HelperProfileStorage or {}
 
 local var_0_0 = "/settings"
 local var_0_1 = "/characterdata"
 local var_0_2 = var_0_0 .. "/game_helper_profiles.json"
 local var_0_3 = var_0_2 .. ".bak"
 local var_0_4 = var_0_0 .. "/game_helper_profiles.pre-v4.bak"
-local var_0_5 = var_0_0 .. "/.game_helper_profiles_initialized_v4"
+local fileName = var_0_0 .. "/.game_helper_profiles_initialized_v4"
 local var_0_6 = var_0_0 .. "/game_helper_data.json"
 local var_0_7 = "game_helper_state.json"
 local var_0_8 = 4
@@ -130,12 +130,12 @@ local function var_0_27(arg_9_0)
 	return var_0_23(var_0_25(arg_9_0))
 end
 
-local function var_0_28(arg_10_0)
-	if not arg_10_0 or not g_resources.fileExists(arg_10_0) then
+local function var_0_28(fileName)
+	if not fileName or not g_resources.fileExists(fileName) then
 		return nil, "missing"
 	end
 
-	local var_10_0, var_10_1 = pcall(g_resources.readFileContents, arg_10_0)
+	local var_10_0, var_10_1 = pcall(g_resources.readFileContents, fileName)
 
 	if not var_10_0 or type(var_10_1) ~= "string" or var_10_1 == "" then
 		return nil, "read"
@@ -284,15 +284,15 @@ local function var_0_36(arg_19_0, arg_19_1)
 	}
 end
 
-local function var_0_37(arg_20_0, arg_20_1)
-	if not g_resources.fileExists(arg_20_0) or g_resources.fileExists(arg_20_1) then
+local function var_0_37(fileName, arg_20_1)
+	if not g_resources.fileExists(fileName) or g_resources.fileExists(arg_20_1) then
 		return true
 	end
 
-	local var_20_0, var_20_1 = pcall(g_resources.readFileContents, arg_20_0)
+	local var_20_0, var_20_1 = pcall(g_resources.readFileContents, fileName)
 
 	if not var_20_0 or type(var_20_1) ~= "string" then
-		var_0_19("warning", "Could not read " .. arg_20_0 .. " for backup.")
+		var_0_19("warning", "Could not read " .. fileName .. " for backup.")
 
 		return false
 	end
@@ -399,7 +399,7 @@ local function var_0_41(arg_24_0, arg_24_1, arg_24_2)
 end
 
 local function var_0_42(arg_25_0)
-	return var_0_30(var_0_5, {
+	return var_0_30(fileName, {
 		version = var_0_8,
 		completedAt = os.time(),
 		source = arg_25_0
@@ -456,7 +456,7 @@ function HelperProfileStorage.initialize(arg_27_0)
 		return false
 	end
 
-	if not g_resources.fileExists(var_0_5) and not var_0_43() then
+	if not g_resources.fileExists(fileName) and not var_0_43() then
 		return false
 	end
 
@@ -659,6 +659,6 @@ function HelperProfileStorage.getPaths()
 		profiles = var_0_2,
 		backup = var_0_3,
 		preV4Backup = var_0_4,
-		marker = var_0_5
+		marker = fileName
 	}
 end

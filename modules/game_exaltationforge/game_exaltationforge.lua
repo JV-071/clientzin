@@ -82,8 +82,8 @@ function Forge.getMenus()
 	return nil
 end
 
-function Forge.createTabPanel(arg_9_0, arg_9_1)
-	local menus = g_ui.createWidget(arg_9_0, Forge.getMenus())
+function Forge.createTabPanel(styleName, arg_9_1)
+	local menus = g_ui.createWidget(styleName, Forge.getMenus())
 
 	if arg_9_1 then
 		menus:setId(arg_9_1)

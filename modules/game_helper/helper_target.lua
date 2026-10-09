@@ -1014,12 +1014,12 @@ local function var_0_95(arg_53_0, arg_53_1)
 	return arg_53_1[var_53_0]
 end
 
-local function var_0_96(arg_54_0, arg_54_1)
+local function var_0_96(fromPos, toPos)
 	if HelperCavebot and HelperCavebot.isCreatureReachable then
-		return HelperCavebot.isCreatureReachable(arg_54_0, arg_54_1)
+		return HelperCavebot.isCreatureReachable(fromPos, toPos)
 	end
 
-	return g_map.isSightClear(arg_54_0, arg_54_1)
+	return g_map.isSightClear(fromPos, toPos)
 end
 
 local function isLockedTargetValid(creature, arg_55_1, position, arg_55_3, creatureMatchesPriority, allCreatures)
@@ -2044,17 +2044,17 @@ local function refreshPriorityListUI()
 	ensureAllCreaturesEntry()
 	var_0_122()
 
-	local var_118_0 = widget("targetPriorityList")
+	local parentWidget = widget("targetPriorityList")
 
-	if not var_118_0 then
+	if not parentWidget then
 		return
 	end
 
-	var_118_0:destroyChildren()
+	parentWidget:destroyChildren()
 
 	for index, entry in ipairs(priorityList) do
 		local var_118_1 = entry
-		local targetPriorityListRowWidget = g_ui.createWidget("TargetPriorityListRow", var_118_0)
+		local targetPriorityListRowWidget = g_ui.createWidget("TargetPriorityListRow", parentWidget)
 		local zebraColor = index % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
 
 		targetPriorityListRowWidget.zebraColor = zebraColor
@@ -2193,8 +2193,8 @@ local function populateTargetMonsterList()
 		if not var_127_0[entry.raceId] then
 			var_127_1 = var_127_1 + 1
 
-			local var_127_2 = var_127_1 % 2 == 1 and "HelperCreatureListRowOdd" or "HelperCreatureListRowEven"
-			local var_127_3 = g_ui.createWidget(var_127_2, targetMonstersPanel)
+			local styleName = var_127_1 % 2 == 1 and "HelperCreatureListRowOdd" or "HelperCreatureListRowEven"
+			local var_127_3 = g_ui.createWidget(styleName, targetMonstersPanel)
 
 			var_127_3.targetRace = entry
 			var_127_3.nameLower = (entry.name or ""):lower()

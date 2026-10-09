@@ -552,8 +552,8 @@ function MiscAnalyser.addDamageReceived(unusedArgument, arg_35_1)
 	MiscAnalyser.damageReceived = MiscAnalyser.damageReceived + (tonumber(arg_35_1) or 0)
 end
 
-local function var_0_28(arg_36_0, arg_36_1)
-	local miscAnalyserRowWidget = g_ui.createWidget("MiscAnalyserRow", arg_36_0)
+local function var_0_28(parentWidget, arg_36_1)
+	local miscAnalyserRowWidget = g_ui.createWidget("MiscAnalyserRow", parentWidget)
 
 	miscAnalyserRowWidget.name:setText(var_0_4[arg_36_1.key] or arg_36_1.name)
 
@@ -703,8 +703,8 @@ function MiscAnalyser.clipboardData(unusedArgument)
 end
 
 function MiscAnalyser.saveToFile(unusedArgument)
-	local var_44_0 = "Misc_Analyser_" .. os.date("%Y-%m-%d", AnalyserSession.startUnix) .. "_" .. AnalyserSession.startUnix .. ".txt"
+	local fileName = "Misc_Analyser_" .. os.date("%Y-%m-%d", AnalyserSession.startUnix) .. "_" .. AnalyserSession.startUnix .. ".txt"
 
-	g_resources.writeFileContents(var_44_0, var_0_29())
-	modules.game_textmessage.displayStatusMessage(tr("Misc Analyser data has been saved to location '%s'", var_44_0))
+	g_resources.writeFileContents(fileName, var_0_29())
+	modules.game_textmessage.displayStatusMessage(tr("Misc Analyser data has been saved to location '%s'", fileName))
 end

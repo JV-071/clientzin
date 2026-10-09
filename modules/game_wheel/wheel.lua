@@ -1,4 +1,4 @@
-﻿wheelWindow = nil
+wheelWindow = nil
 wheelOfDestinyWindow = nil
 gemAtelierWindow = nil
 fragmentWindow = nil
@@ -207,10 +207,10 @@ function hideWheelWindow()
 	wheelWindow:hide()
 end
 
-local function var_0_4(arg_11_0)
+local function var_0_4(playerId)
 	WheelOfDestiny.cancelActiveStateRequest()
 	setWheelButtonOn(true)
-	g_game.openWheel(arg_11_0)
+	g_game.openWheel(playerId)
 end
 
 function toggle()

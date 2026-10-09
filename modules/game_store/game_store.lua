@@ -872,8 +872,8 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 	arg_43_0:setColor(arg_43_2 or var_0_80)
 end
 
-local function var_0_104(arg_44_0, arg_44_1, arg_44_2, arg_44_3)
-	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", arg_44_0)
+local function var_0_104(parentWidget, arg_44_1, arg_44_2, arg_44_3)
+	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", parentWidget)
 
 	if not storeDescriptionLineWidget then
 		return false
@@ -3340,8 +3340,8 @@ local var_0_176 = {
 }
 local var_0_177 = {}
 
-local function var_0_178(arg_153_0, arg_153_1, arg_153_2)
-	if not arg_153_0 or not arg_153_1 then
+local function var_0_178(parentWidget, arg_153_1, arg_153_2)
+	if not parentWidget or not arg_153_1 then
 		return
 	end
 
@@ -3360,7 +3360,7 @@ local function var_0_178(arg_153_0, arg_153_1, arg_153_2)
 		end
 	end
 
-	local var_153_2 = g_ui.createWidget(var_153_1 and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, arg_153_0)
+	local var_153_2 = g_ui.createWidget(var_153_1 and STORE_ROW_UNAVAILABLE or STORE_ROW_AVAILABLE, parentWidget)
 
 	if not var_153_2 then
 		return
@@ -3625,14 +3625,14 @@ local function var_0_186(arg_164_0, arg_164_1)
 	GameStore.requestIncrementalGC()
 end
 
-local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
+local function var_0_187(arg_165_0, arg_165_1, arg_165_2, parentWidget, arg_165_4)
 	if arg_165_0 ~= var_0_22 then
 		var_0_23 = false
 
 		return
 	end
 
-	if not controllerShop.ui or not arg_165_3 or arg_165_3:isDestroyed() then
+	if not controllerShop.ui or not parentWidget or parentWidget:isDestroyed() then
 		var_0_23 = false
 		var_0_27 = nil
 
@@ -3643,7 +3643,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 		return
 	end
 
-	var_0_185(arg_165_3)
+	var_0_185(parentWidget)
 
 	local var_165_0 = g_clock.millis()
 	local var_165_1 = 0
@@ -3654,7 +3654,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 
 	while var_165_2 <= #arg_165_2 do
 		local var_165_4 = arg_165_2[var_165_2]
-		local var_165_5, var_165_6 = pcall(var_0_178, arg_165_3, var_165_4, var_0_176)
+		local var_165_5, var_165_6 = pcall(var_0_178, parentWidget, var_165_4, var_0_176)
 
 		if not var_165_5 then
 			g_logger.warning("[game_store] Failed to render offer row: " .. tostring(var_165_6))
@@ -3662,7 +3662,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 			var_0_180(var_165_6)
 
 			if var_165_4 == arg_165_1.initialProduct then
-				var_0_184(arg_165_1, arg_165_3, var_165_6)
+				var_0_184(arg_165_1, parentWidget, var_165_6)
 			end
 		end
 
@@ -3683,7 +3683,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 		local var_165_7 = #arg_165_2 - (var_165_2 - 1)
 
 		if var_165_7 > 0 then
-			local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_165_3)
+			local uIWidgetWidget = g_ui.createWidget("UIWidget", parentWidget)
 
 			if uIWidgetWidget then
 				uIWidgetWidget:setId("_scrollSpacer")
@@ -3696,7 +3696,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 		var_0_24 = scheduleEvent(function()
 			var_0_24 = nil
 
-			var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, var_165_2)
+			var_0_187(arg_165_0, arg_165_1, arg_165_2, parentWidget, var_165_2)
 		end, 1)
 
 		return
@@ -3704,7 +3704,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, arg_165_3, arg_165_4)
 
 	var_0_24 = nil
 
-	var_0_186(arg_165_0, arg_165_3)
+	var_0_186(arg_165_0, parentWidget)
 end
 
 function onParseStoreCreateProducts(storeProducts)

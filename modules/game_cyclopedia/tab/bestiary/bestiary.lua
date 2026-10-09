@@ -2061,10 +2061,10 @@ function Cyclopedia.loadBestiarySearchCreatures(data)
 	end
 
 	if #unlockedCreatures == 1 then
-		local var_102_2 = unlockedCreatures[1].id
+		local raceId = unlockedCreatures[1].id
 
-		openCreatureDetail(var_102_2, findCategoryPage(var_102_2))
-		g_game.requestBestiarySearch(var_102_2)
+		openCreatureDetail(raceId, findCategoryPage(raceId))
+		g_game.requestBestiarySearch(raceId)
 
 		return
 	end
@@ -2854,8 +2854,8 @@ local function var_0_91(arg_144_0, trackerKills, trackerUno, trackerDos, tracker
 	end
 end
 
-local function var_0_92(arg_145_0, trackerIsBoss, trackerRaceId, arg_145_3, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
-	local trackerButtonWidget = g_ui.createWidget("TrackerButton", arg_145_0)
+local function var_0_92(parentWidget, trackerIsBoss, trackerRaceId, arg_145_3, arg_145_4, arg_145_5, arg_145_6, arg_145_7)
+	local trackerButtonWidget = g_ui.createWidget("TrackerButton", parentWidget)
 
 	trackerButtonWidget:setId(trackerRaceId)
 
@@ -2934,19 +2934,19 @@ local function var_0_93(arg_146_0, arg_146_1)
 
 		for iter_147_0 = 1, #var_146_4 do
 			local var_147_2 = var_146_4[iter_147_0]
-			local var_147_3, var_147_4, var_147_5, var_147_6, var_147_7 = unpack(var_147_2)
-			local raceData = g_things.getRaceData(var_147_3)
+			local raceId, var_147_4, var_147_5, var_147_6, var_147_7 = unpack(var_147_2)
+			local raceData = g_things.getRaceData(raceId)
 
 			if raceData and raceData.name then
 				var_147_1 = var_147_1 + 1
-				var_147_0[var_147_3] = true
+				var_147_0[raceId] = true
 
-				local var_147_9 = var_146_5[var_147_3]
+				local var_147_9 = var_146_5[raceId]
 
 				if var_147_9 and not var_147_9:isDestroyed() then
 					var_0_91(var_147_9, var_147_4, var_147_5, var_147_6, var_147_7)
 				else
-					var_147_9 = var_0_92(contentsPanel, var_146_2, var_147_3, raceData, var_147_4, var_147_5, var_147_6, var_147_7)
+					var_147_9 = var_0_92(contentsPanel, var_146_2, raceId, raceData, var_147_4, var_147_5, var_147_6, var_147_7)
 				end
 
 				if contentsPanel:getChildIndex(var_147_9) ~= var_147_1 then

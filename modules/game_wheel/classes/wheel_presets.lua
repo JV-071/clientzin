@@ -1134,7 +1134,7 @@ function WheelOfDestiny.saveWheelPresets()
 	end
 
 	local id = "/characterdata/" .. localPlayer:getId()
-	local var_45_4 = id .. "/wheelOfDestiny.json"
+	local fileName = id .. "/wheelOfDestiny.json"
 
 	if not g_resources.directoryExists(id) then
 		local unusedValue = g_resources.makeDir(id)
@@ -1152,7 +1152,7 @@ function WheelOfDestiny.saveWheelPresets()
 		return false
 	end
 
-	g_resources.writeFileContents(var_45_4, var_45_7)
+	g_resources.writeFileContents(fileName, var_45_7)
 
 	return true
 end

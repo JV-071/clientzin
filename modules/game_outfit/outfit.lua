@@ -4546,9 +4546,9 @@ function showPresets()
 end
 
 function showOutfits()
-	local var_182_0 = var_0_195()
+	local parentWidget = var_0_195()
 
-	if not var_182_0 then
+	if not parentWidget then
 		return
 	end
 
@@ -4561,7 +4561,7 @@ function showOutfits()
 
 	var_0_58(sortedOutfits, 4)
 	buildSelectionListBatched(sortedOutfits, function(outfitData)
-		local button = g_ui.createWidget("SelectionButton", var_182_0)
+		local button = g_ui.createWidget("SelectionButton", parentWidget)
 
 		button:setId(outfitData[1])
 
@@ -4853,9 +4853,9 @@ function showFamiliars()
 end
 
 function showAuras()
-	local var_193_0 = var_0_195()
+	local parentWidget = var_0_195()
 
-	if not var_193_0 then
+	if not parentWidget then
 		return
 	end
 
@@ -4876,7 +4876,7 @@ function showAuras()
 	local var_193_2
 
 	buildSelectionListBatched(var_193_1, function(arg_194_0)
-		local selectionButtonWidget = g_ui.createWidget("SelectionButton", var_193_0)
+		local selectionButtonWidget = g_ui.createWidget("SelectionButton", parentWidget)
 
 		selectionButtonWidget:setId(arg_194_0[1])
 

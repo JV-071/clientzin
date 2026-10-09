@@ -1,6 +1,6 @@
 bannersController = Controller:new()
 
-local var_0_0 = "ui_drop_shadow"
+local shaderName = "ui_drop_shadow"
 local bannerQueue = {}
 local var_0_2 = false
 local gameBannerPanelWidget
@@ -1256,15 +1256,15 @@ local function finishCurrentBanner()
 end
 
 local function var_0_102(arg_63_0)
-	local var_63_0 = getBannerParent()
+	local parentWidget = getBannerParent()
 
-	if not var_63_0 or var_63_0:isDestroyed() then
+	if not parentWidget or parentWidget:isDestroyed() then
 		return false
 	end
 
 	destroyBannerWidget()
 
-	gameBannerPanelWidget = g_ui.createWidget("GameBannerPanel", var_63_0)
+	gameBannerPanelWidget = g_ui.createWidget("GameBannerPanel", parentWidget)
 
 	if not gameBannerPanelWidget then
 		return false
@@ -1918,14 +1918,14 @@ local function var_0_136(arg_94_0)
 	end
 end
 
-local function var_0_137(arg_95_0, arg_95_1)
-	if not gameBannerPanelWidget or gameBannerPanelWidget:isDestroyed() or gameBannerPanelWidget:getParent() ~= arg_95_1 then
+local function var_0_137(arg_95_0, parentWidget)
+	if not gameBannerPanelWidget or gameBannerPanelWidget:isDestroyed() or gameBannerPanelWidget:getParent() ~= parentWidget then
 		if var_0_121() then
 			g_effects.cancelFade(gameBannerPanelWidget)
 			gameBannerPanelWidget:destroy()
 		end
 
-		gameBannerPanelWidget = g_ui.createWidget("GameBannerPanel", arg_95_1)
+		gameBannerPanelWidget = g_ui.createWidget("GameBannerPanel", parentWidget)
 
 		if not gameBannerPanelWidget then
 			return false
@@ -2072,13 +2072,13 @@ end
 
 function bannersController.onInit(unusedArgument)
 	g_ui.importStyle("game_banners")
-	g_shaders.createFragmentShader(var_0_0, "shaders/drop_shadow.frag", false)
+	g_shaders.createFragmentShader(shaderName, "shaders/drop_shadow.frag", false)
 end
 
 function bannersController.onTerminate(unusedArgument)
 	hideActiveBanner(true)
 	var_0_125()
-	g_shaders.removeShader(var_0_0)
+	g_shaders.removeShader(shaderName)
 end
 
 function bannersController.onGameStart(unusedArgument)

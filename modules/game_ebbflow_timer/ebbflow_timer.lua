@@ -1,4 +1,4 @@
-﻿ebbFlowController = Controller:new()
+ebbFlowController = Controller:new()
 EbbFlowTimer = EbbFlowTimer or {}
 
 local var_0_0 = ExtendedIds and ExtendedIds.EbbFlowTimer or 25
@@ -15,8 +15,8 @@ local numericValue = 0
 local var_0_11 = false
 local var_0_12
 
-local function var_0_13(arg_1_0)
-	return g_fonts and g_fonts.fontExists and g_fonts.fontExists(arg_1_0)
+local function var_0_13(fontName)
+	return g_fonts and g_fonts.fontExists and g_fonts.fontExists(fontName)
 end
 
 local function var_0_14()
@@ -198,13 +198,13 @@ function var_0_12()
 		return ebbFlowTimerPanelWidget
 	end
 
-	local var_13_0 = var_0_15()
+	local parentWidget = var_0_15()
 
-	if not var_13_0 then
+	if not parentWidget then
 		return nil
 	end
 
-	ebbFlowTimerPanelWidget = g_ui.createWidget("EbbFlowTimerPanel", var_13_0)
+	ebbFlowTimerPanelWidget = g_ui.createWidget("EbbFlowTimerPanel", parentWidget)
 
 	if not ebbFlowTimerPanelWidget then
 		g_logger.error("game_ebbflow_timer: failed to create HUD widget")

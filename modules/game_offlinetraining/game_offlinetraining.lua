@@ -181,8 +181,8 @@ local function handleEscape()
 	handleGameEnd()
 end
 
-local function sendOfflineTraining(arg_14_0)
-	g_game.sendOfflineTraining(arg_14_0)
+local function sendOfflineTraining(skillType)
+	g_game.sendOfflineTraining(skillType)
 	handleGameEnd()
 end
 

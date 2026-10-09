@@ -1,4 +1,4 @@
-﻿HelperActionCoordinator = HelperActionCoordinator or {}
+HelperActionCoordinator = HelperActionCoordinator or {}
 
 local var_0_0 = 200
 local var_0_1 = 400
@@ -39,12 +39,12 @@ local function var_0_8(numericValue)
 	return clothSlot and clothSlot > 0 and clothSlot or nil
 end
 
-local function var_0_9(arg_4_0)
-	if not arg_4_0 or not g_things or not g_things.getThingType then
+local function var_0_9(thingId)
+	if not thingId or not g_things or not g_things.getThingType then
 		return nil
 	end
 
-	local thingType = g_things.getThingType(arg_4_0, ThingCategoryItem)
+	local thingType = g_things.getThingType(thingId, ThingCategoryItem)
 
 	if not thingType then
 		return nil

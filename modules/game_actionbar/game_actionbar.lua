@@ -569,18 +569,18 @@ end
 	return actionbarState.EQUIPMENT_TYPE_ICON_BASE .. var_28_0
 end
 
-  actionbarState.ensureEquipmentTypeIconWidget = function(arg_29_0)
-	if not arg_29_0 or arg_29_0:isDestroyed() then
+  actionbarState.ensureEquipmentTypeIconWidget = function(parentWidget)
+	if not parentWidget or parentWidget:isDestroyed() then
 		return nil
 	end
 
-	local equipmentTypeIcon = arg_29_0:getChildById("equipmentTypeIcon")
+	local equipmentTypeIcon = parentWidget:getChildById("equipmentTypeIcon")
 
 	if equipmentTypeIcon and not equipmentTypeIcon:isDestroyed() then
 		return equipmentTypeIcon
 	end
 
-	local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_29_0)
+	local uIWidgetWidget = g_ui.createWidget("UIWidget", parentWidget)
 
 	uIWidgetWidget:setId("equipmentTypeIcon")
 	uIWidgetWidget:setSize(actionbarState.EQUIPMENT_SLOT_DECOR_ICON_SIZE)
@@ -4312,13 +4312,13 @@ end
 	actionbarState.anchorGroupCooldownBelowBottomStack()
 end
 
-  actionbarState[158] = function(_actionBarId, arg_211_1)
-	local var_211_0 = actionbarState.isSideBar(_actionBarId) and "ActionSlotV" or "ActionSlot"
+  actionbarState[158] = function(_actionBarId, parentWidget)
+	local styleName = actionbarState.isSideBar(_actionBarId) and "ActionSlotV" or "ActionSlot"
 	local var_211_1 = actionbarState[120](_actionBarId)
 
 	for iter_211_0 = 1, var_211_1 do
 		local sid = slotIdFor(_actionBarId, iter_211_0)
-		local var_211_3 = g_ui.createWidget(var_211_0, arg_211_1)
+		local var_211_3 = g_ui.createWidget(styleName, parentWidget)
 
 		var_211_3:setId(sid)
 
@@ -9318,33 +9318,33 @@ function loadHelper(slot)
 	refreshActionSlotTooltip(slot)
 end
 
-function loadMultiHelper(arg_408_0)
-	arg_408_0.multiHelper = HelperAction.normalizeList(arg_408_0 and arg_408_0.multiHelper)
+function loadMultiHelper(parentWidget)
+	parentWidget.multiHelper = HelperAction.normalizeList(parentWidget and parentWidget.multiHelper)
 
-	if not isMultiHelperSlot(arg_408_0) then
+	if not isMultiHelperSlot(parentWidget) then
 		return
 	end
 
-	arg_408_0.helperId = nil
+	parentWidget.helperId = nil
 
-	HelperAction.clearIcons(arg_408_0)
+	HelperAction.clearIcons(parentWidget)
 
-	if arg_408_0.clearItem then
-		arg_408_0:clearItem()
+	if parentWidget.clearItem then
+		parentWidget:clearItem()
 	end
 
-	local spellIcon = arg_408_0:getChildById("spellIcon")
+	local spellIcon = parentWidget:getChildById("spellIcon")
 
 	if spellIcon then
 		spellIcon:hide()
 		spellIcon:setImageSource("")
 	end
 
-	local var_408_1 = HelperAction.filledEntries(arg_408_0.multiHelper)
+	local var_408_1 = HelperAction.filledEntries(parentWidget.multiHelper)
 	local var_408_2 = HelperAction.CLIP_SHADER[#var_408_1]
 
 	for iter_408_0 = 1, #var_408_1 do
-		local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_408_0)
+		local uIWidgetWidget = g_ui.createWidget("UIWidget", parentWidget)
 
 		uIWidgetWidget:setId("multiHelperIcon" .. iter_408_0 - 1)
 		uIWidgetWidget:setSize({
@@ -9362,22 +9362,22 @@ function loadMultiHelper(arg_408_0)
 		HelperAction.applyIconWidget(uIWidgetWidget, var_408_1[iter_408_0].id, #var_408_1 >= 2 and var_408_2 and var_408_2[iter_408_0] or "")
 	end
 
-	HelperAction.raiseOverlays(arg_408_0)
+	HelperAction.raiseOverlays(parentWidget)
 
-	local text = arg_408_0:getChildById("text")
+	local text = parentWidget:getChildById("text")
 
 	if text then
 		text:setText("")
 	end
 
-	arg_408_0:setBorderWidth(0)
-	actionbarState.refreshActionSlotEquipmentDecorations(arg_408_0)
-	updateSlotGray(arg_408_0)
-	applyActionSlotFrame(arg_408_0)
-	refreshMultiHelperSlotBorder(arg_408_0)
+	parentWidget:setBorderWidth(0)
+	actionbarState.refreshActionSlotEquipmentDecorations(parentWidget)
+	updateSlotGray(parentWidget)
+	applyActionSlotFrame(parentWidget)
+	refreshMultiHelperSlotBorder(parentWidget)
 	maybeSetupHotkeysAfterSlotLoad()
-	refreshActionSlotInventoryQuantity(arg_408_0)
-	refreshActionSlotTooltip(arg_408_0)
+	refreshActionSlotInventoryQuantity(parentWidget)
+	refreshActionSlotTooltip(parentWidget)
 end
 
 function loadText(slot)

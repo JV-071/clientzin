@@ -2321,13 +2321,13 @@ local function var_0_114(arg_117_0)
 	var_0_56 = arg_117_0
 end
 
-local function var_0_115(arg_118_0, sellAllItemId, sellAllAmount, sellAllPanelKind, arg_118_4, arg_118_5)
-	if not arg_118_0 or not sellAllItemId then
+local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPanelKind, arg_118_4, arg_118_5)
+	if not parentWidget or not sellAllItemId then
 		return
 	end
 
-	local var_118_0 = sellAllPanelKind == "sell" and "SellAllItemRow" or "SellAllIgnoredRow"
-	local var_118_1 = g_ui.createWidget(var_118_0, arg_118_0)
+	local styleName = sellAllPanelKind == "sell" and "SellAllItemRow" or "SellAllIgnoredRow"
+	local var_118_1 = g_ui.createWidget(styleName, parentWidget)
 
 	var_118_1.sellAllItemId = sellAllItemId
 	var_118_1.sellAllAmount = sellAllAmount
@@ -2340,7 +2340,7 @@ local function var_0_115(arg_118_0, sellAllItemId, sellAllAmount, sellAllPanelKi
 			"#484848",
 			"#414141"
 		}
-		local childCount = math.max(1, arg_118_0:getChildCount())
+		local childCount = math.max(1, parentWidget:getChildCount())
 
 		rowBackground:setBackgroundColor(var_118_3[(childCount - 1) % #var_118_3 + 1])
 	end

@@ -1,4 +1,4 @@
-﻿containerSettings = nil
+containerSettings = nil
 
 local containerDragHoveredSlot
 
@@ -1980,18 +1980,18 @@ function destroy(container)
 	end
 end
 
-function closeContainerForSidebar(arg_98_0)
-	if not arg_98_0 then
+function closeContainerForSidebar(container)
+	if not container then
 		return
 	end
 
-	local window = arg_98_0.window
+	local window = container.window
 
 	if window and not window:isDestroyed() then
-		clearContainerWindowLayout(window, arg_98_0)
+		clearContainerWindowLayout(window, container)
 	end
 
-	g_game.close(arg_98_0)
+	g_game.close(container)
 end
 
 function showContainersContextMenu(widget, mousePos, mouseButton)

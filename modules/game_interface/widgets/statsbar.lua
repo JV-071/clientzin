@@ -1,4 +1,4 @@
-﻿local statsBarTop
+local statsBarTop
 local statsBarBottom
 local gameLeftStatsBar
 local gameRightStatsBar
@@ -346,7 +346,7 @@ local function var_0_42(arg_14_0, arg_14_1, arg_14_2)
 	end
 end
 
-local function var_0_43(arg_15_0, parent)
+local function var_0_43(parentWidget, parent)
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
@@ -360,18 +360,18 @@ local function var_0_43(arg_15_0, parent)
 		return
 	end
 
-	arg_15_0:setWidth(0)
-	arg_15_0:destroyChildren()
+	parentWidget:setWidth(0)
+	parentWidget:destroyChildren()
 
 	local lines = 0
 	local lastPlacement = "top"
 	local id = parent:getId()
 	local var_15_6 = id:find("OnRight") ~= nil
-	local var_15_7 = var_15_6 and "RightStatsSkillElement" or "LeftStatsSkillElement"
+	local styleName = var_15_6 and "RightStatsSkillElement" or "LeftStatsSkillElement"
 
 	for i = 1, #tuples do
 		local skillTuple = tuples[i]
-		local widget = g_ui.createWidget(var_15_7, arg_15_0)
+		local widget = g_ui.createWidget(styleName, parentWidget)
 
 		widget:setId("statsbar_skill_" .. skillTuple.key)
 
@@ -490,8 +490,8 @@ local function var_0_43(arg_15_0, parent)
 
 	local var_15_15 = lines * var_0_37
 
-	arg_15_0:updateLayout()
-	arg_15_0:setWidth(var_15_15)
+	parentWidget:updateLayout()
+	parentWidget:setWidth(var_15_15)
 
 	local var_15_16 = var_0_36(var_0_41(parent))
 	local var_15_17 = var_0_38[id] or 0

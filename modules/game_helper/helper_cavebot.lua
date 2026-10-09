@@ -1558,12 +1558,12 @@ end
 	return math.max(1024, math.min(20000, math.floor(cavebotState[145](arg_89_0, arg_89_1) * 256)))
 end
 
-  cavebotState[148] = function(arg_90_0)
-	if not arg_90_0 or not g_map or not g_map.getTile then
+  cavebotState[148] = function(tilePosition)
+	if not tilePosition or not g_map or not g_map.getTile then
 		return false
 	end
 
-	local tile = g_map.getTile(arg_90_0)
+	local tile = g_map.getTile(tilePosition)
 
 	if not tile then
 		return false
@@ -1588,22 +1588,22 @@ end
 	local var_91_2 = cavebotState[147](arg_91_0, arg_91_1.position)
 
 	for unusedValue, ptc_root_local in ipairs(cavebotState[83]) do
-		local var_91_3 = {
+		local tilePosition = {
 			x = arg_91_1.position.x + ptc_root_local.x,
 			y = arg_91_1.position.y + ptc_root_local.y,
 			z = arg_91_1.position.z
 		}
-		local tile = g_map.getTile(var_91_3)
+		local tile = g_map.getTile(tilePosition)
 
 		if tile and tile:isWalkable(false) and not tile:hasCreatures() then
 			local var_91_5, var_91_6 = pcall(function()
-				return g_map.findPathWithBlockedFloorChanges(arg_91_0, var_91_3, var_91_2, cavebotState[31].walkPathFlags(false), cavebotState[31].blockedPathPositions(), false)
+				return g_map.findPathWithBlockedFloorChanges(arg_91_0, tilePosition, var_91_2, cavebotState[31].walkPathFlags(false), cavebotState[31].blockedPathPositions(), false)
 			end)
 			local var_91_7 = var_91_5 and type(var_91_6) == "table" and #var_91_6 or nil
-			local var_91_8 = cavebotState[144](arg_91_0, var_91_3) == 0
+			local var_91_8 = cavebotState[144](arg_91_0, tilePosition) == 0
 
 			if var_91_7 and (var_91_7 > 0 or var_91_8) and var_91_7 < huge then
-				var_91_0 = var_91_3
+				var_91_0 = tilePosition
 				huge = var_91_7
 			end
 		end
@@ -1733,9 +1733,9 @@ end
 	return true
 end
 
-  cavebotState[156] = function(arg_100_0, waypointIndex, arg_100_2, arg_100_3)
+  cavebotState[156] = function(parentWidget, waypointIndex, arg_100_2, arg_100_3)
 	local var_100_0 = cavebotState[128]() and waypointIndex == cavebotState[3]
-	local cavebotMapWaypointMarkerWidget = g_ui.createWidget("CavebotMapWaypointMarker", arg_100_0)
+	local cavebotMapWaypointMarkerWidget = g_ui.createWidget("CavebotMapWaypointMarker", parentWidget)
 
 	cavebotMapWaypointMarkerWidget:setImageSource(cavebotState[150](var_100_0))
 
@@ -1826,7 +1826,7 @@ end
 	arg_100_3 = arg_100_3 or cavebotState[7]
 	arg_100_3[waypointIndex] = cavebotMapWaypointMarkerWidget
 
-	arg_100_0:centerInPosition(cavebotMapWaypointMarkerWidget, arg_100_2.position)
+	parentWidget:centerInPosition(cavebotMapWaypointMarkerWidget, arg_100_2.position)
 	cavebotMapWaypointMarkerWidget:raise()
 
 	return cavebotMapWaypointMarkerWidget
@@ -1919,8 +1919,8 @@ end
 	var_112_0:setTooltip(cavebotState[86](cavebotState[33] and "Stop recording waypoints and object uses." or "Start recording waypoints while you walk and use doors, ladders and holes.", cavebotState[33] and "Para de gravar waypoints e uses de objetos." or "Inicia a gravacao enquanto voce caminha e usa portas, escadas e buracos."))
 end
 
-  cavebotState[162] = function(arg_113_0, waypointIndex, arg_113_2)
-	local cavebotWaypointRowWidget = g_ui.createWidget("CavebotWaypointRow", arg_113_0)
+  cavebotState[162] = function(parentWidget, waypointIndex, arg_113_2)
+	local cavebotWaypointRowWidget = g_ui.createWidget("CavebotWaypointRow", parentWidget)
 
 	cavebotWaypointRowWidget.waypointIndex = waypointIndex
 	cavebotState[8][waypointIndex] = cavebotWaypointRowWidget
@@ -2443,23 +2443,23 @@ end
 		return
 	end
 
-	local var_138_0 = cavebotState[88](arg_138_0)
+	local tilePosition = cavebotState[88](arg_138_0)
 	local localPlayer = g_game.getLocalPlayer()
 	local position = cavebotState[88](localPlayer and localPlayer.getPosition and localPlayer:getPosition())
 
 	arg_138_1 = math.floor(tonumber(arg_138_1) or 0)
 
-	if not var_138_0 or var_138_0.x == 65535 or not position or arg_138_1 <= 0 then
+	if not tilePosition or tilePosition.x == 65535 or not position or arg_138_1 <= 0 then
 		return
 	end
 
-	if cavebotState[145](position, var_138_0) > 1 or math.abs(position.z - var_138_0.z) > 1 then
-		cavebotState[32].holdFarUse(var_138_0, arg_138_1, nil)
+	if cavebotState[145](position, tilePosition) > 1 or math.abs(position.z - tilePosition.z) > 1 then
+		cavebotState[32].holdFarUse(tilePosition, arg_138_1, nil)
 
 		return
 	end
 
-	local tile = g_map.getTile(var_138_0)
+	local tile = g_map.getTile(tilePosition)
 	local var_138_4 = cavebotState[32].findTileItem(tile, arg_138_1, arg_138_2)
 
 	if var_138_4 and (var_138_4:isPickupable() or var_138_4:isContainer()) then
@@ -2470,12 +2470,12 @@ end
 
 	local var_138_5 = cavebotState[1][#cavebotState[1]]
 
-	if var_138_5 and var_138_5.kind == "use" and var_138_5.itemId == arg_138_1 and cavebotState[89](var_138_5.position) == cavebotState[89](position) and cavebotState[89](var_138_5.usePosition) == cavebotState[89](var_138_0) then
+	if var_138_5 and var_138_5.kind == "use" and var_138_5.itemId == arg_138_1 and cavebotState[89](var_138_5.position) == cavebotState[89](position) and cavebotState[89](var_138_5.usePosition) == cavebotState[89](tilePosition) then
 		return
 	end
 
 	if HelperCavebot.addWaypointAt("use", position, {
-		usePosition = var_138_0,
+		usePosition = tilePosition,
 		itemId = arg_138_1
 	}) then
 		cavebotState[34] = cavebotState[88](position)
@@ -3033,18 +3033,18 @@ end
 	return true
 end
 
-  cavebotState[182] = function(arg_163_0)
-	if not arg_163_0 or not g_map or type(g_map.findEveryPath) ~= "function" then
+  cavebotState[182] = function(startPosition)
+	if not startPosition or not g_map or type(g_map.findEveryPath) ~= "function" then
 		return nil
 	end
 
 	local timestamp = cavebotState[87]()
 
-	if cavebotState[55].paths and cavebotState[55].origin and cavebotState[144](arg_163_0, cavebotState[55].origin) <= cavebotState[66] and timestamp - cavebotState[55].timestamp <= cavebotState[67] then
+	if cavebotState[55].paths and cavebotState[55].origin and cavebotState[144](startPosition, cavebotState[55].origin) <= cavebotState[66] and timestamp - cavebotState[55].timestamp <= cavebotState[67] then
 		return cavebotState[55].paths
 	end
 
-	local paths = g_map.findEveryPath(arg_163_0, cavebotState[65] + cavebotState[66], {
+	local paths = g_map.findEveryPath(startPosition, cavebotState[65] + cavebotState[66], {
 		ignoreCost = true,
 		ignoreCreatures = true,
 		allowOnlyVisibleTiles = true,
@@ -3055,7 +3055,7 @@ end
 		paths = nil
 	end
 
-	cavebotState[55].origin = cavebotState[88](arg_163_0)
+	cavebotState[55].origin = cavebotState[88](startPosition)
 	cavebotState[55].timestamp = timestamp
 	cavebotState[55].paths = paths
 
@@ -3180,20 +3180,20 @@ end
 	local var_172_3 = math.min(cavebotState[188](arg_172_2), tonumber(arg_172_3) or math.huge)
 
 	for iter_172_0 = 1, math.min(#arg_172_1, var_172_3) do
-		local var_172_4 = Position.translatedToDirection(var_172_0, arg_172_1[iter_172_0])
-		local tile = g_map.getTile(var_172_4)
+		local tilePosition = Position.translatedToDirection(var_172_0, arg_172_1[iter_172_0])
+		local tile = g_map.getTile(tilePosition)
 
-		if not (tile and tile:isWalkable(false) and not tile:hasCreatures() and not tile:hasFloorChange() and not cavebotState[31].isBlockedPathPosition(var_172_4)) then
+		if not (tile and tile:isWalkable(false) and not tile:hasCreatures() and not tile:hasFloorChange() and not cavebotState[31].isBlockedPathPosition(tilePosition)) then
 			return var_172_1 > 0 and var_172_0 or nil, var_172_1, 0, nil, true
 		end
 
-		local var_172_6 = cavebotState[189](arg_172_2, var_172_0, var_172_4)
+		local var_172_6 = cavebotState[189](arg_172_2, var_172_0, tilePosition)
 
 		if var_172_6 > 0 then
-			return var_172_1 > 0 and var_172_0 or nil, var_172_1, var_172_6, var_172_4, false
+			return var_172_1 > 0 and var_172_0 or nil, var_172_1, var_172_6, tilePosition, false
 		end
 
-		var_172_0 = var_172_4
+		var_172_0 = tilePosition
 		var_172_1 = iter_172_0
 	end
 
@@ -3244,8 +3244,8 @@ end
 	return false
 end
 
- cavebotState[57].existsAt = function(arg_177_0)
-	return arg_177_0 and g_map and g_map.getTile and cavebotState[57].tileContains(g_map.getTile(arg_177_0)) or false
+ cavebotState[57].existsAt = function(tilePosition)
+	return tilePosition and g_map and g_map.getTile and cavebotState[57].tileContains(g_map.getTile(tilePosition)) or false
 end
 
  cavebotState[57].visiblePositions = function(arg_178_0)
@@ -3449,17 +3449,17 @@ end
 	return cavebotState[57].attemptWalk(arg_183_0, arg_183_1)
 end
 
-  cavebotState[192] = function(arg_184_0, arg_184_1, arg_184_2, arg_184_3)
+  cavebotState[192] = function(arg_184_0, startPosition, arg_184_2, arg_184_3)
 	local var_184_0 = cavebotState[87]()
 	local var_184_1 = cavebotState[31].handoff == true
 	local unusedValue, var_184_3, var_184_4 = cavebotState[187]()
-	local var_184_5 = cavebotState[149](arg_184_1, arg_184_2)
-	local var_184_6 = cavebotState[147](arg_184_1, var_184_5)
+	local var_184_5 = cavebotState[149](startPosition, arg_184_2)
+	local var_184_6 = cavebotState[147](startPosition, var_184_5)
 	local var_184_7 = cavebotState[31].allowsDestinationFloorChange(arg_184_2)
-	local var_184_8 = cavebotState[191](arg_184_1, var_184_5, var_184_6, cavebotState[31].walkPathFlags(true), var_184_7)
+	local var_184_8 = cavebotState[191](startPosition, var_184_5, var_184_6, cavebotState[31].walkPathFlags(true), var_184_7)
 
 	if not var_184_8 and cavebotState[31].allowHazardCrossing() then
-		var_184_8 = cavebotState[191](arg_184_1, var_184_5, var_184_6, cavebotState[31].walkPathFlags(true), var_184_7)
+		var_184_8 = cavebotState[191](startPosition, var_184_5, var_184_6, cavebotState[31].walkPathFlags(true), var_184_7)
 	end
 
 	if not var_184_8 then
@@ -3473,7 +3473,7 @@ end
 		return false
 	end
 
-	local var_184_9 = cavebotState[31].diagonalDirections(arg_184_1, var_184_8)
+	local var_184_9 = cavebotState[31].diagonalDirections(startPosition, var_184_8)
 	local var_184_10 = 0
 
 	for unusedValue, entry in ipairs(arg_184_3) do
@@ -3482,16 +3482,16 @@ end
 		end
 	end
 
-	local var_184_11, var_184_12, var_184_13, var_184_14, var_184_15 = cavebotState[190](arg_184_1, var_184_9, arg_184_3, var_184_3)
+	local var_184_11, var_184_12, var_184_13, var_184_14, var_184_15 = cavebotState[190](startPosition, var_184_9, arg_184_3, var_184_3)
 
 	if var_184_15 and var_184_12 == 0 then
 		cavebotState[25]()
 
-		local var_184_16 = cavebotState[191](arg_184_1, var_184_5, var_184_6, cavebotState[31].walkPathFlags(false), var_184_7)
+		local var_184_16 = cavebotState[191](startPosition, var_184_5, var_184_6, cavebotState[31].walkPathFlags(false), var_184_7)
 
 		if var_184_16 then
-			var_184_9 = cavebotState[31].diagonalDirections(arg_184_1, var_184_16)
-			var_184_11, var_184_12, var_184_13, var_184_14, var_184_15 = cavebotState[190](arg_184_1, var_184_9, arg_184_3, var_184_3)
+			var_184_9 = cavebotState[31].diagonalDirections(startPosition, var_184_16)
+			var_184_11, var_184_12, var_184_13, var_184_14, var_184_15 = cavebotState[190](startPosition, var_184_9, arg_184_3, var_184_3)
 		end
 	end
 
@@ -3520,10 +3520,10 @@ end
 		var_184_12 = 1
 	end
 
-	local var_184_17 = {}
+	local directions = {}
 
 	for iter_184_2 = 1, var_184_12 do
-		var_184_17[#var_184_17 + 1] = var_184_9[iter_184_2]
+		directions[#directions + 1] = var_184_9[iter_184_2]
 	end
 
 	cavebotState[49] = false
@@ -3546,7 +3546,7 @@ end
 	cavebotState[30] = var_184_0
 
 	local var_184_19, var_184_20 = pcall(function()
-		return g_game.autoWalk(var_184_17, arg_184_1)
+		return g_game.autoWalk(directions, startPosition)
 	end)
 
 	cavebotState[31].handoff = false
@@ -3600,15 +3600,15 @@ end
 	local var_187_2 = 0
 
 	for iter_187_0 = 1, math.min(#arg_187_1, arg_187_2) do
-		local var_187_3 = Position.translatedToDirection(var_187_0, arg_187_1[iter_187_0])
-		local tile = g_map.getTile(var_187_3)
+		local tilePosition = Position.translatedToDirection(var_187_0, arg_187_1[iter_187_0])
+		local tile = g_map.getTile(tilePosition)
 
-		if not (tile and tile:isWalkable(false) and not tile:hasCreatures() and not tile:hasFloorChange() and not cavebotState[31].isBlockedPathPosition(var_187_3)) then
+		if not (tile and tile:isWalkable(false) and not tile:hasCreatures() and not tile:hasFloorChange() and not cavebotState[31].isBlockedPathPosition(tilePosition)) then
 			break
 		end
 
 		var_187_1[#var_187_1 + 1] = arg_187_1[iter_187_0]
-		var_187_0 = var_187_3
+		var_187_0 = tilePosition
 		var_187_2 = iter_187_0
 	end
 
@@ -3626,16 +3626,16 @@ end
 	cavebotState[56].directions = directions
 end
 
-  cavebotState[196] = function(arg_189_0, arg_189_1, arg_189_2)
+  cavebotState[196] = function(arg_189_0, startPosition, arg_189_2)
 	local var_189_0 = cavebotState[87]()
 	local var_189_1 = cavebotState[31].handoff == true
 	local var_189_2 = not cavebotState[186]()
 
 	if cavebotState[28] and cavebotState[29] then
-		if cavebotState[89](arg_189_1) ~= cavebotState[29] then
+		if cavebotState[89](startPosition) ~= cavebotState[29] then
 			if not var_189_1 then
 				if var_189_2 then
-					if not cavebotState[31].continuousWalkHasStalled(arg_189_0, arg_189_1, cavebotState[29], var_189_0) then
+					if not cavebotState[31].continuousWalkHasStalled(arg_189_0, startPosition, cavebotState[29], var_189_0) then
 						return true
 					end
 				elseif arg_189_0.isWalking and arg_189_0:isWalking() or var_189_0 - cavebotState[30] < cavebotState[76] then
@@ -3671,24 +3671,24 @@ end
 		return true
 	end
 
-	local var_189_6 = cavebotState[149](arg_189_1, arg_189_2)
+	local var_189_6 = cavebotState[149](startPosition, arg_189_2)
 	local var_189_7 = cavebotState[31].allowsDestinationFloorChange(arg_189_2)
-	local var_189_8 = cavebotState[193](arg_189_1, var_189_6, var_189_7)
+	local var_189_8 = cavebotState[193](startPosition, var_189_6, var_189_7)
 	local var_189_9
-	local var_189_10
+	local directions
 	local var_189_11
 
 	if var_189_8 then
-		var_189_9, var_189_10, var_189_11 = cavebotState[194](arg_189_1, var_189_8, var_189_4)
+		var_189_9, directions, var_189_11 = cavebotState[194](startPosition, var_189_8, var_189_4)
 	end
 
 	if not var_189_9 and var_189_8 then
 		cavebotState[98]()
 
-		var_189_8 = cavebotState[193](arg_189_1, var_189_6, var_189_7)
+		var_189_8 = cavebotState[193](startPosition, var_189_6, var_189_7)
 
 		if var_189_8 then
-			var_189_9, var_189_10, var_189_11 = cavebotState[194](arg_189_1, var_189_8, var_189_4)
+			var_189_9, directions, var_189_11 = cavebotState[194](startPosition, var_189_8, var_189_4)
 		end
 	end
 
@@ -3704,7 +3704,7 @@ end
 	cavebotState[30] = var_189_0
 
 	local var_189_12, var_189_13 = pcall(function()
-		return g_game.autoWalk(var_189_10, arg_189_1)
+		return g_game.autoWalk(directions, startPosition)
 	end)
 
 	cavebotState[31].handoff = false
@@ -3721,7 +3721,7 @@ end
 	end
 
 	if var_189_14 and var_189_2 then
-		cavebotState[31].noteContinuousWalkProgress(arg_189_1, cavebotState[29], var_189_0)
+		cavebotState[31].noteContinuousWalkProgress(startPosition, cavebotState[29], var_189_0)
 		cavebotState[110](string.format("%s #%d - %s", cavebotState[86]("Walking to", "Indo para"), cavebotState[3], cavebotState[107](arg_189_2)))
 	elseif var_189_14 then
 		cavebotState[110](string.format("%s %s - #%d", cavebotState[86]("Route speed", "Velocidade da rota"), cavebotState[133](var_189_3), cavebotState[3]))
@@ -3922,15 +3922,15 @@ end
 end
 
  cavebotState[32].handle = function(arg_197_0, waypoint)
-	local var_197_0 = waypoint and waypoint.usePosition
+	local tilePosition = waypoint and waypoint.usePosition
 
-	if not var_197_0 then
+	if not tilePosition then
 		return false
 	end
 
-	local var_197_1 = cavebotState[89](waypoint.position) == cavebotState[89](var_197_0) and 0 or 1
+	local var_197_1 = cavebotState[89](waypoint.position) == cavebotState[89](tilePosition) and 0 or 1
 	local var_197_2 = cavebotState[144](arg_197_0, waypoint.position) == 0
-	local var_197_3 = arg_197_0.z == waypoint.position.z and var_197_1 >= cavebotState[144](arg_197_0, var_197_0)
+	local var_197_3 = arg_197_0.z == waypoint.position.z and var_197_1 >= cavebotState[144](arg_197_0, tilePosition)
 
 	if not var_197_2 and not var_197_3 then
 		return false
@@ -3947,7 +3947,7 @@ end
 		cavebotState[32].reachedAt = var_197_4
 	end
 
-	local tile = g_map.getTile(var_197_0)
+	local tile = g_map.getTile(tilePosition)
 
 	if not tile then
 		if var_197_4 - cavebotState[32].reachedAt >= cavebotState[32].giveUpDelay then
@@ -3989,7 +3989,7 @@ end
 		return true
 	end
 
-	local var_197_9 = waypoint.withItemId and cavebotState[32].findTool(waypoint.withItemId)
+	local item = waypoint.withItemId and cavebotState[32].findTool(waypoint.withItemId)
 
 	if cavebotState[32].usedAt > 0 and var_197_4 - cavebotState[32].usedAt >= cavebotState[32].giveUpDelay and not waypoint.transition and not cavebotState[32].blockedOnArrival then
 		cavebotState[180](cavebotState[86]("Object did not react to the use", "Objeto nao respondeu ao use"))
@@ -4008,14 +4008,14 @@ end
 
 		if not waypoint.withItemId then
 			g_game.use(var_197_7)
-		elseif var_197_9 then
-			g_game.useWith(var_197_9, var_197_7)
+		elseif item then
+			g_game.useWith(item, var_197_7)
 		else
 			g_game.useInventoryItemWith(waypoint.withItemId, var_197_7)
 		end
 	end
 
-	if waypoint.withItemId and not var_197_9 then
+	if waypoint.withItemId and not item then
 		cavebotState[110](cavebotState[86]("Item not in an open container - trying anyway", "Item fora dos containers abertos - tentando mesmo assim"))
 	elseif cavebotState[32].usedAt > 0 and var_197_4 - cavebotState[32].usedAt >= cavebotState[60] then
 		cavebotState[110](cavebotState[86]("Object used, but nothing changed yet", "Objeto usado, mas nada mudou ainda"))

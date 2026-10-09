@@ -292,18 +292,18 @@ local function var_0_70(arg_20_0)
 	return var_0_69(var_20_1, 48)
 end
 
-local function var_0_71(arg_21_0, arg_21_1, arg_21_2)
-	if not var_0_52(arg_21_0) then
+local function var_0_71(parentWidget, arg_21_1, arg_21_2)
+	if not var_0_52(parentWidget) then
 		return nil
 	end
 
-	local var_21_0 = arg_21_0:recursiveGetChildById(arg_21_1)
+	local var_21_0 = parentWidget:recursiveGetChildById(arg_21_1)
 
 	if var_21_0 then
 		return var_21_0
 	end
 
-	local uIWidgetWidget = g_ui.createWidget("UIWidget", arg_21_0)
+	local uIWidgetWidget = g_ui.createWidget("UIWidget", parentWidget)
 
 	if not uIWidgetWidget then
 		return nil
@@ -489,13 +489,13 @@ local function var_0_82()
 end
 
 local function var_0_83()
-	local var_33_0 = var_0_76()
+	local parentWidget = var_0_76()
 
-	if not var_0_52(var_33_0) then
+	if not var_0_52(parentWidget) then
 		return
 	end
 
-	if var_0_52(uIButtonWidget) and uIButtonWidget:getParent() == var_33_0 then
+	if var_0_52(uIButtonWidget) and uIButtonWidget:getParent() == parentWidget then
 		var_0_80()
 
 		return
@@ -503,7 +503,7 @@ local function var_0_83()
 
 	var_0_82()
 
-	uIButtonWidget = g_ui.createWidget("UIButton", var_33_0)
+	uIButtonWidget = g_ui.createWidget("UIButton", parentWidget)
 
 	if not uIButtonWidget then
 		return
@@ -550,7 +550,7 @@ local function var_0_83()
 	end
 
 	if not var_0_17 then
-		connect(var_33_0, {
+		connect(parentWidget, {
 			onGeometryChange = var_0_81,
 			onZoomChange = var_0_81
 		})
@@ -595,10 +595,10 @@ local function var_0_85(numericValue)
 end
 
 local function var_0_86(arg_39_0)
-	local var_39_0 = arg_39_0 and arg_39_0.id or 0
+	local thingId = arg_39_0 and arg_39_0.id or 0
 
-	if var_39_0 > 0 and g_things and g_things.getThingType then
-		local thingType = g_things.getThingType(var_39_0, ThingCategoryItem)
+	if thingId > 0 and g_things and g_things.getThingType then
+		local thingType = g_things.getThingType(thingId, ThingCategoryItem)
 
 		if thingType and thingType.getName then
 			local name = thingType:getName()
@@ -764,20 +764,20 @@ local function var_0_89()
 end
 
 local function var_0_90()
-	local var_50_0 = var_0_76()
+	local parentWidget = var_0_76()
 
-	if not var_0_52(var_50_0) then
+	if not var_0_52(parentWidget) then
 		return
 	end
 
-	if var_0_52(var_0_3) and var_0_3:getParent() == var_50_0 then
+	if var_0_52(var_0_3) and var_0_3:getParent() == parentWidget then
 		var_0_80()
 
 		return
 	end
 
 	var_0_3 = var_0_57(var_0_3)
-	var_0_3 = g_ui.createWidget("UIButton", var_50_0)
+	var_0_3 = g_ui.createWidget("UIButton", parentWidget)
 
 	if not var_0_3 then
 		return
@@ -1102,23 +1102,23 @@ local function var_0_105(arg_68_0)
 	var_0_104(not arg_68_0)
 end
 
-local function var_0_106(arg_69_0, arg_69_1, arg_69_2, arg_69_3, arg_69_4)
-	if not arg_69_0 or not arg_69_3 or arg_69_3 == "" then
+local function var_0_106(parentWidget, arg_69_1, arg_69_2, arg_69_3, arg_69_4)
+	if not parentWidget or not arg_69_3 or arg_69_3 == "" then
 		return
 	end
 
-	local reportThreadLabelWidget = g_ui.createWidget("ReportThreadLabel", arg_69_0)
+	local reportThreadLabelWidget = g_ui.createWidget("ReportThreadLabel", parentWidget)
 
 	reportThreadLabelWidget:setText(string.format("%s %s: %s", var_0_65(arg_69_1), arg_69_2, arg_69_3))
 	reportThreadLabelWidget:setColor(arg_69_4)
 end
 
-local function var_0_107(arg_70_0, arg_70_1, arg_70_2, arg_70_3)
-	if not arg_70_0 or not arg_70_2 or arg_70_2 == "" then
+local function var_0_107(parentWidget, arg_70_1, arg_70_2, arg_70_3)
+	if not parentWidget or not arg_70_2 or arg_70_2 == "" then
 		return
 	end
 
-	local reportThreadLabelWidget = g_ui.createWidget("ReportThreadLabel", arg_70_0)
+	local reportThreadLabelWidget = g_ui.createWidget("ReportThreadLabel", parentWidget)
 
 	reportThreadLabelWidget:setText(string.format("%s %s", var_0_65(arg_70_1), arg_70_2))
 	reportThreadLabelWidget:setColor(arg_70_3 or var_0_26)
@@ -1337,13 +1337,13 @@ local function handleClick(arg_81_0)
 end
 
 local function var_0_118(arg_82_0)
-	local var_82_0 = var_0_54()
+	local parentWidget = var_0_54()
 
-	if not var_82_0 then
+	if not parentWidget then
 		return
 	end
 
-	var_82_0:destroyChildren()
+	parentWidget:destroyChildren()
 
 	var_0_9 = {}
 	reportId = nil
@@ -1360,7 +1360,7 @@ local function var_0_118(arg_82_0)
 
 		var_0_9[reportId] = entry
 
-		local reportListRowWidget = g_ui.createWidget("ReportListRow", var_82_0)
+		local reportListRowWidget = g_ui.createWidget("ReportListRow", parentWidget)
 
 		if not reportListRowWidget then
 			break
@@ -1427,13 +1427,13 @@ end
 
 local function var_0_120(arg_84_0)
 	local var_84_0 = var_0_53(arg_84_0)
-	local var_84_1 = var_84_0 and var_84_0.gotoCommand or nil
+	local message = var_84_0 and var_84_0.gotoCommand or nil
 
-	if not var_84_1 or var_84_1 == "" then
+	if not message or message == "" then
 		return
 	end
 
-	g_game.talk(var_84_1)
+	g_game.talk(message)
 	hide()
 end
 

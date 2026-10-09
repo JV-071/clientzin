@@ -1,4 +1,4 @@
-﻿preyWindow = nil
+preyWindow = nil
 preyButton = nil
 preyWindowButton = nil
 preyTracker = nil
@@ -1267,15 +1267,15 @@ function bindNoCreatureInfoHover(noCreaturePanel)
 end
 
 function setBonusGradeStars(slot, grade)
-	local var_66_0 = preyWindow["slot" .. slot + 1].active.creatureAndBonus.bonus.grade
+	local parentWidget = preyWindow["slot" .. slot + 1].active.creatureAndBonus.bonus.grade
 
-	var_66_0:destroyChildren()
+	parentWidget:destroyChildren()
 
 	for i = 1, 10 do
 		if i <= grade then
-			g_ui.createWidget("Star", var_66_0)
+			g_ui.createWidget("Star", parentWidget)
 		else
-			g_ui.createWidget("NoStar", var_66_0)
+			g_ui.createWidget("NoStar", parentWidget)
 		end
 	end
 end

@@ -287,13 +287,13 @@ function SidebarWidgetsPersistence.clearWidgetPlacement(arg_12_0)
 end
 
 local function var_0_14(arg_13_0)
-	local var_13_0 = var_0_9[arg_13_0]
+	local moduleName = var_0_9[arg_13_0]
 
-	if not var_13_0 or not g_modules or not g_modules.ensureModuleLoaded then
+	if not moduleName or not g_modules or not g_modules.ensureModuleLoaded then
 		return
 	end
 
-	g_modules.ensureModuleLoaded(var_13_0)
+	g_modules.ensureModuleLoaded(moduleName)
 end
 
 local function var_0_15(widgetId, arg_14_1)

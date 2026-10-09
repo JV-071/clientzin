@@ -1,4 +1,4 @@
-﻿HelperTools = HelperTools or {}
+HelperTools = HelperTools or {}
 
 local ctx
 local toolsUiLanguage = "en"
@@ -1437,17 +1437,17 @@ local function var_0_135(arg_79_0)
 	return false, true
 end
 
-local function var_0_136(arg_80_0, arg_80_1, arg_80_2)
+local function var_0_136(arg_80_0, itemId, arg_80_2)
 	if not arg_80_0.getInventoryCount then
 		return false
 	end
 
-	if arg_80_2 >= (tonumber(arg_80_0:getInventoryCount(arg_80_1, 0)) or 0) then
+	if arg_80_2 >= (tonumber(arg_80_0:getInventoryCount(itemId, 0)) or 0) then
 		return false
 	end
 
 	var_0_134(arg_80_2)
-	g_game.equipItemId(arg_80_1, 0)
+	g_game.equipItemId(itemId, 0)
 
 	return true
 end
@@ -1659,18 +1659,18 @@ local function runChangeGold()
 
 	lastChangeGoldMs = var_87_1
 
-	local var_87_2 = var_0_142(localPlayer, GOLD_COIN_ID)
+	local targetThing = var_0_142(localPlayer, GOLD_COIN_ID)
 
-	if var_87_2 then
-		g_game.use(var_87_2)
+	if targetThing then
+		g_game.use(targetThing)
 
 		return
 	end
 
-	local var_87_3 = var_0_142(localPlayer, PLATINUM_COIN_ID)
+	local targetThing = var_0_142(localPlayer, PLATINUM_COIN_ID)
 
-	if var_87_3 then
-		g_game.use(var_87_3)
+	if targetThing then
+		g_game.use(targetThing)
 	end
 end
 

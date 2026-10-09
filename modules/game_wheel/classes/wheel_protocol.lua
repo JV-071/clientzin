@@ -240,16 +240,16 @@ function WheelOfDestiny.onWheelOfDestinyApply(arg_13_0, arg_13_1)
 			return arg_14_0
 		end
 
-		local var_13_2 = var_13_1(gemStruct[GemDomains.GREEN].gemID)
-		local var_13_3 = var_13_1(gemStruct[GemDomains.RED].gemID)
-		local var_13_4 = var_13_1(gemStruct[GemDomains.ACQUA].gemID)
-		local var_13_5 = var_13_1(gemStruct[GemDomains.PURPLE].gemID)
+		local greenGem = var_13_1(gemStruct[GemDomains.GREEN].gemID)
+		local redGem = var_13_1(gemStruct[GemDomains.RED].gemID)
+		local acquaGem = var_13_1(gemStruct[GemDomains.ACQUA].gemID)
+		local purpleGem = var_13_1(gemStruct[GemDomains.PURPLE].gemID)
 
 		if WheelOfDestiny.currentPreset then
 			WheelOfDestiny.currentPreset.equipedGems = var_0_4(gemStruct)
 		end
 
-		g_game.sendApplyWheelPoints(WheelOfDestiny.pointInvested, var_13_2, var_13_3, var_13_4, var_13_5)
+		g_game.sendApplyWheelPoints(WheelOfDestiny.pointInvested, greenGem, redGem, acquaGem, purpleGem)
 		scheduleEvent(function()
 			WheelOfDestiny.requestActiveState()
 		end, 100)

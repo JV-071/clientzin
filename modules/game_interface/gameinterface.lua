@@ -1,4 +1,4 @@
-﻿gameRootPanel = nil
+gameRootPanel = nil
 gameMapPanel = nil
 gameMainRightPanel = nil
 gameRightPanel = nil
@@ -1167,8 +1167,8 @@ function onMouseGrabberRelease(self, mousePosition, mouseButton)
 	return true
 end
 
-local function var_0_34(arg_65_0)
-	if not arg_65_0 then
+local function var_0_34(toThing)
+	if not toThing then
 		return
 	end
 
@@ -1176,7 +1176,7 @@ local function var_0_34(arg_65_0)
 		selectedUseWithCallback(true)
 	end
 
-	g_game.useWith(selectedThing, arg_65_0)
+	g_game.useWith(selectedThing, toThing)
 end
 
 function onUseWith(clickedWidget, mousePosition)
@@ -2980,7 +2980,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 		return false
 	end
 
-	local var_236_5 = resolveHirelingUseThing(useThing, creatureThing)
+	local item = resolveHirelingUseThing(useThing, creatureThing)
 
 	if g_platform.isMobile() then
 		if mouseButton == MouseRightButton then
@@ -3001,23 +3001,23 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 			return true
 		elseif shortcut == "use" then
-			if var_236_5 then
+			if item then
 				modules.game_shortcuts.resetShortcuts()
 
-				if var_236_5:isContainer() then
-					if var_236_5:getParentContainer() then
-						g_game.open(var_236_5, var_236_5:getParentContainer())
+				if item:isContainer() then
+					if item:getParentContainer() then
+						g_game.open(item, item:getParentContainer())
 					else
-						g_game.open(var_236_5)
+						g_game.open(item)
 					end
 
 					return true
-				elseif var_236_5:isMultiUse() then
-					startUseWith(var_236_5)
+				elseif item:isMultiUse() then
+					startUseWith(item)
 
 					return true
 				else
-					handleUseThing(var_236_5, false)
+					handleUseThing(item, false)
 
 					return true
 				end
@@ -3067,8 +3067,8 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 			return true
 		elseif option == "leftSmart" and keyboardModifiers == KeyboardNoModifier and mouseButton == MouseLeftButton then
-			if var_0_102(var_236_5) then
-				handleUseThing(var_236_5, false)
+			if var_0_102(item) then
+				handleUseThing(item, false)
 
 				return true
 			elseif not autoWalkPos and lookThing then
@@ -3076,21 +3076,21 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 				return true
 			end
-		elseif var_236_5 and keyboardModifiers == KeyboardCtrlModifier and (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
-			if var_236_5:isContainer() then
-				if var_236_5:getParentContainer() then
-					g_game.open(var_236_5, var_236_5:getParentContainer())
+		elseif item and keyboardModifiers == KeyboardCtrlModifier and (mouseButton == MouseLeftButton or mouseButton == MouseRightButton) then
+			if item:isContainer() then
+				if item:getParentContainer() then
+					g_game.open(item, item:getParentContainer())
 				else
-					g_game.open(var_236_5)
+					g_game.open(item)
 				end
 
 				return true
-			elseif var_236_5:isMultiUse() then
-				startUseWith(var_236_5)
+			elseif item:isMultiUse() then
+				startUseWith(item)
 
 				return true
 			else
-				handleUseThing(var_236_5, false)
+				handleUseThing(item, false)
 
 				return true
 			end
@@ -3116,21 +3116,21 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif var_236_5 and handleUseThing(var_236_5, true) then
+				elseif item and handleUseThing(item, true) then
 					return true
 				elseif lookThing and not lookThing:isCreature() and lookThing:isPickupable() then
 					g_game.move(lookThing, lookThing:getPosition(), 1)
 
 					return true
 				end
-			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier and var_236_5 and handleUseThing(var_236_5, false) then
+			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier and item and handleUseThing(item, false) then
 				return true
 			end
 		elseif option == "shiftRight" then
 			if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif var_236_5 and handleUseThing(var_236_5, false) then
+				elseif item and handleUseThing(item, false) then
 					return true
 				end
 			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardShiftModifier then
@@ -3154,9 +3154,9 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 			elseif mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier and (var_236_3 or not g_mouse.isPressed(MouseLeftButton)) then
 				if tryClassicAttack(player, attackCreature, creatureThing, autoWalkPos) then
 					return true
-				elseif var_236_5 and handleUseThing(var_236_5, false) then
+				elseif item and handleUseThing(item, false) then
 					return true
-				elseif not var_236_5 then
+				elseif not item then
 					createThingMenu(menuPosition, lookThing, useThing, creatureThing, autoWalkPos)
 
 					return true
