@@ -2,18 +2,18 @@ UIWindow = extends(UIWidget, "UIWindow")
 
 local dragMoveInterval = 16
 
-local function var_0_1(arg_1_0)
-	removeEvent(arg_1_0._windowDragMoveEvent)
+local function cancelPendingWindowDrag(window)
+	removeEvent(window._windowDragMoveEvent)
 
-	arg_1_0._windowDragMoveEvent = nil
-	arg_1_0._windowDragPendingPosition = nil
+	window._windowDragMoveEvent = nil
+	window._windowDragPendingPosition = nil
 end
 
-local function var_0_2(arg_2_0, arg_2_1)
-	arg_2_0:setPosition(arg_2_1)
-	arg_2_0:bindRectToParent()
+local function applyWindowDragPosition(window, position)
+	window:setPosition(position)
+	window:bindRectToParent()
 
-	arg_2_0._windowLastDragMove = g_clock.millis()
+	window._windowLastDragMove = g_clock.millis()
 end
 
 function UIWindow.create()
@@ -46,7 +46,7 @@ function UIWindow.onFocusChange(self, focused)
 end
 
 function UIWindow.onDragEnter(self, mousePos)
-	var_0_1(self)
+	cancelPendingWindowDrag(self)
 
 	self._windowLastDragMove = nil
 
@@ -67,7 +67,7 @@ function UIWindow.onDragLeave(self, unusedArgument, mousePos)
 	self._windowDragPendingPosition = nil
 
 	if self.movingReference and mousePos and (mousePos.x ~= 0 or mousePos.y ~= 0) then
-		var_0_2(self, {
+		applyWindowDragPosition(self, {
 			x = mousePos.x - self.movingReference.x,
 			y = mousePos.y - self.movingReference.y
 		})
@@ -88,21 +88,21 @@ function UIWindow.onDragMove(self, mousePos, unusedArgument)
 		x = mousePos.x - self.movingReference.x,
 		y = mousePos.y - self.movingReference.y
 	}
-	local var_8_1 = self.dragMoveInterval or dragMoveInterval
+	local moveInterval = self.dragMoveInterval or dragMoveInterval
 
-	if var_8_1 <= 0 then
-		var_0_2(self, _windowDragPendingPosition)
+	if moveInterval <= 0 then
+		applyWindowDragPosition(self, _windowDragPendingPosition)
 
 		return true
 	end
 
-	local var_8_2 = g_clock.millis()
-	local var_8_3 = self._windowLastDragMove and var_8_2 - self._windowLastDragMove or var_8_1
+	local now = g_clock.millis()
+	local elapsedSinceMove = self._windowLastDragMove and now - self._windowLastDragMove or moveInterval
 
-	if var_8_1 <= var_8_3 and not self._windowDragMoveEvent then
+	if moveInterval <= elapsedSinceMove and not self._windowDragMoveEvent then
 		self._windowDragPendingPosition = nil
 
-		var_0_2(self, _windowDragPendingPosition)
+		applyWindowDragPosition(self, _windowDragPendingPosition)
 
 		return true
 	end
@@ -124,16 +124,16 @@ function UIWindow.onDragMove(self, mousePos, unusedArgument)
 			self._windowDragPendingPosition = nil
 
 			if _windowDragPendingPosition then
-				var_0_2(self, _windowDragPendingPosition)
+				applyWindowDragPosition(self, _windowDragPendingPosition)
 			end
-		end, math.max(1, var_8_1 - var_8_3))
+		end, math.max(1, moveInterval - elapsedSinceMove))
 	end
 
 	return true
 end
 
 function UIWindow.onDestroy(self)
-	var_0_1(self)
+	cancelPendingWindowDrag(self)
 
 	if self.hotkeyBlock then
 		self.hotkeyBlock.release()

@@ -1,4 +1,4 @@
-﻿local UI
+local UI
 local virtualFloor = 7
 local updatingMapFlags = false
 local loadingMapConfig = false
@@ -39,9 +39,9 @@ local CYCLOPEDIA_GROUND_FLOOR = 7
 local dragStartMouseY = 0
 local dragStartMargin = 0
 local mapPositionEvent
-local var_0_41
-local var_0_42
-local var_0_43
+local floorHotkeyWidget
+local onFloorUpKey
+local onFloorDownKey
 local areaLabelData
 local areaDataById = {}
 local areaLabelWidgets = {}
@@ -220,36 +220,36 @@ local function setupLayersPanelWheel()
 end
 
 local function clearCyclopediaAreaState()
-	if not var_0_41 then
+	if not floorHotkeyWidget then
 		return
 	end
 
-	if var_0_42 then
-		g_keyboard.unbindKeyPress("PageUp", var_0_42, var_0_41)
+	if onFloorUpKey then
+		g_keyboard.unbindKeyPress("PageUp", onFloorUpKey, floorHotkeyWidget)
 	end
 
-	if var_0_43 then
-		g_keyboard.unbindKeyPress("PageDown", var_0_43, var_0_41)
+	if onFloorDownKey then
+		g_keyboard.unbindKeyPress("PageDown", onFloorDownKey, floorHotkeyWidget)
 	end
 
-	var_0_41 = nil
-	var_0_42 = nil
-	var_0_43 = nil
+	floorHotkeyWidget = nil
+	onFloorUpKey = nil
+	onFloorDownKey = nil
 end
 
-local function var_0_71()
+local function bindFloorHotkeys()
 	clearCyclopediaAreaState()
 
-	local var_16_0 = controllerCyclopedia and controllerCyclopedia.ui
+	local cyclopediaWindow = controllerCyclopedia and controllerCyclopedia.ui
 
-	if not var_16_0 or var_16_0:isDestroyed() then
+	if not cyclopediaWindow or cyclopediaWindow:isDestroyed() then
 		return
 	end
 
-	var_0_41 = var_16_0
+	floorHotkeyWidget = cyclopediaWindow
 
-	function var_0_42()
-		if not UI or UI:isDestroyed() or var_16_0:isDestroyed() or not var_16_0:isVisible() then
+	function onFloorUpKey()
+		if not UI or UI:isDestroyed() or cyclopediaWindow:isDestroyed() or not cyclopediaWindow:isVisible() then
 			return false
 		end
 
@@ -258,8 +258,8 @@ local function var_0_71()
 		return true
 	end
 
-	function var_0_43()
-		if not UI or UI:isDestroyed() or var_16_0:isDestroyed() or not var_16_0:isVisible() then
+	function onFloorDownKey()
+		if not UI or UI:isDestroyed() or cyclopediaWindow:isDestroyed() or not cyclopediaWindow:isVisible() then
 			return false
 		end
 
@@ -268,8 +268,8 @@ local function var_0_71()
 		return true
 	end
 
-	g_keyboard.bindKeyPress("PageUp", var_0_42, var_0_41)
-	g_keyboard.bindKeyPress("PageDown", var_0_43, var_0_41)
+	g_keyboard.bindKeyPress("PageUp", onFloorUpKey, floorHotkeyWidget)
+	g_keyboard.bindKeyPress("PageDown", onFloorDownKey, floorHotkeyWidget)
 end
 
 local function getCyclopediaMinimap()
@@ -811,7 +811,7 @@ local function scheduleAreaLabelRefresh()
 	areaLabelRefreshEvent = scheduleEvent(refreshAreaLabels, 35)
 end
 
-local function var_0_92()
+local function resetAreaSelection()
 	if areaLabelRefreshEvent then
 		removeEvent(areaLabelRefreshEvent)
 
@@ -1615,8 +1615,8 @@ local function hookCyclopediaMinimapFlags()
 
 	local baseAddFlag = minimap.addFlag
 
-	function minimap.addFlag(pos, arg_94_1, icon, description, temporary, bundled)
-		baseAddFlag(pos, arg_94_1, icon, description, temporary, bundled)
+	function minimap.addFlag(pos, flagPosition, icon, description, temporary, bundled)
+		baseAddFlag(pos, flagPosition, icon, description, temporary, bundled)
 		Cyclopedia.applyMapFlagFilter()
 	end
 
@@ -1681,7 +1681,7 @@ end
 function Cyclopedia.clearMapUI()
 	clearCyclopediaAreaState()
 	Cyclopedia.disconnectMapPositionEvent()
-	var_0_92()
+	resetAreaSelection()
 
 	UI = nil
 end
@@ -1705,7 +1705,7 @@ function showMap()
 
 	function UI.onDestroy()
 		clearCyclopediaAreaState()
-		var_0_92()
+		resetAreaSelection()
 
 		UI = nil
 	end
@@ -1741,7 +1741,7 @@ function showMap()
 	setupCyclopediaAreas()
 	setupLayersMarkDrag(getLayersMark())
 	setupLayersPanelWheel()
-	var_0_71()
+	bindFloorHotkeys()
 
 	if pendingMapPosition then
 		Cyclopedia.centerMapAtPosition(pendingMapPosition, pendingMapZoomDelta)

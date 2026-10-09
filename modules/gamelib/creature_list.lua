@@ -1,4 +1,4 @@
-﻿CreatureList = {}
+CreatureList = {}
 
 local hoveredCreatureButton
 local hoveredCreatureCursor
@@ -1333,18 +1333,18 @@ function CreatureListEventHub.onShieldChange(creature, shieldId)
 	end)
 end
 
-function CreatureListEventHub.onChangeName(arg_84_0, arg_84_1)
-	local creatureId = arg_84_0:getId()
-	local name = (arg_84_1 or arg_84_0:getName() or ""):lower()
+function CreatureListEventHub.onChangeName(creature, newName)
+	local creatureId = creature:getId()
+	local name = (newName or creature:getName() or ""):lower()
 
-	CreatureListEventHub.forEachInstance(function(arg_85_0, instance)
+	CreatureListEventHub.forEachInstance(function(list, instance)
 		local battleButton = instance.battleButtons[creatureId]
 
-		if not battleButton or battleButton.creature ~= arg_84_0 then
+		if not battleButton or battleButton.creature ~= creature then
 			return
 		end
 
-		local var_85_1 = battleButton.data and battleButton.data.name
+		local previousName = battleButton.data and battleButton.data.name
 
 		if battleButton.data then
 			battleButton.data.name = name
@@ -1366,15 +1366,15 @@ function CreatureListEventHub.onChangeName(arg_84_0, arg_84_1)
 			battleButton:update()
 		end
 
-		if var_85_1 ~= name and instance:getSortType() == "name" then
-			table.sort(instance.binaryTree, function(arg_86_0, arg_86_1)
-				return CreatureList.BSComparatorSortType(arg_86_0, arg_86_1, "name", true) == 1
+		if previousName ~= name and instance:getSortType() == "name" then
+			table.sort(instance.binaryTree, function(leftEntry, rightEntry)
+				return CreatureList.BSComparatorSortType(leftEntry, rightEntry, "name", true) == 1
 			end)
 			instance:correctBattleButtons()
 		end
 
-		if arg_85_0.config.onChangeName then
-			arg_85_0.config.onChangeName(arg_85_0, instance, arg_84_0, arg_84_1)
+		if list.config.onChangeName then
+			list.config.onChangeName(list, instance, creature, newName)
 		end
 	end)
 end
@@ -1476,10 +1476,10 @@ function CreatureListEventHub.onCreatureAppear(creature)
 
 	CreatureListEventHub.forEachInstance(function(manager, instance)
 		local id = creature:getId()
-		local var_90_1 = instance.battleButtons[id]
+		local existingBattleButton = instance.battleButtons[id]
 
-		if var_90_1 and var_90_1.creature ~= creature then
-			instance:removeCreature(var_90_1.creature or creature)
+		if existingBattleButton and existingBattleButton.creature ~= creature then
+			instance:removeCreature(existingBattleButton.creature or creature)
 		end
 
 		if instance:doCreatureFitFilters(creature) then

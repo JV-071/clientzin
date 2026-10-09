@@ -30,7 +30,7 @@ local function setSkillValue(total, base)
 	end
 end
 
-local function setSkillPercent(id, arg_5_1, tooltip, color)
+local function setSkillPercent(id, skillPercent, tooltip, color)
 	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
 		return
 	end
@@ -48,7 +48,7 @@ local function setSkillPercent(id, arg_5_1, tooltip, color)
 	end
 
 	percent:setVisible(true)
-	percent:setPercent(skillPercentForBar(arg_5_1))
+	percent:setPercent(skillPercentForBar(skillPercent))
 
 	if tooltip then
 		percent:setTooltip(tooltip)
@@ -150,19 +150,19 @@ local function updateAllSkills()
 end
 
 local function handleGameEnd()
-	local var_9_0 = offlineTrainingWindow
+	local windowToDestroy = offlineTrainingWindow
 
 	offlineTrainingWindow = nil
 
-	if not var_9_0 or var_9_0:isDestroyed() then
+	if not windowToDestroy or windowToDestroy:isDestroyed() then
 		return
 	end
 
 	pcall(function()
-		g_modalManager.hide(var_9_0)
+		g_modalManager.hide(windowToDestroy)
 	end)
 	pcall(function()
-		var_9_0:destroy()
+		windowToDestroy:destroy()
 	end)
 end
 
@@ -186,7 +186,7 @@ local function sendOfflineTraining(skillType)
 	handleGameEnd()
 end
 
-local function var_0_13()
+local function configureOfflineTrainingWindow()
 	if not offlineTrainingWindow or offlineTrainingWindow:isDestroyed() then
 		return
 	end
@@ -203,7 +203,7 @@ local function var_0_13()
 		return false
 	end
 
-	for unusedValue, iter_15_1 in ipairs({
+	for unusedValue, skillWidgetId in ipairs({
 		"magiclevel",
 		"skillId0",
 		"skillId1",
@@ -211,7 +211,7 @@ local function var_0_13()
 		"skillId3",
 		"skillId4"
 	}) do
-		local closeButton = offlineTrainingWindow:recursiveGetChildById(iter_15_1)
+		local closeButton = offlineTrainingWindow:recursiveGetChildById(skillWidgetId)
 
 		if closeButton then
 			closeButton.onClick = nil
@@ -226,13 +226,13 @@ local function handleModalOfflineTraining()
 		offlineTrainingWindow = g_ui.createWidget("OfflineTrainingWindow", rootWidget)
 	end
 
-	var_0_13()
+	configureOfflineTrainingWindow()
 	g_modalManager.show(offlineTrainingWindow)
 
-	local var_17_0, var_17_1 = pcall(updateAllSkills)
+	local updateSucceeded, updateError = pcall(updateAllSkills)
 
-	if not var_17_0 then
-		g_logger.error("Offline training skills update failed: " .. tostring(var_17_1))
+	if not updateSucceeded then
+		g_logger.error("Offline training skills update failed: " .. tostring(updateError))
 	end
 end
 

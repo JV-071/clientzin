@@ -25,23 +25,23 @@ if not ImpactAnalyser then
 end
 
 local targetMaxMargin = 142
-local var_0_1 = 3600000
-local var_0_2 = 10000
+local ROLLING_WINDOW_MS = 3600000
+local GAUGE_WINDOW_MS = 10000
 
 local function updateSessionMaxRates()
-	local var_1_0 = g_clock.millis()
+	local now = g_clock.millis()
 
-	ImpactAnalyser.damageTotal = AnalyserSession:rollingTotal(ImpactAnalyser.damageWindow, var_1_0)
-	ImpactAnalyser.healingTotal = AnalyserSession:rollingTotal(ImpactAnalyser.healingWindow, var_1_0)
-	ImpactAnalyser.gaugeDps = AnalyserSession:rollingRate(ImpactAnalyser.damageWindow, var_0_2, 1000, var_1_0)
-	ImpactAnalyser.gaugeHps = AnalyserSession:rollingRate(ImpactAnalyser.healingWindow, var_0_2, 1000, var_1_0)
+	ImpactAnalyser.damageTotal = AnalyserSession:rollingTotal(ImpactAnalyser.damageWindow, now)
+	ImpactAnalyser.healingTotal = AnalyserSession:rollingTotal(ImpactAnalyser.healingWindow, now)
+	ImpactAnalyser.gaugeDps = AnalyserSession:rollingRate(ImpactAnalyser.damageWindow, GAUGE_WINDOW_MS, 1000, now)
+	ImpactAnalyser.gaugeHps = AnalyserSession:rollingRate(ImpactAnalyser.healingWindow, GAUGE_WINDOW_MS, 1000, now)
 	ImpactAnalyser.dps = ImpactAnalyser.gaugeDps
 
 	for key, damageEffectWindow in pairs(ImpactAnalyser.damageEffectWindows) do
-		local var_1_1 = AnalyserSession:rollingTotal(damageEffectWindow, var_1_0)
+		local effectDamageTotal = AnalyserSession:rollingTotal(damageEffectWindow, now)
 
-		if var_1_1 > 0 then
-			ImpactAnalyser.damageEffect[key] = var_1_1
+		if effectDamageTotal > 0 then
+			ImpactAnalyser.damageEffect[key] = effectDamageTotal
 		else
 			ImpactAnalyser.damageEffect[key] = nil
 			ImpactAnalyser.damageEffectWindows[key] = nil
@@ -86,15 +86,15 @@ local function updateImpactTargetArrow(arrow, numericValue, target)
 		return
 	end
 
-	local var_3_0 = numericValue / math.max(1, target)
+	local targetFraction = numericValue / math.max(1, target)
 
-	if var_3_0 < 0 then
-		var_3_0 = 0
-	elseif var_3_0 > 1 then
-		var_3_0 = 1
+	if targetFraction < 0 then
+		targetFraction = 0
+	elseif targetFraction > 1 then
+		targetFraction = 1
 	end
 
-	arrow:setMarginLeft(math.floor(targetMaxMargin * var_3_0 + 0.5))
+	arrow:setMarginLeft(math.floor(targetMaxMargin * targetFraction + 0.5))
 end
 
 local imageDir = "/modules/game_cyclopedia/images/bestiary/icons/monster-icon-%s-resist"
@@ -120,8 +120,8 @@ function ImpactAnalyser.create(unusedArgument)
 	ImpactAnalyser.damageTotal = 0
 	ImpactAnalyser.dps = 0
 	ImpactAnalyser.maxDPS = 0
-	ImpactAnalyser.damageWindow = AnalyserSession:newRollingWindow(var_0_1)
-	ImpactAnalyser.healingWindow = AnalyserSession:newRollingWindow(var_0_1)
+	ImpactAnalyser.damageWindow = AnalyserSession:newRollingWindow(ROLLING_WINDOW_MS)
+	ImpactAnalyser.healingWindow = AnalyserSession:newRollingWindow(ROLLING_WINDOW_MS)
 	ImpactAnalyser.damageEffect = {}
 	ImpactAnalyser.damageEffectWindows = {}
 	ImpactAnalyser.allTimeHightDps = 0
@@ -211,8 +211,8 @@ function ImpactAnalyser.reset(unusedArgument, allTimeDps, allTimeHps)
 		ImpactAnalyser.allTimeHightHps = 0
 	end
 
-	ImpactAnalyser.damageWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.damageWindow, var_0_1)
-	ImpactAnalyser.healingWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.healingWindow, var_0_1)
+	ImpactAnalyser.damageWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.damageWindow, ROLLING_WINDOW_MS)
+	ImpactAnalyser.healingWindow = AnalyserSession:resetRollingWindow(ImpactAnalyser.healingWindow, ROLLING_WINDOW_MS)
 	ImpactAnalyser.damageEffect = {}
 	ImpactAnalyser.damageEffectWindows = {}
 	ImpactAnalyser.healingTotal = 0
@@ -229,14 +229,14 @@ end
 function ImpactAnalyser.updateGraphics(unusedArgument)
 	updateSessionMaxRates()
 
-	local var_13_0 = ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel
+	local contentsPanel = ImpactAnalyser.window and ImpactAnalyser.window.contentsPanel
 
-	if not var_13_0 then
+	if not contentsPanel then
 		return
 	end
 
-	analyserUIGraphPushValue(var_13_0.graphDpsPanel, ImpactAnalyser.gaugeDps or 0)
-	analyserUIGraphPushValue(var_13_0.graphHealPanel, ImpactAnalyser.gaugeHps or 0)
+	analyserUIGraphPushValue(contentsPanel.graphDpsPanel, ImpactAnalyser.gaugeDps or 0)
+	analyserUIGraphPushValue(contentsPanel.graphHealPanel, ImpactAnalyser.gaugeHps or 0)
 end
 
 function ImpactAnalyser.updateWindow(unusedArgument, ignoreVisible)
@@ -262,13 +262,13 @@ function ImpactAnalyser.updateWindow(unusedArgument, ignoreVisible)
 	contentsPanel.dpsBG:setTooltip(string.format("Current: %d\nTarget: %d", sessionDps, ImpactAnalyser.targetDPS or 0))
 
 	local noData = contentsPanel.dmgTypes:getChildById("noData")
-	local var_14_4 = not table.empty(ImpactAnalyser.damageEffect)
+	local hasDamageData = not table.empty(ImpactAnalyser.damageEffect)
 
 	for unusedValue, child in pairs(contentsPanel.dmgTypes:getChildren()) do
 		child.toBeRemoved = child:getId() ~= "noData"
 	end
 
-	if var_14_4 then
+	if hasDamageData then
 		for effect, damage in pairs(ImpactAnalyser.damageEffect) do
 			local widget = contentsPanel.dmgTypes:getChildById("DamageEffect_" .. effect)
 
@@ -294,14 +294,14 @@ function ImpactAnalyser.updateWindow(unusedArgument, ignoreVisible)
 		end
 	end
 
-	if not var_14_4 and not noData then
+	if not hasDamageData and not noData then
 		noData = g_ui.createWidget("NoDataLabel", contentsPanel.dmgTypes)
 
 		noData:setId("noData")
 	end
 
 	if noData then
-		noData:setVisible(not var_14_4)
+		noData:setVisible(not hasDamageData)
 	end
 
 	contentsPanel.hpsTotal:setText(formatMoney(ImpactAnalyser.healingTotal, ","))
@@ -332,7 +332,7 @@ function ImpactAnalyser.addDealDamage(unusedArgument, amount, numericValue)
 	AnalyserSession:addRollingValue(ImpactAnalyser.damageWindow, amount)
 
 	if not ImpactAnalyser.damageEffectWindows[numericValue] then
-		ImpactAnalyser.damageEffectWindows[numericValue] = AnalyserSession:newRollingWindow(var_0_1)
+		ImpactAnalyser.damageEffectWindows[numericValue] = AnalyserSession:newRollingWindow(ROLLING_WINDOW_MS)
 	end
 
 	AnalyserSession:addRollingValue(ImpactAnalyser.damageEffectWindows[numericValue], amount)

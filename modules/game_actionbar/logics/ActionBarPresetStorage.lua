@@ -1,4 +1,4 @@
-﻿actionBarSettingsCache = nil
+actionBarSettingsCache = nil
 
 local GLOBAL_ACTIONBAR_FILE = "/settings/actionbar_presets.json"
 local LEGACY_MIGRATION_FLAG = "/settings/.actionbar_presets_migrated"
@@ -122,8 +122,8 @@ local function actionBarSlotHasContent(slot)
 	end
 
 	if type(slot.multiHelper) == "table" then
-		for iter_10_0 = 1, 3 do
-			if type(slot.multiHelper[iter_10_0]) == "string" and slot.multiHelper[iter_10_0] ~= "" then
+		for helperIndex = 1, 3 do
+			if type(slot.multiHelper[helperIndex]) == "string" and slot.multiHelper[helperIndex] ~= "" then
 				return true
 			end
 		end
@@ -345,58 +345,58 @@ function endActionBarBatch()
 	end
 end
 
-local function var_0_17(arg_24_0)
-	if type(arg_24_0) ~= "string" then
+local function isLuaTypeName(value)
+	if type(value) ~= "string" then
 		return false
 	end
 
-	if arg_24_0 == "string" then
+	if value == "string" then
 		return true
 	end
 
-	if arg_24_0 == "number" then
+	if value == "number" then
 		return true
 	end
 
-	if arg_24_0 == "nil" then
+	if value == "nil" then
 		return true
 	end
 
-	if arg_24_0 == "boolean" then
+	if value == "boolean" then
 		return true
 	end
 
-	if arg_24_0 == "table" then
+	if value == "table" then
 		return true
 	end
 
-	if arg_24_0 == "function" then
+	if value == "function" then
 		return true
 	end
 
-	if arg_24_0 == "userdata" then
+	if value == "userdata" then
 		return true
 	end
 
-	if arg_24_0 == "thread" then
+	if value == "thread" then
 		return true
 	end
 
 	return false
 end
 
-local function var_0_18(arg_25_0)
-	if type(arg_25_0) ~= "string" then
+local function getDefaultFunctionHotkey(slotId)
+	if type(slotId) ~= "string" then
 		return ""
 	end
 
-	local var_25_0 = arg_25_0:match("^slot(%d+)$")
+	local slotNumberText = slotId:match("^slot(%d+)$")
 
-	if not var_25_0 then
+	if not slotNumberText then
 		return ""
 	end
 
-	local numericValue = tonumber(var_25_0)
+	local numericValue = tonumber(slotNumberText)
 
 	if not numericValue then
 		return ""
@@ -409,39 +409,39 @@ local function var_0_18(arg_25_0)
 	return "F" .. tostring(numericValue)
 end
 
-local function var_0_19(arg_26_0)
-	if type(arg_26_0) ~= "table" then
+local function repairSerializedHotkeys(document)
+	if type(document) ~= "table" then
 		return false
 	end
 
-	local var_26_0 = false
+	local changed = false
 
-	for key, entry in pairs(arg_26_0) do
+	for key, entry in pairs(document) do
 		if key ~= "_mergeTimes" and type(entry) == "table" then
 			for key, entry in pairs(entry) do
 				if type(entry) == "table" then
-					local var_26_1 = var_0_18(key)
+					local defaultHotkey = getDefaultFunctionHotkey(key)
 
-					if var_0_17(entry.hotkeyChatOn) then
-						entry.hotkeyChatOn = var_26_1
-						var_26_0 = true
+					if isLuaTypeName(entry.hotkeyChatOn) then
+						entry.hotkeyChatOn = defaultHotkey
+						changed = true
 					end
 
-					if var_0_17(entry.hotkeyChatOff) then
-						entry.hotkeyChatOff = var_26_1
-						var_26_0 = true
+					if isLuaTypeName(entry.hotkeyChatOff) then
+						entry.hotkeyChatOff = defaultHotkey
+						changed = true
 					end
 
-					if var_0_17(entry.hotkey) then
-						entry.hotkey = var_26_1
-						var_26_0 = true
+					if isLuaTypeName(entry.hotkey) then
+						entry.hotkey = defaultHotkey
+						changed = true
 					end
 				end
 			end
 		end
 	end
 
-	return var_26_0
+	return changed
 end
 
 function readActionBarPresetsDocument()
@@ -453,7 +453,7 @@ function readActionBarPresetsDocument()
 
 	local document = decodeJsonFile(GLOBAL_ACTIONBAR_FILE) or {}
 
-	if var_0_19(document) then
+	if repairSerializedHotkeys(document) then
 		encodeAndWriteDocument(GLOBAL_ACTIONBAR_FILE, document)
 	end
 
@@ -468,7 +468,7 @@ function writeActionBarPresetsDocument(data)
 	end
 
 	stripMergeMetadata(data)
-	var_0_19(data)
+	repairSerializedHotkeys(data)
 
 	if not encodeAndWriteDocument(GLOBAL_ACTIONBAR_FILE, data) then
 		return false

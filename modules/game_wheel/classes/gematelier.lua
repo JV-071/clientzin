@@ -1,4 +1,4 @@
-﻿GemAtelier = {}
+GemAtelier = {}
 GemAtelier.__index = GemAtelier
 
 local lockedOnly = false
@@ -7,7 +7,7 @@ local sortAffinity = 1
 local currentPage = 1
 local destroyGemWindow
 local lastSelectedGem
-local var_0_6
+local highlightedGemWidget
 local currentGemList = {}
 local totalGemList = {}
 local currentSearchText = ""
@@ -30,10 +30,10 @@ function GemAtelier.resetFields()
 	gemAtelierWindow:recursiveGetChildById("qualitiesBox"):setCurrentIndex(1, true)
 	gemAtelierWindow:recursiveGetChildById("lockedOnly"):setChecked(false, true)
 
-	if var_0_6 then
-		var_0_6:setVisible(false)
+	if highlightedGemWidget then
+		highlightedGemWidget:setVisible(false)
 
-		var_0_6 = nil
+		highlightedGemWidget = nil
 	end
 
 	cachedBasicMods, cachedSupremeMods = ModCatalog.buildModCache()
@@ -67,11 +67,11 @@ function GemAtelier.redirectToGem(gemData)
 
 		highLight:setVisible(true)
 
-		if var_0_6 then
-			var_0_6:setVisible(false)
+		if highlightedGemWidget then
+			highlightedGemWidget:setVisible(false)
 		end
 
-		var_0_6 = highLight
+		highlightedGemWidget = highLight
 	end
 
 	gemList:destroyChildren()
@@ -301,7 +301,7 @@ function GemAtelier.setupGemWidget(widget, data)
 
 	local typeOffset = data.gemType * 32
 	local domainOffset = data.gemDomain * 96
-	local var_7_2 = (WheelOfDestiny.vocationId - 1) * 384 + domainOffset + typeOffset
+	local revelationSpriteOffset = (WheelOfDestiny.vocationId - 1) * 384 + domainOffset + typeOffset
 	local tmpData = GemVocations[WheelOfDestiny.vocationId][data.gemType]
 
 	if not tmpData then
@@ -315,7 +315,7 @@ function GemAtelier.setupGemWidget(widget, data)
 	widget.locker.onClick = GemAtelier.onLockGem
 	widget.locker.gemID = data.gemID
 
-	widget.gemRevelationItem:setImageClip(var_7_2 .. " 0 32 32")
+	widget.gemRevelationItem:setImageClip(revelationSpriteOffset .. " 0 32 32")
 	widget.gemRevelationItem:setTooltip(tmpData.name:gsub(" %(x 0%)", ""))
 
 	if GemAtelier.isGemEquipped(data.gemID) then
@@ -843,20 +843,20 @@ function GemAtelier.getEquipedGem(domain)
 	return WheelGemState.getEquipedGem(domain)
 end
 
-function GemAtelier.onLockActionSent(arg_29_0)
-	local var_29_0 = WheelGemState.toggleGemLock(arg_29_0)
+function GemAtelier.onLockActionSent(gemUuid)
+	local lockState = WheelGemState.toggleGemLock(gemUuid)
 
-	if var_29_0 == nil then
+	if lockState == nil then
 		return
 	end
 
 	if lastSelectedGem and lastSelectedGem.locker then
-		lastSelectedGem.locker:setChecked(var_29_0 == 1)
+		lastSelectedGem.locker:setChecked(lockState == 1)
 	end
 
-	local var_29_1 = lastSelectedGem and lastSelectedGem.gemIndex or 1
+	local selectedGemIndex = lastSelectedGem and lastSelectedGem.gemIndex or 1
 
-	GemAtelier.showGems(false, var_29_1)
+	GemAtelier.showGems(false, selectedGemIndex)
 end
 
 function GemAtelier.onRevealGem(button, gemType)
@@ -1050,12 +1050,12 @@ function GemAtelier.setupVesselPanel()
 		if background and gemContainer and gemItem then
 			local vesselSocketLevel = WheelGemState.getVesselSocketLevel(i)
 			local data = GemAtelier.getEquipedGem(i)
-			local var_40_6 = data ~= nil
-			local var_40_7 = var_40_6 and vesselSocketLevel == data.gemType + 1
+			local hasGem = data ~= nil
+			local matchesSocketLevel = hasGem and vesselSocketLevel == data.gemType + 1
 
 			background:setImageSource(vesselSocketLevel == 0 and "/images/game/wheel/backdrop_skillwheel_socket_inactive" or "/images/game/wheel/backdrop_skillwheel_socket_active")
 			gemContainer:setImageSource("/images/game/wheel/icons-skillwheel-sockets")
-			gemContainer:setImageClip(WheelGemState.getSocketImageClip(i, vesselSocketLevel, var_40_7))
+			gemContainer:setImageClip(WheelGemState.getSocketImageClip(i, vesselSocketLevel, matchesSocketLevel))
 			gemContainer:setVisible(vesselSocketLevel > 0)
 
 			gemItem.gemID = -1
@@ -1063,7 +1063,7 @@ function GemAtelier.setupVesselPanel()
 			gemItem:setVisible(false)
 			gemItem:setImageClip("0 0 32 32")
 
-			if var_40_6 then
+			if hasGem then
 				local typeOffset = data.gemType * 32
 				local domainOffset = data.gemDomain * 96
 				local vocationOffset = (WheelOfDestiny.vocationId - 1) * 384
@@ -1079,8 +1079,8 @@ function GemAtelier.setupVesselPanel()
 end
 
 function GemAtelier.onClickVessel(unusedArgument, domain)
-	if var_0_6 then
-		var_0_6:setVisible(false)
+	if highlightedGemWidget then
+		highlightedGemWidget:setVisible(false)
 	end
 
 	local gemItem = gemAtelierWindow:recursiveGetChildById("selectVessel" .. domain)
@@ -1088,7 +1088,7 @@ function GemAtelier.onClickVessel(unusedArgument, domain)
 	if gemItem then
 		gemItem:setVisible(true)
 
-		var_0_6 = gemItem
+		highlightedGemWidget = gemItem
 	end
 
 	local gemItem = gemAtelierWindow:recursiveGetChildById("gemItem" .. domain)

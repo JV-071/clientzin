@@ -158,6 +158,8 @@ TEST_F(RuntimeEventTest, ModernSkillsDoNotConsumeLegacyAdditionalSkillPairs)
 TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
 {
     const auto previousVersion = g_game.getClientVersion();
+    const auto previousSupportedVersion = g_gameConfig.getLastSupportedVersion();
+    g_gameConfig.setLastSupportedVersion(1530);
     g_game.setClientVersion(1530);
     g_lua.loadFunction(R"lua(
         preySelections = 0
@@ -200,6 +202,7 @@ TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_EQ(2, g_lua.popInteger());
     g_game.setClientVersion(previousVersion);
+    g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
 }
 
 TEST_F(RuntimeEventTest, ColorUsesGlobalPaletteAtRequestedStackIndex)
