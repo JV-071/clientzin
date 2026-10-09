@@ -93,7 +93,8 @@
         "SPEED_UP_BUILD_UNITY": "OFF",
         "OTCLIENT_BUILD_TESTS": "ON",
         "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
+        "CMAKE_CXX_COMPILER": "cl",
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/vcpkg-ports"
       },
       "condition": {
         "type": "equals",

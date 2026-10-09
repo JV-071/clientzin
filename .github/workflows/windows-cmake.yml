@@ -47,8 +47,9 @@ jobs:
         id: cache
         with:
           path: D:/clientzin-cache/vcpkg
-          key: deps-v3-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}
+          key: deps-v3-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json', 'cmake/vcpkg-ports/**') }}
           restore-keys: |
+            deps-v3-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}
             deps-v2-static-windows2022-${{ steps.identity.outputs.compiler }}-${{ hashFiles('vcpkg.json') }}-
       - name: Checkout pinned vcpkg
         uses: actions/checkout@v4
@@ -62,7 +63,7 @@ jobs:
           $env:VCPKG_ROOT = Join-Path $env:GITHUB_WORKSPACE '.ci/vcpkg'
           & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
+          & ./.ci/vcpkg/vcpkg.exe install --triplet x64-windows-static --overlay-ports=cmake/vcpkg-ports --clean-after-build 2>&1 | Tee-Object diagnostics/vcpkg.log
           exit $LASTEXITCODE
       - name: Share dependency packages with all four builds
         uses: actions/upload-artifact@v4
