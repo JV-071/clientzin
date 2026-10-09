@@ -248,6 +248,7 @@ private:
     /// Handle lua errors from safeCall
     static int luaErrorHandler(lua_State* L);
     /// Handle bound cpp functions callbacks
+    static int invokeCppFunction(lua_State* L, bool& failed);
     static int luaCppFunctionCallback(lua_State* L);
     /// Collect bound cpp function pointers
     static int luaCollectCppFunction(lua_State* L);

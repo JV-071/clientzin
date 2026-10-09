@@ -654,10 +654,17 @@ int LuaInterface::luaErrorHandler(lua_State* L)
     return 1;
 }
 
-int LuaInterface::luaCppFunctionCallback(lua_State* L)
+// Keep native exception handlers out of the Lua C callback frame, including
+// optimized builds: LuaJIT may unwind that frame when lua_error is raised.
+#if defined(_MSC_VER)
+__declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+__attribute__((noinline))
+#endif
+int LuaInterface::invokeCppFunction(lua_State* L, bool& failed)
 {
     int numRets = 0;
-    bool failed = false;
+    failed = false;
     {
         ScopedState scopedState(g_lua, L);
         const auto* const funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUpvalueUserdata());
@@ -687,8 +694,14 @@ int LuaInterface::luaCppFunctionCallback(lua_State* L)
             assert(numRets == g_lua.stackSize());
         }
     }
-    // Finish the native catch and destroy local state before Lua unwinds.
-    // Raising inside catch can unwind the MSVC exception handler a second time.
+    return numRets;
+}
+
+int LuaInterface::luaCppFunctionCallback(lua_State* L)
+{
+    bool failed = false;
+    const int numRets = invokeCppFunction(L, failed);
+    // This frame has neither C++ handlers nor nontrivial locals to unwind.
     if (failed)
         return lua_error(L);
     return numRets;
