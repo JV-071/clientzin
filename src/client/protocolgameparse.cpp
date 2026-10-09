@@ -6518,7 +6518,7 @@ void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
             } else {
                 nextFreeReroll = msg->getU16();
             }
-            return g_lua.callGlobalField("g_game", "onPreySelection", slot, monsterNames, monsterLooktypes, nextFreeReroll, wildcards);
+            return g_lua.callGlobalField("g_game", "onPreySelection", slot, 0, 0, 0, monsterNames, monsterLooktypes, nextFreeReroll, wildcards);
         }
         case Otc::PREY_STATE_SELECTION_CHANGE_MONSTER:
         {
@@ -6541,7 +6541,7 @@ void ProtocolGame::parsePreyData(const InputMessagePtr& msg)
             } else {
                 nextFreeReroll = msg->getU16();
             }
-            return g_lua.callGlobalField("g_game", "onPreySelectionChangeMonster", slot, names, outfits, bonusType, bonusValue, bonusGrade, nextFreeReroll, wildcards);
+            return g_lua.callGlobalField("g_game", "onPreySelection", slot, bonusType, bonusValue, bonusGrade, names, outfits, nextFreeReroll, wildcards);
         }
         case Otc::PREY_STATE_LIST_SELECTION:
         {

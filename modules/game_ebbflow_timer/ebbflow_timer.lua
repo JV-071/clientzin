@@ -1,35 +1,35 @@
 ebbFlowController = Controller:new()
 EbbFlowTimer = EbbFlowTimer or {}
 
-local var_0_0 = ExtendedIds and ExtendedIds.EbbFlowTimer or 25
-local var_0_1 = "textmessageblue-13px_cp1252"
-local var_0_2 = "textmessagered-13px_cp1252"
-local var_0_3 = "verdana-11px-rounded"
-local var_0_4 = 100
-local var_0_5 = 30000
-local var_0_6 = 1000
+local EBB_FLOW_OPCODE = ExtendedIds and ExtendedIds.EbbFlowTimer or 25
+local normalTimerFont = "textmessageblue-13px_cp1252"
+local warningTimerFont = "textmessagered-13px_cp1252"
+local FALLBACK_TIMER_FONT = "verdana-11px-rounded"
+local TICK_INTERVAL_MS = 100
+local WARNING_THRESHOLD_MS = 30000
+local FADE_DURATION_MS = 1000
 local imageSourcePath = "/images/game/ranked-queue/game-hud-ui"
 local ebbFlowTimerPanelWidget
-local var_0_9
-local numericValue = 0
-local var_0_11 = false
-local var_0_12
+local timerTickEvent
+local remainingTimeMs = 0
+local closedByUser = false
+local ensureTimerPanel
 
-local function var_0_13(fontName)
+local function fontExists(fontName)
 	return g_fonts and g_fonts.fontExists and g_fonts.fontExists(fontName)
 end
 
-local function var_0_14()
-	if not var_0_13(var_0_1) then
-		var_0_1 = var_0_3
+local function resolveTimerFonts()
+	if not fontExists(normalTimerFont) then
+		normalTimerFont = FALLBACK_TIMER_FONT
 	end
 
-	if not var_0_13(var_0_2) then
-		var_0_2 = var_0_3
+	if not fontExists(warningTimerFont) then
+		warningTimerFont = FALLBACK_TIMER_FONT
 	end
 end
 
-local function var_0_15()
+local function getTimerParent()
 	if modules.game_interface then
 		if modules.game_interface.getMapPanel then
 			local mapPanel = modules.game_interface.getMapPanel()
@@ -47,19 +47,19 @@ local function var_0_15()
 	return rootWidget
 end
 
-local function var_0_16(arg_4_0)
-	if arg_4_0 < 0 then
-		arg_4_0 = 0
+local function formatRemainingTime(remainingMs)
+	if remainingMs < 0 then
+		remainingMs = 0
 	end
 
-	local var_4_0 = math.floor(arg_4_0 / 60000)
-	local var_4_1 = math.floor(arg_4_0 % 60000 / 1000)
-	local var_4_2 = math.floor(arg_4_0 % 1000 / 10)
+	local minutes = math.floor(remainingMs / 60000)
+	local seconds = math.floor(remainingMs % 60000 / 1000)
+	local centiseconds = math.floor(remainingMs % 1000 / 10)
 
-	return string.format("%02d : %02d . %02d", var_4_0, var_4_1, var_4_2)
+	return string.format("%02d : %02d . %02d", minutes, seconds, centiseconds)
 end
 
-local function var_0_17(arg_5_0)
+local function updateTimerColor(remainingMs)
 	if not ebbFlowTimerPanelWidget then
 		return
 	end
@@ -70,25 +70,25 @@ local function var_0_17(arg_5_0)
 		return
 	end
 
-	if arg_5_0 > 0 and arg_5_0 <= var_0_5 then
-		timeLeftTimer:setFont(var_0_2)
+	if remainingMs > 0 and remainingMs <= WARNING_THRESHOLD_MS then
+		timeLeftTimer:setFont(warningTimerFont)
 	else
-		timeLeftTimer:setFont(var_0_1)
+		timeLeftTimer:setFont(normalTimerFont)
 	end
 end
 
-local function var_0_18()
-	if var_0_9 then
-		removeEvent(var_0_9)
+local function stopTimerEvent()
+	if timerTickEvent then
+		removeEvent(timerTickEvent)
 
-		var_0_9 = nil
+		timerTickEvent = nil
 	end
 end
 
-local function var_0_19()
-	var_0_18()
+local function hideTimerPanel()
+	stopTimerEvent()
 
-	numericValue = 0
+	remainingTimeMs = 0
 
 	if ebbFlowTimerPanelWidget then
 		g_effects.cancelFade(ebbFlowTimerPanelWidget)
@@ -97,21 +97,21 @@ local function var_0_19()
 	end
 end
 
-local function var_0_20()
-	if not ebbFlowTimerPanelWidget or var_0_11 or ebbFlowTimerPanelWidget:isVisible() then
+local function showTimerPanel()
+	if not ebbFlowTimerPanelWidget or closedByUser or ebbFlowTimerPanelWidget:isVisible() then
 		return
 	end
 
 	ebbFlowTimerPanelWidget:show()
 	ebbFlowTimerPanelWidget:raise()
 	ebbFlowTimerPanelWidget:setOpacity(0)
-	g_effects.fadeIn(ebbFlowTimerPanelWidget, var_0_6)
+	g_effects.fadeIn(ebbFlowTimerPanelWidget, FADE_DURATION_MS)
 end
 
-local function var_0_21()
-	numericValue = numericValue - var_0_4
+local function onTimerTick()
+	remainingTimeMs = remainingTimeMs - TICK_INTERVAL_MS
 
-	if numericValue <= 0 then
+	if remainingTimeMs <= 0 then
 		if ebbFlowTimerPanelWidget then
 			local timeLeftTimer = ebbFlowTimerPanelWidget:getChildById("timeLeftTimer")
 
@@ -120,9 +120,9 @@ local function var_0_21()
 			end
 		end
 
-		var_0_19()
+		hideTimerPanel()
 
-		var_0_11 = false
+		closedByUser = false
 
 		return
 	end
@@ -134,45 +134,45 @@ local function var_0_21()
 	local timeLeftTimer = ebbFlowTimerPanelWidget:getChildById("timeLeftTimer")
 
 	if timeLeftTimer then
-		timeLeftTimer:setText(var_0_16(numericValue))
+		timeLeftTimer:setText(formatRemainingTime(remainingTimeMs))
 	end
 
-	var_0_17(numericValue)
-	var_0_20()
+	updateTimerColor(remainingTimeMs)
+	showTimerPanel()
 end
 
-function onManageEbbFlowTimer(arg_10_0, arg_10_1)
-	if not arg_10_0 or not arg_10_1 or arg_10_1 <= 0 then
-		var_0_19()
+function onManageEbbFlowTimer(showTimer, remainingMs)
+	if not showTimer or not remainingMs or remainingMs <= 0 then
+		hideTimerPanel()
 
-		var_0_11 = false
+		closedByUser = false
 
 		return
 	end
 
-	if not var_0_12() then
+	if not ensureTimerPanel() then
 		return
 	end
 
-	var_0_18()
+	stopTimerEvent()
 
-	numericValue = tonumber(arg_10_1) or 0
-	var_0_11 = false
+	remainingTimeMs = tonumber(remainingMs) or 0
+	closedByUser = false
 
 	local timeLeftTimer = ebbFlowTimerPanelWidget:getChildById("timeLeftTimer")
 
 	if timeLeftTimer then
-		timeLeftTimer:setText(var_0_16(numericValue))
+		timeLeftTimer:setText(formatRemainingTime(remainingTimeMs))
 	end
 
-	var_0_17(numericValue)
-	var_0_20()
+	updateTimerColor(remainingTimeMs)
+	showTimerPanel()
 
-	var_0_9 = cycleEvent(var_0_21, var_0_4)
+	timerTickEvent = cycleEvent(onTimerTick, TICK_INTERVAL_MS)
 end
 
-local function handleMouseRelease(unusedArgument, arg_11_1, arg_11_2)
-	if arg_11_2 ~= MouseRightButton then
+local function handleMouseRelease(unusedArgument, mousePosition, mouseButton)
+	if mouseButton ~= MouseRightButton then
 		return false
 	end
 
@@ -180,7 +180,7 @@ local function handleMouseRelease(unusedArgument, arg_11_1, arg_11_2)
 
 	popupMenuWidget:setGameMenu(true)
 	popupMenuWidget:addOption(tr("Close"), function()
-		var_0_11 = true
+		closedByUser = true
 
 		if ebbFlowTimerPanelWidget then
 			g_effects.cancelFade(ebbFlowTimerPanelWidget)
@@ -188,17 +188,17 @@ local function handleMouseRelease(unusedArgument, arg_11_1, arg_11_2)
 		end
 	end)
 	popupMenuWidget:setWidth(70)
-	popupMenuWidget:display(arg_11_1)
+	popupMenuWidget:display(mousePosition)
 
 	return true
 end
 
-function var_0_12()
+function ensureTimerPanel()
 	if ebbFlowTimerPanelWidget then
 		return ebbFlowTimerPanelWidget
 	end
 
-	local parentWidget = var_0_15()
+	local parentWidget = getTimerParent()
 
 	if not parentWidget then
 		return nil
@@ -216,8 +216,8 @@ function var_0_12()
 
 	ebbFlowTimerPanelWidget.onMouseRelease = handleMouseRelease
 
-	function ebbFlowTimerPanelWidget.onHoverChange(arg_14_0, arg_14_1)
-		arg_14_0:setOpacity(arg_14_1 and 0.5 or 1)
+	function ebbFlowTimerPanelWidget.onHoverChange(timerPanel, hovered)
+		timerPanel:setOpacity(hovered and 0.5 or 1)
 	end
 
 	ebbFlowTimerPanelWidget:hide()
@@ -225,85 +225,85 @@ function var_0_12()
 	return ebbFlowTimerPanelWidget
 end
 
-local function var_0_23(arg_15_0, arg_15_1)
-	local var_15_0, var_15_1, var_15_2, var_15_3 = arg_15_0:byte(arg_15_1, arg_15_1 + 3)
+local function readLittleEndianU32(buffer, offset)
+	local byte0, byte1, byte2, byte3 = buffer:byte(offset, offset + 3)
 
-	if not var_15_3 then
+	if not byte3 then
 		return nil
 	end
 
-	return var_15_0 + var_15_1 * 256 + var_15_2 * 65536 + var_15_3 * 16777216
+	return byte0 + byte1 * 256 + byte2 * 65536 + byte3 * 16777216
 end
 
-local function var_0_24(arg_16_0, arg_16_1)
-	local var_16_0 = var_0_23(arg_16_0, arg_16_1)
-	local var_16_1 = var_0_23(arg_16_0, arg_16_1 + 4)
+local function readLittleEndianU64(buffer, offset)
+	local lowWord = readLittleEndianU32(buffer, offset)
+	local highWord = readLittleEndianU32(buffer, offset + 4)
 
-	if not var_16_0 or not var_16_1 then
+	if not lowWord or not highWord then
 		return nil
 	end
 
-	return var_16_0 + var_16_1 * 4294967296
+	return lowWord + highWord * 4294967296
 end
 
-local function var_0_25(arg_17_0)
-	if type(arg_17_0) ~= "string" or #arg_17_0 < 1 then
+local function decodeTimerPayload(payload)
+	if type(payload) ~= "string" or #payload < 1 then
 		return nil
 	end
 
-	if arg_17_0:sub(1, 1) == "{" then
-		local var_17_0, var_17_1 = pcall(function()
-			return json.decode(arg_17_0)
+	if payload:sub(1, 1) == "{" then
+		local decodeSucceeded, decodedPayload = pcall(function()
+			return json.decode(payload)
 		end)
 
-		if var_17_0 and type(var_17_1) == "table" then
-			local show = var_17_1.show
+		if decodeSucceeded and type(decodedPayload) == "table" then
+			local show = decodedPayload.show
 
 			if show == nil then
-				show = var_17_1.visible
+				show = decodedPayload.visible
 			end
 
-			local var_17_3 = var_17_1.remaining or var_17_1.endTime or var_17_1.ms or 0
+			local remainingMs = decodedPayload.remaining or decodedPayload.endTime or decodedPayload.ms or 0
 
-			return show ~= false and show ~= 0, tonumber(var_17_3) or 0
+			return show ~= false and show ~= 0, tonumber(remainingMs) or 0
 		end
 	end
 
-	local var_17_4 = arg_17_0:byte(1)
-	local var_17_5 = 0
+	local visibilityByte = payload:byte(1)
+	local remainingMs = 0
 
-	if #arg_17_0 >= 9 then
-		var_17_5 = var_0_24(arg_17_0, 2) or 0
-	elseif #arg_17_0 >= 5 then
-		var_17_5 = var_0_23(arg_17_0, 2) or 0
+	if #payload >= 9 then
+		remainingMs = readLittleEndianU64(payload, 2) or 0
+	elseif #payload >= 5 then
+		remainingMs = readLittleEndianU32(payload, 2) or 0
 	end
 
-	return var_17_4 == 1, var_17_5
+	return visibilityByte == 1, remainingMs
 end
 
-local function var_0_26(unusedArgument, unusedArgument, arg_19_2)
-	local var_19_0, var_19_1 = var_0_25(arg_19_2)
+local function onTimerOpcode(unusedArgument, unusedArgument, payload)
+	local showTimer, remainingMs = decodeTimerPayload(payload)
 
-	if var_19_0 == nil then
+	if showTimer == nil then
 		return
 	end
 
-	onManageEbbFlowTimer(var_19_0, var_19_1)
+	onManageEbbFlowTimer(showTimer, remainingMs)
 end
 
-function EbbFlowTimer.test(arg_20_0)
-	var_0_12()
-	onManageEbbFlowTimer(true, arg_20_0 or 900000)
+function EbbFlowTimer.test(durationMs)
+	ensureTimerPanel()
+	onManageEbbFlowTimer(true, durationMs or 900000)
 end
 
 function EbbFlowTimer.hide()
 	onManageEbbFlowTimer(false, 0)
 end
 
-function ebbFlowController.onInit(arg_22_0)
-	var_0_14()
+function ebbFlowController.onInit(controller)
+	resolveTimerFonts()
 	g_ui.importStyle("ebbflow_timer")
-	arg_22_0:registerExtendedOpcode(var_0_0, var_0_26)
+	controller:registerExtendedOpcode(EBB_FLOW_OPCODE, onTimerOpcode)
 	pcall(function()
 		connect(g_game, {
 			onManageEbbFlowTimer = onManageEbbFlowTimer
@@ -312,13 +312,13 @@ function ebbFlowController.onInit(arg_22_0)
 end
 
 function ebbFlowController.onGameStart(unusedArgument)
-	var_0_12()
+	ensureTimerPanel()
 end
 
 function ebbFlowController.onGameEnd(unusedArgument)
-	var_0_19()
+	hideTimerPanel()
 
-	var_0_11 = false
+	closedByUser = false
 end
 
 function ebbFlowController.onTerminate(unusedArgument)
@@ -327,7 +327,7 @@ function ebbFlowController.onTerminate(unusedArgument)
 			onManageEbbFlowTimer = onManageEbbFlowTimer
 		})
 	end)
-	var_0_19()
+	hideTimerPanel()
 
 	if ebbFlowTimerPanelWidget then
 		ebbFlowTimerPanelWidget:destroy()
@@ -340,7 +340,7 @@ function init()
 	ebbFlowController:init()
 
 	if g_game.isOnline() then
-		var_0_12()
+		ensureTimerPanel()
 	end
 end
 

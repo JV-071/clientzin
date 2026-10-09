@@ -97,6 +97,11 @@ protected:
         g_textures.terminate();
         g_resources.terminate();
     }
+    void parsePrey(const InputMessagePtr& message)
+    {
+        ProtocolGame protocol;
+        protocol.parsePreyData(message);
+    }
     void parseSkills(const InputMessagePtr& message)
     {
         g_lua.registerClass<LocalPlayer>();
@@ -148,6 +153,53 @@ TEST_F(RuntimeEventTest, ModernSkillsDoNotConsumeLegacyAdditionalSkillPairs)
     EXPECT_EQ(0x9c, message->getU8());
     g_game.setClientVersion(0);
     g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
+}
+
+TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
+{
+    const auto previousVersion = g_game.getClientVersion();
+    g_game.setClientVersion(1530);
+    g_lua.loadFunction(R"lua(
+        preySelections = 0
+        g_game = { onPreySelection = function(slot, bonusType, bonusValue, bonusGrade,
+                                             names, outfits, freeReroll, lockType)
+            assert(slot == 0)
+            assert(type(names) == 'table' and #names == 0)
+            assert(type(outfits) == 'table' and #outfits == 0)
+            assert(freeReroll == 60 and lockType == 2)
+            if preySelections == 0 then
+                assert(bonusType == 0 and bonusValue == 0 and bonusGrade == 0)
+            else
+                assert(bonusType == 1 and bonusValue == 25 and bonusGrade == 3)
+            end
+            preySelections = preySelections + 1
+        end }
+    )lua", "@prey_contract_probe.lua");
+    ASSERT_EQ(0, g_lua.safeCall());
+
+    for (const bool changeMonster : {false, true}) {
+        std::string packet;
+        packet.push_back(0); // slot
+        packet.push_back(changeMonster ? Otc::PREY_STATE_SELECTION_CHANGE_MONSTER : Otc::PREY_STATE_SELECTION);
+        if (changeMonster) {
+            packet.push_back(1); // bonus type
+            packet.push_back(25); packet.push_back(0); // bonus value, U16
+            packet.push_back(3); // bonus grade
+        }
+        packet.push_back(0); // empty monster list
+        packet.push_back(60); packet.append(3, '\0'); // next free roll, U32
+        packet.push_back(2); // option/lock state
+        auto message = std::make_shared<InputMessage>();
+        const auto start = message->getReadPos();
+        message->setBuffer(packet);
+        message->setReadPos(start);
+        EXPECT_NO_THROW(parsePrey(message));
+        EXPECT_TRUE(message->eof());
+    }
+    g_lua.loadFunction("return preySelections", "@prey_contract_result.lua");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_EQ(2, g_lua.popInteger());
+    g_game.setClientVersion(previousVersion);
 }
 
 TEST_F(RuntimeEventTest, ColorUsesGlobalPaletteAtRequestedStackIndex)

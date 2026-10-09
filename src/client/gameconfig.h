@@ -138,7 +138,7 @@ private:
     std::string m_animatedTextFontName{ "verdana-11px-rounded" };
     std::string m_staticTextFontName{ "verdana-11px-rounded" };
     std::string m_widgetTextFontName{ "verdana-11px-antialised" };
-    std::string m_itemCountFontName{ "verdana-8px-rounded" };
+    std::string m_itemCountFontName{ "verdana-11px-rounded" };
 
     BitmapFontPtr m_creatureNameFont;
     BitmapFontPtr m_animatedTextFont;

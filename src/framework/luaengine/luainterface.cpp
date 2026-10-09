@@ -656,47 +656,41 @@ int LuaInterface::luaErrorHandler(lua_State* L)
 
 int LuaInterface::luaCppFunctionCallback(lua_State* L)
 {
-    ScopedState scopedState(g_lua, L);
-
-    // retrieves function pointer from userdata
-    const auto* const funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUpvalueUserdata());
-    assert(funcPtr);
-
     int numRets = 0;
+    bool failed = false;
+    {
+        ScopedState scopedState(g_lua, L);
+        const auto* const funcPtr = static_cast<LuaCppFunctionPtr*>(g_lua.popUpvalueUserdata());
+        assert(funcPtr);
 
-    // do the call
-    try {
+        std::string errorMessage;
         ++g_lua.m_cppCallbackDepth;
-        numRets = (*(funcPtr->get()))(&g_lua);
+        try {
+            numRets = (*(funcPtr->get()))(&g_lua);
+        } catch (const stdext::exception& e) {
+            failed = true;
+            errorMessage = fmt::format("C++ call failed: {}", e.what());
+        } catch (const std::exception& e) {
+            failed = true;
+            errorMessage = fmt::format("C++ std::exception: {}", e.what());
+        } catch (...) {
+            failed = true;
+            errorMessage = "Unknown C++ exception";
+        }
         --g_lua.m_cppCallbackDepth;
-        assert(numRets == g_lua.stackSize());
-    } catch (stdext::exception& e) {
-        --g_lua.m_cppCallbackDepth;
-        // cleanup stack
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(fmt::format("C++ call failed: {}", g_lua.traceback(e.what())));
-        scopedState.restore();
-        return lua_error(L);
-    } catch (const std::exception& e) {
-        --g_lua.m_cppCallbackDepth;
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(fmt::format("C++ std::exception: {}", g_lua.traceback(e.what())));
-        scopedState.restore();
-        return lua_error(L);
-    } catch (...) {
-        --g_lua.m_cppCallbackDepth;
-        while (g_lua.stackSize() > 0)
-            g_lua.pop();
-        numRets = 0;
-        g_lua.pushString(g_lua.traceback("Unknown C++ exception"));
-        scopedState.restore();
-        return lua_error(L);
-    }
 
+        if (failed) {
+            while (g_lua.stackSize() > 0)
+                g_lua.pop();
+            g_lua.pushString(g_lua.traceback(errorMessage));
+        } else {
+            assert(numRets == g_lua.stackSize());
+        }
+    }
+    // Finish the native catch and destroy local state before Lua unwinds.
+    // Raising inside catch can unwind the MSVC exception handler a second time.
+    if (failed)
+        return lua_error(L);
     return numRets;
 }
 
