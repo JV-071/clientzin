@@ -75,6 +75,7 @@ private:
 
 class DrawPool
 {
+    friend class RuntimeEventTest;
 public:
     static constexpr uint16_t
         FPS1 = 1000 / 1,

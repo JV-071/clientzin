@@ -15,6 +15,7 @@
 #include "client/gameconfig.h"
 #include "client/localplayer.h"
 #include "client/uiitem.h"
+#include "client/uicreature.h"
 #include "client/item.h"
 #include "client/thingtypemanager.h"
 #include <sstream>
@@ -134,6 +135,23 @@ protected:
         std::cout << "[skills test] Skills packet parsed" << std::endl;
     }
 };
+
+TEST_F(RuntimeEventTest, CreaturePreviewSizeDoesNotChangeWidgetGeometry)
+{
+    g_lua.registerClass<UIWidget>();
+    g_lua.registerClass<UICreature, UIWidget>();
+    ForegroundPool foreground;
+    auto widget = std::make_shared<UICreature>();
+    const Rect originalRect(50, 50, 40, 40);
+    widget->setRect(originalRect);
+
+    for (const uint8_t size : {uint8_t{100}, uint8_t{0}, uint8_t{32}}) {
+        widget->setCreatureSize(size);
+        EXPECT_EQ(size, widget->getCreatureSize());
+        EXPECT_EQ(originalRect, widget->getRect());
+    }
+    widget->destroy();
+}
 
 TEST_F(RuntimeEventTest, LuaHtmlWhitespaceDoesNotRequireNativeNode)
 {
