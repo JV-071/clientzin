@@ -2171,11 +2171,11 @@ local function var_0_140(arg_100_0)
 end
 
 local function updateFollowShooter(unusedArgument)
-	local var_101_0 = var_0_139()
+	local following = var_0_139()
 
 	if var_0_137() then
 		shooterEnabledBeforeFollow = false
-		wasFollowingCreature = var_101_0
+		wasFollowingCreature = following
 
 		var_0_138(true)
 
@@ -2183,11 +2183,11 @@ local function updateFollowShooter(unusedArgument)
 	end
 
 	if not var_0_131() then
-		setShooterCheckEnabled(not var_101_0)
+		setShooterCheckEnabled(not following)
 
-		wasFollowingCreature = var_101_0
+		wasFollowingCreature = following
 
-		if not var_101_0 then
+		if not following then
 			shooterEnabledBeforeFollow = false
 		end
 
@@ -2198,14 +2198,14 @@ local function updateFollowShooter(unusedArgument)
 		return
 	end
 
-	local var_101_1 = widget("enableShooterCheckBox")
+	local check = widget("enableShooterCheckBox")
 
-	if var_101_0 then
+	if following then
 		if not wasFollowingCreature then
-			shooterEnabledBeforeFollow = var_101_1 and var_101_1:isChecked() or hotkeyShooterStatus
+			shooterEnabledBeforeFollow = check and check:isChecked() or hotkeyShooterStatus
 		end
 
-		if var_101_1 and var_101_1:isChecked() then
+		if check and check:isChecked() then
 			var_0_134(false)
 		end
 
@@ -2222,7 +2222,7 @@ local function updateFollowShooter(unusedArgument)
 		setShooterCheckEnabled(true)
 	end
 
-	wasFollowingCreature = var_101_0
+	wasFollowingCreature = following
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
@@ -2288,9 +2288,9 @@ function HelperShooter.disablePausedState()
 end
 
 function HelperShooter.syncHotkeyStatus()
-	local var_108_0 = widget("enableShooterCheckBox")
+	local check = widget("enableShooterCheckBox")
 
-	hotkeyShooterStatus = var_108_0 and var_108_0:isChecked() or false
+	hotkeyShooterStatus = check and check:isChecked() or false
 end
 
 function HelperShooter.toggleMagicShooter(checkWidget, message, silent)
@@ -2448,7 +2448,7 @@ local function getPriorityRowEnabledCheck(row)
 	return row:getChildById("shooterRowEnabled")
 end
 
-local function var_0_145(arg_114_0, arg_114_1)
+local function checkMagicShooter(arg_114_0, arg_114_1)
 	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
 		return
 	end
@@ -2596,7 +2596,7 @@ local function var_0_145(arg_114_0, arg_114_1)
 end
 
 local var_0_146 = 2000
-local var_0_147 = false
+local shooterIdlePollSkip = false
 
 function HelperShooter.getLastTickProfile()
 	return lastTickScanUs, lastTickCreatureCount, lastTickPriorityCount, lastTickPriorityLabel, lastTickPriorityUs
@@ -2612,20 +2612,20 @@ function HelperShooter.runTick(state)
 	local var_117_0 = state and state.nowMs or g_clock.millis()
 
 	if g_game.getAttackingCreature() ~= nil or var_117_0 - lastGlobalCastAt < var_0_146 then
-		var_0_147 = false
+		shooterIdlePollSkip = false
 
-		var_0_145(var_117_0)
+		checkMagicShooter(var_117_0)
 
 		return
 	end
 
-	var_0_147 = not var_0_147
+	shooterIdlePollSkip = not shooterIdlePollSkip
 
-	if var_0_147 then
+	if shooterIdlePollSkip then
 		return
 	end
 
-	var_0_145(var_117_0)
+	checkMagicShooter(var_117_0)
 end
 
 function HelperShooter.onAttackingCreatureChange(creature)
@@ -2633,7 +2633,7 @@ function HelperShooter.onAttackingCreatureChange(creature)
 		return
 	end
 
-	var_0_145(g_clock.millis(), creature)
+	checkMagicShooter(g_clock.millis(), creature)
 end
 
 function HelperShooter.onFollowingCreatureChange()
@@ -5267,12 +5267,12 @@ function HelperShooter.onShow()
 
 	clearPriorityListSelection()
 
-	local var_240_0 = widget("shooterPriorityList")
+	local list = widget("shooterPriorityList")
 
-	if var_240_0 and not var_240_0._shooterButtonsSyncConnected then
-		var_240_0._shooterButtonsSyncConnected = true
+	if list and not list._shooterButtonsSyncConnected then
+		list._shooterButtonsSyncConnected = true
 
-		connect(var_240_0, {
+		connect(list, {
 			onChildFocusChange = function()
 				HelperShooter.syncActionButtons()
 			end
@@ -5334,10 +5334,10 @@ end
 function HelperShooter.collectConfig(config)
 	config.shooter = config.shooter or {}
 
-	local var_245_0 = widget("enableShooterCheckBox")
-	local var_245_1 = var_245_0 and var_245_0:isChecked() or false
+	local enableCheck = widget("enableShooterCheckBox")
+	local enabled = enableCheck and enableCheck:isChecked() or false
 
-	config.shooter.enableShooter = var_245_1 or isShooterPzAutoEnabled() and shooterEnabledBeforePz == true
+	config.shooter.enableShooter = enabled or isShooterPzAutoEnabled() and shooterEnabledBeforePz == true
 	config.shooter.pzAuto = readShooterPzAutoWidget()
 
 	ensureProfiles()

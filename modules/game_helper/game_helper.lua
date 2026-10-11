@@ -919,12 +919,12 @@ local function var_0_67(arg_30_0)
 	return helperLanguage
 end
 
-local function var_0_68(arg_31_0)
+local function var_0_68(item)
 	if not helperStatsWindow or helperStatsWindow:isDestroyed() then
 		return nil
 	end
 
-	return helperStatsWindow:recursiveGetChildById(arg_31_0.rowId)
+	return helperStatsWindow:recursiveGetChildById(item.rowId)
 end
 
 local function var_0_69()
@@ -1092,12 +1092,12 @@ local function unusedValue()
 
 			var_37_3.helperStatsItemId = entry.id
 
-			function var_37_3.onMousePress(arg_39_0, unusedArgument, arg_39_2)
-				if arg_39_2 ~= MouseLeftButton then
+			function var_37_3.onMousePress(widget, unusedArgument, mouseButton)
+				if mouseButton ~= MouseLeftButton then
 					return false
 				end
 
-				modules.game_helper.toggleHelperStatsEntry(arg_39_0.helperStatsItemId)
+				modules.game_helper.toggleHelperStatsEntry(widget.helperStatsItemId)
 
 				return true
 			end
@@ -1169,10 +1169,10 @@ end
 
 local function isAutoSwitchHotkeyPresetEnabled()
 	if modules.client_options and modules.client_options.getOption then
-		local var_46_0, var_46_1 = pcall(modules.client_options.getOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING)
+		local ok, enabled = pcall(modules.client_options.getOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING)
 
-		if var_46_0 and type(var_46_1) == "boolean" then
-			return var_46_1
+		if ok and type(enabled) == "boolean" then
+			return enabled
 		end
 	end
 
@@ -1198,17 +1198,17 @@ local function applyAutoSwitchHotkeyPresetToCheckbox(enabled)
 end
 
 local function setAutoSwitchHotkeyPresetEnabled(enabled)
-	local var_48_0 = enabled == true
+	local value = enabled == true
 
-	local function var_48_1()
+	local function saveNativeSettings()
 		if not g_settings or not g_settings.save then
 			return true
 		end
 
-		local var_49_0, var_49_1 = pcall(g_settings.save)
+		local ok, err = pcall(g_settings.save)
 
-		if not var_49_0 then
-			helperLog("error", "Failed to save native auto-switch option: " .. tostring(var_49_1))
+		if not ok then
+			helperLog("error", "Failed to save native auto-switch option: " .. tostring(err))
 
 			return false
 		end
@@ -1217,25 +1217,25 @@ local function setAutoSwitchHotkeyPresetEnabled(enabled)
 	end
 
 	if modules.client_options and modules.client_options.setOption then
-		local var_48_2, var_48_3 = pcall(modules.client_options.setOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING, var_48_0, true)
+		local ok, err = pcall(modules.client_options.setOption, AUTO_SWITCH_HOTKEY_PRESET_SETTING, value, true)
 
-		if var_48_2 and isAutoSwitchHotkeyPresetEnabled() == var_48_0 then
-			return var_48_1()
+		if ok and isAutoSwitchHotkeyPresetEnabled() == value then
+			return saveNativeSettings()
 		end
 
-		if not var_48_2 then
-			helperLog("warning", "Failed to update native auto-switch option: " .. tostring(var_48_3))
+		if not ok then
+			helperLog("warning", "Failed to update native auto-switch option: " .. tostring(err))
 		end
 	end
 
 	if g_settings and g_settings.set then
-		local var_48_4, var_48_5 = pcall(g_settings.set, AUTO_SWITCH_HOTKEY_PRESET_SETTING, var_48_0)
+		local ok, err = pcall(g_settings.set, AUTO_SWITCH_HOTKEY_PRESET_SETTING, value)
 
-		if var_48_4 then
-			return var_48_1()
+		if ok then
+			return saveNativeSettings()
 		end
 
-		helperLog("error", "Failed to persist native auto-switch option: " .. tostring(var_48_5))
+		helperLog("error", "Failed to persist native auto-switch option: " .. tostring(err))
 	end
 
 	return false
@@ -1721,19 +1721,19 @@ local function var_0_90()
 	end
 end
 
-local function var_0_91(arg_67_0, arg_67_1)
+local function showHelperMessage(failure, message)
 	if not modules.game_textmessage then
 		return
 	end
 
-	if arg_67_0 then
-		modules.game_textmessage.displayFailureMessage(arg_67_1)
+	if failure then
+		modules.game_textmessage.displayFailureMessage(message)
 	else
-		modules.game_textmessage.displayGameMessage(arg_67_1)
+		modules.game_textmessage.displayGameMessage(message)
 	end
 end
 
-local function var_0_92()
+local function buildRuntimeState()
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
@@ -1782,7 +1782,7 @@ local function runCombatTick()
 	end
 
 	local var_71_3 = g_clock.realMicros()
-	local var_71_4 = var_0_92()
+	local var_71_4 = buildRuntimeState()
 	local var_71_5 = g_clock.realMicros() - var_71_3
 
 	if not var_71_4 then
@@ -1857,9 +1857,9 @@ local function startCombatScheduler()
 	combatTickEvent = scheduleEvent(function()
 		combatTickEvent = nil
 
-		local var_74_0, shouldContinue = pcall(runCombatTick)
+		local ok, shouldContinue = pcall(runCombatTick)
 
-		if not var_74_0 then
+		if not ok then
 			if g_logger and g_logger.error then
 				g_logger.error("[game_helper] combatTick failure: " .. tostring(shouldContinue))
 			end
@@ -1906,70 +1906,70 @@ local function closeHelperHotkeyWindow()
 end
 
 local function loadConfigIntoWidgets()
-	function boundTargetHotkeyWindow(arg_80_0)
+	function boundTargetHotkeyWindow(creature)
 		local target = modulesByTab.target
 
 		if target and target.onCreatureAppear then
-			target.onCreatureAppear(arg_80_0)
+			target.onCreatureAppear(creature)
 		end
 	end
 
-	function targetHotkeyPendingCombo(arg_81_0)
+	function targetHotkeyPendingCombo(creature)
 		local target = modulesByTab.target
 
 		if target and target.onCreatureDisappear then
-			target.onCreatureDisappear(arg_81_0)
+			target.onCreatureDisappear(creature)
 		end
 	end
 
-	function handleSpellCooldown(arg_82_0, arg_82_1)
+	function handleSpellCooldown(spellId, duration)
 		if HelperShooter and HelperShooter.onSpellCooldown then
-			HelperShooter.onSpellCooldown(arg_82_0, arg_82_1)
+			HelperShooter.onSpellCooldown(spellId, duration)
 		end
 	end
 
-	function handleSpellGroupCooldown(arg_83_0, arg_83_1)
+	function handleSpellGroupCooldown(groupId, duration)
 		if HelperShooter and HelperShooter.onSpellGroupCooldown then
-			HelperShooter.onSpellGroupCooldown(arg_83_0, arg_83_1)
+			HelperShooter.onSpellGroupCooldown(groupId, duration)
 		end
 	end
 
-	function handleMultiUseCooldown(arg_84_0)
+	function handleMultiUseCooldown(duration)
 		if HelperShooter and HelperShooter.onMultiUseCooldown then
-			HelperShooter.onMultiUseCooldown(arg_84_0)
+			HelperShooter.onMultiUseCooldown(duration)
 		end
 	end
 
-	function handleAttackingCreatureChange(arg_85_0, arg_85_1)
+	function handleAttackingCreatureChange(creature, oldCreature)
 		local target = modulesByTab.target
 
 		if target and target.onAttackingCreatureChange then
-			target.onAttackingCreatureChange(arg_85_0, arg_85_1)
+			target.onAttackingCreatureChange(creature, oldCreature)
 		end
 
 		local shooter = modulesByTab.shooter
 
 		if shooter and shooter.onAttackingCreatureChange then
-			local var_85_2, var_85_3 = pcall(shooter.onAttackingCreatureChange, arg_85_0, arg_85_1)
+			local ok, err = pcall(shooter.onAttackingCreatureChange, creature, oldCreature)
 
-			if not var_85_2 and g_logger and g_logger.error then
-				g_logger.error("[game_helper] attackingCreatureChange shooter failure: " .. tostring(var_85_3))
+			if not ok and g_logger and g_logger.error then
+				g_logger.error("[game_helper] attackingCreatureChange shooter failure: " .. tostring(err))
 			end
 		end
 	end
 
-	function handleFollowingCreatureChange(arg_86_0, arg_86_1)
+	function handleFollowingCreatureChange(creature, oldCreature)
 		local shooter = modulesByTab.shooter
 
 		if shooter and shooter.onFollowingCreatureChange then
-			shooter.onFollowingCreatureChange(arg_86_0, arg_86_1)
+			shooter.onFollowingCreatureChange(creature, oldCreature)
 		end
 	end
 
-	function handleStatesChange(unusedArgument, arg_87_1, arg_87_2)
-		local var_87_0 = PlayerStates and PlayerStates.Pz
+	function handleStatesChange(unusedArgument, states, oldStates)
+		local pzState = PlayerStates and PlayerStates.Pz
 
-		if not var_87_0 or bit.band(bit.bxor(arg_87_1, arg_87_2), var_87_0) == 0 then
+		if not pzState or bit.band(bit.bxor(states, oldStates), pzState) == 0 then
 			return
 		end
 
@@ -2027,7 +2027,7 @@ local function disconnectCombatEvents()
 	end
 end
 
-local function var_0_101()
+local function runHelperTick()
 	if not helperShouldRunTick() then
 		return
 	end
@@ -2036,7 +2036,7 @@ local function var_0_101()
 		return
 	end
 
-	local state = var_0_92()
+	local state = buildRuntimeState()
 
 	if not state then
 		return
@@ -2067,10 +2067,10 @@ local function startScheduler()
 	tagHitchEventSource("game_helper.runHelperTick")
 
 	helperTickEvent = cycleEvent(function()
-		local var_91_0, var_91_1 = pcall(var_0_101)
+		local ok, err = pcall(runHelperTick)
 
-		if not var_91_0 and g_logger and g_logger.error then
-			g_logger.error("[game_helper] helperTick failure: " .. tostring(var_91_1))
+		if not ok and g_logger and g_logger.error then
+			g_logger.error("[game_helper] helperTick failure: " .. tostring(err))
 		end
 	end, helperTickIntervalMs)
 end
@@ -2104,8 +2104,8 @@ local function initModules()
 		getLanguage = function()
 			return helperLanguage
 		end,
-		applyWidgetLanguage = function(arg_96_0)
-			var_0_65(arg_96_0, true)
+		applyWidgetLanguage = function(target)
+			var_0_65(target, true)
 		end,
 		rebindCombatHotkeys = function()
 			if bindCombatHotkeys then
@@ -2170,7 +2170,7 @@ local function initModules()
 			applyAutoSwitchHotkeyPresetToCheckbox = applyAutoSwitchHotkeyPresetToCheckbox,
 			cancelAutoSave = unbindCombatHotkeys,
 			flushAutoSave = var_0_80,
-			showMessage = var_0_91,
+			showMessage = showHelperMessage,
 			log = helperLog,
 			openHelperWindow = function()
 				if helperWindow then
@@ -2184,24 +2184,24 @@ local function initModules()
 end
 
 local function getModuleForTab(tab)
-	local var_105_0 = tab and TABS[tab]
+	local cfg = tab and TABS[tab]
 
-	return var_105_0 and modulesByTab[var_105_0.module] or nil
+	return cfg and modulesByTab[cfg.module] or nil
 end
 
 local function showCurrentTabModule()
-	local var_106_0 = getModuleForTab(currentTab)
+	local mod = getModuleForTab(currentTab)
 
-	if var_106_0 and var_106_0.onShow then
-		var_106_0.onShow()
+	if mod and mod.onShow then
+		mod.onShow()
 	end
 end
 
 local function hideCurrentTabModule()
-	local var_107_0 = getModuleForTab(currentTab)
+	local mod = getModuleForTab(currentTab)
 
-	if var_107_0 and var_107_0.onHide then
-		var_107_0.onHide()
+	if mod and mod.onHide then
+		mod.onHide()
 	end
 end
 
@@ -2339,13 +2339,13 @@ function clampDistanceValue(value, default)
 	return n
 end
 
-local function getDistanceWidgetText(arg_115_0)
-	if not arg_115_0 then
+local function getDistanceWidgetText(widget)
+	if not widget then
 		return nil
 	end
 
-	if arg_115_0.getCurrentOption then
-		local currentOption = arg_115_0:getCurrentOption()
+	if widget.getCurrentOption then
+		local currentOption = widget:getCurrentOption()
 
 		if type(currentOption) == "table" then
 			return currentOption.text
@@ -2354,24 +2354,24 @@ local function getDistanceWidgetText(arg_115_0)
 		return currentOption
 	end
 
-	if arg_115_0.getText then
-		return arg_115_0:getText()
+	if widget.getText then
+		return widget:getText()
 	end
 
 	return nil
 end
 
-local function setDistanceWidgetValue(arg_116_0, arg_116_1, arg_116_2)
-	if not arg_116_0 then
+local function setDistanceWidgetValue(widget, value, default)
+	if not widget then
 		return
 	end
 
-	local textValue = tostring(clampDistanceValue(arg_116_1, arg_116_2 or DISTANCE_DEFAULT))
+	local textValue = tostring(clampDistanceValue(value, default or DISTANCE_DEFAULT))
 
-	if arg_116_0.setCurrentOption then
-		arg_116_0:setCurrentOption(textValue, true)
-	elseif arg_116_0.setText then
-		arg_116_0:setText(textValue)
+	if widget.setCurrentOption then
+		widget:setCurrentOption(textValue, true)
+	elseif widget.setText then
+		widget:setText(textValue)
 	end
 end
 
@@ -2477,7 +2477,7 @@ function openHelperFromStats()
 		return
 	end
 
-	local var_127_0 = helperWindow:isHidden()
+	local opening = helperWindow:isHidden()
 
 	helperWindow:show()
 	helperWindow:raise()
@@ -2485,7 +2485,7 @@ function openHelperFromStats()
 
 	if not currentTab then
 		showTab("healing")
-	elseif var_127_0 then
+	elseif opening then
 		showCurrentTabModule()
 	end
 
@@ -2548,10 +2548,10 @@ function toggleHelperStatsEntry(itemId)
 				return
 			end
 
-			local var_130_0 = getWidget(entry.widgetId)
+			local check = getWidget(entry.widgetId)
 
-			if var_130_0 then
-				local checked = not var_130_0:isChecked()
+			if check then
+				local checked = not check:isChecked()
 
 				if checked and entry.id == "target" and HelperTarget and HelperTarget.enableProtectionZonePause and HelperTarget.enableProtectionZonePause() then
 					refreshHelperStatsWindow()
@@ -2565,7 +2565,7 @@ function toggleHelperStatsEntry(itemId)
 					return
 				end
 
-				var_130_0:setChecked(checked)
+				check:setChecked(checked)
 				refreshHelperStatsWindow()
 			end
 
@@ -2659,14 +2659,14 @@ local function var_0_122(arg_142_0, arg_142_1)
 
 	if not var_142_0 then
 		helperLog("error", "Preset generation failed: " .. tostring(var_142_1))
-		var_0_91(true, tr("Preset generation failed."))
+		showHelperMessage(true, tr("Preset generation failed."))
 
 		return false
 	end
 
 	if var_142_1 ~= true then
 		if var_142_2 then
-			var_0_91(true, var_142_2)
+			showHelperMessage(true, var_142_2)
 		end
 
 		return false
@@ -2677,7 +2677,7 @@ local function var_0_122(arg_142_0, arg_142_1)
 	end
 
 	if var_142_2 then
-		var_0_91(false, var_142_2)
+		showHelperMessage(false, var_142_2)
 	end
 
 	return true
@@ -3695,10 +3695,10 @@ function closeHelperAssignWindow()
 end
 
 function closeHelperSpellAssignWindow()
-	local var_219_0 = var_0_127()
+	local ab = var_0_127()
 
-	if var_219_0 and var_219_0.closeSpellAssignWindow then
-		var_219_0.closeSpellAssignWindow()
+	if ab and ab.closeSpellAssignWindow then
+		ab.closeSpellAssignWindow()
 	end
 end
 
@@ -3721,10 +3721,10 @@ function helperAssignOk()
 end
 
 function helperSpellAssignOk()
-	local var_221_0 = var_0_127()
+	local ab = var_0_127()
 
-	if var_221_0 and var_221_0.spellAssignOk then
-		var_221_0.spellAssignOk()
+	if ab and ab.spellAssignOk then
+		ab.spellAssignOk()
 	end
 end
 
@@ -3739,10 +3739,10 @@ function helperAssignApply()
 end
 
 function helperSpellAssignApply()
-	local var_223_0 = var_0_127()
+	local ab = var_0_127()
 
-	if var_223_0 and var_223_0.spellAssignApply then
-		var_223_0.spellAssignApply()
+	if ab and ab.spellAssignApply then
+		ab.spellAssignApply()
 	end
 end
 
@@ -3765,10 +3765,10 @@ function filterHelperAssign(text)
 end
 
 function filterHelperSpells(text)
-	local var_225_0 = var_0_127()
+	local ab = var_0_127()
 
-	if var_225_0 and var_225_0.filterSpells then
-		var_225_0.filterSpells(text)
+	if ab and ab.filterSpells then
+		ab.filterSpells(text)
 	end
 end
 
@@ -3791,10 +3791,10 @@ function clearHelperAssignFilter()
 end
 
 function clearHelperSpellFilter()
-	local var_227_0 = var_0_127()
+	local ab = var_0_127()
 
-	if var_227_0 and var_227_0.clearSpellFilter then
-		var_227_0.clearSpellFilter()
+	if ab and ab.clearSpellFilter then
+		ab.clearSpellFilter()
 	end
 end
 

@@ -615,14 +615,14 @@ for _, line in ipairs(htmlToStoreDescriptionLines) do
 	end
 end
 
-local function var_0_90(arg_32_0)
-	arg_32_0 = arg_32_0:gsub("&nbsp;", " ")
-	arg_32_0 = arg_32_0:gsub("&lt;", "<")
-	arg_32_0 = arg_32_0:gsub("&gt;", ">")
-	arg_32_0 = arg_32_0:gsub("&quot;", "\"")
-	arg_32_0 = arg_32_0:gsub("&amp;", "&")
+local function decodeStoreDescriptionEntities(text)
+	text = text:gsub("&nbsp;", " ")
+	text = text:gsub("&lt;", "<")
+	text = text:gsub("&gt;", ">")
+	text = text:gsub("&quot;", "\"")
+	text = text:gsub("&amp;", "&")
 
-	return arg_32_0
+	return text
 end
 
 local function matchStoreDescriptionIconTag(lineText, nextPos)
@@ -662,7 +662,7 @@ local function var_0_92(arg_34_0)
 	return matchStoreDescriptionIconTag(var_34_0, 1) ~= nil
 end
 
-local function var_0_93(arg_35_0)
+local function enrichStoreDescriptionLine(arg_35_0)
 	if not arg_35_0 or not arg_35_0:match("%S") then
 		return arg_35_0
 	end
@@ -714,7 +714,7 @@ local function htmlToStoreDescriptionLines(html)
 		return {}
 	end
 
-	html = var_0_90(html:gsub("\r", ""))
+	html = decodeStoreDescriptionEntities(html:gsub("\r", ""))
 	html = html:gsub("<[bB][rR]%s*/?>", "\n")
 	html = html:gsub("<[lL][iI]>%s*", "- ")
 	html = html:gsub("</[lL][iI]>%s*", "\n")
@@ -727,11 +727,11 @@ local function htmlToStoreDescriptionLines(html)
 	local lines = {}
 	local from = 1
 
-	for iter_36_0 = 1, #html do
-		if html:byte(iter_36_0) == 10 then
-			table.insert(lines, html:sub(from, iter_36_0 - 1))
+	for i = 1, #html do
+		if html:byte(i) == 10 then
+			table.insert(lines, html:sub(from, i - 1))
 
-			from = iter_36_0 + 1
+			from = i + 1
 		end
 	end
 
@@ -739,14 +739,14 @@ local function htmlToStoreDescriptionLines(html)
 		table.insert(lines, html:sub(from))
 	end
 
-	for iter_36_1 = 1, #lines do
-		lines[iter_36_1] = var_0_93(lines[iter_36_1])
+	for i = 1, #lines do
+		lines[i] = enrichStoreDescriptionLine(lines[i])
 	end
 
 	return lines
 end
 
-local function var_0_95(arg_37_0)
+local function stripStoreDescriptionTags(arg_37_0)
 	return (arg_37_0:match("^%s*(.-)%s*$") or arg_37_0):gsub("<i>", ""):gsub("</i>", ""):gsub("<I>", ""):gsub("</I>", ""):gsub("<u>", ""):gsub("</u>", ""):gsub("<U>", ""):gsub("</U>", ""):gsub("<[^>]+>", "")
 end
 
@@ -786,17 +786,17 @@ local function var_0_99(arg_39_0, arg_39_1)
 	return labelWidget:getTextSize().width
 end
 
-local function getStoreDescriptionScrollWidth(arg_40_0)
-	if not arg_40_0 then
+local function getStoreDescriptionScrollWidth(scroll)
+	if not scroll then
 		return 200
 	end
 
-	local width = arg_40_0:getWidth() - arg_40_0:getPaddingLeft() - arg_40_0:getPaddingRight()
+	local width = scroll:getWidth() - scroll:getPaddingLeft() - scroll:getPaddingRight()
 
 	return math.max(1, width)
 end
 
-local function var_0_101(plainText, fontName, totalWidth, firstLineWidth)
+local function wrapStoreDescriptionPlainText(plainText, fontName, totalWidth, firstLineWidth)
 	if not plainText or plainText == "" then
 		return {
 			""
@@ -852,7 +852,7 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 	local trimmed = arg_43_1:match("^%s*(.-)%s*$") or arg_43_1
 	local var_43_1 = trimmed:find("<i>") or trimmed:find("<I>")
 	local var_43_2 = trimmed:find("<u>") or trimmed:find("<U>")
-	local text = var_0_95(trimmed)
+	local text = stripStoreDescriptionTags(trimmed)
 
 	if text == "" then
 		arg_43_0:setText("")
@@ -872,7 +872,7 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 	arg_43_0:setColor(arg_43_2 or var_0_80)
 end
 
-local function renderStoreDescriptionLineWidget(parentWidget, arg_44_1, arg_44_2, imageClipRect)
+local function renderStoreDescriptionLineWidget(parentWidget, lineText, color, imageClipRect)
 	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", parentWidget)
 
 	if not storeDescriptionLineWidget then
@@ -903,7 +903,7 @@ local function renderStoreDescriptionLineWidget(parentWidget, arg_44_1, arg_44_2
 		text:setTextWrap(true)
 	end
 
-	var_0_103(text, arg_44_1, arg_44_2)
+	var_0_103(text, lineText, color)
 	storeDescriptionLineWidget:setHeight(math.max(14, text:getTextSize().height + 2))
 
 	return text:getText() ~= "" or imageClipRect ~= nil
@@ -938,23 +938,23 @@ local function addStoreDescriptionLine(container, lineText, color)
 		return true
 	end
 
-	local unusedValue, clip, var_45_5 = matchStoreDescriptionIconTag(lineText, 1)
+	local unusedValue, clip, nextPos = matchStoreDescriptionIconTag(lineText, 1)
 
 	if clip then
-		local var_45_6 = lineText:sub(var_45_5)
-		local var_45_7 = var_0_98(var_45_6)
-		local var_45_8 = var_0_95(var_45_6:match("^%s*(.-)%s*$") or var_45_6)
+		local textAfterIcon = lineText:sub(nextPos)
+		local fontName = var_0_98(textAfterIcon)
+		local plainText = stripStoreDescriptionTags(textAfterIcon:match("^%s*(.-)%s*$") or textAfterIcon)
 		local totalWidth = getStoreDescriptionScrollWidth(container)
-		local var_45_10 = math.max(1, totalWidth - marginLeft)
-		local var_45_11 = var_0_101(var_45_8, var_45_7, totalWidth, var_45_10)
-		local var_45_12 = var_45_6:find("<i>") or var_45_6:find("<I>")
-		local hasUnderline = var_45_6:find("<u>") or var_45_6:find("<U>")
+		local firstLineWidth = math.max(1, totalWidth - marginLeft)
+		local segments = wrapStoreDescriptionPlainText(plainText, fontName, totalWidth, firstLineWidth)
+		local hasItalic = textAfterIcon:find("<i>") or textAfterIcon:find("<I>")
+		local hasUnderline = textAfterIcon:find("<u>") or textAfterIcon:find("<U>")
 		local added = false
 
-		for index, entry in ipairs(var_45_11) do
+		for index, entry in ipairs(segments) do
 			local segmentText = entry
 
-			if var_45_12 then
+			if hasItalic then
 				segmentText = "<i>" .. entry .. "</i>"
 			elseif hasUnderline then
 				segmentText = "<u>" .. entry .. "</u>"
@@ -1009,13 +1009,13 @@ local function var_0_110(arg_48_0)
 end
 
 local function getPanelItemDescriptionScroll(panel)
-	local var_49_0 = getPanelItemDetailsContent(panel)
+	local detail = getPanelItemDetailsContent(panel)
 
-	if not var_49_0 then
+	if not detail then
 		return nil
 	end
 
-	return var_49_0.descriptionScroll or var_49_0:getChildById("descriptionScroll")
+	return detail.descriptionScroll or detail:getChildById("descriptionScroll")
 end
 
 local function unusedValue(arg_50_0)
@@ -1033,8 +1033,8 @@ local function clearStoreDescriptionLines(scroll)
 		return
 	end
 
-	for iter_51_0 = scroll:getChildCount(), 1, -1 do
-		local childByIndex = scroll:getChildByIndex(iter_51_0)
+	for i = scroll:getChildCount(), 1, -1 do
+		local childByIndex = scroll:getChildByIndex(i)
 
 		if childByIndex and childByIndex:getId() ~= "lblDescription" then
 			childByIndex:destroy()
@@ -1052,15 +1052,15 @@ local function showStoreDescriptionFallback(scroll, html, errorText)
 	clearStoreDescriptionLines(scroll)
 	lblDescription:setVisible(true)
 
-	local var_52_1 = {}
+	local textParts = {}
 
 	for unusedValue, entry in ipairs(htmlToStoreDescriptionLines(html or "")) do
-		local var_52_2 = var_0_95(entry):gsub("%{%w+%}", "")
+		local plain = stripStoreDescriptionTags(entry):gsub("%{%w+%}", "")
 
-		table.insert(var_52_1, var_52_2)
+		table.insert(textParts, plain)
 	end
 
-	local text = table.concat(var_52_1, "\n")
+	local text = table.concat(textParts, "\n")
 
 	if errorText and errorText ~= "" then
 		text = errorText .. (text ~= "" and "\n\n" .. text or "")
@@ -1097,48 +1097,48 @@ local function getPackageContents(product)
 end
 
 local function getProductOutfitColors(source)
-	local var_54_0 = source and source.subOffers or {}
+	local subOffers = source and source.subOffers or {}
 	local numericValue = tonumber(source and source.productsCapacity) or 0
 
-	if numericValue <= 0 or numericValue >= #var_54_0 then
-		return var_54_0
+	if numericValue <= 0 or numericValue >= #subOffers then
+		return subOffers
 	end
 
-	local var_54_2 = {}
+	local purchasable = {}
 
-	for iter_54_0 = 1, #var_54_0 - numericValue do
-		table.insert(var_54_2, var_54_0[iter_54_0])
+	for i = 1, #subOffers - numericValue do
+		table.insert(purchasable, subOffers[i])
 	end
 
-	return var_54_2
+	return purchasable
 end
 
-local function var_0_118(arg_55_0)
-	if not arg_55_0 then
+local function var_0_118(source)
+	if not source then
 		return 0, 0, 0, 0
 	end
 
-	local function var_55_0(arg_56_0)
-		if arg_56_0.outfit then
-			return arg_56_0.outfit.lookHead or arg_56_0.outfit.head or 0, arg_56_0.outfit.lookBody or arg_56_0.outfit.body or 0, arg_56_0.outfit.lookLegs or arg_56_0.outfit.legs or 0, arg_56_0.outfit.lookFeet or arg_56_0.outfit.feet or 0
+	local function readColors(from)
+		if from.outfit then
+			return from.outfit.lookHead or from.outfit.head or 0, from.outfit.lookBody or from.outfit.body or 0, from.outfit.lookLegs or from.outfit.legs or 0, from.outfit.lookFeet or from.outfit.feet or 0
 		end
 
-		return arg_56_0.outfitHead or 0, arg_56_0.outfitBody or 0, arg_56_0.outfitLegs or 0, arg_56_0.outfitFeet or 0
+		return from.outfitHead or 0, from.outfitBody or 0, from.outfitLegs or 0, from.outfitFeet or 0
 	end
 
-	local var_55_1, var_55_2, var_55_3, var_55_4 = var_55_0(arg_55_0)
+	local head, body, legs, feet = readColors(source)
 
-	if arg_55_0.outfitHead ~= nil or arg_55_0.outfitBody ~= nil or arg_55_0.outfitLegs ~= nil or arg_55_0.outfitFeet ~= nil then
-		return var_55_1, var_55_2, var_55_3, var_55_4
+	if source.outfitHead ~= nil or source.outfitBody ~= nil or source.outfitLegs ~= nil or source.outfitFeet ~= nil then
+		return head, body, legs, feet
 	end
 
-	for _, subOffer in ipairs(arg_55_0.subOffers or {}) do
+	for _, subOffer in ipairs(source.subOffers or {}) do
 		if subOffer.outfitHead ~= nil or subOffer.outfitBody ~= nil or subOffer.outfitLegs ~= nil or subOffer.outfitFeet ~= nil then
-			return var_55_0(subOffer)
+			return readColors(subOffer)
 		end
 	end
 
-	return var_55_1, var_55_2, var_55_3, var_55_4
+	return head, body, legs, feet
 end
 
 local function buildHirelingProductData(source, outfitId)
@@ -1146,7 +1146,7 @@ local function buildHirelingProductData(source, outfitId)
 		return nil
 	end
 
-	local var_57_0, var_57_1, var_57_2, var_57_3 = var_0_118(source)
+	local head, body, legs, feet = var_0_118(source)
 
 	return {
 		VALOR = "outfitId",
@@ -1155,16 +1155,16 @@ local function buildHirelingProductData(source, outfitId)
 		outfit = {
 			addons = 3,
 			type = outfitId,
-			head = var_57_0,
-			body = var_57_1,
-			legs = var_57_2,
-			feet = var_57_3
+			head = head,
+			body = body,
+			legs = legs,
+			feet = feet
 		}
 	}
 end
 
-local function var_0_120(arg_58_0)
-	local numericValue = tonumber(arg_58_0)
+local function var_0_120(value)
+	local numericValue = tonumber(value)
 
 	if numericValue and numericValue > 0 then
 		return numericValue
@@ -1174,19 +1174,19 @@ local function var_0_120(arg_58_0)
 end
 
 local function findHirelingOutfitIds(product)
-	local var_59_0 = var_0_120(product.maleOutfitId)
-	local var_59_1 = var_0_120(product.femaleOutfitId)
+	local male = var_0_120(product.maleOutfitId)
+	local female = var_0_120(product.femaleOutfitId)
 
-	if var_59_0 or var_59_1 then
-		return var_59_0, var_59_1
+	if male or female then
+		return male, female
 	end
 
 	for unusedValue, entry in ipairs(product.subOffers or {}) do
-		var_59_0 = var_59_0 or var_0_120(entry.maleOutfitId)
-		var_59_1 = var_59_1 or var_0_120(entry.femaleOutfitId)
+		male = male or var_0_120(entry.maleOutfitId)
+		female = female or var_0_120(entry.femaleOutfitId)
 	end
 
-	return var_59_0, var_59_1
+	return male, female
 end
 
 local function resolveHirelingOutfitId(sex, maleOutfitId, femaleOutfitId)
@@ -1485,18 +1485,18 @@ local function var_0_131(arg_71_0, arg_71_1, arg_71_2)
 	arg_71_0._hoverBorder = arg_71_0:getChildById("hoverBorder")
 
 	if arg_71_2 ~= false then
-		function arg_71_0.onFocusChange(arg_72_0, _isFocused)
-			arg_72_0._isFocused = _isFocused
+		function arg_71_0.onFocusChange(widget, _isFocused)
+			widget._isFocused = _isFocused
 
-			refreshRowHoverBorder(arg_72_0)
+			refreshRowHoverBorder(widget)
 		end
 	end
 
 	if arg_71_1 then
-		function arg_71_0.onHoverChange(arg_73_0, _isHovered)
-			arg_73_0._isHovered = _isHovered
+		function arg_71_0.onHoverChange(widget, _isHovered)
+			widget._isHovered = _isHovered
 
-			refreshRowHoverBorder(arg_73_0)
+			refreshRowHoverBorder(widget)
 		end
 	end
 end
@@ -3101,13 +3101,13 @@ function controllerShop.onInit(unusedArgument)
 
 	local SearchClearButton = controllerShop.ui.SearchClearButton
 
-	function SearchClearButton.onMousePress(arg_139_0, unusedArgument, arg_139_2)
-		if not arg_139_0:isEnabled() then
+	function SearchClearButton.onMousePress(widget, unusedArgument, mouseButton)
+		if not widget:isEnabled() then
 			return
 		end
 
-		if arg_139_2 == MouseLeftButton then
-			arg_139_0:setImageClip("0 20 20 20")
+		if mouseButton == MouseLeftButton then
+			widget:setImageClip("0 20 20 20")
 		end
 	end
 

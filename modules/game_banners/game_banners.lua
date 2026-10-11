@@ -754,7 +754,7 @@ local function var_0_83()
 end
 
 local function scheduleBannerEvent(callback, delay)
-	local var_34_0 = scheduleEvent(function()
+	local eventId = scheduleEvent(function()
 		for index, storedId in ipairs(animationEvents) do
 			if storedId == eventId then
 				table.remove(animationEvents, index)
@@ -766,9 +766,9 @@ local function scheduleBannerEvent(callback, delay)
 		callback()
 	end, delay)
 
-	table.insert(animationEvents, var_34_0)
+	table.insert(animationEvents, eventId)
 
-	return var_34_0
+	return eventId
 end
 
 local function var_0_85()

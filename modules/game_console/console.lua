@@ -1176,10 +1176,10 @@ end
 
 local function getChatInputForSend()
 	if isNpcModalChatActive() then
-		local var_54_0 = getNpcModalChatProxy()
+		local proxy = getNpcModalChatProxy()
 
-		if var_54_0 and not var_54_0:isDestroyed() then
-			return var_54_0
+		if proxy and not proxy:isDestroyed() then
+			return proxy
 		end
 	end
 

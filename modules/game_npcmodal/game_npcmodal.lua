@@ -2662,21 +2662,21 @@ function sendSellAll()
 		return
 	end
 
-	local var_132_1 = {}
+	local tempSellAllItems = {}
 
 	for key, unusedValue in pairs(lootPouchItems) do
 		if sellAllIgnoredItems[key] == nil or sellAllIgnoredItems[key] == false then
-			var_132_1[key] = lootPouchItems[key]
+			tempSellAllItems[key] = lootPouchItems[key]
 		end
 	end
 
-	local var_132_2 = 0
+	local count = 0
 
-	for iter_132_2, iter_132_3 in pairs(var_132_1) do
-		var_132_2 = var_132_2 + 1
+	for itemId, _ in pairs(tempSellAllItems) do
+		count = count + 1
 	end
 
-	if var_132_2 == 0 then
+	if count == 0 then
 		return
 	end
 
@@ -2684,10 +2684,10 @@ function sendSellAll()
 
 	msg:addByte(ClientOpcodes.ClientOtcOpCodes)
 	msg:addByte(OtcOpCode.PARSE_SELL_ALL)
-	msg:addU16(var_132_2)
+	msg:addU16(count)
 
-	for iter_132_4, amount in pairs(var_132_1) do
-		msg:addU16(iter_132_4)
+	for itemId, amount in pairs(tempSellAllItems) do
+		msg:addU16(itemId)
 		msg:addU32(amount)
 	end
 

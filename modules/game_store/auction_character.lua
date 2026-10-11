@@ -1600,7 +1600,7 @@ local function setAuctionCharacterArgumentEntryRowSelected(configAuctionCharacte
 	configAuctionCharacterWindow:setBackgroundColor(var_0_117(slotIndex, selected))
 end
 
-local function var_0_119(headerWindow)
+local function clearAuctionCharacterArgumentListSelection(headerWindow)
 	if not headerWindow or headerWindow:isDestroyed() then
 		return
 	end
@@ -1617,9 +1617,9 @@ local function var_0_119(headerWindow)
 end
 
 local function selectAuctionCharacterArgumentInList(entryRow, entryData, rowIndex)
-	local var_97_0 = getAuctionCharacterSelectArgumentsPanel()
+	local argumentsPanel = getAuctionCharacterSelectArgumentsPanel()
 
-	var_0_119(var_97_0)
+	clearAuctionCharacterArgumentListSelection(argumentsPanel)
 	setAuctionCharacterArgumentEntryRowSelected(entryRow, true, rowIndex)
 
 	auctionCharacterArgumentListSelection = copyAuctionCharacterArgumentData(entryData)
@@ -1637,20 +1637,20 @@ local function syncAuctionCharacterNextArgumentSlot()
 	auctionCharacterNextArgumentSlot = 1
 end
 
-local function assignAuctionCharacterArgumentToNextSlot(arg_99_0)
-	if not arg_99_0 then
+local function assignAuctionCharacterArgumentToNextSlot(entryData)
+	if not entryData then
 		return false
 	end
 
-	if var_0_116(arg_99_0) then
+	if var_0_116(entryData) then
 		return false
 	end
 
-	local var_99_0 = auctionCharacterNextArgumentSlot
+	local slotIndex = auctionCharacterNextArgumentSlot
 
-	auctionCharacterHeaderArgumentSlots[var_99_0] = copyAuctionCharacterArgumentData(arg_99_0)
+	auctionCharacterHeaderArgumentSlots[slotIndex] = copyAuctionCharacterArgumentData(entryData)
 
-	updateAuctionCharacterArgumentSlot(var_99_0)
+	updateAuctionCharacterArgumentSlot(slotIndex)
 	syncAuctionCharacterNextArgumentSlot()
 
 	auctionCharacterArgumentListSelection = nil
@@ -1706,7 +1706,7 @@ function updateAuctionCharacterArgumentSlot(slotIndex)
 
 	local selectArgument = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex)
 	local icon = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Icon")
-	local var_103_3 = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Label")
+	local label = headerWindow:recursiveGetChildById("selectArgument" .. slotIndex .. "Label")
 
 	if not selectArgument or selectArgument:isDestroyed() then
 		return
@@ -1733,9 +1733,9 @@ function updateAuctionCharacterArgumentSlot(slotIndex)
 			applyAuctionCharacterArgumentIcon(icon, slotData.argumentId)
 		end
 
-		if var_103_3 and not var_103_3:isDestroyed() then
-			var_103_3:setText(slotData.value or "")
-			var_103_3:setColor(getAuctionCharacterArgumentLabelColor(true))
+		if label and not label:isDestroyed() then
+			label:setText(slotData.value or "")
+			label:setColor(getAuctionCharacterArgumentLabelColor(true))
 		end
 	else
 		selectArgument:setImageSource(A.SELECT_ICON)
@@ -1755,16 +1755,16 @@ function updateAuctionCharacterArgumentSlot(slotIndex)
 			})
 		end
 
-		if var_103_3 and not var_103_3:isDestroyed() then
-			var_103_3:setText(tr("Add sales argument #%d", slotIndex))
-			var_103_3:setColor(getAuctionCharacterArgumentLabelColor(false))
+		if label and not label:isDestroyed() then
+			label:setText(tr("Add sales argument #%d", slotIndex))
+			label:setColor(getAuctionCharacterArgumentLabelColor(false))
 		end
 	end
 end
 
 function updateAllAuctionCharacterArgumentSlots()
-	for iter_106_0 = 1, A.SLOT_COUNT do
-		updateAuctionCharacterArgumentSlot(iter_106_0)
+	for slotIndex = 1, A.SLOT_COUNT do
+		updateAuctionCharacterArgumentSlot(slotIndex)
 	end
 end
 

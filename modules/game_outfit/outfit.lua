@@ -190,9 +190,9 @@ function handleCheckChange.bindRangeChecks()
 end
 
 local function getSelectionListFocusedChild()
-	local var_7_0 = getSelectionListGrid()
+	local grid = getSelectionListGrid()
 
-	return var_7_0 and var_7_0:getFocusedChild() or nil
+	return grid and grid:getFocusedChild() or nil
 end
 
 local function setSelectionListFocusHandler(handler)
@@ -200,18 +200,18 @@ local function setSelectionListFocusHandler(handler)
 		outfitwindowWidget.selectionList.onChildFocusChange = nil
 	end
 
-	local var_8_0 = getSelectionListGrid()
+	local grid = getSelectionListGrid()
 
-	if var_8_0 then
-		var_8_0.onChildFocusChange = handler
+	if grid then
+		grid.onChildFocusChange = handler
 	end
 end
 
 local function clearSelectionListFocus()
-	local var_9_0 = getSelectionListGrid()
+	local grid = getSelectionListGrid()
 
-	if var_9_0 and var_9_0.focusChild then
-		var_9_0:focusChild(nil)
+	if grid and grid.focusChild then
+		grid:focusChild(nil)
 	end
 end
 
@@ -871,11 +871,11 @@ local function applyFloorRowScrollMargins()
 	end
 
 	for index, floorRowWidget in ipairs(floorRowWidgets) do
-		local col = math.floor((index - 1) / floorTileColumns) + 1
-		local var_40_1 = (index - 1) % floorTileColumns + 1
+		local rowIndex = math.floor((index - 1) / floorTileColumns) + 1
+		local columnIndex = (index - 1) % floorTileColumns + 1
 
-		floorRowWidget:setMarginTop((col - 1) * floorTileHeight - floorOffsetY)
-		floorRowWidget:setMarginLeft((var_40_1 - 1) * floorTileWidth - floorOffsetX)
+		floorRowWidget:setMarginTop((rowIndex - 1) * floorTileHeight - floorOffsetY)
+		floorRowWidget:setMarginLeft((columnIndex - 1) * floorTileWidth - floorOffsetX)
 	end
 end
 
@@ -1543,20 +1543,20 @@ end
 
 function onOutfitNameClick()
 	local outfitId = tempOutfit and tempOutfit.type or 0
-	local var_79_1 = getOutfitOfferIdById(outfitId)
+	local state = getOutfitOfferIdById(outfitId)
 	local offerId = var_0_136(outfitId)
 
-	if var_79_1 and var_79_1 ~= statesOutft.available and offerId > 0 then
+	if state and state ~= statesOutft.available and offerId > 0 then
 		redirectToStoreOffer(offerId)
 	end
 end
 
 function onMountNameClick()
 	local mountId = tempOutfit and tempOutfit.mount or 0
-	local var_80_1 = getMountStateById(mountId)
+	local state = getMountStateById(mountId)
 	local offerId = getMountOfferIdById(mountId)
 
-	if var_80_1 and var_80_1 ~= statesOutft.available and offerId > 0 then
+	if state and state ~= statesOutft.available and offerId > 0 then
 		redirectToStoreOffer(offerId)
 	end
 end
@@ -4954,18 +4954,18 @@ end
 function onPresetSelect(unusedArgument, focusedChild, unusedArgument, unusedArgument)
 	if focusedChild then
 		local id = tonumber(focusedChild:getId())
-		local var_197_1 = settings.presets[id]
+		local preset = settings.presets[id]
 
-		tempOutfit = table.copy(var_197_1.outfit)
+		tempOutfit = table.copy(preset.outfit)
 
 		var_0_144(tempOutfit)
 		applyOutfitColorsToTemp()
 
-		if var_197_1.familiarColorCache and type(var_197_1.familiarColorCache) == "table" then
-			familiarColorCache.head = var_197_1.familiarColorCache.head or 0
-			familiarColorCache.body = var_197_1.familiarColorCache.body or 0
-			familiarColorCache.legs = var_197_1.familiarColorCache.legs or 0
-			familiarColorCache.feet = var_197_1.familiarColorCache.feet or 0
+		if preset.familiarColorCache and type(preset.familiarColorCache) == "table" then
+			familiarColorCache.head = preset.familiarColorCache.head or 0
+			familiarColorCache.body = preset.familiarColorCache.body or 0
+			familiarColorCache.legs = preset.familiarColorCache.legs or 0
+			familiarColorCache.feet = preset.familiarColorCache.feet or 0
 		elseif (tempOutfit.familiar or 0) > 0 then
 			familiarColorCache.head = 0
 			familiarColorCache.body = 0
@@ -4982,7 +4982,7 @@ function onPresetSelect(unusedArgument, focusedChild, unusedArgument, unusedArgu
 		end
 
 		if g_game.getFeature(GamePlayerMounts) then
-			outfitwindowWidget.configure.mount.check:setChecked(var_197_1.mounted and tempOutfit.mount > 0)
+			outfitwindowWidget.configure.mount.check:setChecked(preset.mounted and tempOutfit.mount > 0)
 		end
 
 		settings.currentPreset = id

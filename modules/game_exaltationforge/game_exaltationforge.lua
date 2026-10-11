@@ -796,12 +796,12 @@ local function colorizeForgeTextPreservingIcons(ch, textColor)
 	return table.concat(textParts)
 end
 
-local function buildForgeBonusPresentation(bonus, leftItemId)
+local function getForgeFusionGoldCost(itemId, itemTier)
 	if not Fusion or not Fusion.classificationTable then
 		return 0
 	end
 
-	local probe = Item.create(bonus)
+	local probe = Item.create(itemId)
 
 	if not probe then
 		return 0
@@ -813,7 +813,7 @@ local function buildForgeBonusPresentation(bonus, leftItemId)
 		return 0
 	end
 
-	return tonumber(byClass[tostring(leftItemId or 0)]) or 0
+	return tonumber(byClass[tostring(itemTier or 0)]) or 0
 end
 
 local function buildForgeBonusReward(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
@@ -850,7 +850,7 @@ local function buildForgeBonusReward(bonus, leftItemId, leftTier, coreCount, ext
 			text = text
 		}
 	elseif bonus == 3 then
-		local goldCost = buildForgeBonusPresentation(leftItemId, leftTier)
+		local goldCost = getForgeFusionGoldCost(leftItemId, leftTier)
 		local text = string.format("Awesome! The used %s{icon:gold-coin} were not consumed.", Forge:formatNumber(goldCost))
 
 		return {

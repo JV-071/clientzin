@@ -323,13 +323,13 @@ local function getCustomPlayerThreshold(entry, panelIdx)
 	return entry.thresholds[tostring(panelIdx)]
 end
 
-local function setCustomPlayerThreshold(entry, thresholdPanelIndex, panelIdx)
+local function setCustomPlayerThreshold(entry, panelIndex, thresholdValue)
 	if type(entry) ~= "table" then
 		return
 	end
 
 	entry.thresholds = sanitizePlayerThresholds(entry.thresholds)
-	entry.thresholds[tostring(thresholdPanelIndex)] = clampThreshold(panelIdx)
+	entry.thresholds[tostring(panelIndex)] = clampThreshold(thresholdValue)
 end
 
 local function trimText(value)

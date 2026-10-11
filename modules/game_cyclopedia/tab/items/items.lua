@@ -1,4 +1,4 @@
-﻿Cyclopedia.Items = {}
+Cyclopedia.Items = {}
 Cyclopedia.CategoryItems = {
 	{
 		name = "Armors",
@@ -1286,16 +1286,16 @@ function Cyclopedia.onItemListRowClick(widget)
 end
 
 local function bindItemListRow(item, data)
-	local var_74_0, var_74_1 = resolveThingType(data)
+	local thingType, entry = resolveThingType(data)
 
-	if not var_74_0 or not item then
+	if not thingType or not item then
 		return
 	end
 
-	local marketData = var_74_0:getMarketData()
-	local var_74_3 = var_74_0:isMarketable() and marketData and not table.empty(marketData)
-	local id = var_74_1 and var_74_1.id or var_74_0:getId()
-	local itemDisplayName = var_74_1 and var_74_1.name or Cyclopedia.getItemDisplayName(var_74_0)
+	local marketData = thingType:getMarketData()
+	local hasMarket = thingType:isMarketable() and marketData and not table.empty(marketData)
+	local id = entry and entry.id or thingType:getId()
+	local itemDisplayName = entry and entry.name or Cyclopedia.getItemDisplayName(thingType)
 
 	item:setId(id)
 	item.Sprite:setItemId(id)
@@ -1303,7 +1303,7 @@ local function bindItemListRow(item, data)
 	item.Name:setColor(getItemListNameColor(id))
 
 	item.Value = 0
-	item.Vocation = var_74_3 and marketData.restrictVocation or 0
+	item.Vocation = hasMarket and marketData.restrictVocation or 0
 
 	if item.Rarity then
 		item.Rarity:setImageSource("")

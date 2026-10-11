@@ -8,7 +8,7 @@ local priorityList = {}
 local var_0_5
 local monsterCache
 local allCreaturesEnabled = false
-local var_0_8
+local openTargetRowContextMenu
 local openTargetAssignWindowInternal
 local targetActionButtonsState
 local ALL_CREATURES_ICON = "/images/icons_big/icon-arbitrarymonster64x64"
@@ -1097,9 +1097,9 @@ local function isAutoTargetEnabled()
 		return false
 	end
 
-	local var_59_0 = widget("enableTargetCheckBox")
+	local check = widget("enableTargetCheckBox")
 
-	return var_59_0 and var_59_0:isChecked() or false
+	return check and check:isChecked() or false
 end
 
 local function applyTargetAttackMode()
@@ -1917,7 +1917,7 @@ local function var_0_119(arg_108_0, arg_108_1)
 	end
 end
 
-local function var_0_120(arg_109_0, arg_109_1)
+local function applyTargetPriorityRowVisual(arg_109_0, arg_109_1)
 	if not arg_109_0 or not arg_109_1 then
 		return
 	end
@@ -1934,13 +1934,13 @@ local function var_0_120(arg_109_0, arg_109_1)
 end
 
 local function getSelectedRemovableTargetRow()
-	local var_110_0 = widget("targetPriorityList")
+	local list = widget("targetPriorityList")
 
-	if not var_110_0 or var_110_0:isDestroyed() then
+	if not list or list:isDestroyed() then
 		return nil
 	end
 
-	local focusedChild = var_110_0:getFocusedChild()
+	local focusedChild = list:getFocusedChild()
 
 	if focusedChild and not focusedChild.isAllCreaturesRow and focusedChild.priorityListIndex then
 		return focusedChild
@@ -2000,13 +2000,13 @@ local function scheduleTargetActionButtonsSync()
 end
 
 local function clearTargetListSelection()
-	local var_115_0 = widget("targetPriorityList")
+	local list = widget("targetPriorityList")
 
-	if not var_115_0 or var_115_0:isDestroyed() then
+	if not list or list:isDestroyed() then
 		return
 	end
 
-	var_115_0:focusChild(nil)
+	list:focusChild(nil)
 	resetTargetActionButtonsState()
 	scheduleTargetActionButtonsSync()
 end
@@ -2053,7 +2053,7 @@ local function refreshPriorityListUI()
 	parentWidget:destroyChildren()
 
 	for index, entry in ipairs(priorityList) do
-		local var_118_1 = entry
+		local rowEntry = entry
 		local targetPriorityListRowWidget = g_ui.createWidget("TargetPriorityListRow", parentWidget)
 		local zebraColor = index % 2 == 1 and ZEBRA_COLOR_A or ZEBRA_COLOR_B
 
@@ -2062,23 +2062,23 @@ local function refreshPriorityListUI()
 		targetPriorityListRowWidget:setBackgroundColor(zebraColor)
 
 		targetPriorityListRowWidget.priorityListIndex = index
-		targetPriorityListRowWidget.isAllCreaturesRow = var_118_1.allCreatures == true
+		targetPriorityListRowWidget.isAllCreaturesRow = rowEntry.allCreatures == true
 
-		if var_118_1.allCreatures then
-			var_0_119(targetPriorityListRowWidget, var_118_1)
+		if rowEntry.allCreatures then
+			var_0_119(targetPriorityListRowWidget, rowEntry)
 		else
-			targetPriorityListRowWidget.targetRaceId = var_118_1.raceId
+			targetPriorityListRowWidget.targetRaceId = rowEntry.raceId
 
-			var_0_120(targetPriorityListRowWidget, var_118_1)
+			applyTargetPriorityRowVisual(targetPriorityListRowWidget, rowEntry)
 		end
 
 		local targetRowEnabled = targetPriorityListRowWidget:recursiveGetChildById("targetRowEnabled")
 
 		if targetRowEnabled then
 			function targetRowEnabled.onCheckChange(unusedArgument, enabled)
-				var_118_1.enabled = enabled
+				rowEntry.enabled = enabled
 
-				if var_118_1.allCreatures then
+				if rowEntry.allCreatures then
 					allCreaturesEnabled = enabled == true
 
 					resetTargetActionButtonsState()
@@ -2093,9 +2093,9 @@ local function refreshPriorityListUI()
 
 		connectZebraFocus(targetPriorityListRowWidget)
 
-		function targetPriorityListRowWidget.onMouseRelease(arg_120_0, unusedArgument, arg_120_2)
-			if arg_120_2 == MouseRightButton then
-				var_0_8(arg_120_0)
+		function targetPriorityListRowWidget.onMouseRelease(arg_120_0, unusedArgument, button)
+			if button == MouseRightButton then
+				openTargetRowContextMenu(arg_120_0)
 			end
 		end
 	end
@@ -2103,7 +2103,7 @@ local function refreshPriorityListUI()
 	syncTargetActionButtons()
 end
 
-function var_0_8(arg_121_0)
+function openTargetRowContextMenu(arg_121_0)
 	if not arg_121_0 or not arg_121_0.priorityListIndex then
 		return
 	end
@@ -2194,13 +2194,13 @@ local function populateTargetMonsterList()
 			visibleIdx = visibleIdx + 1
 
 			local styleName = visibleIdx % 2 == 1 and "HelperCreatureListRowOdd" or "HelperCreatureListRowEven"
-			local var_127_3 = g_ui.createWidget(styleName, targetMonstersPanel)
+			local row = g_ui.createWidget(styleName, targetMonstersPanel)
 
-			var_127_3.targetRace = entry
-			var_127_3.nameLower = (entry.name or ""):lower()
+			row.targetRace = entry
+			row.nameLower = (entry.name or ""):lower()
 
-			var_0_118(var_127_3, entry)
-			connectZebraFocus(var_127_3)
+			var_0_118(row, entry)
+			connectZebraFocus(row)
 		end
 	end
 

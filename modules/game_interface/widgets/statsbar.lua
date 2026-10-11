@@ -1427,9 +1427,9 @@ function StatsBar.cancelPendingRefreshes()
 	statsBarQuickManaPending = false
 end
 
-local function scheduleCurrentStatsBarQuickInfo(arg_46_0, arg_46_1)
-	statsBarQuickHealthPending = statsBarQuickHealthPending or arg_46_0 == true
-	statsBarQuickManaPending = statsBarQuickManaPending or arg_46_1 == true
+local function scheduleCurrentStatsBarQuickInfo(updateHealth, updateMana)
+	statsBarQuickHealthPending = statsBarQuickHealthPending or updateHealth == true
+	statsBarQuickManaPending = statsBarQuickManaPending or updateMana == true
 
 	if statsBarQuickInfoEvent then
 		return

@@ -1031,7 +1031,7 @@ function reorderButtons()
 end
 
 function getMainPanelButtonsInfo()
-	local var_48_0 = {}
+	local buttons = {}
 	local options = optionsController.ui.onPanel.options
 
 	if options then
@@ -1039,7 +1039,7 @@ function getMainPanelButtonsInfo()
 			local id = button:getId()
 
 			if id then
-				table.insert(var_48_0, {
+				table.insert(buttons, {
 					id = id,
 					tooltip = ControlButtonNames[id] or stripHotkey(button:getTooltip()) or id,
 					visible = isShortcutButtonConfiguredVisible(id, button)
@@ -1048,7 +1048,7 @@ function getMainPanelButtonsInfo()
 		end
 	end
 
-	return var_48_0, buttonOrder
+	return buttons, buttonOrder
 end
 
 function setMainPanelButtonVisible(id, visible)

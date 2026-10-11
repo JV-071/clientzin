@@ -882,12 +882,12 @@ local function var_0_41(categoryName)
 	return 1
 end
 
-local function findCreaturePageInList(creatureData, arg_49_1)
-	arg_49_1 = normalizeRaceId(arg_49_1)
+local function findCreaturePageInList(creatureData, raceId)
+	raceId = normalizeRaceId(raceId)
 
-	for iter_49_0 = 1, #creatureData do
-		if normalizeRaceId(creatureData[iter_49_0].id) == arg_49_1 then
-			return math.floor((iter_49_0 - 1) / BESTIARY_PAGE_SIZE) + 1
+	for i = 1, #creatureData do
+		if normalizeRaceId(creatureData[i].id) == raceId then
+			return math.floor((i - 1) / BESTIARY_PAGE_SIZE) + 1
 		end
 	end
 
