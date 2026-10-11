@@ -257,6 +257,41 @@ TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
     g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
 }
 
+TEST_F(RuntimeEventTest, CreatureStyleUpdatesThePreviewOutfitAndDirection)
+{
+    struct ThingLibrary {
+        ThingLibrary() { g_things.init(); }
+        ~ThingLibrary() { g_things.terminate(); }
+    } library;
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR) + "/assets"));
+    ASSERT_TRUE(g_things.loadAppearances("/things/assets/"));
+    g_lua.registerClass<UIWidget>();
+    g_lua.registerClass<UICreature, UIWidget>();
+    g_lua.registerClass<Creature>();
+    ForegroundPool foreground;
+    DispatcherSession dispatcher;
+    auto widget = std::make_shared<UICreature>();
+    std::istringstream source(
+        "Preview\n"
+        "  outfit-id: 3\n"
+        "  outfit-head: 10\n"
+        "  outfit-body: 20\n"
+        "  outfit-legs: 30\n"
+        "  outfit-feet: 40\n"
+        "  outfit-direction: 0\n");
+    const auto document = OTMLDocument::parse(source, "creature-style-regression");
+    widget->applyStyle(document->get("Preview"));
+    ASSERT_NE(nullptr, widget->getCreature());
+    const auto outfit = widget->getCreature()->getOutfit();
+    EXPECT_EQ(3, outfit.getId());
+    EXPECT_EQ(10, outfit.getHead());
+    EXPECT_EQ(20, outfit.getBody());
+    EXPECT_EQ(30, outfit.getLegs());
+    EXPECT_EQ(40, outfit.getFeet());
+    EXPECT_EQ(Otc::North, widget->getCreature()->getDirection());
+    widget->destroy();
+}
+
 TEST_F(RuntimeEventTest, DecoKitPreviewRetainsPacketContentWithoutChangingTheInventoryItem)
 {
     struct ThingLibrary {

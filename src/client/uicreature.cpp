@@ -98,6 +98,8 @@ void UICreature::onStyleApply(const std::string_view styleName, const OTMLNodePt
             m_center = node->value<bool>();
         } else if (node->tag() == "creature-auto-fit") {
             m_autoFit = node->value<bool>();
+        } else if (node->tag() == "center-by-bounding-box") {
+            setCenterByBoundingBox(node->value<bool>());
         } else if (node->tag() == "creature-size") {
             setCreatureSize(node->value<int>());
         } else if (node->tag() == "outfit-id") {
@@ -106,15 +108,23 @@ void UICreature::onStyleApply(const std::string_view styleName, const OTMLNodePt
             outfit.setId(node->value<int>());
             setOutfit(outfit);
         } else if (node->tag() == "outfit-head") {
-            getOutfit().setHead(node->value<int>());
+            auto outfit = getOutfit();
+            outfit.setHead(node->value<int>());
+            setOutfit(outfit);
         } else if (node->tag() == "outfit-body") {
-            getOutfit().setBody(node->value<int>());
+            auto outfit = getOutfit();
+            outfit.setBody(node->value<int>());
+            setOutfit(outfit);
         } else if (node->tag() == "outfit-legs") {
-            getOutfit().setLegs(node->value<int>());
+            auto outfit = getOutfit();
+            outfit.setLegs(node->value<int>());
+            setOutfit(outfit);
         } else if (node->tag() == "outfit-feet") {
-            getOutfit().setFeet(node->value<int>());
+            auto outfit = getOutfit();
+            outfit.setFeet(node->value<int>());
+            setOutfit(outfit);
         } else if (node->tag() == "outfit-direction") {
-            m_direction = static_cast<Otc::Direction>(node->value<int>());
+            setDirection(static_cast<Otc::Direction>(node->value<int>()));
         }
     }
     UIWidget::onStyleApply(styleName, styleNode);
