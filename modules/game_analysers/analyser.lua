@@ -1020,6 +1020,13 @@ function terminate()
 end
 
 function startNewSession(login)
+	local xpWindow = XPAnalyser and XPAnalyser.window
+	local savedXpHeight
+
+	if xpWindow and not xpWindow:isDestroyed() and xpWindow:isVisible() and not xpWindow:isOn() then
+		savedXpHeight = xpWindow:getHeight()
+	end
+
 	AnalyserSession:reset()
 	HuntingAnalyser:reset()
 
@@ -1046,8 +1053,12 @@ function startNewSession(login)
 	end
 
 	InputAnalyser:updateWindow(true)
-	XPAnalyser:reset()
-	XPAnalyser:updateWindow(true)
+
+	if login then
+		XPAnalyser:reset()
+		XPAnalyser:updateWindow(true)
+	end
+
 	DropTrackerAnalyser:reset(login)
 
 	if login then
@@ -1063,6 +1074,27 @@ function startNewSession(login)
 	end
 
 	ControllerAnalyser:startEvent()
+
+	local function restoreXpWindowHeight()
+		if not savedXpHeight then
+			return
+		end
+
+		local currentXpWindow = XPAnalyser and XPAnalyser.window
+
+		if not currentXpWindow or currentXpWindow:isDestroyed() or currentXpWindow:isOn() then
+			return
+		end
+
+		if currentXpWindow:getHeight() ~= savedXpHeight then
+			currentXpWindow:setHeight(savedXpHeight)
+
+			currentXpWindow.maximizedHeight = savedXpHeight
+		end
+	end
+
+	restoreXpWindowHeight()
+	addEvent(restoreXpWindowHeight)
 end
 
 function onlineAnalyser()

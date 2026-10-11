@@ -1,4 +1,4 @@
-﻿if not ImbuementItem then
+if not ImbuementItem then
 	ImbuementItem = {
 		selectedSlot = 0,
 		slots = 0,
@@ -197,7 +197,9 @@ function ImbuementItem.setup(itemId, tier, slots, activeSlots, availableImbuemen
 		self.pendingClientInfo = nil
 		Imbuement.awaitingFyiRestore = true
 
-		scheduleEvent(function()
+		self.clientInfoEvent = scheduleEvent(function()
+			self.clientInfoEvent = nil
+
 			if not g_game.isOnline() then
 				return
 			end
@@ -205,9 +207,9 @@ function ImbuementItem.setup(itemId, tier, slots, activeSlots, availableImbuemen
 			Imbuement.hide()
 
 			if pending == "apply" then
-				displayInfoBox(tr("Info"), tr("The imbuement has been applied successfully."))
+				Imbuement.onMessageDialog(Imbuement.MessageDialog.ImbuementSuccess, tr("The imbuement has been applied successfully."))
 			elseif pending == "clear" then
-				displayInfoBox(tr("Info"), tr("The imbuement has been removed successfully."))
+				Imbuement.onMessageDialog(Imbuement.MessageDialog.ClearingCharmSuccess, tr("The imbuement has been removed successfully."))
 			end
 		end, 1)
 	end
@@ -321,6 +323,13 @@ function ImbuementItem.shutdown(self)
 	self.restoreSlotAfterSetup = nil
 	self.pendingReselectSlot = nil
 	self.pendingClientInfo = nil
+
+	if self.clientInfoEvent then
+		removeEvent(self.clientInfoEvent)
+
+		self.clientInfoEvent = nil
+	end
+
 	self.reservedReturnSlot = nil
 end
 

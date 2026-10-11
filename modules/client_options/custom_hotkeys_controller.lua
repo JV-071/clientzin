@@ -1,4 +1,4 @@
-﻿CustomHotkeys = {}
+CustomHotkeys = {}
 
 local ACTION_NAME_LIMIT = 39
 local HELPER_SLOT_ID = "customHotkeyAssignHelper"
@@ -759,7 +759,7 @@ local function addHotkeyRow(hotkey, hotkeyId, preset, chatMode)
 	if actionColumn then
 		if actionColumn.item then
 			if display.itemId and display.itemId > 100 then
-				local item = display.subType and Item.create(display.itemId, display.subType) or Item.create(display.itemId)
+				local item = display.subType ~= nil and Item.create(display.itemId, display.subType) or Item.create(display.itemId)
 
 				if item then
 					if display.getTier and item.setTier then
@@ -1013,7 +1013,7 @@ function CustomHotkeys.assignObject(hotkeyId, isNew)
 
 		local item = Item.create(hotkey.data.itemId)
 
-		if item and hotkey.data.subType then
+		if item and hotkey.data.subType ~= nil then
 			item:setSubType(hotkey.data.subType)
 		end
 

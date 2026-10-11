@@ -64,6 +64,7 @@ Module
     - game_offlinetraining
     - game_soulpit
     - game_ebbflow_timer
+    - game_bosstimer
     - game_bossdifficulty
     - game_customisepodium
   @onLoad: init()

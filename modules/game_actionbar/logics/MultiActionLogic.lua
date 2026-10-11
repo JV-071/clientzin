@@ -1483,7 +1483,7 @@ local function openMultiSubSlotMenu(subSlot, parentSlot, index, mousePos)
 		if hasObject then
 			openObjectAssignWindow()
 
-			local item = data.subType and Item.create(data.itemId, data.subType) or Item.create(data.itemId)
+			local item = data.subType ~= nil and Item.create(data.itemId, data.subType) or Item.create(data.itemId)
 
 			populateObjectAssignWindowFromItem(item, data.useType, data.getTier, {
 				smartMode = data.smartMode,

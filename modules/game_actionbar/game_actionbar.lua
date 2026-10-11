@@ -5504,7 +5504,7 @@ function createMenu(slotId)
 			if slot and slot.itemId and slot.itemId > 0 then
 				openObjectAssignWindow()
 
-				local item = slot.subType and Item.create(slot.itemId, slot.subType) or Item.create(slot.itemId)
+				local item = slot.subType ~= nil and Item.create(slot.itemId, slot.subType) or Item.create(slot.itemId)
 
 				populateObjectAssignWindowFromItem(item, slot.useType, actionbarState.actionSlotItemTier(slot), {
 					smartMode = slot.smartMode,
@@ -7719,9 +7719,13 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 
 	previewItem:setItemCount(1)
 
+	if item.isFluidContainer and item:isFluidContainer() then
+		previewItem:setItemSubType(item:getSubType())
+	end
+
 	local defaultWidget
 	local equippable = actionbarState.isEquippableActionBarItem(item)
-	local multiUse = item:isMultiUse()
+	local multiUse = item:isMultiUse() or item.isFluidContainer and item:isFluidContainer()
 
 	if equippable and multiUse then
 		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)

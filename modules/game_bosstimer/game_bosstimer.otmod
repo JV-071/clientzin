@@ -1,0 +1,8 @@
+Module
+  name: game_bosstimer
+  description: Boss fight countdown HUD
+  sandboxed: true
+  dependencies: [ game_interface ]
+  scripts: [ game_bosstimer ]
+  @onLoad: init()
+  @onUnload: terminate()

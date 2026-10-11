@@ -21,6 +21,19 @@ Cyclopedia.storedTrackerData = Cyclopedia.storedTrackerData or nil
 Cyclopedia.storedBosstiaryTrackerData = Cyclopedia.storedBosstiaryTrackerData or nil
 
 local animusMasteryPoints = 0
+
+local function updateAnimusMasteryPoints(points)
+	if points ~= nil then
+		animusMasteryPoints = points
+	end
+end
+
+local function formatAnimusMasteryTooltip(bonusTenths)
+	local bonusPercent = string.format("%.1f", (bonusTenths or 0) / 10):gsub(",", ".")
+
+	return "The Animus Mastery for this creature is unlocked.\n" .. "It yields 2% bonus experience points, plus an additional 0.1% for every 10 Animus Masteries unlocked, up to a maximum of 4%.\n" .. string.format("You currently benefit from %s%% bonus experience points due to having unlocked %d Animus Masteries.", bonusPercent, animusMasteryPoints or 0)
+end
+
 local BESTIARY_CHARM_SLOT = {
 	minor = 2,
 	major = 1
@@ -1462,6 +1475,8 @@ function Cyclopedia.clearBestiaryUI(resetState)
 end
 
 function Cyclopedia.loadBestiaryOverview(name, creatures, animusMasteryPoints)
+	updateAnimusMasteryPoints(animusMasteryPoints)
+
 	local var_86_0 = var_0_35(name)
 
 	if name and name ~= "" and not var_86_0 then
@@ -1485,9 +1500,6 @@ function Cyclopedia.loadBestiaryOverview(name, creatures, animusMasteryPoints)
 		Cyclopedia.loadBestiaryCreatures(creatures, name)
 	end
 
-	if animusMasteryPoints and animusMasteryPoints > 0 then
-		-- block empty
-	end
 end
 
 local function restoreBestiaryViewUI()
@@ -1777,6 +1789,8 @@ function Cyclopedia.CreateCreatureItems(data)
 end
 
 function Cyclopedia.loadBestiarySelectedCreature(data)
+	updateAnimusMasteryPoints(data.AnimusMasteryPoints)
+
 	Cyclopedia.Bestiary.CreatureDetailCache = Cyclopedia.Bestiary.CreatureDetailCache or {}
 	Cyclopedia.Bestiary.CreatureDetailCache[data.id] = data
 
@@ -1951,10 +1965,7 @@ function Cyclopedia.loadBestiarySelectedCreature(data)
 	UI.ListBase.CreatureInfo.LocationField.Textlist.Text:setText(data.location)
 
 	if data.AnimusMasteryBonus > 0 then
-		local bonusPercent = data.AnimusMasteryBonus / 10
-		local masteryPoints = data.AnimusMasteryPoints or animusMasteryPoints or 0
-
-		UI.ListBase.CreatureInfo.AnimusMastery:setTooltip("The Animus Mastery for this creature is unlocked.\nIt yields " .. bonusPercent .. "% bonus experience points, plus an additional 0.1% for every 10 Animus Masteries unlocked, up to a maximum of 4%.\nYou currently benefit from " .. bonusPercent .. "% bonus experience points due to having unlocked " .. masteryPoints .. " Animus Masteries.")
+		UI.ListBase.CreatureInfo.AnimusMastery:setTooltip(formatAnimusMasteryTooltip(data.AnimusMasteryBonus))
 		UI.ListBase.CreatureInfo.AnimusMastery:setVisible(true)
 	else
 		UI.ListBase.CreatureInfo.AnimusMastery:removeTooltip()
@@ -2242,7 +2253,7 @@ function Cyclopedia.CreateBestiaryCreaturesItem(data)
 	widget.Sprite:getCreature():setStaticWalking(1000)
 
 	if data.AnimusMasteryBonus > 0 then
-		widget.AnimusMastery:setTooltip("The Animus Mastery for this creature is unlocked.\nIt yields " .. data.AnimusMasteryBonus .. "% bonus experience points, plus an additional 0.1% for every 10 Animus Masteries unlocked, up to a maximum of 4%.\nYou currently benefit from " .. data.AnimusMasteryBonus .. "% bonus experience points due to having unlocked " .. animusMasteryPoints .. " Animus Masteries.")
+		widget.AnimusMastery:setTooltip(formatAnimusMasteryTooltip(data.AnimusMasteryBonus))
 		widget.AnimusMastery:setVisible(true)
 	else
 		widget.AnimusMastery:removeTooltip()

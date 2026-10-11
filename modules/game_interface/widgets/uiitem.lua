@@ -541,7 +541,9 @@ function UIItem.onHoverChange(self, hovered)
 	local duration = self:getChildById("duration") or parent and parent:getChildById("duration")
 	local text = duration and duration:getText() or ""
 
-	if text ~= "" then
+	if self.stashItemTooltip then
+		self:setTooltip(self.stashItemTooltip)
+	elseif text ~= "" then
 		self:setTooltip(text)
 	end
 
@@ -578,7 +580,7 @@ function UIItem.onHoverChange(self, hovered)
 		end
 	end
 
-	if text == "" and g_game.getFeature(GameItemTooltipV8) then
+	if not self.stashItemTooltip and text == "" and g_game.getFeature(GameItemTooltipV8) then
 		local tooltip = ""
 
 		local function splitTextIntoLines(text, maxLineLength)

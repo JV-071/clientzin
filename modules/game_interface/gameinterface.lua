@@ -3067,6 +3067,18 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
 			return true
 		elseif option == "leftSmart" and keyboardModifiers == KeyboardNoModifier and mouseButton == MouseLeftButton then
+			local leftSmartTarget = attackCreature or creatureThing
+
+			if leftSmartTarget and leftSmartTarget:getPosition().z == player:getPosition().z then
+				if leftSmartTarget == player or leftSmartTarget:isPlayer() and g_game.isSafeFight() then
+					g_game.look(leftSmartTarget)
+				else
+					g_game.attack(leftSmartTarget)
+				end
+
+				return true
+			end
+
 			if var_0_102(item) then
 				handleUseThing(item, false)
 

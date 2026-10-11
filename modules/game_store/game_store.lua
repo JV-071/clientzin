@@ -3500,12 +3500,12 @@ local function var_0_181(arg_156_0)
 		end
 	end
 
-	local var_156_3 = g_clock.millis()
+	local nowMs = g_clock.millis()
 	local var_156_4 = {}
 
 	local function var_156_5(validSubOffers)
 		for _, subOffer in ipairs(validSubOffers) do
-			if g_clock.millis() - var_156_3 >= var_0_33 then
+			if g_clock.millis() - nowMs >= var_0_33 then
 				table.insert(var_156_4, subOffer)
 			elseif not subOffer:isDestroyed() and not subOffer._previewReady and subOffer._previewData then
 				createProductImage(subOffer:getChildById("image"), subOffer._previewData)
@@ -3520,7 +3520,7 @@ local function var_0_181(arg_156_0)
 
 	subOffers = var_156_4
 
-	var_0_38("previewBatch", var_156_3)
+	var_0_38("previewBatch", nowMs)
 
 	if #subOffers > 0 then
 		var_0_25 = scheduleEvent(function()
@@ -3645,7 +3645,7 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, parentWidget, arg_165_
 
 	var_0_185(parentWidget)
 
-	local var_165_0 = g_clock.millis()
+	local nowMs = g_clock.millis()
 	local var_165_1 = 0
 	local var_165_2 = arg_165_4
 	local var_165_3 = arg_165_4 == 1 and var_0_34 or 1
@@ -3669,14 +3669,14 @@ local function var_0_187(arg_165_0, arg_165_1, arg_165_2, parentWidget, arg_165_
 		var_165_2 = var_165_2 + 1
 		var_165_1 = var_165_1 + 1
 
-		if var_165_3 <= var_165_1 and g_clock.millis() - var_165_0 >= var_0_33 then
+		if var_165_3 <= var_165_1 and g_clock.millis() - nowMs >= var_0_33 then
 			break
 		end
 	end
 
 	var_0_23 = false
 
-	var_0_38(string.format("rowBatch start=%d count=%d", arg_165_4, var_165_1), var_165_0)
+	var_0_38(string.format("rowBatch start=%d count=%d", arg_165_4, var_165_1), nowMs)
 	var_0_182(arg_165_0)
 
 	if var_165_2 <= #arg_165_2 then

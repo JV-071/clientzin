@@ -20,28 +20,28 @@ local STORAGE_DIR = "/controls/custom_hotkeys"
 local bindingsSuspended = false
 local OBJECT_USE_DISPLAY = {
 	useOnSelf = {
-		label = "(use object on yourself)",
-		color = "#b0ffb0"
+		color = "#b0ffb0",
+		label = "(use object on yourself)"
 	},
 	useOnTarget = {
-		label = "(use object on target)",
-		color = "#ffb0b0"
+		color = "#ffb0b0",
+		label = "(use object on target)"
 	},
 	useWith = {
-		label = "(use object with crosshair)",
-		color = "#c87d7d"
+		color = "#c87d7d",
+		label = "(use object with crosshair)"
 	},
 	useAtCursor = {
-		label = "(use object at mouse cursor)",
-		color = "#c87d7d"
+		color = "#c87d7d",
+		label = "(use object at mouse cursor)"
 	},
 	equip = {
-		label = "(equip/unequip object)",
-		color = "#bfbf00"
+		color = "#bfbf00",
+		label = "(equip/unequip object)"
 	},
 	use = {
-		label = "(use object)",
-		color = "#b0b0ff"
+		color = "#b0b0ff",
+		label = "(use object)"
 	}
 }
 local USE_TYPE_TO_ACTION = {
@@ -712,8 +712,8 @@ function CustomHotkeyManager.getHotkeyKeys(hotkeyId, preset, chatMode)
 	preset = preset or CustomHotkeyManager.currentPreset
 
 	local keys = {
-		secondary = "",
-		primary = ""
+		primary = "",
+		secondary = ""
 	}
 	local list = CustomHotkeyManager.hotkeys[chatMode][preset]
 
@@ -967,6 +967,140 @@ function CustomHotkeyManager.resumeBindings()
 	end
 end
 
+local function hasExplicitSubtype(data)
+	return data and data.subType ~= nil
+end
+
+local function findSubtypeInventoryItem(data)
+	if not hasExplicitSubtype(data) or not data.itemId or not g_game.findPlayerItem then
+		return nil
+	end
+
+	return g_game.findPlayerItem(data.itemId, data.subType, data.getTier or 0)
+end
+
+local function createHotkeyUseItem(data)
+	if not data or not data.itemId then
+		return nil
+	end
+
+	local inventoryItem = findSubtypeInventoryItem(data)
+
+	if inventoryItem then
+		return inventoryItem
+	end
+
+	local item = Item.create(data.itemId)
+
+	if not item then
+		return nil
+	end
+
+	if hasExplicitSubtype(data) then
+		item:setSubType(data.subType)
+	end
+
+	if data.getTier and item.setTier then
+		item:setTier(data.getTier)
+	end
+
+	return item
+end
+
+local function useHotkeyItemWith(data, target)
+	if not data or not data.itemId or not target then
+		return
+	end
+
+	if not hasExplicitSubtype(data) then
+		g_game.useInventoryItemWith(data.itemId, target)
+
+		return
+	end
+
+	local inventoryItem = findSubtypeInventoryItem(data)
+
+	if inventoryItem then
+		g_game.useWith(inventoryItem, target)
+	end
+end
+
+local function startHotkeyUseWith(data)
+	local item = createHotkeyUseItem(data)
+
+	if item then
+		modules.game_interface.startUseWith(item)
+	end
+end
+
+local function getHotkeyUseTarget(tile, item)
+	if not tile or not item then
+		return nil
+	end
+
+	local target
+
+	if item.isFluidContainer and item:isFluidContainer() or item:isMultiUse() then
+		target = tile:getTopMultiUseThing()
+	else
+		target = tile:getTopUseThing()
+	end
+
+	target = target or tile:getTopCreature()
+
+	return target
+end
+
+local function useHotkeyAtCursor(data)
+	if not data or not data.itemId then
+		return
+	end
+
+	local mousePos = g_window.getMousePosition()
+	local root = modules.game_interface and modules.game_interface.getRootPanel()
+
+	if not root then
+		return
+	end
+
+	local hoveredWidget = root:recursiveGetChildByPos(mousePos, false)
+	local parent = hoveredWidget
+
+	while parent and parent:getClassName() ~= "UIGameMap" do
+		parent = parent:getParent()
+	end
+
+	local item = createHotkeyUseItem(data)
+
+	if not item then
+		return
+	end
+
+	if parent then
+		local tile = parent:getTile(mousePos)
+
+		if not tile then
+			return
+		end
+
+		useHotkeyItemWith(data, getHotkeyUseTarget(tile, item))
+
+		return
+	end
+
+	if not hoveredWidget then
+		return
+	end
+
+	local className = hoveredWidget:getClassName()
+
+	if className == "UIItem" and not hoveredWidget:isVirtual() then
+		useHotkeyItemWith(data, hoveredWidget:getItem())
+	elseif className == "UICreatureButton" then
+		useHotkeyItemWith(data, hoveredWidget:getCreature())
+	end
+end
+
 function CustomHotkeyManager.hotkeyCallback(hotkeyId, chatMode, preset, isPress)
 	if HotkeyUtils and HotkeyUtils.areHotkeysDisabled and HotkeyUtils.areHotkeysDisabled() then
 		return
@@ -989,54 +1123,31 @@ function CustomHotkeyManager.hotkeyCallback(hotkeyId, chatMode, preset, isPress)
 	local data = hotkey.data or {}
 
 	if action == HOTKEY_ACTION.USE_YOURSELF then
-		g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
+		useHotkeyItemWith(data, g_game.getLocalPlayer())
 	elseif action == HOTKEY_ACTION.USE_CROSSHAIR then
-		local crosshairItem = Item.create(data.itemId)
-
-		if crosshairItem then
-			modules.game_interface.startUseWith(crosshairItem, data.subType or -1)
-		end
+		startHotkeyUseWith(data)
 	elseif action == HOTKEY_ACTION.USE_TARGET then
 		local attackingCreature = g_game.getAttackingCreature()
 
 		if not attackingCreature then
-			local targetSelectionItem = Item.create(data.itemId)
-
-			if targetSelectionItem then
-				modules.game_interface.startUseWith(targetSelectionItem, data.subType or -1)
-			end
+			startHotkeyUseWith(data)
 
 			return
 		end
 
 		if attackingCreature:getTile() then
-			g_game.useInventoryItemWith(data.itemId, attackingCreature, data.subType or -1)
+			useHotkeyItemWith(data, attackingCreature)
 		end
 	elseif action == HOTKEY_ACTION.EQUIP then
 		g_game.equipItem(Item.create(data.itemId))
 	elseif action == HOTKEY_ACTION.USE then
 		if data.useAtCursor then
-			local mousePos = g_window.getMousePosition()
-			local root = modules.game_interface and modules.game_interface.getRootPanel()
+			useHotkeyAtCursor(data)
+		elseif hasExplicitSubtype(data) then
+			local inventoryItem = findSubtypeInventoryItem(data)
 
-			if root then
-				local parent = root:recursiveGetChildByPos(mousePos, false)
-
-				while parent and parent:getClassName() ~= "UIGameMap" do
-					parent = parent:getParent()
-				end
-
-				if parent then
-					local tile = parent:getTile(mousePos)
-
-					if tile then
-						local topThing = tile:getTopUseThing()
-
-						if topThing then
-							g_game.useInventoryItemWith(data.itemId, topThing, data.subType or -1)
-						end
-					end
-				end
+			if inventoryItem then
+				g_game.use(inventoryItem)
 			end
 		else
 			g_game.useInventoryItem(data.itemId)

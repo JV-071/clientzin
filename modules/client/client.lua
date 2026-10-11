@@ -50,6 +50,10 @@ local function showStartupLoadingBox()
 
 	local content = box:getChildById("content")
 
+	content:setTextWrap(false)
+	content:setTextAlign(AlignCenter)
+	content:setTextAutoResize(true)
+
 	content:setText(tr("Loading game files"))
 	content:setMarginTop(27)
 

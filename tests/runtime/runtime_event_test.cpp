@@ -610,3 +610,114 @@ TEST_F(RuntimeEventTest, StandardExceptionRetainsItsMessageAfterLuaInitializatio
         EXPECT_STREQ("initialized exception integrity sentinel", caught.what());
     }
 }
+
+TEST_F(RuntimeEventTest, LuaStashTooltipTakesPriorityOverDuration)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/game_interface/widgets/uiitem.lua");
+    const std::string setup = R"lua(
+UIItem = {}
+UIWidget = {onHoverChange = function() end}
+function signalcall(handler, ...) if handler then return handler(...) end end
+)lua";
+    const std::string scenario = R"lua(
+local function check(stash, duration, expected)
+  local seen
+  local widget = {
+    stashItemTooltip = stash,
+    getParent = function() return nil end,
+    getChildById = function()
+      if duration then return {getText = function() return duration end} end
+    end,
+    setTooltip = function(_, text) seen = text end,
+    isVirtual = function() return true end
+  }
+  UIItem.onHoverChange(widget, true)
+  assert(seen == expected, tostring(seen))
+end
+check("25x potion", "Duration", "25x potion")
+check("25x potion", nil, "25x potion")
+check(nil, "Duration", "Duration")
+check(nil, nil, nil)
+check("", "Duration", "")
+return true
+)lua";
+    g_lua.loadFunction(setup + module + scenario, "@stash-tooltip-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}
+
+TEST_F(RuntimeEventTest, LuaHotkeysSelectExplicitSubtypeInventoryItems)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/client_options/custom_hotkey_manager.lua");
+    const std::string setup = R"lua(
+CHAT_MODE = {ON=1, OFF=2}
+HOTKEY_ACTION = {USE_YOURSELF=1, USE_CROSSHAIR=2, USE_TARGET=3, EQUIP=4, USE=5, TEXT=6, TEXT_AUTO=7, SPELL=8}
+trace = {}
+g_clock = {millis=function() return 1000 end}
+modules = {game_interface={startUseWith=function(item)
+  table.insert(trace, "crosshair:" .. tostring(item.subType))
+end}}
+g_game = {
+ getLocalPlayer=function() return {} end,
+ findPlayerItem=function(id, subtype, tier)
+   table.insert(trace, "find:" .. tostring(subtype))
+   return found and {subType=subtype} or nil
+ end,
+ useInventoryItemWith=function() table.insert(trace, "inventoryWith") end,
+ useWith=function(item) table.insert(trace, "useWith:" .. tostring(item.subType)) end,
+ useInventoryItem=function() table.insert(trace, "inventory") end,
+ use=function(item) table.insert(trace, "use:" .. tostring(item.subType)) end
+}
+Item = {create=function() return {
+ setSubType=function(self, value) self.subType=value end,
+ setTier=function() end
+} end}
+)lua";
+    const std::string scenario = R"lua(
+local function check(action, subtype, available, expected)
+  trace = {}; found = available
+  CustomHotkeyManager.hotkeys[1].test = {[1]={action=action, data={itemId=200, subType=subtype}}}
+  CustomHotkeyManager.hotkeyCallback(1, 1, "test", true)
+  assert(table.concat(trace, ",") == expected, table.concat(trace, ","))
+end
+check(1, nil, true, "inventoryWith")
+check(1, 0, true, "find:0,useWith:0")
+check(1, 7, false, "find:7")
+check(2, 0, true, "find:0,crosshair:0")
+check(2, 7, false, "find:7,crosshair:7")
+check(5, nil, false, "inventory")
+check(5, 0, true, "find:0,use:0")
+check(5, 7, false, "find:7")
+return true
+)lua";
+    g_lua.loadFunction(setup + module + scenario, "@hotkey-subtype-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}
+
+TEST_F(RuntimeEventTest, LuaTargetingKeepsReplacementCreatureAfterStaleDisappear)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/game_helper/helper_target.lua");
+    const std::string scenario = R"lua(
+local function creature(name)
+ return {getId=function() return 50 end, getName=function() return name end,
+ isPlayer=function() return false end, isMonster=function() return true end,
+ getHealthPercent=function() return 100 end}
+end
+local first = creature("First")
+local replacement = creature("Replacement")
+HelperTarget.onCreatureAppear(first)
+HelperTarget.onCreatureAppear(replacement)
+HelperTarget.onCreatureDisappear(first)
+assert(HelperTarget.getSpectators()[50] == replacement)
+HelperTarget.onCreatureDisappear(replacement)
+assert(HelperTarget.getSpectators()[50] == nil)
+return true
+)lua";
+    g_lua.loadFunction(module + scenario, "@targeting-creature-identity-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}

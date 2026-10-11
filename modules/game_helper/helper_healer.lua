@@ -1650,20 +1650,20 @@ end
 		return false
 	end
 
-	local var_97_1 = g_clock.millis()
+	local nowMs = g_clock.millis()
 	local var_97_2 = healerState[99](spellByWords.id)
 
-	if var_97_1 < healerState[108](var_97_2) then
+	if nowMs < healerState[108](var_97_2) then
 		return true
 	end
 
 	if type(spellByWords.group) == "table" then
 		for key, unusedValue in pairs(spellByWords.group) do
-			if var_97_1 < healerState[109](key) then
+			if nowMs < healerState[109](key) then
 				return true
 			end
 		end
-	elseif spellByWords.group and var_97_1 < healerState[109](spellByWords.group) then
+	elseif spellByWords.group and nowMs < healerState[109](spellByWords.group) then
 		return true
 	end
 
@@ -1691,17 +1691,17 @@ end
 		end
 	end
 
-	if var_97_1 < (healerState.multiUseExDelay.spells[var_97_2] or 0) then
+	if nowMs < (healerState.multiUseExDelay.spells[var_97_2] or 0) then
 		return true
 	end
 
 	if type(spellByWords.group) == "table" then
 		for iter_97_3 in pairs(spellByWords.group) do
-			if var_97_1 < (healerState.multiUseExDelay.groups[iter_97_3] or 0) then
+			if nowMs < (healerState.multiUseExDelay.groups[iter_97_3] or 0) then
 				return true
 			end
 		end
-	elseif spellByWords.group and var_97_1 < (healerState.multiUseExDelay.groups[spellByWords.group] or 0) then
+	elseif spellByWords.group and nowMs < (healerState.multiUseExDelay.groups[spellByWords.group] or 0) then
 		return true
 	end
 
@@ -1713,7 +1713,7 @@ function HelperHealer.isItemUsePending()
 end
 
   healerState[115] = function()
-	local var_99_0 = g_clock.millis()
+	local nowMs = g_clock.millis()
 	local var_99_1 = healerState.actionbar()
 
 	if var_99_1 and var_99_1.getItemMultiUseCooldownRemaining and var_99_1.getItemMultiUseCooldownRemaining() > 0 then
@@ -1722,7 +1722,7 @@ end
 		return true
 	end
 
-	return var_99_0 < healerState[37] or var_99_0 < healerState.multiUseExDelay.potionUntil or HelperShooter and HelperShooter.isItemUsePending and HelperShooter.isItemUsePending() or false
+	return nowMs < healerState[37] or nowMs < healerState.multiUseExDelay.potionUntil or HelperShooter and HelperShooter.isItemUsePending and HelperShooter.isItemUsePending() or false
 end
 
   healerState[116] = function(arg_100_0, arg_100_1, arg_100_2)
@@ -4415,10 +4415,10 @@ function HelperHealer.shouldYieldToHealing(arg_261_0, arg_261_1)
 	local var_261_5 = healerState[200](var_261_4)
 
 	if var_261_5 ~= nil then
-		local var_261_6 = g_clock.millis()
+		local nowMs = g_clock.millis()
 
 		for unusedValue, spell in pairs(healerState.multiUseExDelay.spells) do
-			if var_261_6 < spell then
+			if nowMs < spell then
 				return true
 			end
 		end

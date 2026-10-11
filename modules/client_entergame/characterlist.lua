@@ -453,6 +453,16 @@ function onGameLoginError(message, msgType)
 
 	msgType = tonumber(msgType) or 0
 
+	if msgType == 0 and autoReconnectAttempt and not manualLogoutPending and g_settings.getBoolean("autoReconnect") and type(message) == "string" and message:lower():find("gameworld is starting up", 1, true) then
+		g_logger.info("[reconnect] gameworld is starting up, retrying later")
+		g_game.cancelLogin()
+		destroyTrackedErrorBox()
+		CharacterList.showAgain()
+
+		return
+	end
+
+
 	local function onLoginErrorOk()
 		errorBox = nil
 

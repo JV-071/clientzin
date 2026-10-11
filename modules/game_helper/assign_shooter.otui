@@ -198,6 +198,37 @@ MainWindowHigh
           phantom: true
 
     Panel
+      id: addShooterCreatureNamesRow
+      height: 0
+      visible: false
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      margin-top: 0
+      margin-left: -2
+
+      Label
+        id: addShooterCreatureNamesLabel
+        width: 70
+        !text: tr('Names:')
+        font: $var-cip-font
+        color: $var-text-cip-color
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        text-auto-resize: false
+
+      TextEdit
+        id: addShooterCreatureNamesEdit
+        height: 20
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: addShooterCreatureNamesLabel.right
+        anchors.right: parent.right
+        margin-left: 6
+        placeholder: Warlock, Lich
+        placeholder-color: $var-cip-inactive-color
+        !tooltip: tr('Only the listed monsters count toward Creatures for this spell. Separate full names with commas. Capitalization is ignored. Leave empty to count all creatures.')
+
+    Panel
       id: addShooterIntervalRow
       height: 0
       visible: false

@@ -400,13 +400,9 @@ local function var_0_22(arg_28_0)
 	end
 
 	for iter_28_0 in arg_28_0:gmatch("%(([^()]*)%)") do
-		for iter_28_1 in iter_28_0:gmatch("[^+]+") do
-			local var_28_1 = iter_28_1:match("^%s*(.-)%s+charm%s*$")
-
-			if var_28_1 and var_28_1 ~= "" then
-				var_28_0 = var_28_0 + 1
-				var_0_21[var_28_0] = var_28_1:lower()
-			end
+		for iter_28_1 in iter_28_0:gmatch("([%a][%a' ]-) charm") do
+			var_28_0 = var_28_0 + 1
+			var_0_21[var_28_0] = iter_28_1:lower()
 		end
 	end
 
@@ -515,6 +511,7 @@ function MiscAnalyser.registerMessageModes(unusedArgument)
 		[MessageModes.Mana] = var_0_24,
 		[MessageModes.Failure] = var_0_25,
 		[MessageModes.Login] = var_0_25,
+		[MessageModes.Loot] = var_0_25,
 		[MessageModes.Status] = var_0_25,
 		[MessageModes.Attention] = var_0_25
 	}

@@ -1,4 +1,4 @@
-﻿if not Imbuement then
+if not Imbuement then
 	Imbuement = {
 		inventoryGold = 0,
 		bankGold = 0,
@@ -99,7 +99,7 @@ function Imbuement.init()
 		onImbuementScroll = self.onImbuementScroll,
 		onResourceBalance = self.onResourceBalance,
 		onCloseImbuementWindow = self.offline,
-		onMessageDialog = self.onMessageDialog
+		onServerError = self.onMessageDialog
 	})
 end
 
@@ -114,7 +114,7 @@ function Imbuement.terminate()
 		onImbuementScroll = self.onImbuementScroll,
 		onResourceBalance = self.onResourceBalance,
 		onCloseImbuementWindow = self.offline,
-		onMessageDialog = self.onMessageDialog
+		onServerError = self.onMessageDialog
 	})
 
 	if self.messageWindow then
@@ -325,17 +325,30 @@ function Imbuement.onResourceBalance(type, balance)
 end
 
 function Imbuement.onMessageDialog(type, content)
-	if type > Imbuement.MessageDialog.ImbuingStationNotFound or not self.window:isVisible() then
+	if not (type >= self.MessageDialog.ImbuementSuccess and type <= self.MessageDialog.ImbuingStationNotFound or type == self.MessageDialog.ClearingCharmSuccess or type == self.MessageDialog.ClearingCharmError) or not self.window or self.window:isDestroyed() then
 		return
 	end
 
+	if not self.window:isVisible() and not self.awaitingFyiRestore and not ImbuementItem.pendingClientInfo and not self.messageWindow then
+		return
+	end
+
+	ImbuementItem.pendingClientInfo = nil
+
+	if ImbuementItem.clientInfoEvent then
+		removeEvent(ImbuementItem.clientInfoEvent)
+
+		ImbuementItem.clientInfoEvent = nil
+	end
+
+	self.awaitingFyiRestore = true
+
 	self:hide()
 
-	local message
-
-	message = content or ""
+	local message = content or ""
 
 	if self.messageWindow then
+		g_modalManager.hide(self.messageWindow)
 		self.messageWindow:destroy()
 
 		self.messageWindow = nil
@@ -347,10 +360,10 @@ function Imbuement.onMessageDialog(type, content)
 
 		self.messageWindow = nil
 
-		Imbuement.show()
+		Imbuement.tryShowAfterOverlay()
 	end
 
-	self.messageWindow = displayGeneralBox(tr("Message Dialog"), content, {
+	self.messageWindow = displayGeneralBox(tr("Info"), message, {
 		{
 			text = tr("Ok"),
 			callback = confirm

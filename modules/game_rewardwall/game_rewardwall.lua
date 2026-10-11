@@ -1,4 +1,4 @@
-﻿rewardWallController = Controller:new()
+rewardWallController = Controller:new()
 
 local ServerPackets = {
 	DailyRewardHistory = 229,
@@ -806,6 +806,10 @@ local function onDailyReward(data)
 end
 
 local function onServerError(code, error)
+	if not claimPending or code >= 0 and code <= 3 or code == 10 or code == 11 then
+		return
+	end
+
 	claimPending = false
 	generalBox = destroyWindows(generalBox)
 
@@ -824,18 +828,6 @@ local function onServerError(code, error)
 	}
 
 	generalBox = displayGeneralBox3(rewardWallController.ui:getText(), error, standardButtons)
-end
-
-local function connectOnServerError()
-	connect(g_game, {
-		onServerError = onServerError
-	})
-end
-
-local function disconnectOnServerError()
-	disconnect(g_game, {
-		onServerError = onServerError
-	})
 end
 
 local function onCloseRewardWall()
@@ -875,7 +867,6 @@ local function onOpenRewardWall(bonusShrines, nextRewardTime, dayStreakDay, wasD
 	premiumStatusWindwos(g_game.getLocalPlayer():isPremium())
 	rewardWallController.ui:show()
 	g_modalManager.show(rewardWallController.ui)
-	connectOnServerError()
 	rewardWallController.ui.restingAreaPanel.restingAreaInfo.rewardStreakIcon:setText(dayStreakLevel)
 	updateRestingAreaBonusIcons(dayStreakLevel)
 
@@ -937,7 +928,6 @@ function show()
 
 	rewardWallController.ui:show()
 	g_modalManager.show(rewardWallController.ui)
-	connectOnServerError()
 	premiumStatusWindwos(g_game.getLocalPlayer():isPremium())
 end
 
@@ -951,9 +941,6 @@ function hide(bool)
 	g_modalManager.hide(rewardWallController.ui)
 	rewardWallController.ui:hide()
 
-	if bool then
-		disconnectOnServerError()
-	end
 end
 
 function toggle()
@@ -1139,6 +1126,7 @@ function rewardWallController.onInit(unusedArgument)
 		onCloseRewardWall = onCloseRewardWall,
 		onDailyReward = onDailyReward,
 		onRewardHistory = onRewardHistory,
+		onServerError = onServerError,
 		onRestingAreaState = onRestingAreaState,
 		onDailyRewardCollectionState = onDailyRewardCollectionState
 	})

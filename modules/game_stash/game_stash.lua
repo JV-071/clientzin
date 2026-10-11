@@ -13,11 +13,24 @@ local stashRenderGeneration = 0
 local stashPendingSearchFocus = false
 local stashOverlayReturn = false
 local stashHiddenForOverlay = false
+local stashRestorePending = false
+local stashOverlayTarget
 local stashOverlayCyclopediaHide
 local stashOverlayMarketHooked = false
+local SUPPLY_STASH_ITEM_ID = 28750
 local clearStashOverlayHooks
-local unusedValue
+local unusedLocal
 local hideStashForOverlay
+
+local function isSupplyStashItem(itemId)
+	if itemId == SUPPLY_STASH_ITEM_ID then
+		return true
+	end
+
+	local thingType = g_things.getThingType(itemId, ThingCategoryItem)
+
+	return thingType and thingType:getName():lower():find("supply stash", 1, true) ~= nil
+end
 
 local function cancelStashRender()
 	if stashRenderEvent then
@@ -228,7 +241,7 @@ local function setupStashComboDisplayTruncation(comboBox)
 		refreshStashComboDisplay(self)
 	end
 
-	function comboBox.onMousePress(self, mousePos, mouseButton)
+	function comboBox.onMousePress(self, unusedArgument1, unusedArgument2)
 		openStashComboPopupMenu(self)
 
 		return true
@@ -369,19 +382,12 @@ local STASH_CATEGORY_ID_TO_KEY = {
 	[MarketCategory.FistWeapons] = "fist weapons"
 }
 local filterCategorys = {
-	containers = "Show Containers",
-	boots = "Show Boots",
-	armors = "Show Armors",
-	amulets = "Show Amulets",
-	["fist weapons"] = "Show Weapons: Fist",
-	["soul cores"] = "Show Soul Cores",
-	["creature products"] = "Show Creature Products",
-	["wands and rods"] = "Show Weapons: Wands",
-	swords = "Show Weapons: Swords",
-	["distance weapons"] = "Show Weapons: Distance",
-	clubs = "Show Weapons: Clubs",
-	axes = "Show Weapons: Axes",
 	ammunition = "Show Weapons: Ammo",
+	axes = "Show Weapons: Axes",
+	clubs = "Show Weapons: Clubs",
+	["distance weapons"] = "Show Weapons: Distance",
+	swords = "Show Weapons: Swords",
+	["wands and rods"] = "Show Weapons: Wands",
 	weapons = "Show Weapons: All",
 	valuables = "Show Valuables",
 	tools = "Show Tools",
@@ -393,7 +399,14 @@ local filterCategorys = {
 	legs = "Show Legs",
 	["helmets and hats"] = "Show Helmets and Hats",
 	food = "Show Food",
-	decoration = "Show Decoration"
+	decoration = "Show Decoration",
+	containers = "Show Containers",
+	boots = "Show Boots",
+	armors = "Show Armors",
+	amulets = "Show Amulets",
+	["fist weapons"] = "Show Weapons: Fist",
+	["soul cores"] = "Show Soul Cores",
+	["creature products"] = "Show Creature Products"
 }
 local weaponCategoryKeys = {
 	"ammunition",
@@ -418,7 +431,6 @@ local function getStashCategoryKey(categoryId)
 end
 
 local digitKeys = {
-	["8"] = true,
 	["7"] = true,
 	["6"] = true,
 	["5"] = true,
@@ -447,7 +459,8 @@ local digitKeys = {
 	["Num+2"] = "2",
 	["Num+1"] = "1",
 	["Num+0"] = "0",
-	["9"] = true
+	["9"] = true,
+	["8"] = true
 }
 
 local function getStashSlotItemWidget(slotWidget)
@@ -629,10 +642,18 @@ local function applyStashOrganizeSort(sortedItemIds)
 	end
 end
 
+function onStashUse(unusedArgument, itemId)
+	if stashHiddenForOverlay and isSupplyStashItem(itemId) then
+		stashHiddenForOverlay = false
+	end
+end
+
 function init()
 	g_ui.importStyle("game_stash")
 	connect(g_game, {
 		onSupplyStashEnter = openStash,
+		onMarketEnter = onStashMarketEnter,
+		onUse = onStashUse,
 		onGameEnd = onSupplyStashClose
 	})
 	connect(LocalPlayer, {
@@ -669,6 +690,8 @@ end
 function terminate()
 	disconnect(g_game, {
 		onSupplyStashEnter = openStash,
+		onMarketEnter = onStashMarketEnter,
+		onUse = onStashUse,
 		onGameEnd = onSupplyStashClose
 	})
 	disconnect(LocalPlayer, {
@@ -676,6 +699,8 @@ function terminate()
 	})
 
 	stashHiddenForOverlay = false
+	stashRestorePending = false
+	stashOverlayTarget = nil
 
 	clearStashOverlayHooks()
 	cancelStashRender()
@@ -686,10 +711,11 @@ function terminate()
 	end
 end
 
-function onPositionChange(creature, newPos, oldPos)
+function onPositionChange(creature, unusedArgument1, unusedArgument2)
 	if creature == g_game.getLocalPlayer() then
 		stashOverlayReturn = false
-		stashHiddenForOverlay = false
+		stashRestorePending = false
+		stashOverlayTarget = nil
 
 		clearStashOverlayHooks()
 		g_modalManager.hide(stashWindow)
@@ -780,6 +806,14 @@ local function resetStashFilters()
 end
 
 function openStash(items)
+	if stashHiddenForOverlay then
+		stashHiddenForOverlay = false
+
+		if not stashOverlayReturn then
+			return
+		end
+	end
+
 	local resetFiltersOnOpen = not stashOverlayReturn
 
 	stashOverlayReturn = true
@@ -817,6 +851,12 @@ function openStash(items)
 		showOrganizeComboBox = stashWindow:recursiveGetChildById("showOrganize")
 
 		populateStashComboBoxSilently(showOrganizeComboBox, organizeOptions, tr("Name (A-Z)"))
+	end
+
+	if stashRestorePending then
+		renderItems(0)
+
+		return
 	end
 
 	if stashWindow:isHidden() then
@@ -1002,6 +1042,16 @@ function prepareWithdraw(itemId, itemAmount)
 	})
 end
 
+local function findSupplyStashItem()
+	for containerId, container in pairs(g_game.getContainers()) do
+		for itemIndex, item in pairs(container:getItems()) do
+			if isSupplyStashItem(item:getId()) then
+				return item
+			end
+		end
+	end
+end
+
 function clearStashOverlayHooks()
 	local cyc = modules.game_cyclopedia
 
@@ -1020,13 +1070,16 @@ function clearStashOverlayHooks()
 end
 
 local function restoreStashFromOverlay()
-	if not stashHiddenForOverlay then
+	if not stashRestorePending then
 		clearStashOverlayHooks()
 
 		return
 	end
 
-	stashHiddenForOverlay = false
+	local overlayTarget = stashOverlayTarget
+
+	stashRestorePending = false
+	stashOverlayTarget = nil
 
 	clearStashOverlayHooks()
 
@@ -1038,7 +1091,17 @@ local function restoreStashFromOverlay()
 		return
 	end
 
-	if not next(stashItems) then
+	if overlayTarget == "market" then
+		local stashItem = findSupplyStashItem()
+
+		if stashItem then
+			g_game.use(stashItem)
+
+			stashHiddenForOverlay = true
+		else
+			onSupplyStashClose()
+		end
+
 		return
 	end
 
@@ -1049,19 +1112,26 @@ local function restoreStashFromOverlay()
 	end, 0)
 end
 
+function onStashMarketEnter()
+	if stashOverlayReturn and stashWindow and not stashWindow:isHidden() then
+		hideStashForOverlay("market")
+	end
+end
+
 function onStashOverlayMarketLeave()
-	if stashHiddenForOverlay then
+	if stashRestorePending then
 		addEvent(restoreStashFromOverlay)
 	end
 end
 
-local function hideStashForOverlay(target)
+function hideStashForOverlay(target)
 	if stashWindow and not stashWindow:isDestroyed() and not stashWindow:isHidden() then
 		g_modalManager.hide(stashWindow)
 		stashWindow:hide()
 	end
 
-	stashHiddenForOverlay = true
+	stashRestorePending = true
+	stashOverlayTarget = target
 
 	clearStashOverlayHooks()
 
@@ -1074,7 +1144,7 @@ local function hideStashForOverlay(target)
 			function cyc.hide(...)
 				stashOverlayCyclopediaHide(...)
 
-				if stashHiddenForOverlay then
+				if stashRestorePending then
 					addEvent(restoreStashFromOverlay)
 				end
 			end
@@ -1173,16 +1243,28 @@ local function openStashItemContextMenu(mousePos, slotInfo)
 	menu:display(mousePos)
 end
 
+local function formatStashItemTooltip(amount, itemName)
+	if not itemName or itemName == "" then
+		return "Loading..."
+	end
+
+	return string.format("%dx %s", amount or 0, itemName)
+end
+
 local function createStashSlotWidget(slotInfo)
 	local slotWidget = g_ui.createWidget("ContainerItemSlot", itemsPanel)
 
 	slotWidget:setMargin(0)
 	applyStashSlotVisuals(slotWidget, slotInfo.itemId, slotInfo.amount)
 
-	if slotInfo.itemName then
-		slotWidget:setTooltip(slotInfo.itemName)
-	else
-		slotWidget:setTooltip("Loading...")
+	local itemWidget = getStashSlotItemWidget(slotWidget)
+
+	if itemWidget then
+		local tooltip = formatStashItemTooltip(slotInfo.amount, slotInfo.itemName)
+
+		itemWidget.stashItemTooltip = tooltip
+
+		itemWidget:setTooltip(tooltip)
 	end
 
 	g_mouse.bindPress(slotWidget, function(mousePos, mouseButton)
@@ -1351,9 +1433,15 @@ end
 
 function onSupplyStashClose()
 	stashOverlayReturn = false
+
+	if not g_game.isOnline() then
+		stashHiddenForOverlay = false
+	end
+
 	stashItems = {}
 	stashPendingSearchFocus = false
-	stashHiddenForOverlay = false
+	stashRestorePending = false
+	stashOverlayTarget = nil
 
 	clearStashOverlayHooks()
 	resetStashFilters()

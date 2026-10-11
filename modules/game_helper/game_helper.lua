@@ -7,6 +7,7 @@ local modulesByTab = {}
 local helperLanguage = "en"
 local helperUiLanguageCaptured = false
 local HELPER_PT_TRANSLATIONS = {
+	["Names:"] = "Nomes:",
 	["Preset:"] = "Perfil:",
 	["Auto Ammo"] = "Municao Automatica",
 	["Presets:"] = "Perfis:",
@@ -135,6 +136,7 @@ local HELPER_PT_TRANSLATIONS = {
 	["Auto Invite"] = "Convite Automatico"
 }
 local var_0_5 = {
+	["Only the listed monsters count toward Creatures for this spell. Separate full names with commas. Capitalization is ignored. Leave empty to count all creatures."] = "Somente os monstros listados contam para Criaturas nesta magia. Separe os nomes completos por virgulas. Maiusculas e minusculas sao ignoradas. Deixe vazio para contar todas as criaturas.",
 	["Prioritize Hotkeys:<br><li>When an Action Bar hotkey uses an item or casts a spell, the Helper briefly pauses its automatic actions.</li><li>The pause lasts 200-400 ms based on ping and does not override server cooldowns.</li>"] = "Priorizar Hotkeys:<br><li>Quando uma hotkey da Action Bar usa um item ou conjura uma magia, o Helper pausa brevemente suas acoes automaticas.</li><li>A pausa dura de 200 a 400 ms conforme o ping e nao ignora os cooldowns do servidor.</li>",
 	["Move the selected waypoint down."] = "Move o waypoint selecionado para baixo.",
 	["Auto-Switch Hotkey Preset:<br><li>On login, selects the client hotkey preset and shared Helper profile whose name exactly matches the character name.</li><li>Helper profiles are shared by all characters and accounts in this client; the active selection and local preferences remain per character.</li><li>If there is no matching preset, each system keeps its current preset.</li>"] = "Troca Automatica de Preset de Hotkeys:<br><li>Ao entrar, seleciona o preset de hotkeys do cliente e o perfil compartilhado do Helper cujo nome corresponde exatamente ao nome do personagem.</li><li>Os perfis do Helper sao compartilhados por todos os personagens e contas deste cliente; a selecao ativa e as preferencias locais continuam por personagem.</li><li>Se nao houver um preset correspondente, cada sistema mantem seu preset atual.</li>",
@@ -700,7 +702,7 @@ local function isCurrentAccountPremium(player)
 	return player and player:isPremium() == true or false
 end
 
-local function refreshHelperCharacterCard()
+local function setCavebotVisible()
 	local player = g_game.isOnline() and g_game.getLocalPlayer() or nil
 	local isPortuguese = 0
 
@@ -717,7 +719,7 @@ local function refreshHelperCharacterCard()
 	setCharacterCardText("helperGoldBalance", var_23_2)
 end
 
-local function var_0_61()
+local function requestHelperResourceBalance()
 	if not g_game.isOnline() then
 		return
 	end
@@ -787,7 +789,7 @@ local function var_0_62()
 		helperAccountStatusIconWidget:setTooltip(statusText)
 	end
 
-	refreshHelperCharacterCard()
+	setCavebotVisible()
 
 	local helperLanguageButton = getWidget("helperLanguageButton")
 
@@ -815,7 +817,7 @@ end
 
 local function handleResourceBalance(arg_27_0)
 	if not arg_27_0 or arg_27_0 == ResourceBank or arg_27_0 == ResourceInventary then
-		refreshHelperCharacterCard()
+		setCavebotVisible()
 	end
 end
 
@@ -2225,7 +2227,7 @@ local function var_0_109(arg_109_0)
 	partyButtonFrameWidget:setMarginTop(5)
 end
 
-local function refreshHelperCharacterCard(visible)
+local function setCavebotVisible(visible)
 	local cavebotButtonFrameWidget = getWidget("cavebotButtonFrame")
 	local cavebotButton = getWidget("cavebotButton")
 	local cavebotPanel = getWidget("cavebotPanel")
@@ -2252,7 +2254,7 @@ local function refreshHelperCharacterCard(visible)
 end
 
 function onCavebotAuthorized(unusedArgument, arg_111_1, arg_111_2, arg_111_3)
-	refreshHelperCharacterCard(true)
+	setCavebotVisible(true)
 
 	local cavebot = modulesByTab.cavebot
 
@@ -2889,8 +2891,8 @@ function init()
 	end
 
 	initModules()
-	refreshHelperCharacterCard(var_0_108())
-	var_0_61()
+	setCavebotVisible(var_0_108())
+	requestHelperResourceBalance()
 	var_0_62()
 	loadConfigIntoWidgets()
 	var_0_90()
@@ -2930,7 +2932,7 @@ function onGameStart()
 
 	helperSavedOnLogout = false
 
-	refreshHelperCharacterCard(var_0_108())
+	setCavebotVisible(var_0_108())
 
 	if not activateHelperCharacterStorage() then
 		helperLog("error", "Character Helper storage could not be activated on game start.")
@@ -2946,7 +2948,7 @@ function onGameStart()
 
 	helperLog("info", string.format("[login] Helper config ready in %d ms.", g_clock.realMillis() - startedAt))
 	scheduleEvent(function()
-		var_0_61()
+		requestHelperResourceBalance()
 		var_0_62()
 
 		if not modules.game_mainpanel then
@@ -3017,7 +3019,7 @@ function onGameEnd()
 	stopScheduler()
 	stopCombatScheduler()
 	var_0_81()
-	refreshHelperCharacterCard(false)
+	setCavebotVisible(false)
 	onHelperClose()
 end
 
@@ -3167,7 +3169,7 @@ local function saveConfig()
 			end
 		end
 
-		var_0_61()
+		requestHelperResourceBalance()
 		var_0_62()
 		var_0_66(false)
 	end

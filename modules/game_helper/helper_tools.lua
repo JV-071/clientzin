@@ -11,7 +11,7 @@ local TOOLS_HELP_TEXT = {
 		reconnect = "Reconnect:<br><li>Enables the client native auto-reconnect setting.</li><li>Attempts to log the same character back in after recoverable connection errors.</li><li>A recent manual logout is respected and does not trigger an immediate reconnect.</li>",
 		antiIdle = "Anti Idle:<br><li>After 5 minutes without walking or turning, rotates your character once every 15 seconds.</li><li>Manual walking or turning restarts the inactivity timer.</li>",
 		autoAmmo = "Auto Ammo:<br><li>Left-click the slot to select arrows, bolts or stackable distance ammunition; right-click to clear it.</li><li>When the amount is below Target, keeps refilling the equipped open quiver until Target is reached or reserve ammunition ends.</li><li>Each refill waits for server confirmation and yields whenever the Healer needs priority. Reserve ammunition can stay in a closed backpack.</li>",
-		autoTraining = "Auto Training:<br><li>Left-click the slot to select an exercise weapon; right-click to clear it.</li><li>Uses the selected weapon every 10 seconds on the nearest visible exercise dummy within 5 tiles.</li><li>The weapon must be available in your inventory or accessible containers.</li>"
+		autoTraining = "Auto Training:<br><li>Left-click the slot to select an exercise weapon; right-click to clear it.</li><li>Uses the selected weapon once on the nearest visible exercise dummy within 5 tiles and does not use it again while that training session is running.</li><li>If training stops, it tries again every 10 seconds. The weapon can stay in your inventory or in the Battle Pass Inbox.</li>"
 	},
 	pt = {
 		changeGold = "Trocar Ouro:<br><li>A cada segundo, converte uma pilha de 100 moedas de ouro em moedas de platina.</li><li>Se nao houver uma pilha de ouro, converte 100 moedas de platina em uma moeda de cristal.</li><li>As moedas devem estar no inventario ou em containers acessiveis.</li>",
@@ -21,7 +21,7 @@ local TOOLS_HELP_TEXT = {
 		reconnect = "Reconectar:<br><li>Ativa a reconexao automatica nativa do cliente.</li><li>Tenta conectar novamente o mesmo personagem apos erros de conexao recuperaveis.</li><li>Um logout manual recente e respeitado e nao dispara uma reconexao imediata.</li>",
 		antiIdle = "Anti Inatividade:<br><li>Apos 5 minutos sem caminhar ou virar, gira o personagem uma vez a cada 15 segundos.</li><li>Caminhar ou virar manualmente reinicia o contador de inatividade.</li>",
 		autoAmmo = "Municao Automatica:<br><li>Clique esquerdo no slot para selecionar flechas, bolts ou municao de distancia empilhavel; clique direito para limpar.</li><li>Quando a quantidade fica abaixo do Alvo, continua recarregando o quiver equipado e aberto ate atingir o Alvo ou acabar a reserva.</li><li>Cada recarga espera a confirmacao do servidor e cede prioridade ao Healer. A municao de reserva pode ficar em uma backpack fechada.</li>",
-		autoTraining = "Treino Automatico:<br><li>Clique esquerdo no slot para selecionar uma arma de exercicio; clique direito para limpar.</li><li>Usa a arma a cada 10 segundos no boneco de treino visivel mais proximo em ate 5 sqm.</li><li>A arma deve estar no inventario ou em containers acessiveis.</li>"
+		autoTraining = "Treino Automatico:<br><li>Clique esquerdo no slot para selecionar uma arma de exercicio; clique direito para limpar.</li><li>Usa a arma uma vez no boneco de treino visivel mais proximo em ate 5 sqm e nao repete o uso enquanto esse treino estiver ativo.</li><li>Se o treino parar, tenta de novo a cada 10 segundos. A arma pode ficar no inventario ou no Battle Pass Inbox.</li>"
 	}
 }
 local TOOLS_HELP_WIDGETS = {
@@ -68,6 +68,8 @@ local lastChangeGoldMs = 0
 local lastEatFoodMs = 0
 local lastExerciseMs = 0
 local lastExerciseDummyMsgMs = 0
+local trainingSessionActive = false
+local trainingMessageHandler
 local lastAutoAmmoMs = 0
 local autoAmmoBurstEvent
 local cachedExerciseDummyKey
@@ -472,12 +474,77 @@ local function markUserActivity()
 	lastActivityMs = g_clock.millis()
 end
 
+local TRAINING_STOP_MESSAGES = {
+	"you stopped exercising",
+	"your current training weapon are gone",
+	"it is not possible to use exercise weapon",
+	"weapon need to be in your equipment",
+	"can only be used after",
+	"only castle owners can use dummy",
+	"inside the house",
+	"only if you are invited",
+	"only on dummies",
+	"only premium accounts",
+	"this weapon is not configured",
+	"only monks can use",
+	"sqms from dummy",
+	"unable to train"
+}
+
+local function onTrainingMessage(unusedArgument, message)
+	if not message or type(message) ~= "string" then
+		return
+	end
+
+	local lowerMessage = message:lower()
+
+	for messageIndex = 1, #TRAINING_STOP_MESSAGES do
+		if lowerMessage:find(TRAINING_STOP_MESSAGES[messageIndex], 1, true) then
+			trainingSessionActive = false
+
+			return
+		end
+	end
+
+	if lowerMessage:find("you started training", 1, true) or lowerMessage:find("you are already training", 1, true) then
+		trainingSessionActive = true
+	end
+end
+
+local function registerTrainingMessageHandler()
+	if trainingMessageHandler or not registerMessageMode then
+		return
+	end
+
+	trainingMessageHandler = onTrainingMessage
+
+	for messageMode = 1, 50 do
+		registerMessageMode(messageMode, trainingMessageHandler)
+	end
+end
+
+local function unregisterTrainingMessageHandler()
+	if not trainingMessageHandler or not unregisterMessageMode then
+		trainingMessageHandler = nil
+
+		return
+	end
+
+	for messageMode = 1, 50 do
+		unregisterMessageMode(messageMode, trainingMessageHandler)
+	end
+
+	trainingMessageHandler = nil
+end
+
 local function onLocalPosChange(creature, newPos, oldPos)
 	local lp = g_game.getLocalPlayer()
 
 	if creature and creature == lp then
 		markUserActivity()
 		invalidateExerciseDummyCache()
+
+		trainingSessionActive = false
 	end
 end
 
@@ -1651,13 +1718,13 @@ local function runChangeGold()
 		return
 	end
 
-	local var_87_1 = g_clock.millis()
+	local nowMs = g_clock.millis()
 
-	if var_87_1 < lastChangeGoldMs + CHANGE_GOLD_INTERVAL_MS then
+	if nowMs < lastChangeGoldMs + CHANGE_GOLD_INTERVAL_MS then
 		return
 	end
 
-	lastChangeGoldMs = var_87_1
+	lastChangeGoldMs = nowMs
 
 	local targetThing = var_0_142(localPlayer, GOLD_COIN_ID)
 
@@ -1759,7 +1826,7 @@ local function runAutoTraining(force)
 		return
 	end
 
-	if not playerHasExerciseItem(localPlayer, itemId) then
+	if trainingSessionActive and not force then
 		return
 	end
 
@@ -1776,6 +1843,7 @@ local function runAutoTraining(force)
 	end
 
 	lastExerciseMs = now
+	trainingSessionActive = true
 
 	g_game.useInventoryItemWith(itemId, dummy)
 end
@@ -1846,12 +1914,15 @@ function HelperTools.init(pctx)
 
 	markUserActivity()
 	installActivityHooks()
+	registerTrainingMessageHandler()
 	bindAutoTrainingSlot()
 	bindAutoAmmoSlot()
 
 	if not toolsTickEvent then
 		toolsTickEvent = cycleEvent(function()
 			if not g_game.isOnline() then
+				trainingSessionActive = false
+
 				return
 			end
 
@@ -1921,6 +1992,10 @@ function HelperTools.terminate()
 	end
 
 	removeActivityHooks()
+	unregisterTrainingMessageHandler()
+
+	trainingSessionActive = false
+
 	clearWidgetCache()
 	invalidateExerciseDummyCache()
 
@@ -1956,6 +2031,7 @@ function HelperTools.onAutoTrainingChange(_, on)
 	end
 
 	autoTrainingEnabled = on
+	trainingSessionActive = false
 
 	if on then
 		addEvent(function()

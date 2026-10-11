@@ -285,3 +285,7 @@ end
 function g_game.onScrollTimers(unusedArgument, unusedArgument, unusedArgument, unusedArgument, unusedArgument)
 	return
 end
+
+function g_game.onBossTimer(bossId, durationSeconds)
+	return
+end

@@ -246,18 +246,19 @@ function UIGameMap.onMouseRelease(self, mousePosition, mouseButton)
 	local creatureThing
 	local multiUseThing
 	local attackCreature
+	local checkAround = modules.client_options.getOption("classicControl") == "leftSmart"
 	local tile = self:getTile(mousePosition)
 
 	if tile then
 		lookThing = tile:getTopLookThing()
 		useThing = tile:getTopUseThing()
-		creatureThing = tile:getTopCreature()
+		creatureThing = tile:getTopCreature(checkAround)
 	end
 
 	local autoWalkTile = g_map.getTile(autoWalkPos)
 
 	if autoWalkTile then
-		attackCreature = autoWalkTile:getTopCreature()
+		attackCreature = autoWalkTile:getTopCreature(checkAround)
 	end
 
 	local ret = modules.game_interface.processMouseAction(mousePosition, mouseButton, autoWalkPos, lookThing, useThing, creatureThing, attackCreature)

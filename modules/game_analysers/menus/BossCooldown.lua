@@ -34,10 +34,6 @@ local function normalizeUntil(raw)
 	return os.time() + raw
 end
 
-local function entryHasCooldown(entry, now)
-	return (tonumber(entry and entry.untilTs) or 0) > (now or os.time())
-end
-
 local function sortBossEntries(entries)
 	if type(entries) ~= "table" or #entries < 2 then
 		return
@@ -49,8 +45,8 @@ local function sortBossEntries(entries)
 		leftEntry = leftEntry or {}
 		rightEntry = rightEntry or {}
 
-		local leftCooldownOrder = entryHasCooldown(leftEntry, nowSeconds) and 0 or 1
-		local rightCooldownOrder = entryHasCooldown(rightEntry, nowSeconds) and 0 or 1
+		local leftCooldownOrder = math.max(0, (tonumber(leftEntry.untilTs) or 0) - nowSeconds)
+		local rightCooldownOrder = math.max(0, (tonumber(rightEntry.untilTs) or 0) - nowSeconds)
 
 		if leftCooldownOrder ~= rightCooldownOrder then
 			return leftCooldownOrder < rightCooldownOrder

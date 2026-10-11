@@ -29,6 +29,7 @@ local statsBarsDimensions = {
 	}
 }
 local lastProficiencyCache = {}
+local lastProficiencyTooltip
 local proficiencyPerkHighlightActive = false
 local firstCall = true
 local currentStats = {
@@ -54,86 +55,86 @@ end
 local SKILL_ICONS_SHEET = "/images/game/creatures/icons-skills"
 local skillsTuples = {
 	{
+		clip = "9 0 9 9",
+		placement = "center",
 		key = "experience",
 		name = "Level",
-		order = 0,
-		clip = "9 0 9 9",
-		placement = "center"
+		order = 0
 	},
 	{
+		clip = "27 0 9 9",
+		placement = "left",
 		key = "magic",
 		name = "Magic Level",
-		order = 1,
-		clip = "27 0 9 9",
-		placement = "left"
+		order = 1
 	},
 	{
+		clip = "54 0 9 9",
+		placement = "right",
 		key = "axe",
 		name = "Axe Fighting Skill",
 		order = 1,
-		clip = "54 0 9 9",
-		placement = "right",
 		skill = Skill.Axe
 	},
 	{
+		clip = "45 0 9 9",
+		placement = "left",
 		key = "club",
 		name = "Club Fighting Skill",
 		order = 2,
-		clip = "45 0 9 9",
-		placement = "left",
 		skill = Skill.Club
 	},
 	{
+		clip = "18 0 9 9",
+		placement = "right",
 		key = "distance",
 		name = "Distance Fighting Skill",
 		order = 2,
-		clip = "18 0 9 9",
-		placement = "right",
 		skill = Skill.Distance
 	},
 	{
+		clip = "0 0 9 9",
+		placement = "left",
 		key = "fist",
 		name = "Fist Fighting Skill",
 		order = 3,
-		clip = "0 0 9 9",
-		placement = "left",
 		skill = Skill.Fist
 	},
 	{
+		clip = "63 0 9 9",
+		placement = "right",
 		key = "shielding",
 		name = "Shielding Fighting Skill",
 		order = 3,
-		clip = "63 0 9 9",
-		placement = "right",
 		skill = Skill.Shielding
 	},
 	{
+		clip = "36 0 9 9",
+		placement = "left",
 		key = "sword",
 		name = "Sword Fighting Skill",
 		order = 4,
-		clip = "36 0 9 9",
-		placement = "left",
 		skill = Skill.Sword
 	},
 	{
+		clip = "72 0 9 9",
+		placement = "right",
 		key = "fishing",
 		name = "Fishing Fighting Skill",
 		order = 4,
-		clip = "72 0 9 9",
-		placement = "right",
 		skill = Skill.Fishing
 	}
 }
 local SKILL_MENU_CHECKBOX_LABEL = {
+	sword = "Show Sword Fighting Skill",
+	experience = "Show Level",
 	fishing = "Show Fishing Skill",
 	shielding = "Show Shielding Skill",
 	axe = "Show Axe Fighting Skill",
-	sword = "Show Sword Fighting Skill",
 	fist = "Show Fist Fighting Skill",
 	magic = "Show Magic Level",
 	distance = "Show Distance Fighting Skill",
-	club = "Show Club Fighting Skill",
-	experience = "Show Level"
+	club = "Show Club Fighting Skill"
 }
 
 StatsBar = {}
@@ -213,26 +214,26 @@ local function statsBarSkillsParentIsLarge(parent)
 	return id == "largeOnTop" or id == "largeOnBottom" or id == "largeOnLeft" or id == "largeOnRight"
 end
 
-local function var_0_33(arg_8_0)
-	if not arg_8_0 then
+local function isSideStatsLayout(layout)
+	if not layout then
 		return false
 	end
 
-	local id = arg_8_0:getId() or ""
+	local id = layout:getId() or ""
 
 	return id:find("OnLeft") ~= nil or id:find("OnRight") ~= nil
 end
 
-local function var_0_34(arg_9_0)
-	local id = arg_9_0:getId()
+local function resizeDefaultSideHealthManaBars(layout)
+	local id = layout:getId()
 
 	if id ~= "defaultOnLeft" and id ~= "defaultOnRight" then
 		return
 	end
 
-	local level = arg_9_0:getChildById("barsColumn")
-	local widget = arg_9_0.health or level and level:getChildById("health")
-	local bar = arg_9_0.mana or level and level:getChildById("mana")
+	local level = layout:getChildById("barsColumn")
+	local widget = layout.health or level and level:getChildById("health")
+	local bar = layout.mana or level and level:getChildById("mana")
 
 	if not level or not widget or not bar then
 		return
@@ -244,8 +245,8 @@ local function var_0_34(arg_9_0)
 		return
 	end
 
-	local var_9_5 = 5
-	local height = math.floor((barMarginRight - var_9_5) / 2)
+	local barGap = 5
+	local height = math.floor((barMarginRight - barGap) / 2)
 
 	if height < 1 then
 		return
@@ -267,60 +268,60 @@ local function var_0_34(arg_9_0)
 	bar:setHeight(height)
 end
 
-local function var_0_35(arg_10_0)
-	if not arg_10_0 then
+local function isSideStatsPanel(panel)
+	if not panel then
 		return false
 	end
 
-	local id = arg_10_0:getId()
+	local id = panel:getId()
 
 	return id == "gameLeftStatsBarPanel" or id == "gameRightStatsBarPanel"
 end
 
-local function var_0_36(arg_11_0)
-	local var_11_0 = statsBarsDimensions[arg_11_0]
+local function getStatsBarThickness(dimension)
+	local dimensions = statsBarsDimensions[dimension]
 
-	if not var_11_0 then
+	if not dimensions then
 		return 35
 	end
 
-	return var_11_0.width or var_11_0.height or 35
+	return dimensions.width or dimensions.height or 35
 end
 
 local width = 19
-local var_0_38 = {
+local SIDE_SKILLS_LAYOUT_SPACING = {
 	compactOnLeft = 10,
-	parallelOnRight = 11,
-	parallelOnLeft = 11,
 	largeOnRight = 8,
 	largeOnLeft = 8,
+	parallelOnRight = 11,
+	parallelOnLeft = 11,
+	compactOnRight = 10,
 	defaultOnRight = 11,
-	defaultOnLeft = 11,
-	compactOnRight = 10
+	defaultOnLeft = 11
 }
-local var_0_39 = {
+local SIDE_LAYOUT_HEIGHT_ADJUSTMENTS = {
 	parallelOnLeft = 15,
+	parallelOnRight = 15,
 	defaultOnRight = -1,
-	defaultOnLeft = -1,
-	parallelOnRight = 15
+	defaultOnLeft = -1
 }
 
-local function var_0_40()
-	local var_12_0 = {}
+local function getEnabledSkillTuples()
+	local enabledTuples = {}
 
-	for iter_12_0 = 1, #skillsTuples do
-		local var_12_1 = skillsTuples[iter_12_0]
+	for tupleIndex = 1, #skillsTuples do
+		local skillTuple = skillsTuples[tupleIndex]
 
-		if var_12_1 and g_settings.getBoolean("top_statsbar_" .. var_12_1.key) then
-			table.insert(var_12_0, var_12_1)
+		if skillTuple and g_settings.getBoolean("top_statsbar_" .. skillTuple.key) then
+			table.insert(enabledTuples, skillTuple)
 		end
 	end
 
-	return var_12_0
+	return enabledTuples
 end
 
-local function var_0_41(arg_13_0)
-	local id = arg_13_0 and arg_13_0:getId() or ""
+local function getLayoutDimensionName(layout)
+	local id = layout and layout:getId() or ""
 
 	if id:find("compact") then
 		return "Compact"
@@ -333,27 +334,138 @@ local function var_0_41(arg_13_0)
 	return "Default"
 end
 
-local function var_0_42(arg_14_0, arg_14_1, arg_14_2)
-	if arg_14_1.key == "experience" then
-		arg_14_0.level:setText(comma_value(arg_14_2:getLevel()))
-		arg_14_0.bar:setValue(playerLevelPercentForStatsBar(arg_14_2), 100)
-	elseif arg_14_1.key == "magic" then
-		arg_14_0.level:setText(arg_14_2:getMagicLevel())
-		arg_14_0.bar:setValue(playerSkillPercentForStatsBar(arg_14_2:getMagicLevelPercent()), 100)
-	else
-		arg_14_0.level:setText(arg_14_2:getSkillLevel(arg_14_1.skill))
-		arg_14_0.bar:setValue(playerSkillPercentForStatsBar(arg_14_2:getSkillLevelPercent(arg_14_1.skill)), 100)
+local function setWidgetTooltipSafely(widget, tooltip)
+	if widget and not widget:isDestroyed() and widget.setTooltip then
+		widget:setTooltip(tooltip)
 	end
 end
 
-local function var_0_43(parentWidget, parent)
+local function buildSkillProgressTooltip(rawPercent)
+	local skillsModule = modules.game_skills
+
+	if skillsModule and skillsModule.skillPercentToGoTooltipForDisplay then
+		return skillsModule.skillPercentToGoTooltipForDisplay(rawPercent)
+	end
+
+	return tr("You have %s percent to go", string.format("%.2f", 100 - (rawPercent or 0) / 100))
+end
+
+local function buildSkillBonusesTooltip(totalLevel, baseLevel, loyaltyField, rawPercent, magicBonuses)
+	local progressTooltip = buildSkillProgressTooltip(rawPercent)
+	local skillsModule = modules.game_skills
+
+	if not skillsModule or not skillsModule.resolveSkillBonusesForDisplay then
+		return progressTooltip
+	end
+
+	local itemBonus, loyaltyBonus = skillsModule.resolveSkillBonusesForDisplay(totalLevel, baseLevel, loyaltyField or 0)
+	local tooltip = progressTooltip
+
+	if itemBonus > 0 or loyaltyBonus > 0 then
+		tooltip = skillsModule.buildLoyaltySkillTooltipLineForDisplay(totalLevel, baseLevel, loyaltyField or 0) .. "\n" .. progressTooltip
+	end
+
+	if magicBonuses and skillsModule.appendMagicLevelModifiersTooltipForDisplay then
+		return skillsModule.appendMagicLevelModifiersTooltipForDisplay(tooltip, magicBonuses)
+	end
+
+	return tooltip
+end
+
+local function buildExperienceTooltip(player)
+	local progressTooltip = buildSkillProgressTooltip(player:getLevelPercent())
+	local skillsModule = modules.game_skills
+	local remainingExperience = skillsModule and skillsModule.expToAdvance and skillsModule.expToAdvance(player:getLevel(), player:getExperience())
+
+	if remainingExperience and remainingExperience > 0 then
+		return tr("%s XP for next level", comma_value(remainingExperience)) .. "\n" .. progressTooltip
+	end
+
+	return progressTooltip
+end
+
+local function buildStatsSkillTooltip(skillTuple, player)
+	if skillTuple.key == "experience" then
+		return buildExperienceTooltip(player)
+	end
+
+	if skillTuple.key == "magic" then
+		local magicBonuses = player.getMagicLevelBonuses and player:getMagicLevelBonuses() or nil
+		local magicLoyalty = player.getMagicLoyalty and player:getMagicLoyalty() or 0
+		local baseMagicLevel = player.getBaseMagicLevel and player:getBaseMagicLevel() or player:getMagicLevel()
+
+		return buildSkillBonusesTooltip(player:getMagicLevel(), baseMagicLevel, magicLoyalty, player:getMagicLevelPercent(), magicBonuses)
+	end
+
+	local skillId = skillTuple.skill
+	local skillLoyalty = player.getSkillLoyalty and player:getSkillLoyalty(skillId) or 0
+	local baseSkillLevel = player.getSkillBaseLevel and player:getSkillBaseLevel(skillId) or player:getSkillLevel(skillId)
+
+	return buildSkillBonusesTooltip(player:getSkillLevel(skillId), baseSkillLevel, skillLoyalty, player:getSkillLevelPercent(skillId), nil)
+end
+
+local function applyProgressBarTooltip(progressBar, tooltip)
+	setWidgetTooltipSafely(progressBar, tooltip)
+
+	if not progressBar or progressBar:isDestroyed() then
+		return
+	end
+
+	setWidgetTooltipSafely(progressBar.bar or progressBar:getChildById("bar"), tooltip)
+
+	local grade = progressBar.grade
+
+	if not grade or grade:isDestroyed() then
+		grade = progressBar:getChildById("horizontalGrade") or progressBar:getChildById("verticalGrade")
+	end
+
+	setWidgetTooltipSafely(grade, tooltip)
+
+	if grade and not grade:isDestroyed() then
+		local gradeChildren = grade:getChildren()
+
+		if gradeChildren then
+			for childIndex = 1, #gradeChildren do
+				setWidgetTooltipSafely(gradeChildren[childIndex], tooltip)
+			end
+		end
+	end
+end
+
+local function applyStatsSkillTooltip(widget, skillTuple, player)
+	local tooltip = buildStatsSkillTooltip(skillTuple, player)
+
+	setWidgetTooltipSafely(widget, tooltip)
+	setWidgetTooltipSafely(widget.level, tooltip)
+
+	if widget.bar then
+		applyProgressBarTooltip(widget.bar, tooltip)
+	end
+end
+
+local function updateStatsSkillWidget(widget, skillTuple, player)
+	if skillTuple.key == "experience" then
+		widget.level:setText(comma_value(player:getLevel()))
+		widget.bar:setValue(playerLevelPercentForStatsBar(player), 100)
+	elseif skillTuple.key == "magic" then
+		widget.level:setText(player:getMagicLevel())
+		widget.bar:setValue(playerSkillPercentForStatsBar(player:getMagicLevelPercent()), 100)
+	else
+		widget.level:setText(player:getSkillLevel(skillTuple.skill))
+		widget.bar:setValue(playerSkillPercentForStatsBar(player:getSkillLevelPercent(skillTuple.skill)), 100)
+	end
+
+	applyStatsSkillTooltip(widget, skillTuple, player)
+end
+
+local function populateSideStatsSkills(parentWidget, parent)
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
 		return
 	end
 
-	local tuples = var_0_40()
+	local tuples = getEnabledSkillTuples()
 	local currentStatsBar = StatsBar.getCurrentStatsBar()
 
 	if not currentStatsBar then
@@ -366,8 +478,8 @@ local function var_0_43(parentWidget, parent)
 	local lines = 0
 	local lastPlacement = "top"
 	local id = parent:getId()
-	local var_15_6 = id:find("OnRight") ~= nil
-	local styleName = var_15_6 and "RightStatsSkillElement" or "LeftStatsSkillElement"
+	local isRightSide = id:find("OnRight") ~= nil
+	local styleName = isRightSide and "RightStatsSkillElement" or "LeftStatsSkillElement"
 
 	for i = 1, #tuples do
 		local skillTuple = tuples[i]
@@ -375,7 +487,7 @@ local function var_0_43(parentWidget, parent)
 
 		widget:setId("statsbar_skill_" .. skillTuple.key)
 
-		if var_15_6 then
+		if isRightSide then
 			widget:addAnchor(AnchorRight, "parent", AnchorRight)
 		else
 			widget:addAnchor(AnchorLeft, "parent", AnchorLeft)
@@ -383,18 +495,18 @@ local function var_0_43(parentWidget, parent)
 
 		widget:setWidth(width)
 
-		local var_15_10
+		local columnOffset
 
 		if lastPlacement == "top" then
-			var_15_10 = lines * width
+			columnOffset = lines * width
 		else
-			var_15_10 = (lines - 1) * width
+			columnOffset = (lines - 1) * width
 		end
 
-		if var_15_6 then
-			widget:setMarginRight(var_15_10)
+		if isRightSide then
+			widget:setMarginRight(columnOffset)
 		else
-			widget:setMarginLeft(var_15_10)
+			widget:setMarginLeft(columnOffset)
 		end
 
 		widget.level = widget:getChildById("level") or widget:recursiveGetChildById("level")
@@ -434,7 +546,7 @@ local function var_0_43(parentWidget, parent)
 			widget.bar.statsType = "skill"
 		end
 
-		local function var_15_13()
+		local function anchorSkillBelowCenter()
 			widget:addAnchor(AnchorBottom, "parent", AnchorBottom)
 			widget:addAnchor(AnchorTop, "parent", AnchorVerticalCenter)
 
@@ -445,7 +557,7 @@ local function var_0_43(parentWidget, parent)
 			end
 		end
 
-		local function var_15_14()
+		local function anchorSkillAboveCenter()
 			widget:addAnchor(AnchorTop, "parent", AnchorTop)
 			widget:addAnchor(AnchorBottom, "parent", AnchorVerticalCenter)
 			widget:setMarginTop(-5)
@@ -467,25 +579,25 @@ local function var_0_43(parentWidget, parent)
 
 			lines = lines + 1
 		elseif lastPlacement == "top" then
-			if var_15_6 then
-				var_15_14()
+			if isRightSide then
+				anchorSkillAboveCenter()
 			else
-				var_15_13()
+				anchorSkillBelowCenter()
 			end
 
 			lines = lines + 1
 			lastPlacement = "bottom"
 		elseif lastPlacement == "bottom" then
-			if var_15_6 then
-				var_15_13()
+			if isRightSide then
+				anchorSkillBelowCenter()
 			else
-				var_15_14()
+				anchorSkillAboveCenter()
 			end
 
 			lastPlacement = "top"
 		end
 
-		var_0_42(widget, skillTuple, localPlayer)
+		updateStatsSkillWidget(widget, skillTuple, localPlayer)
 	end
 
 	local width = lines * width
@@ -493,9 +605,9 @@ local function var_0_43(parentWidget, parent)
 	parentWidget:updateLayout()
 	parentWidget:setWidth(width)
 
-	local var_15_16 = var_0_36(var_0_41(parent))
-	local var_15_17 = var_0_38[id] or 0
-	local totalH = var_15_16 + width + var_15_17 - 1 + (var_0_39[id] or 0)
+	local barThickness = getStatsBarThickness(getLayoutDimensionName(parent))
+	local layoutSpacing = SIDE_SKILLS_LAYOUT_SPACING[id] or 0
+	local totalH = barThickness + width + layoutSpacing - 1 + (SIDE_LAYOUT_HEIGHT_ADJUSTMENTS[id] or 0)
 
 	if totalH < 1 then
 		totalH = 1
@@ -506,8 +618,8 @@ local function var_0_43(parentWidget, parent)
 end
 
 local function reloadSkillsTab(skills, parent)
-	if var_0_33(parent) then
-		return var_0_43(skills, parent)
+	if isSideStatsLayout(parent) then
+		return populateSideStatsSkills(skills, parent)
 	end
 
 	local localPlayer = g_game.getLocalPlayer()
@@ -516,7 +628,7 @@ local function reloadSkillsTab(skills, parent)
 		return
 	end
 
-	local var_18_1 = var_0_40()
+	local enabledTuples = getEnabledSkillTuples()
 	local statsBar = StatsBar.getCurrentStatsBar()
 
 	if not statsBar then
@@ -526,20 +638,20 @@ local function reloadSkillsTab(skills, parent)
 	skills:setHeight(0)
 	skills:destroyChildren()
 
-	local var_18_3 = 0
-	local var_18_4 = "left"
+	local lines = 0
+	local lastPlacement = "left"
 
-	for iter_18_0 = 1, #var_18_1 do
-		local var_18_5 = var_18_1[iter_18_0]
+	for tupleIndex = 1, #enabledTuples do
+		local skillTuple = enabledTuples[tupleIndex]
 		local topStatsSkillElementWidget = g_ui.createWidget("TopStatsSkillElement", skills)
 
-		topStatsSkillElementWidget:setId("statsbar_skill_" .. var_18_5.key)
+		topStatsSkillElementWidget:setId("statsbar_skill_" .. skillTuple.key)
 		topStatsSkillElementWidget:addAnchor(AnchorTop, "parent", AnchorTop)
 
-		if var_18_4 == "left" then
-			topStatsSkillElementWidget:setMarginTop(var_18_3 * skillsLineHeight)
+		if lastPlacement == "left" then
+			topStatsSkillElementWidget:setMarginTop(lines * skillsLineHeight)
 		else
-			topStatsSkillElementWidget:setMarginTop((var_18_3 - 1) * skillsLineHeight)
+			topStatsSkillElementWidget:setMarginTop((lines - 1) * skillsLineHeight)
 		end
 
 		topStatsSkillElementWidget.level = topStatsSkillElementWidget:getChildById("level")
@@ -550,7 +662,7 @@ local function reloadSkillsTab(skills, parent)
 		local statsbarXpBoostButton = topStatsSkillElementWidget:recursiveGetChildById("statsbarXpBoostButton")
 
 		if statsbarXpBoostSlot and statsbarXpBoostButton then
-			if var_18_5.key == "experience" and g_game.getFeature(GameExperienceBonus) then
+			if skillTuple.key == "experience" and g_game.getFeature(GameExperienceBonus) then
 				statsbarXpBoostButton:show()
 
 				local width = statsbarXpBoostButton:getWidth()
@@ -562,7 +674,7 @@ local function reloadSkillsTab(skills, parent)
 			end
 		end
 
-		if var_18_5.key == "experience" then
+		if skillTuple.key == "experience" then
 			local marginRight = topStatsSkillElementWidget.bar:getMarginRight()
 
 			topStatsSkillElementWidget.bar:setMarginRight((marginRight and marginRight > 0 and marginRight or 2) + 4)
@@ -573,8 +685,8 @@ local function reloadSkillsTab(skills, parent)
 		end
 
 		topStatsSkillElementWidget.icon:setImageSource(SKILL_ICONS_SHEET)
-		topStatsSkillElementWidget.icon:setImageClip(var_18_5.clip)
-		topStatsSkillElementWidget.icon:setTooltip(var_18_5.name)
+		topStatsSkillElementWidget.icon:setImageClip(skillTuple.clip)
+		topStatsSkillElementWidget.icon:setTooltip(skillTuple.name)
 
 		topStatsSkillElementWidget.bar.statsGrade = 4
 		topStatsSkillElementWidget.bar.statsGradeColor = "#070707ff"
@@ -583,18 +695,18 @@ local function reloadSkillsTab(skills, parent)
 
 		topStatsSkillElementWidget.bar.showText = false
 
-		if var_18_5.key == "experience" then
+		if skillTuple.key == "experience" then
 			topStatsSkillElementWidget.bar.statsType = "experience"
 		else
 			topStatsSkillElementWidget.bar.statsType = "skill"
 		end
 
-		if var_18_5.placement == "center" or iter_18_0 == #var_18_1 and var_18_4 == "left" then
+		if skillTuple.placement == "center" or tupleIndex == #enabledTuples and lastPlacement == "left" then
 			topStatsSkillElementWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
 			topStatsSkillElementWidget:addAnchor(AnchorRight, "parent", AnchorRight)
 
-			var_18_3 = var_18_3 + 1
-		elseif var_18_4 == "left" then
+			lines = lines + 1
+		elseif lastPlacement == "left" then
 			topStatsSkillElementWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
 			topStatsSkillElementWidget:addAnchor(AnchorRight, "parent", AnchorHorizontalCenter)
 
@@ -604,9 +716,9 @@ local function reloadSkillsTab(skills, parent)
 				topStatsSkillElementWidget:setMarginRight(DEFAULT_SKILL_CENTER_GAP_LEFT)
 			end
 
-			var_18_3 = var_18_3 + 1
-			var_18_4 = "right"
-		elseif var_18_4 == "right" then
+			lines = lines + 1
+			lastPlacement = "right"
+		elseif lastPlacement == "right" then
 			topStatsSkillElementWidget:addAnchor(AnchorRight, "parent", AnchorRight)
 			topStatsSkillElementWidget:addAnchor(AnchorLeft, "parent", AnchorHorizontalCenter)
 
@@ -616,14 +728,14 @@ local function reloadSkillsTab(skills, parent)
 				topStatsSkillElementWidget:setMarginLeft(DEFAULT_SKILL_CENTER_GAP_RIGHT)
 			end
 
-			var_18_4 = "left"
+			lastPlacement = "left"
 		end
 
-		var_0_42(topStatsSkillElementWidget, var_18_5, localPlayer)
+		updateStatsSkillWidget(topStatsSkillElementWidget, skillTuple, localPlayer)
 	end
 
 	skills:updateLayout()
-	skills:setHeight(var_18_3 * skillsLineHeight + 5)
+	skills:setHeight(lines * skillsLineHeight + 5)
 
 	local totalH = statsBarTopSkillsParentBaseHeight(parent) + skills:getHeight() - 1
 
@@ -1161,7 +1273,7 @@ local function loadIcon(bitChanged, content, topmenu)
 	return icon
 end
 
-local function var_0_59()
+local function getStatsBarsIconContent()
 	local iconContents = {}
 	local statsBars = StatsBar.getAllStatsBarWithPosition()
 
@@ -1189,24 +1301,24 @@ local function var_0_59()
 end
 
 local BATTLE_CONDITION_STATES = bit.bor(PlayerStates.Swords, PlayerStates.RedSwords)
-local var_0_61 = "condition_bakragore_taint"
+local BAKRAGORE_TAINT_ICON_ID = "condition_bakragore_taint"
 local refreshHungryConditionIcon
 
-local function var_0_63(arg_35_0)
+local function isConditionHiddenByOptions(conditionId)
 	local client_options = modules.client_options
 
-	return client_options ~= nil and client_options.isSpecialConditionId(arg_35_0) and not client_options.isConditionVisibleInBar(arg_35_0)
+	return client_options ~= nil and client_options.isSpecialConditionId(conditionId) and not client_options.isConditionVisibleInBar(conditionId)
 end
 
-local function var_0_64(arg_36_0, arg_36_1, arg_36_2)
-	local content = arg_36_0.content
-	local childById = content:getChildById(arg_36_1.id)
+local function applyConditionIcon(contentData, iconInfo, active)
+	local content = contentData.content
+	local childById = content:getChildById(iconInfo.id)
 
-	if arg_36_2 and var_0_63(arg_36_1.id) then
-		arg_36_2 = false
+	if active and isConditionHiddenByOptions(iconInfo.id) then
+		active = false
 	end
 
-	if not arg_36_2 then
+	if not active then
 		if childById then
 			childById:hide()
 		end
@@ -1215,7 +1327,7 @@ local function var_0_64(arg_36_0, arg_36_1, arg_36_2)
 	end
 
 	if not childById then
-		return loadIcon(arg_36_1, content, arg_36_0.loadIconTransparent)
+		return loadIcon(iconInfo, content, contentData.loadIconTransparent)
 	end
 
 	if not childById:isExplicitlyVisible() then
@@ -1238,13 +1350,13 @@ local function refreshBattleConditionIcon(states)
 	local swordsInfo = Icons[PlayerStates.Swords]
 	local redSwordsInfo = Icons[PlayerStates.RedSwords]
 
-	for _, contentData in ipairs(var_0_59()) do
-		var_0_64(contentData, swordsInfo, desiredState == PlayerStates.Swords)
-		var_0_64(contentData, redSwordsInfo, desiredState == PlayerStates.RedSwords)
+	for _, contentData in ipairs(getStatsBarsIconContent()) do
+		applyConditionIcon(contentData, swordsInfo, desiredState == PlayerStates.Swords)
+		applyConditionIcon(contentData, redSwordsInfo, desiredState == PlayerStates.RedSwords)
 	end
 end
 
-local function var_0_66(bitChanged, arg_38_1)
+local function updateConditionBit(bitChanged, active)
 	local iconId = Icons[bitChanged]
 
 	if not iconId then
@@ -1253,8 +1365,8 @@ local function var_0_66(bitChanged, arg_38_1)
 		return
 	end
 
-	for _, contentData in ipairs(var_0_59()) do
-		var_0_64(contentData, iconId, arg_38_1)
+	for _, contentData in ipairs(getStatsBarsIconContent()) do
+		applyConditionIcon(contentData, iconId, active)
 	end
 end
 
@@ -1267,12 +1379,12 @@ function StatsBar.refreshConditionIconsFromSettings()
 
 	local states = player:getStates()
 
-	for _, contentData in ipairs(var_0_59()) do
+	for _, contentData in ipairs(getStatsBarsIconContent()) do
 		for _, cond in ipairs(SpecialConditions or {}) do
-			local var_39_2 = cond.state and Icons[cond.state]
+			local iconInfo = cond.state and Icons[cond.state]
 
-			if cond.id and var_39_2 then
-				var_0_64(contentData, var_39_2, bit.band(states, cond.state) ~= 0)
+			if cond.id and iconInfo then
+				applyConditionIcon(contentData, iconInfo, bit.band(states, cond.state) ~= 0)
 			end
 		end
 	end
@@ -1297,8 +1409,8 @@ function refreshHungryConditionIcon()
 
 	local active = isPlayerHungryConditionActive(player)
 
-	for _, contentData in ipairs(var_0_59()) do
-		var_0_64(contentData, info, active)
+	for _, contentData in ipairs(getStatsBarsIconContent()) do
+		applyConditionIcon(contentData, info, active)
 	end
 end
 
@@ -1311,9 +1423,9 @@ function refreshBakragoreTaintIcon()
 
 	local bakragoreIcon = getBakragoreTaintIconInfo(localPlayer:getBakragoreIcon())
 
-	for _, contentData in ipairs(var_0_59()) do
-		local icon = var_0_64(contentData, bakragoreIcon or {
-			id = var_0_61
+	for _, contentData in ipairs(getStatsBarsIconContent()) do
+		local icon = applyConditionIcon(contentData, bakragoreIcon or {
+			id = BAKRAGORE_TAINT_ICON_ID
 		}, bakragoreIcon ~= nil)
 
 		if icon then
@@ -1324,16 +1436,16 @@ function refreshBakragoreTaintIcon()
 end
 
 function processIcon(id, action, createIfMissing)
-	local var_42_0 = Icons[id]
-	local var_42_1 = var_42_0 and var_42_0.id or id
+	local iconInfo = Icons[id]
+	local iconId = iconInfo and iconInfo.id or id
 
-	for _, skillTuple in ipairs(var_0_59()) do
+	for _, skillTuple in ipairs(getStatsBarsIconContent()) do
 		local childById
 
-		if createIfMissing and var_42_0 then
-			childById = var_0_64(skillTuple, var_42_0, true)
+		if createIfMissing and iconInfo then
+			childById = applyConditionIcon(skillTuple, iconInfo, true)
 		else
-			childById = skillTuple.content:getChildById(var_42_1)
+			childById = skillTuple.content:getChildById(iconId)
 		end
 
 		if childById then
@@ -1351,30 +1463,30 @@ function StatsBar.reloadCurrentStatsBarQuickInfo_state(unusedArgument, now, old)
 		return
 	end
 
-	local var_43_0 = bit.bxor(now, old)
-	local var_43_1 = bit.band(var_43_0, BATTLE_CONDITION_STATES) ~= 0
+	local changedStates = bit.bxor(now, old)
+	local battleConditionsChanged = bit.band(changedStates, BATTLE_CONDITION_STATES) ~= 0
 
-	for iter_43_0 = 1, 32 do
-		local var_43_2 = math.pow(2, iter_43_0 - 1)
+	for bitIndex = 1, 32 do
+		local bitMask = math.pow(2, bitIndex - 1)
 
-		if var_43_0 < var_43_2 then
+		if changedStates < bitMask then
 			break
 		end
 
-		local var_43_3 = bit.band(var_43_0, var_43_2)
+		local changedBit = bit.band(changedStates, bitMask)
 
-		if var_43_3 ~= 0 and bit.band(var_43_3, BATTLE_CONDITION_STATES) == 0 then
-			var_0_66(var_43_3, bit.band(now, var_43_3) ~= 0)
+		if changedBit ~= 0 and bit.band(changedBit, BATTLE_CONDITION_STATES) == 0 then
+			updateConditionBit(changedBit, bit.band(now, changedBit) ~= 0)
 		end
 	end
 
-	if var_43_1 then
+	if battleConditionsChanged then
 		refreshBattleConditionIcon(now)
 	end
 
-	local var_43_4 = bit.bor(PlayerStates.ManaShield, PlayerStates.NewManaShield)
+	local manaShieldMask = bit.bor(PlayerStates.ManaShield, PlayerStates.NewManaShield)
 
-	if bit.band(var_43_0, var_43_4) ~= 0 then
+	if bit.band(changedStates, manaShieldMask) ~= 0 then
 		StatsBar.scheduleCurrentStatsBarManaInfo()
 	end
 end
@@ -1395,17 +1507,8 @@ function StatsBar.reloadCurrentStatsBarDeepInfo()
 	for unusedValue, skillsTuple in ipairs(skillsTuples) do
 		local statsbarSkill = currentStatsBarWithPosition:recursiveGetChildById("statsbar_skill_" .. skillsTuple.key)
 
-		if statsbarSkill then
-			if skillsTuple.key == "experience" then
-				statsbarSkill.level:setText(comma_value(localPlayer:getLevel()))
-				statsbarSkill.bar:setValue(playerLevelPercentForStatsBar(localPlayer), 100)
-			elseif skillsTuple.key == "magic" then
-				statsbarSkill.level:setText(localPlayer:getMagicLevel())
-				statsbarSkill.bar:setValue(playerSkillPercentForStatsBar(localPlayer:getMagicLevelPercent()), 100)
-			else
-				statsbarSkill.level:setText(localPlayer:getSkillLevel(skillsTuple.skill))
-				statsbarSkill.bar:setValue(playerSkillPercentForStatsBar(localPlayer:getSkillLevelPercent(skillsTuple.skill)), 100)
-			end
+		if statsbarSkill and statsbarSkill.level and statsbarSkill.bar then
+			updateStatsSkillWidget(statsbarSkill, skillsTuple, localPlayer)
 		end
 	end
 end
@@ -1515,14 +1618,14 @@ function constructStatsBar(dimension, placement)
 	end
 
 	if variant then
-		local var_54_4 = var_0_36(dimension)
+		local barThickness = getStatsBarThickness(dimension)
 
-		if var_0_35(statsBar) then
-			statsBar:setWidth(var_54_4)
-			variant:setWidth(var_54_4)
+		if isSideStatsPanel(statsBar) then
+			statsBar:setWidth(barThickness)
+			variant:setWidth(barThickness)
 		else
-			statsBar:setHeight(var_54_4)
-			variant:setHeight(var_54_4)
+			statsBar:setHeight(barThickness)
+			variant:setHeight(barThickness)
 		end
 
 		variant:show()
@@ -1553,30 +1656,30 @@ function constructStatsBar(dimension, placement)
 		variant.skills = variant:getChildById("skills")
 		statsBar[dimensionOnPlacement] = variant
 
-		if var_0_35(statsBar) then
+		if isSideStatsPanel(statsBar) then
 			local id = statsBar:getId() == "gameRightStatsBarPanel" and 90 or -90
 
-			local function var_54_10(arg_55_0)
-				if arg_55_0 and arg_55_0.setRotation then
-					arg_55_0:setRotation(id)
+			local function rotateSideBarText(widget)
+				if widget and widget.setRotation then
+					widget:setRotation(id)
 				end
 			end
 
 			local health = variant.health or variant:recursiveGetChildById("health")
 
 			if health then
-				var_54_10(health:getChildById("text"))
-				var_54_10(health:getChildById("textRow"))
+				rotateSideBarText(health:getChildById("text"))
+				rotateSideBarText(health:getChildById("textRow"))
 			end
 
 			if variant.mana then
-				var_54_10(variant.mana:getChildById("text"))
-				var_54_10(variant.mana:getChildById("textRow"))
+				rotateSideBarText(variant.mana:getChildById("text"))
+				rotateSideBarText(variant.mana:getChildById("textRow"))
 			end
 
-			var_54_10(variant:recursiveGetChildById("proficiencyLabel"))
-			var_54_10(variant:recursiveGetChildById("proficiencyIcon"))
-			var_0_34(variant)
+			rotateSideBarText(variant:recursiveGetChildById("proficiencyLabel"))
+			rotateSideBarText(variant:recursiveGetChildById("proficiencyIcon"))
+			resizeDefaultSideHealthManaBars(variant)
 
 			local barsColumn = variant:getChildById("barsColumn")
 
@@ -1584,7 +1687,7 @@ function constructStatsBar(dimension, placement)
 				barsColumn._statsBarEqualizeBound = true
 
 				function barsColumn.onGeometryChange()
-					var_0_34(variant)
+					resizeDefaultSideHealthManaBars(variant)
 				end
 			end
 		end
@@ -1763,7 +1866,7 @@ local function openDropMenu(mousePos)
 		local checked = g_settings.getBoolean("top_statsbar_" .. key)
 		local label = tr(SKILL_MENU_CHECKBOX_LABEL[key] or "Show " .. skillTuple.name)
 
-		menu:addCheckBox(label, checked, function(_, newChecked)
+		menu:addCheckBox(label, checked, function(unusedArgument, newChecked)
 			g_settings.set("top_statsbar_" .. key, newChecked)
 
 			local cur = StatsBar.getCurrentStatsBarWithPosition()
@@ -1783,13 +1886,13 @@ local function openDropMenu(mousePos)
 	if modules.client_options and modules.client_options.getOption and modules.client_options.setOption then
 		local customOn = modules.client_options.getOption("showCustomisableStatusBars")
 
-		menu:addCheckBox(tr("Show Customisable Status Bars"), customOn, function(_, checked)
+		menu:addCheckBox(tr("Show Customisable Status Bars"), customOn, function(unusedArgument, checked)
 			modules.client_options.setOption("showCustomisableStatusBars", checked, true)
 		end)
 
 		local statusOn = modules.client_options.getOption("showStatusBars")
 
-		menu:addCheckBox(tr("Show Status Bars"), statusOn, function(_, checked)
+		menu:addCheckBox(tr("Show Status Bars"), statusOn, function(unusedArgument, checked)
 			modules.client_options.setOption("showStatusBars", checked, true)
 		end)
 	end
@@ -1798,7 +1901,7 @@ local function openDropMenu(mousePos)
 	menu:display(mousePos)
 end
 
-local function onStatsMousePress(tab, mousePos, mouseButton)
+local function onStatsMousePress(unusedArgument, mousePos, mouseButton)
 	if mouseButton == MouseRightButton then
 		openDropMenu(mousePos)
 
@@ -2462,6 +2565,36 @@ local PROFICIENCY_LARGE_LAYOUT_IDS = {
 }
 local PROFICIENCY_STATS_LAYOUT_IDS = PROFICIENCY_DEFAULT_PARALLEL_LAYOUT_IDS
 
+local function updateProficiencyButtonTooltips(progressTooltip)
+	local tooltip = tr("Open Weapon Proficiency Dialog")
+
+	if progressTooltip and progressTooltip ~= "" then
+		tooltip = tooltip .. "\n\n" .. progressTooltip
+	end
+
+	for barKey, statsBar in pairs(statsBars) do
+		if statsBar then
+			for compactLayoutIndex, compactLayoutId in ipairs(PROFICIENCY_COMPACT_LAYOUT_IDS) do
+				local compactLayout = statsBar:getChildById(compactLayoutId)
+				local compactButton = compactLayout and compactLayout:recursiveGetChildById("proficiencyButtonCompact")
+
+				if compactButton and compactButton.setTooltip then
+					compactButton:setTooltip(tooltip)
+				end
+			end
+
+			for largeLayoutIndex, largeLayoutId in ipairs(PROFICIENCY_LARGE_LAYOUT_IDS) do
+				local largeLayout = statsBar:getChildById(largeLayoutId)
+				local largeButton = largeLayout and largeLayout:recursiveGetChildById("proficiencyButtonLarge")
+
+				if largeButton and largeButton.setTooltip then
+					largeButton:setTooltip(tooltip)
+				end
+			end
+		end
+	end
+end
+
 local function applyCompactProficiencyWeaponButtonToRoot(root, equipped, srcCompact, srcLarge, pct)
 	if not root then
 		return
@@ -2691,9 +2824,11 @@ function StatsBar.applyDefaultTopProficiencyLayout()
 		StatsBar.clearProficiencyHighlightUi()
 
 		lastProficiencyCache = {}
+		lastProficiencyTooltip = nil
 	end
 
 	StatsBar.applyCompactTopProficiencyWeaponButton()
+	updateProficiencyButtonTooltips(lastProficiencyTooltip)
 
 	for _, bar in pairs(statsBars) do
 		if bar then
@@ -2717,32 +2852,32 @@ local MONK_COMBO_IMAGE_FILLED = "/images/game/topbar/icon-combopoint-filled"
 local MONK_SERENE_IMAGE_OFF = "/images/game/topbar/icon-serene-off"
 local MONK_SERENE_IMAGE_ON = "/images/game/topbar/icon-serene-on"
 
-local function var_0_115(root, monkPanelId)
+local function findMonkComboPointIcon(root, monkPanelId)
 	return root:recursiveGetChildById("topBarMonkCombo" .. monkPanelId) or root:recursiveGetChildById("topBarMonkLargeCombo" .. monkPanelId) or root:recursiveGetChildById("topBarMonkCompactCombo" .. monkPanelId)
 end
 
-local function monkPanel(arg_104_0)
-	return arg_104_0:recursiveGetChildById("topBarMonkSereneIcon") or arg_104_0:recursiveGetChildById("topBarMonkLargeSereneIcon") or arg_104_0:recursiveGetChildById("topBarMonkCompactSereneIcon")
+local function monkPanel(root)
+	return root:recursiveGetChildById("topBarMonkSereneIcon") or root:recursiveGetChildById("topBarMonkLargeSereneIcon") or root:recursiveGetChildById("topBarMonkCompactSereneIcon")
 end
 
-local function statsBarApplyMonkComboSereneToRoot(arg_105_0, arg_105_1, player)
-	if not arg_105_0 then
+local function statsBarApplyMonkComboSereneToRoot(root, panelId, player)
+	if not root then
 		return
 	end
 
-	local var_105_0 = arg_105_0:recursiveGetChildById(arg_105_1)
+	local comboPanel = root:recursiveGetChildById(panelId)
 
-	if not var_105_0 then
+	if not comboPanel then
 		return
 	end
 
 	if not player or not g_game.isOnline() or not player.isMonk or not player:isMonk() then
-		var_105_0:hide()
+		comboPanel:hide()
 
 		return
 	end
 
-	var_105_0:show()
+	comboPanel:show()
 
 	local harmony = 0
 
@@ -2751,14 +2886,14 @@ local function statsBarApplyMonkComboSereneToRoot(arg_105_0, arg_105_1, player)
 	end
 
 	for i = 1, 5 do
-		local w = var_0_115(var_105_0, i)
+		local w = findMonkComboPointIcon(comboPanel, i)
 
 		if w then
 			w:setImageSource(i <= harmony and MONK_COMBO_IMAGE_FILLED or MONK_COMBO_IMAGE_EMPTY)
 		end
 	end
 
-	local sereneIcon = monkPanel(var_105_0)
+	local sereneIcon = monkPanel(comboPanel)
 
 	if sereneIcon and player.isSerene then
 		sereneIcon:setImageSource(player:isSerene() and MONK_SERENE_IMAGE_ON or MONK_SERENE_IMAGE_OFF)
@@ -2877,7 +3012,7 @@ end
 function StatsBar.hideAll()
 	for _, bar in pairs(statsBars) do
 		if bar then
-			local var_109_0 = var_0_35(bar)
+			local isSidePanel = isSideStatsPanel(bar)
 
 			for _, placement in pairs(statsBarsPlacements) do
 				for dimension, _ in pairs(statsBarsDimensions) do
@@ -2887,14 +3022,14 @@ function StatsBar.hideAll()
 						if bar[key].skills then
 							bar[key].skills:destroyChildren()
 
-							if var_109_0 then
+							if isSidePanel then
 								bar[key].skills:setWidth(0)
 							else
 								bar[key].skills:setHeight(0)
 							end
 						end
 
-						if var_109_0 then
+						if isSidePanel then
 							bar[key]:setWidth(0)
 						else
 							bar[key]:setHeight(0)
@@ -2905,7 +3040,7 @@ function StatsBar.hideAll()
 				end
 			end
 
-			if var_109_0 then
+			if isSidePanel then
 				bar:setWidth(0)
 			else
 				bar:setHeight(0)
@@ -2931,7 +3066,7 @@ function StatsBar.destroyAllIcons()
 				end
 			end
 
-			if var_0_35(bar) then
+			if isSideStatsPanel(bar) then
 				bar:setWidth(0)
 			else
 				bar:setHeight(0)
@@ -2982,6 +3117,8 @@ end
 
 function StatsBar.onUpdateProficiencyData(itemCache, hasHighlight, thingType)
 	if not thingType or not itemCache then
+		lastProficiencyTooltip = nil
+
 		StatsBar.clearProficiencyHighlightUi()
 		StatsBar.applyDefaultTopProficiencyLayout()
 
@@ -3021,7 +3158,10 @@ function StatsBar.onUpdateProficiencyData(itemCache, hasHighlight, thingType)
 
 	local showHighlight = proficiencyServerHighlightOn(hasHighlight)
 
+	lastProficiencyTooltip = progressTooltip
+
 	applyProficiencyTopBarWidgetsAllLayouts(percent, progressTooltip, showHighlight)
+	updateProficiencyButtonTooltips(progressTooltip)
 
 	for _, bar in pairs(statsBars) do
 		if bar then

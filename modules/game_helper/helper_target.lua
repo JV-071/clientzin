@@ -15,8 +15,8 @@ local ALL_CREATURES_ICON = "/images/icons_big/icon-arbitrarymonster64x64"
 local spectators = {}
 local spectatorMeta = {}
 local spectatorAgeCounter = 0
-local combatTimer = false
-local var_0_16 = 0
+local nameChangeConnected = false
+local combatElapsedMs = 0
 local COMBAT_TICK_MS = 150
 local TARGET_INTERVAL_MS = 250
 local autoTargetOnHold = false
@@ -234,7 +234,7 @@ local function isFamiliar(creature)
 	end
 
 	local id = creature.getId and creature:getId() or nil
-	local var_12_1 = id and spectatorMeta[id] or nil
+	local var_12_1 = id and spectators[id] == creature and spectatorMeta[id] or nil
 
 	if var_12_1 and var_12_1.nameLower then
 		return var_12_1.nameLower
@@ -975,7 +975,7 @@ local function getCreatureRaceId(creature)
 	end
 
 	local id = creature.getId and creature:getId() or nil
-	local var_52_1 = id and spectatorMeta[id] or nil
+	local var_52_1 = id and spectators[id] == creature and spectatorMeta[id] or nil
 
 	if var_52_1 and var_52_1.raceId ~= nil then
 		return var_52_1.raceId
@@ -1281,7 +1281,7 @@ function HelperTarget.onCreatureAppear(creature)
 
 	local id = creature:getId()
 
-	if creature:isMonster() and not spectators[id] then
+	if creature:isMonster() and spectators[id] ~= creature then
 		spectatorAgeCounter = spectatorAgeCounter + 1
 		spectatorMeta[id] = {
 			age = spectatorAgeCounter,
@@ -1291,19 +1291,25 @@ function HelperTarget.onCreatureAppear(creature)
 	end
 end
 
-local function handleChangeName(arg_79_0, arg_79_1)
-	if not arg_79_0 or not arg_79_0.getId then
+local function handleChangeName(creature, name)
+	if not creature or not creature.getId then
 		return
 	end
 
-	local id = spectatorMeta[arg_79_0:getId()]
+	local creatureId = creature:getId()
 
-	if not id then
+	if spectators[creatureId] ~= creature then
 		return
 	end
 
-	id.nameLower = arg_79_1 and arg_79_1 ~= "" and arg_79_1:lower() or nil
-	id.raceId = nil
+	local meta = spectatorMeta[creatureId]
+
+	if not meta then
+		return
+	end
+
+	meta.nameLower = name and name ~= "" and name:lower() or nil
+	meta.raceId = nil
 end
 
 function HelperTarget.onCreatureDisappear(creature)
@@ -1311,15 +1317,16 @@ function HelperTarget.onCreatureDisappear(creature)
 		return
 	end
 
-	local id = creature:getId()
+	local creatureId = creature:getId()
 
-	if spectators[id] then
-		spectators[id] = nil
+	if spectators[creatureId] ~= creature then
+		return
 	end
 
-	spectatorMeta[id] = nil
+	spectators[creatureId] = nil
+	spectatorMeta[creatureId] = nil
 
-	if creature:getId() == currentLockedTargetId then
+	if creatureId == currentLockedTargetId then
 		currentLockedTargetId = 0
 	end
 end
@@ -1508,7 +1515,7 @@ local function checkAutoTarget()
 	if target then
 		currentLockedTargetId = target:getId()
 
-		if not currentTarget or currentTarget:getId() ~= target:getId() then
+		if currentTarget ~= target then
 			g_game.attack(target, true)
 
 			lastTargetAttackId = target:getId()
@@ -1633,10 +1640,10 @@ function HelperTarget.disableProtectionZonePause()
 end
 
 function HelperTarget.runTick(_state)
-	var_0_16 = var_0_16 + COMBAT_TICK_MS
+	combatElapsedMs = combatElapsedMs + COMBAT_TICK_MS
 
-	if var_0_16 >= TARGET_INTERVAL_MS then
-		var_0_16 = 0
+	if combatElapsedMs >= TARGET_INTERVAL_MS then
+		combatElapsedMs = 0
 
 		checkAutoTarget()
 	end
@@ -2368,14 +2375,14 @@ end
 
 function HelperTarget.init(pctx)
 	ctx = pctx
-	var_0_16 = 0
+	combatElapsedMs = 0
 
-	if not combatTimer then
+	if not nameChangeConnected then
 		connect(Creature, {
 			onChangeName = handleChangeName
 		})
 
-		combatTimer = true
+		nameChangeConnected = true
 	end
 
 	HelperTarget.refreshLanguage(ctx and ctx.getLanguage and ctx.getLanguage() or "en")
@@ -2407,18 +2414,18 @@ function HelperTarget.onGameStart()
 	HelperTarget.clearSpectators()
 
 	currentLockedTargetId = 0
-	var_0_16 = 0
+	combatElapsedMs = 0
 end
 
 function HelperTarget.terminate()
 	closeTargetAssignWindowInternal()
 
-	if combatTimer then
+	if nameChangeConnected then
 		disconnect(Creature, {
 			onChangeName = handleChangeName
 		})
 
-		combatTimer = false
+		nameChangeConnected = false
 	end
 
 	priorityList = {}

@@ -1,4 +1,4 @@
-﻿SpelllistSettings = {
+SpelllistSettings = {
 	Default = {
 		iconFile = "/images/game/spells/spell-icons-32x32",
 		iconSize = {
@@ -3669,7 +3669,7 @@ SpellInfo = {
 			name = "Blood Rage",
 			soul = 0,
 			mana = 290,
-			level = 60,
+			level = 20,
 			exhaustion = 2000,
 			id = 133,
 			words = "utito tempo",

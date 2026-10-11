@@ -209,7 +209,7 @@ function BountyTask.refreshKillTracker()
 	refreshBountyKillTrackerFromCache()
 end
 
-function BountyTask.fillSlotPanel(self, panel, data, selected)
+function BountyTask.fillSlotPanel(unusedArgument, panel, data, selected)
 	if not panel or not data then
 		return
 	end
@@ -306,7 +306,7 @@ function BountyTask.fillSlotPanel(self, panel, data, selected)
 	end
 end
 
-function BountyTask.onSelectSlot(self, panel)
+function BountyTask.onSelectSlot(unusedArgument, panel)
 	local data = panel and panel.bountySlotData
 
 	if not data then
@@ -316,7 +316,7 @@ function BountyTask.onSelectSlot(self, panel)
 	g_game.sendSelectTask(data.taskId)
 end
 
-function BountyTask.selectDifficulty(self, difficulty)
+function BountyTask.selectDifficulty(unusedArgument, difficulty)
 	local difficulties = {
 		Adept = 1,
 		Beginner = 0,
@@ -681,61 +681,102 @@ local PREFERRED_UNLOCK_COSTS = {
 	900,
 	1200
 }
+local INSUFFICIENT_CLEAR_POINTS = "You don't have enough bounty points to clear this slot."
+local INSUFFICIENT_UNLOCK_POINTS = "You don't have enough bounty points to unlock this slot."
 
-local function clearSlotWidget(slotWidget)
-	if not slotWidget then
+local function getBountyPoints()
+	return TaskBoard:getResourceBalance("bountyPoints") or 0
+end
+
+local function canClearSlot()
+	return getBountyPoints() >= PREFERRED_CLEAR_COST
+end
+
+local function refreshClearButton(button)
+	if not button or not button.isClearAction then
 		return
 	end
 
-	local creature = slotWidget:getChildById("slotCreature")
+	local canAfford = canClearSlot()
 
-	if creature then
-		creature:setVisible(false)
+	button:setEnabled(canAfford)
 
-		local c = creature:getCreature()
-
-		if c then
-			c:setStaticWalking(0)
-		end
+	if canAfford then
+		button:setTooltip("")
+	else
+		button:setTooltip(tr(INSUFFICIENT_CLEAR_POINTS))
 	end
-
-	slotWidget.assignedRaceId = nil
 end
 
-local function wireSlotClearButton(row, slotWidget, btn, costPanel, slotIndex, isUnwanted)
-	btn:setText(tr("Clear"))
+local function refreshUnlockButton(button)
+	if not button or not button.isUnlockAction then
+		return
+	end
+
+	local canAfford = getBountyPoints() >= (button.unlockCost or 0)
+
+	button:setEnabled(canAfford)
+
+	if canAfford then
+		button:setTooltip("")
+	else
+		button:setTooltip(tr(INSUFFICIENT_UNLOCK_POINTS))
+	end
+end
+
+function BountyTask.refreshClearButtons(unusedArgument)
+	local panel = TaskBoard.preferredListPanel
+
+	if not panel or not panel:isVisible() then
+		return
+	end
+
+	local rightPanel = panel:getChildById("rightPanel")
+	local slotsList = rightPanel and rightPanel:getChildById("slotsList")
+
+	if not slotsList then
+		return
+	end
+
+	for rowIndex, row in ipairs(slotsList:getChildren()) do
+		refreshClearButton(row:getChildById("preferredButton"))
+		refreshClearButton(row:getChildById("unwantedButton"))
+		refreshUnlockButton(row:getChildById("unlockButton"))
+	end
+end
+
+local function wireSlotClearButton(unusedArgument1, unusedArgument2, button, costPanel, slotIndex, isUnwanted)
+	button:setText(tr("Clear"))
+
+	button.isClearAction = true
 
 	if costPanel then
 		costPanel:show()
 	end
 
-	function btn.onClick()
+	refreshClearButton(button)
+
+	function button.onClick()
+		if not canClearSlot() then
+			refreshClearButton(button)
+
+			return
+		end
+
 		if isUnwanted then
 			g_game.sendPreferredListClearUnwanted(slotIndex)
 		else
 			g_game.sendPreferredListClearPreferred(slotIndex)
 		end
-
-		clearSlotWidget(slotWidget)
-		btn:setText(tr("Assign"))
-
-		if costPanel then
-			costPanel:hide()
-		end
-
-		function btn.onClick()
-			if isUnwanted then
-				BountyTask:assignToRow(row, slotIndex, true)
-			else
-				BountyTask:assignToRow(row, slotIndex, false)
-			end
-		end
-
-		populateBountyCreatureList("", getExcludedRaceIds())
 	end
 end
 
 local function wireSlotAssignButton(row, btn, slotIndex, isUnwanted)
+	btn.isClearAction = nil
+
+	btn:setEnabled(true)
+	btn:setTooltip("")
+
 	function btn.onClick()
 		if isUnwanted then
 			BountyTask:assignToRow(row, slotIndex, true)
@@ -777,11 +818,11 @@ function BountyTask.assignToRow(unusedArgument, row, slotIndex, isUnwanted)
 	wireSlotClearButton(row, slotWidget, btn, costPanel, slotIndex, isUnwanted)
 end
 
-function BountyTask.AssignCreatureSlot(self)
+function BountyTask.AssignCreatureSlot(unusedArgument)
 	return
 end
 
-function BountyTask.UnwantedCreatureSlot(self)
+function BountyTask.UnwantedCreatureSlot(unusedArgument)
 	return
 end
 
@@ -839,7 +880,18 @@ local function buildPreferredLockedRow(container, slotIndex)
 	local btn = row:getChildById("unlockButton")
 
 	if btn then
+		btn.isUnlockAction = true
+		btn.unlockCost = unlockCost
+
+		refreshUnlockButton(btn)
+
 		function btn.onClick()
+			if getBountyPoints() < (btn.unlockCost or 0) then
+				refreshUnlockButton(btn)
+
+				return
+			end
+
 			g_game.sendPreferredListUnlockSlots()
 		end
 	end
@@ -938,7 +990,7 @@ function BountyTask.claimDaily(unusedArgument)
 	g_game.sendClaimDaily()
 end
 
-function BountyTask.updateTalisman(self, talismanId)
+function BountyTask.updateTalisman(unusedArgument, talismanId)
 	g_game.sendUpgradeTalisman(talismanId)
 end
 
@@ -1203,11 +1255,16 @@ local function onGameEndBounty()
 	setBountyTrackerInactive()
 end
 
+local function onBountyResourceBalance()
+	BountyTask:refreshClearButtons()
+end
+
 function BountyTask.init(unusedArgument)
 	connect(g_game, {
 		onBountyTasksDaily = onBountyTasksDaily,
 		onGameStart = onGameStartBounty,
-		onGameEnd = onGameEndBounty
+		onGameEnd = onGameEndBounty,
+		onResourceBalance = onBountyResourceBalance
 	})
 	scheduleEvent(refreshBountyKillTrackerFromCache, 0)
 end
@@ -1216,6 +1273,7 @@ function BountyTask.terminate(unusedArgument)
 	disconnect(g_game, {
 		onBountyTasksDaily = onBountyTasksDaily,
 		onGameStart = onGameStartBounty,
-		onGameEnd = onGameEndBounty
+		onGameEnd = onGameEndBounty,
+		onResourceBalance = onBountyResourceBalance
 	})
 end

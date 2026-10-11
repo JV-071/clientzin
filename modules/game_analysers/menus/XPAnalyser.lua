@@ -395,12 +395,25 @@ function XPAnalyser.checkAnchos(unusedArgument)
 		XPAnalyser.window.contentsPanel.xpGain:setMarginTop(0)
 	end
 
-	XPAnalyser.window:getChildById("bottomResizeBorder"):setMaximum(maximizedHeight)
+	local window = XPAnalyser.window
+	local resizeBorder = window:getChildById("bottomResizeBorder")
+	local previousMaximum = resizeBorder:getMaximum()
+	local previousHeight = window:getHeight()
 
-	XPAnalyser.window.maximizedHeight = maximizedHeight
+	resizeBorder:setMaximum(maximizedHeight)
 
-	if not XPAnalyser.window:isOn() then
-		XPAnalyser.window:setHeight(maximizedHeight)
+	if not window:isOn() then
+		local targetHeight = previousHeight
+
+		if maximizedHeight < previousHeight or previousHeight == previousMaximum then
+			targetHeight = maximizedHeight
+		end
+
+		if targetHeight ~= previousHeight then
+			window:setHeight(targetHeight)
+		end
+
+		window.maximizedHeight = window:getHeight()
 	end
 
 	if XPAnalyser.window.contentsPanel.rawXpHourLabel:isExplicitlyVisible() then

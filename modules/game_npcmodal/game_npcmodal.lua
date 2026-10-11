@@ -2085,6 +2085,10 @@ function sendNpcTrade(items, currencyId)
 		sellButton:setOn(false)
 	end
 
+	if BuySellButton then
+		BuySellButton:setText(tr("Buy"))
+	end
+
 	refreshNpcTradeItemList()
 	var_0_75()
 	showTradeWindow()

@@ -1,0 +1,70 @@
+// EXCEPTION: non-modal countdown HUD, sized to the selected 320x93 octagonal-medallion skin.
+BossTimerPanel < UIWidget
+  id: bossTimerPanel
+  size: 320 93
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  margin-top: 6
+  image-source: images/boss-timer-frame
+  // EXCEPTION: clip the generated source to its plaque, excluding transparent padding.
+  image-clip: 10 105 1957 568
+  image-smooth: true
+  visible: false
+  focusable: false
+  phantom: true
+
+  UICreature
+    id: bossCreature
+    // EXCEPTION: a 52px portrait fits inside the medallion's clipped corners without covering its rim.
+    size: 52 52
+    anchors.top: parent.top
+    anchors.left: parent.left
+    // EXCEPTION: sprite alignment places the portrait at the measured medallion centre (46, 47).
+    margin-top: 21
+    margin-left: 20
+    creature-center: true
+    center-by-bounding-box: true
+    fit-visible-bounds: true
+    fixed-creature-size: true
+    creature-size: 52
+    creature-smooth: false
+    focusable: false
+    phantom: true
+
+  Label
+    id: timeLeftLabel
+    text: 00:00
+    height: 40
+    anchors.top: parent.top
+    anchors.left: bossCreature.right
+    anchors.right: parent.right
+    // EXCEPTION: sprite alignment centres the 30px digits in the upper text field.
+    margin-top: 18
+    margin-left: 24
+    margin-right: 16
+    font: $var-cip-font
+    // EXCEPTION: scale the existing bitmap font for prominent timer digits.
+    font-scale: 2
+    color: $var-text-cip-color-white
+    text-auto-resize: false
+    text-align: center
+    focusable: false
+    phantom: true
+
+    $on:
+      color: $var-text-cip-color-orange
+
+  Label
+    id: bossNameLabel
+    height: 16
+    anchors.top: timeLeftLabel.bottom
+    anchors.left: timeLeftLabel.left
+    anchors.right: timeLeftLabel.right
+    margin-top: 6
+    font: $var-cip-font
+    color: $var-text-cip-color
+    text-auto-resize: false
+    text-overflow: ellipsis
+    text-align: center
+    focusable: false
+    phantom: true
