@@ -451,6 +451,7 @@ ExperienceRate = {
 	BASE = 0
 }
 OtcOpCode = {
+	BOSS_TIMER = 45,
 	BATTLE_PASS_REROLL = 24,
 	BATTLE_PASS_CLAIM = 23,
 	BATTLE_PASS_REWARDS = 22,

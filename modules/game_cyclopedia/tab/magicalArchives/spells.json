@@ -3636,7 +3636,7 @@
         "iconIndex": 95,
         "isRune": false,
         "isRuneCreatable": true,
-        "minimumCasterLevel": 60,
+        "minimumCasterLevel": 20,
         "onlyPromoted": false,
         "autoUnlock": true,
         "premium": true,
