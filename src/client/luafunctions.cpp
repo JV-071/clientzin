@@ -1281,6 +1281,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UIItem>("getFlipDirection", &UIItem::getFlipDirection);
     g_lua.bindClassMemberFunction<UIItem>("setMirrorHorizontal", &UIItem::setMirrorHorizontal);
     g_lua.bindClassMemberFunction<UIItem>("setFixedItemSize", &UIItem::setFixedItemSize);
+    g_lua.bindClassMemberFunction<UIItem>("isFixedItemSize", &UIItem::isFixedItemSize);
     g_lua.bindClassMemberFunction<UIItem>("setTier", &UIItem::setTier);
 
     g_lua.registerClass<UIEffect, UIWidget>();

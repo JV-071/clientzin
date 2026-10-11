@@ -47,6 +47,7 @@ public:
     void setUseDecoKitContainerSprite(bool enabled) { m_useDecoKitContainerSprite = enabled; repaint(); }
     bool isUsingDecoKitContainerSprite() const { return m_useDecoKitContainerSprite; }
     void setFixedItemSize(const bool fixed) { m_fixedItemSize = fixed; repaint(); }
+    bool isFixedItemSize() const { return m_fixedItemSize; }
     void setTier(int tier);
     void clearItem() { setItemId(0); }
 
@@ -64,6 +65,7 @@ public:
 
 protected:
     const ItemPtr& resolveDisplayItem();
+    Rect resolveItemDrawRect(int exactSize);
     void onStyleApply(std::string_view styleName, const OTMLNodePtr& styleNode) override;
 
     std::string m_shaderName;
@@ -74,7 +76,7 @@ protected:
     bool m_virtual{ false };
     bool m_showId{ false };
     bool m_itemVisible{ true };
-    bool m_fixedItemSize{ false };
+    bool m_fixedItemSize{ true };
     bool m_alwaysShowCount{ true };
     bool m_showDuration{ false };
     bool m_showCharges{ false };

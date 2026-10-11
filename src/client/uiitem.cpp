@@ -46,6 +46,28 @@ const ItemPtr& UIItem::resolveDisplayItem()
     return m_unwrappedPreview;
 }
 
+Rect UIItem::resolveItemDrawRect(const int exactSize)
+{
+    const Rect dest = getPaddingRect();
+    if (exactSize <= 0 || !dest.isValid())
+        return dest;
+
+    if (m_fixedItemSize && dest.width() > exactSize) {
+        return Rect(dest.x() + (dest.width() - exactSize) / 2,
+                    dest.y() + (dest.height() - exactSize) / 2,
+                    exactSize, exactSize);
+    }
+
+    // The original engine enlarges flexible square slots only at integer scale.
+    const bool integerScale = !m_fixedItemSize && dest.width() == dest.height() &&
+                              dest.width() >= exactSize && dest.width() % exactSize == 0;
+    if (!integerScale && dest.width() >= exactSize && dest.height() >= exactSize &&
+        m_flipDirection == 0 && !hasShader()) {
+        return Rect(dest.topLeft(), Size(exactSize, exactSize));
+    }
+    return dest;
+}
+
 void UIItem::drawSelf(const DrawPoolType drawPane)
 {
     if (drawPane != DrawPoolType::FOREGROUND)
@@ -72,17 +94,8 @@ void UIItem::drawSelf(const DrawPoolType drawPane)
         displayItem->setColor(m_color);
         displayItem->draw(Point(exactSize - g_gameConfig.getSpriteSize()) + displayItem->getDisplacement());
 
-        // Blit the item at its native size, centered in the slot. Slots larger than the
-        // sprite (e.g. the 66x66 task-board and 70x70 store cells) used to upscale it and
-        // it looked oversized/blurry; now they show it 1:1. Slots smaller than the sprite
-        // still shrink to fit.
-        Rect itemDest = getPaddingRect();
-        const int nativeSide = std::min<int>(exactSize, std::min<int>(itemDest.width(), itemDest.height()));
-        if (nativeSide < itemDest.width() || nativeSide < itemDest.height()) {
-            itemDest = Rect(itemDest.x() + (itemDest.width() - nativeSide) / 2,
-                            itemDest.y() + (itemDest.height() - nativeSide) / 2,
-                            nativeSide, nativeSide);
-        }
+        // Preserve native-size and integer-scale placement from the original engine.
+        const Rect itemDest = resolveItemDrawRect(exactSize);
         g_drawPool.releaseFrameBuffer(itemDest, m_flipDirection);
 
         const auto itemCountFont = g_gameConfig.getItemCountFont();
@@ -194,6 +207,8 @@ void UIItem::onStyleApply(const std::string_view styleName, const OTMLNodePtr& s
             setItemCount(node->value<int>());
         else if (node->tag() == "item-visible")
             setItemVisible(node->value<bool>());
+        else if (node->tag() == "fixed-item-size")
+            setFixedItemSize(node->value<bool>());
         else if (node->tag() == "virtual")
             setVirtual(node->value<bool>());
         else if (node->tag() == "show-id")

@@ -126,6 +126,10 @@ protected:
     {
         return widget.resolveDisplayItem();
     }
+    Rect itemDrawRect(UIItem& widget, const int exactSize)
+    {
+        return widget.resolveItemDrawRect(exactSize);
+    }
     ItemPtr parseItem(const InputMessagePtr& message)
     {
         ProtocolGame protocol;
@@ -255,6 +259,52 @@ TEST_F(RuntimeEventTest, PreySelectionEventsMatchTheRecoveredModuleContract)
     EXPECT_EQ(2, g_lua.popInteger());
     g_game.setClientVersion(previousVersion);
     g_gameConfig.setLastSupportedVersion(previousSupportedVersion);
+}
+
+TEST_F(RuntimeEventTest, ItemFixedSizeMatchesTheOriginalPreviewGeometry)
+{
+    g_lua.registerClass<UIWidget>();
+    g_lua.registerClass<UIItem, UIWidget>();
+    ForegroundPool foreground;
+    DispatcherSession dispatcher;
+    auto widget = std::make_shared<UIItem>();
+    EXPECT_TRUE(widget->isFixedItemSize());
+    widget->setRect(Rect(10, 20, 64, 64));
+    EXPECT_EQ(Rect(26, 36, 32, 32), itemDrawRect(*widget, 32));
+    for (const int side : {16, 32, 48, 64, 70, 96}) {
+        const Rect slot(10, 20, side, side);
+        widget->setRect(slot);
+        widget->setFixedItemSize(true);
+        EXPECT_EQ(side > 32 ? Rect(10 + (side - 32) / 2, 20 + (side - 32) / 2, 32, 32) : slot,
+                  itemDrawRect(*widget, 32));
+        widget->setFixedItemSize(false);
+        EXPECT_EQ(side < 32 || side % 32 == 0 ? slot : Rect(10, 20, 32, 32),
+                  itemDrawRect(*widget, 32));
+        EXPECT_EQ(slot, widget->getRect());
+    }
+    // Original-engine captures include rectangular slots and undersized axes.
+    widget->setRect(Rect(10, 20, 64, 48));
+    widget->setFixedItemSize(true);
+    EXPECT_EQ(Rect(26, 28, 32, 32), itemDrawRect(*widget, 32));
+    widget->setFixedItemSize(false);
+    EXPECT_EQ(Rect(10, 20, 32, 32), itemDrawRect(*widget, 32));
+    widget->setRect(Rect(10, 20, 64, 8));
+    EXPECT_EQ(widget->getRect(), itemDrawRect(*widget, 32));
+    widget->setFixedItemSize(true);
+    EXPECT_EQ(Rect(26, 8, 32, 32), itemDrawRect(*widget, 32));
+    widget->setRect(Rect(10, 20, 8, 64));
+    EXPECT_EQ(widget->getRect(), itemDrawRect(*widget, 32));
+    widget->setFixedItemSize(false);
+    EXPECT_EQ(widget->getRect(), itemDrawRect(*widget, 32));
+    widget->setFixedItemSize(true);
+    std::istringstream styleSource("FlexiblePreview\n  fixed-item-size: false\n");
+    const auto style = OTMLDocument::parse(styleSource, "item-fixed-size-regression");
+    widget->applyStyle(style->get("FlexiblePreview"));
+    EXPECT_FALSE(widget->isFixedItemSize());
+    widget->setRect(Rect(10, 20, 70, 70));
+    widget->setFlipDirection(1);
+    EXPECT_EQ(widget->getRect(), itemDrawRect(*widget, 32));
+    widget->destroy();
 }
 
 TEST_F(RuntimeEventTest, CreatureStyleUpdatesThePreviewOutfitAndDirection)
