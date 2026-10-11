@@ -86,20 +86,20 @@ end
 
 local function getCachedHasteSpell(words)
 	local spell
-	local var_7_1, var_7_2, var_7_3 = getCachedSpell(words, cachedHasteWords, cachedHasteSpell)
+	local resolvedSpell, updatedWords, updatedSpellCache = getCachedSpell(words, cachedHasteWords, cachedHasteSpell)
 
-	cachedHasteSpell = var_7_3
-	cachedHasteWords = var_7_2
+	cachedHasteSpell = updatedSpellCache
+	cachedHasteWords = updatedWords
 
-	return var_7_1
+	return resolvedSpell
 end
 
 local function getCachedManaTrainingSpell(words)
 	local unusedValue
-	local spell, var_8_2, var_8_3 = getCachedSpell(words, cachedManaTrainingWords, cachedManaTrainingSpell)
+	local spell, updatedWords, updatedSpellCache = getCachedSpell(words, cachedManaTrainingWords, cachedManaTrainingSpell)
 
-	cachedManaTrainingSpell = var_8_3
-	cachedManaTrainingWords = var_8_2
+	cachedManaTrainingSpell = updatedSpellCache
+	cachedManaTrainingWords = updatedWords
 
 	return spell
 end
@@ -112,7 +112,7 @@ local HASTE_SPELL_WORDS = {
 	["utani gran hur"] = true,
 	["utani hur"] = true
 }
-local var_0_26 = {
+local RUNE_CONJURATION_SPELL_WORDS = {
 	["adori san"] = true,
 	["adori mas vis"] = true,
 	["adori infir mas tera"] = true,
@@ -150,7 +150,7 @@ local var_0_26 = {
 	["adori min vis"] = true,
 	["adevo grav pox"] = true
 }
-local var_0_27 = {
+local OTHER_TRAINING_SPELL_WORDS = {
 	["exeta con"] = true,
 	["exevo con flam"] = true,
 	["exevo infir con"] = true,
@@ -421,40 +421,40 @@ local function spellSupportsPlayerVocation(allowedVocations)
 	return false
 end
 
-local function var_0_42(arg_23_0)
-	return (arg_23_0 and arg_23_0.words or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+local function getNormalizedSpellWords(spellData)
+	return (spellData and spellData.words or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
 end
 
-local function var_0_43(arg_24_0)
-	if not arg_24_0 then
+local function isRuneConjurationSpell(spellData)
+	if not spellData then
 		return false
 	end
 
-	if tonumber(arg_24_0.source) == BLANK_RUNE_ITEM_ID then
+	if tonumber(spellData.source) == BLANK_RUNE_ITEM_ID then
 		return true
 	end
 
-	return var_0_26[var_0_42(arg_24_0)] == true
+	return RUNE_CONJURATION_SPELL_WORDS[getNormalizedSpellWords(spellData)] == true
 end
 
-local function var_0_44(arg_25_0)
-	if not arg_25_0 then
+local function isOtherTrainingSpell(spellData)
+	if not spellData then
 		return false
 	end
 
-	return var_0_27[var_0_42(arg_25_0)] == true
+	return OTHER_TRAINING_SPELL_WORDS[getNormalizedSpellWords(spellData)] == true
 end
 
-local function var_0_45(arg_26_0)
-	if not arg_26_0 then
+local function hasBlankRune(player)
+	if not player then
 		return false
 	end
 
-	if arg_26_0.getItemsCount and arg_26_0:getItemsCount(BLANK_RUNE_ITEM_ID) > 0 then
+	if player.getItemsCount and player:getItemsCount(BLANK_RUNE_ITEM_ID) > 0 then
 		return true
 	end
 
-	if arg_26_0.getInventoryCount and arg_26_0:getInventoryCount(BLANK_RUNE_ITEM_ID, 0) > 0 then
+	if player.getInventoryCount and player:getInventoryCount(BLANK_RUNE_ITEM_ID, 0) > 0 then
 		return true
 	end
 
@@ -488,7 +488,7 @@ local function isHelperManaTrainingSpell(unusedArgument, spellData)
 		return false
 	end
 
-	if var_0_43(spellData) or var_0_44(spellData) then
+	if isRuneConjurationSpell(spellData) or isOtherTrainingSpell(spellData) then
 		return spellSupportsPlayerVocation(spellData.vocations)
 	end
 
@@ -881,7 +881,7 @@ local function runManaTraining()
 		return
 	end
 
-	if var_0_43(spell) and not var_0_45(lp) then
+	if isRuneConjurationSpell(spell) and not hasBlankRune(lp) then
 		return
 	end
 

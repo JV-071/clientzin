@@ -115,9 +115,9 @@ local function setupItemListScrollbar(itemList)
 	scroll:setMinimum(cache.SCROLL_MARKET_ITEMS.listMin or 0)
 
 	local var_3_1 = cache.SCROLL_MARKET_ITEMS.listFit or 8
-	local var_3_2 = #cache.SCROLL_MARKET_ITEMS.listData
+	local dataCount = #cache.SCROLL_MARKET_ITEMS.listData
 
-	scroll:setMaximum(math.max(0, var_3_2 - var_3_1 + 1))
+	scroll:setMaximum(math.max(0, dataCount - var_3_1 + 1))
 
 	function scroll.onValueChange(self, value, delta)
 		onItemListValueChange(self, value, delta)
@@ -2471,11 +2471,11 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		return
 	end
 
-	local var_109_0 = getTotalMoney()
+	local money = getTotalMoney()
 
 	if oldFocus then
 		local offer = sellOffers[cache.SCROLL_SELL_OFFERS.lastSelected]
-		local offerPrice = var_109_0 >= (offer and offer.price or 0) and "#c0c0c0" or "#808080"
+		local offerPrice = money >= (offer and offer.price or 0) and "#c0c0c0" or "#808080"
 
 		oldFocus:setBackgroundColor(oldFocus:getId())
 		oldFocus.piecePrice:setColor(offerPrice)
@@ -2501,7 +2501,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		unitPrice = 1
 	end
 
-	if var_109_0 < unitPrice then
+	if money < unitPrice then
 		mainMarket.sellAcceptButton:setEnabled(false)
 		updateSellCount(nil, 0)
 		setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 0, 0)
@@ -2509,7 +2509,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 		return
 	end
 
-	local maxValue = math.min(currentOffer.amount or 0, math.floor(var_109_0 / unitPrice))
+	local maxValue = math.min(currentOffer.amount or 0, math.floor(money / unitPrice))
 
 	mainMarket.amountSellScrollBar:setValue(1)
 	setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 1, maxValue)
@@ -2520,7 +2520,7 @@ function onSelectSellOffer(widget, selected, oldFocus)
 	local startValue = 1
 
 	if not table.empty(lastSelectedItem) and lastSelectedItem.itemId == 22118 then
-		local sellCount = math.floor(var_109_0 / (unitPrice * 25))
+		local sellCount = math.floor(money / (unitPrice * 25))
 
 		if sellCount > 0 then
 			setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 25, math.min(currentOffer.amount or 0, sellCount * 25))

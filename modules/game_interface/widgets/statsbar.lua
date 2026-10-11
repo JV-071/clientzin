@@ -1427,7 +1427,7 @@ function StatsBar.cancelPendingRefreshes()
 	statsBarQuickManaPending = false
 end
 
-local function var_0_67(arg_46_0, arg_46_1)
+local function scheduleCurrentStatsBarQuickInfo(arg_46_0, arg_46_1)
 	statsBarQuickHealthPending = statsBarQuickHealthPending or arg_46_0 == true
 	statsBarQuickManaPending = statsBarQuickManaPending or arg_46_1 == true
 
@@ -1449,11 +1449,11 @@ local function var_0_67(arg_46_0, arg_46_1)
 end
 
 function StatsBar.scheduleCurrentStatsBarHealthInfo()
-	var_0_67(true, false)
+	scheduleCurrentStatsBarQuickInfo(true, false)
 end
 
 function StatsBar.scheduleCurrentStatsBarManaInfo()
-	var_0_67(false, true)
+	scheduleCurrentStatsBarQuickInfo(false, true)
 end
 
 function StatsBar.scheduleCurrentStatsBarDeepInfo()

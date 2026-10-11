@@ -882,11 +882,11 @@ local function var_0_41(categoryName)
 	return 1
 end
 
-local function var_0_42(arg_49_0, arg_49_1)
+local function findCreaturePageInList(creatureData, arg_49_1)
 	arg_49_1 = normalizeRaceId(arg_49_1)
 
-	for iter_49_0 = 1, #arg_49_0 do
-		if normalizeRaceId(arg_49_0[iter_49_0].id) == arg_49_1 then
+	for iter_49_0 = 1, #creatureData do
+		if normalizeRaceId(creatureData[iter_49_0].id) == arg_49_1 then
 			return math.floor((iter_49_0 - 1) / BESTIARY_PAGE_SIZE) + 1
 		end
 	end
@@ -902,7 +902,7 @@ local function findCreaturePage(raceId, target)
 	end
 
 	if target and Cyclopedia.Bestiary.OverviewCache and Cyclopedia.Bestiary.OverviewCache[target] then
-		return var_0_42(Cyclopedia.Bestiary.OverviewCache[target], raceId)
+		return findCreaturePageInList(Cyclopedia.Bestiary.OverviewCache[target], raceId)
 	end
 
 	if Cyclopedia.Bestiary.Creatures and Cyclopedia.Bestiary.CreaturesCategory == target then
@@ -937,7 +937,7 @@ local function var_0_44(raceId, category)
 	end
 end
 
-local var_0_45 = 50
+local CREATURE_DETAIL_SHOW_DELAY = 50
 local creatureDetailShowEvent
 local creatureDetailShowToken = 0
 
@@ -1302,7 +1302,7 @@ local function var_0_58(raceId, token)
 			applyCreatureQuickPreview(raceId)
 			Cyclopedia.refreshBestiaryCharmUI()
 		end
-	end, var_0_45)
+	end, CREATURE_DETAIL_SHOW_DELAY)
 end
 
 local function openCreatureDetail(raceId, category)

@@ -1,4 +1,4 @@
-﻿local DETAIL_LABEL_COLUMN_WIDTH = 150
+local DETAIL_LABEL_COLUMN_WIDTH = 150
 local DETAIL_VALUE_COLUMN_GAP = 7
 local DETAIL_ROW_HEIGHT = 20
 local detailMeasureLabel
@@ -728,9 +728,9 @@ local function setInspectEquipmentSlot(slot, entry)
 			hideItemQuickLootIcon(itemWidget)
 
 			if ItemsDatabase and ItemsDatabase.setBigTier and entry.item.getTier then
-				local var_35_5 = isCharacterSelfInspect() and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
+				local overlordTierActive = isCharacterSelfInspect() and ItemsDatabase.OVERLORD_TIER_SLOTS[slot] and ItemsDatabase.isOverlordActive()
 
-				ItemsDatabase.setBigTier(itemWidget, entry.item:getTier() or 0, var_35_5)
+				ItemsDatabase.setBigTier(itemWidget, entry.item:getTier() or 0, overlordTierActive)
 			end
 		end
 	else
@@ -1159,37 +1159,37 @@ function openProficiency()
 	proficiencyMod.requestOpenWindow(item)
 end
 
-local function var_0_63()
+local function refreshInspectedOverlordTiers()
 	if not tibiaInspectCharacter or not tibiaInspectCharacter:isVisible() or not isCharacterSelfInspect() then
 		return
 	end
 
-	local var_58_0 = tibiaInspectCharacter.contentPanel and tibiaInspectCharacter.contentPanel.equipmentPanel
+	local equipmentPanel = tibiaInspectCharacter.contentPanel and tibiaInspectCharacter.contentPanel.equipmentPanel
 
-	if not var_58_0 or not ItemsDatabase or not ItemsDatabase.setBigTier then
+	if not equipmentPanel or not ItemsDatabase or not ItemsDatabase.setBigTier then
 		return
 	end
 
-	local var_58_1 = ItemsDatabase.isOverlordActive()
+	local overlordActive = ItemsDatabase.isOverlordActive()
 
-	for iter_58_0 in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
-		local var_58_2 = INSPECT_SLOT_WIDGETS[iter_58_0]
-		local var_58_3 = var_58_2 and var_58_0[var_58_2]
-		local equippedItem = var_58_3 and var_58_3:getChildById("equippedItem")
-		local var_58_5 = characterInventoryBySlot[iter_58_0]
+	for inventorySlot in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
+		local slotWidgetId = INSPECT_SLOT_WIDGETS[inventorySlot]
+		local slotWidget = slotWidgetId and equipmentPanel[slotWidgetId]
+		local equippedItem = slotWidget and slotWidget:getChildById("equippedItem")
+		local inventoryEntry = characterInventoryBySlot[inventorySlot]
 
-		if equippedItem and var_58_5 and var_58_5.item and var_58_5.item.getTier then
-			ItemsDatabase.setBigTier(equippedItem, var_58_5.item:getTier() or 0, var_58_1)
+		if equippedItem and inventoryEntry and inventoryEntry.item and inventoryEntry.item.getTier then
+			ItemsDatabase.setBigTier(equippedItem, inventoryEntry.item:getTier() or 0, overlordActive)
 		end
 	end
 end
 
-local function handleOtcToggle(arg_59_0)
-	if not OtcOpCode or arg_59_0 ~= OtcOpCode.OVERLORD_ACTIVE then
+local function handleOtcToggle(opcode)
+	if not OtcOpCode or opcode ~= OtcOpCode.OVERLORD_ACTIVE then
 		return
 	end
 
-	var_0_63()
+	refreshInspectedOverlordTiers()
 end
 
 function init()
@@ -1323,19 +1323,19 @@ function onInspection(inspectType, itemName, item, descriptions, imbuements)
 		tibiaInspect.contentPanel.name:setWidth(380)
 	end
 
-	local var_65_3 = tibiaInspect.contentPanel.item
+	local itemWidget = tibiaInspect.contentPanel.item
 
-	var_65_3:setItemId(item:getId())
-	hideItemQuickLootIcon(var_65_3)
+	itemWidget:setItemId(item:getId())
+	hideItemQuickLootIcon(itemWidget)
 
-	local displayItem = var_65_3:getItem()
+	local displayItem = itemWidget:getItem()
 
 	if displayItem and item.getTier then
 		displayItem:setTier(item:getTier())
 	end
 
 	if ItemsDatabase and ItemsDatabase.setBigTier then
-		ItemsDatabase.setBigTier(var_65_3, item.getTier and item:getTier() or 0)
+		ItemsDatabase.setBigTier(itemWidget, item.getTier and item:getTier() or 0)
 	end
 
 	tibiaInspect.contentPanel.name:setText(tr("You are inspecting:") .. " " .. (itemName or ""))

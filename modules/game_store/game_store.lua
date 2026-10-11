@@ -513,7 +513,7 @@ local var_0_82 = string.char(1)
 local var_0_83 = string.char(2)
 local var_0_84 = string.char(3)
 local var_0_85 = string.char(4)
-local var_0_86 = {
+local STORE_INLINE_ICONS = {
 	["{houseicon}"] = "65 0 13 13",
 	["{vocationlevelcheckicon}"] = "104 0 13 13",
 	["{storeinboxicon}"] = "52 0 13 13",
@@ -604,11 +604,11 @@ local htmlToStoreDescriptionLines = {
 		icon = "{accounticon}"
 	}
 }
-local var_0_88 = {}
+local STORE_DESCRIPTION_HINTS_BY_KEYWORD = {}
 local parts = {}
 
 for _, line in ipairs(htmlToStoreDescriptionLines) do
-	var_0_88[line.keyword] = line
+	STORE_DESCRIPTION_HINTS_BY_KEYWORD[line.keyword] = line
 
 	if not line.dynamic then
 		parts[line.text:lower()] = line
@@ -625,7 +625,7 @@ local function var_0_90(arg_32_0)
 	return arg_32_0
 end
 
-local function var_0_91(lineText, nextPos)
+local function matchStoreDescriptionIconTag(lineText, nextPos)
 	if lineText:byte(nextPos) ~= 123 then
 		return nil
 	end
@@ -633,7 +633,7 @@ local function var_0_91(lineText, nextPos)
 	local textAfterIcon = lineText:sub(nextPos):match("^(%{limit|%d+%})")
 
 	if textAfterIcon then
-		return "{limiticon}", var_0_86["{limiticon}"], nextPos + #textAfterIcon
+		return "{limiticon}", STORE_INLINE_ICONS["{limiticon}"], nextPos + #textAfterIcon
 	end
 
 	local panel = lineText:find("}", nextPos + 1, true)
@@ -642,11 +642,11 @@ local function var_0_91(lineText, nextPos)
 		return nil
 	end
 
-	local var_33_2 = lineText:sub(nextPos, panel)
-	local var_33_3 = var_0_86[var_33_2]
+	local tag = lineText:sub(nextPos, panel)
+	local clip = STORE_INLINE_ICONS[tag]
 
-	if var_33_3 then
-		return var_33_2, var_33_3, panel + 1
+	if clip then
+		return tag, clip, panel + 1
 	end
 
 	return nil
@@ -659,7 +659,7 @@ local function var_0_92(arg_34_0)
 		return false
 	end
 
-	return var_0_91(var_34_0, 1) ~= nil
+	return matchStoreDescriptionIconTag(var_34_0, 1) ~= nil
 end
 
 local function var_0_93(arg_35_0)
@@ -672,15 +672,15 @@ local function var_0_93(arg_35_0)
 	end
 
 	local var_35_0 = (arg_35_0:match("^%s*(.-)%s*$") or arg_35_0):gsub("^%-%s*", "")
-	local var_35_1 = var_35_0:match("^%{([^}]+)}%s*$") or var_35_0:match("^%{([^}]+)}%s+")
+	local tagBody = var_35_0:match("^%{([^}]+)}%s*$") or var_35_0:match("^%{([^}]+)}%s+")
 
-	if var_35_1 then
-		local var_35_2, var_35_3 = var_35_1:match("^([^|]+)|(%d+)$")
+	if tagBody then
+		local var_35_2, var_35_3 = tagBody:match("^([^|]+)|(%d+)$")
 
-		var_35_2 = var_35_2 or var_35_1
+		var_35_2 = var_35_2 or tagBody
 
 		local var_35_4 = var_35_2:lower()
-		local var_35_5 = var_0_88[var_35_4]
+		local var_35_5 = STORE_DESCRIPTION_HINTS_BY_KEYWORD[var_35_4]
 
 		if var_35_5 then
 			if var_35_5.dynamic and var_35_3 then
@@ -694,10 +694,10 @@ local function var_0_93(arg_35_0)
 	end
 
 	local var_35_7 = var_35_0:lower()
-	local var_35_8 = var_35_7:match("^maximum amount that can be owned by character: (%d+)$")
+	local limitAmount = var_35_7:match("^maximum amount that can be owned by character: (%d+)$")
 
-	if var_35_8 then
-		return "{limit|" .. var_35_8 .. "} maximum amount that can be owned by character: " .. var_35_8
+	if limitAmount then
+		return "{limit|" .. limitAmount .. "} maximum amount that can be owned by character: " .. limitAmount
 	end
 
 	local var_35_9 = parts[var_35_7]
@@ -724,26 +724,26 @@ local function htmlToStoreDescriptionLines(html)
 	html = html:gsub("</[pP]>%s*", "\n")
 	html = html:gsub("</?[bB]>", "")
 
-	local var_36_0 = {}
-	local var_36_1 = 1
+	local lines = {}
+	local from = 1
 
 	for iter_36_0 = 1, #html do
 		if html:byte(iter_36_0) == 10 then
-			table.insert(var_36_0, html:sub(var_36_1, iter_36_0 - 1))
+			table.insert(lines, html:sub(from, iter_36_0 - 1))
 
-			var_36_1 = iter_36_0 + 1
+			from = iter_36_0 + 1
 		end
 	end
 
-	if var_36_1 <= #html then
-		table.insert(var_36_0, html:sub(var_36_1))
+	if from <= #html then
+		table.insert(lines, html:sub(from))
 	end
 
-	for iter_36_1 = 1, #var_36_0 do
-		var_36_0[iter_36_1] = var_0_93(var_36_0[iter_36_1])
+	for iter_36_1 = 1, #lines do
+		lines[iter_36_1] = var_0_93(lines[iter_36_1])
 	end
 
-	return var_36_0
+	return lines
 end
 
 local function var_0_95(arg_37_0)
@@ -754,13 +754,13 @@ local marginLeft = 17
 local labelWidget
 
 local function var_0_98(arg_38_0)
-	local var_38_0 = arg_38_0:match("^%s*(.-)%s*$") or arg_38_0
+	local trimmed = arg_38_0:match("^%s*(.-)%s*$") or arg_38_0
 
-	if var_38_0:find("<i>") or var_38_0:find("<I>") then
+	if trimmed:find("<i>") or trimmed:find("<I>") then
 		return var_0_78
 	end
 
-	if var_38_0:find("<u>") or var_38_0:find("<U>") then
+	if trimmed:find("<u>") or trimmed:find("<U>") then
 		return var_0_79
 	end
 
@@ -786,7 +786,7 @@ local function var_0_99(arg_39_0, arg_39_1)
 	return labelWidget:getTextSize().width
 end
 
-local function var_0_100(arg_40_0)
+local function getStoreDescriptionScrollWidth(arg_40_0)
 	if not arg_40_0 then
 		return 200
 	end
@@ -796,44 +796,44 @@ local function var_0_100(arg_40_0)
 	return math.max(1, width)
 end
 
-local function var_0_101(arg_41_0, arg_41_1, arg_41_2, arg_41_3)
-	if not arg_41_0 or arg_41_0 == "" then
+local function var_0_101(plainText, fontName, totalWidth, firstLineWidth)
+	if not plainText or plainText == "" then
 		return {
 			""
 		}
 	end
 
-	local var_41_0 = {}
-	local var_41_1 = ""
-	local var_41_2 = arg_41_3
+	local lines = {}
+	local currentLine = ""
+	local maxWidth = firstLineWidth
 
-	for iter_41_0 in arg_41_0:gmatch("%S+") do
-		local var_41_3 = var_41_1 == "" and iter_41_0 or var_41_1 .. " " .. iter_41_0
+	for word in plainText:gmatch("%S+") do
+		local candidate = currentLine == "" and word or currentLine .. " " .. word
 
-		if var_41_2 >= var_0_99(var_41_3, arg_41_1) then
-			var_41_1 = var_41_3
-		elseif var_41_1 == "" then
-			table.insert(var_41_0, iter_41_0)
+		if maxWidth >= var_0_99(candidate, fontName) then
+			currentLine = candidate
+		elseif currentLine == "" then
+			table.insert(lines, word)
 
-			var_41_1 = ""
-			var_41_2 = arg_41_2
+			currentLine = ""
+			maxWidth = totalWidth
 		else
-			table.insert(var_41_0, var_41_1)
+			table.insert(lines, currentLine)
 
-			var_41_1 = iter_41_0
-			var_41_2 = arg_41_2
+			currentLine = word
+			maxWidth = totalWidth
 		end
 	end
 
-	if var_41_1 ~= "" then
-		table.insert(var_41_0, var_41_1)
+	if currentLine ~= "" then
+		table.insert(lines, currentLine)
 	end
 
-	if #var_41_0 == 0 then
-		table.insert(var_41_0, arg_41_0)
+	if #lines == 0 then
+		table.insert(lines, plainText)
 	end
 
-	return var_41_0
+	return lines
 end
 
 local function unusedValue(html)
@@ -849,10 +849,10 @@ local function unusedValue(html)
 end
 
 local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
-	local var_43_0 = arg_43_1:match("^%s*(.-)%s*$") or arg_43_1
-	local var_43_1 = var_43_0:find("<i>") or var_43_0:find("<I>")
-	local var_43_2 = var_43_0:find("<u>") or var_43_0:find("<U>")
-	local text = var_0_95(var_43_0)
+	local trimmed = arg_43_1:match("^%s*(.-)%s*$") or arg_43_1
+	local var_43_1 = trimmed:find("<i>") or trimmed:find("<I>")
+	local var_43_2 = trimmed:find("<u>") or trimmed:find("<U>")
+	local text = var_0_95(trimmed)
 
 	if text == "" then
 		arg_43_0:setText("")
@@ -872,7 +872,7 @@ local function var_0_103(arg_43_0, arg_43_1, arg_43_2)
 	arg_43_0:setColor(arg_43_2 or var_0_80)
 end
 
-local function var_0_104(parentWidget, arg_44_1, arg_44_2, imageClipRect)
+local function renderStoreDescriptionLineWidget(parentWidget, arg_44_1, arg_44_2, imageClipRect)
 	local storeDescriptionLineWidget = g_ui.createWidget("StoreDescriptionLine", parentWidget)
 
 	if not storeDescriptionLineWidget then
@@ -938,37 +938,37 @@ local function addStoreDescriptionLine(container, lineText, color)
 		return true
 	end
 
-	local unusedValue, var_45_4, var_45_5 = var_0_91(lineText, 1)
+	local unusedValue, clip, var_45_5 = matchStoreDescriptionIconTag(lineText, 1)
 
-	if var_45_4 then
+	if clip then
 		local var_45_6 = lineText:sub(var_45_5)
 		local var_45_7 = var_0_98(var_45_6)
 		local var_45_8 = var_0_95(var_45_6:match("^%s*(.-)%s*$") or var_45_6)
-		local var_45_9 = var_0_100(container)
-		local var_45_10 = math.max(1, var_45_9 - marginLeft)
-		local var_45_11 = var_0_101(var_45_8, var_45_7, var_45_9, var_45_10)
+		local totalWidth = getStoreDescriptionScrollWidth(container)
+		local var_45_10 = math.max(1, totalWidth - marginLeft)
+		local var_45_11 = var_0_101(var_45_8, var_45_7, totalWidth, var_45_10)
 		local var_45_12 = var_45_6:find("<i>") or var_45_6:find("<I>")
-		local var_45_13 = var_45_6:find("<u>") or var_45_6:find("<U>")
-		local var_45_14 = false
+		local hasUnderline = var_45_6:find("<u>") or var_45_6:find("<U>")
+		local added = false
 
 		for index, entry in ipairs(var_45_11) do
-			local var_45_15 = entry
+			local segmentText = entry
 
 			if var_45_12 then
-				var_45_15 = "<i>" .. entry .. "</i>"
-			elseif var_45_13 then
-				var_45_15 = "<u>" .. entry .. "</u>"
+				segmentText = "<i>" .. entry .. "</i>"
+			elseif hasUnderline then
+				segmentText = "<u>" .. entry .. "</u>"
 			end
 
-			if var_0_104(container, var_45_15, color, index == 1 and var_45_4 or nil) then
-				var_45_14 = true
+			if renderStoreDescriptionLineWidget(container, segmentText, color, index == 1 and clip or nil) then
+				added = true
 			end
 		end
 
-		return var_45_14
+		return added
 	end
 
-	return var_0_104(container, lineText, color, nil)
+	return renderStoreDescriptionLineWidget(container, lineText, color, nil)
 end
 
 local var_0_106
@@ -1081,15 +1081,15 @@ local function getPackageContents(product)
 	end
 
 	local capacity = product.subOffers or {}
-	local var_53_2 = #capacity - numericValue + 1
+	local startIndex = #capacity - numericValue + 1
 
-	if var_53_2 < 1 then
+	if startIndex < 1 then
 		return {}
 	end
 
 	local purchasable = {}
 
-	for i = var_53_2, #capacity do
+	for i = startIndex, #capacity do
 		table.insert(purchasable, capacity[i])
 	end
 

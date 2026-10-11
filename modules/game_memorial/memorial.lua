@@ -2,10 +2,10 @@ local rootWidget
 local contentTextList
 local goldenOutfitButton
 local royalCostumeButton
-local var_0_4
-local var_0_5
+local goldenOutfitMemorial
+local royalCostumeMemorial
 
-local function var_0_6(text, marginTop, width)
+local function addMemorialTextRow(text, marginTop, width)
 	if width and width > 0 then
 		local mEIndentedLabelRowWidget = g_ui.createWidget("MEIndentedLabelRow", contentTextList)
 
@@ -32,47 +32,47 @@ local function var_0_6(text, marginTop, width)
 	mEListLabelWidget:setText(text)
 end
 
-local function var_0_7(arg_2_0, arg_2_1, arg_2_2, arg_2_3)
+local function populateMemorial(memorialData, populatedHeader, emptyHeader, useTokenPrices)
 	contentTextList:destroyChildren()
 
-	local var_2_0 = #arg_2_0.base > 0 or #arg_2_0.addon1 > 0 or #arg_2_0.addon2 > 0
+	local hasEntries = #memorialData.base > 0 or #memorialData.addon1 > 0 or #memorialData.addon2 > 0
 
-	var_0_6(var_2_0 and arg_2_1 or arg_2_2, 0)
+	addMemorialTextRow(hasEntries and populatedHeader or emptyHeader, 0)
 
-	local function var_2_1(arg_3_0, arg_3_1)
-		if arg_2_3 then
-			return tr("%s for %s Silver Tokens and %s Gold Tokens:", arg_3_0, formatMoney(arg_3_1.silver), formatMoney(arg_3_1.gold))
+	local function formatMemorialPrice(outfitDescription, price)
+		if useTokenPrices then
+			return tr("%s for %s Silver Tokens and %s Gold Tokens:", outfitDescription, formatMoney(price.silver), formatMoney(price.gold))
 		end
 
-		return tr("%s for %s gold:", arg_3_0, formatMoney(arg_3_1))
+		return tr("%s for %s gold:", outfitDescription, formatMoney(price))
 	end
 
-	if #arg_2_0.addon2 > 0 then
-		var_0_6(var_2_1("Full Outfit", arg_2_0.price2), 12, 41)
+	if #memorialData.addon2 > 0 then
+		addMemorialTextRow(formatMemorialPrice("Full Outfit", memorialData.price2), 12, 41)
 
-		for unusedValue, entry in ipairs(arg_2_0.addon2) do
-			var_0_6("- " .. entry, -1, 57)
-		end
-	end
-
-	if #arg_2_0.addon1 > 0 then
-		var_0_6(var_2_1("With One Addon", arg_2_0.price1), 12, 41)
-
-		for unusedValue, entry in ipairs(arg_2_0.addon1) do
-			var_0_6("- " .. entry, -1, 57)
+		for unusedValue, entry in ipairs(memorialData.addon2) do
+			addMemorialTextRow("- " .. entry, -1, 57)
 		end
 	end
 
-	if #arg_2_0.base > 0 then
-		var_0_6(var_2_1("Basic Outfit", arg_2_0.price0), 12, 41)
+	if #memorialData.addon1 > 0 then
+		addMemorialTextRow(formatMemorialPrice("With One Addon", memorialData.price1), 12, 41)
 
-		for unusedValue, entry in ipairs(arg_2_0.base) do
-			var_0_6("- " .. entry, -1, 57)
+		for unusedValue, entry in ipairs(memorialData.addon1) do
+			addMemorialTextRow("- " .. entry, -1, 57)
+		end
+	end
+
+	if #memorialData.base > 0 then
+		addMemorialTextRow(formatMemorialPrice("Basic Outfit", memorialData.price0), 12, 41)
+
+		for unusedValue, entry in ipairs(memorialData.base) do
+			addMemorialTextRow("- " .. entry, -1, 57)
 		end
 	end
 end
 
-local function var_0_8()
+local function ensureMemorialWindow()
 	if rootWidget then
 		return true
 	end
@@ -92,7 +92,7 @@ local function var_0_8()
 	return true
 end
 
-local function var_0_9()
+local function showMemorialWindow()
 	if not rootWidget then
 		return
 	end
@@ -118,26 +118,26 @@ function closeMemorial()
 	rootWidget:hide()
 end
 
-local function handleOutfitMemorial(arg_7_0, arg_7_1)
-	var_0_4 = arg_7_0
-	var_0_5 = arg_7_1
+local function handleOutfitMemorial(goldenOutfitData, royalCostumeData)
+	goldenOutfitMemorial = goldenOutfitData
+	royalCostumeMemorial = royalCostumeData
 
-	if not var_0_8() then
+	if not ensureMemorialWindow() then
 		return
 	end
 
-	var_0_9()
+	showMemorialWindow()
 	selectGoldenPanel()
 end
 
 function selectGoldenPanel()
-	var_0_7(var_0_4, "The following characters have spent a fortune on a Golden Outfit:", "The Golden Outfit has not been acquired by anyone yet.", false)
+	populateMemorial(goldenOutfitMemorial, "The following characters have spent a fortune on a Golden Outfit:", "The Golden Outfit has not been acquired by anyone yet.", false)
 	goldenOutfitButton:setChecked(true)
 	royalCostumeButton:setChecked(false)
 end
 
 function selectRoyalPanel()
-	var_0_7(var_0_5, "The following characters have spent a fortune on a Royal Costume:", "The Royal Costume has not been acquired by anyone yet.", true)
+	populateMemorial(royalCostumeMemorial, "The following characters have spent a fortune on a Royal Costume:", "The Royal Costume has not been acquired by anyone yet.", true)
 	royalCostumeButton:setChecked(true)
 	goldenOutfitButton:setChecked(false)
 end

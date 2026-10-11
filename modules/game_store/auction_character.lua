@@ -1,11 +1,11 @@
-﻿local checksAuctionCharacterWindow
+local checksAuctionCharacterWindow
 local configAuctionCharacterWindow
 local auctionCharacterWindowStep = 0
 local auctionCharacterHeaderData
 local auctionCharacterConfigPanel = "none"
 local auctionCharacterItemsInventory
 local auctionCharacterItemsStore
-local var_0_7
+local auctionCharacterArguments
 local auctionCharacterItemsSearchFilter = ""
 local auctionCharacterHeaderSlots = {}
 local auctionCharacterNextSlot = 1
@@ -818,7 +818,7 @@ local function destroyAllAuctionCharacterWindows()
 	auctionCharacterArgumentListSelection = nil
 	auctionCharacterLastArgumentClick.row = nil
 	auctionCharacterLastArgumentClick.time = 0
-	var_0_7 = nil
+	auctionCharacterArguments = nil
 	auctionCharacterListSelection = nil
 	auctionCharacterLastItemClick.box = nil
 	auctionCharacterLastItemClick.time = 0
@@ -1516,7 +1516,7 @@ local function isAuctionCharacterArgumentEntryAssigned()
 
 	local var_91_0
 
-	for _, groupRow in ipairs(var_0_7) do
+	for _, groupRow in ipairs(auctionCharacterArguments) do
 		if groupRow.id == 4 or groupRow.title == "Store Items" then
 			var_91_0 = groupRow
 
@@ -1535,7 +1535,7 @@ local function isAuctionCharacterArgumentEntryAssigned()
 			entries = {}
 		}
 
-		table.insert(var_0_7, var_91_0)
+		table.insert(auctionCharacterArguments, var_91_0)
 	elseif not var_91_0.entries then
 		var_91_0.entries = {}
 	end
@@ -1558,7 +1558,7 @@ local function isAuctionCharacterArgumentEntryAssigned()
 		end
 	end
 
-	table.sort(var_0_7, function(a, b)
+	table.sort(auctionCharacterArguments, function(a, b)
 		local titleA = (a.title or ""):lower()
 		local titleB = (b.title or ""):lower()
 
@@ -1637,7 +1637,7 @@ local function syncAuctionCharacterNextArgumentSlot()
 	auctionCharacterNextArgumentSlot = 1
 end
 
-local function var_0_122(arg_99_0)
+local function assignAuctionCharacterArgumentToNextSlot(arg_99_0)
 	if not arg_99_0 then
 		return false
 	end
@@ -1665,7 +1665,7 @@ local function confirmAuctionCharacterArgumentFromList(entryData)
 		return
 	end
 
-	var_0_122(entryData)
+	assignAuctionCharacterArgumentToNextSlot(entryData)
 end
 
 local function bindAuctionCharacterArgumentEntryRow(entryRow, entryData, rowIndex)
@@ -1781,7 +1781,7 @@ local function fillAuctionCharacterArguments()
 
 	argumentsPanel:destroyChildren()
 
-	if type(var_0_7) ~= "table" then
+	if type(auctionCharacterArguments) ~= "table" then
 		return
 	end
 
@@ -1790,7 +1790,7 @@ local function fillAuctionCharacterArguments()
 	local listSelection = auctionCharacterArgumentListSelection
 	local globalRowIndex = 0
 
-	for _, argument in ipairs(var_0_7) do
+	for _, argument in ipairs(auctionCharacterArguments) do
 		local entries = argument.entries or {}
 		local visibleEntries = {}
 
@@ -1904,7 +1904,7 @@ end
 function selectArgumentAuctionCharacter()
 	showAuctionCharacterConfigPanel("argument")
 
-	if var_0_7 then
+	if auctionCharacterArguments then
 		fillAuctionCharacterArguments()
 	end
 end
@@ -2340,16 +2340,16 @@ function onAuctionCharacterArguments(arguments)
 		end
 	end
 
-	var_0_7 = {}
+	auctionCharacterArguments = {}
 
 	for _, argument in pairs(grouped) do
 		table.sort(argument.entries, function(a, b)
 			return (a.index or 0) < (b.index or 0)
 		end)
-		table.insert(var_0_7, argument)
+		table.insert(auctionCharacterArguments, argument)
 	end
 
-	table.sort(var_0_7, function(a, b)
+	table.sort(auctionCharacterArguments, function(a, b)
 		local titleA = (a.title or ""):lower()
 		local titleB = (b.title or ""):lower()
 

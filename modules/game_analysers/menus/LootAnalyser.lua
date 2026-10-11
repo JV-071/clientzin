@@ -14,10 +14,10 @@ if not LootAnalyser then
 end
 
 local targetMaxMargin = 142
-local var_0_1 = 3600000
-local var_0_2 = 4096
+local ROLLING_WINDOW_MS = 3600000
+local EVENT_COMPACTION_THRESHOLD = 4096
 
-local function var_0_3()
+local function createLootEventQueue()
 	return {
 		last = 0,
 		first = 1,
@@ -25,56 +25,56 @@ local function var_0_3()
 	}
 end
 
-local function var_0_4(arg_2_0, arg_2_1)
+local function recordLootEvent(itemId, count)
 	local lootEvents = LootAnalyser.lootEvents
 	local tick = g_clock.millis()
-	local var_2_2 = lootEvents.entries[lootEvents.last]
+	local lastEvent = lootEvents.entries[lootEvents.last]
 
-	if var_2_2 and var_2_2.itemId == arg_2_0 and math.floor(var_2_2.tick / 1000) == math.floor(tick / 1000) then
-		var_2_2.count = var_2_2.count + arg_2_1
-		var_2_2.tick = tick
+	if lastEvent and lastEvent.itemId == itemId and math.floor(lastEvent.tick / 1000) == math.floor(tick / 1000) then
+		lastEvent.count = lastEvent.count + count
+		lastEvent.tick = tick
 
 		return
 	end
 
 	lootEvents.last = lootEvents.last + 1
 	lootEvents.entries[lootEvents.last] = {
-		itemId = arg_2_0,
-		count = arg_2_1,
+		itemId = itemId,
+		count = count,
 		tick = tick
 	}
 end
 
-local function var_0_5()
+local function expireLootEvents()
 	local lootEvents = LootAnalyser.lootEvents
 
 	if not lootEvents then
 		return false
 	end
 
-	local var_3_1 = g_clock.millis() - var_0_1
-	local var_3_2 = false
+	local cutoffTime = g_clock.millis() - ROLLING_WINDOW_MS
+	local lootChanged = false
 
 	while lootEvents.first <= lootEvents.last do
-		local var_3_3 = lootEvents.entries[lootEvents.first]
+		local expiredEvent = lootEvents.entries[lootEvents.first]
 
-		if not var_3_3 or var_3_1 < var_3_3.tick then
+		if not expiredEvent or cutoffTime < expiredEvent.tick then
 			break
 		end
 
-		local var_3_4 = LootAnalyser.lootedItems[var_3_3.itemId]
+		local itemInfo = LootAnalyser.lootedItems[expiredEvent.itemId]
 
-		if var_3_4 then
-			local var_3_5 = math.min(var_3_4.count, var_3_3.count)
+		if itemInfo then
+			local expiredCount = math.min(itemInfo.count, expiredEvent.count)
 
-			var_3_4.count = var_3_4.count - var_3_5
-			LootAnalyser.goldValue = math.max(0, LootAnalyser.goldValue - var_3_4.basePrice * var_3_5)
+			itemInfo.count = itemInfo.count - expiredCount
+			LootAnalyser.goldValue = math.max(0, LootAnalyser.goldValue - itemInfo.basePrice * expiredCount)
 
-			if var_3_4.count <= 0 then
-				LootAnalyser.lootedItems[var_3_3.itemId] = nil
+			if itemInfo.count <= 0 then
+				LootAnalyser.lootedItems[expiredEvent.itemId] = nil
 			end
 
-			var_3_2 = true
+			lootChanged = true
 		end
 
 		lootEvents.entries[lootEvents.first] = nil
@@ -82,23 +82,23 @@ local function var_0_5()
 	end
 
 	if lootEvents.first > lootEvents.last then
-		LootAnalyser.lootEvents = var_0_3()
-	elseif lootEvents.first > var_0_2 and lootEvents.first > math.floor(lootEvents.last / 2) then
-		local compactedLootEvents = var_0_3()
+		LootAnalyser.lootEvents = createLootEventQueue()
+	elseif lootEvents.first > EVENT_COMPACTION_THRESHOLD and lootEvents.first > math.floor(lootEvents.last / 2) then
+		local compactedLootEvents = createLootEventQueue()
 
-		for iter_3_0 = lootEvents.first, lootEvents.last do
+		for eventIndex = lootEvents.first, lootEvents.last do
 			compactedLootEvents.last = compactedLootEvents.last + 1
-			compactedLootEvents.entries[compactedLootEvents.last] = lootEvents.entries[iter_3_0]
+			compactedLootEvents.entries[compactedLootEvents.last] = lootEvents.entries[eventIndex]
 		end
 
 		LootAnalyser.lootEvents = compactedLootEvents
 	end
 
-	if var_3_2 then
+	if lootChanged then
 		LootAnalyser.listDirty = true
 	end
 
-	return var_3_2
+	return lootChanged
 end
 
 local function parseLootTargetAmount(text)
@@ -158,7 +158,7 @@ function LootAnalyser.create(unusedArgument)
 	LootAnalyser.gaugeVisible = true
 	LootAnalyser.graphVisible = true
 	LootAnalyser.lootedItems = {}
-	LootAnalyser.lootEvents = var_0_3()
+	LootAnalyser.lootEvents = createLootEventQueue()
 	LootAnalyser.listDirty = false
 	LootAnalyser.forceUpdateBalance = false
 	LootAnalyser.updateBalance = true
@@ -255,7 +255,7 @@ function LootAnalyser.reset(unusedArgument)
 	LootAnalyser.goldHour = 0
 	LootAnalyser.target = 0
 	LootAnalyser.lootedItems = {}
-	LootAnalyser.lootEvents = var_0_3()
+	LootAnalyser.lootEvents = createLootEventQueue()
 	LootAnalyser.listDirty = false
 	LootAnalyser.forceUpdateBalance = false
 	LootAnalyser.updateBalance = true
@@ -298,10 +298,10 @@ function LootAnalyser.checkBalance(unusedArgument)
 	end
 
 	local oldGoldHour = LootAnalyser.goldHour
-	local var_20_3 = LootAnalyser:refreshGoldHour()
+	local lootEventsChanged = LootAnalyser:refreshGoldHour()
 
-	if LootAnalyser.updateBalance or LootAnalyser.listDirty or var_20_3 or oldBalance ~= LootAnalyser.goldValue or oldGoldHour ~= LootAnalyser.goldHour then
-		LootAnalyser:updateWindow(LootAnalyser.listDirty or var_20_3, true)
+	if LootAnalyser.updateBalance or LootAnalyser.listDirty or lootEventsChanged or oldBalance ~= LootAnalyser.goldValue or oldGoldHour ~= LootAnalyser.goldHour then
+		LootAnalyser:updateWindow(LootAnalyser.listDirty or lootEventsChanged, true)
 
 		LootAnalyser.updateBalance = false
 	end
@@ -379,21 +379,21 @@ function LootAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible)
 		end
 	end
 
-	local var_21_6
+	local rowCount
 
-	var_21_6 = not table.empty(LootAnalyser.lootedItems) and numOfLines + 1 or 0
+	rowCount = not table.empty(LootAnalyser.lootedItems) and numOfLines + 1 or 0
 
-	contentsPanel.lootedItems:setHeight(35 * (var_21_6 + (var_21_6 > 0 and numOfItems == 0 and -1 or 0)))
+	contentsPanel.lootedItems:setHeight(35 * (rowCount + (rowCount > 0 and numOfItems == 0 and -1 or 0)))
 
 	LootAnalyser.listDirty = false
 end
 
 function LootAnalyser.refreshGoldHour(unusedArgument)
-	local var_22_0 = var_0_5()
+	local lootEventsChanged = expireLootEvents()
 
-	LootAnalyser.goldHour = AnalyserSession:perHourFromTotal(LootAnalyser.goldValue, LootAnalyser.launchTime, var_0_1)
+	LootAnalyser.goldHour = AnalyserSession:perHourFromTotal(LootAnalyser.goldValue, LootAnalyser.launchTime, ROLLING_WINDOW_MS)
 
-	return var_22_0
+	return lootEventsChanged
 end
 
 function LootAnalyser.updateGraphics(self)
@@ -427,7 +427,7 @@ function LootAnalyser.addLootedItems(unusedArgument, item, name)
 	itemInfo.basePrice = basePrice
 	itemInfo.count = itemInfo.count + count
 
-	var_0_4(itemId, count)
+	recordLootEvent(itemId, count)
 
 	LootAnalyser.goldValue = LootAnalyser.goldValue + itemInfo.basePrice * count
 	LootAnalyser.updateBalance = true

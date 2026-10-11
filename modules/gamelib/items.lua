@@ -372,15 +372,15 @@ end
 function formatItemDuration(duration)
 	local hours = math.floor(duration / 86400)
 	local var_21_1 = math.floor(duration % 86400 / 3600)
-	local var_21_2 = math.floor(duration % 3600 / 60)
+	local minutes = math.floor(duration % 3600 / 60)
 	local seconds = duration % 60
 
 	if hours > 0 then
-		return string.format("%dd %dh %dmin", hours, var_21_1, var_21_2)
+		return string.format("%dd %dh %dmin", hours, var_21_1, minutes)
 	elseif var_21_1 > 0 then
-		return string.format("%dh %dmin", var_21_1, var_21_2)
-	elseif var_21_2 > 0 then
-		return string.format("%dmin", var_21_2)
+		return string.format("%dh %dmin", var_21_1, minutes)
+	elseif minutes > 0 then
+		return string.format("%dmin", minutes)
 	end
 
 	return string.format("%ds", seconds)

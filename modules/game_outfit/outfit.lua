@@ -14,7 +14,7 @@ local CYClOPEDIA_VIEW_TITLES = {
 local outfitwindowWidget
 local podiumContext
 local hirelingContext
-local var_0_9
+local appearanceGroup
 local colorModeGroup
 local colorBoxGroup
 local floor
@@ -1749,11 +1749,11 @@ local function applyGlobalColorCachesFromSettings()
 end
 
 local function getAppearanceCategoryName()
-	if not var_0_9 or not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings then
+	if not appearanceGroup or not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings then
 		return "outfit"
 	end
 
-	local w = var_0_9:getSelectedWidget()
+	local w = appearanceGroup:getSelectedWidget()
 
 	if not w then
 		return "outfit"
@@ -1951,7 +1951,7 @@ local function applyMountColorsToOutfitTable(outfitTable)
 end
 
 local function syncTempOutfitFromSelection()
-	if not outfitwindowWidget or not outfitwindowWidget.selectionList or not var_0_9 then
+	if not outfitwindowWidget or not outfitwindowWidget.selectionList or not appearanceGroup then
 		return
 	end
 
@@ -3056,14 +3056,14 @@ function onOpenHirelingOutfitWindow(player, outfitList, creatureId)
 	applyHirelingWindowMode()
 end
 
-local function var_0_185(arg_135_0)
-	if not arg_135_0 then
+local function hidePreviewOption(optionWidget)
+	if not optionWidget then
 		return
 	end
 
-	arg_135_0:setVisible(false)
-	arg_135_0:setHeight(0)
-	arg_135_0:setPadding(0)
+	optionWidget:setVisible(false)
+	optionWidget:setHeight(0)
+	optionWidget:setPadding(0)
 end
 
 function applyHirelingWindowMode()
@@ -3072,9 +3072,9 @@ function applyHirelingWindowMode()
 	end
 
 	outfitwindowWidget:setText(tr("Customise Hireling"))
-	var_0_185(outfitwindowWidget.preview.options.movement)
-	var_0_185(outfitwindowWidget.preview.options.showOutfit)
-	var_0_185(outfitwindowWidget.preview.options.showFamiliar)
+	hidePreviewOption(outfitwindowWidget.preview.options.movement)
+	hidePreviewOption(outfitwindowWidget.preview.options.showOutfit)
+	hidePreviewOption(outfitwindowWidget.preview.options.showFamiliar)
 
 	settings.movement = false
 
@@ -3111,10 +3111,10 @@ function applyHirelingWindowMode()
 	end
 
 	if outfitwindowWidget.configure then
-		var_0_185(outfitwindowWidget.configure.addon1)
-		var_0_185(outfitwindowWidget.configure.addon2)
-		var_0_185(outfitwindowWidget.configure.mount)
-		var_0_185(outfitwindowWidget.configure.aura)
+		hidePreviewOption(outfitwindowWidget.configure.addon1)
+		hidePreviewOption(outfitwindowWidget.configure.addon2)
+		hidePreviewOption(outfitwindowWidget.configure.mount)
+		hidePreviewOption(outfitwindowWidget.configure.aura)
 	end
 
 	if outfitwindowWidget.presetButtons then
@@ -3159,14 +3159,14 @@ function onOpenPlayerPodiumWindow(player, outfitList, creatureMount, mountList, 
 	applyPodiumWindowMode()
 end
 
-local function var_0_186(arg_138_0)
-	if not arg_138_0 then
+local function showConfigureOption(optionWidget)
+	if not optionWidget then
 		return
 	end
 
-	arg_138_0:setVisible(true)
-	arg_138_0:setHeight(22)
-	arg_138_0:setPadding(5)
+	optionWidget:setVisible(true)
+	optionWidget:setHeight(22)
+	optionWidget:setPadding(5)
 end
 
 function applyPodiumWindowMode()
@@ -3175,12 +3175,12 @@ function applyPodiumWindowMode()
 	end
 
 	outfitwindowWidget:setText(tr("Customise Podium"))
-	var_0_185(outfitwindowWidget.preview.options.movement)
-	var_0_185(outfitwindowWidget.preview.options.showOutfit)
-	var_0_185(outfitwindowWidget.preview.options.showFamiliar)
+	hidePreviewOption(outfitwindowWidget.preview.options.movement)
+	hidePreviewOption(outfitwindowWidget.preview.options.showOutfit)
+	hidePreviewOption(outfitwindowWidget.preview.options.showFamiliar)
 
 	if outfitwindowWidget.configure and outfitwindowWidget.configure.outfit and outfitwindowWidget.configure.outfit.check then
-		var_0_186(outfitwindowWidget.configure.outfit)
+		showConfigureOption(outfitwindowWidget.configure.outfit)
 		outfitwindowWidget.configure.addon1:setMarginTop(0)
 
 		podiumOutfitCheck = outfitwindowWidget.configure.outfit.check
@@ -3193,7 +3193,7 @@ function applyPodiumWindowMode()
 	end
 
 	if outfitwindowWidget.configure and outfitwindowWidget.configure.podium and outfitwindowWidget.configure.podium.check then
-		var_0_186(outfitwindowWidget.configure.podium)
+		showConfigureOption(outfitwindowWidget.configure.podium)
 
 		podiumPlatformCheck = outfitwindowWidget.configure.podium.check
 		podiumPlatformCheck.onCheckChange = onPodiumPlatformChange
@@ -3497,8 +3497,8 @@ function focusCyclopediaAppearanceSelection(pending)
 		familiars = outfitwindowWidget.appearance.settings.familiar.check
 	})[pending.tabType]
 
-	if var_0_9 and var_155_0 then
-		var_0_9:selectWidget(var_155_0)
+	if appearanceGroup and var_155_0 then
+		appearanceGroup:selectWidget(var_155_0)
 	end
 
 	local list = outfitwindowWidget.selectionList
@@ -3579,7 +3579,7 @@ function applyPendingCyclopediaFocus()
 	}
 	local tabWidget = tabWidgets[pending.tabType] or tabWidgets.outfits
 
-	var_0_9:selectWidget(tabWidget)
+	appearanceGroup:selectWidget(tabWidget)
 	addEvent(function()
 		if not outfitwindowWidget then
 			activeCyclopediaPending = nil
@@ -3789,19 +3789,19 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	end
 
 	colorBoxGroup.onSelectionChange = onColorCheckChange
-	var_0_9 = UIRadioGroup.create()
+	appearanceGroup = UIRadioGroup.create()
 
-	var_0_9:addWidget(outfitwindowWidget.appearance.settings.outfit.check)
-	var_0_9:addWidget(outfitwindowWidget.appearance.settings.mount.check)
+	appearanceGroup:addWidget(outfitwindowWidget.appearance.settings.outfit.check)
+	appearanceGroup:addWidget(outfitwindowWidget.appearance.settings.mount.check)
 
 	if outfitwindowWidget.appearance.settings.aura then
-		var_0_9:addWidget(outfitwindowWidget.appearance.settings.aura.check)
+		appearanceGroup:addWidget(outfitwindowWidget.appearance.settings.aura.check)
 	end
 
-	var_0_9:addWidget(outfitwindowWidget.appearance.settings.familiar.check)
-	var_0_9:addWidget(outfitwindowWidget.appearance.settings.preset.check)
+	appearanceGroup:addWidget(outfitwindowWidget.appearance.settings.familiar.check)
+	appearanceGroup:addWidget(outfitwindowWidget.appearance.settings.preset.check)
 
-	var_0_9.onSelectionChange = onAppearanceChange
+	appearanceGroup.onSelectionChange = onAppearanceChange
 
 	refreshAuraTabVisibility()
 
@@ -3811,7 +3811,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	handleCheckChange.bindRangeChecks()
 
 	if not cyclopediaPending then
-		var_0_9:selectWidget(outfitwindowWidget.appearance.settings.outfit.check)
+		appearanceGroup:selectWidget(outfitwindowWidget.appearance.settings.outfit.check)
 	end
 
 	colorModeGroup = UIRadioGroup.create()
@@ -3957,10 +3957,10 @@ function destroy(options)
 	previewPodiumItem = nil
 	podiumPreviewInitialized = false
 
-	if var_0_9 then
-		var_0_9:destroy()
+	if appearanceGroup then
+		appearanceGroup:destroy()
 
-		var_0_9 = nil
+		appearanceGroup = nil
 	end
 
 	if colorModeGroup then
@@ -4934,11 +4934,11 @@ function showAuras()
 end
 
 function refreshFilterListForCurrentColorChange()
-	if not var_0_9 or not outfitwindowWidget then
+	if not appearanceGroup or not outfitwindowWidget then
 		return
 	end
 
-	local selectedWidget = var_0_9:getSelectedWidget()
+	local selectedWidget = appearanceGroup:getSelectedWidget()
 
 	if not selectedWidget or not selectedWidget.getParent then
 		return
@@ -5121,24 +5121,24 @@ function updateAppearanceTexts(outfit)
 		end
 	end
 
-	local var_203_0 = {
+	local serverListKey = {
 		familiar = "familiars",
 		mount = "mounts"
 	}
 
 	for key, unusedValue in pairs(outfit) do
-		local var_203_1 = var_203_0[key] or key
+		local listKey = serverListKey[key] or key
 		local var_203_2 = key
 
 		if key == "type" then
-			var_203_1 = "outfits"
+			listKey = "outfits"
 			var_203_2 = "outfit"
 		end
 
-		local var_203_3 = ServerData[var_203_1]
+		local dataTable = ServerData[listKey]
 
-		if var_203_3 then
-			for unusedValue, entry in ipairs(var_203_3) do
+		if dataTable then
+			for unusedValue, entry in ipairs(dataTable) do
 				if (outfit[key] == entry[1] or outfit[key] == entry[2]) and var_203_2 and entry[2] then
 					updateAppearanceText(var_203_2, entry[2])
 				end

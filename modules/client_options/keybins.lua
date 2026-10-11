@@ -1,4 +1,4 @@
-﻿local actionNameLimit = 39
+local actionNameLimit = 39
 local changedOptions = {}
 local changedKeybinds = {}
 local changedHotkeys = {}
@@ -1070,13 +1070,13 @@ function revertKeybindChanges()
 end
 
 function applyChangedOptions()
-	local var_64_0 = false
+	local needKeybindsUpdate = false
 
 	for key, changedOption in pairs(changedOptions) do
 		if key == "resetKeybinds" then
 			Keybind.resetKeybindsToDefault(changedOption.value, changedOption.chatMode)
 
-			var_64_0 = true
+			needKeybindsUpdate = true
 		end
 	end
 
@@ -1092,7 +1092,7 @@ function applyChangedOptions()
 					clearCustomHotkeyConflicts(entry.primary.keyCombo, numericValue)
 					Keybind.setPrimaryActionKey(entry.primary.category, entry.primary.action, key, entry.primary.keyCombo, numericValue)
 
-					var_64_0 = true
+					needKeybindsUpdate = true
 				end
 
 				if entry.secondary then
@@ -1100,7 +1100,7 @@ function applyChangedOptions()
 					clearCustomHotkeyConflicts(entry.secondary.keyCombo, numericValue)
 					Keybind.setSecondaryActionKey(entry.secondary.category, entry.secondary.action, key, entry.secondary.keyCombo, numericValue)
 
-					var_64_0 = true
+					needKeybindsUpdate = true
 				end
 			end
 		end
@@ -1108,7 +1108,7 @@ function applyChangedOptions()
 
 	changedKeybinds = {}
 
-	if var_64_0 then
+	if needKeybindsUpdate then
 		if modules.game_console and modules.game_console.syncMovingKeys then
 			modules.game_console.syncMovingKeys()
 		end

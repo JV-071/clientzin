@@ -281,17 +281,17 @@ local function getEquippedItemCounts()
 end
 
 local function getSellablePlayerItemCount(itemId)
-	local var_17_0 = playerItems and playerItems[itemId] or 0
+	local total = playerItems and playerItems[itemId] or 0
 
-	if var_17_0 <= 0 then
+	if total <= 0 then
 		return 0
 	end
 
 	if sellEquipped then
-		return var_17_0
+		return total
 	end
 
-	local var_17_1 = var_17_0 - (getEquippedItemCounts()[itemId] or 0)
+	local var_17_1 = total - (getEquippedItemCounts()[itemId] or 0)
 
 	if var_17_1 < 0 then
 		var_17_1 = 0

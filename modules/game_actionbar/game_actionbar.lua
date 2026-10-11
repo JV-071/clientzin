@@ -504,12 +504,12 @@ end
 		equipmentTypeButtonWidget.typeIndex = typeIndex
 
 		if typeIndex > 0 then
-			local var_24_3 = actionbarState.EQUIPMENT_TYPE_OPTIONS[typeIndex]
+			local suffix = actionbarState.EQUIPMENT_TYPE_OPTIONS[typeIndex]
 
-			if var_24_3 then
+			if suffix then
 				local typeIcon = equipmentTypeButtonWidget:getChildById("typeIcon")
 
-				typeIcon:setImageSource(actionbarState.EQUIPMENT_TYPE_ICON_BASE .. var_24_3)
+				typeIcon:setImageSource(actionbarState.EQUIPMENT_TYPE_ICON_BASE .. suffix)
 				typeIcon:show()
 			end
 		end
@@ -525,9 +525,9 @@ end
 		actionbarState.equipmentAssignTypeRadioGroup:selectWidget(var_24_1, true)
 	end
 
-	 actionbarState.equipmentAssignTypeRadioGroup.onSelectionChange = function(unusedArgument, arg_25_1)
-		if arg_25_1 and arg_25_1.typeIndex ~= nil then
-			actionbarState.equipmentAssignTypeIndex = arg_25_1.typeIndex
+	 actionbarState.equipmentAssignTypeRadioGroup.onSelectionChange = function(unusedArgument, selected)
+		if selected and selected.typeIndex ~= nil then
+			actionbarState.equipmentAssignTypeIndex = selected.typeIndex
 		else
 			actionbarState.equipmentAssignTypeIndex = 0
 		end
@@ -560,13 +560,13 @@ end
 		return nil
 	end
 
-	local var_28_0 = actionbarState.EQUIPMENT_TYPE_OPTIONS[arg_28_0]
+	local suffix = actionbarState.EQUIPMENT_TYPE_OPTIONS[arg_28_0]
 
-	if not var_28_0 then
+	if not suffix then
 		return nil
 	end
 
-	return actionbarState.EQUIPMENT_TYPE_ICON_BASE .. var_28_0
+	return actionbarState.EQUIPMENT_TYPE_ICON_BASE .. suffix
 end
 
   actionbarState.ensureEquipmentTypeIconWidget = function(parentWidget)
@@ -1044,9 +1044,9 @@ function EAssign.resolveRightSlotEntry(slot)
 		return slot, false
 	end
 
-	local var_54_0 = EAssign.draftLeftHandItem()
+	local leftItem = EAssign.draftLeftHandItem()
 
-	if var_54_0 and EAssign.isDualWielding(var_54_0) then
+	if leftItem and EAssign.isDualWielding(leftItem) then
 		return actionbarState.equipmentAssignDraft[InventorySlotLeft], true
 	end
 
@@ -1058,28 +1058,28 @@ function EAssign.reconcileHandSlots()
 		return
 	end
 
-	local var_55_0 = EAssign.draftLeftHandItem()
-	local var_55_1 = actionbarState.equipmentAssignDraft[InventorySlotRight]
+	local leftItem = EAssign.draftLeftHandItem()
+	local rightEntry = actionbarState.equipmentAssignDraft[InventorySlotRight]
 
-	if not var_55_1 then
+	if not rightEntry then
 		return
 	end
 
-	local var_55_2 = actionbarState.equipmentEntryToItem(var_55_1)
+	local rightItem = actionbarState.equipmentEntryToItem(rightEntry)
 
-	if var_55_0 and EAssign.isDualWielding(var_55_0) then
+	if leftItem and EAssign.isDualWielding(leftItem) then
 		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 
 		return
 	end
 
-	if var_55_0 and EAssign.blocksShieldSlot(var_55_0) then
+	if leftItem and EAssign.blocksShieldSlot(leftItem) then
 		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 
 		return
 	end
 
-	if var_55_2 and var_55_0 and EAssign.isBowOrCrossbow(var_55_0) and EAssign.isShield(var_55_2) then
+	if rightItem and leftItem and EAssign.isBowOrCrossbow(leftItem) and EAssign.isShield(rightItem) then
 		actionbarState.equipmentAssignDraft[InventorySlotRight] = nil
 	end
 end
@@ -1257,21 +1257,21 @@ end
 	end
 
 	if arg_65_1 == InventorySlotRight then
-		local var_65_1 = EAssign.draftLeftHandItem()
+		local leftItem = EAssign.draftLeftHandItem()
 
-		if var_65_1 and EAssign.isBowOrCrossbow(var_65_1) then
+		if leftItem and EAssign.isBowOrCrossbow(leftItem) then
 			return EAssign.isQuiver(arg_65_0)
 		end
 
 		if EAssign.isQuiver(arg_65_0) then
-			return not var_65_1 or not EAssign.blocksShieldSlot(var_65_1)
+			return not leftItem or not EAssign.blocksShieldSlot(leftItem)
 		end
 
 		if not EAssign.isShield(arg_65_0) then
 			return false
 		end
 
-		return not var_65_1 or not EAssign.blocksShieldSlot(var_65_1)
+		return not leftItem or not EAssign.blocksShieldSlot(leftItem)
 	end
 
 	if arg_65_1 == InventorySlotLeft then
@@ -1766,8 +1766,8 @@ end
 	end
 end
 
-  actionbarState.scheduleSlotGrayRefresh = function(arg_99_0)
-	slotGrayFullRefreshPending = slotGrayFullRefreshPending or arg_99_0 == true
+  actionbarState.scheduleSlotGrayRefresh = function(fullRefresh)
+	slotGrayFullRefreshPending = slotGrayFullRefreshPending or fullRefresh == true
 
 	if actionbarState.slotGrayRefreshEvent then
 		return
@@ -1778,14 +1778,14 @@ end
 	actionbarState.slotGrayRefreshEvent = scheduleEvent(function()
 		actionbarState.slotGrayRefreshEvent = nil
 
-		local var_100_0 = slotGrayFullRefreshPending
-		local var_100_1 = slotGrayInventoryRefreshPending
-		local var_100_2 = next(slotGrayStatsPendingSlots) ~= nil
+		local runFullRefresh = slotGrayFullRefreshPending
+		local runInventoryRefresh = slotGrayInventoryRefreshPending
+		local runStatsRefresh = next(slotGrayStatsPendingSlots) ~= nil
 
 		slotGrayFullRefreshPending = false
 		slotGrayInventoryRefreshPending = false
 
-		if var_100_0 then
+		if runFullRefresh then
 			slotGrayStatsPendingSlots = {}
 
 			updateSlotsVocation()
@@ -1797,16 +1797,16 @@ end
 			actionbarState.refreshSpellAssignPreviewIfOpen()
 			actionbarState.refreshAllEquipmentAssignSlots()
 		else
-			if var_100_1 and updateInventoryDependentActionSlots then
+			if runInventoryRefresh and updateInventoryDependentActionSlots then
 				updateInventoryDependentActionSlots()
 			end
 
-			if var_100_2 and updateStatsDependentSlotGray then
+			if runStatsRefresh and updateStatsDependentSlotGray then
 				updateStatsDependentSlotGray()
 			end
 		end
 
-		if var_100_0 or var_100_2 and spellAssignWindow then
+		if runFullRefresh or runStatsRefresh and spellAssignWindow then
 			refreshAssignSpellListGrayOverlays()
 		end
 	end, 50)
@@ -1824,13 +1824,13 @@ end
 
   actionbarState.onLocalPlayerManaChange = function(unusedArgument, arg_103_1, unusedArgument, arg_103_3, unusedArgument)
 	local numericValue = tonumber(arg_103_1)
-	local var_103_1 = tonumber(arg_103_3)
+	local previousMana = tonumber(arg_103_3)
 
-	if not numericValue or not var_103_1 or numericValue == var_103_1 then
+	if not numericValue or not previousMana or numericValue == previousMana then
 		return
 	end
 
-	local var_103_2 = false
+	local crossedThreshold = false
 
 	for iter_103_0 = 1, NUM_BARS do
 		local slots = actionBarPanels[iter_103_0]
@@ -1839,15 +1839,15 @@ end
 			for slotKey, setting in pairs(slots:getChildren()) do
 				local grayManaCost = setting.grayManaCost
 
-				if grayManaCost and grayManaCost > 0 and (var_103_1 < grayManaCost and grayManaCost <= numericValue or grayManaCost <= var_103_1 and numericValue < grayManaCost) then
+				if grayManaCost and grayManaCost > 0 and (previousMana < grayManaCost and grayManaCost <= numericValue or grayManaCost <= previousMana and numericValue < grayManaCost) then
 					slotGrayStatsPendingSlots[setting] = true
-					var_103_2 = true
+					crossedThreshold = true
 				end
 			end
 		end
 	end
 
-	if var_103_2 then
+	if crossedThreshold then
 		actionbarState.scheduleSlotGrayRefresh(false)
 	end
 end
@@ -1893,53 +1893,53 @@ end
 		return text
 	end
 
-	local var_106_1 = "..."
+	local dots = "..."
 
-	arg_106_0:setText(var_106_1)
+	arg_106_0:setText(dots)
 
 	local textSize = arg_106_0:getTextSize()
 	local var_106_3 = textSize and textSize.width or actionbarState.SPELL_PARAM_MAX_WIDTH_PX
 	local var_106_4 = actionbarState.SPELL_PARAM_MAX_WIDTH_PX - var_106_3
 
 	if var_106_4 <= 0 then
-		return var_106_1
+		return dots
 	end
 
-	local var_106_5 = 1
-	local var_106_6 = #text
-	local var_106_7 = ""
+	local lo = 1
+	local hi = #text
+	local best = ""
 
-	while var_106_5 <= var_106_6 do
-		local var_106_8 = math.floor((var_106_5 + var_106_6) / 2)
-		local text = string.sub(text, 1, var_106_8)
+	while lo <= hi do
+		local mid = math.floor((lo + hi) / 2)
+		local text = string.sub(text, 1, mid)
 
 		arg_106_0:setText(text)
 
 		if var_106_4 >= arg_106_0:getTextSize().width then
-			var_106_7 = text
-			var_106_5 = var_106_8 + 1
+			best = text
+			lo = mid + 1
 		else
-			var_106_6 = var_106_8 - 1
+			hi = mid - 1
 		end
 	end
 
-	if var_106_7 == "" then
-		return var_106_1
+	if best == "" then
+		return dots
 	end
 
-	local text = var_106_7 .. var_106_1
+	local text = best .. dots
 
 	arg_106_0:setText(text)
 
-	local var_106_11 = 0
+	local guard = 0
 
-	while var_106_7 ~= "" and arg_106_0:getTextSize().width > actionbarState.SPELL_PARAM_MAX_WIDTH_PX and var_106_11 < 64 do
-		var_106_7 = string.sub(var_106_7, 1, #var_106_7 - 1)
-		text = var_106_7 ~= "" and var_106_7 .. var_106_1 or var_106_1
+	while best ~= "" and arg_106_0:getTextSize().width > actionbarState.SPELL_PARAM_MAX_WIDTH_PX and guard < 64 do
+		best = string.sub(best, 1, #best - 1)
+		text = best ~= "" and best .. dots or dots
 
 		arg_106_0:setText(text)
 
-		var_106_11 = var_106_11 + 1
+		guard = guard + 1
 	end
 
 	return text
@@ -1983,7 +1983,7 @@ function refreshActionSlotInventoryQuantity(slot)
 
 	local lbl = slot:getChildById("count")
 
-	local function var_108_1()
+	local function hideCountLabel()
 		if lbl then
 			lbl:setVisible(false)
 			lbl:setText("")
@@ -1991,28 +1991,28 @@ function refreshActionSlotInventoryQuantity(slot)
 	end
 
 	if slot.text or slot.passiveId or isHelperActionSlot(slot) or isMultiHelperSlot(slot) then
-		var_108_1()
+		hideCountLabel()
 		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if slot.words and slot.words ~= "" then
-		var_108_1()
+		hideCountLabel()
 		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if actionbarState.isActionSlotEquip(slot) and actionbarState.isActionSlotEquipmentPreset(slot) then
-		var_108_1()
+		hideCountLabel()
 		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
 	end
 
 	if not slot.itemId or slot.itemId <= 0 then
-		var_108_1()
+		hideCountLabel()
 		actionbarState.refreshActionSlotSpellParameter(slot)
 
 		return
@@ -4302,9 +4302,9 @@ end
 			var_210_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
 			var_210_0:addAnchor(AnchorRight, "parent", AnchorRight)
 
-			local var_210_1, var_210_2 = actionbarState[156](iter_210_1)
+			local targetId, targetEdge = actionbarState[156](iter_210_1)
 
-			var_210_0:addAnchor(AnchorTop, var_210_1, var_210_2)
+			var_210_0:addAnchor(AnchorTop, targetId, targetEdge)
 		end
 	end
 
@@ -4460,19 +4460,19 @@ end
 	local bar
 
 	if actionbarState.isSideBar(barId) then
-		local var_218_2
+		local container
 
 		if actionbarState.isLeftBar(barId) then
-			var_218_2 = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
+			container = modules.game_interface.getActionBarLeftPanel and modules.game_interface.getActionBarLeftPanel()
 		else
-			var_218_2 = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
+			container = modules.game_interface.getActionBarRightPanel and modules.game_interface.getActionBarRightPanel()
 		end
 
-		if not var_218_2 then
+		if not container then
 			return nil
 		end
 
-		var_218_0, bar = pcall(g_ui.loadUI, "game_actionbar_side", var_218_2)
+		var_218_0, bar = pcall(g_ui.loadUI, "game_actionbar_side", container)
 	else
 		var_218_0, bar = pcall(g_ui.loadUI, "game_actionbar", bottomPanel)
 	end
@@ -4503,18 +4503,18 @@ end
 	end
 
 	if actionbarState.isSideBar(barId) then
-		local var_218_3 = barWidgetChild(bar, "verticalScroll")
+		local vScroll = barWidgetChild(bar, "verticalScroll")
 
-		if var_218_3 then
-			function var_218_3.onMouseWheel()
+		if vScroll then
+			function vScroll.onMouseWheel()
 				return true
 			end
 		end
 	else
-		local var_218_4 = barWidgetChild(bar, "horizontalScroll")
+		local hScroll = barWidgetChild(bar, "horizontalScroll")
 
-		if var_218_4 then
-			function var_218_4.onMouseWheel()
+		if hScroll then
+			function hScroll.onMouseWheel()
 				return true
 			end
 		end
@@ -7719,11 +7719,11 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 
 	previewItem:setItemCount(1)
 
-	local var_347_2
-	local var_347_3 = actionbarState.isEquippableActionBarItem(item)
-	local var_347_4 = item:isMultiUse()
+	local defaultWidget
+	local equippable = actionbarState.isEquippableActionBarItem(item)
+	local multiUse = item:isMultiUse()
 
-	if var_347_3 and var_347_4 then
+	if equippable and multiUse then
 		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
@@ -7731,8 +7731,8 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		actionbarState.styleAssignObjectCheckbox("equipCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useCheckbox", false)
 
-		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
-	elseif var_347_3 then
+		defaultWidget = objectAssignWindow:getChildById("equipCheckbox")
+	elseif equippable then
 		actionbarState.styleAssignObjectCheckbox("equipCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", false)
@@ -7740,8 +7740,8 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
 		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
-		var_347_2 = objectAssignWindow:getChildById("equipCheckbox")
-	elseif var_347_4 then
+		defaultWidget = objectAssignWindow:getChildById("equipCheckbox")
+	elseif multiUse then
 		actionbarState.styleAssignObjectCheckbox("useOnYourselfCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useOnTargetCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", true)
@@ -7749,7 +7749,7 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		actionbarState.styleAssignObjectCheckbox("equipCheckbox", false)
 		actionbarState.styleAssignObjectCheckbox("useCheckbox", false)
 
-		var_347_2 = objectAssignWindow:getChildById("useOnYourselfCheckbox")
+		defaultWidget = objectAssignWindow:getChildById("useOnYourselfCheckbox")
 	else
 		actionbarState.styleAssignObjectCheckbox("useCheckbox", true)
 		actionbarState.styleAssignObjectCheckbox("equipCheckbox", false)
@@ -7758,10 +7758,10 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		actionbarState.styleAssignObjectCheckbox("useWithCrosshairCheckbox", false)
 		actionbarState.styleAssignObjectCheckbox("useCursorPositionCheckbox", false)
 
-		var_347_2 = objectAssignWindow:getChildById("useCheckbox")
+		defaultWidget = objectAssignWindow:getChildById("useCheckbox")
 	end
 
-	local var_347_5 = {
+	local preferredMap = {
 		useWith = "useWithCrosshairCheckbox",
 		useOnSelf = "useOnYourselfCheckbox",
 		useAtCursor = "useCursorPositionCheckbox",
@@ -7769,22 +7769,22 @@ function populateObjectAssignWindowFromItem(item, preferredUseType, tierOverride
 		equip = "equipCheckbox",
 		useOnTarget = "useOnTargetCheckbox"
 	}
-	local var_347_6 = var_347_2
+	local chosen = defaultWidget
 
 	if preferredUseType then
-		local var_347_7 = var_347_5[preferredUseType]
+		local prefId = preferredMap[preferredUseType]
 
-		if var_347_7 then
-			local childById = objectAssignWindow:getChildById(var_347_7)
+		if prefId then
+			local childById = objectAssignWindow:getChildById(prefId)
 
 			if childById and childById:isEnabled() then
-				var_347_6 = childById
+				chosen = childById
 			end
 		end
 	end
 
-	if var_347_6 then
-		actionRadioGroup:selectWidget(var_347_6)
+	if chosen then
+		actionRadioGroup:selectWidget(chosen)
 	end
 
 	actionbarState.updateSmartModeAssignCheckboxState(item, assignContext)

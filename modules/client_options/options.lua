@@ -2210,18 +2210,18 @@ function cycleHotkeyPreset(arg_92_0)
 
 	arg_92_0 = arg_92_0 or 1
 
-	local var_92_2 = var_92_0[(var_92_1 - 1 + arg_92_0) % #var_92_0 + 1]
+	local nextPreset = var_92_0[(var_92_1 - 1 + arg_92_0) % #var_92_0 + 1]
 
-	if not var_92_2 or var_92_2 == Keybind.currentPreset then
+	if not nextPreset or nextPreset == Keybind.currentPreset then
 		return
 	end
 
-	Keybind.selectPreset(var_92_2)
+	Keybind.selectPreset(nextPreset)
 
 	local var_92_3 = controller and controller.ui and controller.ui:isVisible()
 
 	if panels and panels.keybindsPanel and panels.keybindsPanel.presets and panels.keybindsPanel.presets.list then
-		panels.keybindsPanel.presets.list:setCurrentOption(var_92_2, true)
+		panels.keybindsPanel.presets.list:setCurrentOption(nextPreset, true)
 
 		if var_92_3 and updateKeybinds then
 			updateKeybinds()
@@ -2231,10 +2231,10 @@ function cycleHotkeyPreset(arg_92_0)
 	end
 
 	if CustomHotkeys and CustomHotkeys.syncPresetFromGeneral then
-		CustomHotkeys.syncPresetFromGeneral(var_92_2)
+		CustomHotkeys.syncPresetFromGeneral(nextPreset)
 	end
 
-	showPresetNotification(string.format("Switched to hotkey preset '%s'", var_92_2))
+	showPresetNotification(string.format("Switched to hotkey preset '%s'", nextPreset))
 end
 
 controller = Controller:new()

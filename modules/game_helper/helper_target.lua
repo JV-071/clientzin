@@ -1349,20 +1349,20 @@ local function updateProtectionZoneAutoTarget()
 		return
 	end
 
-	local var_83_1 = localPlayer:isInProtectionZone()
+	local inPz = localPlayer:isInProtectionZone()
 
 	if not isTargetPzAutoEnabled() then
-		local var_83_2 = targetEnabledBeforePz == true
+		local wasPaused = targetEnabledBeforePz == true
 
 		targetEnabledBeforePz = false
 
-		if var_83_1 then
+		if inPz then
 			local var_83_3 = widget("enableTargetCheckBox")
-			local var_83_4 = var_83_2 or var_83_3 and var_83_3:isChecked()
+			local changed = wasPaused or var_83_3 and var_83_3:isChecked()
 
 			blockTargetEnableInProtectionZone(true)
 
-			if var_83_4 then
+			if changed then
 				saveConfigIfReady()
 			end
 		else
@@ -1372,7 +1372,7 @@ local function updateProtectionZoneAutoTarget()
 		setTargetCheckEnabled(true)
 
 		if not var_0_99() then
-			wasInProtectionZone = var_83_1
+			wasInProtectionZone = inPz
 
 			if modules.game_helper and modules.game_helper.refreshHelperStats then
 				modules.game_helper.refreshHelperStats()
@@ -1382,7 +1382,7 @@ local function updateProtectionZoneAutoTarget()
 		end
 
 		if isTargetPzAutoEnabled() then
-			if var_83_1 and not wasInProtectionZone then
+			if inPz and not wasInProtectionZone then
 				local var_83_5 = widget("enableTargetCheckBox")
 
 				if var_83_5 and var_83_5:isChecked() then
@@ -1401,7 +1401,7 @@ local function updateProtectionZoneAutoTarget()
 				else
 					targetEnabledBeforePz = false
 				end
-			elseif not var_83_1 and wasInProtectionZone and targetEnabledBeforePz then
+			elseif not inPz and wasInProtectionZone and targetEnabledBeforePz then
 				targetEnabledBeforePz = false
 
 				local var_83_6 = widget("enableTargetCheckBox")
@@ -1414,12 +1414,12 @@ local function updateProtectionZoneAutoTarget()
 					suppressTargetCheckChange = false
 				end
 			end
-		elseif not var_83_1 then
+		elseif not inPz then
 			targetEnabledBeforePz = false
 		end
 	end
 
-	wasInProtectionZone = var_83_1
+	wasInProtectionZone = inPz
 
 	if modules.game_helper and modules.game_helper.refreshHelperStats then
 		modules.game_helper.refreshHelperStats()
@@ -1949,47 +1949,47 @@ local function getSelectedRemovableTargetRow()
 	return nil
 end
 
-local function var_0_122()
+local function resetTargetActionButtonsState()
 	targetActionButtonsState = nil
 end
 
 local function syncTargetActionButtons()
-	local var_112_0 = widget("targetAddBtn")
-	local var_112_1 = widget("targetEditBtn")
-	local var_112_2 = widget("targetRemoveBtn")
+	local addBtn = widget("targetAddBtn")
+	local editBtn = widget("targetEditBtn")
+	local removeBtn = widget("targetRemoveBtn")
 
-	if not var_112_0 or not var_112_1 or not var_112_2 then
+	if not addBtn or not editBtn or not removeBtn then
 		return
 	end
 
-	local var_112_3 = getSelectedRemovableTargetRow() ~= nil
-	local var_112_4 = var_112_3 and "actions" or "default"
+	local showActions = getSelectedRemovableTargetRow() ~= nil
+	local stateKey = showActions and "actions" or "default"
 
-	if targetActionButtonsState == var_112_4 then
+	if targetActionButtonsState == stateKey then
 		return
 	end
 
-	targetActionButtonsState = var_112_4
+	targetActionButtonsState = stateKey
 
-	var_112_0:setEnabled(true)
+	addBtn:setEnabled(true)
 
-	if var_112_3 then
-		var_112_2:show()
-		var_112_1:show()
-		var_112_0:breakAnchors()
-		var_112_0:addAnchor(AnchorTop, "parent", AnchorTop)
-		var_112_0:addAnchor(AnchorRight, "targetEditBtn", AnchorLeft)
-		var_112_0:setMarginRight(6)
-		var_112_1:setEnabled(true)
-		var_112_2:setEnabled(true)
-		var_112_2:setMarginRight(0)
+	if showActions then
+		removeBtn:show()
+		editBtn:show()
+		addBtn:breakAnchors()
+		addBtn:addAnchor(AnchorTop, "parent", AnchorTop)
+		addBtn:addAnchor(AnchorRight, "targetEditBtn", AnchorLeft)
+		addBtn:setMarginRight(6)
+		editBtn:setEnabled(true)
+		removeBtn:setEnabled(true)
+		removeBtn:setMarginRight(0)
 	else
-		var_112_2:hide()
-		var_112_1:hide()
-		var_112_0:breakAnchors()
-		var_112_0:addAnchor(AnchorTop, "parent", AnchorTop)
-		var_112_0:addAnchor(AnchorRight, "parent", AnchorRight)
-		var_112_0:setMarginRight(0)
+		removeBtn:hide()
+		editBtn:hide()
+		addBtn:breakAnchors()
+		addBtn:addAnchor(AnchorTop, "parent", AnchorTop)
+		addBtn:addAnchor(AnchorRight, "parent", AnchorRight)
+		addBtn:setMarginRight(0)
 	end
 end
 
@@ -2007,7 +2007,7 @@ local function clearTargetListSelection()
 	end
 
 	var_115_0:focusChild(nil)
-	var_0_122()
+	resetTargetActionButtonsState()
 	scheduleTargetActionButtonsSync()
 end
 
@@ -2042,7 +2042,7 @@ end
 
 local function refreshPriorityListUI()
 	ensureAllCreaturesEntry()
-	var_0_122()
+	resetTargetActionButtonsState()
 
 	local parentWidget = widget("targetPriorityList")
 
@@ -2081,7 +2081,7 @@ local function refreshPriorityListUI()
 				if var_118_1.allCreatures then
 					allCreaturesEnabled = enabled == true
 
-					var_0_122()
+					resetTargetActionButtonsState()
 					scheduleTargetActionButtonsSync()
 				else
 					getDistanceBetween()
@@ -2119,7 +2119,7 @@ function var_0_8(arg_121_0)
 
 	if var_121_2 and not var_121_2:isDestroyed() then
 		var_121_2:focusChild(arg_121_0, KeyboardFocusReason)
-		var_0_122()
+		resetTargetActionButtonsState()
 		scheduleTargetActionButtonsSync()
 	end
 
@@ -2186,14 +2186,14 @@ local function populateTargetMonsterList()
 
 	targetMonstersPanel:destroyChildren()
 
-	local var_127_0 = getPriorityRaceIds(editingPriorityListIndex)
-	local var_127_1 = 0
+	local excludeIds = getPriorityRaceIds(editingPriorityListIndex)
+	local visibleIdx = 0
 
 	for unusedValue, entry in ipairs(getMonstersSorted()) do
-		if not var_127_0[entry.raceId] then
-			var_127_1 = var_127_1 + 1
+		if not excludeIds[entry.raceId] then
+			visibleIdx = visibleIdx + 1
 
-			local styleName = var_127_1 % 2 == 1 and "HelperCreatureListRowOdd" or "HelperCreatureListRowEven"
+			local styleName = visibleIdx % 2 == 1 and "HelperCreatureListRowOdd" or "HelperCreatureListRowEven"
 			local var_127_3 = g_ui.createWidget(styleName, targetMonstersPanel)
 
 			var_127_3.targetRace = entry

@@ -8,6 +8,7 @@
 #include "framework/graphics/texture.h"
 #include "framework/net/inputmessage.h"
 #include "framework/core/resourcemanager.h"
+#include "framework/core/eventdispatcher.h"
 #include "framework/graphics/texturemanager.h"
 #include "framework/ui/uiwidget.h"
 #include "client/protocolgame.h"
@@ -94,6 +95,17 @@ protected:
         ForegroundPool() { g_drawPool.m_pools[index] = owned.get(); }
         ~ForegroundPool() { g_drawPool.m_pools[index] = previous; }
     };
+    struct DispatcherSession {
+        EventDispatcher previous{ std::move(g_dispatcher) };
+        DispatcherSession() {
+            g_dispatcher = EventDispatcher{};
+            g_dispatcher.init();
+        }
+        ~DispatcherSession() {
+            g_dispatcher.shutdown();
+            g_dispatcher = std::move(previous);
+        }
+    };
     void SetUp() override
     {
         g_lua.init();
@@ -141,6 +153,7 @@ TEST_F(RuntimeEventTest, CreaturePreviewSizeDoesNotChangeWidgetGeometry)
     g_lua.registerClass<UIWidget>();
     g_lua.registerClass<UICreature, UIWidget>();
     ForegroundPool foreground;
+    DispatcherSession dispatcher;
     auto widget = std::make_shared<UICreature>();
     const Rect originalRect(50, 50, 40, 40);
     widget->setRect(originalRect);

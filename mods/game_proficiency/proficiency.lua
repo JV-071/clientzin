@@ -1809,13 +1809,13 @@ function WeaponProficiency.updateShapePerkPreview(self, shape)
 		return
 	end
 
-	local var_72_0, modifierEntry = var_0_12(self.selectedModifySlot.grade, self.selectedModifySlot.slot)
+	local modifiedPerkData, modifierEntry = var_0_12(self.selectedModifySlot.grade, self.selectedModifySlot.slot)
 
-	if not var_72_0 then
+	if not modifiedPerkData then
 		return
 	end
 
-	local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(var_72_0)
+	local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(modifiedPerkData)
 	local displayName, titleTooltip = formatPerkBonusTitle(bonusName, SHAPE_PERK_TITLE_MAX_LEN, SHAPE_PERK_TITLE_TRUNCATED_LEN)
 	local leftTitle = shape:recursiveGetChildById("leftTitle")
 
@@ -1835,7 +1835,7 @@ function WeaponProficiency.updateShapePerkPreview(self, shape)
 	local perkPreview = shape:recursiveGetChildById("perkPreview")
 
 	if perkPreview then
-		var_0_25(perkPreview, var_72_0, modifierEntry)
+		var_0_25(perkPreview, modifiedPerkData, modifierEntry)
 	end
 end
 

@@ -983,17 +983,17 @@ function reorderMainPanelSpecialButtons()
 		end
 	end
 
-	local var_46_7 = {}
+	local out = {}
 
 	for _, id in pairs(byId) do
 		if not var_46_5[id] then
-			var_46_7[#var_46_7 + 1] = _
+			out[#out + 1] = _
 		end
 	end
 
-	table.sort(var_46_7)
+	table.sort(out)
 
-	for _, button in ipairs(var_46_7) do
+	for _, button in ipairs(out) do
 		rest[#rest + 1] = byId[button]
 	end
 

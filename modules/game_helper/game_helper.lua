@@ -3,7 +3,7 @@ helperButton = nil
 currentTab = nil
 
 local helperConfig = {}
-local var_0_1 = {}
+local modulesByTab = {}
 local helperLanguage = "en"
 local helperUiLanguageCaptured = false
 local HELPER_PT_TRANSLATIONS = {
@@ -215,7 +215,7 @@ local unusedValue
 local HELPER_JSON_VERSION = 4
 local DEFAULT_HELPER_PROFILE_NAME = "Default"
 local AUTO_SWITCH_HOTKEY_PRESET_SETTING = "autoSwitchPreset"
-local var_0_26
+local activeHelperJSONFile
 local textValue
 local helperSavedOnLogout = false
 local autoSaveEvent
@@ -421,7 +421,7 @@ local function activateHelperCharacterStorage()
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
-		var_0_26 = nil
+		activeHelperJSONFile = nil
 		textValue = nil
 
 		if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
@@ -436,7 +436,7 @@ local function activateHelperCharacterStorage()
 	if id == "" or id == "0" then
 		helperLog("error", "Cannot activate character Helper storage without a valid player id.")
 
-		var_0_26 = nil
+		activeHelperJSONFile = nil
 		textValue = nil
 
 		if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
@@ -448,7 +448,7 @@ local function activateHelperCharacterStorage()
 
 	local characterName = g_game.getCharacterName() or localPlayer:getName() or ""
 
-	var_0_26 = nil
+	activeHelperJSONFile = nil
 	textValue = nil
 
 	if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
@@ -461,7 +461,7 @@ local function activateHelperCharacterStorage()
 		return false
 	end
 
-	var_0_26 = id
+	activeHelperJSONFile = id
 	textValue = tostring(characterName)
 	helperSavedOnLogout = false
 
@@ -766,25 +766,25 @@ local function var_0_62()
 	setCharacterCardText("helperCharacterLevel", level)
 	setCharacterCardText("helperAccountCaption", visible and "Status da Conta:" or "Account Status:")
 
-	local var_25_6 = visible and "Desconectado" or "Offline"
+	local statusText = visible and "Desconectado" or "Offline"
 	local imageSourcePath = "/images/game/entergame/nopremium"
 
 	if localPlayer then
 		if isCurrentAccountPremium(localPlayer) then
-			var_25_6 = visible and "Conta Premium" or "Premium Account"
+			statusText = visible and "Conta Premium" or "Premium Account"
 			imageSourcePath = "/images/game/entergame/premium"
 		else
-			var_25_6 = visible and "Conta Gratuita" or "Free Account"
+			statusText = visible and "Conta Gratuita" or "Free Account"
 		end
 	end
 
-	setCharacterCardText("helperAccountStatus", var_25_6, var_25_6)
+	setCharacterCardText("helperAccountStatus", statusText, statusText)
 
 	local helperAccountStatusIconWidget = getWidget("helperAccountStatusIcon")
 
 	if helperAccountStatusIconWidget then
 		helperAccountStatusIconWidget:setImageSource(imageSourcePath)
-		helperAccountStatusIconWidget:setTooltip(var_25_6)
+		helperAccountStatusIconWidget:setTooltip(statusText)
 	end
 
 	refreshHelperCharacterCard()
@@ -875,9 +875,9 @@ local function var_0_65(HELPER_STATS_ITEMS, arg_28_1)
 		local helperLanguageSourceTooltip = HELPER_STATS_ITEMS.helperLanguageSourceTooltip
 
 		if helperLanguageSourceTooltip then
-			local var_28_8 = helperLanguage == "pt" and var_0_5[helperLanguageSourceTooltip] or helperLanguageSourceTooltip
+			local translatedTooltip = helperLanguage == "pt" and var_0_5[helperLanguageSourceTooltip] or helperLanguageSourceTooltip
 
-			HELPER_STATS_ITEMS:setTooltip(var_28_8)
+			HELPER_STATS_ITEMS:setTooltip(translatedTooltip)
 		end
 	end
 
@@ -903,7 +903,7 @@ end
 local function var_0_67(arg_30_0)
 	helperLanguage = normalizeHelperLanguage(arg_30_0)
 
-	for name, cfg in pairs(var_0_1) do
+	for name, cfg in pairs(modulesByTab) do
 		if cfg and cfg.refreshLanguage then
 			local var_30_0, var_30_1 = pcall(cfg.refreshLanguage, helperLanguage)
 
@@ -1253,7 +1253,7 @@ local function var_0_78()
 	var_0_43(helperConfig)
 
 	for unusedValue, cfg in pairs(TABS) do
-		local mod = var_0_1[cfg.module]
+		local mod = modulesByTab[cfg.module]
 
 		if mod and mod.collectConfig then
 			mod.collectConfig(helperConfig)
@@ -1328,7 +1328,7 @@ local function var_0_80()
 end
 
 local function var_0_81()
-	if not var_0_26 or helperSavedOnLogout then
+	if not activeHelperJSONFile or helperSavedOnLogout then
 		return false
 	end
 
@@ -1610,7 +1610,7 @@ local function var_0_89(arg_65_0)
 	initDistanceControls()
 
 	for unusedValue, entry in pairs(TABS) do
-		local var_65_4 = var_0_1[entry.module]
+		local var_65_4 = modulesByTab[entry.module]
 
 		if var_65_4 and var_65_4.loadFromConfig then
 			local var_65_5, var_65_6 = pcall(var_65_4.loadFromConfig, helperConfig)
@@ -1625,7 +1625,7 @@ local function var_0_89(arg_65_0)
 		HelperConditions.loadFromConfig(helperConfig)
 	end
 
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.refreshAllPrioritySteppers then
 		healFriend.refreshAllPrioritySteppers()
@@ -1758,7 +1758,7 @@ local function helperShouldRunTick()
 	return g_game.isOnline()
 end
 
-local function var_0_94()
+local function combatFeatureStates()
 	if not helperShouldRunTick() then
 		return false, false
 	end
@@ -1769,13 +1769,13 @@ local function var_0_94()
 	return enableTargetCheckBox and enableTargetCheckBox:isChecked() or false, enableShooterCheckBox and enableShooterCheckBox:isChecked() or false
 end
 
-local function var_0_95()
+local function runCombatTick()
 	if HelperActionCoordinator and HelperActionCoordinator.isAutomaticActionBlocked and HelperActionCoordinator.isAutomaticActionBlocked() then
 		return true
 	end
 
 	local var_71_0 = g_clock.realMicros()
-	local var_71_1, var_71_2 = var_0_94()
+	local var_71_1, var_71_2 = combatFeatureStates()
 
 	if not var_71_1 and not var_71_2 then
 		return false
@@ -1790,7 +1790,7 @@ local function var_0_95()
 	end
 
 	local var_71_6 = 0
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if var_71_1 and target and target.runTick then
 		local var_71_8 = g_clock.realMicros()
@@ -1809,7 +1809,7 @@ local function var_0_95()
 	local var_71_14 = 0
 	local var_71_15 = "none"
 	local var_71_16 = 0
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if var_71_2 and shooter and shooter.runTick then
 		local var_71_18 = g_clock.realMicros()
@@ -1826,10 +1826,10 @@ local function var_0_95()
 		end
 	end
 
-	local var_71_21 = g_clock.realMicros() - var_71_0
+	local totalUs = g_clock.realMicros() - var_71_0
 
-	if var_0_34 and var_71_21 >= 5000 and g_logger and g_logger.warning then
-		g_logger.warning(string.format("[HelperHitch] total=%.2fms state=%.2fms target=%.2fms shooter=%.2fms scan=%.2fms creatures=%d priorities=%d hot=%s/%.2fms active=%s/%s", var_71_21 / 1000, var_71_5 / 1000, var_71_6 / 1000, var_71_11 / 1000, (tonumber(var_71_12) or 0) / 1000, tonumber(var_71_13) or 0, tonumber(var_71_14) or 0, tostring(var_71_15 or "none"), (tonumber(var_71_16) or 0) / 1000, tostring(var_71_1), tostring(var_71_2)))
+	if var_0_34 and totalUs >= 5000 and g_logger and g_logger.warning then
+		g_logger.warning(string.format("[HelperHitch] total=%.2fms state=%.2fms target=%.2fms shooter=%.2fms scan=%.2fms creatures=%d priorities=%d hot=%s/%.2fms active=%s/%s", totalUs / 1000, var_71_5 / 1000, var_71_6 / 1000, var_71_11 / 1000, (tonumber(var_71_12) or 0) / 1000, tonumber(var_71_13) or 0, tonumber(var_71_14) or 0, tostring(var_71_15 or "none"), (tonumber(var_71_16) or 0) / 1000, tostring(var_71_1), tostring(var_71_2)))
 	end
 
 	return true
@@ -1843,39 +1843,39 @@ local function stopCombatScheduler()
 	end
 end
 
-local function var_0_97()
+local function startCombatScheduler()
 	if combatTickEvent then
 		return
 	end
 
-	local var_73_0, var_73_1 = var_0_94()
+	local targetEnabled, shooterEnabled = combatFeatureStates()
 
-	if not var_73_0 and not var_73_1 then
+	if not targetEnabled and not shooterEnabled then
 		return
 	end
 
 	combatTickEvent = scheduleEvent(function()
 		combatTickEvent = nil
 
-		local var_74_0, var_74_1 = pcall(var_0_95)
+		local var_74_0, shouldContinue = pcall(runCombatTick)
 
 		if not var_74_0 then
 			if g_logger and g_logger.error then
-				g_logger.error("[game_helper] combatTick failure: " .. tostring(var_74_1))
+				g_logger.error("[game_helper] combatTick failure: " .. tostring(shouldContinue))
 			end
-		elseif not var_74_1 then
+		elseif not shouldContinue then
 			return
 		end
 
-		var_0_97()
+		startCombatScheduler()
 	end, combatTickIntervalMs)
 end
 
 function syncCombatSchedulerState()
-	local var_75_0, var_75_1 = var_0_94()
+	local targetEnabled, shooterEnabled = combatFeatureStates()
 
-	if var_75_0 or var_75_1 then
-		var_0_97()
+	if targetEnabled or shooterEnabled then
+		startCombatScheduler()
 	else
 		stopCombatScheduler()
 	end
@@ -1886,15 +1886,15 @@ function bindCombatHotkeys()
 		HelperShooter.unbindPresetHotkeys()
 	end
 
-	local var_76_0 = {}
+	local skippedPresetHotkeys = {}
 
 	if HelperShooter and HelperShooter.bindPresetHotkeys then
-		var_76_0 = HelperShooter.bindPresetHotkeys(function(arg_77_0, arg_77_1)
+		skippedPresetHotkeys = HelperShooter.bindPresetHotkeys(function(arg_77_0, arg_77_1)
 			return var_0_87(arg_77_1, arg_77_0)
 		end) or {}
 	end
 
-	for unusedValue, entry in ipairs(var_76_0) do
+	for unusedValue, entry in ipairs(skippedPresetHotkeys) do
 		helperLog("warning", string.format("Shooter profile hotkey not bound because it is already in use: %s (%s)", tostring(entry.profile), tostring(entry.key)))
 	end
 end
@@ -1907,7 +1907,7 @@ end
 
 local function loadConfigIntoWidgets()
 	function boundTargetHotkeyWindow(arg_80_0)
-		local target = var_0_1.target
+		local target = modulesByTab.target
 
 		if target and target.onCreatureAppear then
 			target.onCreatureAppear(arg_80_0)
@@ -1915,7 +1915,7 @@ local function loadConfigIntoWidgets()
 	end
 
 	function targetHotkeyPendingCombo(arg_81_0)
-		local target = var_0_1.target
+		local target = modulesByTab.target
 
 		if target and target.onCreatureDisappear then
 			target.onCreatureDisappear(arg_81_0)
@@ -1941,13 +1941,13 @@ local function loadConfigIntoWidgets()
 	end
 
 	function handleAttackingCreatureChange(arg_85_0, arg_85_1)
-		local target = var_0_1.target
+		local target = modulesByTab.target
 
 		if target and target.onAttackingCreatureChange then
 			target.onAttackingCreatureChange(arg_85_0, arg_85_1)
 		end
 
-		local shooter = var_0_1.shooter
+		local shooter = modulesByTab.shooter
 
 		if shooter and shooter.onAttackingCreatureChange then
 			local var_85_2, var_85_3 = pcall(shooter.onAttackingCreatureChange, arg_85_0, arg_85_1)
@@ -1959,7 +1959,7 @@ local function loadConfigIntoWidgets()
 	end
 
 	function handleFollowingCreatureChange(arg_86_0, arg_86_1)
-		local shooter = var_0_1.shooter
+		local shooter = modulesByTab.shooter
 
 		if shooter and shooter.onFollowingCreatureChange then
 			shooter.onFollowingCreatureChange(arg_86_0, arg_86_1)
@@ -1973,13 +1973,13 @@ local function loadConfigIntoWidgets()
 			return
 		end
 
-		local target = var_0_1.target
+		local target = modulesByTab.target
 
 		if target and target.refreshProtectionZoneState then
 			target.refreshProtectionZoneState()
 		end
 
-		local shooter = var_0_1.shooter
+		local shooter = modulesByTab.shooter
 
 		if shooter and shooter.refreshProtectionZoneState then
 			shooter.refreshProtectionZoneState()
@@ -2036,26 +2036,26 @@ local function var_0_101()
 		return
 	end
 
-	local var_89_0 = var_0_92()
+	local state = var_0_92()
 
-	if not var_89_0 then
+	if not state then
 		return
 	end
 
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
-	if healer and healer.runTick and healer.runTick(var_89_0) then
+	if healer and healer.runTick and healer.runTick(state) then
 		return
 	end
 
-	if healer and healer.shouldYieldToHealing and healer.shouldYieldToHealing(var_89_0.player) then
+	if healer and healer.shouldYieldToHealing and healer.shouldYieldToHealing(state.player) then
 		return
 	end
 
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.runTick then
-		healFriend.runTick(var_89_0)
+		healFriend.runTick(state)
 	end
 end
 
@@ -2084,17 +2084,17 @@ local function stopScheduler()
 end
 
 local function initModules()
-	var_0_1.healer = HelperHealer
-	var_0_1.healFriend = HelperHealFriend
-	var_0_1.target = HelperTarget
-	var_0_1.shooter = HelperShooter
-	var_0_1.cavebot = HelperCavebot
-	var_0_1.conditions = HelperConditions
-	var_0_1.tools = HelperTools
-	var_0_1.autoparty = HelperAutoParty
-	var_0_1.config = HelperConfigTab
+	modulesByTab.healer = HelperHealer
+	modulesByTab.healFriend = HelperHealFriend
+	modulesByTab.target = HelperTarget
+	modulesByTab.shooter = HelperShooter
+	modulesByTab.cavebot = HelperCavebot
+	modulesByTab.conditions = HelperConditions
+	modulesByTab.tools = HelperTools
+	modulesByTab.autoparty = HelperAutoParty
+	modulesByTab.config = HelperConfigTab
 
-	local var_93_0 = {
+	local ctx = {
 		getWidget = getWidget,
 		getPlayerVoc = var_0_72,
 		saveConfig = var_0_79,
@@ -2115,8 +2115,8 @@ local function initModules()
 		requestAutoSave = function()
 			autoSave()
 		end,
-		isTabActive = function(arg_99_0)
-			return currentTab == arg_99_0 and helperWindow and not helperWindow:isHidden()
+		isTabActive = function(tabName)
+			return currentTab == tabName and helperWindow and not helperWindow:isHidden()
 		end,
 		readDistanceValue = readDistanceValue,
 		applyDistanceValue = applyDistanceValue,
@@ -2126,20 +2126,20 @@ local function initModules()
 
 	for unusedValue, entry in pairs(TABS) do
 		if entry.module ~= "config" then
-			local var_93_1 = var_0_1[entry.module]
+			local var_93_1 = modulesByTab[entry.module]
 
 			if var_93_1 and var_93_1.init then
-				var_93_1.init(var_93_0)
+				var_93_1.init(ctx)
 			end
 		end
 	end
 
 	if HelperConditions and HelperConditions.init then
-		HelperConditions.init(var_93_0)
+		HelperConditions.init(ctx)
 	end
 
 	if HelperPresets and HelperPresets.init then
-		HelperPresets.init(var_93_0)
+		HelperPresets.init(ctx)
 	end
 
 	if HelperConfigTab and HelperConfigTab.init then
@@ -2153,8 +2153,8 @@ local function initModules()
 			copyConfig = copyConfig,
 			collectConfig = var_0_78,
 			applyConfig = var_0_89,
-			applyConfigSnapshot = function(arg_101_0)
-				helperConfig = copyConfig(arg_101_0)
+			applyConfigSnapshot = function(snapshot)
+				helperConfig = copyConfig(snapshot)
 			end,
 			isAutoSaveEnabled = isAutoSaveEnabled,
 			isLoadingConfig = function()
@@ -2186,7 +2186,7 @@ end
 local function getModuleForTab(tab)
 	local var_105_0 = tab and TABS[tab]
 
-	return var_105_0 and var_0_1[var_105_0.module] or nil
+	return var_105_0 and modulesByTab[var_105_0.module] or nil
 end
 
 local function showCurrentTabModule()
@@ -2254,7 +2254,7 @@ end
 function onCavebotAuthorized(unusedArgument, arg_111_1, arg_111_2, arg_111_3)
 	refreshHelperCharacterCard(true)
 
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onAuthorized then
 		cavebot.onAuthorized(arg_111_1, arg_111_2, arg_111_3)
@@ -2262,7 +2262,7 @@ function onCavebotAuthorized(unusedArgument, arg_111_1, arg_111_2, arg_111_3)
 end
 
 function onCavebotStatus(arg_112_0, arg_112_1, arg_112_2, arg_112_3)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onStatus then
 		cavebot.onStatus(arg_112_0, arg_112_1, arg_112_2, arg_112_3)
@@ -2278,68 +2278,68 @@ function showTab(tab)
 		return
 	end
 
-	local var_113_0 = currentTab
+	local prevTab = currentTab
 
 	currentTab = tab
 
 	for key, entry in pairs(TABS) do
 		local visible = key == tab
-		local var_113_2 = getWidget(entry.buttonId)
-		local var_113_3 = getWidget(entry.panelId)
+		local button = getWidget(entry.buttonId)
+		local panel = getWidget(entry.panelId)
 
-		if var_113_2 then
-			var_113_2:setOn(visible)
+		if button then
+			button:setOn(visible)
 		end
 
-		if var_113_3 then
-			var_113_3:setVisible(visible)
+		if panel then
+			panel:setVisible(visible)
 		end
 	end
 
-	if var_113_0 and TABS[var_113_0] then
-		local var_113_4 = getModuleForTab(var_113_0)
+	if prevTab and TABS[prevTab] then
+		local prevMod = getModuleForTab(prevTab)
 
-		if var_113_4 and var_113_4.onHide then
-			var_113_4.onHide()
+		if prevMod and prevMod.onHide then
+			prevMod.onHide()
 		end
 	end
 
 	if TABS[tab] then
-		local var_113_5 = getModuleForTab(tab)
+		local currentMod = getModuleForTab(tab)
 
-		if var_113_5 and var_113_5.onShow then
-			var_113_5.onShow()
+		if currentMod and currentMod.onShow then
+			currentMod.onShow()
 		end
 	end
 
 	var_0_66(false)
 end
 
-local var_0_111 = 1
-local var_0_112 = 7
-local var_0_113 = 7
+local DISTANCE_MIN = 1
+local DISTANCE_MAX = 7
+local DISTANCE_DEFAULT = 7
 
 function clampDistanceValue(value, default)
 	local numericValue = tonumber(value)
 
 	if not numericValue then
-		return default or var_0_113
+		return default or DISTANCE_DEFAULT
 	end
 
-	local var_114_1 = math.floor(numericValue)
+	local n = math.floor(numericValue)
 
-	if var_114_1 < var_0_111 then
-		var_114_1 = var_0_111
+	if n < DISTANCE_MIN then
+		n = DISTANCE_MIN
 	end
 
-	if var_114_1 > var_0_112 then
-		var_114_1 = var_0_112
+	if n > DISTANCE_MAX then
+		n = DISTANCE_MAX
 	end
 
-	return var_114_1
+	return n
 end
 
-local function var_0_114(arg_115_0)
+local function getDistanceWidgetText(arg_115_0)
 	if not arg_115_0 then
 		return nil
 	end
@@ -2361,12 +2361,12 @@ local function var_0_114(arg_115_0)
 	return nil
 end
 
-local function var_0_115(arg_116_0, arg_116_1, arg_116_2)
+local function setDistanceWidgetValue(arg_116_0, arg_116_1, arg_116_2)
 	if not arg_116_0 then
 		return
 	end
 
-	local textValue = tostring(clampDistanceValue(arg_116_1, arg_116_2 or var_0_113))
+	local textValue = tostring(clampDistanceValue(arg_116_1, arg_116_2 or DISTANCE_DEFAULT))
 
 	if arg_116_0.setCurrentOption then
 		arg_116_0:setCurrentOption(textValue, true)
@@ -2384,26 +2384,26 @@ local function var_0_116(arg_117_0)
 		return
 	end
 
-	for iter_117_0 = var_0_111, var_0_112 do
-		arg_117_0:addOption(tostring(iter_117_0), iter_117_0)
+	for i = DISTANCE_MIN, DISTANCE_MAX do
+		arg_117_0:addOption(tostring(i), i)
 	end
 end
 
 function readDistanceValue(id)
-	local var_118_0 = getWidget(id)
+	local distanceWidget = getWidget(id)
 
-	return clampDistanceValue(var_0_114(var_118_0), var_0_113)
+	return clampDistanceValue(getDistanceWidgetText(distanceWidget), DISTANCE_DEFAULT)
 end
 
 function applyDistanceValue(id, value)
-	local var_119_0 = getWidget(id)
+	local distanceWidget = getWidget(id)
 
-	var_0_116(var_119_0)
-	var_0_115(var_119_0, value, var_0_113)
+	var_0_116(distanceWidget)
+	setDistanceWidgetValue(distanceWidget, value, DISTANCE_DEFAULT)
 end
 
 function initDistanceControls()
-	applyDistanceValue("targetDistanceCombo", var_0_113)
+	applyDistanceValue("targetDistanceCombo", DISTANCE_DEFAULT)
 end
 
 function onTargetDistanceChange(unusedArgument)
@@ -2419,7 +2419,7 @@ function onTargetModeChange(unusedArgument)
 		return
 	end
 
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.onTargetModeChange then
 		target.onTargetModeChange()
@@ -2433,7 +2433,7 @@ function onTargetPriorityChange(unusedArgument)
 		return
 	end
 
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.onTargetPriorityChange then
 		target.onTargetPriorityChange()
@@ -2447,7 +2447,7 @@ function onTargetPzAutoChange(unusedArgument)
 		return
 	end
 
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.onTargetPzAutoChange then
 		target.onTargetPzAutoChange()
@@ -2748,15 +2748,15 @@ local function countAttackRunes()
 		return 0
 	end
 
-	local var_147_0 = 0
+	local count = 0
 
 	for key, entry in pairs(SpellRunesData) do
 		if entry.group == 1 and Spells.getRuneSpellByItem(key) then
-			var_147_0 = var_147_0 + 1
+			count = count + 1
 		end
 	end
 
-	return var_147_0
+	return count
 end
 
 local function validateHelperRuntime()
@@ -2801,7 +2801,7 @@ local function validateHelperRuntime()
 				table.insert(warnings, "Tab button missing: " .. name .. " (" .. iter_148_3.buttonId .. ")")
 			end
 
-			if not var_0_1[iter_148_3.module] then
+			if not modulesByTab[iter_148_3.module] then
 				table.insert(warnings, "Module missing for tab: " .. name)
 			end
 		end
@@ -2922,7 +2922,7 @@ function onGameStart()
 		HelperActionCoordinator.onGameStart()
 	end
 
-	if var_0_26 and not helperSavedOnLogout then
+	if activeHelperJSONFile and not helperSavedOnLogout then
 		var_0_81()
 	end
 
@@ -2938,7 +2938,7 @@ function onGameStart()
 
 	var_0_90()
 
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onGameStart then
 		cavebot.onGameStart()
@@ -2965,13 +2965,13 @@ function onGameStart()
 			stopCombatScheduler()
 		end
 
-		local targetMod = var_0_1.target
+		local targetMod = modulesByTab.target
 
 		if targetMod and targetMod.onGameStart then
 			targetMod.onGameStart()
 		end
 
-		local shooterMod = var_0_1.shooter
+		local shooterMod = modulesByTab.shooter
 
 		if shooterMod and shooterMod.onGameStart then
 			shooterMod.onGameStart()
@@ -2979,13 +2979,13 @@ function onGameStart()
 
 		bindCombatHotkeys()
 
-		local healer = var_0_1.healer
+		local healer = modulesByTab.healer
 
 		if healer and healer.onGameStart then
 			healer.onGameStart()
 		end
 
-		local mod = var_0_1.healFriend
+		local mod = modulesByTab.healFriend
 
 		if mod and mod.applyVocationGate then
 			mod.applyVocationGate()
@@ -2994,7 +2994,7 @@ function onGameStart()
 end
 
 function onLogout()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onLogout then
 		cavebot.onLogout()
@@ -3008,7 +3008,7 @@ function onGameEnd()
 		HelperActionCoordinator.onGameEnd()
 	end
 
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onLogout then
 		cavebot.onLogout()
@@ -3050,7 +3050,7 @@ function terminate()
 	})
 
 	for _, tab in pairs(TABS) do
-		local mod = var_0_1[tab.module]
+		local mod = modulesByTab[tab.module]
 
 		if tab.module ~= "config" and mod and mod.terminate then
 			mod.terminate()
@@ -3084,7 +3084,7 @@ function terminate()
 	helperStatsWindow = nil
 	helperWindow = nil
 	helperUiLanguageCaptured = false
-	var_0_26 = nil
+	activeHelperJSONFile = nil
 	textValue = nil
 
 	if HelperProfileStorage and HelperProfileStorage.clearActiveCharacter then
@@ -3121,13 +3121,13 @@ function onHelperClose()
 
 	var_0_62()
 
-	local current = getModuleForTab(currentTab) or var_0_1.healer
+	local current = getModuleForTab(currentTab) or modulesByTab.healer
 
 	if current and current.onHide then
 		current.onHide()
 	end
 
-	local mod = var_0_1.healer
+	local mod = modulesByTab.healer
 
 	if mod and mod ~= current and mod.onHide then
 		mod.onHide()
@@ -3160,7 +3160,7 @@ local function saveConfig()
 		else
 			showCurrentTabModule()
 
-			local mod = var_0_1.healer
+			local mod = modulesByTab.healer
 
 			if mod and mod.clearListSelection then
 				mod.clearListSelection()
@@ -3227,7 +3227,7 @@ function onEnableTargetChange(self, checked)
 		return
 	end
 
-	local mod = var_0_1.target
+	local mod = modulesByTab.target
 
 	if mod and mod.onEnableTargetCheckChange then
 		mod.onEnableTargetCheckChange(self)
@@ -3245,7 +3245,7 @@ function onEnableShooterChange(self, checked)
 		return
 	end
 
-	local mod = var_0_1.shooter
+	local mod = modulesByTab.shooter
 
 	if mod and mod.toggleMagicShooter then
 		mod.toggleMagicShooter(self, nil, true)
@@ -3261,7 +3261,7 @@ function onEnableCavebotChange(arg_168_0, arg_168_1)
 		return
 	end
 
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onEnableChange then
 		cavebot.onEnableChange(arg_168_0, arg_168_1)
@@ -3273,7 +3273,7 @@ function onEnableCavebotChange(arg_168_0, arg_168_1)
 end
 
 function openCavebotEchoRaidWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.openEchoRaidWindow then
 		cavebot.openEchoRaidWindow()
@@ -3281,7 +3281,7 @@ function openCavebotEchoRaidWindow()
 end
 
 function closeCavebotEchoRaidWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.closeEchoRaidWindow then
 		cavebot.closeEchoRaidWindow()
@@ -3289,7 +3289,7 @@ function closeCavebotEchoRaidWindow()
 end
 
 function confirmCavebotEchoRaidWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.confirmEchoRaidWindow then
 		cavebot.confirmEchoRaidWindow()
@@ -3297,7 +3297,7 @@ function confirmCavebotEchoRaidWindow()
 end
 
 function onCavebotEchoRaidModeChange(arg_172_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onEchoRaidModeChange then
 		cavebot.onEchoRaidModeChange(arg_172_0)
@@ -3305,7 +3305,7 @@ function onCavebotEchoRaidModeChange(arg_172_0)
 end
 
 function onCavebotStartNearestWaypointChange(arg_173_0, arg_173_1)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onStartNearestWaypointChange then
 		cavebot.onStartNearestWaypointChange(arg_173_0, arg_173_1)
@@ -3313,7 +3313,7 @@ function onCavebotStartNearestWaypointChange(arg_173_0, arg_173_1)
 end
 
 function onCavebotDiagonalWalkChange(arg_174_0, arg_174_1)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.onDiagonalWalkChange then
 		cavebot.onDiagonalWalkChange(arg_174_0, arg_174_1)
@@ -3321,7 +3321,7 @@ function onCavebotDiagonalWalkChange(arg_174_0, arg_174_1)
 end
 
 function addCavebotWaypoint(arg_175_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.addCurrentWaypoint then
 		cavebot.addCurrentWaypoint(arg_175_0)
@@ -3329,7 +3329,7 @@ function addCavebotWaypoint(arg_175_0)
 end
 
 function toggleCavebotRecording()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.toggleRecording then
 		cavebot.toggleRecording()
@@ -3337,7 +3337,7 @@ function toggleCavebotRecording()
 end
 
 function newCavebotPreset()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.newPreset then
 		cavebot.newPreset()
@@ -3345,7 +3345,7 @@ function newCavebotPreset()
 end
 
 function deleteCavebotPreset()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.deleteNamedPreset then
 		cavebot.deleteNamedPreset()
@@ -3353,7 +3353,7 @@ function deleteCavebotPreset()
 end
 
 function moveCavebotWaypoint(arg_179_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.moveSelectedWaypoint then
 		cavebot.moveSelectedWaypoint(arg_179_0)
@@ -3361,7 +3361,7 @@ function moveCavebotWaypoint(arg_179_0)
 end
 
 function removeCavebotWaypoint()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.removeSelectedWaypoint then
 		cavebot.removeSelectedWaypoint()
@@ -3369,7 +3369,7 @@ function removeCavebotWaypoint()
 end
 
 function clearCavebotWaypoints()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.requestClearWaypoints then
 		cavebot.requestClearWaypoints()
@@ -3377,7 +3377,7 @@ function clearCavebotWaypoints()
 end
 
 function openCavebotRenewWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.openRenewWindow then
 		cavebot.openRenewWindow()
@@ -3385,7 +3385,7 @@ function openCavebotRenewWindow()
 end
 
 function setCavebotMinimapView(arg_183_0, arg_183_1)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if not cavebot or not cavebot.setExternalMapPreview then
 		return false
@@ -3395,7 +3395,7 @@ function setCavebotMinimapView(arg_183_0, arg_183_1)
 end
 
 function closeCavebotRenewWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.closeRenewWindow then
 		cavebot.closeRenewWindow()
@@ -3403,7 +3403,7 @@ function closeCavebotRenewWindow()
 end
 
 function confirmCavebotRenewWindow()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.confirmRenewWindow then
 		cavebot.confirmRenewWindow()
@@ -3411,7 +3411,7 @@ function confirmCavebotRenewWindow()
 end
 
 function centerCavebotMap()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.centerMapOnPlayer then
 		cavebot.centerMapOnPlayer()
@@ -3419,7 +3419,7 @@ function centerCavebotMap()
 end
 
 function toggleCavebotAutoRoute()
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.toggleAutoRouteSelection then
 		cavebot.toggleAutoRouteSelection()
@@ -3427,7 +3427,7 @@ function toggleCavebotAutoRoute()
 end
 
 function navigateCavebotMap(arg_188_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.navigateMap then
 		cavebot.navigateMap(arg_188_0)
@@ -3435,7 +3435,7 @@ function navigateCavebotMap(arg_188_0)
 end
 
 function zoomCavebotMap(arg_189_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.zoomMap then
 		cavebot.zoomMap(arg_189_0)
@@ -3443,7 +3443,7 @@ function zoomCavebotMap(arg_189_0)
 end
 
 function changeCavebotMapFloor(arg_190_0)
-	local cavebot = var_0_1.cavebot
+	local cavebot = modulesByTab.cavebot
 
 	if cavebot and cavebot.changeMapFloor then
 		cavebot.changeMapFloor(arg_190_0)
@@ -3451,7 +3451,7 @@ function changeCavebotMapFloor(arg_190_0)
 end
 
 function openAddHealingWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.openAddHealingWindow then
 		healer.openAddHealingWindow()
@@ -3459,7 +3459,7 @@ function openAddHealingWindow()
 end
 
 function openAddHealingSpellWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.openAddHealingSpellWindow then
 		healer.openAddHealingSpellWindow()
@@ -3467,7 +3467,7 @@ function openAddHealingSpellWindow()
 end
 
 function openAddHealingPotionWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.openAddHealingPotionWindow then
 		healer.openAddHealingPotionWindow()
@@ -3475,7 +3475,7 @@ function openAddHealingPotionWindow()
 end
 
 function openEditHealingWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.openEditHealingWindow then
 		healer.openEditHealingWindow()
@@ -3483,7 +3483,7 @@ function openEditHealingWindow()
 end
 
 function closeAddHealingWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.closeAddHealingWindow then
 		healer.closeAddHealingWindow()
@@ -3491,7 +3491,7 @@ function closeAddHealingWindow()
 end
 
 function addHealingEntryOk()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.addHealingEntryOk then
 		healer.addHealingEntryOk()
@@ -3499,7 +3499,7 @@ function addHealingEntryOk()
 end
 
 function addHealingEntryApply()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.addHealingEntryApply then
 		healer.addHealingEntryApply()
@@ -3511,7 +3511,7 @@ function addHealingEntryConfirm()
 end
 
 function onHealingRemoveClick()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.removeSelectedEntry then
 		healer.removeSelectedEntry()
@@ -3519,7 +3519,7 @@ function onHealingRemoveClick()
 end
 
 function onAddHealingThresholdChange(edit)
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.onAddHealingThresholdChange then
 		healer.onAddHealingThresholdChange(edit)
@@ -3527,7 +3527,7 @@ function onAddHealingThresholdChange(edit)
 end
 
 function onAddHealingThresholdFocusChange(edit, focused)
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.onAddHealingThresholdFocusChange then
 		healer.onAddHealingThresholdFocusChange(edit, focused)
@@ -3535,7 +3535,7 @@ function onAddHealingThresholdFocusChange(edit, focused)
 end
 
 function onEnableHealingChange(self, on)
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.onEnableHealingChange then
 		healer.onEnableHealingChange(self, on)
@@ -3547,7 +3547,7 @@ function onEnableHealingChange(self, on)
 end
 
 function onEnableHealFriendChange(self, on)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.onEnableHealFriendChange then
 		healFriend.onEnableHealFriendChange(self, on)
@@ -3559,7 +3559,7 @@ function onEnableHealFriendChange(self, on)
 end
 
 function onHealFriendClassToggle(self, on)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.onHealFriendClassToggle then
 		healFriend.onHealFriendClassToggle(self, on)
@@ -3569,7 +3569,7 @@ function onHealFriendClassToggle(self, on)
 end
 
 function onHealFriendThresholdChange(edit)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.onThresholdChange then
 		healFriend.onThresholdChange(edit)
@@ -3579,7 +3579,7 @@ function onHealFriendThresholdChange(edit)
 end
 
 function onHealFriendThresholdFocusChange(edit, focused)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.onThresholdFocusChange then
 		healFriend.onThresholdFocusChange(edit, focused)
@@ -3587,7 +3587,7 @@ function onHealFriendThresholdFocusChange(edit, focused)
 end
 
 function setupHealFriendPriorityStepper(stepper, valueId, defaultValue)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.setupPriorityStepper then
 		healFriend.setupPriorityStepper(stepper, valueId, defaultValue)
@@ -3595,7 +3595,7 @@ function setupHealFriendPriorityStepper(stepper, valueId, defaultValue)
 end
 
 function refreshHealFriendPriorityStepper(stepper)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.refreshPriorityStepper then
 		healFriend.refreshPriorityStepper(stepper)
@@ -3603,7 +3603,7 @@ function refreshHealFriendPriorityStepper(stepper)
 end
 
 function onHealFriendPriorityClick(widget, action)
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.onPriorityClick then
 		healFriend.onPriorityClick(widget, action)
@@ -3611,7 +3611,7 @@ function onHealFriendPriorityClick(widget, action)
 end
 
 function openHealFriendPlayersWindow()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.openPlayerListWindow then
 		healFriend.openPlayerListWindow()
@@ -3619,7 +3619,7 @@ function openHealFriendPlayersWindow()
 end
 
 function closeHealFriendPlayersWindow()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.closePlayerListWindow then
 		healFriend.closePlayerListWindow()
@@ -3627,7 +3627,7 @@ function closeHealFriendPlayersWindow()
 end
 
 function addHealFriendTypedPlayer()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.addTypedPlayer then
 		healFriend.addTypedPlayer()
@@ -3635,7 +3635,7 @@ function addHealFriendTypedPlayer()
 end
 
 function addHealFriendVisiblePlayer()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.addVisiblePlayer then
 		healFriend.addVisiblePlayer()
@@ -3643,7 +3643,7 @@ function addHealFriendVisiblePlayer()
 end
 
 function removeHealFriendConfiguredPlayer()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.removeConfiguredPlayer then
 		healFriend.removeConfiguredPlayer()
@@ -3651,7 +3651,7 @@ function removeHealFriendConfiguredPlayer()
 end
 
 function refreshHealFriendVisiblePlayers()
-	local healFriend = var_0_1.healFriend
+	local healFriend = modulesByTab.healFriend
 
 	if healFriend and healFriend.refreshVisiblePlayers then
 		healFriend.refreshVisiblePlayers()
@@ -3679,7 +3679,7 @@ function closeHelperAssignWindow()
 		return
 	end
 
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		healer.closeHelperItemAssignWindow()
@@ -3709,7 +3709,7 @@ function helperAssignOk()
 		return
 	end
 
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		healer.helperItemAssignOk()
@@ -3729,7 +3729,7 @@ function helperSpellAssignOk()
 end
 
 function helperAssignApply()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		return
@@ -3753,7 +3753,7 @@ function filterHelperAssign(text)
 		return
 	end
 
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		healer.filterHelperAssignEntries(text)
@@ -3779,7 +3779,7 @@ function clearHelperAssignFilter()
 		return
 	end
 
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		healer.clearHelperItemAssignFilter()
@@ -3799,7 +3799,7 @@ function clearHelperSpellFilter()
 end
 
 function onHelperAssignLearntChange()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.isHelperItemAssignActive and healer.isHelperItemAssignActive() then
 		healer.onHelperAssignLearntChange()
@@ -3815,7 +3815,7 @@ function filterPotions(text)
 end
 
 function clearPotionFilter()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.clearPotionFilter then
 		healer.clearPotionFilter()
@@ -3823,7 +3823,7 @@ function clearPotionFilter()
 end
 
 function potionAssignOk()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.potionAssignOk then
 		healer.potionAssignOk()
@@ -3831,7 +3831,7 @@ function potionAssignOk()
 end
 
 function closePotionAssignWindow()
-	local healer = var_0_1.healer
+	local healer = modulesByTab.healer
 
 	if healer and healer.closePotionAssignWindow then
 		healer.closePotionAssignWindow()
@@ -3839,7 +3839,7 @@ function closePotionAssignWindow()
 end
 
 function openTargetAssignWindow()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.openAssignWindow then
 		target.openAssignWindow()
@@ -3847,7 +3847,7 @@ function openTargetAssignWindow()
 end
 
 function openTargetEditWindow()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.openEditAssignWindow then
 		target.openEditAssignWindow()
@@ -3855,7 +3855,7 @@ function openTargetEditWindow()
 end
 
 function closeTargetAssignWindow()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.closeAssignWindow then
 		target.closeAssignWindow()
@@ -3863,7 +3863,7 @@ function closeTargetAssignWindow()
 end
 
 function targetAssignOk()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.assignOk then
 		target.assignOk()
@@ -3871,7 +3871,7 @@ function targetAssignOk()
 end
 
 function filterTargetMonsters(text)
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.filterMonsters then
 		target.filterMonsters(text)
@@ -3879,7 +3879,7 @@ function filterTargetMonsters(text)
 end
 
 function clearTargetMonsterFilter()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.clearMonsterFilter then
 		target.clearMonsterFilter()
@@ -3887,7 +3887,7 @@ function clearTargetMonsterFilter()
 end
 
 function onTargetAllCreaturesChange(self, checked)
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.onAllCreaturesChange then
 		target.onAllCreaturesChange(self, checked)
@@ -3895,7 +3895,7 @@ function onTargetAllCreaturesChange(self, checked)
 end
 
 function onTargetRemoveClick()
-	local target = var_0_1.target
+	local target = modulesByTab.target
 
 	if target and target.onRemoveClick then
 		target.onRemoveClick()
@@ -3903,7 +3903,7 @@ function onTargetRemoveClick()
 end
 
 function openShooterAssignWindow()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.openAssignWindow then
 		shooter.openAssignWindow()
@@ -3911,7 +3911,7 @@ function openShooterAssignWindow()
 end
 
 function openShooterEditWindow()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.openEditAssignWindow then
 		shooter.openEditAssignWindow()
@@ -3919,7 +3919,7 @@ function openShooterEditWindow()
 end
 
 function closeShooterAssignWindow()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.closeAssignWindow then
 		shooter.closeAssignWindow()
@@ -3927,7 +3927,7 @@ function closeShooterAssignWindow()
 end
 
 function closeShooterEntryWindow()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.closeEntryWindow then
 		shooter.closeEntryWindow()
@@ -3935,7 +3935,7 @@ function closeShooterEntryWindow()
 end
 
 function shooterAssignOk()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.assignOk then
 		shooter.assignOk()
@@ -3943,7 +3943,7 @@ function shooterAssignOk()
 end
 
 function filterShooterSpells(text)
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.filterSpells then
 		shooter.filterSpells(text)
@@ -3951,7 +3951,7 @@ function filterShooterSpells(text)
 end
 
 function clearShooterSpellFilter()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.clearSpellFilter then
 		shooter.clearSpellFilter()
@@ -3959,7 +3959,7 @@ function clearShooterSpellFilter()
 end
 
 function onShooterAssignLearntChange()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onAssignLearntChange then
 		shooter.onAssignLearntChange()
@@ -3967,7 +3967,7 @@ function onShooterAssignLearntChange()
 end
 
 function addShooterEntryOk()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.addEntryOk then
 		shooter.addEntryOk()
@@ -3975,7 +3975,7 @@ function addShooterEntryOk()
 end
 
 function onAddShooterHpChange(edit)
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onHpTextChange then
 		shooter.onHpTextChange(edit)
@@ -3983,7 +3983,7 @@ function onAddShooterHpChange(edit)
 end
 
 function onAddShooterHpFocusChange(edit, focused)
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onHpFocusChange then
 		shooter.onHpFocusChange(edit, focused)
@@ -3991,7 +3991,7 @@ function onAddShooterHpFocusChange(edit, focused)
 end
 
 function onShooterAssignModeSpells()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.setAssignMode then
 		shooter.setAssignMode("spells")
@@ -3999,7 +3999,7 @@ function onShooterAssignModeSpells()
 end
 
 function onShooterAssignModeRunes()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.setAssignMode then
 		shooter.setAssignMode("runes")
@@ -4007,7 +4007,7 @@ function onShooterAssignModeRunes()
 end
 
 function onShooterRemoveClick()
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onRemoveClick then
 		shooter.onRemoveClick()
@@ -4015,7 +4015,7 @@ function onShooterRemoveClick()
 end
 
 function onShooterPriorityClick(widget, action)
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onPriorityClick then
 		shooter.onPriorityClick(widget, action)
@@ -4023,7 +4023,7 @@ function onShooterPriorityClick(widget, action)
 end
 
 function onShooterPriorityChange(edit)
-	local shooter = var_0_1.shooter
+	local shooter = modulesByTab.shooter
 
 	if shooter and shooter.onPriorityChange then
 		shooter.onPriorityChange(edit)

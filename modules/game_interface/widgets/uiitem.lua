@@ -2,10 +2,10 @@ local dragPreviewItem
 local dragPreviewIsActionSlot = false
 local dragPreviewStyleName
 local hoveredActionTargetSlot
-local var_0_4
+local hoveredInteractionWidget
 local cursorName
-local var_0_6
-local var_0_7 = 2
+local hoveredInteractionEvent
+local DEFAULT_USE_ACTION = 2
 
 local function syncItemCursor(desiredCursorName)
 	if cursorName == desiredCursorName then
@@ -23,7 +23,7 @@ local function syncItemCursor(desiredCursorName)
 	end
 end
 
-local function var_0_9()
+local function getItemControlMode()
 	local option = modules.client_options and modules.client_options.getOption("classicControl") or "regular"
 
 	if option == true then
@@ -37,17 +37,17 @@ local function var_0_9()
 	return "regular"
 end
 
-local function var_0_10(arg_3_0)
-	local parent = arg_3_0
+local function isInventoryOrContainerWidget(widget)
+	local parent = widget
 
 	for unusedValue = 1, 2 do
 		if not parent then
 			break
 		end
 
-		local var_3_1 = parent.position or parent.slotPosition
+		local itemPosition = parent.position or parent.slotPosition
 
-		if var_3_1 and var_3_1.x == 65535 then
+		if itemPosition and itemPosition.x == 65535 then
 			return true
 		end
 
@@ -57,8 +57,8 @@ local function var_0_10(arg_3_0)
 	return false
 end
 
-local function var_0_11(arg_4_0)
-	if not arg_4_0 or g_platform.isMobile() then
+local function getItemInteractionCursor(item)
+	if not item or g_platform.isMobile() then
 		return nil
 	end
 
@@ -68,16 +68,16 @@ local function var_0_11(arg_4_0)
 		return "look"
 	end
 
-	local var_4_1 = var_0_9()
-	local var_4_2 = var_4_1 == "leftSmart" and modifiers == KeyboardNoModifier
-	local var_4_3 = var_4_1 == "regular" and modifiers == KeyboardCtrlModifier or var_4_1 == "classic" and modifiers == KeyboardAltModifier
+	local controlMode = getItemControlMode()
+	local smartUseInput = controlMode == "leftSmart" and modifiers == KeyboardNoModifier
+	local modifiedUseInput = controlMode == "regular" and modifiers == KeyboardCtrlModifier or controlMode == "classic" and modifiers == KeyboardAltModifier
 
-	if var_4_2 or var_4_3 then
-		if arg_4_0:isContainer() then
+	if smartUseInput or modifiedUseInput then
+		if item:isContainer() then
 			return "container"
-		elseif arg_4_0:isUsable() or arg_4_0:isMultiUse() or arg_4_0:getDefaultAction() == var_0_7 then
+		elseif item:isUsable() or item:isMultiUse() or item:getDefaultAction() == DEFAULT_USE_ACTION then
 			return "use"
-		elseif var_4_2 then
+		elseif smartUseInput then
 			return "look"
 		end
 	end
@@ -86,40 +86,40 @@ local function var_0_11(arg_4_0)
 end
 
 function UIItem.refreshHoveredInteractionCursor()
-	local var_5_0 = var_0_4
+	local hoveredWidget = hoveredInteractionWidget
 
-	if not var_5_0 or var_5_0:isDestroyed() or var_5_0:isVirtual() or not var_5_0:isHovered(true) or not var_0_10(var_5_0) then
+	if not hoveredWidget or hoveredWidget:isDestroyed() or hoveredWidget:isVirtual() or not hoveredWidget:isHovered(true) or not isInventoryOrContainerWidget(hoveredWidget) then
 		UIItem.clearHoveredInteractionCursor()
 
 		return
 	end
 
-	syncItemCursor(var_0_11(var_5_0:getItem()))
+	syncItemCursor(getItemInteractionCursor(hoveredWidget:getItem()))
 end
 
 function UIItem.clearHoveredInteractionCursor()
-	var_0_4 = nil
+	hoveredInteractionWidget = nil
 
-	if var_0_6 then
-		removeEvent(var_0_6)
+	if hoveredInteractionEvent then
+		removeEvent(hoveredInteractionEvent)
 
-		var_0_6 = nil
+		hoveredInteractionEvent = nil
 	end
 
 	syncItemCursor(nil)
 end
 
-local function var_0_12(arg_7_0)
-	if var_0_4 ~= arg_7_0 then
+local function trackHoveredInteractionWidget(widget)
+	if hoveredInteractionWidget ~= widget then
 		UIItem.clearHoveredInteractionCursor()
 
-		var_0_4 = arg_7_0
+		hoveredInteractionWidget = widget
 	end
 
 	UIItem.refreshHoveredInteractionCursor()
 
-	if var_0_4 and not var_0_6 then
-		var_0_6 = cycleEvent(UIItem.refreshHoveredInteractionCursor, 25)
+	if hoveredInteractionWidget and not hoveredInteractionEvent then
+		hoveredInteractionEvent = cycleEvent(UIItem.refreshHoveredInteractionCursor, 25)
 	end
 end
 
@@ -523,7 +523,7 @@ function UIItem.onDrop(self, widget, mousePos, forced)
 end
 
 function UIItem.onDestroy(self)
-	if var_0_4 == self then
+	if hoveredInteractionWidget == self then
 		UIItem.clearHoveredInteractionCursor()
 	end
 
@@ -547,13 +547,13 @@ function UIItem.onHoverChange(self, hovered)
 
 	signalcall(UIWidget.onHoverChange, self, hovered)
 
-	if not self:isVirtual() and self:getItem() and var_0_10(self) then
+	if not self:isVirtual() and self:getItem() and isInventoryOrContainerWidget(self) then
 		if hovered or self:isHovered(true) then
-			var_0_12(self)
-		elseif var_0_4 == self then
+			trackHoveredInteractionWidget(self)
+		elseif hoveredInteractionWidget == self then
 			UIItem.clearHoveredInteractionCursor()
 		end
-	elseif var_0_4 == self then
+	elseif hoveredInteractionWidget == self then
 		UIItem.clearHoveredInteractionCursor()
 	end
 

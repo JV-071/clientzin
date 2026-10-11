@@ -68,7 +68,7 @@ local lastChangeGoldMs = 0
 local lastEatFoodMs = 0
 local lastExerciseMs = 0
 local lastExerciseDummyMsgMs = 0
-local var_0_15 = 0
+local lastAutoAmmoMs = 0
 local autoAmmoBurstEvent
 local cachedExerciseDummyKey
 local cachedExerciseDummyAt = 0
@@ -1601,7 +1601,7 @@ local function runAutoAmmo(force)
 
 	local now = g_clock.millis()
 
-	if not force and now < var_0_15 + var_0_51 then
+	if not force and now < lastAutoAmmoMs + var_0_51 then
 		return
 	end
 
@@ -1609,7 +1609,7 @@ local function runAutoAmmo(force)
 		stopAutoAmmoBurst()
 	end
 
-	var_0_15 = now
+	lastAutoAmmoMs = now
 
 	var_0_140()
 end
@@ -2177,7 +2177,7 @@ function HelperTools.loadFromConfig(config)
 		autoAmmoCheck:setChecked(autoAmmoEnabled)
 	end
 
-	var_0_15 = 0
+	lastAutoAmmoMs = 0
 end
 
 function HelperTools.onReconnectChange(self, on)

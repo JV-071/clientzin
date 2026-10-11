@@ -14,10 +14,10 @@ if not SupplyAnalyser then
 end
 
 local targetMaxMargin = 142
-local var_0_1 = 3600000
-local var_0_2 = 4096
+local ROLLING_WINDOW_MS = 3600000
+local EVENT_COMPACTION_THRESHOLD = 4096
 
-local function var_0_3()
+local function createSupplyEventQueue()
 	return {
 		first = 1,
 		last = 0,
@@ -25,14 +25,14 @@ local function var_0_3()
 	}
 end
 
-local function var_0_4(arg_2_0, arg_2_1)
+local function recordSupplyEvent(itemId, value)
 	local supplyEvents = SupplyAnalyser.supplyEvents
 	local tick = g_clock.millis()
-	local var_2_2 = supplyEvents.entries[supplyEvents.last]
+	local lastEvent = supplyEvents.entries[supplyEvents.last]
 
-	if var_2_2 and var_2_2.itemId == arg_2_0 and var_2_2.value == arg_2_1 and math.floor(var_2_2.tick / 1000) == math.floor(tick / 1000) then
-		var_2_2.count = (var_2_2.count or 1) + 1
-		var_2_2.tick = tick
+	if lastEvent and lastEvent.itemId == itemId and lastEvent.value == value and math.floor(lastEvent.tick / 1000) == math.floor(tick / 1000) then
+		lastEvent.count = (lastEvent.count or 1) + 1
+		lastEvent.tick = tick
 
 		return
 	end
@@ -40,43 +40,43 @@ local function var_0_4(arg_2_0, arg_2_1)
 	supplyEvents.last = supplyEvents.last + 1
 	supplyEvents.entries[supplyEvents.last] = {
 		count = 1,
-		itemId = arg_2_0,
-		value = arg_2_1,
+		itemId = itemId,
+		value = value,
 		tick = tick
 	}
 end
 
-local function var_0_5()
+local function expireSupplyEvents()
 	local supplyEvents = SupplyAnalyser.supplyEvents
 
 	if not supplyEvents then
 		return false
 	end
 
-	local var_3_1 = g_clock.millis() - var_0_1
-	local var_3_2 = false
+	local cutoffTime = g_clock.millis() - ROLLING_WINDOW_MS
+	local suppliesChanged = false
 
 	while supplyEvents.first <= supplyEvents.last do
-		local var_3_3 = supplyEvents.entries[supplyEvents.first]
+		local expiredEvent = supplyEvents.entries[supplyEvents.first]
 
-		if not var_3_3 or var_3_1 < var_3_3.tick then
+		if not expiredEvent or cutoffTime < expiredEvent.tick then
 			break
 		end
 
-		local numericValue = tonumber(SupplyAnalyser.items[var_3_3.itemId]) or 0
-		local var_3_5 = math.min(numericValue, tonumber(var_3_3.count) or 1)
+		local numericValue = tonumber(SupplyAnalyser.items[expiredEvent.itemId]) or 0
+		local expiredCount = math.min(numericValue, tonumber(expiredEvent.count) or 1)
 
-		if var_3_5 > 0 then
-			local var_3_6 = numericValue - var_3_5
+		if expiredCount > 0 then
+			local remainingCount = numericValue - expiredCount
 
-			if var_3_6 > 0 then
-				SupplyAnalyser.items[var_3_3.itemId] = var_3_6
+			if remainingCount > 0 then
+				SupplyAnalyser.items[expiredEvent.itemId] = remainingCount
 			else
-				SupplyAnalyser.items[var_3_3.itemId] = nil
+				SupplyAnalyser.items[expiredEvent.itemId] = nil
 			end
 
-			SupplyAnalyser.goldValue = math.max(0, SupplyAnalyser.goldValue - (tonumber(var_3_3.value) or 0) * var_3_5)
-			var_3_2 = true
+			SupplyAnalyser.goldValue = math.max(0, SupplyAnalyser.goldValue - (tonumber(expiredEvent.value) or 0) * expiredCount)
+			suppliesChanged = true
 		end
 
 		supplyEvents.entries[supplyEvents.first] = nil
@@ -84,23 +84,23 @@ local function var_0_5()
 	end
 
 	if supplyEvents.first > supplyEvents.last then
-		SupplyAnalyser.supplyEvents = var_0_3()
-	elseif supplyEvents.first > var_0_2 and supplyEvents.first > math.floor(supplyEvents.last / 2) then
-		local compactedSupplyEvents = var_0_3()
+		SupplyAnalyser.supplyEvents = createSupplyEventQueue()
+	elseif supplyEvents.first > EVENT_COMPACTION_THRESHOLD and supplyEvents.first > math.floor(supplyEvents.last / 2) then
+		local compactedSupplyEvents = createSupplyEventQueue()
 
-		for iter_3_0 = supplyEvents.first, supplyEvents.last do
+		for eventIndex = supplyEvents.first, supplyEvents.last do
 			compactedSupplyEvents.last = compactedSupplyEvents.last + 1
-			compactedSupplyEvents.entries[compactedSupplyEvents.last] = supplyEvents.entries[iter_3_0]
+			compactedSupplyEvents.entries[compactedSupplyEvents.last] = supplyEvents.entries[eventIndex]
 		end
 
 		SupplyAnalyser.supplyEvents = compactedSupplyEvents
 	end
 
-	if var_3_2 then
+	if suppliesChanged then
 		SupplyAnalyser.listDirty = true
 	end
 
-	return var_3_2
+	return suppliesChanged
 end
 
 local function updateSupplyTargetArrow()
@@ -145,7 +145,7 @@ function SupplyAnalyser.create(unusedArgument)
 	SupplyAnalyser.gaugeVisible = true
 	SupplyAnalyser.graphVisible = true
 	SupplyAnalyser.items = {}
-	SupplyAnalyser.supplyEvents = var_0_3()
+	SupplyAnalyser.supplyEvents = createSupplyEventQueue()
 	SupplyAnalyser.listDirty = false
 	SupplyAnalyser.forceUpdateBalance = false
 	SupplyAnalyser.updateBalance = true
@@ -227,7 +227,7 @@ function SupplyAnalyser.reset(unusedArgument)
 	SupplyAnalyser.goldHour = 0
 	SupplyAnalyser.target = 0
 	SupplyAnalyser.items = {}
-	SupplyAnalyser.supplyEvents = var_0_3()
+	SupplyAnalyser.supplyEvents = createSupplyEventQueue()
 	SupplyAnalyser.listDirty = false
 	SupplyAnalyser.forceUpdateBalance = false
 	SupplyAnalyser.updateBalance = true
@@ -245,9 +245,9 @@ function SupplyAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible
 		return
 	end
 
-	local var_17_0 = SupplyAnalyser:refreshGoldHour()
+	local supplyEventsChanged = SupplyAnalyser:refreshGoldHour()
 
-	updateScroll = SupplyAnalyser.listDirty or var_17_0 or updateScroll
+	updateScroll = SupplyAnalyser.listDirty or supplyEventsChanged or updateScroll
 
 	local target = SupplyAnalyser.target or 0
 	local goldHour = SupplyAnalyser.goldHour or 0
@@ -264,8 +264,8 @@ function SupplyAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible
 		return
 	end
 
-	for _, iter_17_1 in pairs(contentsPanel.lootedItems:getChildren()) do
-		iter_17_1.toBeRemoved = true
+	for _, itemWidget in pairs(contentsPanel.lootedItems:getChildren()) do
+		itemWidget.toBeRemoved = true
 	end
 
 	for key, unusedValue in pairs(SupplyAnalyser.items) do
@@ -286,7 +286,7 @@ function SupplyAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible
 
 	local numOfItems = 0
 
-	for iter_17_6, iter_17_7 in pairs(SupplyAnalyser.items) do
+	for itemId, itemCount in pairs(SupplyAnalyser.items) do
 		numOfItems = numOfItems + 1
 	end
 
@@ -306,11 +306,11 @@ function SupplyAnalyser.updateWindow(unusedArgument, updateScroll, ignoreVisible
 end
 
 function SupplyAnalyser.refreshGoldHour(unusedArgument)
-	local var_18_0 = var_0_5()
+	local supplyEventsChanged = expireSupplyEvents()
 
-	SupplyAnalyser.goldHour = AnalyserSession:perHourFromTotal(SupplyAnalyser.goldValue, SupplyAnalyser.launchTime, var_0_1)
+	SupplyAnalyser.goldHour = AnalyserSession:perHourFromTotal(SupplyAnalyser.goldValue, SupplyAnalyser.launchTime, ROLLING_WINDOW_MS)
 
-	return var_18_0
+	return supplyEventsChanged
 end
 
 function SupplyAnalyser.updateGraphics(self)
@@ -374,7 +374,7 @@ function SupplyAnalyser.addSuppliesItems(unusedArgument, itemId)
 
 	local value = getCurrentPrice(itemId)
 
-	var_0_4(itemId, value)
+	recordSupplyEvent(itemId, value)
 
 	SupplyAnalyser.goldValue = SupplyAnalyser.goldValue + value
 	SupplyAnalyser.updateBalance = true

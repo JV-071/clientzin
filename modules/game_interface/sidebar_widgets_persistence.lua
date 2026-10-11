@@ -628,7 +628,7 @@ function SidebarWidgetsPersistence.applyWidgetPlacements()
 		return false
 	end
 
-	local var_24_0 = false
+	local stillPending = false
 
 	for key, entry in pairs(placementByWidgetId) do
 		local var_24_1 = var_0_15(key, entry.type)
@@ -652,7 +652,7 @@ function SidebarWidgetsPersistence.applyWidgetPlacements()
 					SidebarLayoutState.noteWidgetPlacement(var_24_1)
 				end
 			elseif not var_0_19(var_24_1, entry.parentId, entry.index) then
-				var_24_0 = true
+				stillPending = true
 			end
 		else
 			local var_24_5 = entry.type or SidebarLayoutState and SidebarLayoutState.resolveTypeFromWidgetId(key)
@@ -666,12 +666,12 @@ function SidebarWidgetsPersistence.applyWidgetPlacements()
 			end
 
 			if var_24_5 ~= "container" and var_24_5 ~= "battlePassInbox" then
-				var_24_0 = true
+				stillPending = true
 			end
 		end
 	end
 
-	if not var_24_0 and modules.game_interface and modules.game_interface.getMiniWindowSidebarPanelsInOrder then
+	if not stillPending and modules.game_interface and modules.game_interface.getMiniWindowSidebarPanelsInOrder then
 		for unusedValue, entry in ipairs(modules.game_interface.getMiniWindowSidebarPanelsInOrder()) do
 			if entry and not entry:isDestroyed() and entry.order then
 				entry:order()
@@ -679,11 +679,11 @@ function SidebarWidgetsPersistence.applyWidgetPlacements()
 		end
 	end
 
-	if not var_24_0 and modules.game_containers and modules.game_containers.scheduleContainersLayoutRestore then
+	if not stillPending and modules.game_containers and modules.game_containers.scheduleContainersLayoutRestore then
 		modules.game_containers.scheduleContainersLayoutRestore()
 	end
 
-	return not var_24_0
+	return not stillPending
 end
 
 function SidebarWidgetsPersistence.enforceLayoutClosedState()

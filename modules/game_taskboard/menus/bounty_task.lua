@@ -1,4 +1,4 @@
-﻿TaskBoard.BountyTask = {}
+TaskBoard.BountyTask = {}
 
 local BountyTask = TaskBoard.BountyTask
 
@@ -33,12 +33,12 @@ end
 local BOUNTY_TRACKER_TOOLTIP_FOOTER = "Click in this window to open the Task Board dialog."
 local BOUNTY_TRACKER_TOOLTIP_INACTIVE = "Inactive Task.\n\nClick in this window to open Task Board dialog. Select a monster to start a new task."
 local lastBountyTrackerData
-local var_0_7
-local var_0_8
-local var_0_9
-local var_0_10
-local var_0_11 = false
-local var_0_12 = false
+local lastTrackerCreatureWidget
+local lastTrackerRaceId
+local pendingPanelData
+local lastPreferredListData
+local panelNeedsRefresh = false
+local preferredListNeedsRefresh = false
 
 local function buildBountyTrackerActiveTooltip(creatureName, killed, total)
 	return string.format("Creature: %s\nAmount: %s / %s", capitalizeWords(creatureName), TaskBoard:formatNumberWithCommas(killed), TaskBoard:formatNumberWithCommas(total)) .. "\n\n" .. tr(BOUNTY_TRACKER_TOOLTIP_FOOTER)
@@ -69,8 +69,8 @@ local function setBountyTrackerTooltip(slot, text)
 end
 
 local function setBountyTrackerInactive()
-	var_0_7 = nil
-	var_0_8 = nil
+	lastTrackerCreatureWidget = nil
+	lastTrackerRaceId = nil
 
 	local slot = getBountyTrackerSlot()
 
@@ -120,20 +120,20 @@ local function setBountyTrackerSelected(data)
 
 	if creature then
 		if raceData and raceData.outfit then
-			if creature ~= var_0_7 or raceId ~= var_0_8 then
+			if creature ~= lastTrackerCreatureWidget or raceId ~= lastTrackerRaceId then
 				creature:setOutfit(raceData.outfit)
 				creature:getCreature():setStaticWalking(1000)
 
-				var_0_7 = creature
-				var_0_8 = raceId
+				lastTrackerCreatureWidget = creature
+				lastTrackerRaceId = raceId
 			end
 
 			creature:setVisible(true)
 		else
 			creature:setVisible(false)
 
-			var_0_7 = nil
-			var_0_8 = nil
+			lastTrackerCreatureWidget = nil
+			lastTrackerRaceId = nil
 		end
 	end
 
@@ -845,7 +845,7 @@ local function buildPreferredLockedRow(container, slotIndex)
 	end
 end
 
-local function updatePreferredList(preferredListData, arg_48_1)
+local function updatePreferredList(preferredListData, skipCreatureListRefresh)
 	local preferredListPanel = TaskBoard.preferredListPanel
 
 	if not preferredListPanel then
@@ -878,30 +878,30 @@ local function updatePreferredList(preferredListData, arg_48_1)
 		end
 	end
 
-	if not arg_48_1 then
+	if not skipCreatureListRefresh then
 		populateBountyCreatureList("", getExcludedRaceIds())
 	end
 end
 
-function BountyTask.refreshPreferredList(unusedArgument, arg_49_1)
-	if not var_0_12 or not var_0_10 then
+function BountyTask.refreshPreferredList(unusedArgument, skipCreatureListRefresh)
+	if not preferredListNeedsRefresh or not lastPreferredListData then
 		return
 	end
 
-	updatePreferredList(var_0_10, arg_49_1)
+	updatePreferredList(lastPreferredListData, skipCreatureListRefresh)
 
-	var_0_12 = false
+	preferredListNeedsRefresh = false
 end
 
-local function var_0_47(arg_50_0, arg_50_1)
-	if not arg_50_0 or #arg_50_0 ~= #arg_50_1 then
+local function preferredListsMatch(previousList, updatedList)
+	if not previousList or #previousList ~= #updatedList then
 		return false
 	end
 
-	for index, entry in ipairs(arg_50_1) do
-		local var_50_0 = arg_50_0[index]
+	for index, entry in ipairs(updatedList) do
+		local previousEntry = previousList[index]
 
-		if not var_50_0 or var_50_0.unlocked ~= entry.unlocked or var_50_0.preferred ~= entry.preferred or var_50_0.unwanted ~= entry.unwanted then
+		if not previousEntry or previousEntry.unlocked ~= entry.unlocked or previousEntry.preferred ~= entry.preferred or previousEntry.unwanted ~= entry.unwanted then
 			return false
 		end
 	end
@@ -977,17 +977,17 @@ local function getTalismanBonus(talismanId, level)
 	local percent = 5
 
 	if talismanId == 3 then
-		local var_55_3 = percent + math.min(level, 15) * 1
+		local bonusPercent = percent + math.min(level, 15) * 1
 
 		if level > 15 then
-			var_55_3 = var_55_3 + math.min(level - 15, 40) * 0.5
+			bonusPercent = bonusPercent + math.min(level - 15, 40) * 0.5
 		end
 
 		if level > 55 then
-			var_55_3 = var_55_3 + (level - 55) * 0.2
+			bonusPercent = bonusPercent + (level - 55) * 0.2
 		end
 
-		return math.min(var_55_3, 100)
+		return math.min(bonusPercent, 100)
 	end
 
 	return 0
@@ -1030,7 +1030,7 @@ local function applyBountyTalismanRow(talismanId, data, labelWidget, upgradeButt
 	end
 end
 
-local function var_0_51(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, arg_57_5)
+local function updateBountyTaskPanel(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
 	local container = TaskBoard.bountyTaskPanel and TaskBoard.bountyTaskPanel:recursiveGetChildById("dailyTasks")
 
 	if not container then
@@ -1129,27 +1129,27 @@ local function var_0_51(slots, rerollTokens, claimUnlocked, difficultyBountyTask
 		applyBountyTalismanRow(3, talismanData[4], bestiaryTalisman, bestiaryButton, bountyBestiaryPanel)
 	end
 
-	if type(arg_57_5) == "table" and TaskBoard.preferredListPanel and TaskBoard.preferredListPanel:isVisible() then
+	if type(preferredListData) == "table" and TaskBoard.preferredListPanel and TaskBoard.preferredListPanel:isVisible() then
 		BountyTask:refreshPreferredList()
 	end
 
-	var_0_11 = false
+	panelNeedsRefresh = false
 end
 
 function BountyTask.refreshPanel(unusedArgument)
-	if not var_0_11 or not var_0_9 then
+	if not panelNeedsRefresh or not pendingPanelData then
 		return
 	end
 
-	local var_58_0 = var_0_9
+	local panelData = pendingPanelData
 
-	var_0_51(var_58_0.slots, var_58_0.rerollTokens, var_58_0.claimUnlocked, var_58_0.difficultyBountyTask, var_58_0.talismanData, var_58_0.preferredListData)
+	updateBountyTaskPanel(panelData.slots, panelData.rerollTokens, panelData.claimUnlocked, panelData.difficultyBountyTask, panelData.talismanData, panelData.preferredListData)
 end
 
 function onBountyTasksDaily(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
 	updateBountyKillTracker(slots)
 
-	var_0_9 = {
+	pendingPanelData = {
 		slots = slots,
 		rerollTokens = rerollTokens,
 		claimUnlocked = claimUnlocked,
@@ -1157,28 +1157,28 @@ function onBountyTasksDaily(slots, rerollTokens, claimUnlocked, difficultyBounty
 		talismanData = talismanData,
 		preferredListData = preferredListData
 	}
-	var_0_11 = true
+	panelNeedsRefresh = true
 
-	if type(preferredListData) == "table" and not var_0_47(var_0_10, preferredListData) then
-		var_0_10 = preferredListData
-		var_0_12 = true
+	if type(preferredListData) == "table" and not preferredListsMatch(lastPreferredListData, preferredListData) then
+		lastPreferredListData = preferredListData
+		preferredListNeedsRefresh = true
 	end
 
 	if not TaskBoard.mainWindow or not TaskBoard.mainWindow:isVisible() or not TaskBoard.bountyTaskPanel or not TaskBoard.bountyTaskPanel:isVisible() then
 		return
 	end
 
-	var_0_51(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
+	updateBountyTaskPanel(slots, rerollTokens, claimUnlocked, difficultyBountyTask, talismanData, preferredListData)
 end
 
 local function onGameStartBounty()
 	bountyCreatureCache = nil
-	var_0_7 = nil
-	var_0_8 = nil
-	var_0_9 = nil
-	var_0_10 = nil
-	var_0_11 = false
-	var_0_12 = false
+	lastTrackerCreatureWidget = nil
+	lastTrackerRaceId = nil
+	pendingPanelData = nil
+	lastPreferredListData = nil
+	panelNeedsRefresh = false
+	preferredListNeedsRefresh = false
 
 	scheduleEvent(buildBountyCreatureCache, 500)
 	scheduleEvent(function()
@@ -1193,12 +1193,12 @@ local function onGameEndBounty()
 	selectedBountyRow = nil
 	selectedBountyRace = nil
 	lastBountyTrackerData = nil
-	var_0_7 = nil
-	var_0_8 = nil
-	var_0_9 = nil
-	var_0_10 = nil
-	var_0_11 = false
-	var_0_12 = false
+	lastTrackerCreatureWidget = nil
+	lastTrackerRaceId = nil
+	pendingPanelData = nil
+	lastPreferredListData = nil
+	panelNeedsRefresh = false
+	preferredListNeedsRefresh = false
 
 	setBountyTrackerInactive()
 end

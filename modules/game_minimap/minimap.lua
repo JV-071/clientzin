@@ -929,7 +929,7 @@ local function applyLayoutMode(isHorizontal, container)
 	end
 
 	local showHorizontal = isHorizontal == true
-	local var_51_4 = showHorizontal and resolveHorizontalSide(container) or nil
+	local horizontalSide = showHorizontal and resolveHorizontalSide(container) or nil
 	local dragHandle = getLayoutWidget(var_51_2, "horizontalDragHandle")
 
 	setPhantomStyleBackgroundVisible(var_51_0, not showHorizontal)
@@ -940,8 +940,8 @@ local function applyLayoutMode(isHorizontal, container)
 
 	if ui:isVisible() == not showHorizontal and var_51_2:isVisible() == showHorizontal then
 		if showHorizontal then
-			if lastHorizontalSide ~= var_51_4 then
-				applyHorizontalPanelLayout(var_51_2, var_51_4)
+			if lastHorizontalSide ~= horizontalSide then
+				applyHorizontalPanelLayout(var_51_2, horizontalSide)
 				addEvent(function()
 					if var_51_0 and not var_51_0:isDestroyed() then
 						var_51_0:updateLayout()
@@ -984,7 +984,7 @@ local function applyLayoutMode(isHorizontal, container)
 	var_0_38()
 
 	if showHorizontal then
-		applyHorizontalPanelLayout(var_51_2, var_51_4)
+		applyHorizontalPanelLayout(var_51_2, horizontalSide)
 	else
 		lastHorizontalSide = nil
 	end

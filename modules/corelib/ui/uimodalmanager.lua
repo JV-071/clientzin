@@ -495,9 +495,9 @@ function g_modalManager.show(widget, opts)
 
 	opts = opts or {}
 
-	local var_40_0, var_40_1 = pcall(createBlocker, widget, opts)
+	local ok, var_40_1 = pcall(createBlocker, widget, opts)
 
-	if not var_40_0 or not var_40_1 then
+	if not ok or not var_40_1 then
 		return
 	end
 

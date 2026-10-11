@@ -1537,15 +1537,15 @@ function Cyclopedia.loadCharacterCombatStats(data, mitigation, additionalSkillsA
 
 			local valor = combatsArray[i][2]
 			local porcentaje = valor / 100
-			local var_76_5 = (65535 - valor) / 100
+			local wrappedNegativePercentage = (65535 - valor) / 100
 			local resultado
 
-			if porcentaje <= var_76_5 then
+			if porcentaje <= wrappedNegativePercentage then
 				resultado = string.format("+%.2f%%", porcentaje)
 
 				widget.value:setColor("green")
 			else
-				resultado = string.format("-%.2f%%", var_76_5)
+				resultado = string.format("-%.2f%%", wrappedNegativePercentage)
 
 				widget.value:setColor("red")
 			end
@@ -2046,7 +2046,7 @@ function Cyclopedia.configureCharacterCategories()
 			text = "General Stats",
 			icon = "/images/icons/icon-character-generalstats",
 			subCategories = function()
-				local var_90_0 = {
+				local generalStatCategories = {
 					{
 						text = "Character Stats",
 						open = "CharacterStats",
@@ -2054,23 +2054,23 @@ function Cyclopedia.configureCharacterCategories()
 					}
 				}
 
-				table.insert(var_90_0, {
+				table.insert(generalStatCategories, {
 					text = "Offence Stats",
 					open = "OffenceStats",
 					icon = "/images/icons/icon-character-generalstats-offence"
 				})
-				table.insert(var_90_0, {
+				table.insert(generalStatCategories, {
 					text = "Deffence Stats",
 					open = "DeffenceStats",
 					icon = "/images/icons/icon-character-generalstats-defence"
 				})
-				table.insert(var_90_0, {
+				table.insert(generalStatCategories, {
 					text = "Misc. Stats",
 					open = "MiscStats",
 					icon = "/images/icons/icon-character-generalstats-misc"
 				})
 
-				return var_90_0
+				return generalStatCategories
 			end
 		},
 		{
@@ -2579,29 +2579,29 @@ function Cyclopedia.onCharacterInventorySlotClick(slot, widget)
 	g_game.inspectionObject(3, item:getId(), math.max(1, item:getCount()))
 end
 
-function Cyclopedia.applyCharacterEquipmentSlot(arg_110_0, arg_110_1)
+function Cyclopedia.applyCharacterEquipmentSlot(inventorySlot, item)
 	if not UI or not UI.InfoBase or not UI.InfoBase.inventoryPanel then
 		return
 	end
 
-	local itemWidget = UI.InfoBase.inventoryPanel["slot" .. arg_110_0]
-	local var_110_1 = Cyclopedia.InventorySlotStyles[arg_110_0]
+	local itemWidget = UI.InfoBase.inventoryPanel["slot" .. inventorySlot]
+	local slotStyle = Cyclopedia.InventorySlotStyles[inventorySlot]
 
-	if not itemWidget or not var_110_1 then
+	if not itemWidget or not slotStyle then
 		return
 	end
 
-	if arg_110_1 then
+	if item then
 		itemWidget:setStyle("InventoryItemCyclopedia")
-		itemWidget:setItem(arg_110_1)
+		itemWidget:setItem(item)
 		itemWidget:setIcon("")
 
-		local var_110_2 = ItemsDatabase.OVERLORD_TIER_SLOTS[arg_110_0] and ItemsDatabase.isOverlordActive()
+		local overlordTierActive = ItemsDatabase.OVERLORD_TIER_SLOTS[inventorySlot] and ItemsDatabase.isOverlordActive()
 
-		ItemsDatabase.setTier(itemWidget, arg_110_1, var_110_2)
+		ItemsDatabase.setTier(itemWidget, item, overlordTierActive)
 	else
-		itemWidget:setStyle(var_110_1.name)
-		itemWidget:setIcon(var_110_1.icon)
+		itemWidget:setStyle(slotStyle.name)
+		itemWidget:setIcon(slotStyle.icon)
 		itemWidget:setItem(nil)
 		ItemsDatabase.setTier(itemWidget, 0)
 	end
@@ -2618,14 +2618,14 @@ function Cyclopedia.refreshOverlordTiers()
 		return
 	end
 
-	local var_111_1 = ItemsDatabase.isOverlordActive()
+	local overlordActive = ItemsDatabase.isOverlordActive()
 
 	for selectedSlot in pairs(ItemsDatabase.OVERLORD_TIER_SLOTS) do
 		local widget = UI.InfoBase.inventoryPanel["slot" .. selectedSlot]
 		local item = localPlayer:getInventoryItem(selectedSlot)
 
 		if widget and item then
-			ItemsDatabase.setTier(widget, item, var_111_1)
+			ItemsDatabase.setTier(widget, item, overlordActive)
 		end
 	end
 end
@@ -3711,7 +3711,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 
 	local leftPanel = UI.OffenceStats.leftPanel
 	local rightPanel = UI.OffenceStats.rightPanel
-	local var_159_2 = {
+	local leftStatBlocks = {
 		{
 			principal = {
 				valueMarginRight = -2,
@@ -3759,7 +3759,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	}
 
 	if (data.weaponElementDamage or 0) > 0 then
-		table.insert(var_159_2, {
+		table.insert(leftStatBlocks, {
 			principal = {
 				name = "Converted Damage",
 				percent = true,
@@ -3770,7 +3770,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 		})
 	end
 
-	table.insert(var_159_2, {
+	table.insert(leftStatBlocks, {
 		principal = {
 			percent = true,
 			name = "Onslaught",
@@ -3791,7 +3791,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 			}
 		}
 	})
-	table.insert(var_159_2, {
+	table.insert(leftStatBlocks, {
 		principal = {
 			percent = true,
 			name = "Life Leech",
@@ -3824,7 +3824,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	})
 
 	if (data.lifeGainOnHit or 0) > 0 then
-		table.insert(var_159_2, {
+		table.insert(leftStatBlocks, {
 			principal = {
 				valueMarginRight = -2,
 				name = "Life Gain on Hit",
@@ -3834,7 +3834,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 		})
 	end
 
-	table.insert(var_159_2, {
+	table.insert(leftStatBlocks, {
 		principal = {
 			percent = true,
 			name = "Mana Leech",
@@ -3867,7 +3867,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	})
 
 	if (data.manaGainOnKill or 0) > 0 then
-		table.insert(var_159_2, {
+		table.insert(leftStatBlocks, {
 			principal = {
 				valueMarginRight = -2,
 				name = "Mana Gain on Kill",
@@ -3880,28 +3880,28 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	local damageBlock = buildDamageAgainstTargetsBlock(data)
 
 	if damageBlock then
-		table.insert(var_159_2, damageBlock)
+		table.insert(leftStatBlocks, damageBlock)
 	end
 
 	local damageBlock = buildProficiencySkillBonusBlock(data.autoAttackExtraDamage, "Auto-Attack Extra Damage")
 
 	if damageBlock then
-		table.insert(var_159_2, damageBlock)
+		table.insert(leftStatBlocks, damageBlock)
 	end
 
-	local var_159_5 = buildProficiencySkillBonusBlock(data.extraSpellDamage, "Extra Spell Damage")
+	local extraSpellDamageBlock = buildProficiencySkillBonusBlock(data.extraSpellDamage, "Extra Spell Damage")
 
-	if var_159_5 then
-		table.insert(var_159_2, var_159_5)
+	if extraSpellDamageBlock then
+		table.insert(leftStatBlocks, extraSpellDamageBlock)
 	end
 
-	local var_159_6 = buildProficiencySkillBonusBlock(data.extraSpellHealing, "Extra Spell Healing")
+	local extraSpellHealingBlock = buildProficiencySkillBonusBlock(data.extraSpellHealing, "Extra Spell Healing")
 
-	if var_159_6 then
-		table.insert(var_159_2, var_159_6)
+	if extraSpellHealingBlock then
+		table.insert(leftStatBlocks, extraSpellHealingBlock)
 	end
 
-	table.insert(var_159_2, {
+	table.insert(leftStatBlocks, {
 		principal = {
 			percent = true,
 			name = "Cleave",
@@ -3910,15 +3910,15 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 	})
 
 	local rightBlocks = {}
-	local var_159_8 = buildCriticalChanceTypeItems(data)
-	local var_159_9 = buildCriticalDamageTypeItems(data)
+	local criticalChanceTypeItems = buildCriticalChanceTypeItems(data)
+	local criticalDamageTypeItems = buildCriticalDamageTypeItems(data)
 
-	if (data.critChance or 0) > 0 or (data.critDamage or 0) > 0 or (data.critChanceFlat or 0) > 0 or (data.critChanceEquipament or 0) > 0 or (data.critChanceImbuement or 0) > 0 or (data.critChanceWheel or 0) > 0 or (data.critChanceConcoction or 0) > 0 or (data.critDamageFlat or 0) > 0 or (data.critDamageBase or 0) > 0 or (data.critDamageImbuement or 0) > 0 or (data.critDamageWheel or 0) > 0 or (data.critDamageConcoction or 0) > 0 or #var_159_8 > 0 or #var_159_9 > 0 then
+	if (data.critChance or 0) > 0 or (data.critDamage or 0) > 0 or (data.critChanceFlat or 0) > 0 or (data.critChanceEquipament or 0) > 0 or (data.critChanceImbuement or 0) > 0 or (data.critChanceWheel or 0) > 0 or (data.critChanceConcoction or 0) > 0 or (data.critDamageFlat or 0) > 0 or (data.critDamageBase or 0) > 0 or (data.critDamageImbuement or 0) > 0 or (data.critDamageWheel or 0) > 0 or (data.critDamageConcoction or 0) > 0 or #criticalChanceTypeItems > 0 or #criticalDamageTypeItems > 0 then
 		table.insert(rightBlocks, {
 			header = "Critical Hit:"
 		})
 
-		local var_159_10 = {
+		local criticalChanceBlock = {
 			principal = {
 				marginLeft = 20,
 				name = "Chance",
@@ -3956,21 +3956,21 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 			}
 		}
 
-		if #var_159_8 > 0 then
-			var_159_10.typeSections = {
+		if #criticalChanceTypeItems > 0 then
+			criticalChanceBlock.typeSections = {
 				{
 					itemMarginTop = 3,
 					itemMarginLeft = 58,
 					subheader = "Critical Chance by Type",
 					marginTop = 5,
-					items = var_159_8
+					items = criticalChanceTypeItems
 				}
 			}
 		end
 
-		table.insert(rightBlocks, var_159_10)
+		table.insert(rightBlocks, criticalChanceBlock)
 
-		local var_159_11 = {
+		local criticalDamageBlock = {
 			principal = {
 				marginLeft = 20,
 				name = "Extra Damage",
@@ -4008,19 +4008,19 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 			}
 		}
 
-		if #var_159_9 > 0 then
-			var_159_11.typeSections = {
+		if #criticalDamageTypeItems > 0 then
+			criticalDamageBlock.typeSections = {
 				{
 					itemMarginTop = 3,
 					itemMarginLeft = 56,
 					subheader = "Critical Damage by Type",
 					marginTop = 5,
-					items = var_159_9
+					items = criticalDamageTypeItems
 				}
 			}
 		end
 
-		table.insert(rightBlocks, var_159_11)
+		table.insert(rightBlocks, criticalDamageBlock)
 	end
 
 	if data.perfectShotDamage then
@@ -4053,7 +4053,7 @@ function Cyclopedia.onCyclopediaCharacterOffenceStats(data)
 		end
 	end
 
-	for _, block in ipairs(var_159_2) do
+	for _, block in ipairs(leftStatBlocks) do
 		Cyclopedia.renderOffenceStatBlock(leftPanel, block)
 	end
 

@@ -1,4 +1,4 @@
-﻿UIMoveableTabBar = extends(UIWidget, "UIMoveableTabBar")
+UIMoveableTabBar = extends(UIWidget, "UIMoveableTabBar")
 
 local function onTabClick(tab)
 	if tab.tabBar.currentTab == tab then
@@ -24,7 +24,7 @@ local function updateMargins(tabBar)
 	end
 end
 
-local function var_0_2(tabBar)
+local function updateNextNavigationMargin(tabBar)
 	local nextNavigation = tabBar.nextNavigation
 
 	if not nextNavigation then
@@ -43,8 +43,8 @@ local function var_0_2(tabBar)
 
 	local width = tabBar.tabSpacing * (#tabBar.tabs - 1)
 
-	for iter_3_0 = 1, #tabBar.tabs do
-		width = width + tabBar.tabs[iter_3_0]:getWidth()
+	for tabIndex = 1, #tabBar.tabs do
+		width = width + tabBar.tabs[tabIndex]:getWidth()
 	end
 
 	local paddingLeft = tabBar:getPaddingLeft() + width
@@ -52,9 +52,9 @@ local function var_0_2(tabBar)
 	nextNavigation:setMarginLeft(paddingLeft - tabBar:getWidth())
 end
 
-local function var_0_3(arg_4_0)
-	for iter_4_0 = 1, #arg_4_0 do
-		if arg_4_0[iter_4_0].navigationHighlight then
+local function hasNavigationHighlight(tabs)
+	for tabIndex = 1, #tabs do
+		if tabs[tabIndex].navigationHighlight then
 			return true
 		end
 	end
@@ -62,13 +62,13 @@ local function var_0_3(arg_4_0)
 	return false
 end
 
-local function var_0_4(arg_5_0)
-	if arg_5_0.prevNavigation then
-		arg_5_0.prevNavigation:setOn(var_0_3(arg_5_0.preTabs))
+local function updateNavigationHighlights(tabBar)
+	if tabBar.prevNavigation then
+		tabBar.prevNavigation:setOn(hasNavigationHighlight(tabBar.preTabs))
 	end
 
-	if arg_5_0.nextNavigation then
-		arg_5_0.nextNavigation:setOn(var_0_3(arg_5_0.postTabs))
+	if tabBar.nextNavigation then
+		tabBar.nextNavigation:setOn(hasNavigationHighlight(tabBar.postTabs))
 	end
 end
 
@@ -101,8 +101,8 @@ local function updateNavigation(tabBar)
 		end
 	end
 
-	var_0_2(tabBar)
-	var_0_4(tabBar)
+	updateNextNavigationMargin(tabBar)
+	updateNavigationHighlights(tabBar)
 end
 
 local function updateIndexes(tabBar, tab, xoff)
@@ -767,22 +767,22 @@ function UIMoveableTabBar.getCurrentTab(self)
 	return self.currentTab
 end
 
-function UIMoveableTabBar.getTabs(arg_40_0)
-	local var_40_0 = {}
+function UIMoveableTabBar.getTabs(tabBar)
+	local allTabs = {}
 
-	for unusedValue, preTab in ipairs(arg_40_0.preTabs) do
-		var_40_0[#var_40_0 + 1] = preTab
+	for unusedValue, preTab in ipairs(tabBar.preTabs) do
+		allTabs[#allTabs + 1] = preTab
 	end
 
-	for unusedValue, tab in ipairs(arg_40_0.tabs) do
-		var_40_0[#var_40_0 + 1] = tab
+	for unusedValue, tab in ipairs(tabBar.tabs) do
+		allTabs[#allTabs + 1] = tab
 	end
 
-	for unusedValue, postTab in ipairs(arg_40_0.postTabs) do
-		var_40_0[#var_40_0 + 1] = postTab
+	for unusedValue, postTab in ipairs(tabBar.postTabs) do
+		allTabs[#allTabs + 1] = postTab
 	end
 
-	return var_40_0
+	return allTabs
 end
 
 function UIMoveableTabBar.setNavigation(self, prevButton, nextButton)
@@ -804,14 +804,14 @@ function UIMoveableTabBar.setNavigation(self, prevButton, nextButton)
 	updateNavigation(self)
 end
 
-function UIMoveableTabBar.setTabNavigationHighlight(arg_44_0, arg_44_1, arg_44_2)
-	if not arg_44_1 then
+function UIMoveableTabBar.setTabNavigationHighlight(tabBar, tab, highlighted)
+	if not tab then
 		return
 	end
 
-	arg_44_1.navigationHighlight = arg_44_2 == true
+	tab.navigationHighlight = highlighted == true
 
-	updateNavigation(arg_44_0)
+	updateNavigation(tabBar)
 end
 
 function UIMoveableTabBar.setDropTarget(self, widget, callback)

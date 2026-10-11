@@ -777,21 +777,21 @@ function HelperConfigTab.deleteProfile(explicitName)
 		return
 	end
 
-	local var_39_3 = var_39_1.activeProfile == var_39_0
+	local wasActive = var_39_1.activeProfile == var_39_0
 
 	var_39_1.profiles[var_39_0] = nil
 
 	local activeProfile = var_39_1.activeProfile
 
-	if var_39_3 or type(var_39_1.profiles[activeProfile]) ~= "table" then
+	if wasActive or type(var_39_1.profiles[activeProfile]) ~= "table" then
 		activeProfile = HelperConfigTab.getFallbackProfileName(var_39_1.profiles)
 	end
 
-	local var_39_5 = type(var_39_1.profiles[activeProfile]) == "table" and ctx.copyConfig(var_39_1.profiles[activeProfile]) or {}
+	local fallbackConfig = type(var_39_1.profiles[activeProfile]) == "table" and ctx.copyConfig(var_39_1.profiles[activeProfile]) or {}
 
-	if var_39_3 then
+	if wasActive then
 		var_39_1.activeProfile = activeProfile
-		var_39_1.current = ctx.copyConfig(var_39_5)
+		var_39_1.current = ctx.copyConfig(fallbackConfig)
 	end
 
 	if not ctx.writeHelperJSON(var_39_1) then
@@ -814,8 +814,8 @@ function HelperConfigTab.deleteProfile(explicitName)
 		ctx.showMessage(false, profileTr("Profile \"%s\" deleted.", var_39_0))
 	end
 
-	if var_39_3 and ctx.applyConfig then
-		ctx.applyConfig(var_39_5)
+	if wasActive and ctx.applyConfig then
+		ctx.applyConfig(fallbackConfig)
 	end
 
 	HelperConfigTab.setSelectedProfileName(activeProfile)
@@ -1057,7 +1057,7 @@ function HelperConfigTab.deleteQuickProfile()
 		confirmBox = nil
 	end
 
-	local function var_49_3()
+	local function confirmDelete()
 		closeConfirm()
 		HelperConfigTab.deleteProfile(name)
 	end
@@ -1069,9 +1069,9 @@ function HelperConfigTab.deleteQuickProfile()
 		},
 		{
 			text = configText("yes"),
-			callback = var_49_3
+			callback = confirmDelete
 		}
-	}, var_49_3, closeConfirm)
+	}, confirmDelete, closeConfirm)
 end
 
 function HelperConfigTab.init(pctx)

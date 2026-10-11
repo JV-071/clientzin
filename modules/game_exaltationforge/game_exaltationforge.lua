@@ -82,21 +82,21 @@ function Forge.getMenus()
 	return nil
 end
 
-function Forge.createTabPanel(styleName, arg_9_1)
+function Forge.createTabPanel(styleName, panelId)
 	local menus = g_ui.createWidget(styleName, Forge.getMenus())
 
-	if arg_9_1 then
-		menus:setId(arg_9_1)
+	if panelId then
+		menus:setId(panelId)
 	end
 
 	return menus
 end
 
-function Forge.anchorContentPanel(arg_10_0)
-	arg_10_0:addAnchor(AnchorTop, "menus", AnchorBottom)
-	arg_10_0:addAnchor(AnchorLeft, "parent", AnchorLeft)
-	arg_10_0:addAnchor(AnchorRight, "parent", AnchorRight)
-	arg_10_0:addAnchor(AnchorBottom, "parent", AnchorBottom)
+function Forge.anchorContentPanel(contentPanel)
+	contentPanel:addAnchor(AnchorTop, "menus", AnchorBottom)
+	contentPanel:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	contentPanel:addAnchor(AnchorRight, "parent", AnchorRight)
+	contentPanel:addAnchor(AnchorBottom, "parent", AnchorBottom)
 end
 
 function Forge.setActiveTabButton(currentButton)
@@ -750,50 +750,50 @@ end
 local FORGE_DUST_ITEM_ID = 37160
 local FORGE_CORE_ITEM_ID = 37110
 local FORGE_GOLD_ITEM_ID = 3031
-local var_0_37 = "#C0C0C0"
+local DEFAULT_FORGE_TEXT_COLOR = "#C0C0C0"
 
-local function var_0_38(ch, arg_54_1)
-	arg_54_1 = arg_54_1 or var_0_37
+local function colorizeForgeTextPreservingIcons(ch, textColor)
+	textColor = textColor or DEFAULT_FORGE_TEXT_COLOR
 
 	if not ch:find("{icon:", 1, true) then
-		return string.format("{%s, %s}", ch, arg_54_1)
+		return string.format("{%s, %s}", ch, textColor)
 	end
 
-	local var_54_0 = {}
+	local textParts = {}
 	local buffer = 1
 
 	while buffer <= #ch do
-		local var_54_2 = ch:find("{icon:", buffer, true)
+		local iconStart = ch:find("{icon:", buffer, true)
 
-		if not var_54_2 then
-			local var_54_3 = ch:sub(buffer)
+		if not iconStart then
+			local trailingText = ch:sub(buffer)
 
-			if var_54_3 ~= "" then
-				var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", var_54_3, arg_54_1)
+			if trailingText ~= "" then
+				textParts[#textParts + 1] = string.format("{%s, %s}", trailingText, textColor)
 			end
 
 			break
 		end
 
-		local var_54_4 = ch:find("}", var_54_2, true)
+		local iconEnd = ch:find("}", iconStart, true)
 
-		if not var_54_4 then
-			var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", ch:sub(buffer), arg_54_1)
+		if not iconEnd then
+			textParts[#textParts + 1] = string.format("{%s, %s}", ch:sub(buffer), textColor)
 
 			break
 		end
 
-		local var_54_5 = ch:sub(buffer, var_54_2 - 1)
+		local plainText = ch:sub(buffer, iconStart - 1)
 
-		if var_54_5 ~= "" then
-			var_54_0[#var_54_0 + 1] = string.format("{%s, %s}", var_54_5, arg_54_1)
+		if plainText ~= "" then
+			textParts[#textParts + 1] = string.format("{%s, %s}", plainText, textColor)
 		end
 
-		var_54_0[#var_54_0 + 1] = ch:sub(var_54_2, var_54_4)
-		buffer = var_54_4 + 1
+		textParts[#textParts + 1] = ch:sub(iconStart, iconEnd)
+		buffer = iconEnd + 1
 	end
 
-	return table.concat(var_54_0)
+	return table.concat(textParts)
 end
 
 local function buildForgeBonusPresentation(bonus, leftItemId)
@@ -816,7 +816,7 @@ local function buildForgeBonusPresentation(bonus, leftItemId)
 	return tonumber(byClass[tostring(leftItemId or 0)]) or 0
 end
 
-local function var_0_40(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
+local function buildForgeBonusReward(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
 	bonus = tonumber(bonus) or 0
 
 	if bonus <= 0 then
@@ -949,10 +949,10 @@ function Forge.showResultBonus(self, bonusInfo)
 
 	if descWidget then
 		local text = bonusInfo.text or ""
-		local var_58_7, line2 = text:match("^(.-)\n(.*)$")
+		local firstLine, line2 = text:match("^(.-)\n(.*)$")
 
-		if not var_58_7 then
-			var_58_7 = text
+		if not firstLine then
+			firstLine = text
 			line2 = nil
 		end
 
@@ -969,19 +969,19 @@ function Forge.showResultBonus(self, bonusInfo)
 			descWidget:setTextWrap(false)
 		end
 
-		descWidget:setColor(var_0_37)
+		descWidget:setColor(DEFAULT_FORGE_TEXT_COLOR)
 
-		if var_58_7:find("{icon:", 1, true) and not line2 then
-			descWidget:setColoredText(var_0_38(var_58_7))
+		if firstLine:find("{icon:", 1, true) and not line2 then
+			descWidget:setColoredText(colorizeForgeTextPreservingIcons(firstLine))
 		else
-			descWidget:setText(var_58_7)
+			descWidget:setText(firstLine)
 		end
 
 		descWidget:setVisible(true)
 
 		if descWidget2 then
 			if line2 and line2 ~= "" then
-				descWidget2:setColor(var_0_37)
+				descWidget2:setColor(DEFAULT_FORGE_TEXT_COLOR)
 				descWidget2:setText(line2)
 				descWidget2:setVisible(true)
 			else
@@ -1106,7 +1106,7 @@ function Forge.displayResult(self, actionType, convergence, success, leftItemId,
 	local bonusInfo
 
 	if actionType == ACTION_FUSION_TYPE then
-		bonusInfo = var_0_40(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
+		bonusInfo = buildForgeBonusReward(bonus, leftItemId, leftTier, coreCount, extraItemId, extraTier)
 	end
 
 	local closeWidget = resultWindow:getChildById("close")

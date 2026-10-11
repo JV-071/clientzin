@@ -1635,7 +1635,7 @@ function Cyclopedia.requestHouseList(cityName)
 	g_game.sendCyclopediaHouseAuction(Cyclopedia.HouseAction.OPEN, 0, 0, 0, payload)
 end
 
-local var_0_78 = {
+local BID_ERROR_MESSAGES = {
 	"Incorrect character name or password.",
 	"Your character does not live on this game world.",
 	"Characters on the beginner's island are not allowed to rent houses.",
@@ -1661,7 +1661,7 @@ local var_0_78 = {
 	"You cannot bid for a house while your character is listed on the character bazaar.",
 	"You need level 300 to buy a house."
 }
-local var_0_79 = {
+local OWNER_ACTION_ERROR_MESSAGES = {
 	"Incorrect password.",
 	"You are not the owner of this house.",
 	"You cannot change the status of this guildhall because you are no longer the leader of an active guild.",
@@ -1689,7 +1689,7 @@ local var_0_79 = {
 	"You can only transfer one house at a time.",
 	"You may not transfer this house as long as you are bidding for a house."
 }
-local var_0_80 = {
+local TRANSFER_ERROR_MESSAGES = {
 	"Incorrect password.",
 	"This character is not the designated new owner of this house.",
 	"You cannot accept a house transfer as long as one of your characters is bidding for a house.",
@@ -1709,7 +1709,7 @@ local var_0_80 = {
 	"You may not rent any new houses as long as you have an unacknowledged rule violation record in your account.",
 	"You cannot rent a new house while your character is listed on the character bazaar."
 }
-local var_0_81 = {
+local REJECT_TRANSFER_ERROR_MESSAGES = {
 	"Incorrect password.",
 	"This character is not the designated new owner of this house.",
 	"You cannot accept a house transfer as long as one of your characters is bidding for a house.",
@@ -1727,38 +1727,38 @@ local var_0_81 = {
 	"You may not rent any new houses as long as your account is frozen.",
 	"The house is scheduled for renovation and can not be rented."
 }
-local var_0_82 = {
-	[Cyclopedia.HouseAction.BID] = var_0_78,
-	[Cyclopedia.HouseAction.MOVEOUT] = var_0_79,
-	[Cyclopedia.HouseAction.TRANSFER] = var_0_80,
-	[Cyclopedia.HouseAction.CANCEL_MOVEOUT] = var_0_79,
-	[Cyclopedia.HouseAction.CANCEL_TRANSFER] = var_0_79,
-	[Cyclopedia.HouseAction.ACCEPT_TRANSFER] = var_0_80,
-	[Cyclopedia.HouseAction.REJECT_TRANSFER] = var_0_81
+local ACTION_ERROR_MESSAGES = {
+	[Cyclopedia.HouseAction.BID] = BID_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.MOVEOUT] = OWNER_ACTION_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.TRANSFER] = TRANSFER_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.CANCEL_MOVEOUT] = OWNER_ACTION_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.CANCEL_TRANSFER] = OWNER_ACTION_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.ACCEPT_TRANSFER] = TRANSFER_ERROR_MESSAGES,
+	[Cyclopedia.HouseAction.REJECT_TRANSFER] = REJECT_TRANSFER_ERROR_MESSAGES
 }
 
-local function var_0_83(arg_76_0)
-	local var_76_0 = Cyclopedia.House.Info or {}
+local function describeBidRestriction(errorCode)
+	local houseInfo = Cyclopedia.House.Info or {}
 
-	if arg_76_0 == 4 then
-		local numericValue = tonumber(var_76_0.excludedUntil) or 0
+	if errorCode == 4 then
+		local numericValue = tonumber(houseInfo.excludedUntil) or 0
 
 		if numericValue > 0 then
 			return "You have been excluded from any auction until " .. os.date("%Y-%m-%d, %H:%M", numericValue) .. " because you still owe your old landlord the rent for the last month."
 		end
 
 		return "You have been excluded from any auction because you still owe your old landlord the rent for the last month."
-	elseif arg_76_0 == 12 then
-		local numericValue = tonumber(var_76_0.regularHousesOwned) or 0
-		local var_76_3 = tonumber(var_76_0.maxRegularHouses) or 0
+	elseif errorCode == 12 then
+		local numericValue = tonumber(houseInfo.regularHousesOwned) or 0
+		local maxRegularHouses = tonumber(houseInfo.maxRegularHouses) or 0
 
-		if var_76_3 > 0 then
-			return string.format("The characters of your account already own %d houses. You may only own %d houses at the same time.", numericValue, var_76_3)
+		if maxRegularHouses > 0 then
+			return string.format("The characters of your account already own %d houses. You may only own %d houses at the same time.", numericValue, maxRegularHouses)
 		end
 
 		return "The characters of your account already own the maximum number of houses."
-	elseif arg_76_0 == 13 then
-		local numericValue = tonumber(var_76_0.maxWorldHouses) or 0
+	elseif errorCode == 13 then
+		local numericValue = tonumber(houseInfo.maxWorldHouses) or 0
 
 		if numericValue > 0 then
 			return string.format("You may only own %d houses on each world at the same time.", numericValue)
@@ -1776,35 +1776,35 @@ local function describeActionError(action, numericValue)
 	end
 
 	if action == Cyclopedia.HouseAction.BID then
-		local var_77_0 = var_0_83(numericValue)
+		local bidRestrictionMessage = describeBidRestriction(numericValue)
 
-		if var_77_0 then
-			return var_77_0
+		if bidRestrictionMessage then
+			return bidRestrictionMessage
 		end
 	end
 
-	local var_77_1 = var_0_82[action]
+	local actionErrorMessages = ACTION_ERROR_MESSAGES[action]
 
-	if var_77_1 and var_77_1[numericValue] then
-		return var_77_1[numericValue]
+	if actionErrorMessages and actionErrorMessages[numericValue] then
+		return actionErrorMessages[numericValue]
 	end
 
 	return "Internal error."
 end
 
-local function var_0_85(arg_78_0, arg_78_1, numericValue)
+local function applyHouseActionAvailability(button, action, numericValue)
 	numericValue = tonumber(numericValue) or 0
 
 	if numericValue == 0 then
-		arg_78_0:setEnabled(true)
-		arg_78_0:setTooltip("")
+		button:setEnabled(true)
+		button:setTooltip("")
 
 		return
 	end
 
-	arg_78_0:setEnabled(false)
-	arg_78_0:setTooltip(describeActionError(arg_78_1, numericValue))
-	arg_78_0:setTooltipAlign(AlignTopLeft)
+	button:setEnabled(false)
+	button:setTooltip(describeActionError(action, numericValue))
+	button:setTooltipAlign(AlignTopLeft)
 end
 
 function Cyclopedia.onCyclopediaHouseActionResult(timestamp, action, result, hasBidExtra, bidExtra)
@@ -2537,7 +2537,7 @@ function Cyclopedia.selectHouse(widget)
 
 			rejectBtn.onClick = Cyclopedia.rejectTransfer
 
-			var_0_85(rejectBtn, Cyclopedia.HouseAction.REJECT_TRANSFER, widget.data.canRejectTransfer)
+			applyHouseActionAvailability(rejectBtn, Cyclopedia.HouseAction.REJECT_TRANSFER, widget.data.canRejectTransfer)
 
 			local acceptBtn = g_ui.createWidget("Button", lateral)
 
@@ -2553,7 +2553,7 @@ function Cyclopedia.selectHouse(widget)
 
 			acceptBtn.onClick = Cyclopedia.acceptTransfer
 
-			var_0_85(acceptBtn, Cyclopedia.HouseAction.ACCEPT_TRANSFER, widget.data.canAcceptTransfer)
+			applyHouseActionAvailability(acceptBtn, Cyclopedia.HouseAction.ACCEPT_TRANSFER, widget.data.canAcceptTransfer)
 		elseif widget.data.isYourOwner then
 			local btn = g_ui.createWidget("Button", lateral)
 
@@ -2570,7 +2570,7 @@ function Cyclopedia.selectHouse(widget)
 
 			btn.onClick = Cyclopedia.cancelTransfer
 
-			var_0_85(btn, Cyclopedia.HouseAction.CANCEL_TRANSFER, widget.data.canCancelTransfer)
+			applyHouseActionAvailability(btn, Cyclopedia.HouseAction.CANCEL_TRANSFER, widget.data.canCancelTransfer)
 		end
 	elseif widget.data.rented then
 		if widget.data.isYourOwner then
@@ -2590,7 +2590,7 @@ function Cyclopedia.selectHouse(widget)
 
 				btn.onClick = Cyclopedia.keepHouse
 
-				var_0_85(btn, Cyclopedia.HouseAction.CANCEL_MOVEOUT, widget.data.canCancelMoveOut)
+				applyHouseActionAvailability(btn, Cyclopedia.HouseAction.CANCEL_MOVEOUT, widget.data.canCancelMoveOut)
 			else
 				local houseActionButtonWidget = g_ui.createWidget("HouseActionButton", lateral)
 
@@ -2607,7 +2607,7 @@ function Cyclopedia.selectHouse(widget)
 
 				houseActionButtonWidget.onClick = Cyclopedia.transferHouse
 
-				var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.TRANSFER, widget.data.acceptTransferDisabledId)
+				applyHouseActionAvailability(houseActionButtonWidget, Cyclopedia.HouseAction.TRANSFER, widget.data.acceptTransferDisabledId)
 
 				local houseActionButtonWidget = g_ui.createWidget("HouseActionButton", lateral)
 
@@ -2623,7 +2623,7 @@ function Cyclopedia.selectHouse(widget)
 
 				houseActionButtonWidget.onClick = Cyclopedia.moveOutHouse
 
-				var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.MOVEOUT, widget.data.canMoveOut)
+				applyHouseActionAvailability(houseActionButtonWidget, Cyclopedia.HouseAction.MOVEOUT, widget.data.canMoveOut)
 			end
 		end
 	else
@@ -2641,7 +2641,7 @@ function Cyclopedia.selectHouse(widget)
 
 		houseActionButtonWidget.onClick = Cyclopedia.bidHouse
 
-		var_0_85(houseActionButtonWidget, Cyclopedia.HouseAction.BID, widget.data.canBid)
+		applyHouseActionAvailability(houseActionButtonWidget, Cyclopedia.HouseAction.BID, widget.data.canBid)
 	end
 
 	widget:setChecked(true)

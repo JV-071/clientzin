@@ -1,4 +1,4 @@
-﻿HelperHealFriend = HelperHealFriend or {}
+HelperHealFriend = HelperHealFriend or {}
 
 local ctx
 local HEAL_FRIEND_PANEL_BY_VOC = {
@@ -66,7 +66,7 @@ local customPlayers = {}
 local activePartyPlayers = {}
 local refreshPlayerSettingsPanel
 local syncPartyPlayers
-local var_0_17
+local delayedPartySyncEvent
 local partySyncEvent
 
 local function saveConfigIfReady()
@@ -141,7 +141,7 @@ local HEAL_FRIEND_PRIORITY_IDS = {
 	"priorityDruidEdit3",
 	"priorityMonkEdit3"
 }
-local var_0_25 = {
+local LEGACY_HEAL_FRIEND_THRESHOLD_IDS = {
 	"friendThresholdEdit1",
 	"friendThresholdEdit2",
 	"friendThresholdEdit3"
@@ -323,13 +323,13 @@ local function getCustomPlayerThreshold(entry, panelIdx)
 	return entry.thresholds[tostring(panelIdx)]
 end
 
-local function setCustomPlayerThreshold(entry, arg_15_1, panelIdx)
+local function setCustomPlayerThreshold(entry, thresholdPanelIndex, panelIdx)
 	if type(entry) ~= "table" then
 		return
 	end
 
 	entry.thresholds = sanitizePlayerThresholds(entry.thresholds)
-	entry.thresholds[tostring(arg_15_1)] = clampThreshold(panelIdx)
+	entry.thresholds[tostring(thresholdPanelIndex)] = clampThreshold(panelIdx)
 end
 
 local function trimText(value)
@@ -364,30 +364,30 @@ local function copyPlainTable(value)
 	return copy
 end
 
-local function vocationThresholdId(classKey)
-	local var_19_0 = {}
+local function buildPartyPlayerSignature(classKey)
+	local playerSignatures = {}
 
 	for unusedValue, entry in ipairs(classKey) do
-		local var_19_1 = {}
+		local outfitFields = {}
 
 		if type(entry.outfit) == "table" then
 			for key, entry in pairs(entry.outfit) do
 				if type(entry) ~= "table" then
-					var_19_1[#var_19_1 + 1] = tostring(key) .. "=" .. tostring(entry)
+					outfitFields[#outfitFields + 1] = tostring(key) .. "=" .. tostring(entry)
 				end
 			end
 
-			table.sort(var_19_1)
+			table.sort(outfitFields)
 		end
 
-		var_19_0[#var_19_0 + 1] = tostring(normalizePlayerName(entry.name)) .. ":" .. table.concat(var_19_1, ",")
+		playerSignatures[#playerSignatures + 1] = tostring(normalizePlayerName(entry.name)) .. ":" .. table.concat(outfitFields, ",")
 	end
 
-	return table.concat(var_19_0, "|")
+	return table.concat(playerSignatures, "|")
 end
 
-local function var_0_47(arg_20_0, arg_20_1)
-	return "friendThreshold" .. arg_20_0 .. "Edit" .. arg_20_1
+local function getVocationThresholdWidgetId(classKey, panelIndex)
+	return "friendThreshold" .. classKey .. "Edit" .. panelIndex
 end
 
 local function sanitizeThresholdDigits(text)
@@ -610,7 +610,7 @@ local function setupVocationThresholdControls()
 					row:setWidth(270)
 					row:setHeight(18)
 
-					local thresholdId = var_0_47(classKey, panelIdx)
+					local thresholdId = getVocationThresholdWidgetId(classKey, panelIdx)
 					local thresholdStepperId = "friendThreshold" .. classKey .. "Stepper" .. panelIdx
 					local thresholdStepper = ctx.getWidget(thresholdStepperId)
 
@@ -705,18 +705,18 @@ local function onSpellGroupCooldownEvt(groupId, delay)
 end
 
 local function cancelPartySync()
-	if var_0_17 then
-		removeEvent(var_0_17)
+	if delayedPartySyncEvent then
+		removeEvent(delayedPartySyncEvent)
 
-		var_0_17 = nil
+		delayedPartySyncEvent = nil
 	end
 end
 
 local function schedulePartySync(delay)
 	cancelPartySync()
 
-	var_0_17 = scheduleEvent(function()
-		var_0_17 = nil
+	delayedPartySyncEvent = scheduleEvent(function()
+		delayedPartySyncEvent = nil
 
 		if syncPartyPlayers then
 			syncPartyPlayers("ifChanged")
@@ -1096,7 +1096,7 @@ function syncPartyPlayers(refreshUi)
 		saveConfigIfReady()
 	end
 
-	if refreshUi == "ifChanged" and not addedPlayer and vocationThresholdId(activePartyPlayers) == partySyncEvent then
+	if refreshUi == "ifChanged" and not addedPlayer and buildPartyPlayerSignature(activePartyPlayers) == partySyncEvent then
 		return
 	end
 
@@ -1472,7 +1472,7 @@ function refreshPlayerSettingsPanel()
 		return
 	end
 
-	partySyncEvent = vocationThresholdId(activePartyPlayers)
+	partySyncEvent = buildPartyPlayerSignature(activePartyPlayers)
 
 	function list.onDrop(_, draggedWidget, mousePos)
 		return HelperHealFriend.dropPartyPlayerAtMouse(nil, draggedWidget, mousePos)
@@ -1836,7 +1836,7 @@ function HelperHealFriend.runTick(state)
 		return false
 	end
 
-	local var_101_4 = buildPartyCandidates(localPos)
+	local partyCandidates = buildPartyCandidates(localPos)
 	local nowMs = state.nowMs or g_clock.millis()
 
 	for panelIdx = 1, 3 do
@@ -1854,7 +1854,7 @@ function HelperHealFriend.runTick(state)
 				if not (HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(candidates, spellByWords and spellByWords.mana)) and nowMs >= (lastSpellCastAt[spellKey] or 0) and not isSpellOnCooldown(words) then
 					local ranked = {}
 
-					for _, creature in ipairs(var_101_4) do
+					for _, creature in ipairs(partyCandidates) do
 						if creature and creature:isPlayer() and not creature:isLocalPlayer() then
 							local hp = creature:getHealthPercent()
 
@@ -1904,10 +1904,10 @@ function HelperHealFriend.init(pctx)
 	connectGameEvents()
 	updateTargetingUi()
 
-	local var_103_0 = {}
-	local var_103_1 = pcall(HelperHealFriend.collectConfig, var_103_0)
+	local widgetDefaults = {}
+	local defaultsCollected = pcall(HelperHealFriend.collectConfig, widgetDefaults)
 
-	HelperHealFriend.widgetDefaults = var_103_1 and var_103_0 or nil
+	HelperHealFriend.widgetDefaults = defaultsCollected and widgetDefaults or nil
 end
 
 function HelperHealFriend.onShow()
@@ -1955,7 +1955,7 @@ function HelperHealFriend.collectConfig(config)
 
 	config.healFriendThresholds = config.healFriendThresholds or {}
 
-	for _, id in ipairs(var_0_25) do
+	for _, id in ipairs(LEGACY_HEAL_FRIEND_THRESHOLD_IDS) do
 		local w = ctx.getWidget(id)
 
 		if w then
@@ -1998,13 +1998,13 @@ end
 function HelperHealFriend.loadFromConfig(config)
 	local classes = HelperHealFriend.widgetDefaults or {}
 
-	local function var_108_1(arg_109_0, arg_109_1, arg_109_2)
-		if type(arg_109_0) == "table" and arg_109_0[arg_109_2] ~= nil then
-			return arg_109_0[arg_109_2]
+	local function getConfiguredOrDefaultValue(configuredValues, defaultValues, key)
+		if type(configuredValues) == "table" and configuredValues[key] ~= nil then
+			return configuredValues[key]
 		end
 
-		if type(arg_109_1) == "table" then
-			return arg_109_1[arg_109_2]
+		if type(defaultValues) == "table" then
+			return defaultValues[key]
 		end
 
 		return nil
@@ -2014,10 +2014,10 @@ function HelperHealFriend.loadFromConfig(config)
 
 	for unusedValue, entry in ipairs(HEAL_FRIEND_CHECK_IDS) do
 		local widget = ctx.getWidget(entry)
-		local var_108_4 = var_108_1(healFriendClasses, classes.healFriendClasses, entry)
+		local classEnabled = getConfiguredOrDefaultValue(healFriendClasses, classes.healFriendClasses, entry)
 
-		if widget and var_108_4 ~= nil then
-			widget:setChecked(var_108_4 == true)
+		if widget and classEnabled ~= nil then
+			widget:setChecked(classEnabled == true)
 		end
 	end
 
@@ -2025,21 +2025,21 @@ function HelperHealFriend.loadFromConfig(config)
 
 	for unusedValue, entry in ipairs(HEAL_FRIEND_PRIORITY_IDS) do
 		local widget = ctx.getWidget(entry)
-		local var_108_7 = var_108_1(healFriendPriorities, classes.healFriendPriorities, entry)
+		local priorityValue = getConfiguredOrDefaultValue(healFriendPriorities, classes.healFriendPriorities, entry)
 
-		if widget and var_108_7 ~= nil then
-			widget:setText(tostring(var_108_7))
+		if widget and priorityValue ~= nil then
+			widget:setText(tostring(priorityValue))
 		end
 	end
 
 	local thresholds = config.healFriendThresholds or {}
 
-	for _, id in ipairs(var_0_25) do
+	for _, id in ipairs(LEGACY_HEAL_FRIEND_THRESHOLD_IDS) do
 		local w = ctx.getWidget(id)
-		local var_108_10 = var_108_1(thresholds, classes.healFriendThresholds, id)
+		local thresholdValue = getConfiguredOrDefaultValue(thresholds, classes.healFriendThresholds, id)
 
-		if w and var_108_10 ~= nil then
-			w:setText(tostring(clampThreshold(var_108_10)))
+		if w and thresholdValue ~= nil then
+			w:setText(tostring(clampThreshold(thresholdValue)))
 		end
 	end
 
@@ -2049,7 +2049,7 @@ function HelperHealFriend.loadFromConfig(config)
 		local legacyValue = thresholds["friendThresholdEdit" .. panelIdx] or THRESHOLD_DEFAULT
 
 		for _, classKey in ipairs(CLASS_KEYS) do
-			local id = var_0_47(classKey, panelIdx)
+			local id = getVocationThresholdWidgetId(classKey, panelIdx)
 			local w = ctx.getWidget(id)
 
 			if w then
@@ -2062,7 +2062,7 @@ function HelperHealFriend.loadFromConfig(config)
 
 	for _, id in ipairs(HEAL_FRIEND_CONDITION_IDS) do
 		local w = ctx.getWidget(id)
-		local conditions = var_108_1(conditions, classes.healFriendConditions, id)
+		local conditions = getConfiguredOrDefaultValue(conditions, classes.healFriendConditions, id)
 
 		if w and conditions ~= nil and w.setCurrentOption then
 			w:setCurrentOption(tostring(conditions))

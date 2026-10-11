@@ -2170,7 +2170,7 @@ local function var_0_140(arg_100_0)
 	return true
 end
 
-local function var_0_141(unusedArgument)
+local function updateFollowShooter(unusedArgument)
 	local var_101_0 = var_0_139()
 
 	if var_0_137() then
@@ -2465,7 +2465,7 @@ local function var_0_145(arg_114_0, arg_114_1)
 		return
 	end
 
-	var_0_141(false)
+	updateFollowShooter(false)
 
 	if var_0_139() then
 		return
@@ -2493,9 +2493,9 @@ local function var_0_145(arg_114_0, arg_114_1)
 	local var_114_6 = isOffensiveTargetInRange(arg_114_1, var_114_1, var_114_2, var_114_3) and arg_114_1 or getShooterCombatTarget(var_114_1, var_114_2, var_114_3)
 	local var_114_7 = var_0_133()
 	local var_114_8 = var_114_6 ~= nil or #var_114_5 > 0
-	local var_114_9 = arg_114_0 - lastGlobalCastAt >= GLOBAL_CAST_COOLDOWN_MS
+	local globalCastReady = arg_114_0 - lastGlobalCastAt >= GLOBAL_CAST_COOLDOWN_MS
 
-	if not var_114_8 and var_114_9 then
+	if not var_114_8 and globalCastReady then
 		local function var_114_10(arg_115_0)
 			if HelperHealer and HelperHealer.shouldYieldToHealing and HelperHealer.shouldYieldToHealing(localPlayer, arg_115_0.mana) then
 				return false
@@ -2532,7 +2532,7 @@ local function var_0_145(arg_114_0, arg_114_1)
 		nowMs = arg_114_0
 	}
 
-	if not var_114_9 then
+	if not globalCastReady then
 		return
 	end
 
@@ -2545,18 +2545,18 @@ local function var_0_145(arg_114_0, arg_114_1)
 		return
 	end
 
-	local var_114_17 = 0
+	local comboBase = 0
 
 	if comboMode and listSize > 1 then
-		var_114_17 = ((comboNextIndex or 1) - 1) % listSize
+		comboBase = ((comboNextIndex or 1) - 1) % listSize
 	end
 
-	for iter_114_0 = 1, listSize do
+	for step = 1, listSize do
 		if magicShooterOnHold then
 			break
 		end
 
-		local var_114_18 = (var_114_17 + iter_114_0 - 1) % listSize + 1
+		local var_114_18 = (comboBase + step - 1) % listSize + 1
 		local entry = var_114_15[var_114_18]
 
 		if type(entry) ~= "table" then
@@ -2566,23 +2566,23 @@ local function var_0_145(arg_114_0, arg_114_1)
 		elseif not entry.id or entry.id <= 0 then
 			-- block empty
 		else
-			local var_114_20 = g_clock.realMicros()
-			local var_114_21 = false
+			local priorityStartedUs = g_clock.realMicros()
+			local cast = false
 
 			if entry.type == "spell" then
-				var_114_21 = tryCastPrioritySpell(entry, var_114_14)
+				cast = tryCastPrioritySpell(entry, var_114_14)
 			elseif entry.type == "rune" then
-				var_114_21 = tryCastPriorityRune(entry, var_114_14)
+				cast = tryCastPriorityRune(entry, var_114_14)
 			end
 
-			local var_114_22 = g_clock.realMicros() - var_114_20
+			local priorityUs = g_clock.realMicros() - priorityStartedUs
 
-			if var_114_22 > lastTickPriorityUs then
-				lastTickPriorityUs = var_114_22
+			if priorityUs > lastTickPriorityUs then
+				lastTickPriorityUs = priorityUs
 				lastTickPriorityLabel = string.format("%d:%s:%s:%s", var_114_18, tostring(entry.type or "unknown"), tostring(entry.useTo or "target"), tostring(entry.id))
 			end
 
-			if var_114_21 then
+			if cast then
 				debugLog(string.format("Cast #%d (%s id=%d)", var_114_18, entry.type, entry.id))
 
 				if comboMode and listSize > 1 then
@@ -2637,7 +2637,7 @@ function HelperShooter.onAttackingCreatureChange(creature)
 end
 
 function HelperShooter.onFollowingCreatureChange()
-	var_0_141(false)
+	updateFollowShooter(false)
 end
 
 local function connectZebraFocus(item)
@@ -5182,7 +5182,7 @@ local function migrateLegacyPriorityList(data)
 	end
 end
 
-function HelperShooter.bindPresetHotkeys(arg_236_0)
+function HelperShooter.bindPresetHotkeys(presetHotkeyConflict)
 	for _, binding in pairs(boundPresetHotkeys or {}) do
 		g_keyboard.unbindKeyPress(binding.key, binding.callback)
 	end
@@ -5197,7 +5197,7 @@ function HelperShooter.bindPresetHotkeys(arg_236_0)
 		local hotkey = type(profile) == "table" and profile.hotkey or nil
 
 		if type(hotkey) == "string" and hotkey ~= "" then
-			if arg_236_0 and arg_236_0(profileName, hotkey) or false then
+			if presetHotkeyConflict and presetHotkeyConflict(profileName, hotkey) or false then
 				table.insert(skippedPresetHotkeys, {
 					profile = profileName,
 					key = hotkey
@@ -5302,7 +5302,7 @@ function HelperShooter.onGameStart()
 	wasFollowingCreature = false
 
 	HelperShooter.syncHotkeyStatus()
-	var_0_141(true)
+	updateFollowShooter(true)
 
 	if HelperPosture and HelperPosture.onGameStart then
 		HelperPosture.onGameStart()
