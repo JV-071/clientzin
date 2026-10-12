@@ -217,6 +217,7 @@ jobs:
         if: always()
         with:
           name: diagnostics-${{ matrix.configuration }}-${{ matrix.renderer }}
+          include-hidden-files: true
           path: |
             diagnostics/
             build/**/CMakeCache.txt
