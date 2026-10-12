@@ -15,9 +15,9 @@ local SECTION_FIELD_ORDER = {
 local applyScheduled = false
 local placementByWidgetId = {}
 local fullOrderRestoreEvent
-local WIDGET_TYPE_TO_ID = false
-local var_0_7 = false
-local var_0_8 = {
+local isRestoringLoginOrder = false
+local battlePassInboxRequested = false
+local widgetIdByType = {
 	prey = "preyTracker",
 	battlePassTracker = "BattlePassTrackerWindow",
 	battleList = "battleWindow",
@@ -44,7 +44,7 @@ local var_0_8 = {
 	imbuementTracker = "imbuementTracker",
 	battlePassInbox = "BattlePassInboxWindow"
 }
-local var_0_9 = {
+local moduleNameByWidgetType = {
 	prey = "game_prey",
 	battlePassTracker = "game_battlepass",
 	battleList = "game_battle",
@@ -78,10 +78,10 @@ local function resolveWidgetId(widgetType, instance)
 	end
 
 	if widgetType == "battlePassInbox" then
-		local var_1_0 = SidebarWidgetOptions and SidebarWidgetOptions.findBattlePassInboxWindow and SidebarWidgetOptions.findBattlePassInboxWindow()
+		local inboxWindow = SidebarWidgetOptions and SidebarWidgetOptions.findBattlePassInboxWindow and SidebarWidgetOptions.findBattlePassInboxWindow()
 
-		if var_1_0 and var_1_0.getId then
-			return var_1_0:getId()
+		if inboxWindow and inboxWindow.getId then
+			return inboxWindow:getId()
 		end
 
 		return "BattlePassInboxWindow"
@@ -97,7 +97,7 @@ local function resolveWidgetId(widgetType, instance)
 		return "battleWindow_" .. instance
 	end
 
-	local localId = var_0_8[widgetType]
+	local localId = widgetIdByType[widgetType]
 
 	if localId then
 		return localId
@@ -184,13 +184,13 @@ function SidebarWidgetsPersistence.getWidgetPlacement(widgetId)
 	return placementByWidgetId[widgetId]
 end
 
-function SidebarWidgetsPersistence.getWidgetPlacementByType(arg_8_0)
-	if type(arg_8_0) ~= "string" then
+function SidebarWidgetsPersistence.getWidgetPlacementByType(widgetType)
+	if type(widgetType) ~= "string" then
 		return nil
 	end
 
 	for widgetId, placement in pairs(placementByWidgetId) do
-		if placement and placement.type == arg_8_0 then
+		if placement and placement.type == widgetType then
 			return placement
 		end
 	end
@@ -198,22 +198,22 @@ function SidebarWidgetsPersistence.getWidgetPlacementByType(arg_8_0)
 	return nil
 end
 
-function SidebarWidgetsPersistence.hasWidgetType(arg_9_0)
-	return SidebarWidgetsPersistence.getWidgetPlacementByType(arg_9_0) ~= nil
+function SidebarWidgetsPersistence.hasWidgetType(widgetType)
+	return SidebarWidgetsPersistence.getWidgetPlacementByType(widgetType) ~= nil
 end
 
-local function var_0_13(arg_10_0, arg_10_1, arg_10_2)
-	if type(arg_10_0) ~= "table" or not arg_10_1 then
+local function removeWidgetFromSavedOrder(widgetList, widgetType, instance)
+	if type(widgetList) ~= "table" or not widgetType then
 		return
 	end
 
-	local numericValue = tonumber(arg_10_2) or 0
+	local numericValue = tonumber(instance) or 0
 
-	for iter_10_0 = #arg_10_0, 1, -1 do
-		local var_10_1 = arg_10_0[iter_10_0]
+	for entryIndex = #widgetList, 1, -1 do
+		local entry = widgetList[entryIndex]
 
-		if type(var_10_1) == "table" and var_10_1.type == arg_10_1 and (tonumber(var_10_1.instance) or 0) == numericValue then
-			table.remove(arg_10_0, iter_10_0)
+		if type(entry) == "table" and entry.type == widgetType and (tonumber(entry.instance) or 0) == numericValue then
+			table.remove(widgetList, entryIndex)
 		end
 	end
 end
@@ -223,32 +223,32 @@ function SidebarWidgetsPersistence.clearWidgetPlacementByType(parent)
 		return
 	end
 
-	local var_11_0 = {}
+	local widgetIdsToClear = {}
 
 	for key, entry in pairs(placementByWidgetId) do
 		if entry and entry.type == parent then
-			var_11_0[#var_11_0 + 1] = key
+			widgetIdsToClear[#widgetIdsToClear + 1] = key
 		end
 	end
 
 	if parent == "battlePassInbox" then
-		var_11_0[#var_11_0 + 1] = "BattlePassInboxWindow"
+		widgetIdsToClear[#widgetIdsToClear + 1] = "BattlePassInboxWindow"
 	end
 
-	for unusedValue, entry in ipairs(var_11_0) do
+	for unusedValue, entry in ipairs(widgetIdsToClear) do
 		SidebarWidgetsPersistence.clearWidgetPlacement(entry)
 	end
 end
 
-function SidebarWidgetsPersistence.clearWidgetPlacement(arg_12_0)
-	if type(arg_12_0) ~= "string" or arg_12_0 == "" then
+function SidebarWidgetsPersistence.clearWidgetPlacement(widgetId)
+	if type(widgetId) ~= "string" or widgetId == "" then
 		return
 	end
 
-	placementByWidgetId[arg_12_0] = nil
+	placementByWidgetId[widgetId] = nil
 
 	if SidebarLayoutState and SidebarLayoutState.widgets then
-		SidebarLayoutState.widgets[arg_12_0] = nil
+		SidebarLayoutState.widgets[widgetId] = nil
 	end
 
 	if not SidebarPersistence or not SidebarPersistence.active then
@@ -259,9 +259,9 @@ function SidebarWidgetsPersistence.clearWidgetPlacement(arg_12_0)
 		return
 	end
 
-	local var_12_0, var_12_1 = SidebarLayoutState.resolveTypeFromWidgetId(arg_12_0)
+	local widgetType, instance = SidebarLayoutState.resolveTypeFromWidgetId(widgetId)
 
-	if not var_12_0 then
+	if not widgetType then
 		return
 	end
 
@@ -273,21 +273,21 @@ function SidebarWidgetsPersistence.clearWidgetPlacement(arg_12_0)
 
 	if type(section.openWidgetsOrderPerSidebar) == "table" then
 		for unusedValue, entry in ipairs(section.openWidgetsOrderPerSidebar) do
-			var_0_13(entry, var_12_0, var_12_1)
+			removeWidgetFromSavedOrder(entry, widgetType, instance)
 		end
 	end
 
 	if type(section.openWidgetsOrderPerHorizontalSidebar) == "table" then
 		for unusedValue, entry in ipairs(section.openWidgetsOrderPerHorizontalSidebar) do
-			var_0_13(entry, var_12_0, var_12_1)
+			removeWidgetFromSavedOrder(entry, widgetType, instance)
 		end
 	end
 
 	SidebarWidgetsPersistence.buildPlacementMap(section)
 end
 
-local function var_0_14(arg_13_0)
-	local moduleName = var_0_9[arg_13_0]
+local function ensureWidgetModuleLoaded(widgetType)
+	local moduleName = moduleNameByWidgetType[widgetType]
 
 	if not moduleName or not g_modules or not g_modules.ensureModuleLoaded then
 		return
@@ -296,12 +296,12 @@ local function var_0_14(arg_13_0)
 	g_modules.ensureModuleLoaded(moduleName)
 end
 
-local function var_0_15(widgetId, arg_14_1)
-	if arg_14_1 == "battlePassInbox" or widgetId == "BattlePassInboxWindow" then
-		local var_14_0 = SidebarWidgetOptions and SidebarWidgetOptions.findBattlePassInboxWindow and SidebarWidgetOptions.findBattlePassInboxWindow()
+local function findPlacementWidget(widgetId, widgetType)
+	if widgetType == "battlePassInbox" or widgetId == "BattlePassInboxWindow" then
+		local inboxWindow = SidebarWidgetOptions and SidebarWidgetOptions.findBattlePassInboxWindow and SidebarWidgetOptions.findBattlePassInboxWindow()
 
-		if var_14_0 and not var_14_0:isDestroyed() then
-			return var_14_0
+		if inboxWindow and not inboxWindow:isDestroyed() then
+			return inboxWindow
 		end
 	end
 
@@ -318,7 +318,7 @@ local function var_0_15(widgetId, arg_14_1)
 		return registryWidget
 	end
 
-	local moduleName = var_0_9[arg_14_1]
+	local moduleName = moduleNameByWidgetType[widgetType]
 
 	if moduleName then
 		local module = modules[moduleName]
@@ -338,7 +338,7 @@ local function addWidgetsToPlacementMap(widgetList, parentId)
 
 	for index, entry in ipairs(widgetList) do
 		if type(entry) == "table" and type(entry.type) == "string" then
-			var_0_14(entry.type)
+			ensureWidgetModuleLoaded(entry.type)
 
 			local widgetId = resolveWidgetId(entry.type, entry.instance)
 
@@ -384,9 +384,9 @@ function SidebarWidgetsPersistence.buildPlacementMap(section)
 		end
 
 		if section.leftHorizontalSidebar == true then
-			local var_16_1 = slotIndex + 1
+			local leftHorizontalSlotIndex = slotIndex + 1
 
-			addWidgetsToPlacementMap(section.openWidgetsOrderPerHorizontalSidebar[var_16_1], HORIZONTAL_PARENT_IDS[2])
+			addWidgetsToPlacementMap(section.openWidgetsOrderPerHorizontalSidebar[leftHorizontalSlotIndex], HORIZONTAL_PARENT_IDS[2])
 		end
 	end
 
@@ -399,12 +399,12 @@ function SidebarWidgetsPersistence.seedRegistryFromPlacement()
 	end
 
 	for key, entry in pairs(placementByWidgetId) do
-		local var_17_0, var_17_1 = SidebarLayoutState.resolveTypeFromWidgetId(key)
+		local widgetType, instance = SidebarLayoutState.resolveTypeFromWidgetId(key)
 
-		if var_17_0 then
+		if widgetType then
 			SidebarLayoutState.widgets[key] = {
-				type = var_17_0,
-				instance = var_17_1 or 0,
+				type = widgetType,
+				instance = instance or 0,
 				parentId = SidebarLayoutState.canonicalParentId(entry.parentId),
 				index = tonumber(entry.index) or 1
 			}
@@ -504,7 +504,7 @@ local function resolveParentPanel(parentId)
 	return rootWidget:recursiveGetChildById(parentId)
 end
 
-local function var_0_19(widget, parentId, index)
+local function moveWidgetToSavedPlacement(widget, parentId, index)
 	if not widget or widget:isDestroyed() then
 		return false
 	end
@@ -518,9 +518,9 @@ local function var_0_19(widget, parentId, index)
 	end
 
 	local id = modules.game_interface and modules.game_interface.isGameSidePanelId and modules.game_interface.isGameSidePanelId(parent:getId())
-	local var_20_2 = parentId == "gameLeftTopPanel" or parentId == "gameRightTopPanel"
+	local isHorizontalSidebar = parentId == "gameLeftTopPanel" or parentId == "gameRightTopPanel"
 
-	if not (parent:isVisible() or id and parent:isOn() or var_20_2 and parent:isOn()) then
+	if not (parent:isVisible() or id and parent:isOn() or isHorizontalSidebar and parent:isOn()) then
 		return false
 	end
 
@@ -631,41 +631,41 @@ function SidebarWidgetsPersistence.applyWidgetPlacements()
 	local stillPending = false
 
 	for key, entry in pairs(placementByWidgetId) do
-		local var_24_1 = var_0_15(key, entry.type)
+		local widget = findPlacementWidget(key, entry.type)
 
-		if var_24_1 and not var_24_1:isDestroyed() then
-			local parent = var_24_1:getParent()
+		if widget and not widget:isDestroyed() then
+			local parent = widget:getParent()
 			local id = parent and parent:getId()
 
 			if SidebarLayoutState and SidebarLayoutState.canonicalParentId(id) == SidebarLayoutState.canonicalParentId(entry.parentId) and parent and not parent:isDestroyed() then
 				if parent:getClassName() == "UIMiniWindowContainer" and entry.index and type(parent.scheduleInsert) == "function" then
 					local numericValue = tonumber(entry.index)
 
-					if numericValue and var_24_1.miniIndex ~= numericValue then
-						var_24_1.miniIndex = numericValue
+					if numericValue and widget.miniIndex ~= numericValue then
+						widget.miniIndex = numericValue
 
-						parent:scheduleInsert(var_24_1, numericValue)
+						parent:scheduleInsert(widget, numericValue)
 					end
 				end
 
 				if SidebarLayoutState and SidebarLayoutState.noteWidgetPlacement then
-					SidebarLayoutState.noteWidgetPlacement(var_24_1)
+					SidebarLayoutState.noteWidgetPlacement(widget)
 				end
-			elseif not var_0_19(var_24_1, entry.parentId, entry.index) then
+			elseif not moveWidgetToSavedPlacement(widget, entry.parentId, entry.index) then
 				stillPending = true
 			end
 		else
-			local var_24_5 = entry.type or SidebarLayoutState and SidebarLayoutState.resolveTypeFromWidgetId(key)
+			local widgetType = entry.type or SidebarLayoutState and SidebarLayoutState.resolveTypeFromWidgetId(key)
 
-			if var_24_5 == "battlePassInbox" and not var_0_7 then
-				var_0_7 = true
+			if widgetType == "battlePassInbox" and not battlePassInboxRequested then
+				battlePassInboxRequested = true
 
 				if g_game.sendBattlePassOpenInbox then
 					g_game.sendBattlePassOpenInbox()
 				end
 			end
 
-			if var_24_5 ~= "container" and var_24_5 ~= "battlePassInbox" then
+			if widgetType ~= "container" and widgetType ~= "battlePassInbox" then
 				stillPending = true
 			end
 		end
@@ -828,7 +828,7 @@ local function applySavedOrderToPanel(section)
 end
 
 function SidebarWidgetsPersistence.scheduleFullOrderRestore()
-	if not WIDGET_TYPE_TO_ID or not SidebarPersistence or not SidebarPersistence.active then
+	if not isRestoringLoginOrder or not SidebarPersistence or not SidebarPersistence.active then
 		return
 	end
 
@@ -841,7 +841,7 @@ function SidebarWidgetsPersistence.scheduleFullOrderRestore()
 	fullOrderRestoreEvent = scheduleEvent(function()
 		fullOrderRestoreEvent = nil
 
-		if not WIDGET_TYPE_TO_ID then
+		if not isRestoringLoginOrder then
 			return
 		end
 
@@ -858,11 +858,11 @@ function SidebarWidgetsPersistence.finishLoginOrderRestore()
 		fullOrderRestoreEvent = nil
 	end
 
-	WIDGET_TYPE_TO_ID = false
+	isRestoringLoginOrder = false
 end
 
 function SidebarWidgetsPersistence.isRestoringLoginOrder()
-	return WIDGET_TYPE_TO_ID == true
+	return isRestoringLoginOrder == true
 end
 
 function SidebarWidgetsPersistence.applyAll()
@@ -967,15 +967,15 @@ connect(g_game, {
 			fullOrderRestoreEvent = nil
 		end
 
-		WIDGET_TYPE_TO_ID = false
+		isRestoringLoginOrder = false
 	end,
 	onGameStart = function()
 		layoutRestoreAttempts = 0
-		var_0_7 = false
+		battlePassInboxRequested = false
 
 		SidebarWidgetsPersistence.clearRuntimeState()
 
-		WIDGET_TYPE_TO_ID = true
+		isRestoringLoginOrder = true
 
 		local panels = {}
 
@@ -1038,7 +1038,7 @@ connect(g_game, {
 
 					applyAllPanelsOrder(section)
 					scheduleEvent(function()
-						if SidebarPersistence and SidebarPersistence.active and WIDGET_TYPE_TO_ID then
+						if SidebarPersistence and SidebarPersistence.active and isRestoringLoginOrder then
 							local s = SidebarPersistence.getSection(SECTION_WIDGETS_MANAGER)
 
 							applyAllPanelsOrder(s)

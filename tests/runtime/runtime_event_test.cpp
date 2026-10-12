@@ -721,3 +721,13 @@ return true
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_TRUE(g_lua.popBoolean());
 }
+
+TEST_F(RuntimeEventTest, LuaWheelModCatalogSearchesDescriptionsWithLiteralSubstrings)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/game_wheel/classes/mod_catalog.lua");
+    const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/wheel_mod_catalog_contract.lua");
+    g_lua.loadFunction(module + "\n" + scenario, "@wheel-mod-catalog-search-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}

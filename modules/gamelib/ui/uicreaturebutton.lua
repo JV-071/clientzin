@@ -19,10 +19,10 @@ local NameBorderColors = {
 	pink = "#C850C0",
 	orange = "#EE8413"
 }
-local var_0_2 = 11
-local var_0_3 = 2
+local STATUS_ICON_WIDTH = 11
+local STATUS_ICON_SPACING = 2
 local text = "..."
-local var_0_5 = {
+local STATUS_ICON_IDS = {
 	"iconsMonsterSlot3",
 	"iconsMonsterSlot2",
 	"iconsMonsterSlot1",
@@ -31,24 +31,24 @@ local var_0_5 = {
 	"skull"
 }
 
-local function var_0_6(arg_1_0, arg_1_1)
-	return arg_1_0:recursiveGetChildById(arg_1_1)
+local function findStatusIcon(button, iconId)
+	return button:recursiveGetChildById(iconId)
 end
 
-local function var_0_7(arg_2_0, arg_2_1, arg_2_2, arg_2_3)
-	local var_2_0 = var_0_6(arg_2_0, arg_2_1)
+local function updateStatusIcon(button, iconId, imageSource, imageClip)
+	local iconWidget = findStatusIcon(button, iconId)
 
-	if not var_2_0 then
+	if not iconWidget then
 		return
 	end
 
-	local visible = arg_2_2 ~= nil
+	local visible = imageSource ~= nil
 
-	var_2_0:setVisible(visible)
-	var_2_0:setImageSource(arg_2_2 or "")
+	iconWidget:setVisible(visible)
+	iconWidget:setImageSource(imageSource or "")
 
-	if visible and arg_2_3 then
-		var_2_0:setImageClip(torect(arg_2_3))
+	if visible and imageClip then
+		iconWidget:setImageClip(torect(imageClip))
 	end
 end
 
@@ -190,56 +190,56 @@ function UICreatureButton.updateNameLabel(self)
 		return
 	end
 
-	local var_11_3 = 0
-	local var_11_4 = #name
-	local var_11_5 = text
+	local minimumPrefixLength = 0
+	local maximumPrefixLength = #name
+	local fittingName = text
 
-	while var_11_3 <= var_11_4 do
-		local var_11_6 = math.floor((var_11_3 + var_11_4) / 2)
-		local text = name:sub(1, var_11_6) .. text
+	while minimumPrefixLength <= maximumPrefixLength do
+		local prefixLength = math.floor((minimumPrefixLength + maximumPrefixLength) / 2)
+		local text = name:sub(1, prefixLength) .. text
 
 		labelWidget:setText(text)
 
 		if width >= labelWidget:getTextSize().width then
-			var_11_5 = text
-			var_11_3 = var_11_6 + 1
+			fittingName = text
+			minimumPrefixLength = prefixLength + 1
 		else
-			var_11_4 = var_11_6 - 1
+			maximumPrefixLength = prefixLength - 1
 		end
 	end
 
-	labelWidget:setText(var_11_5)
+	labelWidget:setText(fittingName)
 end
 
-function UICreatureButton.updateStatusIconLayout(arg_12_0)
-	local statusIcons = arg_12_0:getChildById("statusIcons")
+function UICreatureButton.updateStatusIconLayout(button)
+	local statusIcons = button:getChildById("statusIcons")
 
 	if not statusIcons then
 		return
 	end
 
-	local var_12_1 = 0
+	local visibleIconCount = 0
 
-	for unusedValue, entry in ipairs(var_0_5) do
-		local var_12_2 = var_0_6(arg_12_0, entry)
+	for unusedValue, entry in ipairs(STATUS_ICON_IDS) do
+		local iconWidget = findStatusIcon(button, entry)
 
-		if var_12_2 and var_12_2:isExplicitlyVisible() then
-			var_12_1 = var_12_1 + 1
+		if iconWidget and iconWidget:isExplicitlyVisible() then
+			visibleIconCount = visibleIconCount + 1
 		end
 	end
 
-	local width = var_12_1 > 0 and var_12_1 * var_0_2 + (var_12_1 - 1) * var_0_3 or 0
+	local width = visibleIconCount > 0 and visibleIconCount * STATUS_ICON_WIDTH + (visibleIconCount - 1) * STATUS_ICON_SPACING or 0
 
 	statusIcons:setWidth(width)
 	statusIcons:getLayout():update()
 
-	local layout = arg_12_0:getLayout()
+	local layout = button:getLayout()
 
 	if layout then
 		layout:update()
 	end
 
-	arg_12_0:updateNameLabel()
+	button:updateNameLabel()
 end
 
 function UICreatureButton.updateOutfitPreview(self, outfit)
@@ -251,13 +251,13 @@ function UICreatureButton.updateOutfitPreview(self, outfit)
 
 	creature:setOutfit(outfit)
 
-	local var_13_1 = creature:getCreature()
+	local previewCreature = creature:getCreature()
 
-	if var_13_1 then
-		var_13_1:setAnimate(true)
+	if previewCreature then
+		previewCreature:setAnimate(true)
 
-		if not var_13_1:isDisabledWalkAnimation() then
-			var_13_1:setDisableWalkAnimation(true)
+		if not previewCreature:isDisabledWalkAnimation() then
+			previewCreature:setDisableWalkAnimation(true)
 		end
 	end
 
@@ -282,8 +282,8 @@ function UICreatureButton.setup(self, targetCreature, onlyOutfit)
 	if not label._nameEllipsisBound then
 		label._nameEllipsisBound = true
 
-		function label.onGeometryChange(arg_15_0)
-			local parent = arg_15_0:getParent()
+		function label.onGeometryChange(labelWidget)
+			local parent = labelWidget:getParent()
 
 			if parent and parent.updateNameLabel then
 				parent:updateNameLabel()
@@ -336,9 +336,9 @@ function UICreatureButton.updateSkull(self, skullId)
 	if skullId ~= SkullNone then
 		local imagePath, clip = getSkullImagePath(skullId)
 
-		var_0_7(self, "skull", imagePath, clip)
+		updateStatusIcon(self, "skull", imagePath, clip)
 	else
-		var_0_7(self, "skull", nil)
+		updateStatusIcon(self, "skull", nil)
 	end
 
 	self:updateStatusIconLayout()
@@ -354,9 +354,9 @@ function UICreatureButton.updateEmblem(self, emblemId)
 	if emblemId ~= EmblemNone then
 		local imagePath, clip = getEmblemImagePath(emblemId)
 
-		var_0_7(self, "emblem", imagePath, clip)
+		updateStatusIcon(self, "emblem", imagePath, clip)
 	else
-		var_0_7(self, "emblem", nil)
+		updateStatusIcon(self, "emblem", nil)
 	end
 
 	self:updateStatusIconLayout()
@@ -385,7 +385,7 @@ function UICreatureButton.updatePartyShield(self, shieldId)
 		return
 	end
 
-	if not var_0_6(self, "partyShield") then
+	if not findStatusIcon(self, "partyShield") then
 		return
 	end
 
@@ -394,9 +394,9 @@ function UICreatureButton.updatePartyShield(self, shieldId)
 	if shieldId ~= ShieldNone then
 		local imagePath, clip = getShieldImagePath(shieldId)
 
-		var_0_7(self, "partyShield", imagePath, clip)
+		updateStatusIcon(self, "partyShield", imagePath, clip)
 	else
-		var_0_7(self, "partyShield", nil)
+		updateStatusIcon(self, "partyShield", nil)
 	end
 
 	self:updateStatusIconLayout()
@@ -431,7 +431,7 @@ end
 
 function UICreatureButton.updateIcons(self, icons)
 	for i = 1, 3 do
-		local w = var_0_6(self, "iconsMonsterSlot" .. i)
+		local w = findStatusIcon(self, "iconsMonsterSlot" .. i)
 
 		if w then
 			w:setImageSource("")
@@ -459,7 +459,7 @@ function UICreatureButton.updateIcons(self, icons)
 		end
 
 		local iconId = iconData[1]
-		local widget = var_0_6(self, "iconsMonsterSlot" .. index)
+		local widget = findStatusIcon(self, "iconsMonsterSlot" .. index)
 
 		if widget then
 			widget:setVisible(true)
@@ -481,8 +481,8 @@ function UICreatureButton.resetState(self)
 	self:getChildById("creature"):setBorderWidth(0)
 	self:getChildById("label"):setColor(CreatureButtonColors.onIdle.notHovered)
 
-	for unusedValue, entry in ipairs(var_0_5) do
-		local w = var_0_6(self, entry)
+	for unusedValue, entry in ipairs(STATUS_ICON_IDS) do
+		local w = findStatusIcon(self, entry)
 
 		if w then
 			w:setImageSource("")

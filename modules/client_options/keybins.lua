@@ -8,9 +8,9 @@ local keyEditWindow
 local keyEditOverlay
 local chatModeGroup
 local _syncingPreset = false
-local var_0_10 = false
-local var_0_11 = false
-local var_0_12 = "controls-keybinds-chat-mode"
+local restoringChatMode = false
+local keybindsUiDirty = false
+local CHAT_MODE_SETTING_KEY = "controls-keybinds-chat-mode"
 
 local function getKeyEditComboWidget()
 	return keyEditWindow and keyEditWindow:recursiveGetChildById("keyCombo")
@@ -40,15 +40,15 @@ local function isKeyComboUsedOnActionBar(keyCombo)
 	return false
 end
 
-local function clearActionBarHotkeyConflicts(keyCombo, arg_4_1)
+local function clearActionBarHotkeyConflicts(keyCombo, chatMode)
 	if not keyCombo or keyCombo == "" then
 		return
 	end
 
-	arg_4_1 = arg_4_1 or getChatMode()
+	chatMode = chatMode or getChatMode()
 
 	if Keybind.clearActionBarHotkeyConflicts then
-		Keybind.clearActionBarHotkeyConflicts(keyCombo, arg_4_1)
+		Keybind.clearActionBarHotkeyConflicts(keyCombo, chatMode)
 
 		return
 	end
@@ -56,7 +56,7 @@ local function clearActionBarHotkeyConflicts(keyCombo, arg_4_1)
 	local game_actionbar = modules.game_actionbar
 
 	if game_actionbar and game_actionbar.clearActionBarHotkeyConflicts then
-		game_actionbar.clearActionBarHotkeyConflicts(keyCombo, arg_4_1 == CHAT_MODE.ON)
+		game_actionbar.clearActionBarHotkeyConflicts(keyCombo, chatMode == CHAT_MODE.ON)
 	end
 end
 
@@ -76,19 +76,19 @@ local function isKeyComboUsedOnCustomHotkeys(keyCombo)
 	return false
 end
 
-local function clearCustomHotkeyConflicts(keyCombo, arg_6_1)
+local function clearCustomHotkeyConflicts(keyCombo, chatMode)
 	if not keyCombo or keyCombo == "" then
 		return
 	end
 
-	arg_6_1 = arg_6_1 or getChatMode()
+	chatMode = chatMode or getChatMode()
 
 	local cleared = false
 
 	if Keybind.clearCustomHotkeyConflicts then
-		cleared = Keybind.clearCustomHotkeyConflicts(keyCombo, arg_6_1)
+		cleared = Keybind.clearCustomHotkeyConflicts(keyCombo, chatMode)
 	elseif CustomHotkeyManager and CustomHotkeyManager.clearKeyComboConflicts then
-		cleared = CustomHotkeyManager.clearKeyComboConflicts(keyCombo, arg_6_1)
+		cleared = CustomHotkeyManager.clearKeyComboConflicts(keyCombo, chatMode)
 	end
 
 	if cleared and CustomHotkeys and CustomHotkeys.refreshPanel then
@@ -97,8 +97,8 @@ local function clearCustomHotkeyConflicts(keyCombo, arg_6_1)
 end
 
 local function isKeyComboUsedInPendingKeybinds(keyCombo, category, action, preset)
-	local var_7_0 = getChatMode()
-	local changedKeybinds = changedKeybinds[preset] and changedKeybinds[preset][var_7_0]
+	local chatMode = getChatMode()
+	local changedKeybinds = changedKeybinds[preset] and changedKeybinds[preset][chatMode]
 
 	if not changedKeybinds then
 		return false
@@ -118,10 +118,10 @@ local function isKeyComboUsedInPendingKeybinds(keyCombo, category, action, prese
 end
 
 local function getPendingKeybindKeys(category, action, preset)
-	local var_8_0 = getChatMode()
-	local keys = Keybind.getKeybindKeys(category, action, var_8_0, preset, changedOptions.resetKeybinds)
+	local chatMode = getChatMode()
+	local keys = Keybind.getKeybindKeys(category, action, chatMode, preset, changedOptions.resetKeybinds)
 	local index = category .. "_" .. action
-	local pending = changedKeybinds[preset] and changedKeybinds[preset][var_8_0]
+	local pending = changedKeybinds[preset] and changedKeybinds[preset][chatMode]
 	local pending = pending and pending[index]
 
 	if pending then
@@ -137,23 +137,23 @@ local function getPendingKeybindKeys(category, action, preset)
 	return keys
 end
 
-local function setKeybindColumnText(arg_9_0, arg_9_1, arg_9_2)
-	if not changedKeybinds[arg_9_0] then
-		changedKeybinds[arg_9_0] = {}
+local function setKeybindColumnText(preset, chatMode, actionIndex)
+	if not changedKeybinds[preset] then
+		changedKeybinds[preset] = {}
 	end
 
-	if not changedKeybinds[arg_9_0][arg_9_1] then
-		changedKeybinds[arg_9_0][arg_9_1] = {}
+	if not changedKeybinds[preset][chatMode] then
+		changedKeybinds[preset][chatMode] = {}
 	end
 
-	if not changedKeybinds[arg_9_0][arg_9_1][arg_9_2] then
-		changedKeybinds[arg_9_0][arg_9_1][arg_9_2] = {}
+	if not changedKeybinds[preset][chatMode][actionIndex] then
+		changedKeybinds[preset][chatMode][actionIndex] = {}
 	end
 
-	return changedKeybinds[arg_9_0][arg_9_1][arg_9_2]
+	return changedKeybinds[preset][chatMode][actionIndex]
 end
 
-local function var_0_23(category, action, columnIndex, text)
+local function updateKeybindTableCell(category, action, columnIndex, text)
 	local dataSpace = panels.keybindsPanel.tablePanel.keybinds.dataSpace
 
 	if not dataSpace then
@@ -611,7 +611,7 @@ function editKeybindPrimary(button)
 	local index = category .. "_" .. action
 	local keybind = Keybind.getAction(category, action)
 	local preset = panels.keybindsPanel.presets.list:getCurrentOption().text
-	local var_36_6 = getChatMode()
+	local chatMode = getChatMode()
 
 	keyEditWindow.keybind = {
 		category = category,
@@ -625,24 +625,24 @@ function editKeybindPrimary(button)
 	function keyEditWindow.buttons.ok.onClick()
 		local text = getKeyEditComboWidget():getText()
 
-		setKeybindColumnText(preset, var_36_6, index).primary = {
+		setKeybindColumnText(preset, chatMode, index).primary = {
 			category = category,
 			action = action,
 			keyCombo = text
 		}
 
-		var_0_23(category, action, 3, text)
+		updateKeybindTableCell(category, action, 3, text)
 		closeKeyEditWindow()
 	end
 
 	function keyEditWindow.buttons.clear.onClick()
-		setKeybindColumnText(preset, var_36_6, index).primary = {
+		setKeybindColumnText(preset, chatMode, index).primary = {
 			keyCombo = "",
 			category = category,
 			action = action
 		}
 
-		var_0_23(category, action, 3, "")
+		updateKeybindTableCell(category, action, 3, "")
 		closeKeyEditWindow()
 	end
 end
@@ -651,41 +651,41 @@ function editKeybindSecondary(button)
 	local parent = button:getParent():getParent()
 	local category = parent.category
 	local action = parent.action
-	local var_39_3 = category .. "_" .. action
-	local var_39_4 = Keybind.getAction(category, action)
+	local actionIndex = category .. "_" .. action
+	local keybindAction = Keybind.getAction(category, action)
 	local currentOption = panels.keybindsPanel.presets.list:getCurrentOption().text
-	local var_39_6 = getChatMode()
+	local chatMode = getChatMode()
 
 	keyEditWindow.keybind = {
 		category = category,
 		action = action
 	}
 
-	keyEditWindow:setText(tr("Edit Secondary Key for '%s'", string.format("%s: %s", var_39_4.category, var_39_4.action)))
+	keyEditWindow:setText(tr("Edit Secondary Key for '%s'", string.format("%s: %s", keybindAction.category, keybindAction.action)))
 	getKeyEditComboWidget():setText(getPendingKeybindKeys(category, action, currentOption).secondary)
-	editKeybind(var_39_4)
+	editKeybind(keybindAction)
 
 	function keyEditWindow.buttons.ok.onClick()
 		local text = getKeyEditComboWidget():getText()
 
-		setKeybindColumnText(currentOption, var_39_6, var_39_3).secondary = {
+		setKeybindColumnText(currentOption, chatMode, actionIndex).secondary = {
 			category = category,
 			action = action,
 			keyCombo = text
 		}
 
-		var_0_23(category, action, 5, text)
+		updateKeybindTableCell(category, action, 5, text)
 		closeKeyEditWindow()
 	end
 
 	function keyEditWindow.buttons.clear.onClick()
-		setKeybindColumnText(currentOption, var_39_6, var_39_3).secondary = {
+		setKeybindColumnText(currentOption, chatMode, actionIndex).secondary = {
 			keyCombo = "",
 			category = category,
 			action = action
 		}
 
-		var_0_23(category, action, 5, "")
+		updateKeybindTableCell(category, action, 5, "")
 		closeKeyEditWindow()
 	end
 end
@@ -700,27 +700,27 @@ function resetActions()
 end
 
 function markKeybindsUiDirty()
-	var_0_11 = true
+	keybindsUiDirty = true
 end
 
 function refreshKeybindsUiIfNeeded()
-	if not var_0_11 then
+	if not keybindsUiDirty then
 		return
 	end
 
-	var_0_11 = false
+	keybindsUiDirty = false
 
 	updateKeybinds()
 end
 
 function updateKeybinds()
 	if not controller or not controller.ui or not controller.ui:isVisible() then
-		var_0_11 = true
+		keybindsUiDirty = true
 
 		return
 	end
 
-	var_0_11 = false
+	keybindsUiDirty = false
 
 	if keyEditWindow and keyEditWindow:isVisible() then
 		closeKeyEditWindow()
@@ -1019,8 +1019,8 @@ end
 function chatModeChange()
 	changedHotkeys = {}
 
-	if not var_0_10 then
-		g_settings.setValue(var_0_12, tostring(getChatMode()))
+	if not restoringChatMode then
+		g_settings.setValue(CHAT_MODE_SETTING_KEY, tostring(getChatMode()))
 	end
 
 	panels.keybindsPanel.search.field:clearText()
@@ -1040,21 +1040,21 @@ function syncKeybindChatMode()
 		return
 	end
 
-	local value = tonumber(g_settings.getValue(var_0_12))
+	local value = tonumber(g_settings.getValue(CHAT_MODE_SETTING_KEY))
 
 	if value ~= CHAT_MODE.ON and value ~= CHAT_MODE.OFF then
 		value = Keybind.chatMode
 	end
 
 	local chatMode = panels.keybindsPanel.panel.chatMode
-	local var_62_2 = value == CHAT_MODE.OFF and chatMode.off or chatMode.on
+	local selectedChatModeWidget = value == CHAT_MODE.OFF and chatMode.off or chatMode.on
 
-	if chatModeGroup:getSelectedWidget() ~= var_62_2 then
-		var_0_10 = true
+	if chatModeGroup:getSelectedWidget() ~= selectedChatModeWidget then
+		restoringChatMode = true
 
-		chatModeGroup:selectWidget(var_62_2)
+		chatModeGroup:selectWidget(selectedChatModeWidget)
 
-		var_0_10 = false
+		restoringChatMode = false
 	end
 end
 
@@ -1083,8 +1083,8 @@ function applyChangedOptions()
 	changedOptions = {}
 
 	for key, changedKeybind in pairs(changedKeybinds) do
-		for iter_64_4, entry in pairs(changedKeybind) do
-			local numericValue = tonumber(iter_64_4) or iter_64_4
+		for chatModeKey, entry in pairs(changedKeybind) do
+			local numericValue = tonumber(chatModeKey) or chatModeKey
 
 			for unusedValue, entry in pairs(entry) do
 				if entry.primary then
@@ -1219,12 +1219,12 @@ function listKeybindsComboBox(value)
 	if not _syncingPreset and CustomHotkeys and CustomHotkeys.syncPresetFromGeneral then
 		_syncingPreset = true
 
-		local var_69_1, var_69_2 = pcall(CustomHotkeys.syncPresetFromGeneral, value)
+		local syncSucceeded, syncError = pcall(CustomHotkeys.syncPresetFromGeneral, value)
 
 		_syncingPreset = false
 
-		if not var_69_1 then
-			g_logger.error("Failed to sync Custom Hotkeys preset: " .. tostring(var_69_2))
+		if not syncSucceeded then
+			g_logger.error("Failed to sync Custom Hotkeys preset: " .. tostring(syncError))
 		end
 	end
 end

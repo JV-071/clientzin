@@ -72,9 +72,9 @@ local trainingSessionActive = false
 local trainingMessageHandler
 local lastAutoAmmoMs = 0
 local autoAmmoBurstEvent
-local cachedExerciseDummyKey
-local cachedExerciseDummyAt = 0
-local EXERCISE_DUMMY_CACHE_MS = 0
+local pendingAmmoCount
+local pendingAmmoSinceMs = 0
+local lastAmmoActionMs = 0
 local toolsTickEvent
 local antiIdleOutfitEvent
 local antiIdleOutfitDirectionIndex = 1
@@ -92,9 +92,9 @@ local autoAmmoEnabled = false
 local autoAmmoTargetCount = 100
 local cachedMainCheck
 local cachedExerciseDummy
-local var_0_37
-local var_0_38 = 0
-local var_0_39 = 2500
+local cachedDummyPositionKey
+local cachedDummySinceMs = 0
+local EXERCISE_DUMMY_CACHE_MS = 2500
 local toolsItemAssignWindow
 local toolsItemAssignPanel
 local toolsItemAssignTargetSlot
@@ -106,10 +106,10 @@ local CHANGE_GOLD_INTERVAL_MS = 1000
 local EAT_FOOD_INTERVAL_MS = 30000
 local EXERCISE_INTERVAL_MS = 10000
 local EXERCISE_SEARCH_RADIUS = 5
-local var_0_51 = 10000
-local var_0_52 = 100
-local var_0_53 = 250
-local var_0_54 = 2000
+local AUTO_AMMO_INTERVAL_MS = 10000
+local AUTO_AMMO_BURST_INTERVAL_MS = 100
+local AUTO_AMMO_ACTION_INTERVAL_MS = 250
+local AUTO_AMMO_CONFIRMATION_TIMEOUT_MS = 2000
 local AUTO_AMMO_DEFAULT_TARGET_COUNT = 100
 local AUTO_AMMO_COUNT_STEP = 10
 local AUTO_AMMO_MAX_COUNT = 1000
@@ -274,9 +274,9 @@ local function stopAutoAmmoBurst()
 		autoAmmoBurstEvent = nil
 	end
 
-	cachedExerciseDummyKey = nil
-	cachedExerciseDummyAt = 0
-	EXERCISE_DUMMY_CACHE_MS = 0
+	pendingAmmoCount = nil
+	pendingAmmoSinceMs = 0
+	lastAmmoActionMs = 0
 end
 
 local function localizeToolsItemAssignWindow()
@@ -462,8 +462,8 @@ end
 
 local function invalidateExerciseDummyCache()
 	cachedExerciseDummy = nil
-	var_0_37 = nil
-	var_0_38 = 0
+	cachedDummyPositionKey = nil
+	cachedDummySinceMs = 0
 end
 
 local function playerPosCacheKey(pos)
@@ -1303,7 +1303,7 @@ local function getNearestExerciseDummy()
 	local posKey = playerPosCacheKey(playerPos)
 	local now = g_clock.millis()
 
-	if var_0_37 == posKey and now < var_0_38 + var_0_39 then
+	if cachedDummyPositionKey == posKey and now < cachedDummySinceMs + EXERCISE_DUMMY_CACHE_MS then
 		return cachedExerciseDummy
 	end
 
@@ -1346,16 +1346,16 @@ local function getNearestExerciseDummy()
 	end
 
 	cachedExerciseDummy = nearest
-	var_0_37 = posKey
-	var_0_38 = now
+	cachedDummyPositionKey = posKey
+	cachedDummySinceMs = now
 
 	return nearest
 end
 
 local function itemMatchesId(item, itemId)
-	local var_69_0 = type(item)
+	local itemType = type(item)
 
-	return (var_69_0 == "userdata" or var_69_0 == "table") and item:getId() == itemId
+	return (itemType == "userdata" or itemType == "table") and item:getId() == itemId
 end
 
 local function itemCount(item)
@@ -1363,10 +1363,10 @@ local function itemCount(item)
 end
 
 local function sameContainerSource(left, right)
-	local var_71_0 = type(left)
-	local var_71_1 = type(right)
+	local leftType = type(left)
+	local rightType = type(right)
 
-	if var_71_0 ~= "userdata" and var_71_0 ~= "table" or var_71_1 ~= "userdata" and var_71_1 ~= "table" then
+	if leftType ~= "userdata" and leftType ~= "table" or rightType ~= "userdata" and rightType ~= "table" then
 		return false
 	end
 
@@ -1464,7 +1464,7 @@ local function findAmmoSource(player, itemId, excludedContainer, excludedItems)
 	return nil
 end
 
-local function runQuiverAutoAmmo(player)
+local function shouldYieldAmmoToHealing(player)
 	if not HelperHealer then
 		return false
 	end
@@ -1476,92 +1476,92 @@ local function runQuiverAutoAmmo(player)
 	return HelperHealer.isItemUsePending and HelperHealer.isItemUsePending() or false
 end
 
-local function var_0_134(arg_78_0)
-	cachedExerciseDummyKey = arg_78_0
-	cachedExerciseDummyAt = g_clock.millis()
-	EXERCISE_DUMMY_CACHE_MS = cachedExerciseDummyAt
+local function recordPendingAmmoAction(currentAmmoCount)
+	pendingAmmoCount = currentAmmoCount
+	pendingAmmoSinceMs = g_clock.millis()
+	lastAmmoActionMs = pendingAmmoSinceMs
 end
 
-local function var_0_135(arg_79_0)
-	if cachedExerciseDummyKey == nil then
+local function checkAmmoConfirmation(currentAmmoCount)
+	if pendingAmmoCount == nil then
 		return false, false
 	end
 
-	if arg_79_0 > cachedExerciseDummyKey then
-		cachedExerciseDummyKey = nil
-		cachedExerciseDummyAt = 0
+	if currentAmmoCount > pendingAmmoCount then
+		pendingAmmoCount = nil
+		pendingAmmoSinceMs = 0
 
 		return false, false
 	end
 
-	if g_clock.millis() - cachedExerciseDummyAt < var_0_54 then
+	if g_clock.millis() - pendingAmmoSinceMs < AUTO_AMMO_CONFIRMATION_TIMEOUT_MS then
 		return true, false
 	end
 
-	cachedExerciseDummyKey = nil
-	cachedExerciseDummyAt = 0
+	pendingAmmoCount = nil
+	pendingAmmoSinceMs = 0
 
 	return false, true
 end
 
-local function var_0_136(arg_80_0, itemId, arg_80_2)
-	if not arg_80_0.getInventoryCount then
+local function refillAmmoFromClosedInventory(player, itemId, currentAmmoCount)
+	if not player.getInventoryCount then
 		return false
 	end
 
-	if arg_80_2 >= (tonumber(arg_80_0:getInventoryCount(itemId, 0)) or 0) then
+	if currentAmmoCount >= (tonumber(player:getInventoryCount(itemId, 0)) or 0) then
 		return false
 	end
 
-	var_0_134(arg_80_2)
+	recordPendingAmmoAction(currentAmmoCount)
 	g_game.equipItemId(itemId, 0)
 
 	return true
 end
 
-local function var_0_137(arg_81_0, arg_81_1, targetCount)
-	local unusedValue, var_81_1 = findOpenEquippedQuiver(arg_81_0)
+local function refillQuiverAmmo(player, itemId, targetCount)
+	local unusedValue, quiverContainer = findOpenEquippedQuiver(player)
 
-	if not var_81_1 then
+	if not quiverContainer then
 		return false
 	end
 
-	local currentCount = countContainerItem(var_81_1, arg_81_1)
+	local currentCount = countContainerItem(quiverContainer, itemId)
 
 	if targetCount <= currentCount then
 		return false
 	end
 
-	local var_81_3, var_81_4 = var_0_135(currentCount)
+	local isAwaitingConfirmation, confirmationTimedOut = checkAmmoConfirmation(currentCount)
 
-	if var_81_3 then
+	if isAwaitingConfirmation then
 		return true
 	end
 
-	if var_81_4 then
+	if confirmationTimedOut then
 		return false
 	end
 
-	if g_clock.millis() - EXERCISE_DUMMY_CACHE_MS < var_0_53 then
+	if g_clock.millis() - lastAmmoActionMs < AUTO_AMMO_ACTION_INTERVAL_MS then
 		return true
 	end
 
-	local destination, destinationCapacity = findAmmoDestination(var_81_1, arg_81_1)
+	local destination, destinationCapacity = findAmmoDestination(quiverContainer, itemId)
 
 	if not destination or destinationCapacity <= 0 then
 		return false
 	end
 
-	local source = findAmmoSource(arg_81_0, arg_81_1, var_81_1)
+	local source = findAmmoSource(player, itemId, quiverContainer)
 
 	if not source then
-		return var_0_136(arg_81_0, arg_81_1, currentCount)
+		return refillAmmoFromClosedInventory(player, itemId, currentCount)
 	end
 
 	local moveCount = math.min(targetCount - currentCount, itemCount(source), destinationCapacity)
 
 	if moveCount > 0 then
-		var_0_134(currentCount)
+		recordPendingAmmoAction(currentCount)
 		g_game.move(source, destination, moveCount)
 
 		return true
@@ -1625,14 +1625,14 @@ local function performAutoAmmoAction()
 		return
 	end
 
-	if runQuiverAutoAmmo(player) then
+	if shouldYieldAmmoToHealing(player) then
 		return true
 	end
 
 	local targetCount = normalizeAutoAmmoCount(autoAmmoTargetCount, AUTO_AMMO_DEFAULT_TARGET_COUNT)
 
 	if ammoKind == "quiver" then
-		return var_0_137(player, itemId, targetCount)
+		return refillQuiverAmmo(player, itemId, targetCount)
 	else
 		runHandAutoAmmo(player, itemId, math.min(targetCount, AMMO_STACK_MAX_COUNT))
 
@@ -1640,17 +1640,17 @@ local function performAutoAmmoAction()
 	end
 end
 
-local function var_0_140()
+local function runAutoAmmoBurst()
 	autoAmmoBurstEvent = nil
 
 	if not performAutoAmmoAction() then
-		cachedExerciseDummyKey = nil
-		cachedExerciseDummyAt = 0
+		pendingAmmoCount = nil
+		pendingAmmoSinceMs = 0
 
 		return
 	end
 
-	autoAmmoBurstEvent = scheduleEvent(var_0_140, var_0_52)
+	autoAmmoBurstEvent = scheduleEvent(runAutoAmmoBurst, AUTO_AMMO_BURST_INTERVAL_MS)
 end
 
 local function runAutoAmmo(force)
@@ -1668,7 +1668,7 @@ local function runAutoAmmo(force)
 
 	local now = g_clock.millis()
 
-	if not force and now < lastAutoAmmoMs + var_0_51 then
+	if not force and now < lastAutoAmmoMs + AUTO_AMMO_INTERVAL_MS then
 		return
 	end
 
@@ -1678,21 +1678,21 @@ local function runAutoAmmo(force)
 
 	lastAutoAmmoMs = now
 
-	var_0_140()
+	runAutoAmmoBurst()
 end
 
-local function var_0_142(arg_86_0, arg_86_1)
-	if not arg_86_0 or not arg_86_0.getItems then
+local function findConvertibleCoinStack(player, coinItemId)
+	if not player or not player.getItems then
 		return nil
 	end
 
-	local items = arg_86_0:getItems(arg_86_1)
+	local items = player:getItems(coinItemId)
 
-	for iter_86_0 = 1, #items do
-		local var_86_1 = items[iter_86_0]
+	for itemIndex = 1, #items do
+		local coinStack = items[itemIndex]
 
-		if var_86_1 and var_86_1:getCount() >= CONVERT_STACK_SIZE then
-			return var_86_1
+		if coinStack and coinStack:getCount() >= CONVERT_STACK_SIZE then
+			return coinStack
 		end
 	end
 
@@ -1726,7 +1726,7 @@ local function runChangeGold()
 
 	lastChangeGoldMs = nowMs
 
-	local targetThing = var_0_142(localPlayer, GOLD_COIN_ID)
+	local targetThing = findConvertibleCoinStack(localPlayer, GOLD_COIN_ID)
 
 	if targetThing then
 		g_game.use(targetThing)
@@ -1734,7 +1734,7 @@ local function runChangeGold()
 		return
 	end
 
-	local targetThing = var_0_142(localPlayer, PLATINUM_COIN_ID)
+	local targetThing = findConvertibleCoinStack(localPlayer, PLATINUM_COIN_ID)
 
 	if targetThing then
 		g_game.use(targetThing)

@@ -1514,45 +1514,45 @@ local function isAuctionCharacterArgumentEntryAssigned()
 		return
 	end
 
-	local var_91_0
+	local storeItemsGroup
 
 	for _, groupRow in ipairs(auctionCharacterArguments) do
 		if groupRow.id == 4 or groupRow.title == "Store Items" then
-			var_91_0 = groupRow
+			storeItemsGroup = groupRow
 
 			break
 		end
 	end
 
-	if var_91_0 and type(var_91_0.entries) == "table" and #var_91_0.entries > 0 then
+	if storeItemsGroup and type(storeItemsGroup.entries) == "table" and #storeItemsGroup.entries > 0 then
 		return
 	end
 
-	if not var_91_0 then
-		var_91_0 = {
+	if not storeItemsGroup then
+		storeItemsGroup = {
 			title = "Store Items",
 			id = 4,
 			entries = {}
 		}
 
-		table.insert(auctionCharacterArguments, var_91_0)
-	elseif not var_91_0.entries then
-		var_91_0.entries = {}
+		table.insert(auctionCharacterArguments, storeItemsGroup)
+	elseif not storeItemsGroup.entries then
+		storeItemsGroup.entries = {}
 	end
 
 	for _, entryRow in ipairs(auctionCharacterItemsStore) do
-		local var_91_1 = parseAuctionCharacterItemEntry(entryRow)
+		local storeItemEntry = parseAuctionCharacterItemEntry(entryRow)
 
-		if var_91_1 then
-			local var_91_2 = getAuctionCharacterItemName(var_91_1.id)
-			local var_91_3 = math.max(1, tonumber(var_91_1.count) or 1)
+		if storeItemEntry then
+			local storeItemName = getAuctionCharacterItemName(storeItemEntry.id)
+			local storeItemCount = math.max(1, tonumber(storeItemEntry.count) or 1)
 
-			if var_91_2 ~= "" then
-				table.insert(var_91_0.entries, {
-					value = var_91_3 .. "x " .. var_91_2 .. " (Store Item)",
-					storeItemId = var_91_1.id,
-					storeItemTier = var_91_1.tier or 0,
-					storeItemCount = var_91_3
+			if storeItemName ~= "" then
+				table.insert(storeItemsGroup.entries, {
+					value = storeItemCount .. "x " .. storeItemName .. " (Store Item)",
+					storeItemId = storeItemEntry.id,
+					storeItemTier = storeItemEntry.tier or 0,
+					storeItemCount = storeItemCount
 				})
 			end
 		end
@@ -1570,9 +1570,9 @@ local function isAuctionCharacterArgumentEntryAssigned()
 	end)
 end
 
-local function var_0_116(arg_93_0)
+local function isArgumentAlreadyPinned(argumentEntry)
 	for slotIndex = 1, A.SLOT_COUNT do
-		if isSameAuctionCharacterArgumentEntry(auctionCharacterHeaderArgumentSlots[slotIndex], arg_93_0) then
+		if isSameAuctionCharacterArgumentEntry(auctionCharacterHeaderArgumentSlots[slotIndex], argumentEntry) then
 			return true
 		end
 	end
@@ -1580,12 +1580,12 @@ local function var_0_116(arg_93_0)
 	return false
 end
 
-local function var_0_117(arg_94_0, arg_94_1)
-	if arg_94_1 then
+local function getArgumentRowColor(rowIndex, isSelected)
+	if isSelected then
 		return A.ROW_COLOR_SELECTED
 	end
 
-	if arg_94_0 % 2 == 0 then
+	if rowIndex % 2 == 0 then
 		return A.ROW_COLOR_B
 	end
 
@@ -1597,7 +1597,7 @@ local function setAuctionCharacterArgumentEntryRowSelected(configAuctionCharacte
 		return
 	end
 
-	configAuctionCharacterWindow:setBackgroundColor(var_0_117(slotIndex, selected))
+	configAuctionCharacterWindow:setBackgroundColor(getArgumentRowColor(slotIndex, selected))
 end
 
 local function clearAuctionCharacterArgumentListSelection(headerWindow)
@@ -1642,7 +1642,7 @@ local function assignAuctionCharacterArgumentToNextSlot(entryData)
 		return false
 	end
 
-	if var_0_116(entryData) then
+	if isArgumentAlreadyPinned(entryData) then
 		return false
 	end
 
@@ -1812,7 +1812,7 @@ local function fillAuctionCharacterArguments()
 					storeItemCount = entry.storeItemCount
 				}
 
-				if not var_0_116(entryData) then
+				if not isArgumentAlreadyPinned(entryData) then
 					visibleEntries[#visibleEntries + 1] = entryData
 				end
 			end
@@ -2067,22 +2067,22 @@ local function updateAuctionCharacterHeaderItemSlot(slotIndex)
 
 	if itemData and display and not display:isDestroyed() then
 		local item = math.max(1, tonumber(itemData.count) or 1)
-		local var_120_6 = Item.create(itemData.id, item)
+		local previewItem = Item.create(itemData.id, item)
 
-		if var_120_6 then
-			if itemData.tier and itemData.tier > 0 and var_120_6.setTier then
-				var_120_6:setTier(itemData.tier)
+		if previewItem then
+			if itemData.tier and itemData.tier > 0 and previewItem.setTier then
+				previewItem:setTier(itemData.tier)
 			end
 
-			display:setItem(var_120_6)
+			display:setItem(previewItem)
 
 			if display.setItemCount then
 				display:setItemCount(item)
 			end
 
 			if ItemsDatabase then
-				ItemsDatabase.setRarityItem(display, var_120_6, nil, true)
-				ItemsDatabase.setTier(display, var_120_6)
+				ItemsDatabase.setRarityItem(display, previewItem, nil, true)
+				ItemsDatabase.setTier(display, previewItem)
 			end
 		end
 
@@ -2267,22 +2267,22 @@ function refreshAuctionCharacterItemsList(searchFilter)
 
 			if slotItem then
 				local item = math.max(1, tonumber(itemData.count) or 1)
-				local var_130_7 = Item.create(itemData.id, item)
+				local previewItem = Item.create(itemData.id, item)
 
-				if var_130_7 then
-					if itemData.tier and itemData.tier > 0 and var_130_7.setTier then
-						var_130_7:setTier(itemData.tier)
+				if previewItem then
+					if itemData.tier and itemData.tier > 0 and previewItem.setTier then
+						previewItem:setTier(itemData.tier)
 					end
 
-					slotItem:setItem(var_130_7)
+					slotItem:setItem(previewItem)
 
 					if slotItem.setItemCount then
 						slotItem:setItemCount(item)
 					end
 
 					if ItemsDatabase then
-						ItemsDatabase.setRarityItem(slotItem, var_130_7, nil, true)
-						ItemsDatabase.setTier(slotItem, var_130_7)
+						ItemsDatabase.setRarityItem(slotItem, previewItem, nil, true)
+						ItemsDatabase.setTier(slotItem, previewItem)
 					end
 				end
 			end
@@ -2479,7 +2479,7 @@ function confirmAuctionCharacter()
 		return
 	end
 
-	local var_144_0 = AUCTION_MIN_OFFER_PRICE
+	local startingBid = AUCTION_MIN_OFFER_PRICE
 
 	if configAuctionCharacterWindow and not configAuctionCharacterWindow:isDestroyed() then
 		if not configAuctionCharacterWindow.headerWindow then
@@ -2516,7 +2516,7 @@ function confirmAuctionCharacter()
 			return
 		end
 
-		var_144_0 = value
+		startingBid = value
 	else
 		print("[Erro] Janela principal de configuração do leilão não está aberta ou foi destruída.")
 
@@ -2602,7 +2602,7 @@ function confirmAuctionCharacter()
 		end
 	end
 
-	if var_144_0 == 0 then
+	if startingBid == 0 then
 		print("[Erro] startBid não pode ser zero.")
 
 		return
@@ -2615,7 +2615,7 @@ function confirmAuctionCharacter()
 	end
 
 	g_game.sendCharacterAuction({
-		startBid = var_144_0,
+		startBid = startingBid,
 		endTimestamp = endTimestamp,
 		inventoryItems = inventoryItems,
 		storeItems = storeItems,

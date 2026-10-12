@@ -1,45 +1,45 @@
 HelperActionCoordinator = HelperActionCoordinator or {}
 
-local var_0_0 = 200
-local var_0_1 = 400
-local var_0_2 = 250
-local var_0_3
-local var_0_4
-local var_0_5 = 0
+local MIN_ACTION_TIMEOUT_MS = 200
+local MAX_ACTION_TIMEOUT_MS = 400
+local DEFAULT_ACTION_TIMEOUT_MS = 250
+local connectedPlayer
+local pendingEquipmentAction
+local manualHotkeyBlockedUntilMs = 0
 
-local function var_0_6()
+local function getNowMs()
 	return g_clock.millis()
 end
 
-local function var_0_7()
+local function getActionTimeoutMs()
 	local ping = g_game.getPing and tonumber(g_game.getPing()) or 0
 
 	if not ping or ping <= 0 then
-		return var_0_2
+		return DEFAULT_ACTION_TIMEOUT_MS
 	end
 
-	return math.max(var_0_0, math.min(var_0_1, ping + 100))
+	return math.max(MIN_ACTION_TIMEOUT_MS, math.min(MAX_ACTION_TIMEOUT_MS, ping + 100))
 end
 
-local function var_0_8(numericValue)
+local function resolveEquipmentSlot(numericValue)
 	numericValue = tonumber(numericValue)
 
 	if not numericValue or numericValue <= 0 or not Item or not Item.create then
 		return nil
 	end
 
-	local var_3_0 = Item.create(numericValue)
+	local item = Item.create(numericValue)
 
-	if not var_3_0 or not var_3_0.getClothSlot then
+	if not item or not item.getClothSlot then
 		return nil
 	end
 
-	local clothSlot = tonumber(var_3_0:getClothSlot())
+	local clothSlot = tonumber(item:getClothSlot())
 
 	return clothSlot and clothSlot > 0 and clothSlot or nil
 end
 
-local function var_0_9(thingId)
+local function resolveItemName(thingId)
 	if not thingId or not g_things or not g_things.getThingType then
 		return nil
 	end
@@ -61,94 +61,94 @@ local function var_0_9(thingId)
 	return name and name ~= "" and name or nil
 end
 
-local function var_0_10(arg_5_0, arg_5_1)
-	if not arg_5_0 or not arg_5_1 or not arg_5_0.getId then
+local function matchesEquipmentItem(inventoryItem, expectedItemId)
+	if not inventoryItem or not expectedItemId or not inventoryItem.getId then
 		return false
 	end
 
-	local id = arg_5_0:getId()
+	local id = inventoryItem:getId()
 
-	if id == arg_5_1 then
+	if id == expectedItemId then
 		return true
 	end
 
-	local var_5_1 = var_0_9(arg_5_1)
+	local expectedItemName = resolveItemName(expectedItemId)
 
-	return var_5_1 ~= nil and var_5_1 == var_0_9(id)
+	return expectedItemName ~= nil and expectedItemName == resolveItemName(id)
 end
 
-local function var_0_11()
-	if var_0_4 and var_0_6() >= var_0_4.expiresAt then
-		var_0_4 = nil
+local function expirePendingEquipmentAction()
+	if pendingEquipmentAction and getNowMs() >= pendingEquipmentAction.expiresAt then
+		pendingEquipmentAction = nil
 	end
 end
 
-local function handleInventoryChange(unusedArgument, arg_7_1, arg_7_2)
-	if not var_0_4 then
+local function handleInventoryChange(unusedArgument, changedSlot, changedItem)
+	if not pendingEquipmentAction then
 		return
 	end
 
-	local inventorySlot = var_0_4.inventorySlot
+	local inventorySlot = pendingEquipmentAction.inventorySlot
 
 	if not inventorySlot then
-		var_0_4 = nil
+		pendingEquipmentAction = nil
 
 		return
 	end
 
-	if inventorySlot ~= arg_7_1 then
+	if inventorySlot ~= changedSlot then
 		return
 	end
 
-	if var_0_10(arg_7_2, var_0_4.itemId) == var_0_4.shouldBeEquipped then
-		var_0_4 = nil
+	if matchesEquipmentItem(changedItem, pendingEquipmentAction.itemId) == pendingEquipmentAction.shouldBeEquipped then
+		pendingEquipmentAction = nil
 	end
 end
 
-local function var_0_13(arg_8_0)
-	if var_0_3 == arg_8_0 then
+local function connectInventoryObserver(player)
+	if connectedPlayer == player then
 		return
 	end
 
-	if var_0_3 then
-		disconnect(var_0_3, {
+	if connectedPlayer then
+		disconnect(connectedPlayer, {
 			onInventoryChange = handleInventoryChange
 		})
 	end
 
-	var_0_3 = arg_8_0
+	connectedPlayer = player
 
-	if var_0_3 then
-		connect(var_0_3, {
+	if connectedPlayer then
+		connect(connectedPlayer, {
 			onInventoryChange = handleInventoryChange
 		})
 	end
 end
 
-function HelperActionCoordinator.beginManualEquipmentAction(arg_9_0)
+function HelperActionCoordinator.beginManualEquipmentAction(itemId)
 	if not g_game.isOnline() then
 		return false
 	end
 
-	var_0_13(g_game.getLocalPlayer())
+	connectInventoryObserver(g_game.getLocalPlayer())
 
-	local var_9_0 = var_0_6()
-	local numericValue = tonumber(arg_9_0)
-	local var_9_2 = var_0_8(numericValue)
+	local startedAtMs = getNowMs()
+	local numericValue = tonumber(itemId)
+	local equipmentSlot = resolveEquipmentSlot(numericValue)
 	local localPlayer = g_game.getLocalPlayer()
-	local inventoryItem = var_9_2 and localPlayer and localPlayer.getInventoryItem and localPlayer:getInventoryItem(var_9_2) or nil
-	local var_9_5
+	local inventoryItem = equipmentSlot and localPlayer and localPlayer.getInventoryItem and localPlayer:getInventoryItem(equipmentSlot) or nil
+	local shouldBeEquipped
 
 	if numericValue then
-		var_9_5 = not var_0_10(inventoryItem, numericValue)
+		shouldBeEquipped = not matchesEquipmentItem(inventoryItem, numericValue)
 	end
 
-	var_0_4 = {
+	pendingEquipmentAction = {
 		itemId = numericValue,
-		inventorySlot = var_9_2,
-		shouldBeEquipped = var_9_5,
-		startedAt = var_9_0,
-		expiresAt = var_9_0 + var_0_7()
+		inventorySlot = equipmentSlot,
+		shouldBeEquipped = shouldBeEquipped,
+		startedAt = startedAtMs,
+		expiresAt = startedAtMs + getActionTimeoutMs()
 	}
 
 	return true
@@ -159,34 +159,34 @@ function HelperActionCoordinator.beginManualHotkeyAction()
 		return false
 	end
 
-	var_0_5 = math.max(var_0_5, var_0_6() + var_0_7())
+	manualHotkeyBlockedUntilMs = math.max(manualHotkeyBlockedUntilMs, getNowMs() + getActionTimeoutMs())
 
 	return true
 end
 
 function HelperActionCoordinator.clearManualHotkeyAction()
-	var_0_5 = 0
+	manualHotkeyBlockedUntilMs = 0
 end
 
 function HelperActionCoordinator.isAutomaticActionBlocked()
-	var_0_11()
+	expirePendingEquipmentAction()
 
-	return var_0_4 ~= nil or var_0_6() < var_0_5
+	return pendingEquipmentAction ~= nil or getNowMs() < manualHotkeyBlockedUntilMs
 end
 
 function HelperActionCoordinator.reset()
-	var_0_4 = nil
-	var_0_5 = 0
+	pendingEquipmentAction = nil
+	manualHotkeyBlockedUntilMs = 0
 end
 
 function HelperActionCoordinator.init()
 	HelperActionCoordinator.reset()
-	var_0_13(g_game.getLocalPlayer())
+	connectInventoryObserver(g_game.getLocalPlayer())
 end
 
 function HelperActionCoordinator.onGameStart()
 	HelperActionCoordinator.reset()
-	var_0_13(g_game.getLocalPlayer())
+	connectInventoryObserver(g_game.getLocalPlayer())
 end
 
 function HelperActionCoordinator.onGameEnd()
@@ -195,5 +195,5 @@ end
 
 function HelperActionCoordinator.terminate()
 	HelperActionCoordinator.reset()
-	var_0_13(nil)
+	connectInventoryObserver(nil)
 end

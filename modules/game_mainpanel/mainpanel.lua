@@ -131,8 +131,8 @@ local DEFAULT_SHORTCUT_ORDER = {
 	"reportButton"
 }
 local optionsShrink = false
-local var_0_14 = "control_buttons"
-local var_0_15 = {
+local CONTROL_BUTTONS_SETTINGS_KEY = "control_buttons"
+local EXCLUDED_SHORTCUT_IDS = {
 	helperButton = true
 }
 
@@ -194,11 +194,11 @@ function reloadMainPanelSizes()
 							options:setMarginTop(5)
 						end
 
-						local var_6_8, unusedValue = calculatePanelHeight(options, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.OPTIONS)
+						local optionsHeight, unusedValue = calculatePanelHeight(options, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.OPTIONS)
 						local specials = optionsController.ui.onPanel.specials
-						local var_6_11, unusedValue = calculatePanelHeight(specials, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.SPECIALS)
+						local specialsHeight, unusedValue = calculatePanelHeight(specials, PANEL_CONSTANTS.MAX_ICONS_PER_ROW.SPECIALS)
 						local optionsSeparator = optionsController.ui.onPanel.optionsSeparator
-						local controls_height = math.max(var_6_8, var_6_11)
+						local controls_height = math.max(optionsHeight, specialsHeight)
 
 						options:setHeight(controls_height)
 						specials:setHeight(controls_height)
@@ -236,29 +236,29 @@ function reloadMainPanelSizes()
 	right_panel:fitAll()
 end
 
-local function var_0_17(arg_7_0)
-	if not arg_7_0 or arg_7_0:isDestroyed() then
+local function isHighlightWidget(widget)
+	if not widget or widget:isDestroyed() then
 		return false
 	end
 
-	if arg_7_0.isExplicitlyVisible and not arg_7_0:isExplicitlyVisible() then
+	if widget.isExplicitlyVisible and not widget:isExplicitlyVisible() then
 		return false
 	end
 
-	local id = arg_7_0:getId() or ""
+	local id = widget:getId() or ""
 
 	if id:find("Highlight") or id:find("highlight") then
 		return true
 	end
 
-	local var_7_1, var_7_2 = pcall(function()
-		return arg_7_0:getImageSource()
+	local imageSourceReadSucceeded, imageSource = pcall(function()
+		return widget:getImageSource()
 	end)
 
-	return var_7_1 and type(var_7_2) == "string" and var_7_2:find("button%-highlight") ~= nil
+	return imageSourceReadSucceeded and type(imageSource) == "string" and imageSource:find("button%-highlight") ~= nil
 end
 
-local function var_0_18()
+local function hasVisibleShortcutHighlight()
 	if not optionsController or not optionsController.ui or not optionsController.ui.onPanel then
 		return false
 	end
@@ -272,7 +272,7 @@ local function var_0_18()
 	for unusedValue, child in ipairs(options:getChildren()) do
 		if child and not child:isDestroyed() then
 			for unusedValue, child in ipairs(child:getChildren()) do
-				if var_0_17(child) then
+				if isHighlightWidget(child) then
 					return true
 				end
 			end
@@ -293,7 +293,7 @@ function refreshOffPanelResizerHighlight()
 		return
 	end
 
-	offPanelResizerHighlight:setVisible(optionsShrink and var_0_18())
+	offPanelResizerHighlight:setVisible(optionsShrink and hasVisibleShortcutHighlight())
 end
 
 local function refreshOptionsSizes()
@@ -693,20 +693,20 @@ function toggleExtendedViewButtons(extended)
 	refreshOptionsSizes()
 end
 
-local function var_0_27(arg_36_0)
-	local var_36_0 = {}
+local function normalizeShortcutOrder(savedOrder)
+	local normalizedOrder = {}
 	local seen = {}
 
-	if type(arg_36_0) ~= "table" then
-		return var_36_0
+	if type(savedOrder) ~= "table" then
+		return normalizedOrder
 	end
 
 	local visibleSet = {}
 
-	for _, id in pairs(arg_36_0) do
+	for _, id in pairs(savedOrder) do
 		local numericValue = tonumber(_)
 
-		if numericValue and numericValue >= 1 and numericValue == math.floor(numericValue) and type(id) == "string" and id ~= "" and not var_0_15[id] then
+		if numericValue and numericValue >= 1 and numericValue == math.floor(numericValue) and type(id) == "string" and id ~= "" and not EXCLUDED_SHORTCUT_IDS[id] then
 			table.insert(visibleSet, {
 				index = numericValue,
 				id = id
@@ -714,22 +714,22 @@ local function var_0_27(arg_36_0)
 		end
 	end
 
-	table.sort(visibleSet, function(arg_37_0, arg_37_1)
-		return arg_37_0.index < arg_37_1.index
+	table.sort(visibleSet, function(leftEntry, rightEntry)
+		return leftEntry.index < rightEntry.index
 	end)
 
 	for unusedValue, entry in ipairs(visibleSet) do
 		if not seen[entry.id] then
-			table.insert(var_36_0, entry.id)
+			table.insert(normalizedOrder, entry.id)
 
 			seen[entry.id] = true
 		end
 	end
 
-	return var_36_0
+	return normalizedOrder
 end
 
-local function var_0_28()
+local function readSidebarShortcutOrder()
 	if not SidebarPersistence or not SidebarPersistence.getSection then
 		return {}, false
 	end
@@ -740,11 +740,11 @@ local function var_0_28()
 		return {}, false
 	end
 
-	return var_0_27(section.shortcutOrder), type(section.shortcutOrder) == "table"
+	return normalizeShortcutOrder(section.shortcutOrder), type(section.shortcutOrder) == "table"
 end
 
-local function var_0_29()
-	local node = g_settings and g_settings.getNode and g_settings.getNode(var_0_14)
+local function loadControlButtonsSettings()
+	local node = g_settings and g_settings.getNode and g_settings.getNode(CONTROL_BUTTONS_SETTINGS_KEY)
 
 	if type(node) ~= "table" then
 		node = {}
@@ -754,55 +754,55 @@ local function var_0_29()
 		node.buttons = {}
 	end
 
-	local var_39_1 = false
+	local settingsChanged = false
 
-	for iter_39_0 in pairs(var_0_15) do
-		if node.buttons[iter_39_0] ~= nil then
-			node.buttons[iter_39_0] = nil
-			var_39_1 = true
+	for excludedId in pairs(EXCLUDED_SHORTCUT_IDS) do
+		if node.buttons[excludedId] ~= nil then
+			node.buttons[excludedId] = nil
+			settingsChanged = true
 		end
 	end
 
 	if type(node.order) == "table" then
 		for unusedValue, entry in pairs(node.order) do
-			if var_0_15[entry] then
-				var_39_1 = true
+			if EXCLUDED_SHORTCUT_IDS[entry] then
+				settingsChanged = true
 
 				break
 			end
 		end
 	end
 
-	local order = var_0_27(node.order)
+	local order = normalizeShortcutOrder(node.order)
 
-	if var_39_1 then
+	if settingsChanged then
 		node.order = order
 	end
 
 	if not (#order > 0 or node.shortcutOrderInitialized == true) then
-		local var_39_3, var_39_4 = var_0_28()
+		local sidebarShortcutOrder, hasSavedSidebarOrder = readSidebarShortcutOrder()
 
-		order = var_39_3
+		order = sidebarShortcutOrder
 
-		if not var_39_4 then
-			order = var_0_27(DEFAULT_SHORTCUT_ORDER)
+		if not hasSavedSidebarOrder then
+			order = normalizeShortcutOrder(DEFAULT_SHORTCUT_ORDER)
 
-			for iter_39_3 = #order, 1, -1 do
-				local var_39_5 = node.buttons[order[iter_39_3]]
+			for orderIndex = #order, 1, -1 do
+				local savedButtonConfig = node.buttons[order[orderIndex]]
 
-				if type(var_39_5) == "table" and var_39_5.visible == false then
-					table.remove(order, iter_39_3)
+				if type(savedButtonConfig) == "table" and savedButtonConfig.visible == false then
+					table.remove(order, orderIndex)
 				end
 			end
 		end
 
 		node.order = order
 		node.shortcutOrderInitialized = true
-		var_39_1 = true
+		settingsChanged = true
 	end
 
-	if var_39_1 and g_settings and g_settings.setNode then
-		g_settings.setNode(var_0_14, node)
+	if settingsChanged and g_settings and g_settings.setNode then
+		g_settings.setNode(CONTROL_BUTTONS_SETTINGS_KEY, node)
 		g_settings.save()
 	end
 
@@ -814,7 +814,7 @@ function saveButtonConfig()
 		return
 	end
 
-	local node = g_settings.getNode(var_0_14)
+	local node = g_settings.getNode(CONTROL_BUTTONS_SETTINGS_KEY)
 
 	if type(node) ~= "table" then
 		node = {}
@@ -824,30 +824,30 @@ function saveButtonConfig()
 		node.buttons = {}
 	end
 
-	for iter_40_0 in pairs(var_0_15) do
-		node.buttons[iter_40_0] = nil
+	for excludedId in pairs(EXCLUDED_SHORTCUT_IDS) do
+		node.buttons[excludedId] = nil
 	end
 
-	local var_40_1 = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
+	local optionsPanel = optionsController and optionsController.ui and optionsController.ui.onPanel and optionsController.ui.onPanel.options
 
-	if var_40_1 then
-		for unusedValue, child in ipairs(var_40_1:getChildren()) do
+	if optionsPanel then
+		for unusedValue, child in ipairs(optionsPanel:getChildren()) do
 			local id = child:getId()
 
 			if id and id ~= "" then
-				local var_40_3 = buttonConfigs[id]
+				local buttonConfig = buttonConfigs[id]
 
 				node.buttons[id] = {
-					visible = var_40_3 and var_40_3.visible ~= nil and var_40_3.visible or child:isVisible()
+					visible = buttonConfig and buttonConfig.visible ~= nil and buttonConfig.visible or child:isVisible()
 				}
 			end
 		end
 	end
 
-	node.order = var_0_27(buttonOrder)
+	node.order = normalizeShortcutOrder(buttonOrder)
 	node.shortcutOrderInitialized = true
 
-	g_settings.setNode(var_0_14, node)
+	g_settings.setNode(CONTROL_BUTTONS_SETTINGS_KEY, node)
 	g_settings.save()
 end
 
@@ -902,7 +902,7 @@ function applyShortcutOrder(order)
 		return
 	end
 
-	buttonOrder = var_0_27(order)
+	buttonOrder = normalizeShortcutOrder(order)
 
 	local byId = {}
 
@@ -937,7 +937,7 @@ function applyShortcutOrder(order)
 end
 
 function loadButtonConfig()
-	local unusedValue, DEFAULT_SHORTCUT_ORDER = var_0_29()
+	local unusedValue, DEFAULT_SHORTCUT_ORDER = loadControlButtonsSettings()
 
 	return {
 		shortcutOrder = DEFAULT_SHORTCUT_ORDER
@@ -972,21 +972,21 @@ function reorderMainPanelSpecialButtons()
 	end
 
 	local rest = {}
-	local var_46_5 = {}
+	local orderedWidgetSet = {}
 
 	for id, w in ipairs(orderIds) do
 		local w = byId[w]
 
 		if w then
 			rest[#rest + 1] = w
-			var_46_5[w] = true
+			orderedWidgetSet[w] = true
 		end
 	end
 
 	local out = {}
 
 	for _, id in pairs(byId) do
-		if not var_46_5[id] then
+		if not orderedWidgetSet[id] then
 			out[#out + 1] = _
 		end
 	end
@@ -1089,7 +1089,7 @@ function setMainPanelButtonVisible(id, visible)
 end
 
 function setMainPanelButtonOrder(order)
-	buttonOrder = var_0_27(order)
+	buttonOrder = normalizeShortcutOrder(order)
 
 	reorderButtons()
 	saveButtonConfig()

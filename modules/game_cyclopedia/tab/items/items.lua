@@ -134,7 +134,7 @@ local itemsVirtualMode = false
 local itemsVirtualEntries = {}
 local itemsVirtualPool = {}
 local itemsVirtualFirstIndex = 1
-local var_0_20
+local moveItemSelection
 
 local function cancelItemsListRender()
 	itemsRenderGeneration = itemsRenderGeneration + 1
@@ -278,8 +278,8 @@ local function setupItemsSearchEdit()
 				Cyclopedia.ItemSearch(text, false)
 			end
 
-			if var_0_20 then
-				var_0_20(keyCode == KeyDown and 1 or -1)
+			if moveItemSelection then
+				moveItemSelection(keyCode == KeyDown and 1 or -1)
 			end
 
 			return true
@@ -746,8 +746,8 @@ function Cyclopedia.onItemTrackCheckChange(widget, checked)
 	updateItemListTrackColorForId(itemId)
 end
 
-function Cyclopedia.onItemIgnoreSellAllCheckChange(arg_49_0, arg_49_1)
-	if arg_49_0._suppressIgnoreSellAllChange then
+function Cyclopedia.onItemIgnoreSellAllCheckChange(checkbox, isIgnored)
+	if checkbox._suppressIgnoreSellAllChange then
 		return
 	end
 
@@ -764,7 +764,7 @@ function Cyclopedia.onItemIgnoreSellAllCheckChange(arg_49_0, arg_49_1)
 	local game_npcmodal = modules.game_npcmodal
 
 	if game_npcmodal and game_npcmodal.setSellAllItemIgnored then
-		game_npcmodal.setSellAllItemIgnored(id, arg_49_1)
+		game_npcmodal.setSellAllItemIgnored(id, isIgnored)
 	end
 end
 
@@ -1207,11 +1207,11 @@ function Cyclopedia.onItemListRowClick(widget)
 
 	if trackCheck then
 		local game_npcmodal = modules.game_npcmodal
-		local var_69_7 = game_npcmodal and game_npcmodal.isSellAllItemIgnored and game_npcmodal.isSellAllItemIgnored(clickedItemId)
+		local isIgnoredForSellAll = game_npcmodal and game_npcmodal.isSellAllItemIgnored and game_npcmodal.isSellAllItemIgnored(clickedItemId)
 
 		trackCheck._suppressIgnoreSellAllChange = true
 
-		trackCheck:setChecked(var_69_7 == true)
+		trackCheck:setChecked(isIgnoredForSellAll == true)
 
 		trackCheck._suppressIgnoreSellAllChange = false
 		trackCheck.onCheckChange = Cyclopedia.onItemIgnoreSellAllCheckChange
@@ -1451,33 +1451,33 @@ local function onVirtualItemsScroll(scrollArea, offset)
 end
 
 local function renderItemEntriesVirtual(entries)
-	local var_80_0, var_80_1 = resolveThingType(entries)
+	local thingType, itemEntry = resolveThingType(entries)
 
-	if var_80_1 and var_80_1.id then
-		return tonumber(var_80_1.id)
+	if itemEntry and itemEntry.id then
+		return tonumber(itemEntry.id)
 	end
 
-	return var_80_0 and tonumber(var_80_0:getId()) or nil
+	return thingType and tonumber(thingType:getId()) or nil
 end
 
-function var_0_20(arg_81_0)
+function moveItemSelection(selectionDelta)
 	if not UI or not UI.ItemListBase or not UI.ItemListBase.List then
 		return false
 	end
 
 	local List = UI.ItemListBase.List
 	local numericValue = tonumber(UI.selectedItemId)
-	local var_81_2
-	local var_81_3 = 0
+	local selectedIndex
+	local entryCount = 0
 	local children
 
 	if itemsVirtualMode then
-		var_81_3 = #itemsVirtualEntries
+		entryCount = #itemsVirtualEntries
 
 		if numericValue then
-			for iter_81_0 = 1, var_81_3 do
-				if renderItemEntriesVirtual(itemsVirtualEntries[iter_81_0]) == numericValue then
-					var_81_2 = iter_81_0
+			for entryIndex = 1, entryCount do
+				if renderItemEntriesVirtual(itemsVirtualEntries[entryIndex]) == numericValue then
+					selectedIndex = entryIndex
 
 					break
 				end
@@ -1485,12 +1485,12 @@ function var_0_20(arg_81_0)
 		end
 	else
 		children = List:getChildren()
-		var_81_3 = #children
+		entryCount = #children
 
 		if numericValue then
-			for iter_81_1 = 1, var_81_3 do
-				if tonumber(children[iter_81_1]:getId()) == numericValue then
-					var_81_2 = iter_81_1
+			for entryIndex = 1, entryCount do
+				if tonumber(children[entryIndex]:getId()) == numericValue then
+					selectedIndex = entryIndex
 
 					break
 				end
@@ -1498,36 +1498,36 @@ function var_0_20(arg_81_0)
 		end
 	end
 
-	if var_81_3 == 0 then
+	if entryCount == 0 then
 		return false
 	end
 
-	local var_81_5
+	local nextIndex
 
-	if var_81_2 then
-		var_81_5 = math.max(1, math.min(var_81_3, var_81_2 + arg_81_0))
+	if selectedIndex then
+		nextIndex = math.max(1, math.min(entryCount, selectedIndex + selectionDelta))
 	else
-		var_81_5 = arg_81_0 < 0 and var_81_3 or 1
+		nextIndex = selectionDelta < 0 and entryCount or 1
 	end
 
-	local var_81_6
+	local selectedRow
 
 	if itemsVirtualMode then
-		local var_81_7 = #itemsVirtualPool
+		local visibleRowCount = #itemsVirtualPool
 
-		if var_81_7 == 0 then
+		if visibleRowCount == 0 then
 			return false
 		end
 
-		local var_81_8 = itemsVirtualFirstIndex
+		local firstVisibleIndex = itemsVirtualFirstIndex
 
-		if var_81_5 < var_81_8 then
-			var_81_8 = var_81_5
-		elseif var_81_5 >= var_81_8 + var_81_7 then
-			var_81_8 = var_81_5 - var_81_7 + 1
+		if nextIndex < firstVisibleIndex then
+			firstVisibleIndex = nextIndex
+		elseif nextIndex >= firstVisibleIndex + visibleRowCount then
+			firstVisibleIndex = nextIndex - visibleRowCount + 1
 		end
 
-		local value = math.max(1, math.min(var_81_8, math.max(1, var_81_3 - var_81_7 + 1)))
+		local value = math.max(1, math.min(firstVisibleIndex, math.max(1, entryCount - visibleRowCount + 1)))
 		local ListScrollbar = UI.ItemListBase.ListScrollbar
 
 		if ListScrollbar then
@@ -1540,20 +1540,20 @@ function var_0_20(arg_81_0)
 			rebindVirtualItemPool(value)
 		end
 
-		var_81_6 = itemsVirtualPool[var_81_5 - itemsVirtualFirstIndex + 1]
+		selectedRow = itemsVirtualPool[nextIndex - itemsVirtualFirstIndex + 1]
 	else
-		var_81_6 = children[var_81_5]
+		selectedRow = children[nextIndex]
 
-		if var_81_6 then
-			List:ensureChildVisible(var_81_6)
+		if selectedRow then
+			List:ensureChildVisible(selectedRow)
 		end
 	end
 
-	if not var_81_6 or var_81_6:isDestroyed() or not var_81_6:isVisible() then
+	if not selectedRow or selectedRow:isDestroyed() or not selectedRow:isVisible() then
 		return false
 	end
 
-	Cyclopedia.onItemListRowClick(var_81_6)
+	Cyclopedia.onItemListRowClick(selectedRow)
 
 	return true
 end
@@ -2054,7 +2054,7 @@ local function buildItemsIndexChunked(forceSync)
 	processBatch()
 end
 
-function Cyclopedia.startItemsIndexPreload(arg_99_0)
+function Cyclopedia.startItemsIndexPreload(allowOfflinePreload)
 	if Cyclopedia.ItemsIndexBuilt and Cyclopedia.AllItemList and #Cyclopedia.AllItemList > 0 then
 		return
 	end
@@ -2063,7 +2063,7 @@ function Cyclopedia.startItemsIndexPreload(arg_99_0)
 		return
 	end
 
-	if not arg_99_0 and not g_game.isOnline() then
+	if not allowOfflinePreload and not g_game.isOnline() then
 		return
 	end
 

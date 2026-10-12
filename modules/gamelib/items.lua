@@ -231,11 +231,11 @@ function ItemsDatabase.setColorLootMessage(text)
 	return text:gsub("{(.-)}", coloringLootName)
 end
 
-local var_0_4 = 10
-local var_0_5 = "/images/inventory/tiers-strip"
-local var_0_6 = "/images/inventory/tiers-strip-exaltation-overlord"
-local var_0_7 = "/images/inventory/tiers-strip-big"
-local var_0_8 = "/images/inventory/tiers-strip-big-exaltation-overlord"
+local MAX_TIER_STRIP_FRAMES = 10
+local TIER_STRIP_IMAGE = "/images/inventory/tiers-strip"
+local OVERLORD_TIER_STRIP_IMAGE = "/images/inventory/tiers-strip-exaltation-overlord"
+local BIG_TIER_STRIP_IMAGE = "/images/inventory/tiers-strip-big"
+local BIG_OVERLORD_TIER_STRIP_IMAGE = "/images/inventory/tiers-strip-big-exaltation-overlord"
 
 ItemsDatabase.OVERLORD_TIER_SLOTS = {
 	[InventorySlotHead] = true,
@@ -249,43 +249,43 @@ function ItemsDatabase.isOverlordActive()
 	return OtcOpCode and g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(OtcOpCode.OVERLORD_ACTIVE)
 end
 
-local function var_0_9(arg_14_0)
-	if type(arg_14_0) == "number" then
-		return arg_14_0
+local function resolveItemTier(itemOrTier)
+	if type(itemOrTier) == "number" then
+		return itemOrTier
 	end
 
-	if type(arg_14_0) == "userdata" and arg_14_0 and arg_14_0.getTier then
-		return arg_14_0:getTier() or 0
+	if type(itemOrTier) == "userdata" and itemOrTier and itemOrTier.getTier then
+		return itemOrTier:getTier() or 0
 	end
 
 	return 0
 end
 
-local function var_0_10(arg_15_0, numericValue, arg_15_2, arg_15_3, arg_15_4, arg_15_5, arg_15_6)
-	if not arg_15_0 or not arg_15_0.setImageClip then
+local function updateTierStrip(tierWidget, numericValue, overlordActive, frameWidth, frameHeight, normalImage, overlordImage)
+	if not tierWidget or not tierWidget.setImageClip then
 		return
 	end
 
-	arg_15_0:setImageSource(arg_15_2 and arg_15_6 or arg_15_5)
+	tierWidget:setImageSource(overlordActive and overlordImage or normalImage)
 
 	numericValue = tonumber(numericValue) or 0
 
-	if arg_15_2 then
+	if overlordActive then
 		numericValue = numericValue + 1
 	end
 
 	if numericValue > 0 then
-		local var_15_0 = math.min(math.max(numericValue, 1), var_0_4)
+		local frameIndex = math.min(math.max(numericValue, 1), MAX_TIER_STRIP_FRAMES)
 
-		arg_15_0:setImageClip({
+		tierWidget:setImageClip({
 			y = 0,
-			x = (var_15_0 - 1) * arg_15_3,
-			width = arg_15_3,
-			height = arg_15_4
+			x = (frameIndex - 1) * frameWidth,
+			width = frameWidth,
+			height = frameHeight
 		})
-		arg_15_0:setVisible(true)
+		tierWidget:setVisible(true)
 	else
-		arg_15_0:setVisible(false)
+		tierWidget:setVisible(false)
 	end
 end
 
@@ -294,7 +294,7 @@ function ItemsDatabase.setTier(widget, item, style)
 		return
 	end
 
-	var_0_10(widget.tier, var_0_9(item), style == true, 9, 8, var_0_5, var_0_6)
+	updateTierStrip(widget.tier, resolveItemTier(item), style == true, 9, 8, TIER_STRIP_IMAGE, OVERLORD_TIER_STRIP_IMAGE)
 end
 
 function ItemsDatabase.setBigTier(widget, item, style)
@@ -302,7 +302,7 @@ function ItemsDatabase.setBigTier(widget, item, style)
 		return
 	end
 
-	var_0_10(widget.bigtier, var_0_9(item), style == true, 18, 16, var_0_7, var_0_8)
+	updateTierStrip(widget.bigtier, resolveItemTier(item), style == true, 18, 16, BIG_TIER_STRIP_IMAGE, BIG_OVERLORD_TIER_STRIP_IMAGE)
 end
 
 function ItemsDatabase.setCharges(widget, item, style)
@@ -331,25 +331,25 @@ function ItemsDatabase.setCharges(widget, item, style)
 	end
 end
 
-function ItemsDatabase.setDurationText(arg_19_0, arg_19_1)
-	if not arg_19_0 or not arg_19_0.duration then
+function ItemsDatabase.setDurationText(slotWidget, remainingDuration)
+	if not slotWidget or not slotWidget.duration then
 		return
 	end
 
-	local var_19_0 = arg_19_1 and formatItemDuration(arg_19_1) or ""
-	local text = arg_19_0.duration:getText()
+	local durationText = remainingDuration and formatItemDuration(remainingDuration) or ""
+	local text = slotWidget.duration:getText()
 
-	arg_19_0.duration:setText(var_19_0)
+	slotWidget.duration:setText(durationText)
 
-	local var_19_2 = resolveSlotItemWidget(arg_19_0) or arg_19_0
+	local itemWidget = resolveSlotItemWidget(slotWidget) or slotWidget
 
-	if var_19_0 ~= "" then
-		var_19_2:setTooltip(var_19_0)
-	elseif text ~= "" and var_19_2:getTooltip() == text then
-		local item = var_19_2:getItem()
+	if durationText ~= "" then
+		itemWidget:setTooltip(durationText)
+	elseif text ~= "" and itemWidget:getTooltip() == text then
+		local item = itemWidget:getItem()
 		local tooltip = item and item:getTooltip() or ""
 
-		var_19_2:setTooltip(tooltip ~= "" and tooltip or nil)
+		itemWidget:setTooltip(tooltip ~= "" and tooltip or nil)
 	end
 end
 
@@ -371,14 +371,14 @@ end
 
 function formatItemDuration(duration)
 	local hours = math.floor(duration / 86400)
-	local var_21_1 = math.floor(duration % 86400 / 3600)
+	local remainingHours = math.floor(duration % 86400 / 3600)
 	local minutes = math.floor(duration % 3600 / 60)
 	local seconds = duration % 60
 
 	if hours > 0 then
-		return string.format("%dd %dh %dmin", hours, var_21_1, minutes)
-	elseif var_21_1 > 0 then
-		return string.format("%dh %dmin", var_21_1, minutes)
+		return string.format("%dd %dh %dmin", hours, remainingHours, minutes)
+	elseif remainingHours > 0 then
+		return string.format("%dh %dmin", remainingHours, minutes)
 	elseif minutes > 0 then
 		return string.format("%dmin", minutes)
 	end

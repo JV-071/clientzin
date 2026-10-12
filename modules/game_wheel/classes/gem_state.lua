@@ -20,13 +20,13 @@ function WheelGemState.setEquipedGems(equipedGems)
 	end
 end
 
-function WheelGemState.getGemDataById(arg_5_0)
-	if type(arg_5_0) ~= "number" or arg_5_0 < 0 then
+function WheelGemState.getGemDataById(gemId)
+	if type(gemId) ~= "number" or gemId < 0 then
 		return nil
 	end
 
 	for unusedValue, getAtelierGem in pairs(WheelGemState.getAtelierGems()) do
-		if getAtelierGem.gemID == arg_5_0 then
+		if getAtelierGem.gemID == gemId then
 			return getAtelierGem
 		end
 	end
@@ -34,13 +34,13 @@ function WheelGemState.getGemDataById(arg_5_0)
 	return nil
 end
 
-function WheelGemState.isGemEquipped(arg_6_0)
-	if not arg_6_0 or arg_6_0 < 0 then
+function WheelGemState.isGemEquipped(gemId)
+	if not gemId or gemId < 0 then
 		return false
 	end
 
 	for unusedValue, getEquipedGem in pairs(WheelGemState.getEquipedGems()) do
-		if type(getEquipedGem) == "number" and getEquipedGem == arg_6_0 then
+		if type(getEquipedGem) == "number" and getEquipedGem == gemId then
 			return true
 		end
 	end
@@ -48,13 +48,13 @@ function WheelGemState.isGemEquipped(arg_6_0)
 	return false
 end
 
-function WheelGemState.getGemDomainById(arg_7_0)
-	if type(arg_7_0) ~= "number" or arg_7_0 < 0 then
+function WheelGemState.getGemDomainById(gemId)
+	if type(gemId) ~= "number" or gemId < 0 then
 		return -1
 	end
 
 	for unusedValue, getAtelierGem in pairs(WheelGemState.getAtelierGems()) do
-		if getAtelierGem.gemID == arg_7_0 then
+		if getAtelierGem.gemID == gemId then
 			return getAtelierGem.gemDomain
 		end
 	end
@@ -62,21 +62,21 @@ function WheelGemState.getGemDomainById(arg_7_0)
 	return -1
 end
 
-function WheelGemState.getGemCountByDomain(arg_8_0)
-	local var_8_0 = 0
+function WheelGemState.getGemCountByDomain(gemDomain)
+	local gemCount = 0
 
 	for unusedValue, getAtelierGem in pairs(WheelGemState.getAtelierGems()) do
-		if getAtelierGem.gemDomain == arg_8_0 then
-			var_8_0 = var_8_0 + 1
+		if getAtelierGem.gemDomain == gemDomain then
+			gemCount = gemCount + 1
 		end
 	end
 
-	return var_8_0
+	return gemCount
 end
 
-function WheelGemState.getEquipedGem(arg_9_0)
+function WheelGemState.getEquipedGem(gemDomain)
 	for unusedValue, getAtelierGem in pairs(WheelGemState.getAtelierGems()) do
-		if getAtelierGem.gemDomain == arg_9_0 and WheelGemState.isGemEquipped(getAtelierGem.gemID) then
+		if getAtelierGem.gemDomain == gemDomain and WheelGemState.isGemEquipped(getAtelierGem.gemID) then
 			return getAtelierGem
 		end
 	end
@@ -84,107 +84,107 @@ function WheelGemState.getEquipedGem(arg_9_0)
 	return nil
 end
 
-function WheelGemState.getFilledVesselCount(arg_10_0)
-	local var_10_0 = 0
-	local var_10_1 = VesselIndex[arg_10_0]
+function WheelGemState.getFilledVesselCount(vesselIndex)
+	local filledVesselCount = 0
+	local vesselBonusIndices = VesselIndex[vesselIndex]
 
-	if not var_10_1 then
+	if not vesselBonusIndices then
 		return 0
 	end
 
-	for unusedValue, entry in pairs(var_10_1) do
-		local var_10_2 = WheelBonus[entry]
-		local var_10_3 = WheelOfDestiny.pointInvested[entry + 1]
+	for unusedValue, entry in pairs(vesselBonusIndices) do
+		local bonusDefinition = WheelBonus[entry]
+		local investedPoints = WheelOfDestiny.pointInvested[entry + 1]
 
-		if var_10_2 and var_10_3 and var_10_3 >= var_10_2.maxPoints then
-			var_10_0 = var_10_0 + 1
+		if bonusDefinition and investedPoints and investedPoints >= bonusDefinition.maxPoints then
+			filledVesselCount = filledVesselCount + 1
 		end
 	end
 
-	return var_10_0
+	return filledVesselCount
 end
 
-function WheelGemState.getVesselSocketLevel(arg_11_0)
-	return math.min(WheelGemState.getFilledVesselCount(arg_11_0), 3)
+function WheelGemState.getVesselSocketLevel(vesselIndex)
+	return math.min(WheelGemState.getFilledVesselCount(vesselIndex), 3)
 end
 
-function WheelGemState.getGemModCount(arg_12_0)
-	if not arg_12_0 or type(arg_12_0.gemType) ~= "number" then
+function WheelGemState.getGemModCount(gem)
+	if not gem or type(gem.gemType) ~= "number" then
 		return 0
 	end
 
-	return math.max(0, math.min(arg_12_0.gemType + 1, 3))
+	return math.max(0, math.min(gem.gemType + 1, 3))
 end
 
-function WheelGemState.getGemModBonus(arg_13_0, arg_13_1)
-	if arg_13_1 > WheelGemState.getGemModCount(arg_13_0) then
+function WheelGemState.getGemModBonus(gem, modSlot)
+	if modSlot > WheelGemState.getGemModCount(gem) then
 		return nil
 	end
 
-	if arg_13_1 == 1 then
-		return arg_13_0.lesserBonus, false
-	elseif arg_13_1 == 2 then
-		return arg_13_0.regularBonus, false
-	elseif arg_13_1 == 3 then
-		return arg_13_0.supremeBonus, true
+	if modSlot == 1 then
+		return gem.lesserBonus, false
+	elseif modSlot == 2 then
+		return gem.regularBonus, false
+	elseif modSlot == 3 then
+		return gem.supremeBonus, true
 	end
 
 	return nil
 end
 
-function WheelGemState.getSocketImageClip(arg_14_0, arg_14_1, arg_14_2)
-	if not arg_14_1 or arg_14_1 < 1 then
+function WheelGemState.getSocketImageClip(vesselIndex, socketLevel, isGemFullyActivated)
+	if not socketLevel or socketLevel < 1 then
 		return "0 0 34 34"
 	end
 
-	arg_14_1 = math.min(3, arg_14_1)
-	arg_14_0 = arg_14_0 or 0
+	socketLevel = math.min(3, socketLevel)
+	vesselIndex = vesselIndex or 0
 
-	return ((arg_14_2 and 2 or 14) + arg_14_0 * 3 + (arg_14_1 - 1) - 1) * 34 .. " 0 34 34"
+	return ((isGemFullyActivated and 2 or 14) + vesselIndex * 3 + (socketLevel - 1) - 1) * 34 .. " 0 34 34"
 end
 
-function WheelGemState.isVesselAvailable(arg_15_0, arg_15_1)
-	local var_15_0 = 0
-	local var_15_1 = VesselIndex[arg_15_0]
+function WheelGemState.isVesselAvailable(vesselIndex, requiredFilledVessels)
+	local filledVesselCount = 0
+	local vesselBonusIndices = VesselIndex[vesselIndex]
 
-	if not var_15_1 then
+	if not vesselBonusIndices then
 		return false
 	end
 
-	for unusedValue, entry in pairs(var_15_1) do
-		local var_15_2 = WheelBonus[entry]
-		local var_15_3 = WheelOfDestiny.pointInvested[entry + 1] or 0
+	for unusedValue, entry in pairs(vesselBonusIndices) do
+		local bonusDefinition = WheelBonus[entry]
+		local investedPoints = WheelOfDestiny.pointInvested[entry + 1] or 0
 
-		if var_15_2 and var_15_3 >= var_15_2.maxPoints then
-			var_15_0 = var_15_0 + 1
+		if bonusDefinition and investedPoints >= bonusDefinition.maxPoints then
+			filledVesselCount = filledVesselCount + 1
 		end
 	end
 
-	return arg_15_1 <= var_15_0
+	return requiredFilledVessels <= filledVesselCount
 end
 
-function WheelGemState.getEffectiveLevel(arg_16_0, arg_16_1, arg_16_2, arg_16_3)
+function WheelGemState.getEffectiveLevel(gem, bonusId, isSupremeBonus, modIndex)
 	local basicModsUpgrade = WheelOfDestiny.basicModsUpgrade
 	local supremeModsUpgrade = WheelOfDestiny.supremeModsUpgrade
-	local var_16_2 = arg_16_2 and (supremeModsUpgrade[arg_16_1] or 0) or basicModsUpgrade[arg_16_1] or 0
+	local bonusUpgradeLevel = isSupremeBonus and (supremeModsUpgrade[bonusId] or 0) or basicModsUpgrade[bonusId] or 0
 
-	if arg_16_3 == 0 then
-		return var_16_2
-	elseif arg_16_3 == 1 then
-		local var_16_3 = basicModsUpgrade[arg_16_0.lesserBonus] or 0
+	if modIndex == 0 then
+		return bonusUpgradeLevel
+	elseif modIndex == 1 then
+		local lesserBonusUpgradeLevel = basicModsUpgrade[gem.lesserBonus] or 0
 
-		return math.min(var_16_2, var_16_3)
-	elseif arg_16_3 == 2 then
-		local var_16_4 = basicModsUpgrade[arg_16_0.lesserBonus] or 0
-		local var_16_5 = basicModsUpgrade[arg_16_0.regularBonus] or 0
-		local var_16_6 = math.min(var_16_4, var_16_5)
+		return math.min(bonusUpgradeLevel, lesserBonusUpgradeLevel)
+	elseif modIndex == 2 then
+		local lesserBonusUpgradeLevel = basicModsUpgrade[gem.lesserBonus] or 0
+		local regularBonusUpgradeLevel = basicModsUpgrade[gem.regularBonus] or 0
+		local precedingBonusLevel = math.min(lesserBonusUpgradeLevel, regularBonusUpgradeLevel)
 
-		return math.min(var_16_2, var_16_6)
+		return math.min(bonusUpgradeLevel, precedingBonusLevel)
 	end
 end
 
-function WheelGemState.toggleGemLock(arg_17_0)
-	local gemDataById = WheelGemState.getGemDataById(arg_17_0)
+function WheelGemState.toggleGemLock(gemId)
+	local gemDataById = WheelGemState.getGemDataById(gemId)
 
 	if not gemDataById then
 		return nil
@@ -195,8 +195,8 @@ function WheelGemState.toggleGemLock(arg_17_0)
 	return gemDataById.locked
 end
 
-function WheelGemState.equipGemInVessel(arg_18_0, arg_18_1)
-	local var_18_0 = {
+function WheelGemState.equipGemInVessel(gem, unequip)
+	local equippedGemIds = {
 		-1,
 		-1,
 		-1,
@@ -207,19 +207,19 @@ function WheelGemState.equipGemInVessel(arg_18_0, arg_18_1)
 		if type(getEquipedGem) == "number" and getEquipedGem >= 0 then
 			local gemDomainById = WheelGemState.getGemDomainById(getEquipedGem)
 
-			if gemDomainById ~= -1 and gemDomainById ~= arg_18_0.gemDomain then
-				var_18_0[gemDomainById + 1] = getEquipedGem
+			if gemDomainById ~= -1 and gemDomainById ~= gem.gemDomain then
+				equippedGemIds[gemDomainById + 1] = getEquipedGem
 			end
 		end
 	end
 
-	if not arg_18_1 then
-		var_18_0[arg_18_0.gemDomain + 1] = arg_18_0.gemID
+	if not unequip then
+		equippedGemIds[gem.gemDomain + 1] = gem.gemID
 	else
-		var_18_0[arg_18_0.gemDomain + 1] = -1
+		equippedGemIds[gem.gemDomain + 1] = -1
 	end
 
-	WheelGemState.setEquipedGems(var_18_0)
+	WheelGemState.setEquipedGems(equippedGemIds)
 
-	return var_18_0
+	return equippedGemIds
 end

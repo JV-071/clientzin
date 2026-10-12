@@ -124,9 +124,9 @@ end
 
 local function fillDeliverySlot(panel)
 	local game_cyclopedia = modules.game_cyclopedia
-	local var_8_1 = game_cyclopedia and game_cyclopedia.Cyclopedia
+	local cyclopedia = game_cyclopedia and game_cyclopedia.Cyclopedia
 
-	if not var_8_1 or not var_8_1.openItemInCyclopedia then
+	if not cyclopedia or not cyclopedia.openItemInCyclopedia then
 		return
 	end
 
@@ -134,24 +134,24 @@ local function fillDeliverySlot(panel)
 		game_cyclopedia.show("items")
 	end
 
-	var_8_1.openItemInCyclopedia(panel)
+	cyclopedia.openItemInCyclopedia(panel)
 end
 
-local function var_0_7(arg_9_0)
+local function openDeliveryItemInMarket(itemId)
 	local game_market = modules.game_market
 
 	if not game_market then
 		return
 	end
 
-	local var_9_1 = Item.create(arg_9_0, 1)
+	local marketItem = Item.create(itemId, 1)
 
-	if not var_9_1 then
+	if not marketItem then
 		return
 	end
 
 	if game_market.showItemInMarket then
-		game_market.showItemInMarket(var_9_1)
+		game_market.showItemInMarket(marketItem)
 	elseif game_market.onRedirect then
 		g_game.sendMarketAction(1)
 		scheduleEvent(function()
@@ -159,12 +159,12 @@ local function var_0_7(arg_9_0)
 				game_market.show()
 			end
 
-			game_market.onRedirect(var_9_1)
+			game_market.onRedirect(marketItem)
 		end, 400)
 	end
 end
 
-local function var_0_8(arg_11_0, thingId)
+local function showDeliveryItemContextMenu(mousePosition, thingId)
 	if thingId <= 0 then
 		return false
 	end
@@ -179,35 +179,35 @@ local function var_0_8(arg_11_0, thingId)
 
 	gamePopupMenuWidget:setGameMenu(true)
 
-	local var_11_2 = false
+	local hasOptions = false
 	local game_cyclopedia = modules.game_cyclopedia
-	local var_11_4 = game_cyclopedia and game_cyclopedia.Cyclopedia
+	local cyclopedia = game_cyclopedia and game_cyclopedia.Cyclopedia
 
-	if thingType.isCyclopediaItem and thingType:isCyclopediaItem() and var_11_4 and var_11_4.openItemInCyclopedia then
+	if thingType.isCyclopediaItem and thingType:isCyclopediaItem() and cyclopedia and cyclopedia.openItemInCyclopedia then
 		gamePopupMenuWidget:addOption(tr("Cyclopedia"), function()
 			fillDeliverySlot(thingId)
 		end)
 
-		var_11_2 = true
+		hasOptions = true
 	end
 
 	local game_market = modules.game_market
 
 	if thingType.isMarketable and thingType:isMarketable() and game_market and (game_market.showItemInMarket or game_market.onRedirect) then
 		gamePopupMenuWidget:addOption(tr("Show in Market"), function()
-			var_0_7(thingId)
+			openDeliveryItemInMarket(thingId)
 		end)
 
-		var_11_2 = true
+		hasOptions = true
 	end
 
-	if not var_11_2 then
+	if not hasOptions then
 		gamePopupMenuWidget:destroy()
 
 		return false
 	end
 
-	gamePopupMenuWidget:display(arg_11_0)
+	gamePopupMenuWidget:display(mousePosition)
 
 	return true
 end
@@ -236,23 +236,23 @@ local function fillDeliverySlot(panel, entry)
 
 		itemIcon:setItemId(itemId)
 
-		function itemIcon.onMouseRelease(arg_15_0, arg_15_1, arg_15_2)
-			if arg_15_2 ~= MouseRightButton or not g_keyboard.isCtrlPressed() or not arg_15_0:containsPoint(arg_15_1) then
+		function itemIcon.onMouseRelease(itemWidget, mousePosition, mouseButton)
+			if mouseButton ~= MouseRightButton or not g_keyboard.isCtrlPressed() or not itemWidget:containsPoint(mousePosition) then
 				return false
 			end
 
-			return var_0_8(arg_15_1, itemId)
+			return showDeliveryItemContextMenu(mousePosition, itemId)
 		end
 	end
 
-	local var_14_4 = (entry.completed or 0) ~= 0
+	local isDeliveryCompleted = (entry.completed or 0) ~= 0
 	local currentLabel = panel:getChildById("currentDeliveryLabel")
 	local ofDeliveryLabel = panel:getChildById("ofDeliveryLabel")
 	local totalLabel = panel:getChildById("totalDeliveryLabel")
 	local deliverButton = panel:getChildById("deliverButton")
 	local completedIcon = panel:getChildById("completedIcon")
 
-	if var_14_4 then
+	if isDeliveryCompleted then
 		if currentLabel then
 			currentLabel:setVisible(false)
 		end
@@ -506,7 +506,7 @@ local function buildKillSlots(weeklyTasks)
 	refreshBountyKillTrackerIfAvailable()
 end
 
-local function var_0_21(weeklyTasks)
+local function refreshWeeklyKillSlots(weeklyTasks)
 	local deliverySlotsList = getKillSlotsList()
 
 	if not deliverySlotsList then
@@ -689,13 +689,13 @@ local function buildRewards(weeklyTasks)
 	local huntingPoints = weeklyTasks.totalPoints or 0
 	local soulSealsPoints = weeklyTasks.totalTasksCompleted or 0
 	local numericValue = tonumber(weeklyTasks.killTaskExp) or 0
-	local var_32_3 = tonumber(weeklyTasks.deliveryTaskExp) or 0
+	local deliveryTaskExperience = tonumber(weeklyTasks.deliveryTaskExp) or 0
 
 	if TaskBoard.weeklyPanel then
 		local weeklyExperienceRewardLabel = TaskBoard.weeklyPanel:recursiveGetChildById("weeklyExperienceRewardLabel")
 
 		if weeklyExperienceRewardLabel then
-			weeklyExperienceRewardLabel:setText(tr("Each kill task will reward you with %s XP and each delivery task will reward you with %s XP.", TaskBoard:formatNumberWithCommas(numericValue), TaskBoard:formatNumberWithCommas(var_32_3)))
+			weeklyExperienceRewardLabel:setText(tr("Each kill task will reward you with %s XP and each delivery task will reward you with %s XP.", TaskBoard:formatNumberWithCommas(numericValue), TaskBoard:formatNumberWithCommas(deliveryTaskExperience)))
 		end
 
 		local huntingPointsLabel = TaskBoard.weeklyPanel:recursiveGetChildById("huntingPointsLabel")
@@ -715,8 +715,8 @@ local function buildRewards(weeklyTasks)
 	local daysRemainingLabel = TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:recursiveGetChildById("daysRemaining")
 
 	if daysRemainingLabel and timeStamp > 0 then
-		local var_32_9 = timeStamp - os.time()
-		local daysRemaining = math.floor(var_32_9 / 86400)
+		local remainingSeconds = timeStamp - os.time()
+		local daysRemaining = math.floor(remainingSeconds / 86400)
 
 		if daysRemaining < 0 then
 			daysRemaining = 0
@@ -773,23 +773,23 @@ function WeeklyTask.allowDifficultyWeeklyTasks(self, unlockedDifficulties)
 	end
 end
 
-local var_0_33
-local var_0_34 = false
+local pendingWeeklyTasks
+local isWeeklyPanelDirty = false
 
-local function var_0_35()
+local function isWeeklyPanelVisible()
 	return TaskBoard.mainWindow and TaskBoard.mainWindow:isVisible() and TaskBoard.weeklyPanel and TaskBoard.weeklyPanel:isVisible()
 end
 
-local function var_0_36(arg_35_0)
-	var_0_21(arg_35_0)
-	buildDeliverySlots(arg_35_0)
+local function refreshWeeklyTaskPanels(weeklyTasks)
+	refreshWeeklyKillSlots(weeklyTasks)
+	buildDeliverySlots(weeklyTasks)
 
-	var_0_34 = false
+	isWeeklyPanelDirty = false
 end
 
 function WeeklyTask.refreshPanel(unusedArgument)
-	if var_0_34 and var_0_33 then
-		var_0_36(var_0_33)
+	if isWeeklyPanelDirty and pendingWeeklyTasks then
+		refreshWeeklyTaskPanels(pendingWeeklyTasks)
 	end
 end
 
@@ -800,11 +800,11 @@ function onWeeklyTasks(weeklyTasks)
 
 	buildKillSlots(weeklyTasks)
 
-	var_0_33 = weeklyTasks
-	var_0_34 = true
+	pendingWeeklyTasks = weeklyTasks
+	isWeeklyPanelDirty = true
 
-	if var_0_35() then
-		var_0_36(weeklyTasks)
+	if isWeeklyPanelVisible() then
+		refreshWeeklyTaskPanels(weeklyTasks)
 	end
 
 	buildBarProgress(weeklyTasks)

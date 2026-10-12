@@ -1,22 +1,22 @@
 ModCatalog = {}
 
-local var_0_0 = {}
+local fragmentList = {}
 
-local function var_0_1(arg_1_0, arg_1_1)
-	if not arg_1_0 or not arg_1_1 then
+local function containsCaseInsensitive(text, searchText)
+	if not text or not searchText then
 		return false
 	end
 
-	return arg_1_0:lower():find(arg_1_1:lower(), 1, true) ~= nil
+	return text:lower():find(searchText:lower(), 1, true) ~= nil
 end
 
 function ModCatalog.getFragmentList()
-	return var_0_0
+	return fragmentList
 end
 
-function ModCatalog.getDataByBonus(arg_3_0, arg_3_1)
-	for unusedValue, entry in pairs(var_0_0) do
-		if arg_3_1 and entry.supreme and arg_3_0 == entry.modID or not arg_3_1 and not entry.supreme and arg_3_0 == entry.modID then
+function ModCatalog.getDataByBonus(bonusId, isSupreme)
+	for unusedValue, entry in pairs(fragmentList) do
+		if isSupreme and entry.supreme and bonusId == entry.modID or not isSupreme and not entry.supreme and bonusId == entry.modID then
 			return entry
 		end
 	end
@@ -33,23 +33,23 @@ function ModCatalog.createFragments()
 
 	local vocation = translateVocation(localPlayer:getVocation())
 
-	var_0_0 = {}
+	fragmentList = {}
 
 	for modID = 0, #FlatSupremeMods do
-		local var_4_2 = FlatSupremeMods[modID]
+		local flatSupremeMod = FlatSupremeMods[modID]
 
-		if not var_4_2 or modID == 4 and vocation > 6 then
+		if not flatSupremeMod or modID == 4 and vocation > 6 then
 			-- block empty
 		else
-			var_4_2.modID = modID
-			var_4_2.supreme = true
+			flatSupremeMod.modID = modID
+			flatSupremeMod.supreme = true
 
-			table.insert(var_0_0, var_4_2)
+			table.insert(fragmentList, flatSupremeMod)
 		end
 	end
 
-	local var_4_3 = VocationSupremeMods[vocation]
-	local var_4_4 = ({
+	local vocationSupremeMods = VocationSupremeMods[vocation]
+	local vocationModRange = ({
 		[8] = {
 			fromID = 6,
 			toID = 24
@@ -72,53 +72,53 @@ function ModCatalog.createFragments()
 		}
 	})[vocation]
 
-	if var_4_4 then
-		for modID = var_4_4.fromID, var_4_4.toID do
-			local var_4_5 = var_4_3[modID]
+	if vocationModRange then
+		for modID = vocationModRange.fromID, vocationModRange.toID do
+			local vocationSupremeMod = vocationSupremeMods[modID]
 
-			if var_4_5 then
-				var_4_5.modID = modID
-				var_4_5.supreme = true
+			if vocationSupremeMod then
+				vocationSupremeMod.modID = modID
+				vocationSupremeMod.supreme = true
 
-				table.insert(var_0_0, var_4_5)
+				table.insert(fragmentList, vocationSupremeMod)
 			end
 		end
 	end
 
 	for modID = 0, #BasicMods do
-		local var_4_6 = BasicMods[modID]
+		local basicMod = BasicMods[modID]
 
-		if var_4_6 then
-			var_4_6.modID = modID
-			var_4_6.supreme = false
+		if basicMod then
+			basicMod.modID = modID
+			basicMod.supreme = false
 
-			table.insert(var_0_0, var_4_6)
+			table.insert(fragmentList, basicMod)
 		end
 	end
 end
 
 function ModCatalog.buildModCache()
-	local var_5_0 = {}
-	local var_5_1 = {}
+	local basicModsById = {}
+	local supremeModsById = {}
 
-	for unusedValue, entry in pairs(var_0_0) do
+	for unusedValue, entry in pairs(fragmentList) do
 		if entry.supreme then
-			var_5_1[entry.modID] = entry
+			supremeModsById[entry.modID] = entry
 		else
-			var_5_0[entry.modID] = entry
+			basicModsById[entry.modID] = entry
 		end
 	end
 
-	return var_5_0, var_5_1
+	return basicModsById, supremeModsById
 end
 
 function ModCatalog.getEquippedGemBonus()
-	local var_6_0 = {}
-	local var_6_1 = {}
+	local equippedBasicBonusGems = {}
+	local equippedSupremeBonusGems = {}
 
-	local function var_6_2(arg_7_0, arg_7_1, arg_7_2)
-		if arg_7_0 ~= -1 then
-			arg_7_1[tostring(arg_7_0)] = arg_7_2
+	local function recordEquippedBonus(bonusId, bonusGemMap, gemId)
+		if bonusId ~= -1 then
+			bonusGemMap[tostring(bonusId)] = gemId
 		end
 	end
 
@@ -126,80 +126,80 @@ function ModCatalog.getEquippedGemBonus()
 		local gemDataById = WheelGemState.getGemDataById(getEquipedGem)
 
 		if gemDataById then
-			var_6_2(gemDataById.lesserBonus, var_6_0, gemDataById.gemID)
-			var_6_2(gemDataById.regularBonus, var_6_0, gemDataById.gemID)
-			var_6_2(gemDataById.supremeBonus, var_6_1, gemDataById.gemID)
+			recordEquippedBonus(gemDataById.lesserBonus, equippedBasicBonusGems, gemDataById.gemID)
+			recordEquippedBonus(gemDataById.regularBonus, equippedBasicBonusGems, gemDataById.gemID)
+			recordEquippedBonus(gemDataById.supremeBonus, equippedSupremeBonusGems, gemDataById.gemID)
 		end
 	end
 
-	return var_6_0, var_6_1
+	return equippedBasicBonusGems, equippedSupremeBonusGems
 end
 
-function ModCatalog.getSortList(arg_8_0, arg_8_1, arg_8_2, arg_8_3)
-	local var_8_0 = {}
-	local text = arg_8_0.text
-	local var_8_2 = {
+function ModCatalog.getSortList(sortOption, equippedBasic, equippedSupreme, searchText)
+	local filteredMods = {}
+	local text = sortOption.text
+	local upgradeLevelByGrade = {
 		["Grade III"] = 2,
 		["Grade II"] = 1,
 		["Grade IV"] = 3
 	}
 
-	for unusedValue, entry in pairs(var_0_0) do
-		if arg_8_3 and not string.empty(arg_8_3) and not var_0_1(arg_8_3, entry.tooltip) then
+	for unusedValue, entry in pairs(fragmentList) do
+		if searchText and not string.empty(searchText) and not containsCaseInsensitive(entry.tooltip, searchText) then
 			-- block empty
 		else
 			local textValue = tostring(entry.modID)
-			local var_8_4
+			local upgradeLevel
 
 			if entry.supreme then
-				var_8_4 = WheelOfDestiny.supremeModsUpgrade[entry.modID]
+				upgradeLevel = WheelOfDestiny.supremeModsUpgrade[entry.modID]
 			else
-				var_8_4 = WheelOfDestiny.basicModsUpgrade[entry.modID]
+				upgradeLevel = WheelOfDestiny.basicModsUpgrade[entry.modID]
 			end
 
 			if text == "Basic Mods" and not entry.supreme then
-				table.insert(var_8_0, entry)
+				table.insert(filteredMods, entry)
 			elseif text == "Supreme Mods" and entry.supreme then
-				table.insert(var_8_0, entry)
+				table.insert(filteredMods, entry)
 			elseif text == "In-Vessel Mods" then
-				if entry.supreme and arg_8_2[textValue] or not entry.supreme and arg_8_1[textValue] then
-					table.insert(var_8_0, entry)
+				if entry.supreme and equippedSupreme[textValue] or not entry.supreme and equippedBasic[textValue] then
+					table.insert(filteredMods, entry)
 				end
 			elseif text == "Grade I" then
-				if not var_8_4 or var_8_4 < 1 then
-					table.insert(var_8_0, entry)
+				if not upgradeLevel or upgradeLevel < 1 then
+					table.insert(filteredMods, entry)
 				end
-			elseif var_8_2[text] then
-				local var_8_5 = var_8_2[text]
+			elseif upgradeLevelByGrade[text] then
+				local requiredUpgradeLevel = upgradeLevelByGrade[text]
 
-				if var_8_4 and var_8_4 == var_8_5 then
-					table.insert(var_8_0, entry)
+				if upgradeLevel and upgradeLevel == requiredUpgradeLevel then
+					table.insert(filteredMods, entry)
 				end
 			end
 		end
 	end
 
-	return var_8_0
+	return filteredMods
 end
 
-function ModCatalog.searchModifications(arg_9_0)
-	local var_9_0 = {}
+function ModCatalog.searchModifications(searchText)
+	local matchingMods = {}
 
-	for unusedValue, entry in pairs(var_0_0) do
-		if var_0_1(arg_9_0, entry.tooltip) then
-			table.insert(var_9_0, entry)
+	for unusedValue, entry in pairs(fragmentList) do
+		if containsCaseInsensitive(entry.tooltip, searchText) then
+			table.insert(matchingMods, entry)
 		end
 	end
 
-	return var_9_0
+	return matchingMods
 end
 
-function ModCatalog.findModPageIndex(arg_10_0, arg_10_1, arg_10_2)
-	arg_10_2 = arg_10_2 or 30
+function ModCatalog.findModPageIndex(bonusId, isSupreme, pageSize)
+	pageSize = pageSize or 30
 
-	for key, entry in pairs(var_0_0) do
-		if arg_10_1 and entry.supreme and entry.modID == arg_10_0 or not arg_10_1 and not entry.supreme and entry.modID == arg_10_0 then
-			return math.ceil(key / arg_10_2), (key - 1) % arg_10_2 + 1
+	for key, entry in pairs(fragmentList) do
+		if isSupreme and entry.supreme and entry.modID == bonusId or not isSupreme and not entry.supreme and entry.modID == bonusId then
+			return math.ceil(key / pageSize), (key - 1) % pageSize + 1
 		end
 	end
 

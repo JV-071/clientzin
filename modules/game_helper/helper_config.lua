@@ -167,20 +167,20 @@ local function profileExists(names, wanted)
 	return false
 end
 
-function HelperConfigTab.getFallbackProfileName(arg_15_0, arg_15_1)
-	arg_15_0 = type(arg_15_0) == "table" and arg_15_0 or {}
+function HelperConfigTab.getFallbackProfileName(profiles, excludedProfileName)
+	profiles = type(profiles) == "table" and profiles or {}
 
 	local DEFAULT_PROFILE_NAME = HelperConfigTab.DEFAULT_PROFILE_NAME
 
-	if DEFAULT_PROFILE_NAME ~= arg_15_1 and type(arg_15_0[DEFAULT_PROFILE_NAME]) == "table" then
+	if DEFAULT_PROFILE_NAME ~= excludedProfileName and type(profiles[DEFAULT_PROFILE_NAME]) == "table" then
 		return DEFAULT_PROFILE_NAME
 	end
 
-	for unusedValue, iter_15_1 in ipairs(getSortedProfileNames({
-		profiles = arg_15_0
+	for unusedValue, profileName in ipairs(getSortedProfileNames({
+		profiles = profiles
 	})) do
-		if iter_15_1 ~= arg_15_1 and type(arg_15_0[iter_15_1]) == "table" then
-			return iter_15_1
+		if profileName ~= excludedProfileName and type(profiles[profileName]) == "table" then
+			return profileName
 		end
 	end
 
@@ -195,36 +195,36 @@ function HelperConfigTab.getQuickProfileName()
 end
 
 function HelperConfigTab.refreshQuickProfileCombo(preferredName)
-	local var_17_0 = getQuickProfileCombo()
+	local quickProfileCombo = getQuickProfileCombo()
 
-	if not var_17_0 or not ctx or not ctx.readHelperJSON then
+	if not quickProfileCombo or not ctx or not ctx.readHelperJSON then
 		return
 	end
 
-	local var_17_1 = ctx.readHelperJSON()
-	local var_17_2 = getSortedProfileNames(var_17_1)
+	local helperConfig = ctx.readHelperJSON()
+	local profileNames = getSortedProfileNames(helperConfig)
 
-	var_17_0.menuScroll = #var_17_2 > QUICK_PROFILE_MAX_VISIBLE_ROWS
+	quickProfileCombo.menuScroll = #profileNames > QUICK_PROFILE_MAX_VISIBLE_ROWS
 
-	local fallbackProfileName = trimProfileName(preferredName or var_17_1.activeProfile or "")
+	local fallbackProfileName = trimProfileName(preferredName or helperConfig.activeProfile or "")
 
-	if not profileExists(var_17_2, fallbackProfileName) then
-		fallbackProfileName = #var_17_2 > 0 and HelperConfigTab.getFallbackProfileName(var_17_1.profiles) or ""
+	if not profileExists(profileNames, fallbackProfileName) then
+		fallbackProfileName = #profileNames > 0 and HelperConfigTab.getFallbackProfileName(helperConfig.profiles) or ""
 	end
 
 	suppressQuickProfileChange = true
 
-	var_17_0:clearOptions()
+	quickProfileCombo:clearOptions()
 
-	for unusedValue, entry in ipairs(var_17_2) do
-		var_17_0:addOption(entry, entry)
+	for unusedValue, entry in ipairs(profileNames) do
+		quickProfileCombo:addOption(entry, entry)
 	end
 
 	if fallbackProfileName ~= "" then
-		if var_17_0.setCurrentOptionByData then
-			var_17_0:setCurrentOptionByData(fallbackProfileName, true)
+		if quickProfileCombo.setCurrentOptionByData then
+			quickProfileCombo:setCurrentOptionByData(fallbackProfileName, true)
 		else
-			var_17_0:setCurrentOption(fallbackProfileName, true)
+			quickProfileCombo:setCurrentOption(fallbackProfileName, true)
 		end
 	end
 
@@ -245,7 +245,7 @@ function HelperConfigTab.refreshQuickProfileCombo(preferredName)
 	local widget = ctx.getWidget("quickProfileDeleteButton")
 
 	if widget then
-		widget:setEnabled(fallbackProfileName ~= "" and #var_17_2 > 1)
+		widget:setEnabled(fallbackProfileName ~= "" and #profileNames > 1)
 	end
 end
 
@@ -579,11 +579,11 @@ function HelperConfigTab.saveProfile(explicitName)
 
 	config.profiles = config.profiles or {}
 
-	local var_37_2 = config.profiles[activeProfile] ~= nil
-	local var_37_3 = ctx.collectConfig()
+	local profileAlreadyExists = config.profiles[activeProfile] ~= nil
+	local configSnapshot = ctx.collectConfig()
 
-	config.profiles[activeProfile] = ctx.copyConfig(var_37_3)
-	config.current = ctx.copyConfig(var_37_3)
+	config.profiles[activeProfile] = ctx.copyConfig(configSnapshot)
+	config.current = ctx.copyConfig(configSnapshot)
 	config.activeProfile = activeProfile
 
 	if ctx.isAutoSaveEnabled then
@@ -603,7 +603,7 @@ function HelperConfigTab.saveProfile(explicitName)
 	end
 
 	if ctx.applyConfigSnapshot then
-		ctx.applyConfigSnapshot(var_37_3)
+		ctx.applyConfigSnapshot(configSnapshot)
 	end
 
 	HelperConfigTab.setSelectedProfileName(activeProfile)
@@ -615,7 +615,7 @@ function HelperConfigTab.saveProfile(explicitName)
 	end
 
 	if ctx.showMessage then
-		if var_37_2 then
+		if profileAlreadyExists then
 			ctx.showMessage(false, profileTr("Profile \"%s\" updated.", activeProfile))
 		else
 			ctx.showMessage(false, profileTr("Profile \"%s\" created.", activeProfile))
@@ -717,11 +717,11 @@ function HelperConfigTab.deleteProfile(explicitName)
 		return
 	end
 
-	local var_39_0 = explicitName ~= nil and trimProfileName(explicitName) or resolveProfileName(false)
+	local profileName = explicitName ~= nil and trimProfileName(explicitName) or resolveProfileName(false)
 
-	if not var_39_0 or var_39_0 == "" then
+	if not profileName or profileName == "" then
 		if ctx.log then
-			ctx.log("info", "[PROFILE] Delete aborted (none selected): " .. tostring(var_39_0))
+			ctx.log("info", "[PROFILE] Delete aborted (none selected): " .. tostring(profileName))
 		end
 
 		if ctx.showMessage then
@@ -732,7 +732,7 @@ function HelperConfigTab.deleteProfile(explicitName)
 	end
 
 	if ctx.log then
-		ctx.log("info", "[PROFILE] Deleting: " .. tostring(var_39_0))
+		ctx.log("info", "[PROFILE] Deleting: " .. tostring(profileName))
 	end
 
 	if ctx.flushAutoSave then
@@ -741,15 +741,15 @@ function HelperConfigTab.deleteProfile(explicitName)
 		ctx.cancelAutoSave()
 	end
 
-	local var_39_1 = ctx.readHelperJSON()
+	local helperConfig = ctx.readHelperJSON()
 
-	if type(var_39_1.profiles) ~= "table" or var_39_1.profiles[var_39_0] == nil then
+	if type(helperConfig.profiles) ~= "table" or helperConfig.profiles[profileName] == nil then
 		if ctx.showMessage then
-			ctx.showMessage(true, profileTr("Profile \"%s\" not found.", var_39_0))
+			ctx.showMessage(true, profileTr("Profile \"%s\" not found.", profileName))
 		end
 
 		if ctx.log then
-			ctx.log("error", "Delete profile failed, not found: \"" .. tostring(var_39_0) .. "\".")
+			ctx.log("error", "Delete profile failed, not found: \"" .. tostring(profileName) .. "\".")
 		end
 
 		HelperConfigTab.refreshProfileList()
@@ -757,17 +757,17 @@ function HelperConfigTab.deleteProfile(explicitName)
 		return
 	end
 
-	local var_39_2 = false
+	local hasAnotherProfile = false
 
-	for key, profile in pairs(var_39_1.profiles) do
-		if key ~= var_39_0 and type(profile) == "table" then
-			var_39_2 = true
+	for key, profile in pairs(helperConfig.profiles) do
+		if key ~= profileName and type(profile) == "table" then
+			hasAnotherProfile = true
 
 			break
 		end
 	end
 
-	if not var_39_2 then
+	if not hasAnotherProfile then
 		if ctx.showMessage then
 			ctx.showMessage(true, configText("lastProfile"))
 		end
@@ -777,41 +777,41 @@ function HelperConfigTab.deleteProfile(explicitName)
 		return
 	end
 
-	local wasActive = var_39_1.activeProfile == var_39_0
+	local wasActive = helperConfig.activeProfile == profileName
 
-	var_39_1.profiles[var_39_0] = nil
+	helperConfig.profiles[profileName] = nil
 
-	local activeProfile = var_39_1.activeProfile
+	local activeProfile = helperConfig.activeProfile
 
-	if wasActive or type(var_39_1.profiles[activeProfile]) ~= "table" then
-		activeProfile = HelperConfigTab.getFallbackProfileName(var_39_1.profiles)
+	if wasActive or type(helperConfig.profiles[activeProfile]) ~= "table" then
+		activeProfile = HelperConfigTab.getFallbackProfileName(helperConfig.profiles)
 	end
 
-	local fallbackConfig = type(var_39_1.profiles[activeProfile]) == "table" and ctx.copyConfig(var_39_1.profiles[activeProfile]) or {}
+	local fallbackConfig = type(helperConfig.profiles[activeProfile]) == "table" and ctx.copyConfig(helperConfig.profiles[activeProfile]) or {}
 
 	if wasActive then
-		var_39_1.activeProfile = activeProfile
-		var_39_1.current = ctx.copyConfig(fallbackConfig)
+		helperConfig.activeProfile = activeProfile
+		helperConfig.current = ctx.copyConfig(fallbackConfig)
 	end
 
-	if not ctx.writeHelperJSON(var_39_1) then
+	if not ctx.writeHelperJSON(helperConfig) then
 		if ctx.showMessage then
 			ctx.showMessage(true, tr("Failed to delete profile."))
 		end
 
 		if ctx.log then
-			ctx.log("error", "Delete profile failed to write JSON: \"" .. tostring(var_39_0) .. "\".")
+			ctx.log("error", "Delete profile failed to write JSON: \"" .. tostring(profileName) .. "\".")
 		end
 
 		return
 	end
 
 	if ctx.log then
-		ctx.log("info", "Profile deleted: \"" .. tostring(var_39_0) .. "\".")
+		ctx.log("info", "Profile deleted: \"" .. tostring(profileName) .. "\".")
 	end
 
 	if ctx.showMessage then
-		ctx.showMessage(false, profileTr("Profile \"%s\" deleted.", var_39_0))
+		ctx.showMessage(false, profileTr("Profile \"%s\" deleted.", profileName))
 	end
 
 	if wasActive and ctx.applyConfig then
@@ -823,14 +823,14 @@ function HelperConfigTab.deleteProfile(explicitName)
 	HelperConfigTab.refreshProfileList()
 end
 
-function HelperConfigTab.createBlankProfile(arg_40_0)
+function HelperConfigTab.createBlankProfile(profileName)
 	if not ctx or not ctx.getWidget then
 		return
 	end
 
-	arg_40_0 = trimProfileName(arg_40_0)
+	profileName = trimProfileName(profileName)
 
-	if arg_40_0 == "" then
+	if profileName == "" then
 		if ctx.showMessage then
 			ctx.showMessage(true, tr("Profile name cannot be empty."))
 		end
@@ -838,11 +838,11 @@ function HelperConfigTab.createBlankProfile(arg_40_0)
 		return
 	end
 
-	local var_40_0 = ctx.readHelperJSON()
+	local helperConfig = ctx.readHelperJSON()
 
-	if type(var_40_0.profiles) == "table" and var_40_0.profiles[arg_40_0] ~= nil then
+	if type(helperConfig.profiles) == "table" and helperConfig.profiles[profileName] ~= nil then
 		if ctx.showMessage then
-			ctx.showMessage(true, string.format(configText("nameTaken"), arg_40_0))
+			ctx.showMessage(true, string.format(configText("nameTaken"), profileName))
 		end
 
 		return
@@ -854,24 +854,24 @@ function HelperConfigTab.createBlankProfile(arg_40_0)
 		ctx.cancelAutoSave()
 	end
 
-	local var_40_1 = ctx.collectConfig()
+	local previousConfigSnapshot = ctx.collectConfig()
 
 	ctx.applyConfig({})
 
-	if not HelperConfigTab.saveProfile(arg_40_0) then
-		ctx.applyConfig(var_40_1)
+	if not HelperConfigTab.saveProfile(profileName) then
+		ctx.applyConfig(previousConfigSnapshot)
 	end
 end
 
-function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
+function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
 	if not ctx or not ctx.getWidget then
 		return
 	end
 
-	arg_41_0 = trimProfileName(arg_41_0)
+	oldProfileName = trimProfileName(oldProfileName)
 	activeProfile = trimProfileName(activeProfile)
 
-	if arg_41_0 == "" then
+	if oldProfileName == "" then
 		if ctx.showMessage then
 			ctx.showMessage(true, tr("Select a profile to rename."))
 		end
@@ -887,7 +887,7 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 		return
 	end
 
-	if activeProfile == arg_41_0 then
+	if activeProfile == oldProfileName then
 		return
 	end
 
@@ -897,13 +897,13 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 		ctx.cancelAutoSave()
 	end
 
-	local var_41_0 = ctx.readHelperJSON()
+	local helperConfig = ctx.readHelperJSON()
 
-	var_41_0.profiles = var_41_0.profiles or {}
+	helperConfig.profiles = helperConfig.profiles or {}
 
-	if type(var_41_0.profiles[arg_41_0]) ~= "table" then
+	if type(helperConfig.profiles[oldProfileName]) ~= "table" then
 		if ctx.showMessage then
-			ctx.showMessage(true, profileTr("Profile \"%s\" not found.", arg_41_0))
+			ctx.showMessage(true, profileTr("Profile \"%s\" not found.", oldProfileName))
 		end
 
 		HelperConfigTab.refreshProfileList()
@@ -911,7 +911,7 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 		return
 	end
 
-	if var_41_0.profiles[activeProfile] ~= nil then
+	if helperConfig.profiles[activeProfile] ~= nil then
 		if ctx.showMessage then
 			ctx.showMessage(true, string.format(configText("nameTaken"), activeProfile))
 		end
@@ -919,22 +919,22 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 		return
 	end
 
-	var_41_0.profiles[activeProfile] = var_41_0.profiles[arg_41_0]
-	var_41_0.profiles[arg_41_0] = nil
+	helperConfig.profiles[activeProfile] = helperConfig.profiles[oldProfileName]
+	helperConfig.profiles[oldProfileName] = nil
 
-	local var_41_1 = var_41_0.activeProfile == arg_41_0
+	local wasActiveProfile = helperConfig.activeProfile == oldProfileName
 
-	if var_41_1 then
-		var_41_0.activeProfile = activeProfile
+	if wasActiveProfile then
+		helperConfig.activeProfile = activeProfile
 	end
 
-	if not ctx.writeHelperJSON(var_41_0) then
+	if not ctx.writeHelperJSON(helperConfig) then
 		if ctx.showMessage then
 			ctx.showMessage(true, configText("renameFailed"))
 		end
 
 		if ctx.log then
-			ctx.log("error", "Rename profile failed for \"" .. tostring(arg_41_0) .. "\".")
+			ctx.log("error", "Rename profile failed for \"" .. tostring(oldProfileName) .. "\".")
 		end
 
 		HelperConfigTab.refreshProfileList()
@@ -942,7 +942,7 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 		return
 	end
 
-	if var_41_1 or selectedProfileName == arg_41_0 then
+	if wasActiveProfile or selectedProfileName == oldProfileName then
 		HelperConfigTab.setSelectedProfileName(activeProfile)
 		HelperConfigTab.syncProfileNameEdit(activeProfile)
 	end
@@ -950,15 +950,15 @@ function HelperConfigTab.renameProfile(arg_41_0, activeProfile)
 	HelperConfigTab.refreshProfileList()
 
 	if ctx.log then
-		ctx.log("info", "Profile renamed: \"" .. arg_41_0 .. "\" -> \"" .. activeProfile .. "\".")
+		ctx.log("info", "Profile renamed: \"" .. oldProfileName .. "\" -> \"" .. activeProfile .. "\".")
 	end
 
 	if ctx.showMessage then
-		ctx.showMessage(false, string.format(configText("renamed"), arg_41_0, activeProfile))
+		ctx.showMessage(false, string.format(configText("renamed"), oldProfileName, activeProfile))
 	end
 end
 
-local function var_0_21(arg_42_0, arg_42_1, arg_42_2, arg_42_3)
+local function showProfileNameInput(title, labelText, initialName, onAccept)
 	if not UIInputBox or not UIInputBox.create then
 		if ctx and ctx.showMessage then
 			ctx.showMessage(true, tr("Profile name input is unavailable."))
@@ -972,44 +972,44 @@ local function var_0_21(arg_42_0, arg_42_1, arg_42_2, arg_42_3)
 	end
 
 	local unusedValue
-	local var_42_1 = UIInputBox.create(arg_42_0, arg_42_3, function()
+	local inputBox = UIInputBox.create(title, onAccept, function()
 		profileInputBox = nil
 	end)
 
-	profileInputBox = var_42_1
+	profileInputBox = inputBox
 
-	local var_42_2 = var_42_1:addLabel(arg_42_1)
-	local var_42_3 = var_42_1:addLineEdit(nil, arg_42_2, 48)
+	local labelWidget = inputBox:addLabel(labelText)
+	local nameEdit = inputBox:addLineEdit(nil, initialName, 48)
 
-	if var_42_2 then
-		var_42_2:setStyle("HelperProfileInputLabel")
-		var_42_2:resizeToText()
+	if labelWidget then
+		labelWidget:setStyle("HelperProfileInputLabel")
+		labelWidget:resizeToText()
 	end
 
-	if var_42_3 then
-		var_42_3:setStyle("HelperProfileInputLineEdit")
+	if nameEdit then
+		nameEdit:setStyle("HelperProfileInputLineEdit")
 	end
 
-	var_42_1:display()
-	var_42_1:setStyle("HelperProfileInputBox")
+	inputBox:display()
+	inputBox:setStyle("HelperProfileInputBox")
 
-	function var_42_1.onDestroy()
-		if profileInputBox == var_42_1 then
+	function inputBox.onDestroy()
+		if profileInputBox == inputBox then
 			profileInputBox = nil
 		end
 	end
 
-	if var_42_3 then
-		var_42_3:focus()
+	if nameEdit then
+		nameEdit:focus()
 
-		if arg_42_2 and var_42_3.selectAll then
-			var_42_3:selectAll()
+		if initialName and nameEdit.selectAll then
+			nameEdit:selectAll()
 		end
 	end
 end
 
 function HelperConfigTab.newQuickProfile()
-	var_0_21(configText("newPreset"), configText("profileName"), nil, HelperConfigTab.createBlankProfile)
+	showProfileNameInput(configText("newPreset"), configText("profileName"), nil, HelperConfigTab.createBlankProfile)
 end
 
 function HelperConfigTab.renameQuickProfile()
@@ -1021,8 +1021,8 @@ function HelperConfigTab.renameQuickProfile()
 		return
 	end
 
-	var_0_21(configText("renamePreset"), configText("newProfileName"), quickProfileName, function(arg_47_0)
-		HelperConfigTab.renameProfile(quickProfileName, arg_47_0)
+	showProfileNameInput(configText("renamePreset"), configText("newProfileName"), quickProfileName, function(newProfileName)
+		HelperConfigTab.renameProfile(quickProfileName, newProfileName)
 	end)
 end
 
@@ -1030,7 +1030,7 @@ function HelperConfigTab.saveQuickProfile()
 	local quickProfileName = HelperConfigTab.getQuickProfileName()
 
 	if quickProfileName == "" then
-		var_0_21(configText("newPreset"), configText("profileName"), nil, HelperConfigTab.saveProfile)
+		showProfileNameInput(configText("newPreset"), configText("profileName"), nil, HelperConfigTab.saveProfile)
 
 		return
 	end

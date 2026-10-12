@@ -1,4 +1,4 @@
-﻿BIG_LARGE_CIRCLE = 261
+BIG_LARGE_CIRCLE = 261
 LARGE_CIRCLE = 215
 BIG_MEDIUM_CIRCLE = 160
 MEDIUM_CIRCLE = 106
@@ -359,7 +359,7 @@ WheelDomainColors = {
 	}
 }
 
-local var_0_0 = {
+local visualRingsByRadius = {
 	[SMALL_CIRCLE] = {
 		inner = 1,
 		outer = 51
@@ -382,21 +382,21 @@ local var_0_0 = {
 	}
 }
 
-function WheelButtons.getVisualRing(arg_1_0)
-	return var_0_0[arg_1_0] or {
+function WheelButtons.getVisualRing(radius)
+	return visualRingsByRadius[radius] or {
 		inner = 0,
-		outer = arg_1_0
+		outer = radius
 	}
 end
 
-function WheelButtons.getSliceDomain(arg_2_0)
-	local var_2_0 = WheelButtons[arg_2_0]
+function WheelButtons.getSliceDomain(sliceIndex)
+	local sliceDefinition = WheelButtons[sliceIndex]
 
-	if not var_2_0 then
+	if not sliceDefinition then
 		return 1
 	end
 
-	local domain = var_2_0.domain
+	local domain = sliceDefinition.domain
 
 	if domain == nil then
 		return 1
@@ -405,8 +405,8 @@ function WheelButtons.getSliceDomain(arg_2_0)
 	return domain
 end
 
-function WheelButtons.getSliceColors(arg_3_0)
-	local sliceDomain = WheelDomainColors[WheelButtons.getSliceDomain(arg_3_0)]
+function WheelButtons.getSliceColors(sliceIndex)
+	local sliceDomain = WheelDomainColors[WheelButtons.getSliceDomain(sliceIndex)]
 
 	if sliceDomain == nil then
 		return WheelDomainColors[1]
@@ -415,12 +415,12 @@ function WheelButtons.getSliceColors(arg_3_0)
 	return sliceDomain
 end
 
-function WheelButtons.getSliceFillColor(arg_4_0)
-	return WheelButtons.getSliceColors(arg_4_0).color
+function WheelButtons.getSliceFillColor(sliceIndex)
+	return WheelButtons.getSliceColors(sliceIndex).color
 end
 
-function WheelButtons.getSliceAvailableColor(arg_5_0)
-	local sliceColors = WheelButtons.getSliceColors(arg_5_0)
+function WheelButtons.getSliceAvailableColor(sliceIndex)
+	local sliceColors = WheelButtons.getSliceColors(sliceIndex)
 
 	if sliceColors.available ~= nil then
 		return sliceColors.available
@@ -429,40 +429,40 @@ function WheelButtons.getSliceAvailableColor(arg_5_0)
 	return sliceColors.color
 end
 
-local var_0_1 = {}
+local staticArcParamsBySlice = {}
 
-function WheelButtons.getSliceStaticArcParams(arg_6_0)
-	local var_6_0 = var_0_1[arg_6_0]
+function WheelButtons.getSliceStaticArcParams(sliceIndex)
+	local cachedArcParams = staticArcParamsBySlice[sliceIndex]
 
-	if var_6_0 then
-		return var_6_0
+	if cachedArcParams then
+		return cachedArcParams
 	end
 
-	local var_6_1 = WheelButtons[arg_6_0]
+	local sliceDefinition = WheelButtons[sliceIndex]
 
-	if not var_6_1 then
+	if not sliceDefinition then
 		return nil
 	end
 
-	local var_6_2 = var_0_0[var_6_1.radius] or {
+	local visualRing = visualRingsByRadius[sliceDefinition.radius] or {
 		inner = 0,
-		outer = var_6_1.radius
+		outer = sliceDefinition.radius
 	}
-	local var_6_3 = 360 / var_6_1.totalSlice
-	local var_6_4 = {
-		startAngle = (var_6_1.slice * var_6_3 + 90) % 360,
-		fullSpan = var_6_3,
-		ringInner = var_6_2.inner,
-		ringOuter = var_6_2.outer
+	local sliceAngle = 360 / sliceDefinition.totalSlice
+	local arcParams = {
+		startAngle = (sliceDefinition.slice * sliceAngle + 90) % 360,
+		fullSpan = sliceAngle,
+		ringInner = visualRing.inner,
+		ringOuter = visualRing.outer
 	}
 
-	var_0_1[arg_6_0] = var_6_4
+	staticArcParamsBySlice[sliceIndex] = arcParams
 
-	return var_6_4
+	return arcParams
 end
 
-function WheelButtons.getSliceArcParams(arg_7_0, arg_7_1, arg_7_2)
-	local sliceStaticArcParams = WheelButtons.getSliceStaticArcParams(arg_7_0)
+function WheelButtons.getSliceArcParams(sliceIndex, startFraction, endFraction)
+	local sliceStaticArcParams = WheelButtons.getSliceStaticArcParams(sliceIndex)
 
 	if not sliceStaticArcParams then
 		return nil
@@ -470,35 +470,35 @@ function WheelButtons.getSliceArcParams(arg_7_0, arg_7_1, arg_7_2)
 
 	local ringInner = sliceStaticArcParams.ringInner
 	local ringOuter = sliceStaticArcParams.ringOuter
-	local var_7_3 = ringOuter - ringInner
-	local var_7_4 = arg_7_1
-	local var_7_5 = arg_7_2
+	local ringThickness = ringOuter - ringInner
+	local requestedStartFraction = startFraction
+	local requestedEndFraction = endFraction
 
-	if var_7_5 == nil then
-		if var_7_4 == nil then
-			var_7_4, var_7_5 = 0, 1
+	if requestedEndFraction == nil then
+		if requestedStartFraction == nil then
+			requestedStartFraction, requestedEndFraction = 0, 1
 		else
-			var_7_5 = var_7_4
-			var_7_4 = 0
+			requestedEndFraction = requestedStartFraction
+			requestedStartFraction = 0
 		end
 	end
 
-	local var_7_6 = math.max(0, math.min(1, var_7_4))
-	local var_7_7 = math.max(0, math.min(1, var_7_5))
+	local clampedStartFraction = math.max(0, math.min(1, requestedStartFraction))
+	local clampedEndFraction = math.max(0, math.min(1, requestedEndFraction))
 
-	if var_7_7 < var_7_6 then
-		var_7_6, var_7_7 = var_7_7, var_7_6
+	if clampedEndFraction < clampedStartFraction then
+		clampedStartFraction, clampedEndFraction = clampedEndFraction, clampedStartFraction
 	end
 
-	local var_7_8 = ringInner + var_7_3 * var_7_7
-	local var_7_9 = ringInner + var_7_3 * var_7_6
-	local var_7_10 = math.max(0.1, var_7_8 - var_7_9)
+	local segmentOuterRadius = ringInner + ringThickness * clampedEndFraction
+	local segmentInnerRadius = ringInner + ringThickness * clampedStartFraction
+	local segmentThickness = math.max(0.1, segmentOuterRadius - segmentInnerRadius)
 
 	return {
 		startAngle = sliceStaticArcParams.startAngle,
 		fullSpan = sliceStaticArcParams.fullSpan,
-		thickness = var_7_10,
-		radialInset = math.max(0, WHEEL_WIDGET_HALF - var_7_8),
+		thickness = segmentThickness,
+		radialInset = math.max(0, WHEEL_WIDGET_HALF - segmentOuterRadius),
 		ringInner = ringInner,
 		ringOuter = ringOuter
 	}
