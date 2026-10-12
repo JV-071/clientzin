@@ -2,6 +2,11 @@ find_package(GTest CONFIG REQUIRED)
 
 include(GoogleTest)
 
+set(OTCLIENT_TEST_CORE otclient_core)
+if(TARGET otclient_test_core)
+    set(OTCLIENT_TEST_CORE otclient_test_core)
+endif()
+
 function(otclient_add_gtest TARGET_NAME)
     add_executable(${TARGET_NAME} ${ARGN})
 
@@ -16,7 +21,7 @@ function(otclient_add_gtest TARGET_NAME)
 
     target_link_libraries(${TARGET_NAME}
         PRIVATE
-            otclient_core
+            ${OTCLIENT_TEST_CORE}
             GTest::gtest
             GTest::gtest_main
     )
@@ -45,6 +50,14 @@ function(otclient_add_gtest TARGET_NAME)
         else()
             set_property(TARGET ${TARGET_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
         endif()
+    endif()
+
+    if(NOT ENABLE_TEST_LTO)
+        set_target_properties(${TARGET_NAME} PROPERTIES
+            INTERPROCEDURAL_OPTIMIZATION FALSE
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE FALSE
+            INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO FALSE
+            INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL FALSE)
     endif()
 
     # Discover after all link/app-local DLL steps finish, outside parallel builds.

@@ -147,6 +147,22 @@
       "cacheVariables": {
         "CLIENTZIN_RENDERER": "d3d11"
       }
+    },
+    {
+      "name": "windows-cmake-release-d3d9-fast-tests",
+      "inherits": "windows-cmake-release-d3d9",
+      "displayName": "Windows Release d3d9 - fast test links",
+      "cacheVariables": {
+        "ENABLE_TEST_LTO": "OFF"
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d11-fast-tests",
+      "inherits": "windows-cmake-release-d3d11",
+      "displayName": "Windows Release d3d11 - fast test links",
+      "cacheVariables": {
+        "ENABLE_TEST_LTO": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -189,6 +205,14 @@
     {
       "name": "windows-cmake-release-d3d11",
       "configurePreset": "windows-cmake-release-d3d11"
+    },
+    {
+      "name": "windows-cmake-release-d3d9-fast-tests",
+      "configurePreset": "windows-cmake-release-d3d9-fast-tests"
+    },
+    {
+      "name": "windows-cmake-release-d3d11-fast-tests",
+      "configurePreset": "windows-cmake-release-d3d11-fast-tests"
     }
   ],
   "testPresets": [
@@ -230,6 +254,20 @@
     {
       "name": "windows-cmake-release-d3d11",
       "configurePreset": "windows-cmake-release-d3d11",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d9-fast-tests",
+      "configurePreset": "windows-cmake-release-d3d9-fast-tests",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-cmake-release-d3d11-fast-tests",
+      "configurePreset": "windows-cmake-release-d3d11-fast-tests",
       "output": {
         "outputOnFailure": true
       }

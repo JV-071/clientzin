@@ -1004,3 +1004,31 @@ else()
           RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/"
   )
 endif()
+
+# Keep production IPO while avoiding repeated whole-program links for tests.
+if(OTCLIENT_BUILD_TESTS AND NOT ANDROID AND NOT ENABLE_TEST_LTO
+    AND CMAKE_BUILD_TYPE MATCHES "^(Release|RelWithDebInfo|MinSizeRel)$")
+  add_library(otclient_test_core STATIC ${SOURCE_FILES})
+  foreach(property IN ITEMS
+      INCLUDE_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES
+      COMPILE_DEFINITIONS INTERFACE_COMPILE_DEFINITIONS
+      COMPILE_OPTIONS INTERFACE_COMPILE_OPTIONS
+      LINK_LIBRARIES INTERFACE_LINK_LIBRARIES
+      LINK_OPTIONS INTERFACE_LINK_OPTIONS
+      CXX_STANDARD CXX_STANDARD_REQUIRED CXX_EXTENSIONS
+      UNITY_BUILD UNITY_BUILD_BATCH_SIZE
+      PRECOMPILE_HEADERS MSVC_RUNTIME_LIBRARY)
+    get_target_property(value otclient_core ${property})
+    if(NOT value STREQUAL "value-NOTFOUND")
+      if(property MATCHES "^(INTERFACE_)?LINK_OPTIONS$")
+        list(FILTER value EXCLUDE REGEX "^-flto(=.*)?$")
+      endif()
+      set_property(TARGET otclient_test_core PROPERTY ${property} "${value}")
+    endif()
+  endforeach()
+  set_target_properties(otclient_test_core PROPERTIES
+      INTERPROCEDURAL_OPTIMIZATION FALSE
+      INTERPROCEDURAL_OPTIMIZATION_RELEASE FALSE
+      INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO FALSE
+      INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL FALSE)
+endif()

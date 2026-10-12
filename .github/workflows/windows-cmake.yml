@@ -106,6 +106,8 @@ jobs:
   build:
     needs: dependencies
     name: windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }}
+    env:
+      BUILD_PRESET: ${{ matrix.configuration == 'release' && format('windows-cmake-release-{0}-fast-tests', matrix.renderer) || format('windows-cmake-debug-{0}', matrix.renderer) }}
     runs-on: windows-2022
     timeout-minutes: 90
     strategy:
@@ -157,7 +159,7 @@ jobs:
         run: |
           & ./.ci/vcpkg/bootstrap-vcpkg.bat -disableMetrics
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} 2>&1 | Tee-Object diagnostics/configure.log
+          cmake --preset ${{ env.BUILD_PRESET }} 2>&1 | Tee-Object diagnostics/configure.log
           exit $LASTEXITCODE
       - name: Separate configuration probes from compilation statistics
         shell: pwsh
@@ -168,17 +170,17 @@ jobs:
       - name: Compile
         shell: pwsh
         run: |
-          cmake --build --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --parallel 4 -- -k 0 2>&1 | Tee-Object diagnostics/build.log
+          cmake --build --preset ${{ env.BUILD_PRESET }} --parallel 4 -- -k 0 2>&1 | Tee-Object diagnostics/build.log
           exit $LASTEXITCODE
       - name: Run unit tests
         shell: pwsh
         run: |
-          ctest --preset windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --verbose --timeout 60 --no-tests=error --output-junit "$env:GITHUB_WORKSPACE/diagnostics/tests.xml" 2>&1 | Tee-Object diagnostics/tests.log
+          ctest --preset ${{ env.BUILD_PRESET }} --verbose --timeout 60 --no-tests=error --output-junit "$env:GITHUB_WORKSPACE/diagnostics/tests.xml" 2>&1 | Tee-Object diagnostics/tests.log
           exit $LASTEXITCODE
       - name: Package executable and matching PDB only
         shell: pwsh
         run: |
-          python tools/package_client.py --build build/windows-cmake-${{ matrix.configuration }}-${{ matrix.renderer }} --output package
+          python tools/package_client.py --build build/${{ env.BUILD_PRESET }} --output package
           exit $LASTEXITCODE
       - name: Inspect executable DLL dependencies
         shell: pwsh

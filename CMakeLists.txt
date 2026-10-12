@@ -139,10 +139,11 @@ endif()
 # Add project
 # *****************************************************************************
 
+option(OTCLIENT_BUILD_TESTS "Build unit tests" ON)
+option(ENABLE_TEST_LTO "Link tests with the production LTO core" ON)
+
 # Src
 add_subdirectory(src)
-
-option(OTCLIENT_BUILD_TESTS "Build unit tests" ON)
 
 if(OTCLIENT_BUILD_TESTS AND NOT ANDROID)
     enable_testing()
