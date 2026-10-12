@@ -1,4 +1,4 @@
-﻿local function var_0_0(attribute)
+local function firstSpellIsUnlocked(attribute)
 	if type(attribute) ~= "table" then
 		return false
 	end
@@ -14,10 +14,10 @@ local function secondSpellIsUnlocked(attribute)
 	return WheelOfDestiny.isLitFull(attribute[1]) and WheelOfDestiny.isLitFull(attribute[2])
 end
 
-local var_0_2 = "#c0c0c0"
-local var_0_3 = "#707070"
+local ACTIVE_BONUS_TEXT_COLOR = "#c0c0c0"
+local INACTIVE_BONUS_TEXT_COLOR = "#707070"
 
-function formatWheelPercent(numericValue, arg_3_1)
+function formatWheelPercent(numericValue, includePlusSign)
 	numericValue = tonumber(numericValue) or 0
 
 	local formattedText
@@ -28,17 +28,17 @@ function formatWheelPercent(numericValue, arg_3_1)
 		formattedText = string.format("%.2f", numericValue):gsub("(%..-)0+$", "%1"):gsub("%.$", "")
 	end
 
-	if arg_3_1 then
+	if includePlusSign then
 		return string.format("+%s%%", formattedText)
 	end
 
 	return formattedText .. "%"
 end
 
-function formatWheelPlusInteger(arg_4_0)
-	arg_4_0 = math.floor((tonumber(arg_4_0) or 0) + 0.5)
+function formatWheelPlusInteger(amount)
+	amount = math.floor((tonumber(amount) or 0) + 0.5)
 
-	return (arg_4_0 < 0 and "-" or "+") .. comma_value(math.abs(arg_4_0))
+	return (amount < 0 and "-" or "+") .. comma_value(math.abs(amount))
 end
 
 function formatWheelSignedPercent(numericValue)
@@ -47,7 +47,7 @@ function formatWheelSignedPercent(numericValue)
 	return (numericValue < 0 and "-" or "+") .. formatWheelPercent(math.abs(numericValue))
 end
 
-function formatWheelFixedPercent(numericValue, arg_6_1)
+function formatWheelFixedPercent(numericValue, includePlusSign)
 	numericValue = tonumber(numericValue) or 0
 
 	local formattedText = string.format("%.2f%%", math.abs(numericValue))
@@ -56,84 +56,84 @@ function formatWheelFixedPercent(numericValue, arg_6_1)
 		return "-" .. formattedText
 	end
 
-	return (arg_6_1 and "+" or "") .. formattedText
+	return (includePlusSign and "+" or "") .. formattedText
 end
 
-local function var_0_4(arg_7_0)
-	if type(arg_7_0) ~= "string" then
+local function normalizeBonusWhitespace(text)
+	if type(text) ~= "string" then
 		return ""
 	end
 
-	return arg_7_0:gsub("\n+", " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	return text:gsub("\n+", " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
-local function var_0_5(arg_8_0, arg_8_1)
-	if type(arg_8_0) == "string" then
-		return arg_8_0
+local function selectStringOrFallback(text, fallback)
+	if type(text) == "string" then
+		return text
 	end
 
-	if type(arg_8_1) == "string" then
-		return arg_8_1
+	if type(fallback) == "string" then
+		return fallback
 	end
 
 	return ""
 end
 
-local function var_0_6(arg_9_0, arg_9_1, arg_9_2)
-	local var_9_0 = var_0_4(arg_9_2)
-	local var_9_1 = arg_9_1 and var_0_2 or var_0_3
+local function buildAugmentationTier(tierIndex, unlocked, description)
+	local normalizedDescription = normalizeBonusWhitespace(description)
+	local textColor = unlocked and ACTIVE_BONUS_TEXT_COLOR or INACTIVE_BONUS_TEXT_COLOR
 
 	return {
-		prefix = string.format("{icon:icon-augmentation-%d-%s}{: , %s}", arg_9_0, arg_9_1 and "active" or "inactive", var_0_2),
-		text = string.format("{%s, %s}", var_9_0, var_9_1)
+		prefix = string.format("{icon:icon-augmentation-%d-%s}{: , %s}", tierIndex, unlocked and "active" or "inactive", ACTIVE_BONUS_TEXT_COLOR),
+		text = string.format("{%s, %s}", normalizedDescription, textColor)
 	}
 end
 
-local function var_0_7(arg_10_0, arg_10_1)
-	local var_10_0 = arg_10_1 and var_0_2 or var_0_3
+local function colorBonusText(text, active)
+	local textColor = active and ACTIVE_BONUS_TEXT_COLOR or INACTIVE_BONUS_TEXT_COLOR
 
-	return string.format("{%s, %s}", var_0_4(arg_10_0), var_10_0)
+	return string.format("{%s, %s}", normalizeBonusWhitespace(text), textColor)
 end
 
-local function var_0_8(arg_11_0, arg_11_1, arg_11_2, arg_11_3)
-	local var_11_0 = {
-		var_0_6(1, arg_11_1, arg_11_0)
+local function buildSpellAugmentationTiers(firstTierText, firstTierUnlocked, secondTierText, secondTierUnlocked)
+	local tiers = {
+		buildAugmentationTier(1, firstTierUnlocked, firstTierText)
 	}
 
-	if arg_11_2 and arg_11_2 ~= "" then
-		var_11_0[#var_11_0 + 1] = var_0_6(2, arg_11_3, arg_11_2)
+	if secondTierText and secondTierText ~= "" then
+		tiers[#tiers + 1] = buildAugmentationTier(2, secondTierUnlocked, secondTierText)
 	end
 
-	return var_11_0
+	return tiers
 end
 
-local function var_0_9(arg_12_0, arg_12_1, arg_12_2, arg_12_3, arg_12_4, arg_12_5)
+local function buildSpellConvictionParts(title, firstTierText, secondTierText, unlockSlices, investedPoints, requiredPoints)
 	return {
-		name = var_0_7(arg_12_0, arg_12_5 <= arg_12_4),
-		tiers = var_0_8(arg_12_1, var_0_0(arg_12_3), arg_12_2, secondSpellIsUnlocked(arg_12_3))
+		name = colorBonusText(title, requiredPoints <= investedPoints),
+		tiers = buildSpellAugmentationTiers(firstTierText, firstSpellIsUnlocked(unlockSlices), secondTierText, secondSpellIsUnlocked(unlockSlices))
 	}
 end
 
-local function var_0_10(arg_13_0)
-	if type(arg_13_0) ~= "string" or arg_13_0 == "" then
+local function splitBonusTitleAndBody(text)
+	if type(text) ~= "string" or text == "" then
 		return "", ""
 	end
 
-	local var_13_0 = arg_13_0:find("\n", 1, true)
+	local newlineIndex = text:find("\n", 1, true)
 
-	if not var_13_0 then
-		return arg_13_0, ""
+	if not newlineIndex then
+		return text, ""
 	end
 
-	return arg_13_0:sub(1, var_13_0 - 1), arg_13_0:sub(var_13_0 + 1)
+	return text:sub(1, newlineIndex - 1), text:sub(newlineIndex + 1)
 end
 
-local function var_0_11(arg_14_0)
-	local var_14_0, var_14_1 = var_0_10(arg_14_0)
+local function buildBonusTitleAndBody(text)
+	local title, body = splitBonusTitleAndBody(text)
 
 	return {
-		name = var_14_0,
-		body = var_14_1
+		name = title,
+		body = body
 	}
 end
 
@@ -146,72 +146,72 @@ function getDedicationBonus(index)
 		return
 	end
 
-	local var_15_3 = WheelConsts[bonus.dedication]
-	local var_15_4 = 0
+	local dedicationConstants = WheelConsts[bonus.dedication]
+	local bonusPerPoint = 0
 
-	if type(var_15_3) == "table" and var_15_3[vocation] then
-		var_15_4 = var_15_3[vocation] or 0
+	if type(dedicationConstants) == "table" and dedicationConstants[vocation] then
+		bonusPerPoint = dedicationConstants[vocation] or 0
 	end
 
-	local var_15_5 = DedicationBonusTexts[bonus.dedication]
+	local dedicationText = DedicationBonusTexts[bonus.dedication]
 
-	if not var_15_5 then
+	if not dedicationText then
 		return ""
 	end
 
 	if bonus.dedication == "mitigation" then
-		return formatWheelPercent(points * var_15_3) .. var_15_5.percentSuffix
+		return formatWheelPercent(points * dedicationConstants) .. dedicationText.percentSuffix
 	elseif bonus.dedication == "lifemana" then
-		return string.format(var_15_5, points * var_15_3.life[vocation], points * var_15_3.mana[vocation])
+		return string.format(dedicationText, points * dedicationConstants.life[vocation], points * dedicationConstants.mana[vocation])
 	end
 
-	return string.format(var_15_5, points * var_15_4)
+	return string.format(dedicationText, points * bonusPerPoint)
 end
 
 function getDedicationTooltip(index)
-	local var_16_0 = WheelBonus[index - 1]
+	local bonusDefinition = WheelBonus[index - 1]
 	local vocationId = WheelOfDestiny.vocationId
 
 	if not vocationId or vocationId == 0 then
 		return ""
 	end
 
-	local var_16_2 = WheelConsts[var_16_0.dedication]
-	local var_16_3 = 0
+	local dedicationConstants = WheelConsts[bonusDefinition.dedication]
+	local bonusPerPoint = 0
 
-	if type(var_16_2) == "table" and var_16_2[vocationId] then
-		var_16_3 = var_16_2[vocationId] or 0
+	if type(dedicationConstants) == "table" and dedicationConstants[vocationId] then
+		bonusPerPoint = dedicationConstants[vocationId] or 0
 	end
 
-	local var_16_4 = DedicationTooltipTexts[var_16_0.dedication]
+	local dedicationTooltip = DedicationTooltipTexts[bonusDefinition.dedication]
 
-	if not var_16_4 then
+	if not dedicationTooltip then
 		return ""
 	end
 
-	if var_16_0.dedication == "mitigation" then
-		return var_16_4.prefix .. formatWheelPercent(var_16_2) .. var_16_4.percentSuffix
-	elseif var_16_0.dedication == "lifemana" then
-		return string.format(var_16_4, var_16_2.life[vocationId], var_16_2.mana[vocationId])
+	if bonusDefinition.dedication == "mitigation" then
+		return dedicationTooltip.prefix .. formatWheelPercent(dedicationConstants) .. dedicationTooltip.percentSuffix
+	elseif bonusDefinition.dedication == "lifemana" then
+		return string.format(dedicationTooltip, dedicationConstants.life[vocationId], dedicationConstants.mana[vocationId])
 	end
 
-	return string.format(var_16_4, var_16_3)
+	return string.format(dedicationTooltip, bonusPerPoint)
 end
 
 function getConvictionBonusTooltip(index)
-	local var_17_0 = WheelBonus[index - 1]
+	local bonusDefinition = WheelBonus[index - 1]
 	local vocation = WheelOfDestiny.vocationId
-	local order = WheelConsts[var_17_0.conviction]
-	local conviction = var_17_0.conviction
+	local order = WheelConsts[bonusDefinition.conviction]
+	local conviction = bonusDefinition.conviction
 
 	if conviction == "vessel" then
-		local var_17_4 = ConvictionStaticTexts.vessel[var_17_0.domain]
+		local vesselText = ConvictionStaticTexts.vessel[bonusDefinition.domain]
 
-		return var_17_4 and var_17_4.tooltip or ""
+		return vesselText and vesselText.tooltip or ""
 	elseif conviction == "special_1" or conviction == "special_2" then
-		local var_17_5 = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocation]
+		local specialText = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocation]
 
-		return var_17_5 and (var_17_5.tooltip or var_17_5.body) or ""
+		return specialText and (specialText.tooltip or specialText.body) or ""
 	elseif ConvictionSpellTexts[conviction] then
 		return buildSpellConvictionTooltip(conviction, vocation, order) or ""
 	end
@@ -220,178 +220,178 @@ function getConvictionBonusTooltip(index)
 end
 
 function getConvictionBonus(index, fullMessage)
-	local var_18_0 = getConvictionBonusParts(index, fullMessage)
+	local bonusParts = getConvictionBonusParts(index, fullMessage)
 
-	if not var_18_0.name or var_18_0.name == "" then
-		return var_18_0.body or ""
+	if not bonusParts.name or bonusParts.name == "" then
+		return bonusParts.body or ""
 	end
 
-	if var_18_0.tiers and #var_18_0.tiers > 0 then
-		local var_18_1 = ""
+	if bonusParts.tiers and #bonusParts.tiers > 0 then
+		local tierText = ""
 
-		for index, tier in ipairs(var_18_0.tiers) do
+		for index, tier in ipairs(bonusParts.tiers) do
 			if index > 1 then
-				var_18_1 = var_18_1 .. "\n"
+				tierText = tierText .. "\n"
 			end
 
-			var_18_1 = var_18_1 .. tier.prefix .. tier.text
+			tierText = tierText .. tier.prefix .. tier.text
 		end
 
-		return var_18_0.name .. var_18_1
+		return bonusParts.name .. tierText
 	end
 
-	if var_18_0.body and var_18_0.body ~= "" then
-		if var_18_0.name:find("{", 1, true) or var_18_0.body:find("{", 1, true) then
-			return var_18_0.name .. var_18_0.body
+	if bonusParts.body and bonusParts.body ~= "" then
+		if bonusParts.name:find("{", 1, true) or bonusParts.body:find("{", 1, true) then
+			return bonusParts.name .. bonusParts.body
 		end
 
-		return var_18_0.name .. "\n" .. var_18_0.body
+		return bonusParts.name .. "\n" .. bonusParts.body
 	end
 
-	return var_18_0.name
+	return bonusParts.name
 end
 
-function getConvictionBonusParts(arg_19_0, arg_19_1)
-	local var_19_0 = getConvictionBonusRaw(arg_19_0, arg_19_1)
+function getConvictionBonusParts(sliceIndex, fullMessage)
+	local rawBonus = getConvictionBonusRaw(sliceIndex, fullMessage)
 
-	if type(var_19_0) == "table" and type(var_19_0.name) == "string" then
-		if var_19_0.tiers then
+	if type(rawBonus) == "table" and type(rawBonus.name) == "string" then
+		if rawBonus.tiers then
 			return {
 				body = "",
-				name = var_19_0.name,
-				tiers = var_19_0.tiers
+				name = rawBonus.name,
+				tiers = rawBonus.tiers
 			}
 		end
 
-		return var_19_0
+		return rawBonus
 	end
 
-	if type(var_19_0) ~= "string" then
-		var_19_0 = ""
+	if type(rawBonus) ~= "string" then
+		rawBonus = ""
 	end
 
-	return var_0_11(var_19_0)
+	return buildBonusTitleAndBody(rawBonus)
 end
 
-local function var_0_12(arg_20_0, arg_20_1, arg_20_2)
-	local var_20_0 = ConvictionSpecialTexts[arg_20_0] and ConvictionSpecialTexts[arg_20_0][arg_20_1]
+local function buildSpecialConvictionText(conviction, vocationId, fullMessage)
+	local specialText = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocationId]
 
-	if not var_20_0 then
+	if not specialText then
 		return ""
 	end
 
-	local var_20_1 = arg_20_2 and var_20_0.body or var_20_0.bodyShort or var_20_0.body
+	local body = fullMessage and specialText.body or specialText.bodyShort or specialText.body
 
-	return var_0_5(var_20_0.name) .. "\n" .. var_0_5(var_20_1)
+	return selectStringOrFallback(specialText.name) .. "\n" .. selectStringOrFallback(body)
 end
 
-function getSpellConvictionTextEntry(arg_21_0, arg_21_1)
-	return ConvictionSpellTexts[arg_21_0] and ConvictionSpellTexts[arg_21_0][arg_21_1] or nil
+function getSpellConvictionTextEntry(conviction, vocationId)
+	return ConvictionSpellTexts[conviction] and ConvictionSpellTexts[conviction][vocationId] or nil
 end
 
-local var_0_13 = "•"
+local TOOLTIP_BULLET = "•"
 
-function buildSpellConvictionTooltip(arg_22_0, arg_22_1, unusedArgument)
-	local var_22_0 = getSpellConvictionTextEntry(arg_22_0, arg_22_1)
+function buildSpellConvictionTooltip(conviction, vocationId, unusedArgument)
+	local spellText = getSpellConvictionTextEntry(conviction, vocationId)
 
-	if not var_22_0 then
+	if not spellText then
 		return nil
 	end
 
-	local var_22_1 = {}
-	local var_22_2 = var_22_0.tiers or {}
+	local tooltipParts = {}
+	local tiers = spellText.tiers or {}
 
-	for index, entry in ipairs(var_22_2) do
+	for index, entry in ipairs(tiers) do
 		if type(entry) ~= "string" then
 			-- block empty
 		else
-			setStringColor(var_22_1, var_0_13, "white")
+			setStringColor(tooltipParts, TOOLTIP_BULLET, "white")
 
-			local var_22_3 = index < #var_22_2 and "\n" or ""
+			local lineEnding = index < #tiers and "\n" or ""
 
-			setStringColor(var_22_1, entry .. var_22_3, "#3F3F3F")
+			setStringColor(tooltipParts, entry .. lineEnding, "#3F3F3F")
 		end
 	end
 
-	return var_22_1
+	return tooltipParts
 end
 
-function getConvictionBonusRaw(arg_23_0, arg_23_1)
-	local var_23_0 = WheelBonus[arg_23_0 - 1]
+function getConvictionBonusRaw(sliceIndex, fullMessage)
+	local bonusDefinition = WheelBonus[sliceIndex - 1]
 
-	if not var_23_0 then
+	if not bonusDefinition then
 		return ""
 	end
 
 	local vocationId = WheelOfDestiny.vocationId
-	local var_23_2 = WheelOfDestiny.pointInvested[arg_23_0] or 0
-	local var_23_3 = WheelConsts[var_23_0.conviction]
-	local conviction = var_23_0.conviction
+	local investedPoints = WheelOfDestiny.pointInvested[sliceIndex] or 0
+	local convictionConstants = WheelConsts[bonusDefinition.conviction]
+	local conviction = bonusDefinition.conviction
 
 	if conviction == "vessel" then
-		local var_23_5 = ConvictionStaticTexts.vessel[var_23_0.domain]
+		local vesselText = ConvictionStaticTexts.vessel[bonusDefinition.domain]
 
-		if not var_23_5 then
+		if not vesselText then
 			return ""
 		end
 
-		local var_23_6 = arg_23_1 and var_23_5.body or var_23_5.bodyShort
+		local body = fullMessage and vesselText.body or vesselText.bodyShort
 
-		return var_0_5(var_23_5.name) .. "\n" .. var_0_5(var_23_6)
+		return selectStringOrFallback(vesselText.name) .. "\n" .. selectStringOrFallback(body)
 	elseif conviction == "skill" then
-		local var_23_7 = ConvictionStaticTexts.skill[vocationId]
+		local skillText = ConvictionStaticTexts.skill[vocationId]
 
-		if not var_23_7 then
+		if not skillText then
 			return ""
 		end
 
-		return string.format(var_0_5(var_23_7.template), var_23_3)
+		return string.format(selectStringOrFallback(skillText.template), convictionConstants)
 	elseif conviction == "lifeleech" then
-		return formatWheelPercent(var_23_3, true) .. " Life Leech"
+		return formatWheelPercent(convictionConstants, true) .. " Life Leech"
 	elseif conviction == "manaleech" then
-		return formatWheelPercent(var_23_3, true) .. " Mana Leech"
+		return formatWheelPercent(convictionConstants, true) .. " Mana Leech"
 	elseif ConvictionSpellTexts[conviction] then
-		local var_23_8 = getSpellConvictionTextEntry(conviction, vocationId)
+		local spellText = getSpellConvictionTextEntry(conviction, vocationId)
 
-		if not var_23_8 then
+		if not spellText then
 			return ""
 		end
 
-		local tiers = var_23_8.tiers
+		local tiers = spellText.tiers
 
 		if type(tiers) ~= "table" then
 			tiers = {}
 		end
 
-		return var_0_9(var_0_5(var_23_8.title, var_23_8.perk), var_0_5(tiers[1]), var_0_5(tiers[2]), var_23_3, var_23_2, var_23_0.maxPoints or 0)
+		return buildSpellConvictionParts(selectStringOrFallback(spellText.title, spellText.perk), selectStringOrFallback(tiers[1]), selectStringOrFallback(tiers[2]), convictionConstants, investedPoints, bonusDefinition.maxPoints or 0)
 	elseif conviction == "special_1" or conviction == "special_2" then
-		return var_0_12(conviction, vocationId, arg_23_1)
+		return buildSpecialConvictionText(conviction, vocationId, fullMessage)
 	end
 
 	return ""
 end
 
-local var_0_14 = {
+local ROMAN_TIER_LABELS = {
 	"I",
 	"II",
 	"III"
 }
 
-local function var_0_15(arg_24_0)
-	return (arg_24_0 or ""):gsub("^Augmented%s+", ""):gsub("^Aug%.%s*", "")
+local function stripAugmentationPrefix(title)
+	return (title or ""):gsub("^Augmented%s+", ""):gsub("^Aug%.%s*", "")
 end
 
 function getConvictionPerks()
 	local vocationId = WheelOfDestiny.vocationId
 	local convictions = {}
 
-	local function var_25_2(arg_26_0, arg_26_1)
-		if not convictions[arg_26_0] then
-			arg_26_1.points = 0
-			convictions[arg_26_0] = arg_26_1
+	local function getOrCreateConvictionPerk(convictionKey, perkDefinition)
+		if not convictions[convictionKey] then
+			perkDefinition.points = 0
+			convictions[convictionKey] = perkDefinition
 		end
 
-		return convictions[arg_26_0]
+		return convictions[convictionKey]
 	end
 
 	for id, bonus in pairs(WheelBonus) do
@@ -401,114 +401,114 @@ function getConvictionPerks()
 			-- block empty
 		else
 			local conviction = bonus.conviction
-			local var_25_5 = WheelConsts[conviction]
+			local convictionConstants = WheelConsts[conviction]
 
 			if conviction == "special_1" or conviction == "special_2" then
-				local var_25_6 = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocationId]
+				local specialText = ConvictionSpecialTexts[conviction] and ConvictionSpecialTexts[conviction][vocationId]
 
-				if var_25_6 then
-					var_25_2(conviction, {
+				if specialText then
+					getOrCreateConvictionPerk(conviction, {
 						priority = 0,
 						names = {
-							var_25_6.name
+							specialText.name
 						},
-						tooltip = var_25_6.tooltip or var_25_6.body
+						tooltip = specialText.tooltip or specialText.body
 					})
-				elseif var_25_5 and var_25_5[vocationId] then
-					var_25_2(conviction, {
+				elseif convictionConstants and convictionConstants[vocationId] then
+					getOrCreateConvictionPerk(conviction, {
 						priority = 0,
 						names = {
-							var_25_5[vocationId][1]
+							convictionConstants[vocationId][1]
 						},
-						tooltip = var_25_5[vocationId][2]
+						tooltip = convictionConstants[vocationId][2]
 					})
 				end
 			elseif conviction == "skill" then
-				local var_25_7 = ConvictionStaticTexts.skill[vocationId]
+				local skillText = ConvictionStaticTexts.skill[vocationId]
 
-				if var_25_7 then
-					local var_25_8 = var_25_2(conviction, {
+				if skillText then
+					local skillPerk = getOrCreateConvictionPerk(conviction, {
 						priority = 0,
 						names = {
-							var_25_7.perk
+							skillText.perk
 						},
-						tooltip = var_25_7.tooltip
+						tooltip = skillText.tooltip
 					})
 
-					var_25_8.points = var_25_8.points + var_25_5
-					var_25_8.stringPoint = formatWheelPlusInteger(var_25_8.points)
+					skillPerk.points = skillPerk.points + convictionConstants
+					skillPerk.stringPoint = formatWheelPlusInteger(skillPerk.points)
 				end
 			elseif conviction == "lifeleech" or conviction == "manaleech" then
-				local var_25_9 = conviction == "lifeleech" and "Life Leech" or "Mana Leech"
-				local var_25_10 = var_25_2(conviction, {
+				local leechName = conviction == "lifeleech" and "Life Leech" or "Mana Leech"
+				local leechPerk = getOrCreateConvictionPerk(conviction, {
 					priority = 4,
 					names = {
-						var_25_9
+						leechName
 					},
 					order = conviction == "lifeleech" and 1 or 2
 				})
 
-				var_25_10.points = var_25_10.points + var_25_5
-				var_25_10.stringPoint = formatWheelFixedPercent(var_25_10.points, true)
+				leechPerk.points = leechPerk.points + convictionConstants
+				leechPerk.stringPoint = formatWheelFixedPercent(leechPerk.points, true)
 			elseif conviction == "vessel" then
-				local var_25_11 = ConvictionStaticTexts.vessel[bonus.domain]
+				local vesselText = ConvictionStaticTexts.vessel[bonus.domain]
 
-				if var_25_11 then
-					local var_25_12 = var_25_2("vessel." .. bonus.domain, {
+				if vesselText then
+					local vesselPerk = getOrCreateConvictionPerk("vessel." .. bonus.domain, {
 						priority = 4,
 						names = {
-							var_25_11.name,
-							var_25_11.perk
+							vesselText.name,
+							vesselText.perk
 						},
 						order = 10 + bonus.domain,
-						tooltip = var_25_11.tooltip
+						tooltip = vesselText.tooltip
 					})
 
-					var_25_12.points = var_25_12.points + 1
-					var_25_12.stringPoint = var_0_14[math.min(var_25_12.points, 3)]
+					vesselPerk.points = vesselPerk.points + 1
+					vesselPerk.stringPoint = ROMAN_TIER_LABELS[math.min(vesselPerk.points, 3)]
 				end
 			elseif ConvictionSpellTexts[conviction] then
-				local var_25_13 = getSpellConvictionTextEntry(conviction, vocationId)
+				local spellText = getSpellConvictionTextEntry(conviction, vocationId)
 
-				if var_25_13 then
-					local var_25_14 = var_0_15(var_25_13.title or var_25_13.perk)
-					local var_25_15 = var_25_2(conviction, {
+				if spellText then
+					local spellTitle = stripAugmentationPrefix(spellText.title or spellText.perk)
+					local spellPerk = getOrCreateConvictionPerk(conviction, {
 						priority = 1,
 						names = {
-							"Augmented " .. var_25_14,
-							"Aug. " .. var_25_14
+							"Augmented " .. spellTitle,
+							"Aug. " .. spellTitle
 						},
-						tooltip = buildSpellConvictionTooltip(conviction, vocationId, var_25_5)
+						tooltip = buildSpellConvictionTooltip(conviction, vocationId, convictionConstants)
 					})
 
-					var_25_15.points = var_25_15.points + 1
-					var_25_15.stringPoint = var_0_14[math.min(var_25_15.points, 2)]
+					spellPerk.points = spellPerk.points + 1
+					spellPerk.stringPoint = ROMAN_TIER_LABELS[math.min(spellPerk.points, 2)]
 				end
 			end
 		end
 	end
 
-	local var_25_16 = {}
+	local sortedPerks = {}
 
 	for unusedValue, conviction in pairs(convictions) do
 		conviction.perk = conviction.names[#conviction.names]
 
-		table.insert(var_25_16, conviction)
+		table.insert(sortedPerks, conviction)
 	end
 
-	table.sort(var_25_16, function(arg_27_0, arg_27_1)
-		if arg_27_0.priority ~= arg_27_1.priority then
-			return arg_27_0.priority < arg_27_1.priority
+	table.sort(sortedPerks, function(leftPerk, rightPerk)
+		if leftPerk.priority ~= rightPerk.priority then
+			return leftPerk.priority < rightPerk.priority
 		end
 
-		if (arg_27_0.order or 0) ~= (arg_27_1.order or 0) then
-			return (arg_27_0.order or 0) < (arg_27_1.order or 0)
+		if (leftPerk.order or 0) ~= (rightPerk.order or 0) then
+			return (leftPerk.order or 0) < (rightPerk.order or 0)
 		end
 
-		return arg_27_0.names[1] < arg_27_1.names[1]
+		return leftPerk.names[1] < rightPerk.names[1]
 	end)
 
-	return var_25_16, convictions
+	return sortedPerks, convictions
 end
 
 function getPassiveInfo(domain)
@@ -831,41 +831,41 @@ function getValueByVocation(bonusType, steps)
 	return bonus
 end
 
-local var_0_16 = "/images/game/wheel/icon-crit"
-local var_0_17 = "/images/game/wheel/icon-spelldamage"
-local var_0_18 = "If the Vessel Resonance matches the gem quality in this domain, a\nbonus of +1 to all damage and healing is granted. This bonus is\nincreased by 1 for greater gems.\n\nRegardless of the match, gems will always grant mod bonuses\nbased on the Vessel Resonance.\n- Lesser gems match Dormant Vessels (VR I)\n- Regular gems match Awakened Vessels (VR II)\n- Greater gems match Radiant Vessels (VR III)"
-local var_0_19 = "Increasing the mod grade of cooldown augmentations does not\nfurther reduce the cooldown of spells, but adds a chance to gain\nMomentum that is additive to other chances of gaining Momentum."
-local var_0_20 = {
+local CRITICAL_BONUS_ICON = "/images/game/wheel/icon-crit"
+local SPELL_DAMAGE_BONUS_ICON = "/images/game/wheel/icon-spelldamage"
+local VESSEL_RESONANCE_TOOLTIP = "If the Vessel Resonance matches the gem quality in this domain, a\nbonus of +1 to all damage and healing is granted. This bonus is\nincreased by 1 for greater gems.\n\nRegardless of the match, gems will always grant mod bonuses\nbased on the Vessel Resonance.\n- Lesser gems match Dormant Vessels (VR I)\n- Regular gems match Awakened Vessels (VR II)\n- Greater gems match Radiant Vessels (VR III)"
+local COOLDOWN_MOMENTUM_TOOLTIP = "Increasing the mod grade of cooldown augmentations does not\nfurther reduce the cooldown of spells, but adds a chance to gain\nMomentum that is additive to other chances of gaining Momentum."
+local STAT_BONUS_PRIORITIES = {
 	["Hit Points"] = 40,
 	Capacity = 42,
 	Mana = 41
 }
 
-local function var_0_21(arg_33_0, arg_33_1)
-	if arg_33_0 == "integer" then
-		return formatWheelPlusInteger(arg_33_1)
-	elseif arg_33_0 == "fixedPercent" then
-		return formatWheelFixedPercent(arg_33_1)
-	elseif arg_33_0 == "seconds" then
-		return string.format("%ds", arg_33_1)
+local function formatVesselBonusAmount(format, amount)
+	if format == "integer" then
+		return formatWheelPlusInteger(amount)
+	elseif format == "fixedPercent" then
+		return formatWheelFixedPercent(amount)
+	elseif format == "seconds" then
+		return string.format("%ds", amount)
 	end
 
-	return formatWheelSignedPercent(arg_33_1)
+	return formatWheelSignedPercent(amount)
 end
 
 function getVesselBonus()
 	local defenses = {}
 
-	local function var_34_1(arg_35_0, arg_35_1, arg_35_2)
-		local var_35_0 = defenses[arg_35_0]
+	local function accumulateVesselBonus(bonusKey, bonusDefinition, amount)
+		local accumulatedBonus = defenses[bonusKey]
 
-		if not var_35_0 then
-			var_35_0 = arg_35_1
-			var_35_0.amount = 0
-			defenses[arg_35_0] = var_35_0
+		if not accumulatedBonus then
+			accumulatedBonus = bonusDefinition
+			accumulatedBonus.amount = 0
+			defenses[bonusKey] = accumulatedBonus
 		end
 
-		var_35_0.amount = var_35_0.amount + (tonumber(arg_35_2) or 0)
+		accumulatedBonus.amount = accumulatedBonus.amount + (tonumber(amount) or 0)
 	end
 
 	for _, k in pairs(WheelOfDestiny.equipedGemBonuses) do
@@ -876,104 +876,104 @@ function getVesselBonus()
 		else
 			local text = bonus.text
 			local skipIndex = text:find("\n")
-			local var_34_5 = skipIndex and text:sub(1, skipIndex - 1) or text
-			local var_34_6 = skipIndex and text:sub(skipIndex + 1) or nil
+			local firstDescriptionLine = skipIndex and text:sub(1, skipIndex - 1) or text
+			local secondDescriptionLine = skipIndex and text:sub(skipIndex + 1) or nil
 
 			if not k.supreme then
-				for iter_34_2 = 1, 2 do
-					local var_34_7 = iter_34_2 == 1 and var_34_5 or var_34_6
-					local var_34_8 = iter_34_2 == 1 and bonus.type1 or bonus.type2
+				for lineIndex = 1, 2 do
+					local descriptionLine = lineIndex == 1 and firstDescriptionLine or secondDescriptionLine
+					local bonusType = lineIndex == 1 and bonus.type1 or bonus.type2
 
-					if var_34_7 and var_34_8 then
-						local number = getBonusValueUpgrade(k.bonusID, k.gemID, false, iter_34_2 == 1)
+					if descriptionLine and bonusType then
+						local number = getBonusValueUpgrade(k.bonusID, k.gemID, false, lineIndex == 1)
 
-						if var_34_8 == "mitigation" then
-							var_34_1("mitigation", {
+						if bonusType == "mitigation" then
+							accumulateVesselBonus("mitigation", {
 								format = "fixedPercent",
 								bonusType = "mitigation",
 								priority = 43,
 								text = "Mitigation Mult.",
 								tooltip = bonus.tooltip
 							}, number)
-						elseif var_34_8 == "defense" then
-							local var_34_10 = var_34_7
+						elseif bonusType == "defense" then
+							local resistanceDescription = descriptionLine
 
-							if iter_34_2 == 2 and bonus.bonus2 == -1 then
+							if lineIndex == 2 and bonus.bonus2 == -1 then
 								local unusedValue
-								local var_34_12
+								local percentText
 
-								var_34_12, var_34_10 = var_34_7:match("([-]?%d+%.?%d*)%% (.+)")
-								number = tonumber(var_34_12) or 0
+								percentText, resistanceDescription = descriptionLine:match("([-]?%d+%.?%d*)%% (.+)")
+								number = tonumber(percentText) or 0
 							end
 
-							local var_34_13 = (var_34_10 or var_34_7):gsub(" Resistance$", "")
+							local resistanceName = (resistanceDescription or descriptionLine):gsub(" Resistance$", "")
 
-							var_34_1("defense." .. var_34_13, {
+							accumulateVesselBonus("defense." .. resistanceName, {
 								bonusType = "defense",
 								indent = true,
 								priority = 50,
-								text = var_34_13
+								text = resistanceName
 							}, number)
 						else
-							local var_34_14 = var_34_7:match("[@#]%s*(.+)") or var_34_7
+							local statName = descriptionLine:match("[@#]%s*(.+)") or descriptionLine
 
-							var_34_1("stat." .. var_34_14, {
+							accumulateVesselBonus("stat." .. statName, {
 								format = "integer",
-								bonusType = var_34_8,
-								text = var_34_14,
-								priority = var_0_20[var_34_14] or 44
+								bonusType = bonusType,
+								text = statName,
+								priority = STAT_BONUS_PRIORITIES[statName] or 44
 							}, number)
 						end
 					end
 				end
 			elseif text:find("^RM ") then
-				var_34_1("rm." .. text, {
+				accumulateVesselBonus("rm." .. text, {
 					format = "integer",
 					bonusType = "revelation",
 					priority = 10,
 					text = text,
 					tooltip = bonus.tooltip
 				}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
-			elseif not var_34_6 then
-				local var_34_15 = var_34_5:match("%%%s+(.+)$") or var_34_5
+			elseif not secondDescriptionLine then
+				local specialBonusName = firstDescriptionLine:match("%%%s+(.+)$") or firstDescriptionLine
 
-				var_34_1("flat." .. var_34_15, {
+				accumulateVesselBonus("flat." .. specialBonusName, {
 					bonusType = "special",
 					priority = 30,
-					text = var_34_15
+					text = specialBonusName
 				}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
 			else
-				local var_34_16 = var_34_5:gsub("^Aug%.%s*", "")
+				local spellName = firstDescriptionLine:gsub("^Aug%.%s*", "")
 
-				if var_34_6:find("Cooldown") then
-					local numericValue = tonumber(var_34_6:match("(%-?%d+)s")) or 0
+				if secondDescriptionLine:find("Cooldown") then
+					local numericValue = tonumber(secondDescriptionLine:match("(%-?%d+)s")) or 0
 
-					var_34_1("cooldown." .. var_34_16, {
+					accumulateVesselBonus("cooldown." .. spellName, {
 						format = "seconds",
 						bonusType = "augment",
 						priority = 20,
-						text = var_34_16,
-						tooltip = var_34_6
+						text = spellName,
+						tooltip = secondDescriptionLine
 					}, numericValue)
 
-					local var_34_18 = getBonusValueUpgrade(k.bonusID, k.gemID, true, true)
+					local momentumChance = getBonusValueUpgrade(k.bonusID, k.gemID, true, true)
 
-					if var_34_18 > 0 then
-						var_34_1("momentum", {
+					if momentumChance > 0 then
+						accumulateVesselBonus("momentum", {
 							bonusType = "momentum",
 							text = "Momentum",
 							priority = 5,
-							tooltip = var_0_19
-						}, var_34_18)
+							tooltip = COOLDOWN_MOMENTUM_TOOLTIP
+						}, momentumChance)
 					end
 				else
-					local var_34_19 = var_34_6:find("Critical") and var_0_16 or var_0_17
+					local augmentationIcon = secondDescriptionLine:find("Critical") and CRITICAL_BONUS_ICON or SPELL_DAMAGE_BONUS_ICON
 
-					var_34_1("augment." .. var_34_19 .. var_34_16, {
+					accumulateVesselBonus("augment." .. augmentationIcon .. spellName, {
 						bonusType = "augment",
 						priority = 20,
-						text = var_34_16,
-						icon = var_34_19,
+						text = spellName,
+						icon = augmentationIcon,
 						tooltipFormat = bonus.tooltip
 					}, getBonusValueUpgrade(k.bonusID, k.gemID, true, true))
 				end
@@ -985,7 +985,7 @@ function getVesselBonus()
 
 	for _, v in pairs(defenses) do
 		if v.amount ~= 0 or v.bonusType ~= "defense" then
-			v.value = var_0_21(v.format, v.amount)
+			v.value = formatVesselBonusAmount(v.format, v.amount)
 
 			if v.tooltipFormat and v.tooltipFormat:find("%%") then
 				v.tooltip = tr(v.tooltipFormat, v.amount)
@@ -995,16 +995,16 @@ function getVesselBonus()
 		end
 	end
 
-	table.sort(bonuses, function(arg_36_0, arg_36_1)
-		if arg_36_0.priority ~= arg_36_1.priority then
-			return arg_36_0.priority < arg_36_1.priority
+	table.sort(bonuses, function(leftBonus, rightBonus)
+		if leftBonus.priority ~= rightBonus.priority then
+			return leftBonus.priority < rightBonus.priority
 		end
 
-		if arg_36_0.text ~= arg_36_1.text then
-			return arg_36_0.text < arg_36_1.text
+		if leftBonus.text ~= rightBonus.text then
+			return leftBonus.text < rightBonus.text
 		end
 
-		return (arg_36_0.icon or "") > (arg_36_1.icon or "")
+		return (leftBonus.icon or "") > (rightBonus.icon or "")
 	end)
 
 	for index, bonuse in ipairs(bonuses) do
@@ -1028,7 +1028,7 @@ function getVesselBonus()
 			priority = 0,
 			text = "Damage and Healing",
 			value = "+" .. DHcount,
-			tooltip = var_0_18
+			tooltip = VESSEL_RESONANCE_TOOLTIP
 		})
 	end
 
