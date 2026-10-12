@@ -479,6 +479,7 @@ void Application::registerLuaFunctions()
     g_lua.bindSingletonFunction("g_ui", "createWidget", &UIManager::createWidget, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "createWidgetFromOTML", &UIManager::createWidgetFromOTML, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getRootWidget", &UIManager::getRootWidget, &g_ui);
+    g_lua.bindSingletonFunction("g_ui", "getFocusedWidget", &UIManager::getFocusedWidget, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getDraggingWidget", &UIManager::getDraggingWidget, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "getPressedWidget", &UIManager::getPressedWidget, &g_ui);
     g_lua.bindSingletonFunction("g_ui", "setDebugBoxesDrawing", &UIManager::setDebugBoxesDrawing, &g_ui);

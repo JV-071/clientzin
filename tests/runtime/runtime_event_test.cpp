@@ -11,6 +11,7 @@
 #include "framework/core/eventdispatcher.h"
 #include "framework/graphics/texturemanager.h"
 #include "framework/ui/uiwidget.h"
+#include "framework/ui/uimanager.h"
 #include "client/protocolgame.h"
 #include "client/game.h"
 #include "client/gameconfig.h"
@@ -738,6 +739,52 @@ TEST_F(RuntimeEventTest, LuaKeybindKeepsItemSubtypesOutOfUseWithCallbacks)
     const auto module = g_resources.readFileContents("/modules/corelib/keybind.lua");
     const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/keybind_item_subtype_contract.lua");
     g_lua.loadFunction(module + "\n" + scenario, "@keybind-item-subtype-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}
+
+TEST_F(RuntimeEventTest, FocusedWidgetFollowsTheKeyboardReceiverAndFocusChain)
+{
+    DispatcherSession dispatcher;
+    ForegroundPool pool;
+    g_lua.registerClass<UIWidget>();
+    UIManager manager;
+    EXPECT_EQ(nullptr, manager.getFocusedWidget());
+
+    auto root = std::make_shared<UIWidget>();
+    auto panel = std::make_shared<UIWidget>();
+    auto edit = std::make_shared<UIWidget>();
+    root->addChild(panel);
+    panel->addChild(edit);
+    root->focusChild(panel, Fw::OtherFocusReason);
+    panel->focusChild(edit, Fw::OtherFocusReason);
+    manager.setKeyboardReceiver(root);
+    EXPECT_EQ(edit, manager.getFocusedWidget());
+
+    edit->setVisible(false);
+    EXPECT_EQ(panel, manager.getFocusedWidget());
+    edit->setVisible(true);
+    panel->focusChild(edit, Fw::OtherFocusReason);
+    edit->setEnabled(false);
+    EXPECT_EQ(panel, manager.getFocusedWidget());
+
+    auto modal = std::make_shared<UIWidget>();
+    auto modalEdit = std::make_shared<UIWidget>();
+    modal->addChild(modalEdit);
+    modal->focusChild(modalEdit, Fw::OtherFocusReason);
+    manager.setKeyboardReceiver(modal);
+    EXPECT_EQ(modalEdit, manager.getFocusedWidget());
+    modal->destroy();
+    EXPECT_EQ(nullptr, manager.getFocusedWidget());
+    root->destroy();
+}
+
+TEST_F(RuntimeEventTest, LuaModalTabNavigationRespectsNativeAndLegacyTextEdits)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/corelib/ui/uimodalmanager.lua");
+    const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/modal_text_focus_contract.lua");
+    g_lua.loadFunction("function connect() end\n" + module + "\n" + scenario, "@modal-text-focus-contract");
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_TRUE(g_lua.popBoolean());
 }

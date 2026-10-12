@@ -75,6 +75,21 @@ void UIManager::render(DrawPoolType drawPane) const
 
 void UIManager::resize(const Size& size) const { m_rootWidget->setSize(size); }
 
+UIWidgetPtr UIManager::getFocusedWidget() const
+{
+    auto widget = m_keyboardReceiver;
+    if (!widget || widget->isDestroyed())
+        return nullptr;
+
+    // Follow the same focused, visible and enabled path as keyboard propagation.
+    while (const auto child = widget->getFocusedChild()) {
+        if (child->isDestroyed() || !child->isExplicitlyVisible() || !child->isExplicitlyEnabled())
+            break;
+        widget = child;
+    }
+    return widget;
+}
+
 void UIManager::inputEvent(const InputEvent& event)
 {
     UIWidgetList widgetList;

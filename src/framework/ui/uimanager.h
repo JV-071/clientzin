@@ -68,6 +68,7 @@ public:
     void resetKeyboardReceiver() { m_keyboardReceiver = m_rootWidget; }
     UIWidgetPtr getMouseReceiver() { return m_mouseReceiver; }
     UIWidgetPtr getKeyboardReceiver() { return m_keyboardReceiver; }
+    UIWidgetPtr getFocusedWidget() const;
     UIWidgetPtr getDraggingWidget() { return m_draggingWidget; }
     UIWidgetPtr getHoveredWidget() { return m_hoveredWidget; }
     UIWidgetPtr getPressedWidget() { return m_pressedWidget; }

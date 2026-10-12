@@ -275,7 +275,8 @@ local function isTextEditWidget(widget)
 		return false
 	end
 
-	return widget:getClassName() == "UITextEditBox"
+	local className = widget:getClassName()
+	return className == "UITextEdit" or className == "UITextEditBox"
 end
 
 local function hasFocusedTextEdit(modalWidget)
