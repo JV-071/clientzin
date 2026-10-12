@@ -799,3 +799,13 @@ TEST_F(RuntimeEventTest, LuaCreatureButtonPreviewsUseAvailableNativeApis)
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_TRUE(g_lua.popBoolean());
 }
+
+TEST_F(RuntimeEventTest, LuaWheelInvestmentRespectsAvailablePointBudget)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/game_wheel/classes/wheel_input.lua");
+    const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/wheel_point_budget_contract.lua");
+    g_lua.loadFunction("WheelOfDestiny = {}\n" + module + "\n" + scenario, "@wheel-point-budget-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}

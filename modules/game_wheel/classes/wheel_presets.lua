@@ -1,4 +1,4 @@
-local var_0_0 = {
+local emptyPresetCodesByVocation = {
 	[0] = "",
 	"K0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 	"P0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -7,21 +7,21 @@ local var_0_0 = {
 	"M0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 }
 
-local function var_0_1(arg_1_0)
+local function isNewPresetNameAvailable(presetName)
 	for unusedValue, entry in pairs(WheelOfDestiny.internalPreset) do
-		if entry.presetName == arg_1_0 then
+		if entry.presetName == presetName then
 			return false
 		end
 	end
 
-	return #arg_1_0 > 1
+	return #presetName > 1
 end
 
-function WheelOfDestiny.showNewPreset(arg_2_0)
+function WheelOfDestiny.showNewPreset(useEmptyPreset)
 	hideWheelWindow()
 	newPresetWindow:show()
 
-	if not arg_2_0 then
+	if not useEmptyPreset then
 		selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.import)
 	else
 		selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.useEmpty)
@@ -32,31 +32,31 @@ function WheelOfDestiny.showNewPreset(arg_2_0)
 	newPresetWindow.contentPanel.copyPreset:setText(string.format("Copy preset '%s'", WheelOfDestiny.currentPreset.presetName))
 end
 
-function WheelOfDestiny.onImportConfig(arg_3_0)
-	if not arg_3_0 or arg_3_0 == "" then
+function WheelOfDestiny.onImportConfig(encodedPreset)
+	if not encodedPreset or encodedPreset == "" then
 		return {}
 	end
 
-	arg_3_0 = arg_3_0:gsub("-", "+"):gsub("_", "/")
+	encodedPreset = encodedPreset:gsub("-", "+"):gsub("_", "/")
 
-	local var_3_0 = #arg_3_0 % 4
+	local base64Remainder = #encodedPreset % 4
 
-	if var_3_0 > 0 then
-		arg_3_0 = arg_3_0 .. string.rep("=", 4 - var_3_0)
+	if base64Remainder > 0 then
+		encodedPreset = encodedPreset .. string.rep("=", 4 - base64Remainder)
 	end
 
-	if not base64.isValidBase64(arg_3_0) then
+	if not base64.isValidBase64(encodedPreset) then
 		return {}
 	end
 
-	local var_3_1 = base64.decode(arg_3_0)
-	local var_3_2 = string.unpack_custom("I2", var_3_1)
-	local var_3_3 = {}
-	local var_3_4 = {}
-	local var_3_5 = 3
-	local var_3_6 = 0
+	local decodedPreset = base64.decode(encodedPreset)
+	local maxPoints = string.unpack_custom("I2", decodedPreset)
+	local pointInvested = {}
+	local equippedGems = {}
+	local readOffset = 3
+	local usedPoints = 0
 	local points = WheelOfDestiny.points
-	local var_3_8 = {
+	local encodedSliceOrder = {
 		15,
 		14,
 		9,
@@ -94,64 +94,64 @@ function WheelOfDestiny.onImportConfig(arg_3_0)
 		25,
 		31
 	}
-	local var_3_9 = {}
+	local encodedSlicePoints = {}
 
-	while var_3_5 <= #var_3_1 do
-		local var_3_10 = string.unpack_custom("I1", var_3_1:sub(var_3_5, var_3_5))
+	while readOffset <= #decodedPreset do
+		local slicePoints = string.unpack_custom("I1", decodedPreset:sub(readOffset, readOffset))
 
-		if points and points < var_3_6 + var_3_10 then
-			var_3_10 = points - var_3_6
+		if points and points < usedPoints + slicePoints then
+			slicePoints = points - usedPoints
 
-			if var_3_10 < 0 then
-				var_3_10 = 0
+			if slicePoints < 0 then
+				slicePoints = 0
 			end
 		end
 
-		table.insert(var_3_9, var_3_10)
+		table.insert(encodedSlicePoints, slicePoints)
 
-		var_3_6 = var_3_6 + var_3_10
-		var_3_5 = var_3_5 + 1
+		usedPoints = usedPoints + slicePoints
+		readOffset = readOffset + 1
 
-		if var_3_5 >= 39 then
+		if readOffset >= 39 then
 			break
 		end
 	end
 
-	for iter_3_0 = 1, 36 do
-		var_3_3[iter_3_0] = 0
+	for sliceIndex = 1, 36 do
+		pointInvested[sliceIndex] = 0
 	end
 
-	for index, entry in ipairs(var_3_9) do
-		if var_3_8[index] then
-			var_3_3[var_3_8[index]] = entry
+	for index, entry in ipairs(encodedSlicePoints) do
+		if encodedSliceOrder[index] then
+			pointInvested[encodedSliceOrder[index]] = entry
 		end
 	end
 
-	while var_3_5 <= #var_3_1 do
-		local var_3_11 = string.unpack_custom("I1", var_3_1:sub(var_3_5, var_3_5))
+	while readOffset <= #decodedPreset do
+		local gemId = string.unpack_custom("I1", decodedPreset:sub(readOffset, readOffset))
 
-		if var_3_11 == 255 then
-			var_3_11 = -1
+		if gemId == 255 then
+			gemId = -1
 		end
 
-		table.insert(var_3_4, var_3_11)
+		table.insert(equippedGems, gemId)
 
-		var_3_5 = var_3_5 + 1
+		readOffset = readOffset + 1
 	end
 
-	while #var_3_4 < 4 do
-		table.insert(var_3_4, -1)
+	while #equippedGems < 4 do
+		table.insert(equippedGems, -1)
 	end
 
-	if var_3_2 < var_3_6 then
+	if maxPoints < usedPoints then
 		return {}
 	end
 
 	return {
-		maxPoints = var_3_2,
-		usedPoints = var_3_6,
-		pointInvested = var_3_3,
-		equipedGems = var_3_4
+		maxPoints = maxPoints,
+		usedPoints = usedPoints,
+		pointInvested = pointInvested,
+		equipedGems = equippedGems
 	}
 end
 
@@ -169,7 +169,7 @@ function WheelOfDestiny.onExportPreset()
 
 	hideWheelWindow()
 
-	local function var_5_0()
+	local function copyPresetCodeToClipboard()
 		if exportCodeWindow then
 			exportCodeWindow:destroy()
 
@@ -187,11 +187,11 @@ function WheelOfDestiny.onExportPreset()
 		return true
 	end
 
-	local function var_5_1()
+	local function acceptPlannerUrlSelection()
 		return true
 	end
 
-	local function var_5_2()
+	local function cancelPresetExport()
 		if exportCodeWindow then
 			exportCodeWindow:destroy()
 
@@ -206,96 +206,96 @@ function WheelOfDestiny.onExportPreset()
 	exportCodeWindow = displayGeneralBox("Copy to Clipboard", tr("Copy export code or URL of the planner to clipboard."), {
 		{
 			text = tr("Code"),
-			callback = var_5_0
+			callback = copyPresetCodeToClipboard
 		},
 		{
 			text = tr("URL"),
-			callback = var_5_1
+			callback = acceptPlannerUrlSelection
 		},
 		{
 			text = tr("Cancel"),
-			callback = var_5_2
+			callback = cancelPresetExport
 		}
 	})
 end
 
 function WheelOfDestiny.onExportConfig()
-	local var_9_0 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
-	local var_9_1 = WheelOfDestiny.pointInvested or {}
+	local totalAvailablePoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
+	local pointInvested = WheelOfDestiny.pointInvested or {}
 
 	if not WheelOfDestiny.equipedGems then
 		local unusedValue = {}
 	end
 
-	local var_9_3 = {}
-	local var_9_4 = string.pack_custom("I2", var_9_0)
+	local encodedChunks = {}
+	local packedAvailablePoints = string.pack_custom("I2", totalAvailablePoints)
 
-	if not var_9_4 or var_9_4 == "" then
+	if not packedAvailablePoints or packedAvailablePoints == "" then
 		return ""
 	end
 
-	table.insert(var_9_3, var_9_4)
+	table.insert(encodedChunks, packedAvailablePoints)
 
-	for unusedValue, entry in ipairs(var_9_1) do
-		local var_9_5 = string.pack_custom("I1", entry)
+	for unusedValue, entry in ipairs(pointInvested) do
+		local packedSlicePoints = string.pack_custom("I1", entry)
 
-		if var_9_5 and var_9_5 ~= "" then
-			table.insert(var_9_3, var_9_5)
+		if packedSlicePoints and packedSlicePoints ~= "" then
+			table.insert(encodedChunks, packedSlicePoints)
 		end
 	end
 
 	local gemStruct = WheelOfDestiny.getGemStruct()
-	local var_9_7 = {
+	local orderedGemDomains = {
 		GemDomains.GREEN,
 		GemDomains.RED,
 		GemDomains.ACQUA,
 		GemDomains.PURPLE
 	}
 
-	for unusedValue, entry in ipairs(var_9_7) do
-		local var_9_8 = gemStruct[entry]
-		local var_9_9 = var_9_8 and var_9_8.gemID or -1
-		local var_9_10 = string.pack_custom("I1", var_9_9 < 0 and 255 or var_9_9)
+	for unusedValue, entry in ipairs(orderedGemDomains) do
+		local gemEntry = gemStruct[entry]
+		local gemId = gemEntry and gemEntry.gemID or -1
+		local packedGemId = string.pack_custom("I1", gemId < 0 and 255 or gemId)
 
-		if var_9_10 and var_9_10 ~= "" then
-			table.insert(var_9_3, var_9_10)
+		if packedGemId and packedGemId ~= "" then
+			table.insert(encodedChunks, packedGemId)
 		end
 	end
 
-	local var_9_11 = table.concat(var_9_3)
+	local binaryPreset = table.concat(encodedChunks)
 
-	if not var_9_11 or var_9_11 == "" then
+	if not binaryPreset or binaryPreset == "" then
 		return ""
 	end
 
-	local var_9_12 = base64.encode(var_9_11)
-	local formattedText = string.format("%s%s", getVocationSt(WheelOfDestiny.vocationId), var_9_12)
+	local encodedPreset = base64.encode(binaryPreset)
+	local formattedText = string.format("%s%s", getVocationSt(WheelOfDestiny.vocationId), encodedPreset)
 
 	g_window.setClipboardText(formattedText)
 end
 
-function WheelOfDestiny.getExportCode(arg_10_0)
-	if not arg_10_0 or table.empty(arg_10_0) then
+function WheelOfDestiny.getExportCode(preset)
+	if not preset or table.empty(preset) then
 		return ""
 	end
 
-	local availablePoints = arg_10_0.availablePoints
-	local var_10_1 = arg_10_0.pointInvested or {}
+	local availablePoints = preset.availablePoints
+	local pointInvested = preset.pointInvested or {}
 
-	if not arg_10_0.equipedGems then
+	if not preset.equipedGems then
 		local unusedValue = {}
 	end
 
-	local var_10_3 = {}
-	local var_10_4 = string.pack_custom("I2", availablePoints)
+	local encodedChunks = {}
+	local packedAvailablePoints = string.pack_custom("I2", availablePoints)
 
-	if not var_10_4 or var_10_4 == "" then
+	if not packedAvailablePoints or packedAvailablePoints == "" then
 		return ""
 	end
 
-	table.insert(var_10_3, var_10_4)
+	table.insert(encodedChunks, packedAvailablePoints)
 
-	local var_10_5 = {
+	local encodedSliceOrder = {
 		15,
 		14,
 		9,
@@ -333,49 +333,49 @@ function WheelOfDestiny.getExportCode(arg_10_0)
 		25,
 		31
 	}
-	local var_10_6 = {}
+	local encodedSlicePoints = {}
 
-	for iter_10_0 = 1, 36 do
-		var_10_6[iter_10_0] = 0
+	for sliceIndex = 1, 36 do
+		encodedSlicePoints[sliceIndex] = 0
 	end
 
-	for index, entry in ipairs(var_10_5) do
-		var_10_6[index] = var_10_1[entry] or 0
+	for index, entry in ipairs(encodedSliceOrder) do
+		encodedSlicePoints[index] = pointInvested[entry] or 0
 	end
 
-	for unusedValue, entry in ipairs(var_10_6) do
-		local var_10_7 = string.pack_custom("I1", entry)
+	for unusedValue, entry in ipairs(encodedSlicePoints) do
+		local packedSlicePoints = string.pack_custom("I1", entry)
 
-		if var_10_7 and var_10_7 ~= "" then
-			table.insert(var_10_3, var_10_7)
+		if packedSlicePoints and packedSlicePoints ~= "" then
+			table.insert(encodedChunks, packedSlicePoints)
 		end
 	end
 
-	local gemStruct = WheelOfDestiny.getGemStruct(arg_10_0)
-	local var_10_9 = {
+	local gemStruct = WheelOfDestiny.getGemStruct(preset)
+	local orderedGemDomains = {
 		GemDomains.GREEN,
 		GemDomains.RED,
 		GemDomains.ACQUA,
 		GemDomains.PURPLE
 	}
 
-	for unusedValue, entry in ipairs(var_10_9) do
-		local var_10_10 = gemStruct[entry]
-		local var_10_11 = var_10_10 and var_10_10.gemID or -1
-		local var_10_12 = string.pack_custom("I1", var_10_11 < 0 and 255 or var_10_11)
+	for unusedValue, entry in ipairs(orderedGemDomains) do
+		local gemEntry = gemStruct[entry]
+		local gemId = gemEntry and gemEntry.gemID or -1
+		local packedGemId = string.pack_custom("I1", gemId < 0 and 255 or gemId)
 
-		if var_10_12 and var_10_12 ~= "" then
-			table.insert(var_10_3, var_10_12)
+		if packedGemId and packedGemId ~= "" then
+			table.insert(encodedChunks, packedGemId)
 		end
 	end
 
-	local var_10_13 = table.concat(var_10_3)
+	local binaryPreset = table.concat(encodedChunks)
 
-	if not var_10_13 or var_10_13 == "" then
+	if not binaryPreset or binaryPreset == "" then
 		return ""
 	end
 
-	local var_10_14 = base64.encode(var_10_13)
+	local encodedPreset = base64.encode(binaryPreset)
 	local localPlayer = g_game.getLocalPlayer()
 
 	if not localPlayer then
@@ -384,7 +384,7 @@ function WheelOfDestiny.getExportCode(arg_10_0)
 
 	local vocation = translateWheelVocation(localPlayer:getVocation())
 
-	return string.format("%s%s", getVocationSt(vocation), var_10_14)
+	return string.format("%s%s", getVocationSt(vocation), encodedPreset)
 end
 
 function WheelOfDestiny.onCancelConfig()
@@ -392,39 +392,39 @@ function WheelOfDestiny.onCancelConfig()
 	newPresetWindow:hide()
 end
 
-function WheelOfDestiny.validateImportCode(arg_12_0)
-	if not arg_12_0 or arg_12_0 == "" or #arg_12_0 < 3 then
+function WheelOfDestiny.validateImportCode(exportCode)
+	if not exportCode or exportCode == "" or #exportCode < 3 then
 		return "Export code does not match a valid Wheel of Destiny."
 	end
 
-	local var_12_0 = arg_12_0:sub(1, 2)
-	local var_12_1 = arg_12_0:sub(3)
+	local vocationPrefix = exportCode:sub(1, 2)
+	local encodedPreset = exportCode:sub(3)
 
-	if var_12_0 ~= getVocationSt(WheelOfDestiny.vocationId) then
+	if vocationPrefix ~= getVocationSt(WheelOfDestiny.vocationId) then
 		return "Export code does not match the character's vocation."
 	end
 
-	if not var_12_1 or var_12_1 == "" then
+	if not encodedPreset or encodedPreset == "" then
 		return "Export code does not match a valid Wheel of Destiny."
 	end
 
-	local var_12_2 = WheelOfDestiny.onImportConfig(var_12_1)
+	local importedPreset = WheelOfDestiny.onImportConfig(encodedPreset)
 
-	if not var_12_2 or table.empty(var_12_2) then
+	if not importedPreset or table.empty(importedPreset) then
 		return "Export code does not match a valid Wheel of Destiny."
 	end
 
 	return ""
 end
 
-function WheelOfDestiny.onEditCode(arg_13_0)
+function WheelOfDestiny.onEditCode(exportCode)
 	selectedNewPresetRadio:selectWidget(newPresetWindow.contentPanel.import)
 
-	local var_13_0 = WheelOfDestiny.validateImportCode(arg_13_0)
+	local validationError = WheelOfDestiny.validateImportCode(exportCode)
 
-	if not string.empty(var_13_0) then
+	if not string.empty(validationError) then
 		newPresetWindow.contentPanel.importTooltip:setVisible(true)
-		newPresetWindow.contentPanel.importTooltip:setTooltip(var_13_0)
+		newPresetWindow.contentPanel.importTooltip:setTooltip(validationError)
 		newPresetWindow.contentPanel.ok:setEnabled(false)
 
 		return
@@ -433,15 +433,15 @@ function WheelOfDestiny.onEditCode(arg_13_0)
 	newPresetWindow.contentPanel.importTooltip:setVisible(false)
 
 	local text = newPresetWindow.contentPanel.presetName:getText()
-	local enabled = var_0_1(text)
+	local enabled = isNewPresetNameAvailable(text)
 
 	newPresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
-function WheelOfDestiny.onEditName(arg_14_0)
-	newPresetWindow.contentPanel.presetNameTooltip:setVisible(not var_0_1(arg_14_0))
+function WheelOfDestiny.onEditName(presetName)
+	newPresetWindow.contentPanel.presetNameTooltip:setVisible(not isNewPresetNameAvailable(presetName))
 
-	local enabled = var_0_1(arg_14_0)
+	local enabled = isNewPresetNameAvailable(presetName)
 	local text = string.empty(WheelOfDestiny.validateImportCode(newPresetWindow.contentPanel.presetCode:getText()))
 
 	if selectedNewPresetRadio:getSelectedWidget() == newPresetWindow.contentPanel.import then
@@ -461,13 +461,13 @@ function WheelOfDestiny.onNewPresetSelectionChange()
 	end
 
 	local text = newPresetWindow.contentPanel.presetName:getText()
-	local enabled = var_0_1(text)
+	local enabled = isNewPresetNameAvailable(text)
 
 	if selectedWidget == newPresetWindow.contentPanel.import then
 		local text = newPresetWindow.contentPanel.presetCode:getText()
-		local var_15_4 = string.empty(WheelOfDestiny.validateImportCode(text))
+		local isImportCodeValid = string.empty(WheelOfDestiny.validateImportCode(text))
 
-		newPresetWindow.contentPanel.ok:setEnabled(enabled and var_15_4)
+		newPresetWindow.contentPanel.ok:setEnabled(enabled and isImportCodeValid)
 
 		return
 	end
@@ -484,43 +484,43 @@ function WheelOfDestiny.onConfirmCreatePreset()
 
 	local text = newPresetWindow.contentPanel.presetName:getText()
 
-	if not var_0_1(text) then
+	if not isNewPresetNameAvailable(text) then
 		return
 	end
 
-	local var_16_2
+	local newPreset
 
 	if selectedWidget == newPresetWindow.contentPanel.import then
-		local var_16_3 = newPresetWindow.contentPanel.presetCode:getText()
+		local exportCode = newPresetWindow.contentPanel.presetCode:getText()
 
-		if var_16_3:sub(1, 2) ~= getVocationSt(WheelOfDestiny.vocationId) then
+		if exportCode:sub(1, 2) ~= getVocationSt(WheelOfDestiny.vocationId) then
 			return
 		end
 
-		local var_16_4 = var_16_3:sub(3)
-		local var_16_5 = WheelOfDestiny.onImportConfig(var_16_4)
+		local encodedPreset = exportCode:sub(3)
+		local importedPreset = WheelOfDestiny.onImportConfig(encodedPreset)
 
-		if table.empty(var_16_5) then
+		if table.empty(importedPreset) then
 			return
 		end
 
-		var_16_2 = {
+		newPreset = {
 			presetName = text,
-			availablePoints = var_16_5.maxPoints,
-			usedPoints = var_16_5.usedPoints,
-			pointInvested = var_16_5.pointInvested,
-			equipedGems = var_16_5.equipedGems
+			availablePoints = importedPreset.maxPoints,
+			usedPoints = importedPreset.usedPoints,
+			pointInvested = importedPreset.pointInvested,
+			equipedGems = importedPreset.equipedGems
 		}
 	elseif selectedWidget == newPresetWindow.contentPanel.copyPreset then
-		var_16_2 = table.copy(WheelOfDestiny.currentPreset)
-		var_16_2.presetName = text
+		newPreset = table.copy(WheelOfDestiny.currentPreset)
+		newPreset.presetName = text
 	elseif selectedWidget == newPresetWindow.contentPanel.useEmpty then
-		local var_16_6 = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
+		local totalAvailablePoints = WheelOfDestiny.points + (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
-		var_16_2 = {
+		newPreset = {
 			usedPoints = 0,
 			presetName = text,
-			availablePoints = var_16_6,
+			availablePoints = totalAvailablePoints,
 			pointInvested = table.reserve(36, 0),
 			equipedGems = {
 				-1,
@@ -542,24 +542,24 @@ function WheelOfDestiny.onConfirmCreatePreset()
 	local supremeModsUpgrade = WheelOfDestiny.supremeModsUpgrade
 
 	if selectedWidget == newPresetWindow.contentPanel.import then
-		var_16_2.equipedGems = equipedGems
+		newPreset.equipedGems = equipedGems
 	end
 
-	WheelOfDestiny.createPreset(text, var_16_2)
+	WheelOfDestiny.createPreset(text, newPreset)
 	WheelOfDestiny.saveWheelPresets()
 
-	local pointInvested = table.copy(var_16_2.pointInvested)
-	local equipedGems = table.copy(var_16_2.equipedGems)
+	local pointInvested = table.copy(newPreset.pointInvested)
+	local equipedGems = table.copy(newPreset.equipedGems)
 
 	WheelOfDestiny.resetWheel(true)
 
 	WheelOfDestiny.currentPreset.pointInvested = pointInvested
 	WheelOfDestiny.currentPreset.equipedGems = equipedGems
 
-	local var_16_13 = WheelOfDestiny.levelPoints or WheelOfDestiny.points or 0
-	local unusedValue = var_16_2.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
+	local levelPoints = WheelOfDestiny.levelPoints or WheelOfDestiny.points or 0
+	local unusedValue = newPreset.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
-	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, var_16_13, WheelOfDestiny.scrollPoints, var_16_2.pointInvested, WheelOfDestiny.usedPromotionScrolls, var_16_2.equipedGems, atelierGems, basicModsUpgrade, supremeModsUpgrade)
+	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, levelPoints, WheelOfDestiny.scrollPoints, newPreset.pointInvested, WheelOfDestiny.usedPromotionScrolls, newPreset.equipedGems, atelierGems, basicModsUpgrade, supremeModsUpgrade)
 
 	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
 		GemAtelier.setupVesselPanel()
@@ -626,16 +626,16 @@ function WheelOfDestiny.onRenamePreset()
 	renamePresetWindow:grabKeyboard()
 end
 
-function WheelOfDestiny.onPresetNameChange(arg_22_0)
-	local enabled = var_0_1(arg_22_0)
-	local var_22_1 = selectedNewPresetRadio:getSelectedWidget()
+function WheelOfDestiny.onPresetNameChange(presetName)
+	local enabled = isNewPresetNameAvailable(presetName)
+	local selectedNewPresetWidget = selectedNewPresetRadio:getSelectedWidget()
 
 	renamePresetWindow.contentPanel.presetNameTooltip:setVisible(not enabled)
 	renamePresetWindow.contentPanel.ok:setEnabled(enabled)
 end
 
-function WheelOfDestiny.onConfirmRenamePreset(arg_23_0)
-	if arg_23_0 then
+function WheelOfDestiny.onConfirmRenamePreset(cancelRename)
+	if cancelRename then
 		renamePresetWindow:hide()
 		showWheelWindow()
 
@@ -644,7 +644,7 @@ function WheelOfDestiny.onConfirmRenamePreset(arg_23_0)
 
 	local text = renamePresetWindow.contentPanel.presetName:getText()
 
-	if not var_0_1(text) then
+	if not isNewPresetNameAvailable(text) then
 		return
 	end
 
@@ -665,7 +665,7 @@ function WheelOfDestiny.onDeletePreset()
 
 	hideWheelWindow()
 
-	local function var_24_0()
+	local function cancelPresetDeletion()
 		deletePresetWindow:destroy()
 
 		deletePresetWindow = nil
@@ -673,7 +673,7 @@ function WheelOfDestiny.onDeletePreset()
 		showWheelWindow()
 	end
 
-	local function var_24_1()
+	local function confirmPresetDeletion()
 		WheelOfDestiny.deletePreset()
 		showWheelWindow()
 		deletePresetWindow:destroy()
@@ -689,11 +689,11 @@ function WheelOfDestiny.onDeletePreset()
 	deletePresetWindow = displayGeneralBox("Delete Preset", formattedText, {
 		{
 			text = "Yes",
-			callback = var_24_1
+			callback = confirmPresetDeletion
 		},
 		{
 			text = "No",
-			callback = var_24_0
+			callback = cancelPresetDeletion
 		}
 	})
 end
@@ -712,26 +712,26 @@ function WheelOfDestiny.deletePreset()
 	WheelOfDestiny.currentPreset = WheelOfDestiny.internalPreset[1]
 end
 
-local var_0_2 = false
+local isConfiguringPresets = false
 
 function WheelOfDestiny.configurePresets()
-	if var_0_2 then
+	if isConfiguringPresets then
 		return
 	end
 
-	var_0_2 = true
+	isConfiguringPresets = true
 
-	local var_28_0, unusedValue = pcall(function()
+	local configuredSuccessfully, unusedValue = pcall(function()
 		local presetList = wheelWindow:recursiveGetChildById("presetList")
 
 		if not presetList then
-			var_0_2 = false
+			isConfiguringPresets = false
 
 			return
 		end
 
 		if not presetList:isVisible() then
-			var_0_2 = false
+			isConfiguringPresets = false
 
 			return
 		end
@@ -742,30 +742,30 @@ function WheelOfDestiny.configurePresets()
 
 		presetList:destroyChildren()
 
-		function presetList.onChildFocusChange(arg_30_0, arg_30_1, arg_30_2)
-			WheelOfDestiny.onPreparePresetClick(arg_30_0, arg_30_1, arg_30_2)
+		function presetList.onChildFocusChange(presetListWidget, focusedPresetWidget, previousPresetWidget)
+			WheelOfDestiny.onPreparePresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
 		end
 
 		if table.empty(WheelOfDestiny.internalPreset) then
-			var_0_2 = false
+			isConfiguringPresets = false
 
 			return
 		end
 
-		table.sort(WheelOfDestiny.internalPreset, function(arg_31_0, arg_31_1)
-			if not arg_31_0 or not arg_31_0.presetName then
+		table.sort(WheelOfDestiny.internalPreset, function(leftPreset, rightPreset)
+			if not leftPreset or not leftPreset.presetName then
 				return false
 			end
 
-			if not arg_31_1 or not arg_31_1.presetName then
+			if not rightPreset or not rightPreset.presetName then
 				return true
 			end
 
-			return arg_31_0.presetName:lower() < arg_31_1.presetName:lower()
+			return leftPreset.presetName:lower() < rightPreset.presetName:lower()
 		end)
 
 		for key, entry in pairs(WheelOfDestiny.internalPreset) do
-			local var_29_1, unusedValue = pcall(function()
+			local rowCreatedSuccessfully, unusedValue = pcall(function()
 				local presetLabelWidget = g_ui.createWidget("PresetLabel", presetList)
 
 				if not presetLabelWidget then
@@ -794,7 +794,7 @@ function WheelOfDestiny.configurePresets()
 				end
 			end)
 
-			if not var_29_1 then
+			if not rowCreatedSuccessfully then
 				-- block empty
 			end
 		end
@@ -806,28 +806,28 @@ function WheelOfDestiny.configurePresets()
 		end
 	end)
 
-	var_0_2 = false
+	isConfiguringPresets = false
 
-	if not var_28_0 then
+	if not configuredSuccessfully then
 		-- block empty
 	end
 end
 
-function WheelOfDestiny.onPreparePresetClick(arg_33_0, arg_33_1, arg_33_2)
-	if not arg_33_1 or not arg_33_1.presetData then
+function WheelOfDestiny.onPreparePresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
+	if not focusedPresetWidget or not focusedPresetWidget.presetData then
 		return
 	end
 
-	if not arg_33_2 or not arg_33_2.presetData then
-		WheelOfDestiny.onPresetClick(arg_33_0, arg_33_1, arg_33_2)
+	if not previousPresetWidget or not previousPresetWidget.presetData then
+		WheelOfDestiny.onPresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
 
 		return
 	end
 
-	local var_33_0 = arg_33_2.presetData.pointInvested or {}
+	local previousPresetPoints = previousPresetWidget.presetData.pointInvested or {}
 
-	if table.compare(var_33_0, WheelOfDestiny.pointInvested) then
-		WheelOfDestiny.onPresetClick(arg_33_0, arg_33_1, arg_33_2)
+	if table.compare(previousPresetPoints, WheelOfDestiny.pointInvested) then
+		WheelOfDestiny.onPresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
 
 		return
 	end
@@ -838,7 +838,7 @@ function WheelOfDestiny.onPreparePresetClick(arg_33_0, arg_33_1, arg_33_2)
 
 	hideWheelWindow()
 
-	local function var_33_1()
+	local function saveCurrentPresetChanges()
 		if checkSavePresetWindow then
 			checkSavePresetWindow:destroy()
 
@@ -852,7 +852,7 @@ function WheelOfDestiny.onPreparePresetClick(arg_33_0, arg_33_1, arg_33_2)
 		return true
 	end
 
-	local function var_33_2()
+	local function activatePresetWithoutSaving()
 		if checkSavePresetWindow then
 			checkSavePresetWindow:destroy()
 
@@ -860,7 +860,7 @@ function WheelOfDestiny.onPreparePresetClick(arg_33_0, arg_33_1, arg_33_2)
 		end
 
 		showWheelWindow()
-		WheelOfDestiny.onPresetClick(arg_33_0, arg_33_1, arg_33_2)
+		WheelOfDestiny.onPresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
 
 		return false
 	end
@@ -870,32 +870,32 @@ function WheelOfDestiny.onPreparePresetClick(arg_33_0, arg_33_1, arg_33_2)
 	checkSavePresetWindow = displayGeneralBox("Save?", formattedText, {
 		{
 			text = "Yes",
-			callback = var_33_1
+			callback = saveCurrentPresetChanges
 		},
 		{
 			text = "No",
-			callback = var_33_2
+			callback = activatePresetWithoutSaving
 		}
 	})
 end
 
-function WheelOfDestiny.onPresetClick(arg_36_0, arg_36_1, arg_36_2)
-	if not arg_36_1 then
+function WheelOfDestiny.onPresetClick(presetListWidget, focusedPresetWidget, previousPresetWidget)
+	if not focusedPresetWidget then
 		return
 	end
 
-	if not arg_36_1.presetData then
+	if not focusedPresetWidget.presetData then
 		return
 	end
 
-	local presetData = arg_36_1.presetData
+	local presetData = focusedPresetWidget.presetData
 
-	if arg_36_2 then
-		local childIndex = arg_36_0:getChildIndex(arg_36_2)
+	if previousPresetWidget then
+		local childIndex = presetListWidget:getChildIndex(previousPresetWidget)
 
-		arg_36_2:setBackgroundColor(childIndex % 2 == 0 and "#484848" or "#414141")
-		arg_36_2.name:setColor("#c0c0c0")
-		arg_36_2.points:setColor("#c0c0c0")
+		previousPresetWidget:setBackgroundColor(childIndex % 2 == 0 and "#484848" or "#414141")
+		previousPresetWidget.name:setColor("#c0c0c0")
+		previousPresetWidget.points:setColor("#c0c0c0")
 	end
 
 	local localPlayer = g_game.getLocalPlayer()
@@ -910,8 +910,8 @@ function WheelOfDestiny.onPresetClick(arg_36_0, arg_36_1, arg_36_2)
 		return
 	end
 
-	arg_36_1.name:setColor("#f4f4f4")
-	arg_36_1.points:setColor("#f4f4f4")
+	focusedPresetWidget.name:setColor("#f4f4f4")
+	focusedPresetWidget.points:setColor("#f4f4f4")
 
 	WheelOfDestiny.currentPreset = presetData
 
@@ -935,9 +935,9 @@ function WheelOfDestiny.onPresetClick(arg_36_0, arg_36_1, arg_36_2)
 	WheelOfDestiny.currentPreset.pointInvested = pointInvested
 	WheelOfDestiny.currentPreset.equipedGems = equipedGems
 
-	local var_36_7 = presetData.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
+	local presetLevelPoints = presetData.availablePoints - (WheelOfDestiny.extraGemPoints + WheelOfDestiny.scrollPoints)
 
-	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, var_36_7, WheelOfDestiny.scrollPoints, presetData.pointInvested, WheelOfDestiny.usedPromotionScrolls, presetData.equipedGems, WheelOfDestiny.atelierGems, WheelOfDestiny.basicModsUpgrade, WheelOfDestiny.supremeModsUpgrade)
+	WheelOfDestiny.create(WheelOfDestiny.playerId, WheelOfDestiny.canView, WheelOfDestiny.changeState, WheelOfDestiny.vocationId, presetLevelPoints, WheelOfDestiny.scrollPoints, presetData.pointInvested, WheelOfDestiny.usedPromotionScrolls, presetData.equipedGems, WheelOfDestiny.atelierGems, WheelOfDestiny.basicModsUpgrade, WheelOfDestiny.supremeModsUpgrade)
 
 	if GemAtelier and gemAtelierWindow and gemAtelierWindow:isVisible() and GemAtelier.setupVesselPanel then
 		GemAtelier.setupVesselPanel()
@@ -988,9 +988,9 @@ function WheelOfDestiny.updateCurrentPreset()
 	WheelOfDestiny.currentPreset.equipedGems = WheelOfDestiny.getLocalGemStruct()
 	WheelOfDestiny.currentPreset.usedPoints = WheelOfDestiny.usedPoints or 0
 
-	local var_40_0 = WheelOfDestiny.points or 0
+	local levelPoints = WheelOfDestiny.points or 0
 	local extraGemPoints = WheelOfDestiny.extraGemPoints or 0
-	local availablePoints = var_40_0 + (extraGemPoints + (WheelOfDestiny.scrollPoints or 0))
+	local availablePoints = levelPoints + (extraGemPoints + (WheelOfDestiny.scrollPoints or 0))
 
 	WheelOfDestiny.currentPreset.availablePoints = availablePoints
 	WheelOfDestiny.currentPreset.extraGemPoints = extraGemPoints
@@ -1012,8 +1012,8 @@ function WheelOfDestiny.checkApplyButton()
 		return
 	end
 
-	local var_41_0 = WheelOfDestiny.currentPreset.pointInvested or {}
-	local enabled = table.compare(var_41_0, WheelOfDestiny.pointInvested)
+	local savedPresetPoints = WheelOfDestiny.currentPreset.pointInvested or {}
+	local enabled = table.compare(savedPresetPoints, WheelOfDestiny.pointInvested)
 	local manage = wheelWindow:recursiveGetChildById("manage")
 
 	manage.applyPresetChanges:setEnabled(not enabled)
@@ -1041,18 +1041,18 @@ function WheelOfDestiny.loadWheelPresets()
 		presets = {
 			{
 				name = "Default-Preset",
-				exportString = var_0_0[vocation]
+				exportString = emptyPresetCodesByVocation[vocation]
 			}
 		}
 	}
 	local id = "/characterdata/" .. localPlayer:getId() .. "/wheelOfDestiny.json"
 
 	if g_resources.fileExists(id) then
-		local var_42_4, savedExternalPreset = pcall(function()
+		local decodedSuccessfully, savedExternalPreset = pcall(function()
 			return json.decode(g_resources.readFileContents(id))
 		end)
 
-		if not var_42_4 then
+		if not decodedSuccessfully then
 			WheelOfDestiny.externalPreset = externalPreset
 
 			WheelOfDestiny.generateInternalPreset()
@@ -1085,19 +1085,19 @@ function WheelOfDestiny.generateInternalPreset()
 
 	for key, preset in pairs(WheelOfDestiny.externalPreset.presets) do
 		local exportString = preset.exportString
-		local var_44_3 = exportString:sub(1, 2)
-		local var_44_4 = exportString:sub(3)
-		local var_44_5 = WheelOfDestiny.onImportConfig(var_44_4)
+		local vocationPrefix = exportString:sub(1, 2)
+		local encodedPreset = exportString:sub(3)
+		local importedPreset = WheelOfDestiny.onImportConfig(encodedPreset)
 
-		if table.empty(var_44_5) or var_44_3 ~= getVocationSt(vocation) then
+		if table.empty(importedPreset) or vocationPrefix ~= getVocationSt(vocation) then
 			table.remove(WheelOfDestiny.externalPreset.presets, key)
 		else
 			table.insert(WheelOfDestiny.internalPreset, {
 				presetName = preset.name,
-				availablePoints = var_44_5.maxPoints,
-				usedPoints = var_44_5.usedPoints,
-				pointInvested = var_44_5.pointInvested,
-				equipedGems = var_44_5.equipedGems
+				availablePoints = importedPreset.maxPoints,
+				usedPoints = importedPreset.usedPoints,
+				pointInvested = importedPreset.pointInvested,
+				equipedGems = importedPreset.equipedGems
 			})
 		end
 	end
@@ -1114,7 +1114,7 @@ function WheelOfDestiny.saveWheelPresets()
 		return false
 	end
 
-	local var_45_1 = {
+	local externalPreset = {
 		presets = {}
 	}
 
@@ -1122,11 +1122,11 @@ function WheelOfDestiny.saveWheelPresets()
 		local exportCode = WheelOfDestiny.getExportCode(entry)
 
 		if not string.empty(exportCode) and #exportCode < 10 then
-			exportCode = var_0_0[translateWheelVocation(localPlayer:getVocation())]
+			exportCode = emptyPresetCodesByVocation[translateWheelVocation(localPlayer:getVocation())]
 		end
 
 		if not string.empty(exportCode) then
-			table.insert(var_45_1.presets, {
+			table.insert(externalPreset.presets, {
 				exportString = exportCode,
 				name = entry.presetName
 			})
@@ -1140,19 +1140,19 @@ function WheelOfDestiny.saveWheelPresets()
 		local unusedValue = g_resources.makeDir(id)
 	end
 
-	local var_45_6, var_45_7 = pcall(function()
-		return json.encode(var_45_1, 2)
+	local encodedSuccessfully, serializedPresets = pcall(function()
+		return json.encode(externalPreset, 2)
 	end)
 
-	if not var_45_6 then
+	if not encodedSuccessfully then
 		return false
 	end
 
-	if var_45_7:len() > 104857600 then
+	if serializedPresets:len() > 104857600 then
 		return false
 	end
 
-	g_resources.writeFileContents(fileName, var_45_7)
+	g_resources.writeFileContents(fileName, serializedPresets)
 
 	return true
 end
