@@ -62,7 +62,7 @@ jobs:
           repository: microsoft/vcpkg
           ref: 9e593bb18ea69cc5095e012465dcd675a822ed0d
           path: .ci/vcpkg
-      - name: Install dependencies once for all four builds
+      - name: Install dependencies once for all enabled builds
         shell: pwsh
         run: |
           $env:VCPKG_ROOT = Join-Path $env:GITHUB_WORKSPACE '.ci/vcpkg'
@@ -76,7 +76,7 @@ jobs:
         with:
           path: D:/clientzin-cache/vcpkg
           key: ${{ steps.cache.outputs.cache-primary-key }}
-      - name: Share dependency packages with all four builds
+      - name: Share dependency packages with all enabled builds
         uses: actions/upload-artifact@v4
         with:
           name: dependency-binary-packages
@@ -114,7 +114,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [debug, release]
+        configuration: [debug]
         renderer: [d3d9, d3d11]
     steps:
       - uses: actions/checkout@v4

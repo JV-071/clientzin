@@ -784,7 +784,18 @@ TEST_F(RuntimeEventTest, LuaModalTabNavigationRespectsNativeAndLegacyTextEdits)
     ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
     const auto module = g_resources.readFileContents("/modules/corelib/ui/uimodalmanager.lua");
     const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/modal_text_focus_contract.lua");
-    g_lua.loadFunction("function connect() end\n" + module + "\n" + scenario, "@modal-text-focus-contract");
+    g_lua.loadFunction("connect = function() end\n" + module + "\n" + scenario, "@modal-text-focus-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}
+
+TEST_F(RuntimeEventTest, LuaCreatureButtonPreviewsUseAvailableNativeApis)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/gamelib/ui/uicreaturebutton.lua");
+    const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/creature_button_preview_api_contract.lua");
+    g_lua.loadFunction("UIWidget = {}; function extends() return {} end\n" + module + "\n" + scenario,
+                       "@creature-button-preview-api-contract");
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_TRUE(g_lua.popBoolean());
 }

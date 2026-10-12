@@ -263,12 +263,29 @@ function UICreatureButton.updateOutfitPreview(self, outfit)
 
 	creature:setCenter(true)
 	creature:setCenterByBoundingBox(true)
-	creature:setFitVisibleBounds(true)
-	creature:setFixedCreatureSize(true)
+	if creature.setFitVisibleBounds then
+		creature:setFitVisibleBounds(true)
+	elseif creature.setAutoFit then
+		creature:setAutoFit(true)
+	end
+
+	if creature.setFixedCreatureSize then
+		creature:setFixedCreatureSize(true)
+	end
+
 	creature:setCreatureSize(0)
-	creature:setBaseScale(false)
-	creature:setIgnoreDisplacementShift(false)
-	creature:setCreatureSmooth(false)
+
+	if creature.setBaseScale then
+		creature:setBaseScale(false)
+	end
+
+	if creature.setIgnoreDisplacementShift then
+		creature:setIgnoreDisplacementShift(false)
+	end
+
+	if creature.setCreatureSmooth then
+		creature:setCreatureSmooth(false)
+	end
 end
 
 function UICreatureButton.setup(self, targetCreature, onlyOutfit)

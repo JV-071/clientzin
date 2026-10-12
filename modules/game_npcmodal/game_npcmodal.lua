@@ -54,10 +54,10 @@ local npcTradeSelectedEntry
 local npcTradeLookThing
 local npcTradeCurrentUnitPrice = 0
 local npcTradeQuantity = 0
-local var_0_48 = 0
-local var_0_49
-local var_0_50 = false
-local var_0_51 = 0
+local savedNpcTradeScrollValue = 0
+local npcTradeListViewKey
+local npcTradeScrollRestorePending = false
+local npcTradeListGeneration = 0
 local sellAllModal
 local sellAllButton
 
@@ -66,7 +66,7 @@ sellAllIgnoredItems = {}
 
 local FilterText2 = ""
 local FilterText3 = ""
-local var_0_56
+local selectedSellAllRow
 
 local function isSameNpcTradeItem(itemA, itemB)
 	if not itemA or not itemB then
@@ -182,7 +182,7 @@ local function formatNumberWithCommas(n)
 	return t
 end
 
-local function var_0_63()
+local function isNpcTradeGoldCurrency()
 	return npcTradeCurrencyId == nil or npcTradeCurrencyId == GOLD_COIN_ITEM_ID
 end
 
@@ -193,7 +193,7 @@ local function getNpcTradeBalance()
 		return 0
 	end
 
-	if var_0_63() then
+	if isNpcTradeGoldCurrency() then
 		return player:getTotalMoney() or 0
 	end
 
@@ -212,7 +212,7 @@ local function getNpcTradeBalance()
 	return balance
 end
 
-local function var_0_65()
+local function updateSellAllGoldBalance()
 	if not sellAllModal or sellAllModal:isDestroyed() then
 		return
 	end
@@ -291,13 +291,13 @@ local function getSellablePlayerItemCount(itemId)
 		return total
 	end
 
-	local var_17_1 = total - (getEquippedItemCounts()[itemId] or 0)
+	local unequippedItemCount = total - (getEquippedItemCounts()[itemId] or 0)
 
-	if var_17_1 < 0 then
-		var_17_1 = 0
+	if unequippedItemCount < 0 then
+		unequippedItemCount = 0
 	end
 
-	return var_17_1
+	return unequippedItemCount
 end
 
 local function saveNpcModalSettings()
@@ -591,24 +591,24 @@ local function loadSellAllIgnoreList()
 	end
 end
 
-local var_0_75
-local var_0_76
-local var_0_77
+local refreshNpcTradeItems
+local refreshNpcTradeQuantity
+local quantityRevalidationEvent
 
 local function revalidateNpcTradeQuantity()
-	if var_0_77 then
+	if quantityRevalidationEvent then
 		return
 	end
 
-	var_0_77 = addEvent(function()
-		var_0_77 = nil
+	quantityRevalidationEvent = addEvent(function()
+		quantityRevalidationEvent = nil
 
 		if not npcModalTrade or not mainNpcModal or mainNpcModal:isDestroyed() then
 			return
 		end
 
-		var_0_75()
-		var_0_76()
+		refreshNpcTradeItems()
+		refreshNpcTradeQuantity()
 	end)
 end
 
@@ -621,7 +621,7 @@ local function onNpcModalFreeCapacityChange(item, oldItem)
 		return
 	end
 
-	var_0_76()
+	refreshNpcTradeQuantity()
 end
 
 local function onNpcModalInventoryChange(unusedArgument, unusedArgument, unusedArgument, unusedArgument)
@@ -636,7 +636,7 @@ local function onNpcModalInventoryChange(unusedArgument, unusedArgument, unusedA
 	revalidateNpcTradeQuantity()
 	refreshSellAllButtonVisibility()
 
-	if not var_0_63() and npcTradeCurrencyId ~= 0 then
+	if not isNpcTradeGoldCurrency() and npcTradeCurrencyId ~= 0 then
 		updateNpcTradePlayerBalanceLabel()
 	end
 end
@@ -648,7 +648,7 @@ local function onNpcModalContainerChange()
 
 	refreshSellAllButtonVisibility()
 
-	if not var_0_63() and npcTradeCurrencyId ~= 0 then
+	if not isNpcTradeGoldCurrency() and npcTradeCurrencyId ~= 0 then
 		updateNpcTradePlayerBalanceLabel()
 	end
 end
@@ -804,7 +804,7 @@ local function clearNpcTradeQuantity()
 	end
 end
 
-local function applyNpcTradeQuantity(n, arg_51_1)
+local function applyNpcTradeQuantity(n, allowExcessBuyQuantity)
 	if not countScrollBar or not userInput or countScrollBar:isDestroyed() or userInput:isDestroyed() or not npcModalTrade then
 		return
 	end
@@ -819,7 +819,7 @@ local function applyNpcTradeQuantity(n, arg_51_1)
 	local minV, maxV = computeNpcTradeQuantityRange()
 
 	if minV == 0 and maxV == 0 then
-		if not arg_51_1 or not buyButton or not buyButton:isOn() then
+		if not allowExcessBuyQuantity or not buyButton or not buyButton:isOn() then
 			clearNpcTradeQuantity()
 			updateNpcTradePriceLabel(0)
 
@@ -832,7 +832,7 @@ local function applyNpcTradeQuantity(n, arg_51_1)
 
 	n = math.floor(tonumber(n) or 1)
 
-	if arg_51_1 and buyButton and buyButton:isOn() then
+	if allowExcessBuyQuantity and buyButton and buyButton:isOn() then
 		maxV = math.max(maxV, n)
 	end
 
@@ -847,7 +847,7 @@ local function applyNpcTradeQuantity(n, arg_51_1)
 	npcTradeQuantity = n
 end
 
-function var_0_76()
+function refreshNpcTradeQuantity()
 	if not userInput or userInput:isDestroyed() then
 		return
 	end
@@ -863,7 +863,7 @@ function var_0_76()
 	applyNpcTradeQuantity(text, buyButton and buyButton:isOn())
 end
 
-local function var_0_93()
+local function refreshNpcTradeCurrencyLabels()
 	if not mainNpcModal or mainNpcModal:isDestroyed() or not npcModalTrade then
 		return
 	end
@@ -875,7 +875,7 @@ local function var_0_93()
 	end
 
 	if label5 and not label5:isDestroyed() then
-		if var_0_63() then
+		if isNpcTradeGoldCurrency() then
 			label5:setText(tr("Gold:"))
 		else
 			label5:setText(tr("Stock:"))
@@ -885,7 +885,7 @@ local function var_0_93()
 	playerBalance:setText(tr("%s", formatNumberWithCommas(getNpcTradeBalance())))
 
 	if isNpcTradeQuantityAvailable() then
-		var_0_76()
+		refreshNpcTradeQuantity()
 	end
 end
 
@@ -894,7 +894,7 @@ local function refreshNpcTradeCurrencyState()
 		return
 	end
 
-	var_0_93()
+	refreshNpcTradeCurrencyLabels()
 	revalidateNpcTradeQuantity()
 end
 
@@ -942,10 +942,10 @@ local function onNpcModalResourcesBalanceChange(unusedArgument, unusedArgument, 
 	end
 
 	if resourceType == ResourceTypes.BANK_BALANCE or resourceType == ResourceTypes.GOLD_EQUIPPED then
-		var_0_65()
+		updateSellAllGoldBalance()
 	end
 
-	if var_0_63() then
+	if isNpcTradeGoldCurrency() then
 		if resourceType ~= ResourceTypes.BANK_BALANCE and resourceType ~= ResourceTypes.GOLD_EQUIPPED then
 			return
 		end
@@ -993,7 +993,7 @@ local function clearNpcTradeItem2Preview()
 	clearNpcTradeQuantity()
 end
 
-local function applyNpcTradeItem2Preview(entry, price, arg_61_2)
+local function applyNpcTradeItem2Preview(entry, price, preserveQuantity)
 	if not entry or not entry.item:getId() or entry.item:getId() == 0 then
 		clearNpcTradeItem2Preview()
 
@@ -1025,9 +1025,9 @@ local function applyNpcTradeItem2Preview(entry, price, arg_61_2)
 
 		applyNpcTradeQuantity(maxV > 0 and maxV or 1)
 	else
-		local var_61_3 = arg_61_2 and npcTradeQuantity or 1
+		local selectedQuantity = preserveQuantity and npcTradeQuantity or 1
 
-		applyNpcTradeQuantity(var_61_3, arg_61_2)
+		applyNpcTradeQuantity(selectedQuantity, preserveQuantity)
 	end
 end
 
@@ -1092,41 +1092,41 @@ local function showTradeWindowChildrens()
 end
 
 local function refreshNpcTradeItemList()
-	var_0_48 = 0
-	var_0_49 = nil
-	var_0_50 = false
-	var_0_51 = var_0_51 + 1
+	savedNpcTradeScrollValue = 0
+	npcTradeListViewKey = nil
+	npcTradeScrollRestorePending = false
+	npcTradeListGeneration = npcTradeListGeneration + 1
 end
 
-function var_0_75()
+function refreshNpcTradeItems()
 	local panel = itemsSelling:getChildById("npcTradeItemsPanel")
 	local npcTradeItemsScrollBar = itemsSelling:getChildById("npcTradeItemsScrollBar")
 	local buying = buyButton:isOn()
-	local var_66_3 = "name"
+	local sortField = "name"
 
 	if sortByPrice then
-		var_66_3 = "price"
+		sortField = "price"
 	elseif sortByWeight then
-		var_66_3 = "weight"
+		sortField = "weight"
 	end
 
-	local var_66_4 = (buying and "buy" or "sell") .. "|" .. var_66_3 .. "|" .. (npcTradeFilterText or "")
+	local listViewKey = (buying and "buy" or "sell") .. "|" .. sortField .. "|" .. (npcTradeFilterText or "")
 
-	if npcTradeItemsScrollBar and not npcTradeItemsScrollBar:isDestroyed() and not var_0_50 then
-		var_0_48 = npcTradeItemsScrollBar:getValue()
+	if npcTradeItemsScrollBar and not npcTradeItemsScrollBar:isDestroyed() and not npcTradeScrollRestorePending then
+		savedNpcTradeScrollValue = npcTradeItemsScrollBar:getValue()
 	end
 
-	if var_66_4 ~= var_0_49 then
-		var_0_48 = npcTradeItemsScrollBar and not npcTradeItemsScrollBar:isDestroyed() and npcTradeItemsScrollBar:getMinimum() or 0
-		var_0_49 = var_66_4
+	if listViewKey ~= npcTradeListViewKey then
+		savedNpcTradeScrollValue = npcTradeItemsScrollBar and not npcTradeItemsScrollBar:isDestroyed() and npcTradeItemsScrollBar:getMinimum() or 0
+		npcTradeListViewKey = listViewKey
 	end
 
-	local var_66_5 = var_0_48
+	local scrollValueToRestore = savedNpcTradeScrollValue
 
-	var_0_50 = true
-	var_0_51 = var_0_51 + 1
+	npcTradeScrollRestorePending = true
+	npcTradeListGeneration = npcTradeListGeneration + 1
 
-	local var_66_6 = var_0_51
+	local listGeneration = npcTradeListGeneration
 
 	if panel then
 		panel:destroyChildren()
@@ -1307,11 +1307,11 @@ function var_0_75()
 
 	setNpcTradeRowHighlight(panel, selectedBox)
 	addEvent(function()
-		if var_66_6 ~= var_0_51 then
+		if listGeneration ~= npcTradeListGeneration then
 			return
 		end
 
-		var_0_50 = false
+		npcTradeScrollRestorePending = false
 
 		if not itemsSelling or itemsSelling:isDestroyed() then
 			return
@@ -1330,17 +1330,17 @@ function var_0_75()
 
 		local minimum = sb:getMinimum()
 		local maximum = sb:getMaximum()
-		local var_72_4 = var_66_5
+		local clampedScrollValue = scrollValueToRestore
 
-		if var_72_4 < minimum then
-			var_72_4 = minimum
-		elseif maximum < var_72_4 then
-			var_72_4 = maximum
+		if clampedScrollValue < minimum then
+			clampedScrollValue = minimum
+		elseif maximum < clampedScrollValue then
+			clampedScrollValue = maximum
 		end
 
-		sb:setValue(var_72_4)
+		sb:setValue(clampedScrollValue)
 
-		var_0_48 = sb:getValue()
+		savedNpcTradeScrollValue = sb:getValue()
 	end)
 end
 
@@ -1364,7 +1364,7 @@ function search(text, type)
 	if type == 1 then
 		npcTradeFilterText = text
 
-		var_0_75()
+		refreshNpcTradeItems()
 	elseif type == 2 then
 		FilterText2 = text
 
@@ -1388,7 +1388,7 @@ function clearTradeSearch(type)
 
 		npcTradeFilterText = ""
 
-		var_0_75()
+		refreshNpcTradeItems()
 	elseif type == 2 then
 		if sellAllModal then
 			local w = sellAllModal:recursiveGetChildById("search2")
@@ -1420,14 +1420,14 @@ function onNpcTradeBuyClick()
 	buyButton:setOn(true)
 	sellButton:setOn(false)
 	BuySellButton:setText(tr("Buy"))
-	var_0_75()
+	refreshNpcTradeItems()
 end
 
 function onNpcTradeSellClick()
 	sellButton:setOn(true)
 	buyButton:setOn(false)
 	BuySellButton:setText(tr("Sell"))
-	var_0_75()
+	refreshNpcTradeItems()
 end
 
 function onConfirmTrade()
@@ -1482,7 +1482,7 @@ function onConfirmTrade()
 			end
 		end
 
-		var_0_76()
+		refreshNpcTradeQuantity()
 	end
 end
 
@@ -1732,9 +1732,9 @@ function init()
 	npcNameLabel:hide()
 
 	function mainNpcModal.onFocusChange(widget, focused)
-		local var_90_0 = modules.game_console and modules.game_console.isChatEnabled and not modules.game_console.isChatEnabled()
+		local isChatDisabled = modules.game_console and modules.game_console.isChatEnabled and not modules.game_console.isChatEnabled()
 
-		if focused or var_90_0 then
+		if focused or isChatDisabled then
 			setWindowOpacity(1)
 		else
 			setWindowOpacity(0.9)
@@ -2090,7 +2090,7 @@ function sendNpcTrade(items, currencyId)
 	end
 
 	refreshNpcTradeItemList()
-	var_0_75()
+	refreshNpcTradeItems()
 	showTradeWindow()
 	refreshNpcTradeCurrencyState()
 	addEvent(function()
@@ -2199,7 +2199,7 @@ local function handleSorts(param)
 		sortByWeight = true
 	end
 
-	var_0_75()
+	refreshNpcTradeItems()
 end
 
 function showMenuFilters(showLook)
@@ -2246,14 +2246,14 @@ function showMenuFilters(showLook)
 	menu:addCheckBox(tr("Ignore capacity"), ignoreCapacity, function()
 		ignoreCapacity = not ignoreCapacity
 
-		var_0_76()
+		refreshNpcTradeQuantity()
 	end)
 	menu:addSeparator()
 	menu:addCheckBox(tr("Sell equipped"), sellEquipped, function()
 		sellEquipped = not sellEquipped
 
-		var_0_75()
-		var_0_76()
+		refreshNpcTradeItems()
+		refreshNpcTradeQuantity()
 	end)
 	menu:addSeparator()
 	menu:addCheckBox(tr("Show search field"), showSearchField, function()
@@ -2266,7 +2266,7 @@ function showMenuFilters(showLook)
 	setWindowOpacity(1)
 end
 
-local function createSellAllItemBox(panel)
+local function getSellAllItemName(panel)
 	local thingType = g_things.getThingType(panel, ThingCategoryItem)
 
 	if not thingType then
@@ -2282,85 +2282,85 @@ local function createSellAllItemBox(panel)
 	return capitalizeWords(name)
 end
 
-local function var_0_112()
+local function getSellPricesByItemId()
 	local tempSellAllItems = {}
 
 	for itemId, amount in ipairs(SellNpcTradeItems or {}) do
 		local id = amount.item and amount.item:getId() or 0
-		local var_115_2 = math.floor(tonumber(amount.sellPrice) or 0)
+		local unitSellPrice = math.floor(tonumber(amount.sellPrice) or 0)
 
-		if id > 0 and var_115_2 > 0 and not tempSellAllItems[id] then
-			tempSellAllItems[id] = var_115_2
+		if id > 0 and unitSellPrice > 0 and not tempSellAllItems[id] then
+			tempSellAllItems[id] = unitSellPrice
 		end
 	end
 
 	return tempSellAllItems
 end
 
-local function var_0_113()
-	if var_0_56 and not var_0_56:isDestroyed() then
-		local selectionBorder = var_0_56:recursiveGetChildById("selectionBorder")
+local function clearSellAllRowSelection()
+	if selectedSellAllRow and not selectedSellAllRow:isDestroyed() then
+		local selectionBorder = selectedSellAllRow:recursiveGetChildById("selectionBorder")
 
 		if selectionBorder then
 			selectionBorder:hide()
 		end
 	end
 
-	var_0_56 = nil
+	selectedSellAllRow = nil
 end
 
-local function var_0_114(arg_117_0)
-	if not arg_117_0 or arg_117_0:isDestroyed() or arg_117_0 == var_0_56 then
+local function selectSellAllRow(rowWidget)
+	if not rowWidget or rowWidget:isDestroyed() or rowWidget == selectedSellAllRow then
 		return
 	end
 
-	var_0_113()
+	clearSellAllRowSelection()
 
-	local selectionBorder = arg_117_0:recursiveGetChildById("selectionBorder")
+	local selectionBorder = rowWidget:recursiveGetChildById("selectionBorder")
 
 	if selectionBorder then
 		selectionBorder:show()
 	end
 
-	var_0_56 = arg_117_0
+	selectedSellAllRow = rowWidget
 end
 
-local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPanelKind, text, arg_118_5)
+local function createSellAllRow(parentWidget, sellAllItemId, sellAllAmount, sellAllPanelKind, text, unitPrice)
 	if not parentWidget or not sellAllItemId then
 		return
 	end
 
 	local styleName = sellAllPanelKind == "sell" and "SellAllItemRow" or "SellAllIgnoredRow"
-	local var_118_1 = g_ui.createWidget(styleName, parentWidget)
+	local rowWidget = g_ui.createWidget(styleName, parentWidget)
 
-	var_118_1.sellAllItemId = sellAllItemId
-	var_118_1.sellAllAmount = sellAllAmount
-	var_118_1.sellAllPanelKind = sellAllPanelKind
+	rowWidget.sellAllItemId = sellAllItemId
+	rowWidget.sellAllAmount = sellAllAmount
+	rowWidget.sellAllPanelKind = sellAllPanelKind
 
-	local rowBackground = var_118_1:recursiveGetChildById("rowBackground")
+	local rowBackground = rowWidget:recursiveGetChildById("rowBackground")
 
 	if rowBackground then
-		local var_118_3 = {
+		local rowBackgroundColors = {
 			"#484848",
 			"#414141"
 		}
 		local childCount = math.max(1, parentWidget:getChildCount())
 
-		rowBackground:setBackgroundColor(var_118_3[(childCount - 1) % #var_118_3 + 1])
+		rowBackground:setBackgroundColor(rowBackgroundColors[(childCount - 1) % #rowBackgroundColors + 1])
 	end
 
-	local hoverOverlay = var_118_1:recursiveGetChildById("hoverOverlay")
+	local hoverOverlay = rowWidget:recursiveGetChildById("hoverOverlay")
 
 	if hoverOverlay then
-		function var_118_1.onHoverChange(unusedArgument, visible)
+		function rowWidget.onHoverChange(unusedArgument, visible)
 			hoverOverlay:setVisible(visible)
 		end
 	end
 
-	local itemsell = var_118_1:recursiveGetChildById("itemsell")
+	local itemsell = rowWidget:recursiveGetChildById("itemsell")
 
 	if not itemsell then
-		var_118_1:destroy()
+		rowWidget:destroy()
 
 		return
 	end
@@ -2369,105 +2369,105 @@ local function var_0_115(parentWidget, sellAllItemId, sellAllAmount, sellAllPane
 	itemsell:setItemCount(math.max(1, math.floor(tonumber(sellAllAmount) or 1)))
 	itemsell:setShowCount(false)
 
-	local itemName = var_118_1:recursiveGetChildById("itemName")
+	local itemName = rowWidget:recursiveGetChildById("itemName")
 
 	if itemName then
 		itemName:setText(text)
 	end
 
-	local itemDetails = var_118_1:recursiveGetChildById("itemDetails")
-	local var_118_9
+	local itemDetails = rowWidget:recursiveGetChildById("itemDetails")
+	local rowTooltip
 
 	if sellAllPanelKind == "sell" then
-		local var_118_10 = math.max(0, math.floor(tonumber(sellAllAmount) or 0))
-		local var_118_11 = math.max(0, math.floor(tonumber(arg_118_5) or 0))
-		local var_118_12 = var_118_10 * var_118_11
+		local itemAmount = math.max(0, math.floor(tonumber(sellAllAmount) or 0))
+		local normalizedUnitPrice = math.max(0, math.floor(tonumber(unitPrice) or 0))
+		local totalPrice = itemAmount * normalizedUnitPrice
 
 		if itemDetails then
-			if var_118_11 > 0 then
-				itemDetails:setText(tr("%s x %s gold", formatNumberWithCommas(var_118_10), formatNumberWithCommas(var_118_11)))
+			if normalizedUnitPrice > 0 then
+				itemDetails:setText(tr("%s x %s gold", formatNumberWithCommas(itemAmount), formatNumberWithCommas(normalizedUnitPrice)))
 			else
-				itemDetails:setText(tr("%s items", formatNumberWithCommas(var_118_10)))
+				itemDetails:setText(tr("%s items", formatNumberWithCommas(itemAmount)))
 			end
 		end
 
-		local totalValue = var_118_1:recursiveGetChildById("totalValue")
+		local totalValue = rowWidget:recursiveGetChildById("totalValue")
 
 		if totalValue then
-			totalValue:setText(var_118_11 > 0 and formatNumberWithCommas(var_118_12) or "-")
+			totalValue:setText(normalizedUnitPrice > 0 and formatNumberWithCommas(totalPrice) or "-")
 		end
 
-		var_118_9 = tr("%s\nRight-click for options. Double-click to ignore this item.", text)
+		rowTooltip = tr("%s\nRight-click for options. Double-click to ignore this item.", text)
 
 		local function handleDoubleClick()
-			if not var_118_1.sellAllItemId then
+			if not rowWidget.sellAllItemId then
 				return false
 			end
 
-			return setSellAllItemIgnored(var_118_1.sellAllItemId, true)
+			return setSellAllItemIgnored(rowWidget.sellAllItemId, true)
 		end
 
-		var_118_1.onDoubleClick = handleDoubleClick
+		rowWidget.onDoubleClick = handleDoubleClick
 		itemsell.onDoubleClick = handleDoubleClick
 	elseif sellAllPanelKind == "ignore" then
 		if itemDetails then
 			itemDetails:setText(tr("Double-click to restore"))
 		end
 
-		var_118_9 = tr("%s\nRight-click for options. Double-click to include this item in the sale.", text)
+		rowTooltip = tr("%s\nRight-click for options. Double-click to include this item in the sale.", text)
 
 		local function handleDoubleClick()
-			if not var_118_1.sellAllItemId then
+			if not rowWidget.sellAllItemId then
 				return false
 			end
 
-			return setSellAllItemIgnored(var_118_1.sellAllItemId, false)
+			return setSellAllItemIgnored(rowWidget.sellAllItemId, false)
 		end
 
-		var_118_1.onDoubleClick = handleDoubleClick
+		rowWidget.onDoubleClick = handleDoubleClick
 		itemsell.onDoubleClick = handleDoubleClick
 	end
 
-	function var_118_1.onMouseRelease(unusedArgument, arg_122_1, arg_122_2)
-		if arg_122_2 == MouseLeftButton then
-			var_0_114(var_118_1)
+	function rowWidget.onMouseRelease(unusedArgument, mousePosition, mouseButton)
+		if mouseButton == MouseLeftButton then
+			selectSellAllRow(rowWidget)
 
 			return false
 		end
 
-		if arg_122_2 ~= MouseRightButton then
+		if mouseButton ~= MouseRightButton then
 			return false
 		end
 
-		var_0_114(var_118_1)
+		selectSellAllRow(rowWidget)
 
 		local gamePopupMenuWidget = g_ui.createWidget("GamePopupMenu")
 
 		gamePopupMenuWidget:setGameMenu(true)
 		gamePopupMenuWidget:setWidth(155)
 
-		if var_118_1.sellAllPanelKind == "sell" then
+		if rowWidget.sellAllPanelKind == "sell" then
 			gamePopupMenuWidget:addOption(tr("Add to Ignore Sell"), function()
-				if var_118_1 and not var_118_1:isDestroyed() and var_118_1.sellAllItemId then
-					setSellAllItemIgnored(var_118_1.sellAllItemId, true)
+				if rowWidget and not rowWidget:isDestroyed() and rowWidget.sellAllItemId then
+					setSellAllItemIgnored(rowWidget.sellAllItemId, true)
 				end
 			end)
 		else
 			gamePopupMenuWidget:addOption(tr("Remove from Ignore Sell"), function()
-				if var_118_1 and not var_118_1:isDestroyed() and var_118_1.sellAllItemId then
-					setSellAllItemIgnored(var_118_1.sellAllItemId, false)
+				if rowWidget and not rowWidget:isDestroyed() and rowWidget.sellAllItemId then
+					setSellAllItemIgnored(rowWidget.sellAllItemId, false)
 				end
 			end)
 		end
 
-		gamePopupMenuWidget:display(arg_122_1)
+		gamePopupMenuWidget:display(mousePosition)
 
 		return true
 	end
 
-	if var_118_9 then
-		var_118_1:setTooltip(var_118_9)
-		itemsell:setTooltip(var_118_9)
+	if rowTooltip then
+		rowWidget:setTooltip(rowTooltip)
+		itemsell:setTooltip(rowTooltip)
 	end
 end
 
@@ -2477,14 +2477,14 @@ function isSellAllItemIgnored(numericValue)
 	return numericValue ~= nil and sellAllIgnoredItems[numericValue] == true
 end
 
-function setSellAllItemIgnored(numericValue, arg_126_1)
+function setSellAllItemIgnored(numericValue, isIgnored)
 	numericValue = tonumber(numericValue)
 
 	if not numericValue then
 		return false
 	end
 
-	if arg_126_1 then
+	if isIgnored then
 		sellAllIgnoredItems[numericValue] = true
 	else
 		sellAllIgnoredItems[numericValue] = false
@@ -2493,7 +2493,7 @@ function setSellAllItemIgnored(numericValue, arg_126_1)
 	saveSellAllIgnoreList()
 
 	if sellAllModal and not sellAllModal:isDestroyed() and sellAllModal:isVisible() then
-		var_0_113()
+		clearSellAllRowSelection()
 		addEvent(function()
 			refreshSellAllModalLists()
 		end)
@@ -2514,24 +2514,24 @@ function refreshSellAllModalLists()
 		return
 	end
 
-	var_0_113()
+	clearSellAllRowSelection()
 	npcSellItemsPanel:destroyChildren()
 	npcIgnoreItemsPanel:destroyChildren()
 
-	local var_128_2 = var_0_112()
-	local var_128_3 = {}
+	local sellPricesByItemId = getSellPricesByItemId()
+	local saleEntries = {}
 	local tempSellAllItems = {}
 
 	for itemId, _ in pairs(lootPouchItems) do
 		if sellAllIgnoredItems[itemId] == nil or sellAllIgnoredItems[itemId] == false then
-			local var_128_5 = math.max(0, math.floor(tonumber(_) or 0))
+			local itemAmount = math.max(0, math.floor(tonumber(_) or 0))
 
-			if var_128_5 > 0 then
-				table.insert(var_128_3, {
+			if itemAmount > 0 then
+				table.insert(saleEntries, {
 					itemId = itemId,
-					amount = var_128_5,
-					itemName = createSellAllItemBox(itemId),
-					unitPrice = var_128_2[itemId] or 0
+					amount = itemAmount,
+					itemName = getSellAllItemName(itemId),
+					unitPrice = sellPricesByItemId[itemId] or 0
 				})
 			end
 		end
@@ -2541,62 +2541,62 @@ function refreshSellAllModalLists()
 		if sellAllIgnoredItem == true then
 			table.insert(tempSellAllItems, {
 				itemId = key,
-				itemName = createSellAllItemBox(key)
+				itemName = getSellAllItemName(key)
 			})
 		end
 	end
 
-	local function var_128_6(arg_129_0, arg_129_1)
-		local var_129_0 = arg_129_0.itemName:lower()
-		local var_129_1 = arg_129_1.itemName:lower()
+	local function compareSellAllEntries(leftEntry, rightEntry)
+		local lowercaseLeftName = leftEntry.itemName:lower()
+		local lowercaseRightName = rightEntry.itemName:lower()
 
-		if var_129_0 ~= var_129_1 then
-			return var_129_0 < var_129_1
+		if lowercaseLeftName ~= lowercaseRightName then
+			return lowercaseLeftName < lowercaseRightName
 		end
 
-		return arg_129_0.itemId < arg_129_1.itemId
+		return leftEntry.itemId < rightEntry.itemId
 	end
 
-	table.sort(var_128_3, var_128_6)
-	table.sort(tempSellAllItems, var_128_6)
+	table.sort(saleEntries, compareSellAllEntries)
+	table.sort(tempSellAllItems, compareSellAllEntries)
 
-	local var_128_7 = 0
-	local var_128_8 = 0
+	local totalSaleValue = 0
+	local unknownPriceItemCount = 0
 
-	for unusedValue, entry in ipairs(var_128_3) do
+	for unusedValue, entry in ipairs(saleEntries) do
 		if entry.unitPrice > 0 then
-			var_128_7 = var_128_7 + entry.amount * entry.unitPrice
+			totalSaleValue = totalSaleValue + entry.amount * entry.unitPrice
 		else
-			var_128_8 = var_128_8 + 1
+			unknownPriceItemCount = unknownPriceItemCount + 1
 		end
 	end
 
 	local textValue = tostring(FilterText2 or ""):lower()
-	local var_128_10 = 0
+	local visibleSaleRowCount = 0
 
-	for unusedValue, entry in ipairs(var_128_3) do
+	for unusedValue, entry in ipairs(saleEntries) do
 		if textValue == "" or entry.itemName:lower():find(textValue, 1, true) then
-			var_0_115(npcSellItemsPanel, entry.itemId, entry.amount, "sell", entry.itemName, entry.unitPrice)
+			createSellAllRow(npcSellItemsPanel, entry.itemId, entry.amount, "sell", entry.itemName, entry.unitPrice)
 
-			var_128_10 = var_128_10 + 1
+			visibleSaleRowCount = visibleSaleRowCount + 1
 		end
 	end
 
 	local textValue = tostring(FilterText3 or ""):lower()
-	local var_128_12 = 0
+	local visibleIgnoredRowCount = 0
 
 	for unusedValue, tempSellAllItem in ipairs(tempSellAllItems) do
 		if textValue == "" or tempSellAllItem.itemName:lower():find(textValue, 1, true) then
-			var_0_115(npcIgnoreItemsPanel, tempSellAllItem.itemId, 0, "ignore", tempSellAllItem.itemName, 0)
+			createSellAllRow(npcIgnoreItemsPanel, tempSellAllItem.itemId, 0, "ignore", tempSellAllItem.itemName, 0)
 
-			var_128_12 = var_128_12 + 1
+			visibleIgnoredRowCount = visibleIgnoredRowCount + 1
 		end
 	end
 
 	local mainPanel1 = sellAllModal:recursiveGetChildById("mainPanel1")
 
 	if mainPanel1 then
-		mainPanel1:setText(tr("Items to Sell (%d)", #var_128_3))
+		mainPanel1:setText(tr("Items to Sell (%d)", #saleEntries))
 	end
 
 	local mainPanel2 = sellAllModal:recursiveGetChildById("mainPanel2")
@@ -2608,29 +2608,29 @@ function refreshSellAllModalLists()
 	local sellItemsEmpty = sellAllModal:recursiveGetChildById("sellItemsEmpty")
 
 	if sellItemsEmpty then
-		sellItemsEmpty:setText(#var_128_3 == 0 and tr("No items available.") or tr("No matching items."))
-		sellItemsEmpty:setVisible(var_128_10 == 0)
+		sellItemsEmpty:setText(#saleEntries == 0 and tr("No items available.") or tr("No matching items."))
+		sellItemsEmpty:setVisible(visibleSaleRowCount == 0)
 	end
 
 	local ignoreItemsEmpty = sellAllModal:recursiveGetChildById("ignoreItemsEmpty")
 
 	if ignoreItemsEmpty then
 		ignoreItemsEmpty:setText(#tempSellAllItems == 0 and tr("No ignored items.") or tr("No matching items."))
-		ignoreItemsEmpty:setVisible(var_128_12 == 0)
+		ignoreItemsEmpty:setVisible(visibleIgnoredRowCount == 0)
 	end
 
-	var_0_65()
+	updateSellAllGoldBalance()
 
 	local saleValue = sellAllModal:recursiveGetChildById("saleValue")
 
 	if saleValue then
-		saleValue:setText(var_128_8 == 0 and formatNumberWithCommas(var_128_7) or "-")
+		saleValue:setText(unknownPriceItemCount == 0 and formatNumberWithCommas(totalSaleValue) or "-")
 	end
 
 	local confirmSellAllButton = sellAllModal:recursiveGetChildById("confirmSellAllButton")
 
 	if confirmSellAllButton then
-		confirmSellAllButton:setEnabled(#var_128_3 > 0)
+		confirmSellAllButton:setEnabled(#saleEntries > 0)
 	end
 end
 
