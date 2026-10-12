@@ -29,7 +29,7 @@ jobs:
             const groups = new Map();
             for (const cache of caches) {
               const match = cache.key.match(/^(compiler-clientzin-v1-(?:debug|release)-d3d(?:9|11)-[0-9.]+)-[0-9]+-[0-9]+$/);
-              const keep = 2;
+              const keep = 1;
               if (!match || !Number.isSafeInteger(cache.id) || cache.id <= 0) continue;
               const key = `${cache.ref}:${match[1]}:${keep}`;
               if (!groups.has(key)) groups.set(key, { keep, caches: [] });
@@ -48,4 +48,4 @@ jobs:
                 }
               }
             }
-            await core.summary.addRaw(`Removed ${removed} older generated snapshots (${bytes} bytes). Retained two compiler snapshots per configuration, renderer and ref. Dependency caches and other cache keys were preserved.`).write();
+            await core.summary.addRaw(`Removed ${removed} older generated snapshots (${bytes} bytes). Retained one compiler snapshot per configuration, renderer and ref. Dependency caches and other cache keys were preserved.`).write();
