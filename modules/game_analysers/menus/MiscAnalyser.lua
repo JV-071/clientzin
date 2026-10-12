@@ -22,8 +22,8 @@ if not MiscAnalyser then
 end
 
 local imageSourcePath = "/modules/game_cyclopedia/images/charms/monster-bonus-effects"
-local var_0_1 = "/modules/game_analysers/images/misc-analyser-icons"
-local var_0_2 = {
+local MISC_ANALYSER_ICON_SHEET = "/modules/game_analysers/images/misc-analyser-icons"
+local CHARM_ICON_INDICES = {
 	numb = 10,
 	["adrenaline burst"] = 9,
 	dodge = 8,
@@ -50,64 +50,64 @@ local var_0_2 = {
 	bless = 12,
 	cleanse = 11
 }
-local var_0_3 = {
+local CRITICAL_HIT_CHARMS = {
 	["savage blow"] = true,
 	["low blow"] = true
 }
-local var_0_4 = {
+local CHARM_DISPLAY_NAMES = {
 	["adrenaline burst"] = "Adrenaline"
 }
-local var_0_5 = 15
-local var_0_6 = 28
-local var_0_7 = {
+local ROW_HEIGHT = 15
+local ROW_WITH_DETAIL_HEIGHT = 28
+local METRIC_ROW_DEFINITIONS = {
 	{
 		id = "critical",
 		list = "imbuementList",
 		clip = "0 0 12 12",
 		name = "Critical Hit",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "manaGain",
 		list = "imbuementList",
 		clip = "12 0 12 12",
 		name = "Mana Gain",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "lifeGain",
 		list = "imbuementList",
 		clip = "24 0 12 12",
 		name = "Life Gain",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "onslaught",
 		list = "upgradeList",
 		clip = "36 0 12 12",
 		name = "Onslaught",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "ruse",
 		list = "upgradeList",
 		clip = "48 0 12 12",
 		name = "Ruse",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "momentum",
 		list = "upgradeList",
 		clip = "60 0 12 12",
 		name = "Momentum",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		id = "transcendence",
 		list = "upgradeList",
 		clip = "72 0 12 12",
 		name = "Transcendence",
-		icon = var_0_1
+		icon = MISC_ANALYSER_ICON_SHEET
 	},
 	{
 		name = "Critical Rate",
@@ -136,160 +136,160 @@ local var_0_7 = {
 	}
 }
 
-local function var_0_8(arg_1_0)
-	arg_1_0 = math.floor(tonumber(arg_1_0) or 0)
+local function formatCompactAmount(amount)
+	amount = math.floor(tonumber(amount) or 0)
 
-	if arg_1_0 < 10000 then
-		return formatMoney(arg_1_0, ",")
+	if amount < 10000 then
+		return formatMoney(amount, ",")
 	end
 
-	local var_1_0 = arg_1_0 / 1000
-	local var_1_1 = "k"
+	local scaledAmount = amount / 1000
+	local suffix = "k"
 
-	if arg_1_0 >= 1000000 then
-		var_1_0, var_1_1 = arg_1_0 / 1000000, "M"
+	if amount >= 1000000 then
+		scaledAmount, suffix = amount / 1000000, "M"
 	end
 
-	if var_1_0 >= 100 then
-		return math.floor(var_1_0) .. var_1_1
+	if scaledAmount >= 100 then
+		return math.floor(scaledAmount) .. suffix
 	end
 
-	return string.format(var_1_0 >= 10 and "%.1f" or "%.2f", var_1_0):gsub("0+$", ""):gsub("%.$", "") .. var_1_1
+	return string.format(scaledAmount >= 10 and "%.1f" or "%.2f", scaledAmount):gsub("0+$", ""):gsub("%.$", "") .. suffix
 end
 
-local function var_0_9(arg_2_0, arg_2_1)
-	if not arg_2_1 or arg_2_1 <= 0 then
+local function formatPercentage(part, total)
+	if not total or total <= 0 then
 		return "0%"
 	end
 
-	local var_2_0 = arg_2_0 * 100 / arg_2_1
+	local percentage = part * 100 / total
 
-	if var_2_0 >= 10 then
-		return string.format("%d%%", math.floor(var_2_0 + 0.5))
+	if percentage >= 10 then
+		return string.format("%d%%", math.floor(percentage + 0.5))
 	end
 
-	return string.format("%.1f%%", var_2_0)
+	return string.format("%.1f%%", percentage)
 end
 
-local function var_0_10(arg_3_0)
-	return arg_3_0 == 1 and "1 proc" or string.format("%d procs", arg_3_0)
+local function formatProcCount(count)
+	return count == 1 and "1 proc" or string.format("%d procs", count)
 end
 
-local function var_0_11(arg_4_0)
-	return (arg_4_0:gsub("(%a)([%w']*)", function(arg_5_0, arg_5_1)
-		return arg_5_0:upper() .. arg_5_1
+local function titleCaseCharmName(name)
+	return (name:gsub("(%a)([%w']*)", function(firstLetter, wordRemainder)
+		return firstLetter:upper() .. wordRemainder
 	end))
 end
 
-local function var_0_12()
+local function formatSessionDuration()
 	if not AnalyserSession:isActive() then
 		return "00:00h"
 	end
 
-	local var_6_0 = math.max(1, AnalyserSession:durationSeconds())
+	local durationSeconds = math.max(1, AnalyserSession:durationSeconds())
 
-	return string.format("%02d:%02dh", math.floor(var_6_0 / 3600), math.floor(var_6_0 % 3600 / 60))
+	return string.format("%02d:%02dh", math.floor(durationSeconds / 3600), math.floor(durationSeconds % 3600 / 60))
 end
 
-local var_0_13 = {
-	critical = function(arg_7_0)
-		return tostring(arg_7_0.crits), tr("%d critical hits (attacks, spells and runes)\nDamage: %s\nAverage: %s", arg_7_0.crits, formatMoney(arg_7_0.critDamage, ","), formatMoney(math.floor(arg_7_0.critDamage / math.max(1, arg_7_0.crits)), ",")), var_0_8(arg_7_0.critDamage)
+local METRIC_FORMATTERS = {
+	critical = function(stats)
+		return tostring(stats.crits), tr("%d critical hits (attacks, spells and runes)\nDamage: %s\nAverage: %s", stats.crits, formatMoney(stats.critDamage, ","), formatMoney(math.floor(stats.critDamage / math.max(1, stats.crits)), ",")), formatCompactAmount(stats.critDamage)
 	end,
-	manaGain = function(arg_8_0)
-		return var_0_8(arg_8_0.manaGain), tr("Mana gained from leech: %s", formatMoney(arg_8_0.manaGain, ","))
+	manaGain = function(stats)
+		return formatCompactAmount(stats.manaGain), tr("Mana gained from leech: %s", formatMoney(stats.manaGain, ","))
 	end,
-	lifeGain = function(arg_9_0)
-		return var_0_8(arg_9_0.lifeGain), tr("Hit points gained from leech: %s", formatMoney(arg_9_0.lifeGain, ","))
+	lifeGain = function(stats)
+		return formatCompactAmount(stats.lifeGain), tr("Hit points gained from leech: %s", formatMoney(stats.lifeGain, ","))
 	end,
-	onslaught = function(arg_10_0)
-		local var_10_0 = tr("%d Onslaught hits\nDamage: %s", arg_10_0.onslaught, formatMoney(arg_10_0.onslaughtDamage, ","))
+	onslaught = function(stats)
+		local tooltip = tr("%d Onslaught hits\nDamage: %s", stats.onslaught, formatMoney(stats.onslaughtDamage, ","))
 
-		if arg_10_0.amplifiedOnslaught > 0 then
-			var_10_0 = var_10_0 .. "\n" .. tr("Amplified: %d", arg_10_0.amplifiedOnslaught)
+		if stats.amplifiedOnslaught > 0 then
+			tooltip = tooltip .. "\n" .. tr("Amplified: %d", stats.amplifiedOnslaught)
 		end
 
-		return tostring(arg_10_0.onslaught), var_10_0, var_0_8(arg_10_0.onslaughtDamage)
+		return tostring(stats.onslaught), tooltip, formatCompactAmount(stats.onslaughtDamage)
 	end,
-	ruse = function(arg_11_0)
-		return tostring(arg_11_0.ruse), tr("Attacks dodged: %d (Ruse and Wheel of Destiny dodge)", arg_11_0.ruse)
+	ruse = function(stats)
+		return tostring(stats.ruse), tr("Attacks dodged: %d (Ruse and Wheel of Destiny dodge)", stats.ruse)
 	end,
-	momentum = function(arg_12_0)
-		return tostring(arg_12_0.momentum), tr("Momentum triggers: %d (-2s on spell cooldowns each)", arg_12_0.momentum)
+	momentum = function(stats)
+		return tostring(stats.momentum), tr("Momentum triggers: %d (-2s on spell cooldowns each)", stats.momentum)
 	end,
-	transcendence = function(arg_13_0)
-		return tostring(arg_13_0.transcendence), tr("Transcendence triggers: %d", arg_13_0.transcendence)
+	transcendence = function(stats)
+		return tostring(stats.transcendence), tr("Transcendence triggers: %d", stats.transcendence)
 	end,
-	critRate = function(arg_14_0)
-		return var_0_9(arg_14_0.crits, arg_14_0.hits), tr("%d of %d hits were critical", arg_14_0.crits, arg_14_0.hits)
+	critRate = function(stats)
+		return formatPercentage(stats.crits, stats.hits), tr("%d of %d hits were critical", stats.crits, stats.hits)
 	end,
-	charmShare = function(arg_15_0)
-		return var_0_9(arg_15_0.charmDamage, arg_15_0.damage), tr("%s of %s damage came from charms", formatMoney(arg_15_0.charmDamage, ","), formatMoney(arg_15_0.damage, ","))
+	charmShare = function(stats)
+		return formatPercentage(stats.charmDamage, stats.damage), tr("%s of %s damage came from charms", formatMoney(stats.charmDamage, ","), formatMoney(stats.damage, ","))
 	end,
-	lifeGainHour = function(unusedArgument, arg_16_1)
-		return var_0_8(arg_16_1), tr("Hit points gained from leech per hour: %s", formatMoney(arg_16_1, ","))
+	lifeGainHour = function(unusedArgument, lifeGainPerHour)
+		return formatCompactAmount(lifeGainPerHour), tr("Hit points gained from leech per hour: %s", formatMoney(lifeGainPerHour, ","))
 	end,
-	manaGainHour = function(unusedArgument, arg_17_1)
-		return var_0_8(arg_17_1), tr("Mana gained from leech per hour: %s", formatMoney(arg_17_1, ","))
+	manaGainHour = function(unusedArgument, manaGainPerHour)
+		return formatCompactAmount(manaGainPerHour), tr("Mana gained from leech per hour: %s", formatMoney(manaGainPerHour, ","))
 	end,
-	sustain = function(arg_18_0)
-		return var_0_9(arg_18_0.lifeGain, arg_18_0.damageReceived), tr("Life Gain covered this share of the damage you took\nLife Gain: %s\nDamage taken: %s", formatMoney(arg_18_0.lifeGain, ","), formatMoney(arg_18_0.damageReceived, ","))
+	sustain = function(stats)
+		return formatPercentage(stats.lifeGain, stats.damageReceived), tr("Life Gain covered this share of the damage you took\nLife Gain: %s\nDamage taken: %s", formatMoney(stats.lifeGain, ","), formatMoney(stats.damageReceived, ","))
 	end
 }
 
-local function build(arg_19_0)
-	local var_19_0 = tr("%s charm: %s", arg_19_0.name, var_0_10(arg_19_0.count))
+local function build(charmStats)
+	local tooltip = tr("%s charm: %s", charmStats.name, formatProcCount(charmStats.count))
 
-	if arg_19_0.damage > 0 then
-		var_19_0 = var_19_0 .. "\n" .. tr("Damage: %s\nAverage: %s", formatMoney(arg_19_0.damage, ","), formatMoney(math.floor(arg_19_0.damage / math.max(1, arg_19_0.count)), ","))
+	if charmStats.damage > 0 then
+		tooltip = tooltip .. "\n" .. tr("Damage: %s\nAverage: %s", formatMoney(charmStats.damage, ","), formatMoney(math.floor(charmStats.damage / math.max(1, charmStats.count)), ","))
 
-		return tostring(arg_19_0.count), var_19_0, var_0_8(arg_19_0.damage)
+		return tostring(charmStats.count), tooltip, formatCompactAmount(charmStats.damage)
 	end
 
-	if var_0_3[arg_19_0.key] then
-		var_19_0 = var_19_0 .. "\n" .. tr("Critical hits against the charmed creature.")
+	if CRITICAL_HIT_CHARMS[charmStats.key] then
+		tooltip = tooltip .. "\n" .. tr("Critical hits against the charmed creature.")
 	end
 
-	return tostring(arg_19_0.count), var_19_0
+	return tostring(charmStats.count), tooltip
 end
 
-local function var_0_15(arg_20_0, text)
+local function updateRowDetail(rowWidget, text)
 	local hasDetail = text ~= nil
 
-	if arg_20_0.hasDetail ~= hasDetail then
-		arg_20_0.hasDetail = hasDetail
+	if rowWidget.hasDetail ~= hasDetail then
+		rowWidget.hasDetail = hasDetail
 
-		arg_20_0.detailName:setVisible(hasDetail)
-		arg_20_0.detailValue:setVisible(hasDetail)
-		arg_20_0:setHeight(hasDetail and var_0_6 or var_0_5)
+		rowWidget.detailName:setVisible(hasDetail)
+		rowWidget.detailValue:setVisible(hasDetail)
+		rowWidget:setHeight(hasDetail and ROW_WITH_DETAIL_HEIGHT or ROW_HEIGHT)
 	end
 
 	if hasDetail then
-		arg_20_0.detailValue:setText(text)
+		rowWidget.detailValue:setText(text)
 	end
 end
 
-local function var_0_16(arg_21_0, visible, arg_21_2, arg_21_3, arg_21_4)
-	arg_21_0:setVisible(visible)
+local function updateMetricRow(rowWidget, visible, primaryValue, secondaryValue, stats)
+	rowWidget:setVisible(visible)
 
 	if not visible then
 		return false
 	end
 
-	if arg_21_0.shownA ~= arg_21_2 or arg_21_0.shownB ~= arg_21_3 then
-		arg_21_0.shownA, arg_21_0.shownB = arg_21_2, arg_21_3
+	if rowWidget.shownA ~= primaryValue or rowWidget.shownB ~= secondaryValue then
+		rowWidget.shownA, rowWidget.shownB = primaryValue, secondaryValue
 
-		local text, var_21_1, var_21_2 = arg_21_0.build(arg_21_4 or MiscAnalyser, arg_21_2, arg_21_3)
+		local text, tooltip, detailText = rowWidget.build(stats or MiscAnalyser, primaryValue, secondaryValue)
 
-		arg_21_0.value:setText(text)
-		arg_21_0:setTooltip(var_21_1)
-		var_0_15(arg_21_0, var_21_2)
+		rowWidget.value:setText(text)
+		rowWidget:setTooltip(tooltip)
+		updateRowDetail(rowWidget, detailText)
 	end
 
 	return true
 end
 
-local function var_0_17(arg_22_0)
-	arg_22_0.shownA, arg_22_0.shownB = nil
+local function invalidateRowValues(rowWidget)
+	rowWidget.shownA, rowWidget.shownB = nil
 end
 
 function MiscAnalyser.create(unusedArgument)
@@ -300,22 +300,22 @@ function MiscAnalyser.create(unusedArgument)
 
 	local contentsPanel = MiscAnalyser.window.contentsPanel
 
-	for unusedValue, entry in ipairs(var_0_7) do
-		local var_23_1 = contentsPanel[entry.list][entry.id]
+	for unusedValue, entry in ipairs(METRIC_ROW_DEFINITIONS) do
+		local rowWidget = contentsPanel[entry.list][entry.id]
 
-		var_23_1.name:setText(tr(entry.name))
+		rowWidget.name:setText(tr(entry.name))
 
-		var_23_1.build = var_0_13[entry.id]
+		rowWidget.build = METRIC_FORMATTERS[entry.id]
 
 		if entry.icon then
-			var_23_1.icon:setImageSource(entry.icon)
+			rowWidget.icon:setImageSource(entry.icon)
 
 			if entry.clip then
-				var_23_1.icon:setImageClip(entry.clip)
+				rowWidget.icon:setImageClip(entry.clip)
 			end
 		end
 
-		var_23_1:setVisible(false)
+		rowWidget:setVisible(false)
 	end
 end
 
@@ -343,186 +343,186 @@ function MiscAnalyser.reset(unusedArgument)
 
 	for unusedValue, charmRow in pairs(MiscAnalyser.charmRows) do
 		charmRow:setVisible(false)
-		var_0_17(charmRow)
+		invalidateRowValues(charmRow)
 	end
 
 	local contentsPanel = MiscAnalyser.window.contentsPanel
 
-	for unusedValue, entry in ipairs(var_0_7) do
-		var_0_17(contentsPanel[entry.list][entry.id])
+	for unusedValue, entry in ipairs(METRIC_ROW_DEFINITIONS) do
+		invalidateRowValues(contentsPanel[entry.list][entry.id])
 	end
 
 	MiscAnalyser:updateWindow(true)
 end
 
-local var_0_18 = 1000
+local UNKNOWN_CHARM_SORT_INDEX = 1000
 
-local function var_0_19(arg_26_0, arg_26_1)
-	local var_26_0 = var_0_2[arg_26_0.key] or var_0_18
-	local var_26_1 = var_0_2[arg_26_1.key] or var_0_18
+local function compareCharmOrder(leftCharm, rightCharm)
+	local leftSortIndex = CHARM_ICON_INDICES[leftCharm.key] or UNKNOWN_CHARM_SORT_INDEX
+	local rightSortIndex = CHARM_ICON_INDICES[rightCharm.key] or UNKNOWN_CHARM_SORT_INDEX
 
-	if var_26_0 ~= var_26_1 then
-		return var_26_0 < var_26_1
+	if leftSortIndex ~= rightSortIndex then
+		return leftSortIndex < rightSortIndex
 	end
 
-	return arg_26_0.name < arg_26_1.name
+	return leftCharm.name < rightCharm.name
 end
 
-local function var_0_20(arg_27_0)
-	local var_27_0 = MiscAnalyser.charms[arg_27_0]
+local function getOrCreateCharmStats(charmKey)
+	local charmStats = MiscAnalyser.charms[charmKey]
 
-	if not var_27_0 then
-		var_27_0 = {
+	if not charmStats then
+		charmStats = {
 			count = 0,
 			damage = 0,
-			key = arg_27_0,
-			name = var_0_11(arg_27_0)
+			key = charmKey,
+			name = titleCaseCharmName(charmKey)
 		}
-		MiscAnalyser.charms[arg_27_0] = var_27_0
+		MiscAnalyser.charms[charmKey] = charmStats
 
 		local charmOrder = MiscAnalyser.charmOrder
 
-		charmOrder[#charmOrder + 1] = var_27_0
+		charmOrder[#charmOrder + 1] = charmStats
 
-		table.sort(charmOrder, var_0_19)
+		table.sort(charmOrder, compareCharmOrder)
 	end
 
-	return var_27_0
+	return charmStats
 end
 
-local var_0_21 = {}
+local parsedCharmKeys = {}
 
-local function var_0_22(arg_28_0)
-	local var_28_0 = 0
+local function extractCharmKeys(message)
+	local charmCount = 0
 
-	if not arg_28_0:find(" charm", 1, true) then
-		return var_28_0
+	if not message:find(" charm", 1, true) then
+		return charmCount
 	end
 
-	for iter_28_0 in arg_28_0:gmatch("%(([^()]*)%)") do
-		for iter_28_1 in iter_28_0:gmatch("([%a][%a' ]-) charm") do
-			var_28_0 = var_28_0 + 1
-			var_0_21[var_28_0] = iter_28_1:lower()
+	for parenthesizedText in message:gmatch("%(([^()]*)%)") do
+		for charmName in parenthesizedText:gmatch("([%a][%a' ]-) charm") do
+			charmCount = charmCount + 1
+			parsedCharmKeys[charmCount] = charmName:lower()
 		end
 	end
 
-	return var_28_0
+	return charmCount
 end
 
-local function var_0_23(arg_29_0)
-	if not arg_29_0:find("due to your", 1, true) then
+local function processDamageMessage(message)
+	if not message:find("due to your", 1, true) then
 		return
 	end
 
-	local numericValue = tonumber(arg_29_0:match("loses (%d+) hitpoints?") or arg_29_0:match("loses (%d+) mana")) or 0
+	local numericValue = tonumber(message:match("loses (%d+) hitpoints?") or message:match("loses (%d+) mana")) or 0
 
 	MiscAnalyser.damage = MiscAnalyser.damage + numericValue
 
-	local var_29_1 = false
+	local countedCharmDamage = false
 
-	for iter_29_0 = 1, var_0_22(arg_29_0) do
-		local var_29_2 = var_0_21[iter_29_0]
-		local var_29_3 = var_0_20(var_29_2)
+	for charmIndex = 1, extractCharmKeys(message) do
+		local charmKey = parsedCharmKeys[charmIndex]
+		local charmStats = getOrCreateCharmStats(charmKey)
 
-		var_29_3.count = var_29_3.count + 1
+		charmStats.count = charmStats.count + 1
 
-		if not var_0_3[var_29_2] and not var_29_1 then
-			var_29_1 = true
-			var_29_3.damage = var_29_3.damage + numericValue
+		if not CRITICAL_HIT_CHARMS[charmKey] and not countedCharmDamage then
+			countedCharmDamage = true
+			charmStats.damage = charmStats.damage + numericValue
 			MiscAnalyser.charmDamage = MiscAnalyser.charmDamage + numericValue
 		end
 	end
 
-	if var_29_1 then
+	if countedCharmDamage then
 		return
 	end
 
 	MiscAnalyser.hits = MiscAnalyser.hits + 1
 
-	if arg_29_0:find("critical attack", 1, true) then
+	if message:find("critical attack", 1, true) then
 		MiscAnalyser.crits = MiscAnalyser.crits + 1
 		MiscAnalyser.critDamage = MiscAnalyser.critDamage + numericValue
 	end
 
-	if arg_29_0:find("fatal attack", 1, true) or arg_29_0:find("Onslaught)", 1, true) then
+	if message:find("fatal attack", 1, true) or message:find("Onslaught)", 1, true) then
 		MiscAnalyser.onslaught = MiscAnalyser.onslaught + 1
 		MiscAnalyser.onslaughtDamage = MiscAnalyser.onslaughtDamage + numericValue
 
-		if arg_29_0:find("mplified", 1, true) then
+		if message:find("mplified", 1, true) then
 			MiscAnalyser.amplifiedOnslaught = MiscAnalyser.amplifiedOnslaught + 1
 		end
 	end
 end
 
-local function var_0_24(arg_30_0)
-	local var_30_0 = arg_30_0:match("^You were healed for (%d+) hitpoints?")
+local function processLeechMessage(message)
+	local healedAmountText = message:match("^You were healed for (%d+) hitpoints?")
 
-	if var_30_0 then
-		MiscAnalyser.lifeGain = MiscAnalyser.lifeGain + tonumber(var_30_0)
+	if healedAmountText then
+		MiscAnalyser.lifeGain = MiscAnalyser.lifeGain + tonumber(healedAmountText)
 
 		return
 	end
 
-	local var_30_1 = arg_30_0:match("^You gained (%d+) mana") or arg_30_0:match("^You were restored for (%d+) mana")
+	local restoredManaText = message:match("^You gained (%d+) mana") or message:match("^You were restored for (%d+) mana")
 
-	if var_30_1 then
-		MiscAnalyser.manaGain = MiscAnalyser.manaGain + tonumber(var_30_1)
+	if restoredManaText then
+		MiscAnalyser.manaGain = MiscAnalyser.manaGain + tonumber(restoredManaText)
 	end
 end
 
-local function var_0_25(arg_31_0)
-	local var_31_0 = var_0_22(arg_31_0)
+local function processStatusMessage(message)
+	local charmCount = extractCharmKeys(message)
 
-	if var_31_0 > 0 then
-		for iter_31_0 = 1, var_31_0 do
-			local var_31_1 = var_0_20(var_0_21[iter_31_0])
+	if charmCount > 0 then
+		for charmIndex = 1, charmCount do
+			local charmStats = getOrCreateCharmStats(parsedCharmKeys[charmIndex])
 
-			var_31_1.count = var_31_1.count + 1
+			charmStats.count = charmStats.count + 1
 		end
 
 		return
 	end
 
-	if arg_31_0:find("^Momentum was triggered") then
+	if message:find("^Momentum was triggered") then
 		MiscAnalyser.momentum = MiscAnalyser.momentum + 1
-	elseif arg_31_0:find("^Transcendence was triggered") then
+	elseif message:find("^Transcendence was triggered") then
 		MiscAnalyser.transcendence = MiscAnalyser.transcendence + 1
-	elseif arg_31_0:find("^You dodged an attack%.?$") then
+	elseif message:find("^You dodged an attack%.?$") then
 		MiscAnalyser.ruse = MiscAnalyser.ruse + 1
 	end
 end
 
-local var_0_26
+local messageHandlersByMode
 
-local function var_0_27(arg_32_0, arg_32_1)
-	local var_32_0 = var_0_26 and var_0_26[arg_32_0]
+local function dispatchAnalyserMessage(messageMode, message)
+	local handler = messageHandlersByMode and messageHandlersByMode[messageMode]
 
-	if var_32_0 and type(arg_32_1) == "string" then
-		var_32_0(arg_32_1)
+	if handler and type(message) == "string" then
+		handler(message)
 	end
 end
 
 function MiscAnalyser.registerMessageModes(unusedArgument)
 	MiscAnalyser:unregisterMessageModes()
 
-	var_0_26 = {
-		[MessageModes.DamageDealed] = var_0_23,
-		[MessageModes.Heal] = var_0_24,
-		[MessageModes.Mana] = var_0_24,
-		[MessageModes.Failure] = var_0_25,
-		[MessageModes.Login] = var_0_25,
-		[MessageModes.Loot] = var_0_25,
-		[MessageModes.Status] = var_0_25,
-		[MessageModes.Attention] = var_0_25
+	messageHandlersByMode = {
+		[MessageModes.DamageDealed] = processDamageMessage,
+		[MessageModes.Heal] = processLeechMessage,
+		[MessageModes.Mana] = processLeechMessage,
+		[MessageModes.Failure] = processStatusMessage,
+		[MessageModes.Login] = processStatusMessage,
+		[MessageModes.Loot] = processStatusMessage,
+		[MessageModes.Status] = processStatusMessage,
+		[MessageModes.Attention] = processStatusMessage
 	}
 
 	local registered = {
 		modes = {},
-		callback = var_0_27
+		callback = dispatchAnalyserMessage
 	}
 
-	for key, unusedValue in pairs(var_0_26) do
-		registerMessageMode(key, var_0_27)
+	for key, unusedValue in pairs(messageHandlersByMode) do
+		registerMessageMode(key, dispatchAnalyserMessage)
 
 		registered.modes[#registered.modes + 1] = key
 	end
@@ -542,92 +542,92 @@ function MiscAnalyser.unregisterMessageModes(unusedArgument)
 	end
 
 	MiscAnalyser.registered = nil
-	var_0_26 = nil
+	messageHandlersByMode = nil
 end
 
-function MiscAnalyser.addDamageReceived(unusedArgument, arg_35_1)
-	MiscAnalyser.damageReceived = MiscAnalyser.damageReceived + (tonumber(arg_35_1) or 0)
+function MiscAnalyser.addDamageReceived(unusedArgument, damageAmount)
+	MiscAnalyser.damageReceived = MiscAnalyser.damageReceived + (tonumber(damageAmount) or 0)
 end
 
-local function var_0_28(parentWidget, arg_36_1)
+local function createCharmRow(parentWidget, charmStats)
 	local miscAnalyserRowWidget = g_ui.createWidget("MiscAnalyserRow", parentWidget)
 
-	miscAnalyserRowWidget.name:setText(var_0_4[arg_36_1.key] or arg_36_1.name)
+	miscAnalyserRowWidget.name:setText(CHARM_DISPLAY_NAMES[charmStats.key] or charmStats.name)
 
 	miscAnalyserRowWidget.build = build
 
-	local var_36_1 = var_0_2[arg_36_1.key]
+	local iconIndex = CHARM_ICON_INDICES[charmStats.key]
 
-	if var_36_1 then
+	if iconIndex then
 		miscAnalyserRowWidget.icon:setImageSource(imageSourcePath)
-		miscAnalyserRowWidget.icon:setImageClip(string.format("%d 0 32 32", var_36_1 * 32))
+		miscAnalyserRowWidget.icon:setImageClip(string.format("%d 0 32 32", iconIndex * 32))
 	end
 
-	MiscAnalyser.charmRows[arg_36_1.key] = miscAnalyserRowWidget
+	MiscAnalyser.charmRows[charmStats.key] = miscAnalyserRowWidget
 
 	return miscAnalyserRowWidget
 end
 
-function MiscAnalyser.updateWindow(unusedArgument, arg_37_1)
+function MiscAnalyser.updateWindow(unusedArgument, forceRefresh)
 	local window = MiscAnalyser.window
 
-	if not window or window:isDestroyed() or not window:isVisible() and not arg_37_1 then
+	if not window or window:isDestroyed() or not window:isVisible() and not forceRefresh then
 		return
 	end
 
-	local var_37_1 = MiscAnalyser
+	local stats = MiscAnalyser
 	local contentsPanel = window.contentsPanel
 	local shownMinutes = AnalyserSession:isActive() and math.floor(math.max(1, AnalyserSession:durationSeconds()) / 60) or -1
 
 	if contentsPanel.session.shownMinutes ~= shownMinutes then
 		contentsPanel.session.shownMinutes = shownMinutes
 
-		contentsPanel.session:setText(var_0_12())
+		contentsPanel.session:setText(formatSessionDuration())
 	end
 
 	local charmList = contentsPanel.charmList
 
-	for index, entry in ipairs(var_37_1.charmOrder) do
-		local var_37_5 = var_37_1.charmRows[entry.key] or var_0_28(charmList, entry)
+	for index, entry in ipairs(stats.charmOrder) do
+		local charmRow = stats.charmRows[entry.key] or createCharmRow(charmList, entry)
 
-		var_0_16(var_37_5, true, entry.count, entry.damage, entry)
+		updateMetricRow(charmRow, true, entry.count, entry.damage, entry)
 
-		if charmList:getChildIndex(var_37_5) ~= index + 1 then
-			charmList:moveChildToIndex(var_37_5, index + 1)
+		if charmList:getChildIndex(charmRow) ~= index + 1 then
+			charmList:moveChildToIndex(charmRow, index + 1)
 		end
 	end
 
-	charmList.empty:setVisible(#var_37_1.charmOrder == 0)
+	charmList.empty:setVisible(#stats.charmOrder == 0)
 
 	local imbuementList = contentsPanel.imbuementList
-	local var_37_7 = var_0_16(imbuementList.critical, var_37_1.crits > 0, var_37_1.crits, var_37_1.critDamage)
+	local hasImbuementRows = updateMetricRow(imbuementList.critical, stats.crits > 0, stats.crits, stats.critDamage)
 
-	var_37_7 = var_0_16(imbuementList.manaGain, var_37_1.manaGain > 0, var_37_1.manaGain) or var_37_7
-	var_37_7 = var_0_16(imbuementList.lifeGain, var_37_1.lifeGain > 0, var_37_1.lifeGain) or var_37_7
+	hasImbuementRows = updateMetricRow(imbuementList.manaGain, stats.manaGain > 0, stats.manaGain) or hasImbuementRows
+	hasImbuementRows = updateMetricRow(imbuementList.lifeGain, stats.lifeGain > 0, stats.lifeGain) or hasImbuementRows
 
-	imbuementList.empty:setVisible(not var_37_7)
+	imbuementList.empty:setVisible(not hasImbuementRows)
 
 	local upgradeList = contentsPanel.upgradeList
-	local var_37_9 = var_0_16(upgradeList.onslaught, var_37_1.onslaught > 0, var_37_1.onslaught, var_37_1.onslaughtDamage)
+	local hasUpgradeRows = updateMetricRow(upgradeList.onslaught, stats.onslaught > 0, stats.onslaught, stats.onslaughtDamage)
 
-	var_37_9 = var_0_16(upgradeList.ruse, var_37_1.ruse > 0, var_37_1.ruse) or var_37_9
-	var_37_9 = var_0_16(upgradeList.momentum, var_37_1.momentum > 0, var_37_1.momentum) or var_37_9
-	var_37_9 = var_0_16(upgradeList.transcendence, var_37_1.transcendence > 0, var_37_1.transcendence) or var_37_9
+	hasUpgradeRows = updateMetricRow(upgradeList.ruse, stats.ruse > 0, stats.ruse) or hasUpgradeRows
+	hasUpgradeRows = updateMetricRow(upgradeList.momentum, stats.momentum > 0, stats.momentum) or hasUpgradeRows
+	hasUpgradeRows = updateMetricRow(upgradeList.transcendence, stats.transcendence > 0, stats.transcendence) or hasUpgradeRows
 
-	upgradeList.empty:setVisible(not var_37_9)
+	upgradeList.empty:setVisible(not hasUpgradeRows)
 
 	local efficiencyList = contentsPanel.efficiencyList
-	local var_37_11 = var_0_16(efficiencyList.critRate, var_37_1.crits > 0, var_37_1.crits, var_37_1.hits)
+	local hasEfficiencyRows = updateMetricRow(efficiencyList.critRate, stats.crits > 0, stats.crits, stats.hits)
 
-	var_37_11 = var_0_16(efficiencyList.charmShare, var_37_1.charmDamage > 0, var_37_1.charmDamage, var_37_1.damage) or var_37_11
-	var_37_11 = var_0_16(efficiencyList.lifeGainHour, var_37_1.lifeGain > 0, AnalyserSession:perHourFromTotal(var_37_1.lifeGain)) or var_37_11
-	var_37_11 = var_0_16(efficiencyList.manaGainHour, var_37_1.manaGain > 0, AnalyserSession:perHourFromTotal(var_37_1.manaGain)) or var_37_11
-	var_37_11 = var_0_16(efficiencyList.sustain, var_37_1.lifeGain > 0 and var_37_1.damageReceived > 0, var_37_1.lifeGain, var_37_1.damageReceived) or var_37_11
+	hasEfficiencyRows = updateMetricRow(efficiencyList.charmShare, stats.charmDamage > 0, stats.charmDamage, stats.damage) or hasEfficiencyRows
+	hasEfficiencyRows = updateMetricRow(efficiencyList.lifeGainHour, stats.lifeGain > 0, AnalyserSession:perHourFromTotal(stats.lifeGain)) or hasEfficiencyRows
+	hasEfficiencyRows = updateMetricRow(efficiencyList.manaGainHour, stats.manaGain > 0, AnalyserSession:perHourFromTotal(stats.manaGain)) or hasEfficiencyRows
+	hasEfficiencyRows = updateMetricRow(efficiencyList.sustain, stats.lifeGain > 0 and stats.damageReceived > 0, stats.lifeGain, stats.damageReceived) or hasEfficiencyRows
 
-	efficiencyList.empty:setVisible(not var_37_11)
+	efficiencyList.empty:setVisible(not hasEfficiencyRows)
 end
 
-function onMiscExtra(arg_38_0)
+function onMiscExtra(mousePosition)
 	if cancelNextRelease then
 		cancelNextRelease = false
 
@@ -647,61 +647,61 @@ function onMiscExtra(arg_38_0)
 	popupMenuWidget:addOption(tr("Save to File"), function()
 		MiscAnalyser:saveToFile()
 	end)
-	popupMenuWidget:display(arg_38_0)
+	popupMenuWidget:display(mousePosition)
 
 	return true
 end
 
-local function var_0_29()
-	local var_42_0 = MiscAnalyser
-	local var_42_1 = {}
+local function buildSessionReport()
+	local stats = MiscAnalyser
+	local reportLines = {}
 
-	var_42_1[#var_42_1 + 1] = "Session data: From " .. os.date("%Y-%m-%d, %H:%M:%S", AnalyserSession.startUnix) .. " to " .. os.date("%Y-%m-%d, %H:%M:%S")
-	var_42_1[#var_42_1 + 1] = "Session: " .. var_0_12()
-	var_42_1[#var_42_1 + 1] = "Charm:"
+	reportLines[#reportLines + 1] = "Session data: From " .. os.date("%Y-%m-%d, %H:%M:%S", AnalyserSession.startUnix) .. " to " .. os.date("%Y-%m-%d, %H:%M:%S")
+	reportLines[#reportLines + 1] = "Session: " .. formatSessionDuration()
+	reportLines[#reportLines + 1] = "Charm:"
 
-	local charmOrder = var_42_0.charmOrder
+	local charmOrder = stats.charmOrder
 
 	if #charmOrder == 0 then
-		var_42_1[#var_42_1 + 1] = "\tNo data yet"
+		reportLines[#reportLines + 1] = "\tNo data yet"
 	end
 
 	for unusedValue, entry in ipairs(charmOrder) do
-		local formattedText = string.format("\t%s: %s", entry.name, var_0_10(entry.count))
+		local formattedText = string.format("\t%s: %s", entry.name, formatProcCount(entry.count))
 
 		if entry.damage > 0 then
-			formattedText = formattedText .. string.format(", %s damage (%s)", formatMoney(entry.damage, ","), var_0_9(entry.damage, var_42_0.damage))
+			formattedText = formattedText .. string.format(", %s damage (%s)", formatMoney(entry.damage, ","), formatPercentage(entry.damage, stats.damage))
 		end
 
-		var_42_1[#var_42_1 + 1] = formattedText
+		reportLines[#reportLines + 1] = formattedText
 	end
 
-	var_42_1[#var_42_1 + 1] = "Imbuement:"
-	var_42_1[#var_42_1 + 1] = string.format("\tCritical Hit: %d (%s damage)", var_42_0.crits, formatMoney(var_42_0.critDamage, ","))
-	var_42_1[#var_42_1 + 1] = "\tMana Gain: " .. formatMoney(var_42_0.manaGain, ",")
-	var_42_1[#var_42_1 + 1] = "\tLife Gain: " .. formatMoney(var_42_0.lifeGain, ",")
-	var_42_1[#var_42_1 + 1] = "Item Upgrade:"
-	var_42_1[#var_42_1 + 1] = string.format("\tOnslaught: %d (%s damage, %d amplified)", var_42_0.onslaught, formatMoney(var_42_0.onslaughtDamage, ","), var_42_0.amplifiedOnslaught)
-	var_42_1[#var_42_1 + 1] = "\tRuse: " .. var_42_0.ruse
-	var_42_1[#var_42_1 + 1] = "\tMomentum: " .. var_42_0.momentum
-	var_42_1[#var_42_1 + 1] = "\tTranscendence: " .. var_42_0.transcendence
-	var_42_1[#var_42_1 + 1] = "Efficiency:"
-	var_42_1[#var_42_1 + 1] = string.format("\tCritical Rate: %s (%d of %d hits)", var_0_9(var_42_0.crits, var_42_0.hits), var_42_0.crits, var_42_0.hits)
-	var_42_1[#var_42_1 + 1] = string.format("\tCharm Damage: %s of %s damage", var_0_9(var_42_0.charmDamage, var_42_0.damage), formatMoney(var_42_0.damage, ","))
-	var_42_1[#var_42_1 + 1] = "\tLife Gain/h: " .. formatMoney(AnalyserSession:perHourFromTotal(var_42_0.lifeGain), ",")
-	var_42_1[#var_42_1 + 1] = "\tMana Gain/h: " .. formatMoney(AnalyserSession:perHourFromTotal(var_42_0.manaGain), ",")
-	var_42_1[#var_42_1 + 1] = string.format("\tLeech Sustain: %s of %s damage taken", var_0_9(var_42_0.lifeGain, var_42_0.damageReceived), formatMoney(var_42_0.damageReceived, ","))
+	reportLines[#reportLines + 1] = "Imbuement:"
+	reportLines[#reportLines + 1] = string.format("\tCritical Hit: %d (%s damage)", stats.crits, formatMoney(stats.critDamage, ","))
+	reportLines[#reportLines + 1] = "\tMana Gain: " .. formatMoney(stats.manaGain, ",")
+	reportLines[#reportLines + 1] = "\tLife Gain: " .. formatMoney(stats.lifeGain, ",")
+	reportLines[#reportLines + 1] = "Item Upgrade:"
+	reportLines[#reportLines + 1] = string.format("\tOnslaught: %d (%s damage, %d amplified)", stats.onslaught, formatMoney(stats.onslaughtDamage, ","), stats.amplifiedOnslaught)
+	reportLines[#reportLines + 1] = "\tRuse: " .. stats.ruse
+	reportLines[#reportLines + 1] = "\tMomentum: " .. stats.momentum
+	reportLines[#reportLines + 1] = "\tTranscendence: " .. stats.transcendence
+	reportLines[#reportLines + 1] = "Efficiency:"
+	reportLines[#reportLines + 1] = string.format("\tCritical Rate: %s (%d of %d hits)", formatPercentage(stats.crits, stats.hits), stats.crits, stats.hits)
+	reportLines[#reportLines + 1] = string.format("\tCharm Damage: %s of %s damage", formatPercentage(stats.charmDamage, stats.damage), formatMoney(stats.damage, ","))
+	reportLines[#reportLines + 1] = "\tLife Gain/h: " .. formatMoney(AnalyserSession:perHourFromTotal(stats.lifeGain), ",")
+	reportLines[#reportLines + 1] = "\tMana Gain/h: " .. formatMoney(AnalyserSession:perHourFromTotal(stats.manaGain), ",")
+	reportLines[#reportLines + 1] = string.format("\tLeech Sustain: %s of %s damage taken", formatPercentage(stats.lifeGain, stats.damageReceived), formatMoney(stats.damageReceived, ","))
 
-	return table.concat(var_42_1, "\n")
+	return table.concat(reportLines, "\n")
 end
 
 function MiscAnalyser.clipboardData(unusedArgument)
-	g_window.setClipboardText(var_0_29())
+	g_window.setClipboardText(buildSessionReport())
 end
 
 function MiscAnalyser.saveToFile(unusedArgument)
 	local fileName = "Misc_Analyser_" .. os.date("%Y-%m-%d", AnalyserSession.startUnix) .. "_" .. AnalyserSession.startUnix .. ".txt"
 
-	g_resources.writeFileContents(fileName, var_0_29())
+	g_resources.writeFileContents(fileName, buildSessionReport())
 	modules.game_textmessage.displayStatusMessage(tr("Misc Analyser data has been saved to location '%s'", fileName))
 end

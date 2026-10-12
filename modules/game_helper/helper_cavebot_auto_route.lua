@@ -1,70 +1,70 @@
 HelperCavebotAutoRoute = HelperCavebotAutoRoute or {}
 
-local var_0_0 = HelperCavebotAutoRoute
-local var_0_1 = {
+local autoRoute = HelperCavebotAutoRoute
+local autoRouteState = {
 	generating = false,
 	active = false
 }
-local var_0_2
+local startRouteGeneration
 
-local function var_0_3(arg_1_0)
-	if not arg_1_0 or tonumber(arg_1_0.x) == nil or tonumber(arg_1_0.y) == nil or tonumber(arg_1_0.z) == nil then
+local function normalizePosition(position)
+	if not position or tonumber(position.x) == nil or tonumber(position.y) == nil or tonumber(position.z) == nil then
 		return nil
 	end
 
 	return {
-		x = math.floor(tonumber(arg_1_0.x)),
-		y = math.floor(tonumber(arg_1_0.y)),
-		z = math.floor(tonumber(arg_1_0.z))
+		x = math.floor(tonumber(position.x)),
+		y = math.floor(tonumber(position.y)),
+		z = math.floor(tonumber(position.z))
 	}
 end
 
-local function var_0_4(arg_2_0, arg_2_1)
-	if var_0_1.ctx and var_0_1.ctx.text then
-		return var_0_1.ctx.text(arg_2_0, arg_2_1)
+local function localizedText(englishText, portugueseText)
+	if autoRouteState.ctx and autoRouteState.ctx.text then
+		return autoRouteState.ctx.text(englishText, portugueseText)
 	end
 
-	return arg_2_0
+	return englishText
 end
 
-local function var_0_5(arg_3_0)
-	if var_0_1.ctx and var_0_1.ctx.getWidget then
-		return var_0_1.ctx.getWidget(arg_3_0)
+local function getWidget(widgetId)
+	if autoRouteState.ctx and autoRouteState.ctx.getWidget then
+		return autoRouteState.ctx.getWidget(widgetId)
 	end
 
 	return nil
 end
 
-local function var_0_6(arg_4_0)
-	if var_0_1.ctx and var_0_1.ctx.setStatus then
-		var_0_1.ctx.setStatus(arg_4_0)
+local function setRouteStatus(statusText)
+	if autoRouteState.ctx and autoRouteState.ctx.setStatus then
+		autoRouteState.ctx.setStatus(statusText)
 	end
 end
 
-local function var_0_7(arg_5_0)
-	if arg_5_0 and not arg_5_0:isDestroyed() then
-		arg_5_0:destroy()
+local function destroyWidgetIfAlive(widget)
+	if widget and not widget:isDestroyed() then
+		widget:destroy()
 	end
 end
 
-local function var_0_8()
-	local confirmBox = var_0_1.confirmBox
+local function closeRouteConfirmation()
+	local confirmBox = autoRouteState.confirmBox
 
-	var_0_1.confirmBox = nil
+	autoRouteState.confirmBox = nil
 
-	var_0_7(confirmBox)
+	destroyWidgetIfAlive(confirmBox)
 end
 
-local function var_0_9()
-	if var_0_1.generationEvent then
-		removeEvent(var_0_1.generationEvent)
+local function cancelRouteGenerationEvent()
+	if autoRouteState.generationEvent then
+		removeEvent(autoRouteState.generationEvent)
 
-		var_0_1.generationEvent = nil
+		autoRouteState.generationEvent = nil
 	end
 end
 
-local function var_0_10()
-	var_0_1.animationCallback = nil
+local function clearRouteAnimation()
+	autoRouteState.animationCallback = nil
 
 	if g_cavebotAutoRoute and g_cavebotAutoRoute.clearAnimation then
 		pcall(function()
@@ -73,130 +73,130 @@ local function var_0_10()
 	end
 end
 
-local function var_0_11()
-	for unusedValue, iter_10_1 in ipairs({
+local function raiseRouteControls()
+	for unusedValue, widgetId in ipairs({
 		"cavebotAutoRouteButton",
 		"cavebotRosePanel"
 	}) do
-		local var_10_0 = var_0_5(iter_10_1)
+		local controlWidget = getWidget(widgetId)
 
-		if var_10_0 and not var_10_0:isDestroyed() then
-			var_10_0:raise()
+		if controlWidget and not controlWidget:isDestroyed() then
+			controlWidget:raise()
 		end
 	end
 end
 
-local function var_0_12(enabled)
-	local var_11_0 = var_0_5("cavebotRosePanel")
+local function setRosePanelEnabled(enabled)
+	local rosePanel = getWidget("cavebotRosePanel")
 
-	if var_11_0 and not var_11_0:isDestroyed() then
-		var_11_0:setEnabled(enabled)
+	if rosePanel and not rosePanel:isDestroyed() then
+		rosePanel:setEnabled(enabled)
 	end
 end
 
-function var_0_0.refreshButton()
-	local var_12_0 = var_0_5("cavebotAutoRouteButton")
+function autoRoute.refreshButton()
+	local autoRouteButton = getWidget("cavebotAutoRouteButton")
 
-	if not var_12_0 or var_12_0:isDestroyed() then
+	if not autoRouteButton or autoRouteButton:isDestroyed() then
 		return
 	end
 
-	var_12_0:setOn(var_0_1.active)
-	var_12_0:setText(var_0_1.active and var_0_4("Cancel", "Cancelar") or var_0_4("Auto Route", "Rota Auto"))
-	var_12_0:setTooltip(var_0_1.active and var_0_4("Cancel the automatic hunt scan.", "Cancelar o escaneamento automatico da hunt.") or var_0_4("Scan the connected hunt and generate a geometric Position-only route.", "Escaneie a hunt conectada e gere uma rota geometrica somente com Pos."))
+	autoRouteButton:setOn(autoRouteState.active)
+	autoRouteButton:setText(autoRouteState.active and localizedText("Cancel", "Cancelar") or localizedText("Auto Route", "Rota Auto"))
+	autoRouteButton:setTooltip(autoRouteState.active and localizedText("Cancel the automatic hunt scan.", "Cancelar o escaneamento automatico da hunt.") or localizedText("Scan the connected hunt and generate a geometric Position-only route.", "Escaneie a hunt conectada e gere uma rota geometrica somente com Pos."))
 end
 
-local function var_0_13()
-	local map = var_0_1.map
+local function restoreMapInputHandlers()
+	local map = autoRouteState.map
 
 	if map and not map:isDestroyed() then
-		local var_13_1 = var_0_1.savedHandlers or {}
+		local savedHandlers = autoRouteState.savedHandlers or {}
 
-		map.onMousePress = var_13_1.onMousePress
-		map.onMouseMove = var_13_1.onMouseMove
-		map.onMouseRelease = var_13_1.onMouseRelease
-		map.onMouseWheel = var_13_1.onMouseWheel
+		map.onMousePress = savedHandlers.onMousePress
+		map.onMouseMove = savedHandlers.onMouseMove
+		map.onMouseRelease = savedHandlers.onMouseRelease
+		map.onMouseWheel = savedHandlers.onMouseWheel
 
-		if var_13_1.draggable ~= nil then
-			map:setDraggable(var_13_1.draggable)
+		if savedHandlers.draggable ~= nil then
+			map:setDraggable(savedHandlers.draggable)
 		end
 	end
 
-	var_0_1.savedHandlers = nil
+	autoRouteState.savedHandlers = nil
 
-	var_0_12(true)
+	setRosePanelEnabled(true)
 end
 
-local function var_0_14(arg_14_0)
-	var_0_9()
-	var_0_8()
-	var_0_10()
-	var_0_13()
+local function resetAutoRouteState(restoreMarkers)
+	cancelRouteGenerationEvent()
+	closeRouteConfirmation()
+	clearRouteAnimation()
+	restoreMapInputHandlers()
 
-	var_0_1.active = false
-	var_0_1.generating = false
-	var_0_1.scanOrigin = nil
-	var_0_1.plan = nil
-	var_0_1.map = nil
-	var_0_1.destination = nil
+	autoRouteState.active = false
+	autoRouteState.generating = false
+	autoRouteState.scanOrigin = nil
+	autoRouteState.plan = nil
+	autoRouteState.map = nil
+	autoRouteState.destination = nil
 
-	var_0_0.refreshButton()
+	autoRoute.refreshButton()
 
-	if arg_14_0 and var_0_1.ctx and var_0_1.ctx.showMarkers then
-		var_0_1.ctx.showMarkers()
+	if restoreMarkers and autoRouteState.ctx and autoRouteState.ctx.showMarkers then
+		autoRouteState.ctx.showMarkers()
 	end
 end
 
-function var_0_0.cancel(arg_15_0)
-	if not var_0_1.active and not var_0_1.map then
+function autoRoute.cancel(showCancelStatus)
+	if not autoRouteState.active and not autoRouteState.map then
 		return false
 	end
 
-	var_0_14(true)
+	resetAutoRouteState(true)
 
-	if arg_15_0 then
-		var_0_6(var_0_4("Automatic route cancelled", "Rota automatica cancelada"))
+	if showCancelStatus then
+		setRouteStatus(localizedText("Automatic route cancelled", "Rota automatica cancelada"))
 	end
 
 	return true
 end
 
-local function var_0_15(arg_16_0, arg_16_1)
-	arg_16_1 = type(arg_16_1) == "table" and arg_16_1 or {}
+local function formatRouteGenerationError(errorCode, errorDetails)
+	errorDetails = type(errorDetails) == "table" and errorDetails or {}
 
-	if arg_16_0 == "invalidPlayerPosition" then
-		return var_0_4("The player position is unavailable for scanning.", "A posicao do personagem nao esta disponivel para o escaneamento.")
-	elseif arg_16_0 == "singleFloorOnly" then
-		return var_0_4("The selection must stay on one floor.", "A selecao precisa ficar em um unico andar.")
-	elseif arg_16_0 == "selectionTooLarge" then
-		return string.format(var_0_4("Selection is too large (%d tiles; maximum %d).", "A selecao e grande demais (%d SQMs; maximo %d)."), tonumber(arg_16_1.selectedTiles) or 0, tonumber(arg_16_1.maximum) or 0)
-	elseif arg_16_0 == "regionTooLarge" then
-		return string.format(var_0_4("The connected hunt is too large (%d tiles; maximum %d).", "A hunt conectada e grande demais (%d SQMs; maximo %d)."), tonumber(arg_16_1.regionTiles) or 0, tonumber(arg_16_1.maximum) or 0)
-	elseif arg_16_0 == "regionTooSmall" then
-		return string.format(var_0_4("The connected hunt is too small (%d tiles; minimum %d).", "A hunt conectada e pequena demais (%d SQMs; minimo %d)."), tonumber(arg_16_1.regionTiles) or 0, tonumber(arg_16_1.minimum) or 0)
-	elseif arg_16_0 == "noNavigableTiles" then
-		return var_0_4("No known walkable hunt area was found.", "Nenhuma area conhecida e caminhavel da hunt foi encontrada.")
-	elseif arg_16_0 == "notEnoughRoutePoints" then
-		return var_0_4("The hunt does not contain enough space for a route.", "A hunt nao tem espaco suficiente para uma rota.")
-	elseif arg_16_0 == "tooManyWaypoints" then
-		return string.format(var_0_4("The route needs too many waypoints (%d; maximum %d).", "A rota precisa de waypoints demais (%d; maximo %d)."), tonumber(arg_16_1.waypoints) or 0, tonumber(arg_16_1.maximum) or 0)
-	elseif arg_16_0 == "routeLeavesHunt" then
-		return var_0_4("A safe route that stays inside the hunt could not be built.", "Nao foi possivel montar uma rota segura que fique dentro da hunt.")
-	elseif arg_16_0 == "routeConnectionFailed" then
-		return var_0_4("Some hunt sections could not be connected safely.", "Algumas partes da hunt nao puderam ser conectadas com seguranca.")
-	elseif arg_16_0 == "pathfinderUnavailable" or arg_16_0 == "pathfinderFailed" then
-		return var_0_4("The map pathfinder is unavailable for this area.", "O pathfinder do mapa nao esta disponivel para esta area.")
+	if errorCode == "invalidPlayerPosition" then
+		return localizedText("The player position is unavailable for scanning.", "A posicao do personagem nao esta disponivel para o escaneamento.")
+	elseif errorCode == "singleFloorOnly" then
+		return localizedText("The selection must stay on one floor.", "A selecao precisa ficar em um unico andar.")
+	elseif errorCode == "selectionTooLarge" then
+		return string.format(localizedText("Selection is too large (%d tiles; maximum %d).", "A selecao e grande demais (%d SQMs; maximo %d)."), tonumber(errorDetails.selectedTiles) or 0, tonumber(errorDetails.maximum) or 0)
+	elseif errorCode == "regionTooLarge" then
+		return string.format(localizedText("The connected hunt is too large (%d tiles; maximum %d).", "A hunt conectada e grande demais (%d SQMs; maximo %d)."), tonumber(errorDetails.regionTiles) or 0, tonumber(errorDetails.maximum) or 0)
+	elseif errorCode == "regionTooSmall" then
+		return string.format(localizedText("The connected hunt is too small (%d tiles; minimum %d).", "A hunt conectada e pequena demais (%d SQMs; minimo %d)."), tonumber(errorDetails.regionTiles) or 0, tonumber(errorDetails.minimum) or 0)
+	elseif errorCode == "noNavigableTiles" then
+		return localizedText("No known walkable hunt area was found.", "Nenhuma area conhecida e caminhavel da hunt foi encontrada.")
+	elseif errorCode == "notEnoughRoutePoints" then
+		return localizedText("The hunt does not contain enough space for a route.", "A hunt nao tem espaco suficiente para uma rota.")
+	elseif errorCode == "tooManyWaypoints" then
+		return string.format(localizedText("The route needs too many waypoints (%d; maximum %d).", "A rota precisa de waypoints demais (%d; maximo %d)."), tonumber(errorDetails.waypoints) or 0, tonumber(errorDetails.maximum) or 0)
+	elseif errorCode == "routeLeavesHunt" then
+		return localizedText("A safe route that stays inside the hunt could not be built.", "Nao foi possivel montar uma rota segura que fique dentro da hunt.")
+	elseif errorCode == "routeConnectionFailed" then
+		return localizedText("Some hunt sections could not be connected safely.", "Algumas partes da hunt nao puderam ser conectadas com seguranca.")
+	elseif errorCode == "pathfinderUnavailable" or errorCode == "pathfinderFailed" then
+		return localizedText("The map pathfinder is unavailable for this area.", "O pathfinder do mapa nao esta disponivel para esta area.")
 	end
 
-	return var_0_4("The automatic route could not be generated.", "Nao foi possivel gerar a rota automatica.")
+	return localizedText("The automatic route could not be generated.", "Nao foi possivel gerar a rota automatica.")
 end
 
-local function var_0_16(arg_17_0, arg_17_1, arg_17_2)
-	local var_17_0 = g_cavebotAutoRoute
-	local var_17_1 = var_17_0 and var_17_0[arg_17_0]
+local function runRouteAnimation(animationMethod, plan, onComplete)
+	local routeGenerator = g_cavebotAutoRoute
+	local animate = routeGenerator and routeGenerator[animationMethod]
 
-	if not var_17_1 or not var_0_1.map or var_0_1.map:isDestroyed() then
-		arg_17_2()
+	if not animate or not autoRouteState.map or autoRouteState.map:isDestroyed() then
+		onComplete()
 
 		return
 	end
@@ -204,361 +204,361 @@ local function var_0_16(arg_17_0, arg_17_1, arg_17_2)
 	local unusedValue
 
 	local function animationCallback()
-		if var_0_1.animationCallback ~= animationCallback then
+		if autoRouteState.animationCallback ~= animationCallback then
 			return
 		end
 
-		var_0_1.animationCallback = nil
+		autoRouteState.animationCallback = nil
 
-		if var_0_1.active and var_0_1.plan == arg_17_1 then
-			var_0_11()
-			arg_17_2()
+		if autoRouteState.active and autoRouteState.plan == plan then
+			raiseRouteControls()
+			onComplete()
 		end
 	end
 
-	var_0_1.animationCallback = animationCallback
+	autoRouteState.animationCallback = animationCallback
 
-	local var_17_4, var_17_5 = pcall(function()
-		return var_17_1(var_0_1.map, animationCallback)
+	local animationCallSucceeded, animationStarted = pcall(function()
+		return animate(autoRouteState.map, animationCallback)
 	end)
 
-	if var_17_4 and var_17_5 then
+	if animationCallSucceeded and animationStarted then
 		return
 	end
 
-	if var_0_1.animationCallback == animationCallback then
-		var_0_1.animationCallback = nil
+	if autoRouteState.animationCallback == animationCallback then
+		autoRouteState.animationCallback = nil
 	end
 
-	arg_17_2()
+	onComplete()
 end
 
-local function var_0_17(arg_20_0, arg_20_1)
-	var_0_16("animateScan", arg_20_0, arg_20_1)
+local function animateRouteScan(plan, onComplete)
+	runRouteAnimation("animateScan", plan, onComplete)
 end
 
-local function var_0_18(arg_21_0, arg_21_1)
-	var_0_16("animateRoute", arg_21_0, arg_21_1)
+local function animateGeneratedRoute(plan, onComplete)
+	runRouteAnimation("animateRoute", plan, onComplete)
 end
 
-local function var_0_19(arg_22_0)
-	local var_22_0 = arg_22_0.stats or {}
-	local var_22_1 = {
-		string.format(var_0_4("%d Position waypoints", "%d waypoints Pos"), tonumber(var_22_0.waypoints) or #(arg_22_0.waypoints or {})),
-		string.format(var_0_4("Hunt coverage: %.1f%% of %d navigable tiles", "Cobertura da hunt: %.1f%% de %d SQMs caminhaveis"), tonumber(var_22_0.coveragePercent) or 0, tonumber(var_22_0.huntTiles) or 0),
-		string.format(var_0_4("Estimated cycle: %d steps", "Ciclo estimado: %d passos"), tonumber(var_22_0.totalSteps) or 0)
+local function buildRouteSummary(plan)
+	local stats = plan.stats or {}
+	local summaryLines = {
+		string.format(localizedText("%d Position waypoints", "%d waypoints Pos"), tonumber(stats.waypoints) or #(plan.waypoints or {})),
+		string.format(localizedText("Hunt coverage: %.1f%% of %d navigable tiles", "Cobertura da hunt: %.1f%% de %d SQMs caminhaveis"), tonumber(stats.coveragePercent) or 0, tonumber(stats.huntTiles) or 0),
+		string.format(localizedText("Estimated cycle: %d steps", "Ciclo estimado: %d passos"), tonumber(stats.totalSteps) or 0)
 	}
-	local numericValue = tonumber(var_22_0.outsideTiles) or 0
+	local numericValue = tonumber(stats.outsideTiles) or 0
 
 	if numericValue > 0 then
-		if var_22_0.automaticScan then
-			var_22_1[#var_22_1 + 1] = string.format(var_0_4("%d non-walkable or unsafe tile(s) were ignored by the scan.", "%d SQM(s) nao caminhaveis ou inseguros foram ignorados pelo scanner."), numericValue)
+		if stats.automaticScan then
+			summaryLines[#summaryLines + 1] = string.format(localizedText("%d non-walkable or unsafe tile(s) were ignored by the scan.", "%d SQM(s) nao caminhaveis ou inseguros foram ignorados pelo scanner."), numericValue)
 		else
-			var_22_1[#var_22_1 + 1] = string.format(var_0_4("%d selected tile(s) outside the walkable hunt were detected and ignored.", "%d SQM(s) fora da area caminhavel da hunt foram detectados e ignorados."), numericValue)
+			summaryLines[#summaryLines + 1] = string.format(localizedText("%d selected tile(s) outside the walkable hunt were detected and ignored.", "%d SQM(s) fora da area caminhavel da hunt foram detectados e ignorados."), numericValue)
 		end
 	else
-		var_22_1[#var_22_1 + 1] = var_22_0.automaticScan and var_0_4("The wave stayed inside the connected walkable hunt.", "A onda permaneceu dentro da hunt caminhavel conectada.") or var_0_4("The entire selection belongs to the walkable hunt area.", "Toda a selecao pertence a area caminhavel da hunt.")
+		summaryLines[#summaryLines + 1] = stats.automaticScan and localizedText("The wave stayed inside the connected walkable hunt.", "A onda permaneceu dentro da hunt caminhavel conectada.") or localizedText("The entire selection belongs to the walkable hunt area.", "Toda a selecao pertence a area caminhavel da hunt.")
 	end
 
-	local numericValue = tonumber(var_22_0.floorChangeTiles) or 0
+	local numericValue = tonumber(stats.floorChangeTiles) or 0
 
 	if numericValue > 0 then
-		var_22_1[#var_22_1 + 1] = string.format(var_0_4("%d floor-change tile(s) were excluded for safety.", "%d SQM(s) de troca de andar foram excluidos por seguranca."), numericValue)
+		summaryLines[#summaryLines + 1] = string.format(localizedText("%d floor-change tile(s) were excluded for safety.", "%d SQM(s) de troca de andar foram excluidos por seguranca."), numericValue)
 	end
 
-	if var_22_0.automaticScan then
-		if var_22_0.scanLimited then
-			var_22_1[#var_22_1 + 1] = string.format(var_0_4("Open-area safety limit reached after %d path layers.", "Limite de seguranca para area aberta atingido apos %d camadas de caminho."), tonumber(var_22_0.scanSafetyDistance) or 0)
+	if stats.automaticScan then
+		if stats.scanLimited then
+			summaryLines[#summaryLines + 1] = string.format(localizedText("Open-area safety limit reached after %d path layers.", "Limite de seguranca para area aberta atingido apos %d camadas de caminho."), tonumber(stats.scanSafetyDistance) or 0)
 		else
-			var_22_1[#var_22_1 + 1] = var_0_4("The circular wave reached the complete boundary of this connected hunt.", "A onda circular encontrou todo o limite desta hunt conectada.")
+			summaryLines[#summaryLines + 1] = localizedText("The circular wave reached the complete boundary of this connected hunt.", "A onda circular encontrou todo o limite desta hunt conectada.")
 		end
 	end
 
-	local textValue = tostring(var_22_0.routePattern or "")
+	local textValue = tostring(stats.routePattern or "")
 
 	if textValue == "horizontal" or textValue == "vertical" then
-		var_22_1[#var_22_1 + 1] = textValue == "horizontal" and var_0_4("Geometric pattern: horizontal sweep.", "Padrao geometrico: varredura horizontal.") or var_0_4("Geometric pattern: vertical sweep.", "Padrao geometrico: varredura vertical.")
+		summaryLines[#summaryLines + 1] = textValue == "horizontal" and localizedText("Geometric pattern: horizontal sweep.", "Padrao geometrico: varredura horizontal.") or localizedText("Geometric pattern: vertical sweep.", "Padrao geometrico: varredura vertical.")
 	end
 
-	local numericValue = tonumber(var_22_0.continuityCorrections) or 0
+	local numericValue = tonumber(stats.continuityCorrections) or 0
 
 	if numericValue > 0 then
-		var_22_1[#var_22_1 + 1] = string.format(var_0_4("%d local return(s) were replaced by smoother continuations.", "%d retorno(s) local(is) foram trocados por continuacoes mais fluidas."), numericValue)
+		summaryLines[#summaryLines + 1] = string.format(localizedText("%d local return(s) were replaced by smoother continuations.", "%d retorno(s) local(is) foram trocados por continuacoes mais fluidas."), numericValue)
 	end
 
-	var_22_1[#var_22_1 + 1] = var_0_4("The route uses only Pos and never changes floor.", "A rota usa apenas Pos e nunca troca de andar.")
-	var_22_1[#var_22_1 + 1] = var_0_4("Closed cycle: the last waypoint returns to the first.", "Ciclo fechado: o ultimo waypoint retorna ao primeiro.")
+	summaryLines[#summaryLines + 1] = localizedText("The route uses only Pos and never changes floor.", "A rota usa apenas Pos e nunca troca de andar.")
+	summaryLines[#summaryLines + 1] = localizedText("Closed cycle: the last waypoint returns to the first.", "Ciclo fechado: o ultimo waypoint retorna ao primeiro.")
 
-	return table.concat(var_22_1, "\n")
+	return table.concat(summaryLines, "\n")
 end
 
-local function var_0_20()
-	var_0_8()
-	var_0_10()
+local function rescanRoute()
+	closeRouteConfirmation()
+	clearRouteAnimation()
 
-	var_0_1.plan = nil
+	autoRouteState.plan = nil
 
 	local localPlayer = g_game and g_game.getLocalPlayer and g_game.getLocalPlayer()
-	local position = var_0_3(localPlayer and localPlayer.getPosition and localPlayer:getPosition())
+	local position = normalizePosition(localPlayer and localPlayer.getPosition and localPlayer:getPosition())
 
 	if position then
-		var_0_1.scanOrigin = position
+		autoRouteState.scanOrigin = position
 	end
 
-	if var_0_2 then
-		var_0_2()
+	if startRouteGeneration then
+		startRouteGeneration()
 	end
 end
 
-local function var_0_21(plan)
-	var_0_1.generating = false
-	var_0_1.plan = plan
+local function showGeneratedRouteConfirmation(plan)
+	autoRouteState.generating = false
+	autoRouteState.plan = plan
 
-	var_0_6(var_0_4("Automatic route ready for review", "Rota automatica pronta para revisao"))
+	setRouteStatus(localizedText("Automatic route ready for review", "Rota automatica pronta para revisao"))
 
-	local function var_24_0()
-		if not var_0_1.active or var_0_1.plan ~= plan then
+	local function applyGeneratedRoute()
+		if not autoRouteState.active or autoRouteState.plan ~= plan then
 			return
 		end
 
-		local plan = var_0_1.plan
-		local destination = var_0_1.destination
+		local plan = autoRouteState.plan
+		local destination = autoRouteState.destination
 
-		var_0_14(false)
+		resetAutoRouteState(false)
 
-		if plan and var_0_1.ctx and var_0_1.ctx.applyWaypoints then
-			var_0_1.ctx.applyWaypoints(plan.waypoints, plan.stats, destination)
+		if plan and autoRouteState.ctx and autoRouteState.ctx.applyWaypoints then
+			autoRouteState.ctx.applyWaypoints(plan.waypoints, plan.stats, destination)
 		end
 	end
 
-	local function var_24_1()
-		var_0_0.cancel(true)
+	local function cancelGeneratedRoute()
+		autoRoute.cancel(true)
 	end
 
 	if not displayGeneralBox then
-		var_24_0()
+		applyGeneratedRoute()
 
 		return
 	end
 
-	var_0_1.confirmBox = displayGeneralBox(var_0_4("Automatic Cavebot Route", "Rota Automatica do Cavebot"), var_0_19(plan), {
+	autoRouteState.confirmBox = displayGeneralBox(localizedText("Automatic Cavebot Route", "Rota Automatica do Cavebot"), buildRouteSummary(plan), {
 		{
-			text = var_0_4("Cancel", "Cancelar"),
-			callback = var_24_1
+			text = localizedText("Cancel", "Cancelar"),
+			callback = cancelGeneratedRoute
 		},
 		{
-			text = var_0_4("Rescan", "Escanear"),
-			callback = var_0_20
+			text = localizedText("Rescan", "Escanear"),
+			callback = rescanRoute
 		},
 		{
-			text = var_0_4("Apply", "Aplicar"),
-			callback = var_24_0
+			text = localizedText("Apply", "Aplicar"),
+			callback = applyGeneratedRoute
 		}
-	}, var_24_0, var_24_1)
+	}, applyGeneratedRoute, cancelGeneratedRoute)
 end
 
-local function var_0_22(arg_27_0, arg_27_1)
-	var_0_14(true)
-	var_0_6(arg_27_0)
+local function reportRouteGenerationFailure(statusText, errorDetails)
+	resetAutoRouteState(true)
+	setRouteStatus(statusText)
 
-	if arg_27_1 and g_logger and g_logger.error then
-		g_logger.error("[helper_cavebot_auto_route] " .. tostring(arg_27_1))
+	if errorDetails and g_logger and g_logger.error then
+		g_logger.error("[helper_cavebot_auto_route] " .. tostring(errorDetails))
 	end
 
 	if displayErrorBox then
-		displayErrorBox(var_0_4("Automatic Cavebot Route", "Rota Automatica do Cavebot"), arg_27_0)
+		displayErrorBox(localizedText("Automatic Cavebot Route", "Rota Automatica do Cavebot"), statusText)
 	end
 end
 
-local function var_0_23(plan)
-	var_0_1.plan = plan
+local function showGeneratedRouteAnimations(plan)
+	autoRouteState.plan = plan
 
-	var_0_6(var_0_4("Propagating circular scan waves through the hunt...", "Propagando ondas circulares de escaneamento pela hunt..."))
-	var_0_17(plan, function()
-		if not var_0_1.active or var_0_1.plan ~= plan then
+	setRouteStatus(localizedText("Propagating circular scan waves through the hunt...", "Propagando ondas circulares de escaneamento pela hunt..."))
+	animateRouteScan(plan, function()
+		if not autoRouteState.active or autoRouteState.plan ~= plan then
 			return
 		end
 
-		var_0_6(var_0_4("Drawing the optimized route...", "Desenhando a rota otimizada..."))
-		var_0_18(plan, function()
-			if var_0_1.active and var_0_1.plan == plan then
-				var_0_21(plan)
+		setRouteStatus(localizedText("Drawing the optimized route...", "Desenhando a rota otimizada..."))
+		animateGeneratedRoute(plan, function()
+			if autoRouteState.active and autoRouteState.plan == plan then
+				showGeneratedRouteConfirmation(plan)
 			end
 		end)
 	end)
 end
 
-local function var_0_24()
-	var_0_1.generationEvent = nil
+local function pollRouteGeneration()
+	autoRouteState.generationEvent = nil
 
-	if not var_0_1.active or not var_0_1.scanOrigin then
+	if not autoRouteState.active or not autoRouteState.scanOrigin then
 		return
 	end
 
 	if not g_cavebotAutoRoute or not g_cavebotAutoRoute.generateAutomatic then
-		var_0_22(var_0_4("The automatic route generator is unavailable.", "O gerador automatico de rota esta indisponivel."))
+		reportRouteGenerationFailure(localizedText("The automatic route generator is unavailable.", "O gerador automatico de rota esta indisponivel."))
 
 		return
 	end
 
-	local var_31_0 = var_0_3(var_0_1.scanOrigin)
-	local var_31_1, var_31_2, var_31_3, var_31_4 = pcall(function()
-		return g_cavebotAutoRoute.generateAutomatic(var_31_0)
+	local scanOrigin = normalizePosition(autoRouteState.scanOrigin)
+	local generationCallSucceeded, generatedPlan, generationStatus, generationDetails = pcall(function()
+		return g_cavebotAutoRoute.generateAutomatic(scanOrigin)
 	end)
 
-	if not var_31_1 then
-		var_0_22(var_0_4("The automatic route generator failed safely.", "O gerador automatico de rota falhou com seguranca."), tostring(var_31_2))
+	if not generationCallSucceeded then
+		reportRouteGenerationFailure(localizedText("The automatic route generator failed safely.", "O gerador automatico de rota falhou com seguranca."), tostring(generatedPlan))
 
 		return
 	end
 
-	if not var_31_2 and var_31_3 == "pending" then
-		var_31_4 = type(var_31_4) == "table" and var_31_4 or {}
+	if not generatedPlan and generationStatus == "pending" then
+		generationDetails = type(generationDetails) == "table" and generationDetails or {}
 
-		local numericValue = tonumber(var_31_4.phase) or 1
+		local numericValue = tonumber(generationDetails.phase) or 1
 
 		if numericValue == 1 then
-			var_0_6(string.format(var_0_4("Scanning the connected hunt... %d tiles", "Escaneando a hunt conectada... %d SQMs"), tonumber(var_31_4.processed) or 0))
+			setRouteStatus(string.format(localizedText("Scanning the connected hunt... %d tiles", "Escaneando a hunt conectada... %d SQMs"), tonumber(generationDetails.processed) or 0))
 		elseif numericValue == 2 then
-			var_0_6(var_0_4("Optimizing the route in the background...", "Otimizando a rota em segundo plano..."))
+			setRouteStatus(localizedText("Optimizing the route in the background...", "Otimizando a rota em segundo plano..."))
 		elseif numericValue == 3 then
-			var_0_6(string.format(var_0_4("Validating route connections... %d/%d", "Validando conexoes da rota... %d/%d"), tonumber(var_31_4.processed) or 0, tonumber(var_31_4.total) or 0))
+			setRouteStatus(string.format(localizedText("Validating route connections... %d/%d", "Validando conexoes da rota... %d/%d"), tonumber(generationDetails.processed) or 0, tonumber(generationDetails.total) or 0))
 		end
 
-		if var_0_1.active and var_0_1.scanOrigin then
-			var_0_1.generationEvent = scheduleEvent(var_0_24, 1)
+		if autoRouteState.active and autoRouteState.scanOrigin then
+			autoRouteState.generationEvent = scheduleEvent(pollRouteGeneration, 1)
 		end
 
 		return
 	end
 
-	if not var_31_2 then
-		var_0_22(var_0_15(var_31_3, var_31_4), var_31_3)
+	if not generatedPlan then
+		reportRouteGenerationFailure(formatRouteGenerationError(generationStatus, generationDetails), generationStatus)
 
 		return
 	end
 
-	var_0_23(var_31_2)
+	showGeneratedRouteAnimations(generatedPlan)
 end
 
-function var_0_2()
-	if not var_0_1.active or not var_0_1.scanOrigin then
+function startRouteGeneration()
+	if not autoRouteState.active or not autoRouteState.scanOrigin then
 		return
 	end
 
-	var_0_9()
-	var_0_8()
-	var_0_10()
+	cancelRouteGenerationEvent()
+	closeRouteConfirmation()
+	clearRouteAnimation()
 
-	var_0_1.plan = nil
-	var_0_1.generating = true
+	autoRouteState.plan = nil
+	autoRouteState.generating = true
 
-	var_0_6(var_0_4("Scanning the connected hunt...", "Escaneando a hunt conectada..."))
+	setRouteStatus(localizedText("Scanning the connected hunt...", "Escaneando a hunt conectada..."))
 
-	var_0_1.generationEvent = scheduleEvent(var_0_24, 1)
+	autoRouteState.generationEvent = scheduleEvent(pollRouteGeneration, 1)
 end
 
-local function var_0_25(arg_34_0)
-	var_0_1.savedHandlers = {
-		onMousePress = arg_34_0.onMousePress,
-		onMouseMove = arg_34_0.onMouseMove,
-		onMouseRelease = arg_34_0.onMouseRelease,
-		onMouseWheel = arg_34_0.onMouseWheel,
-		draggable = arg_34_0:isDraggable()
+local function captureMapInputHandlers(mapWidget)
+	autoRouteState.savedHandlers = {
+		onMousePress = mapWidget.onMousePress,
+		onMouseMove = mapWidget.onMouseMove,
+		onMouseRelease = mapWidget.onMouseRelease,
+		onMouseWheel = mapWidget.onMouseWheel,
+		draggable = mapWidget:isDraggable()
 	}
 
-	arg_34_0:setDraggable(false)
+	mapWidget:setDraggable(false)
 
-	function arg_34_0.onMousePress(unusedArgument, unusedArgument, arg_35_2)
-		if arg_35_2 == MouseRightButton then
-			var_0_0.cancel(true)
+	function mapWidget.onMousePress(unusedArgument, unusedArgument, mouseButton)
+		if mouseButton == MouseRightButton then
+			autoRoute.cancel(true)
 		end
 
 		return true
 	end
 
-	function arg_34_0.onMouseMove()
+	function mapWidget.onMouseMove()
 		return true
 	end
 
-	function arg_34_0.onMouseRelease(unusedArgument, unusedArgument, arg_37_2)
-		if arg_37_2 == MouseRightButton then
-			var_0_0.cancel(true)
+	function mapWidget.onMouseRelease(unusedArgument, unusedArgument, mouseButton)
+		if mouseButton == MouseRightButton then
+			autoRoute.cancel(true)
 		end
 
 		return true
 	end
 
-	function arg_34_0.onMouseWheel()
+	function mapWidget.onMouseWheel()
 		return true
 	end
 end
 
-function var_0_0.start(destination)
-	local map = var_0_5("cavebotMapPreview")
+function autoRoute.start(destination)
+	local map = getWidget("cavebotMapPreview")
 	local localPlayer = g_game and g_game.getLocalPlayer and g_game.getLocalPlayer()
-	local position = var_0_3(localPlayer and localPlayer.getPosition and localPlayer:getPosition())
+	local position = normalizePosition(localPlayer and localPlayer.getPosition and localPlayer:getPosition())
 
 	if not map or map:isDestroyed() or not position then
-		var_0_6(var_0_4("Open the game before generating a route.", "Entre no jogo antes de gerar uma rota."))
+		setRouteStatus(localizedText("Open the game before generating a route.", "Entre no jogo antes de gerar uma rota."))
 
 		return false
 	end
 
-	if var_0_1.active or var_0_1.map then
-		var_0_14(true)
+	if autoRouteState.active or autoRouteState.map then
+		resetAutoRouteState(true)
 	end
 
-	if var_0_1.ctx and var_0_1.ctx.prepare then
-		var_0_1.ctx.prepare()
+	if autoRouteState.ctx and autoRouteState.ctx.prepare then
+		autoRouteState.ctx.prepare()
 	end
 
-	var_0_1.map = map
-	var_0_1.active = true
-	var_0_1.generating = true
-	var_0_1.scanOrigin = var_0_3(position)
-	var_0_1.plan = nil
-	var_0_1.destination = destination
+	autoRouteState.map = map
+	autoRouteState.active = true
+	autoRouteState.generating = true
+	autoRouteState.scanOrigin = normalizePosition(position)
+	autoRouteState.plan = nil
+	autoRouteState.destination = destination
 
-	if var_0_1.ctx and var_0_1.ctx.hideMarkers then
-		var_0_1.ctx.hideMarkers()
+	if autoRouteState.ctx and autoRouteState.ctx.hideMarkers then
+		autoRouteState.ctx.hideMarkers()
 	end
 
-	var_0_25(map)
-	var_0_12(false)
-	var_0_0.refreshButton()
-	var_0_11()
-	var_0_2()
+	captureMapInputHandlers(map)
+	setRosePanelEnabled(false)
+	autoRoute.refreshButton()
+	raiseRouteControls()
+	startRouteGeneration()
 
 	return true
 end
 
-function var_0_0.toggle()
-	if var_0_1.active then
-		return var_0_0.cancel(true)
+function autoRoute.toggle()
+	if autoRouteState.active then
+		return autoRoute.cancel(true)
 	end
 
-	return var_0_0.start()
+	return autoRoute.start()
 end
 
-function var_0_0.isActive()
-	return var_0_1.active == true
+function autoRoute.isActive()
+	return autoRouteState.active == true
 end
 
-function var_0_0.init(ctx)
-	if var_0_1.active or var_0_1.map then
-		var_0_14(false)
+function autoRoute.init(ctx)
+	if autoRouteState.active or autoRouteState.map then
+		resetAutoRouteState(false)
 	end
 
-	var_0_1.ctx = ctx
+	autoRouteState.ctx = ctx
 
-	var_0_0.refreshButton()
+	autoRoute.refreshButton()
 end
 
-function var_0_0.terminate()
-	if var_0_1.active or var_0_1.map then
-		var_0_14(false)
+function autoRoute.terminate()
+	if autoRouteState.active or autoRouteState.map then
+		resetAutoRouteState(false)
 	end
 
-	var_0_1.ctx = nil
+	autoRouteState.ctx = nil
 end

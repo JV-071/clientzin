@@ -187,21 +187,21 @@ local function applyContainerTitleStyle(containerWindow)
 	end
 end
 
-local function var_0_10(arg_9_0, arg_9_1)
-	if not arg_9_0 or arg_9_0:isDestroyed() then
+local function anchorContainerTitleBeforeButton(containerWindow, headerButton)
+	if not containerWindow or containerWindow:isDestroyed() then
 		return
 	end
 
-	local miniwindowTitle = arg_9_0:getChildById("miniwindowTitle")
+	local miniwindowTitle = containerWindow:getChildById("miniwindowTitle")
 
-	if not miniwindowTitle or not arg_9_1 or arg_9_1.isDestroyed and arg_9_1:isDestroyed() then
+	if not miniwindowTitle or not headerButton or headerButton.isDestroyed and headerButton:isDestroyed() then
 		return
 	end
 
 	miniwindowTitle:breakAnchors()
 	miniwindowTitle:addAnchor(AnchorTop, "miniwindowHeader", AnchorTop)
 	miniwindowTitle:addAnchor(AnchorLeft, "miniwindowHeader", AnchorLeft)
-	miniwindowTitle:addAnchor(AnchorRight, arg_9_1:getId(), AnchorLeft)
+	miniwindowTitle:addAnchor(AnchorRight, headerButton:getId(), AnchorLeft)
 	miniwindowTitle:setMarginTop(1)
 	miniwindowTitle:setMarginLeft(19)
 	miniwindowTitle:setMarginRight(3)
@@ -504,10 +504,10 @@ if MarketCategory then
 	STORE_INBOX_FLOOR_COVERING_CATEGORIES[MarketCategory.Decoration] = true
 end
 
-local var_0_33 = 23721
-local var_0_34 = 11698
-local var_0_35 = 65535
-local var_0_36 = {
+local AUTOLOOT_ONLY_CONTAINER_ITEM_ID = 23721
+local BATTLE_PASS_INBOX_ITEM_ID = 11698
+local VIRTUAL_ITEM_POSITION_X = 65535
+local AUTOLOOT_EXCLUDED_CONTAINER_IDS = {
 	[19202] = true,
 	[470] = true,
 	[12902] = true,
@@ -527,18 +527,18 @@ local function isStoreInboxContainer(container)
 	return container:getName():lower():find("store inbox", 1, true) ~= nil
 end
 
-local function var_0_38(arg_28_0)
-	if not arg_28_0 then
+local function isBattlePassInboxContainer(container)
+	if not container then
 		return false
 	end
 
-	local containerItem = arg_28_0.getContainerItem and arg_28_0:getContainerItem()
+	local containerItem = container.getContainerItem and container:getContainerItem()
 
-	if containerItem and containerItem:getId() == var_0_34 then
+	if containerItem and containerItem:getId() == BATTLE_PASS_INBOX_ITEM_ID then
 		return true
 	end
 
-	local name = arg_28_0:getName()
+	local name = container:getName()
 
 	if not name then
 		return false
@@ -547,32 +547,32 @@ local function var_0_38(arg_28_0)
 	return name:lower():find("battle pass", 1, true) ~= nil
 end
 
-local function var_0_39(arg_29_0)
-	if not arg_29_0 or not arg_29_0.getContainerItem then
+local function isAutolootOnlyContainer(container)
+	if not container or not container.getContainerItem then
 		return false
 	end
 
-	local containerItem = arg_29_0:getContainerItem()
+	local containerItem = container:getContainerItem()
 
-	return containerItem and containerItem:getId() == var_0_33
+	return containerItem and containerItem:getId() == AUTOLOOT_ONLY_CONTAINER_ITEM_ID
 end
 
-local function var_0_40(arg_30_0, arg_30_1)
-	if not arg_30_0 or not arg_30_0.getName then
+local function containerNameContains(container, nameSubstring)
+	if not container or not container.getName then
 		return false
 	end
 
-	local name = arg_30_0:getName()
+	local name = container:getName()
 
 	if not name or name == "" then
 		return false
 	end
 
-	return name:lower():find(arg_30_1, 1, true) ~= nil
+	return name:lower():find(nameSubstring, 1, true) ~= nil
 end
 
-local function var_0_41(arg_31_0)
-	local containerItem = arg_31_0 and arg_31_0.getContainerItem and arg_31_0:getContainerItem()
+local function isCorpseContainer(container)
+	local containerItem = container and container.getContainerItem and container:getContainerItem()
 
 	if not containerItem then
 		return false
@@ -589,36 +589,36 @@ local function var_0_41(arg_31_0)
 	return false
 end
 
-local function var_0_42(arg_32_0)
-	if not arg_32_0 then
+local function canShowContainerAutoloot(container)
+	if not container then
 		return false
 	end
 
-	if arg_32_0.isInDepot and arg_32_0:isInDepot() then
+	if container.isInDepot and container:isInDepot() then
 		return false
 	end
 
-	if var_0_41(arg_32_0) then
+	if isCorpseContainer(container) then
 		return false
 	end
 
-	if var_0_40(arg_32_0, "depot") or var_0_40(arg_32_0, "browse field") or var_0_40(arg_32_0, "market") then
+	if containerNameContains(container, "depot") or containerNameContains(container, "browse field") or containerNameContains(container, "market") then
 		return false
 	end
 
-	local containerItem = arg_32_0.getContainerItem and arg_32_0:getContainerItem()
+	local containerItem = container.getContainerItem and container:getContainerItem()
 
 	if not containerItem then
 		return false
 	end
 
-	if var_0_36[containerItem:getId()] then
+	if AUTOLOOT_EXCLUDED_CONTAINER_IDS[containerItem:getId()] then
 		return false
 	end
 
 	local position = containerItem.getPosition and containerItem:getPosition()
 
-	if not position or position.x ~= var_0_35 then
+	if not position or position.x ~= VIRTUAL_ITEM_POSITION_X then
 		return false
 	end
 
@@ -845,11 +845,11 @@ function shouldApplyContainerSort(container)
 		return false
 	end
 
-	if var_0_39(container) then
+	if isAutolootOnlyContainer(container) then
 		return false
 	end
 
-	if var_0_38(container) then
+	if isBattlePassInboxContainer(container) then
 		return false
 	end
 
@@ -944,11 +944,11 @@ local function showStoreInboxContextMenu(widget, mousePos, mouseButton, containe
 	local buttonSize = widget:getSize()
 	local width = menu:getWidth()
 	local buttonCenterX = buttonPos.x + buttonSize.width / 2
-	local var_49_14, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
+	local menuY, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
 
 	menu:display({
 		x = menuX,
-		y = var_49_14
+		y = menuY
 	})
 
 	return true
@@ -1214,19 +1214,19 @@ local function clearContainerLayoutForId()
 		SidebarPersistence.document.battlePassInboxWidgetOptions = nil
 	end
 
-	local var_66_0 = getSidebarWidgetOptionsPersistence()
+	local widgetOptionsPersistence = getSidebarWidgetOptionsPersistence()
 
-	if var_66_0 and var_66_0.clearWidgetOptionsById then
-		var_66_0.clearWidgetOptionsById("BattlePassInboxWindow")
+	if widgetOptionsPersistence and widgetOptionsPersistence.clearWidgetOptionsById then
+		widgetOptionsPersistence.clearWidgetOptionsById("BattlePassInboxWindow")
 	end
 
-	local var_66_1 = modules.game_interface and modules.game_interface.SidebarWidgetsPersistence
+	local sidebarPersistence = modules.game_interface and modules.game_interface.SidebarWidgetsPersistence
 
-	if var_66_1 then
-		if var_66_1.clearWidgetPlacementByType then
-			var_66_1.clearWidgetPlacementByType("battlePassInbox")
-		elseif var_66_1.clearWidgetPlacement then
-			var_66_1.clearWidgetPlacement("BattlePassInboxWindow")
+	if sidebarPersistence then
+		if sidebarPersistence.clearWidgetPlacementByType then
+			sidebarPersistence.clearWidgetPlacementByType("battlePassInbox")
+		elseif sidebarPersistence.clearWidgetPlacement then
+			sidebarPersistence.clearWidgetPlacement("BattlePassInboxWindow")
 		end
 	end
 
@@ -1239,64 +1239,64 @@ local function clearContainerLayoutForId()
 	end
 end
 
-local function var_0_76(arg_67_0, arg_67_1)
-	if not arg_67_0 then
+local function clearSavedContainerLayout(windowId, container)
+	if not windowId then
 		return
 	end
 
-	local var_67_0 = arg_67_1 and var_0_38(arg_67_1)
-	local textValue = tostring(arg_67_0):match("^container(%d+)$")
+	local isBattlePassInbox = container and isBattlePassInboxContainer(container)
+	local textValue = tostring(windowId):match("^container(%d+)$")
 
 	if textValue then
-		local var_67_2 = getSidebarWidgetOptionsPersistence()
+		local widgetOptionsPersistence = getSidebarWidgetOptionsPersistence()
 
-		if var_67_2 and var_67_2.clearContainerOptions then
-			var_67_2.clearContainerOptions(tonumber(textValue))
+		if widgetOptionsPersistence and widgetOptionsPersistence.clearContainerOptions then
+			widgetOptionsPersistence.clearContainerOptions(tonumber(textValue))
 		end
 
-		local var_67_3 = modules.game_interface and modules.game_interface.SidebarWidgetsPersistence
+		local sidebarPersistence = modules.game_interface and modules.game_interface.SidebarWidgetsPersistence
 
-		if var_67_3 and var_67_3.clearWidgetPlacement then
-			var_67_3.clearWidgetPlacement(tostring(arg_67_0))
+		if sidebarPersistence and sidebarPersistence.clearWidgetPlacement then
+			sidebarPersistence.clearWidgetPlacement(tostring(windowId))
 		end
 	end
 
-	if var_67_0 then
+	if isBattlePassInbox then
 		clearContainerLayoutForId()
 	end
 end
 
-local function var_0_77()
+local function getSidebarWidgetsPersistence()
 	return modules.game_interface and modules.game_interface.SidebarWidgetsPersistence
 end
 
-local function getSavedLayoutForWindow(arg_69_0, window)
-	if not arg_69_0 or not arg_69_0.getId then
+local function getSavedLayoutForWindow(containerWindow, window)
+	if not containerWindow or not containerWindow.getId then
 		return nil, nil
 	end
 
-	local settings = arg_69_0:getSettings("parentId")
-	local var_69_1 = arg_69_0:getSettings("index")
-	local var_69_2 = window and var_0_38(window)
-	local var_69_3 = var_0_77()
+	local settings = containerWindow:getSettings("parentId")
+	local savedIndex = containerWindow:getSettings("index")
+	local isBattlePassInbox = window and isBattlePassInboxContainer(window)
+	local sidebarPersistence = getSidebarWidgetsPersistence()
 
-	if not settings and var_69_3 then
-		local widgetPlacement = var_69_3.getWidgetPlacement and var_69_3.getWidgetPlacement(arg_69_0:getId())
+	if not settings and sidebarPersistence then
+		local widgetPlacement = sidebarPersistence.getWidgetPlacement and sidebarPersistence.getWidgetPlacement(containerWindow:getId())
 
-		if not widgetPlacement and var_69_2 then
-			widgetPlacement = var_69_3.getWidgetPlacementByType and var_69_3.getWidgetPlacementByType("battlePassInbox") or var_69_3.getWidgetPlacement and var_69_3.getWidgetPlacement("BattlePassInboxWindow")
+		if not widgetPlacement and isBattlePassInbox then
+			widgetPlacement = sidebarPersistence.getWidgetPlacementByType and sidebarPersistence.getWidgetPlacementByType("battlePassInbox") or sidebarPersistence.getWidgetPlacement and sidebarPersistence.getWidgetPlacement("BattlePassInboxWindow")
 		end
 
 		if widgetPlacement then
 			settings = widgetPlacement.parentId
-			var_69_1 = widgetPlacement.index
+			savedIndex = widgetPlacement.index
 		end
 	end
 
 	if not settings and SidebarLayoutState and SidebarLayoutState.getWidgets then
-		local widgets = SidebarLayoutState.getWidgets()[arg_69_0:getId()]
+		local widgets = SidebarLayoutState.getWidgets()[containerWindow:getId()]
 
-		if not widgets and var_69_2 then
+		if not widgets and isBattlePassInbox then
 			for unusedValue, getWidget in pairs(SidebarLayoutState.getWidgets()) do
 				if getWidget.type == "battlePassInbox" then
 					widgets = getWidget
@@ -1308,19 +1308,19 @@ local function getSavedLayoutForWindow(arg_69_0, window)
 
 		if widgets then
 			settings = widgets.parentId
-			var_69_1 = widgets.index
+			savedIndex = widgets.index
 		end
 	end
 
-	return settings, var_69_1
+	return settings, savedIndex
 end
 
-local function clearContainerWindowLayout(arg_70_0, arg_70_1)
-	if not arg_70_0 or not arg_70_0.getId then
+local function clearContainerWindowLayout(containerWindow, container)
+	if not containerWindow or not containerWindow.getId then
 		return
 	end
 
-	var_0_76(arg_70_0:getId(), arg_70_1)
+	clearSavedContainerLayout(containerWindow:getId(), container)
 end
 
 local function ensureSidebarForSavedLayout(parentId)
@@ -1359,22 +1359,22 @@ local function computeExpectedNumLines(layout, container)
 	return math.max(math.ceil(capacity / numColumns), 1)
 end
 
-local var_0_82 = 4
-local var_0_83 = 9
-local var_0_84 = 3
-local var_0_85 = 4
-local var_0_86 = var_0_85 + 24
-local var_0_87 = 17
+local CONTAINER_CONTENT_PADDING_TOP = 4
+local CONTAINER_CONTENT_PADDING_BOTTOM = 9
+local CONTAINER_CONTENT_MINIMUM_PADDING_BOTTOM = 3
+local CONTAINER_MARGIN_BOTTOM = 4
+local PAGED_CONTAINER_MARGIN_BOTTOM = CONTAINER_MARGIN_BOTTOM + 24
+local CONTAINER_CONTENT_HEIGHT_OVERHEAD = 17
 
-local function var_0_88(arg_73_0, arg_73_1, arg_73_2)
-	if not arg_73_0 or arg_73_1 <= 0 then
+local function computeContainerContentHeight(layout, rowCount, paddingBottom)
+	if not layout or rowCount <= 0 then
 		return 0
 	end
 
-	local cellSize = arg_73_0:getCellSize()
-	local unusedValue, var_73_2 = getGridSpacing(arg_73_0)
+	local cellSize = layout:getCellSize()
+	local unusedValue, spacingY = getGridSpacing(layout)
 
-	return arg_73_1 * cellSize.height + math.max(arg_73_1 - 1, 0) * var_73_2 + var_0_87 + (arg_73_2 or var_0_83) - var_0_83
+	return rowCount * cellSize.height + math.max(rowCount - 1, 0) * spacingY + CONTAINER_CONTENT_HEIGHT_OVERHEAD + (paddingBottom or CONTAINER_CONTENT_PADDING_BOTTOM) - CONTAINER_CONTENT_PADDING_BOTTOM
 end
 
 local function applyDefaultContentHeightForWindow(containerWindow, layout, unusedArgument, container)
@@ -1386,59 +1386,59 @@ local function applyDefaultContentHeightForWindow(containerWindow, layout, unuse
 		itemsCount = math.max(math.ceil(container:getItemsCount() / layout:getNumColumns()), 1)
 	end
 
-	containerWindow:setContentHeight(var_0_88(layout, itemsCount))
+	containerWindow:setContentHeight(computeContainerContentHeight(layout, itemsCount))
 end
 
-local function var_0_90(arg_75_0, arg_75_1, arg_75_2)
-	if arg_75_0 and not arg_75_0:isDestroyed() and arg_75_0.getMinimumHeight then
-		local minimumHeight = arg_75_0:getMinimumHeight()
+local function computeContainerMinimumWindowHeight(containerWindow, container, layout)
+	if containerWindow and not containerWindow:isDestroyed() and containerWindow.getMinimumHeight then
+		local minimumHeight = containerWindow:getMinimumHeight()
 
 		if minimumHeight and minimumHeight > 0 then
 			return minimumHeight
 		end
 	end
 
-	if not arg_75_1 or not arg_75_2 then
+	if not container or not layout then
 		return 0
 	end
 
-	local var_75_1 = arg_75_1:hasPages() and var_0_86 or var_0_85
+	local marginBottom = container:hasPages() and PAGED_CONTAINER_MARGIN_BOTTOM or CONTAINER_MARGIN_BOTTOM
 
-	return var_0_88(arg_75_2, 1) + var_0_82 + var_0_84 + var_75_1
+	return computeContainerContentHeight(layout, 1) + CONTAINER_CONTENT_PADDING_TOP + CONTAINER_CONTENT_MINIMUM_PADDING_BOTTOM + marginBottom
 end
 
-local function var_0_91(arg_76_0, arg_76_1, arg_76_2)
-	if not arg_76_0 or arg_76_0:isDestroyed() then
+local function ensureContainerMinimumWindowHeight(containerWindow, container, layout)
+	if not containerWindow or containerWindow:isDestroyed() then
 		return
 	end
 
-	local height = var_0_90(arg_76_0, arg_76_1, arg_76_2)
+	local height = computeContainerMinimumWindowHeight(containerWindow, container, layout)
 
-	if height > 0 and height > arg_76_0:getHeight() then
-		arg_76_0:setHeight(height)
+	if height > 0 and height > containerWindow:getHeight() then
+		containerWindow:setHeight(height)
 	end
 end
 
-local function var_0_92(arg_77_0, arg_77_1, arg_77_2, unusedArgument)
-	if not arg_77_0 or arg_77_0:isDestroyed() or not arg_77_2 then
+local function updateContainerContentHeightLimits(containerWindow, container, layout, unusedArgument)
+	if not containerWindow or containerWindow:isDestroyed() or not layout then
 		return
 	end
 
-	arg_77_0:setContentMinimumHeight(var_0_88(arg_77_2, 1, var_0_84))
-	arg_77_0:setContentMaximumHeight(var_0_88(arg_77_2, computeExpectedNumLines(arg_77_2, arg_77_1)))
+	containerWindow:setContentMinimumHeight(computeContainerContentHeight(layout, 1, CONTAINER_CONTENT_MINIMUM_PADDING_BOTTOM))
+	containerWindow:setContentMaximumHeight(computeContainerContentHeight(layout, computeExpectedNumLines(layout, container)))
 end
 
-local function var_0_93(arg_78_0, arg_78_1, arg_78_2)
-	var_0_91(arg_78_0, arg_78_1, arg_78_2)
+local function clampContainerWindowHeight(containerWindow, container, layout)
+	ensureContainerMinimumWindowHeight(containerWindow, container, layout)
 
-	if not arg_78_0 or arg_78_0:isDestroyed() or not arg_78_0.getMaximumHeight then
+	if not containerWindow or containerWindow:isDestroyed() or not containerWindow.getMaximumHeight then
 		return
 	end
 
-	local maximumHeight = arg_78_0:getMaximumHeight()
+	local maximumHeight = containerWindow:getMaximumHeight()
 
-	if maximumHeight and maximumHeight > 0 and maximumHeight < arg_78_0:getHeight() then
-		arg_78_0:setHeight(maximumHeight)
+	if maximumHeight and maximumHeight > 0 and maximumHeight < containerWindow:getHeight() then
+		containerWindow:setHeight(maximumHeight)
 	end
 end
 
@@ -1448,18 +1448,18 @@ local function applyContainerHeight(containerWindow, container, layout, cellSize
 	end
 
 	if containerWindow.preservedHeight and containerWindow.preservedHeight > 0 then
-		local var_79_0 = var_0_90(containerWindow, container, layout)
+		local minimumWindowHeight = computeContainerMinimumWindowHeight(containerWindow, container, layout)
 		local preservedHeight = containerWindow.preservedHeight
 
-		if var_79_0 > 0 and preservedHeight < var_79_0 then
-			preservedHeight = var_79_0
+		if minimumWindowHeight > 0 and preservedHeight < minimumWindowHeight then
+			preservedHeight = minimumWindowHeight
 		end
 
 		containerWindow:setHeight(preservedHeight)
 
 		containerWindow.preservedHeight = nil
 
-		var_0_93(containerWindow, container, layout)
+		clampContainerWindowHeight(containerWindow, container, layout)
 
 		return
 	end
@@ -1469,7 +1469,7 @@ local function applyContainerHeight(containerWindow, container, layout, cellSize
 
 	if containerOpts and type(containerOpts.contentHeight) == "number" and containerOpts.contentHeight > 0 then
 		containerWindow:setContentHeight(containerOpts.contentHeight)
-		var_0_93(containerWindow, container, layout)
+		clampContainerWindowHeight(containerWindow, container, layout)
 
 		return
 	end
@@ -1478,16 +1478,16 @@ local function applyContainerHeight(containerWindow, container, layout, cellSize
 
 	if legacyHeight and legacyHeight > 0 then
 		containerWindow:setHeight(legacyHeight)
-		var_0_93(containerWindow, container, layout)
+		clampContainerWindowHeight(containerWindow, container, layout)
 
 		return
 	end
 
 	applyDefaultContentHeightForWindow(containerWindow, layout, cellSize, container)
-	var_0_93(containerWindow, container, layout)
+	clampContainerWindowHeight(containerWindow, container, layout)
 end
 
-local function applyContainerLayout(container, cellSize, arg_80_2, layout)
+local function applyContainerLayout(container, cellSize, gridLayout, layout)
 	local containerWindow = container.window
 
 	if not containerWindow or containerWindow:isDestroyed() then
@@ -1537,7 +1537,7 @@ local function applyContainerLayout(container, cellSize, arg_80_2, layout)
 		end
 
 		if not layout then
-			applyDefaultContentHeightForWindow(containerWindow, arg_80_2, cellSize, container)
+			applyDefaultContentHeightForWindow(containerWindow, gridLayout, cellSize, container)
 		end
 
 		container._needsLayoutRestore = nil
@@ -1651,11 +1651,11 @@ local function applyContainerLayout(container, cellSize, arg_80_2, layout)
 	else
 		if not layout then
 			if containerWindow.preservedHeight and containerWindow.preservedHeight > 0 then
-				local var_80_25 = var_0_90(containerWindow, container, arg_80_2)
+				local minimumWindowHeight = computeContainerMinimumWindowHeight(containerWindow, container, gridLayout)
 				local preservedHeight = containerWindow.preservedHeight
 
-				if var_80_25 > 0 and preservedHeight < var_80_25 then
-					preservedHeight = var_80_25
+				if minimumWindowHeight > 0 and preservedHeight < minimumWindowHeight then
+					preservedHeight = minimumWindowHeight
 				end
 
 				containerWindow:setHeight(preservedHeight)
@@ -1663,10 +1663,10 @@ local function applyContainerLayout(container, cellSize, arg_80_2, layout)
 				containerWindow.preservedHeight = nil
 			elseif savedContentHeight and containerWindow:isResizeable() then
 				containerWindow:setContentHeight(savedContentHeight)
-				var_0_91(containerWindow, container, arg_80_2)
+				ensureContainerMinimumWindowHeight(containerWindow, container, gridLayout)
 			elseif savedHeight and containerWindow:isResizeable() then
 				containerWindow:setHeight(savedHeight)
-				var_0_91(containerWindow, container, arg_80_2)
+				ensureContainerMinimumWindowHeight(containerWindow, container, gridLayout)
 			end
 		end
 
@@ -1684,9 +1684,9 @@ local function applyContainerLayout(container, cellSize, arg_80_2, layout)
 	if parent:getClassName() == "UIMiniWindowContainer" then
 		addEvent(function()
 			if parent and not parent:isDestroyed() then
-				local var_81_0 = var_0_77()
+				local sidebarPersistence = getSidebarWidgetsPersistence()
 
-				if var_81_0 and var_81_0.isRestoringLoginOrder and var_81_0.isRestoringLoginOrder() then
+				if sidebarPersistence and sidebarPersistence.isRestoringLoginOrder and sidebarPersistence.isRestoringLoginOrder() then
 					parent:order()
 				end
 			end
@@ -1752,9 +1752,9 @@ local function restoreAllContainerLayouts()
 					applyContainerLayout(container, cellSize, layout, true)
 					toggleContainerPages(window, container)
 					applyContainerContextLayout(window)
-					var_0_92(window, container, layout, cellSize)
+					updateContainerContentHeightLimits(window, container, layout, cellSize)
 					applyContainerHeight(window, container, layout, cellSize)
-					var_0_93(window, container, layout)
+					clampContainerWindowHeight(window, container, layout)
 
 					if container._needsLayoutRestore then
 						container._layoutRestoreAttempts = (container._layoutRestoreAttempts or 0) + 1
@@ -1763,8 +1763,8 @@ local function restoreAllContainerLayouts()
 							applyDefaultPanelFallback(container, cellSize, layout)
 							toggleContainerPages(window, container)
 							applyContainerContextLayout(window)
-							var_0_92(window, container, layout, cellSize)
-							var_0_93(window, container, layout)
+							updateContainerContentHeightLimits(window, container, layout, cellSize)
+							clampContainerWindowHeight(window, container, layout)
 						else
 							stillPending = true
 						end
@@ -1970,12 +1970,12 @@ function destroy(container)
 			return
 		end
 
-		local var_97_1 = parent:getParent()
+		local sidebarPanel = parent:getParent()
 
 		parent:destroy()
 
-		if var_97_1 and not var_97_1:isDestroyed() and var_97_1:getClassName() == "UIMiniWindowContainer" and type(var_97_1.refreshSidebarFreeSpace) == "function" then
-			var_97_1:refreshSidebarFreeSpace()
+		if sidebarPanel and not sidebarPanel:isDestroyed() and sidebarPanel:getClassName() == "UIMiniWindowContainer" and type(sidebarPanel.refreshSidebarFreeSpace) == "function" then
+			sidebarPanel:refreshSidebarFreeSpace()
 		end
 	end
 end
@@ -2013,8 +2013,8 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 
 	menu:setGameMenu(true)
 
-	local var_99_2 = var_0_39(sourceContainer)
-	local visible = var_0_42(sourceContainer)
+	local isAutolootOnly = isAutolootOnlyContainer(sourceContainer)
+	local visible = canShowContainerAutoloot(sourceContainer)
 	local autoLoot = menu:getChildById("autoLoot")
 	local autoLootSeparator = menu:getChildById("autoLootSeparator")
 
@@ -2026,16 +2026,16 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 		autoLoot:setVisible(visible)
 
 		if visible then
-			local var_99_6 = OtcOpCode and OtcOpCode.TOGGLE_AUTOLOOT or 1
-			local checked = g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(var_99_6) and true or false
+			local autolootToggleOpcode = OtcOpCode and OtcOpCode.TOGGLE_AUTOLOOT or 1
+			local checked = g_game.isOtcToggleEnabled and g_game.isOtcToggleEnabled(autolootToggleOpcode) and true or false
 			local unusedValue = true
 
 			autoLoot:setChecked(checked)
 
-			local var_99_9 = false
+			local isSynchronizingAutolootCheckbox = false
 
-			function autoLoot.onCheckChange(arg_100_0)
-				if var_99_9 then
+			function autoLoot.onCheckChange(checkbox)
+				if isSynchronizingAutolootCheckbox then
 					return
 				end
 
@@ -2043,7 +2043,7 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 					return
 				end
 
-				g_game.sendOtcToggle(var_99_6, arg_100_0:isChecked() and 1 or 0)
+				g_game.sendOtcToggle(autolootToggleOpcode, checkbox:isChecked() and 1 or 0)
 				menu:destroy()
 			end
 		end
@@ -2052,7 +2052,7 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 	for _, choice in ipairs(menu:getChildren()) do
 		local choiceId = choice:getId()
 
-		if var_99_2 and choiceId ~= "autoLoot" and choiceId ~= "autoLootSeparator" then
+		if isAutolootOnly and choiceId ~= "autoLoot" and choiceId ~= "autoLootSeparator" then
 			choice:setVisible(false)
 		end
 
@@ -2103,11 +2103,11 @@ function showContainersContextMenu(widget, mousePos, mouseButton)
 	local buttonSize = widget:getSize()
 	local width = menu:getWidth()
 	local buttonCenterX = buttonPos.x + buttonSize.width / 2
-	local var_99_18, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
+	local menuY, menuX = buttonPos.y + buttonSize.height / 2, buttonCenterX - width
 
 	menu:display({
 		x = menuX,
-		y = var_99_18
+		y = menuY
 	})
 
 	return true
@@ -2159,14 +2159,14 @@ function onContainersMenuAction(actionId, container)
 	end
 
 	if isToggleOption then
-		local var_106_1 = not getContainerOptionState(actionId)
+		local newOptionState = not getContainerOptionState(actionId)
 
-		containerSettings[actionId] = var_106_1 and 1 or 0
+		containerSettings[actionId] = newOptionState and 1 or 0
 
 		g_settings.setNode("containers", containerSettings)
 
 		if actionId == "useManualSortMode" then
-			g_game.setManualContainerSort(var_106_1)
+			g_game.setManualContainerSort(newOptionState)
 			refreshAllContainerTitleStyles()
 		end
 	end
@@ -2186,7 +2186,7 @@ function refreshContainerItems(container)
 		refreshContainerPages(container)
 	end
 
-	if container.window and (isStoreInboxContainer(container) or var_0_38(container)) then
+	if container.window and (isStoreInboxContainer(container) or isBattlePassInboxContainer(container)) then
 		applyContainerHeaderButtonLayout(container.window, container)
 	end
 end
@@ -2273,7 +2273,7 @@ function applyContainerHeaderButtonLayout(containerWindow, container)
 	local minimizeButton = containerWindow:recursiveGetChildById("minimizeButton")
 
 	if not upButton or not contextMenuButton or not minimizeButton then
-		var_0_10(containerWindow, minimizeButton)
+		anchorContainerTitleBeforeButton(containerWindow, minimizeButton)
 
 		return
 	end
@@ -2285,56 +2285,56 @@ function applyContainerHeaderButtonLayout(containerWindow, container)
 		searchButton:setVisible(showDepotSearch)
 	end
 
-	local var_112_7 = var_0_42(container)
-	local visible = not showDepotSearch and not var_0_38(container) and (showStoreInboxFilter or not isStoreInboxContainer(container)) and (not var_0_39(container) or var_112_7)
+	local canShowAutoloot = canShowContainerAutoloot(container)
+	local visible = not showDepotSearch and not isBattlePassInboxContainer(container) and (showStoreInboxFilter or not isStoreInboxContainer(container)) and (not isAutolootOnlyContainer(container) or canShowAutoloot)
 
 	contextMenuButton:setVisible(visible)
 
-	local var_112_9 = container and modules.game_interface.canContainerShowUpButton and modules.game_interface.canContainerShowUpButton(container)
+	local canShowUpButton = container and modules.game_interface.canContainerShowUpButton and modules.game_interface.canContainerShowUpButton(container)
 
-	upButton:setVisible(var_112_9)
+	upButton:setVisible(canShowUpButton)
 	upButton:breakAnchors()
 	upButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
 	upButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
 	upButton:setMarginRight(marginRight)
 	upButton:setMarginTop(0)
 
-	local var_112_10
+	local searchOrContextButton
 
 	if showDepotSearch and searchButton then
-		var_112_10 = searchButton
+		searchOrContextButton = searchButton
 	elseif visible then
-		var_112_10 = contextMenuButton
+		searchOrContextButton = contextMenuButton
 	end
 
-	if var_112_10 then
-		var_112_10:breakAnchors()
+	if searchOrContextButton then
+		searchOrContextButton:breakAnchors()
 
-		if var_112_9 then
-			var_112_10:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
-			var_112_10:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
+		if canShowUpButton then
+			searchOrContextButton:addAnchor(AnchorTop, upButton:getId(), AnchorTop)
+			searchOrContextButton:addAnchor(AnchorRight, upButton:getId(), AnchorLeft)
 		else
-			var_112_10:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
-			var_112_10:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
+			searchOrContextButton:addAnchor(AnchorTop, minimizeButton:getId(), AnchorTop)
+			searchOrContextButton:addAnchor(AnchorRight, minimizeButton:getId(), AnchorLeft)
 		end
 
-		var_112_10:setMarginRight(CONTAINER_HEADER_BUTTON_MARGIN)
-		var_112_10:setMarginTop(0)
+		searchOrContextButton:setMarginRight(CONTAINER_HEADER_BUTTON_MARGIN)
+		searchOrContextButton:setMarginTop(0)
 	end
 
-	local var_112_11 = var_112_10 or var_112_9 and upButton or minimizeButton
+	local lockButtonAnchor = searchOrContextButton or canShowUpButton and upButton or minimizeButton
 
-	if lockButton and var_112_11 then
+	if lockButton and lockButtonAnchor then
 		lockButton:breakAnchors()
-		lockButton:addAnchor(AnchorTop, var_112_11:getId(), AnchorTop)
-		lockButton:addAnchor(AnchorRight, var_112_11:getId(), AnchorLeft)
+		lockButton:addAnchor(AnchorTop, lockButtonAnchor:getId(), AnchorTop)
+		lockButton:addAnchor(AnchorRight, lockButtonAnchor:getId(), AnchorLeft)
 		lockButton:setMarginRight(CONTAINER_HEADER_BUTTON_MARGIN)
 		lockButton:setMarginTop(0)
 	end
 
-	local var_112_12 = lockButton and lockButton:isVisible() and lockButton or var_112_10 or var_112_9 and upButton or minimizeButton
+	local titleAnchorButton = lockButton and lockButton:isVisible() and lockButton or searchOrContextButton or canShowUpButton and upButton or minimizeButton
 
-	var_0_10(containerWindow, var_112_12)
+	anchorContainerTitleBeforeButton(containerWindow, titleAnchorButton)
 end
 
 function toggleContainerPages(containerWindow, container)
@@ -2343,7 +2343,7 @@ function toggleContainerPages(containerWindow, container)
 	local pagePanel = containerWindow:getChildById("pagePanel")
 	local separator = containerWindow:getChildById("separator")
 	local contentsPanel = containerWindow:getChildById("contentsPanel")
-	local marginBottom = pages and var_0_86 or var_0_85
+	local marginBottom = pages and PAGED_CONTAINER_MARGIN_BOTTOM or CONTAINER_MARGIN_BOTTOM
 
 	if pages then
 		scrollbar:breakAnchors()
@@ -2362,8 +2362,8 @@ function toggleContainerPages(containerWindow, container)
 		contentsPanel:setMarginBottom(marginBottom)
 		contentsPanel:setMarginTop(-2)
 		contentsPanel:setMarginRight(1)
-		contentsPanel:setPaddingTop(var_0_82)
-		contentsPanel:setPaddingBottom(var_0_83)
+		contentsPanel:setPaddingTop(CONTAINER_CONTENT_PADDING_TOP)
+		contentsPanel:setPaddingBottom(CONTAINER_CONTENT_PADDING_BOTTOM)
 
 		if contentsPanel.setClipToPadding then
 			contentsPanel:setClipToPadding(false)
@@ -2385,8 +2385,8 @@ function toggleContainerPages(containerWindow, container)
 		contentsPanel:setMarginBottom(marginBottom)
 		contentsPanel:setMarginTop(-2)
 		contentsPanel:setMarginRight(1)
-		contentsPanel:setPaddingTop(var_0_82)
-		contentsPanel:setPaddingBottom(var_0_83)
+		contentsPanel:setPaddingTop(CONTAINER_CONTENT_PADDING_TOP)
+		contentsPanel:setPaddingBottom(CONTAINER_CONTENT_PADDING_BOTTOM)
 
 		if contentsPanel.setClipToPadding then
 			contentsPanel:setClipToPadding(false)
@@ -2607,7 +2607,7 @@ function onContainerOpen(container, previousContainer)
 
 		local function restrictResize()
 			function containerWindow.onResize()
-				var_0_91(containerWindow, container, layout)
+				ensureContainerMinimumWindowHeight(containerWindow, container, layout)
 			end
 		end
 
@@ -2661,12 +2661,12 @@ function onContainerOpen(container, previousContainer)
 			else
 				container._needsLayoutRestore = nil
 
-				local var_125_3 = modules.game_interface.findContentPanelAvailable(containerWindow, cellSize.height)
+				local availableContentPanel = modules.game_interface.findContentPanelAvailable(containerWindow, cellSize.height)
 
 				containerWindow.miniIndex = nil
 				containerWindow.miniLoaded = true
 
-				var_125_3:addChild(containerWindow)
+				availableContentPanel:addChild(containerWindow)
 
 				if SidebarLayoutState and SidebarLayoutState.noteWidgetPlacement then
 					SidebarLayoutState.noteWidgetPlacement(containerWindow)
@@ -2697,9 +2697,9 @@ function onContainerOpen(container, previousContainer)
 
 		toggleContainerPages(containerWindow, container)
 		applyContainerContextLayout(containerWindow)
-		var_0_92(containerWindow, container, layout, cellSize)
+		updateContainerContentHeightLimits(containerWindow, container, layout, cellSize)
 		applyContainerHeight(containerWindow, container, layout, cellSize)
-		var_0_93(containerWindow, container, layout)
+		clampContainerWindowHeight(containerWindow, container, layout)
 	end
 
 	local capacity = container:getCapacity()
@@ -2759,7 +2759,7 @@ function onContainerClose(container)
 	destroy(container)
 
 	if windowId and not savingContainerLayoutsOnLogout then
-		var_0_76(windowId, container)
+		clearSavedContainerLayout(windowId, container)
 	end
 end
 
@@ -2775,10 +2775,10 @@ function onContainerChangeSize(container, size)
 	if preservedHeight then
 		local contentsPanel = container.itemsPanel or container.window and container.window:getChildById("contentsPanel")
 		local layout = contentsPanel and contentsPanel:getLayout()
-		local var_133_3 = var_0_90(container.window, container, layout)
+		local minimumWindowHeight = computeContainerMinimumWindowHeight(container.window, container, layout)
 
-		if var_133_3 > 0 and preservedHeight < var_133_3 then
-			preservedHeight = var_133_3
+		if minimumWindowHeight > 0 and preservedHeight < minimumWindowHeight then
+			preservedHeight = minimumWindowHeight
 		end
 
 		container.window:setHeight(preservedHeight)
@@ -2786,22 +2786,22 @@ function onContainerChangeSize(container, size)
 		container.window.preservedHeight = nil
 
 		if layout then
-			var_0_93(container.window, container, layout)
+			clampContainerWindowHeight(container.window, container, layout)
 		end
 	end
 end
 
-function onContainerUpdateItem(container, slot, arg_134_2, unusedArgument)
+function onContainerUpdateItem(container, slot, updatedItem, unusedArgument)
 	if not container.window then
 		return
 	end
 
 	local item = container.itemsPanel:getChildById("item" .. slot)
 
-	applyContainerSlotVisuals(item, arg_134_2)
+	applyContainerSlotVisuals(item, updatedItem)
 	bindContainerSlotPosition(item, container:getSlotPosition(slot))
 
-	if isStoreInboxContainer(container) or var_0_38(container) then
+	if isStoreInboxContainer(container) or isBattlePassInboxContainer(container) then
 		applyContainerHeaderButtonLayout(container.window, container)
 	end
 end

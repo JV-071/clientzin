@@ -99,25 +99,25 @@ local handleCheckChange = {
 function handleCheckChange.lookTypeInRange(numericValue)
 	numericValue = tonumber(numericValue) or 0
 
-	local var_3_0 = handleCheckChange.ranges[handleCheckChange.index] or handleCheckChange.ranges[1]
+	local selectedLookTypeRange = handleCheckChange.ranges[handleCheckChange.index] or handleCheckChange.ranges[1]
 
-	if numericValue < (var_3_0.min or 0) then
+	if numericValue < (selectedLookTypeRange.min or 0) then
 		return false
 	end
 
-	if var_3_0.max and numericValue > var_3_0.max then
+	if selectedLookTypeRange.max and numericValue > selectedLookTypeRange.max then
 		return false
 	end
 
 	return true
 end
 
-function handleCheckChange.setIndex(arg_4_0, arg_4_1)
-	if arg_4_0 < 1 or arg_4_0 > #handleCheckChange.ranges then
+function handleCheckChange.setIndex(rangeIndex, refreshSelection)
+	if rangeIndex < 1 or rangeIndex > #handleCheckChange.ranges then
 		return
 	end
 
-	handleCheckChange.index = arg_4_0
+	handleCheckChange.index = rangeIndex
 
 	if not outfitwindowWidget or not outfitwindowWidget.listSearch then
 		return
@@ -126,36 +126,36 @@ function handleCheckChange.setIndex(arg_4_0, arg_4_1)
 	handleCheckChange.ignoreCheck = true
 
 	for index, range in ipairs(handleCheckChange.ranges) do
-		local var_4_0 = outfitwindowWidget.listSearch[range.id]
+		local rangeCheckbox = outfitwindowWidget.listSearch[range.id]
 
-		if var_4_0 then
-			var_4_0:setChecked(index == arg_4_0)
+		if rangeCheckbox then
+			rangeCheckbox:setChecked(index == rangeIndex)
 		end
 	end
 
 	handleCheckChange.ignoreCheck = false
 
-	if arg_4_1 then
+	if refreshSelection then
 		handleCheckChange.apply()
 	end
 end
 
-function handleCheckChange.onRangeCheckChange(arg_5_0, arg_5_1)
-	if handleCheckChange.ignoreCheck or not arg_5_0 then
+function handleCheckChange.onRangeCheckChange(checkbox, checked)
+	if handleCheckChange.ignoreCheck or not checkbox then
 		return
 	end
 
 	local index = handleCheckChange.index
 
-	for iter_5_0, range in ipairs(handleCheckChange.ranges) do
-		if outfitwindowWidget.listSearch[range.id] == arg_5_0 then
-			index = iter_5_0
+	for rangeIndex, range in ipairs(handleCheckChange.ranges) do
+		if outfitwindowWidget.listSearch[range.id] == checkbox then
+			index = rangeIndex
 
 			break
 		end
 	end
 
-	if not arg_5_1 then
+	if not checked then
 		handleCheckChange.setIndex(index, false)
 
 		return
@@ -170,23 +170,23 @@ function handleCheckChange.bindRangeChecks()
 	end
 
 	for unusedValue, range in ipairs(handleCheckChange.ranges) do
-		local var_6_0 = outfitwindowWidget.listSearch[range.id]
+		local rangeCheckbox = outfitwindowWidget.listSearch[range.id]
 
-		if var_6_0 then
-			var_6_0.onCheckChange = handleCheckChange.onRangeCheckChange
+		if rangeCheckbox then
+			rangeCheckbox.onCheckChange = handleCheckChange.onRangeCheckChange
 		end
 	end
 
-	local var_6_1 = tempOutfit and tempOutfit.type
+	local lookType = tempOutfit and tempOutfit.type
 
-	if not var_6_1 or var_6_1 == 0 then
+	if not lookType or lookType == 0 then
 		local localPlayer = g_game.getLocalPlayer()
 		local outfit = localPlayer and localPlayer:getOutfit()
 
-		var_6_1 = outfit and outfit.type or 0
+		lookType = outfit and outfit.type or 0
 	end
 
-	handleCheckChange.setIndex(handleCheckChange.rangeIndexForLookType(var_6_1), false)
+	handleCheckChange.setIndex(handleCheckChange.rangeIndexForLookType(lookType), false)
 end
 
 local function getSelectionListFocusedChild()
@@ -249,16 +249,16 @@ function getCurrentGraphicsMode()
 	return math.max(0, math.min(3, tonumber(client_options.getOption("antialiasingMode")) or 0))
 end
 
-function applyCreatureGraphicsMode(arg_12_0, arg_12_1)
-	if not arg_12_0 or arg_12_0:isDestroyed() then
+function applyCreatureGraphicsMode(creatureWidget, graphicsMode)
+	if not creatureWidget or creatureWidget:isDestroyed() then
 		return
 	end
 
-	arg_12_0:setAntiAliasingMode(arg_12_1 == nil and getCurrentGraphicsMode() or arg_12_1)
+	creatureWidget:setAntiAliasingMode(graphicsMode == nil and getCurrentGraphicsMode() or graphicsMode)
 end
 
-local var_0_45 = 20
-local var_0_46 = 20
+local SELECTION_BUILD_BATCH_SIZE = 20
+local SELECTION_BUILD_SYNC_LIMIT = 20
 local selectionListBuildToken = 0
 local selectionHydrationEvent
 local SELECTION_CARD_HEIGHT = 102
@@ -271,31 +271,31 @@ local OUTFIT_CLOSE_DESTROY_BATCH_SIZE = 12
 local OUTFIT_CLOSE_CLEANUP_INTERVAL_MS = 16
 local OUTFIT_CLOSE_LUA_GC_STEP_SIZE = 256
 
-local function var_0_58(arg_13_0, arg_13_1)
-	table.sort(arg_13_0, function(arg_14_0, arg_14_1)
-		local available = arg_14_0[arg_13_1]
+local function sortAppearanceEntriesByAvailability(entries, availabilityField)
+	table.sort(entries, function(leftEntry, rightEntry)
+		local available = leftEntry[availabilityField]
 
 		if available == nil then
 			available = statesOutft.available
 		end
 
-		local var_14_1 = arg_14_1[arg_13_1]
+		local rightAvailability = rightEntry[availabilityField]
 
-		if var_14_1 == nil then
-			var_14_1 = statesOutft.available
+		if rightAvailability == nil then
+			rightAvailability = statesOutft.available
 		end
 
-		local var_14_2 = available == statesOutft.available
+		local isLeftAvailable = available == statesOutft.available
 
-		if var_14_2 ~= (var_14_1 == statesOutft.available) then
-			return var_14_2
+		if isLeftAvailable ~= (rightAvailability == statesOutft.available) then
+			return isLeftAvailable
 		end
 
-		if arg_14_0[1] ~= arg_14_1[1] then
-			return arg_14_0[1] < arg_14_1[1]
+		if leftEntry[1] ~= rightEntry[1] then
+			return leftEntry[1] < rightEntry[1]
 		end
 
-		return tostring(arg_14_0[2] or "") < tostring(arg_14_1[2] or "")
+		return tostring(leftEntry[2] or "") < tostring(rightEntry[2] or "")
 	end)
 end
 
@@ -586,9 +586,9 @@ local function getSelectionHydrationWindow(totalCount, bufferRows)
 
 	local firstVisibleRow = math.max(0, math.floor(scrollY / SELECTION_CARD_HEIGHT))
 	local startRow = math.max(0, firstVisibleRow - bufferRows)
-	local var_29_8 = firstVisibleRow + math.max(1, math.ceil(viewportHeight / SELECTION_CARD_HEIGHT)) + bufferRows
+	local lastVisibleRowWithBuffer = firstVisibleRow + math.max(1, math.ceil(viewportHeight / SELECTION_CARD_HEIGHT)) + bufferRows
 	local startIndex = startRow * columns + 1
-	local endIndex = math.min(totalCount, (var_29_8 + 1) * columns)
+	local endIndex = math.min(totalCount, (lastVisibleRowWithBuffer + 1) * columns)
 
 	if startIndex <= endIndex then
 		endIndex = math.min(endIndex, startIndex + SELECTION_HYDRATION_MAX_ITEMS - 1)
@@ -741,12 +741,12 @@ function handleCheckChange.apply()
 		text = outfitwindowWidget.listSearch.search:getText():lower():trim()
 	end
 
-	local var_33_3 = outfitwindowWidget.listSearch and outfitwindowWidget.listSearch.onlyMine and outfitwindowWidget.listSearch.onlyMine:isChecked()
+	local onlyOwnedChecked = outfitwindowWidget.listSearch and outfitwindowWidget.listSearch.onlyMine and outfitwindowWidget.listSearch.onlyMine:isChecked()
 
 	for index, item in ipairs(items:getChildren()) do
 		local id = item.auraClientId ~= nil or handleCheckChange.lookTypeInRange(item:getId())
 
-		if id and var_33_3 and (not item.state or item.state ~= statesOutft.available) then
+		if id and onlyOwnedChecked and (not item.state or item.state ~= statesOutft.available) then
 			id = false
 		end
 
@@ -757,13 +757,13 @@ function handleCheckChange.apply()
 		item:setVisible(id)
 	end
 
-	local var_33_5 = getSelectionListFocusedChild()
+	local focusedSelectionWidget = getSelectionListFocusedChild()
 
-	if var_33_5 then
-		local id = tonumber(var_33_5:getId())
-		local var_33_7 = tempOutfit and (id == tempOutfit.type or id == tempOutfit.mount or id == tempOutfit.familiar or id == ServerData.selectedAuraId)
+	if focusedSelectionWidget then
+		local id = tonumber(focusedSelectionWidget:getId())
+		local matchesSelectedAppearance = tempOutfit and (id == tempOutfit.type or id == tempOutfit.mount or id == tempOutfit.familiar or id == ServerData.selectedAuraId)
 
-		if not var_33_5:isVisible() or not var_33_7 then
+		if not focusedSelectionWidget:isVisible() or not matchesSelectedAppearance then
 			clearSelectionListFocus()
 		end
 	end
@@ -783,7 +783,7 @@ local function makeThumbnailStatic(uiCreature)
 	end
 end
 
-local function var_0_74()
+local function advanceSelectionBuildToken()
 	selectionListBuildToken = selectionListBuildToken + 1
 
 	return selectionListBuildToken
@@ -800,10 +800,10 @@ local function buildSelectionListBatched(floorRowWidgets, buildItem, onComplete)
 		layout:disableUpdates()
 	end
 
-	local var_37_1 = selectionListBuildToken
+	local buildToken = selectionListBuildToken
 
-	local function var_37_2()
-		if isSelectionListBuildStale(var_37_1) then
+	local function finishSelectionBuild()
+		if isSelectionListBuildStale(buildToken) then
 			if layout then
 				layout:enableUpdates()
 			end
@@ -824,22 +824,22 @@ local function buildSelectionListBatched(floorRowWidgets, buildItem, onComplete)
 		end
 	end
 
-	local var_37_3 = #floorRowWidgets
+	local entryCount = #floorRowWidgets
 
-	if var_37_3 <= var_0_46 then
+	if entryCount <= SELECTION_BUILD_SYNC_LIMIT then
 		for index, tile in ipairs(floorRowWidgets) do
 			buildItem(tile, index)
 		end
 
-		var_37_2()
+		finishSelectionBuild()
 
 		return
 	end
 
-	local var_37_4 = 1
+	local nextEntryIndex = 1
 
-	local function var_37_5()
-		if isSelectionListBuildStale(var_37_1) then
+	local function buildNextSelectionBatch()
+		if isSelectionListBuildStale(buildToken) then
 			if layout then
 				layout:enableUpdates()
 			end
@@ -847,22 +847,22 @@ local function buildSelectionListBatched(floorRowWidgets, buildItem, onComplete)
 			return
 		end
 
-		local var_39_0 = math.min(var_37_4 + var_0_45 - 1, var_37_3)
+		local batchEndIndex = math.min(nextEntryIndex + SELECTION_BUILD_BATCH_SIZE - 1, entryCount)
 
-		for iter_39_0 = var_37_4, var_39_0 do
-			buildItem(floorRowWidgets[iter_39_0], iter_39_0)
+		for entryIndex = nextEntryIndex, batchEndIndex do
+			buildItem(floorRowWidgets[entryIndex], entryIndex)
 		end
 
-		var_37_4 = var_39_0 + 1
+		nextEntryIndex = batchEndIndex + 1
 
-		if var_37_4 <= var_37_3 then
-			addEvent(var_37_5)
+		if nextEntryIndex <= entryCount then
+			addEvent(buildNextSelectionBatch)
 		else
-			var_37_2()
+			finishSelectionBuild()
 		end
 	end
 
-	var_37_5()
+	buildNextSelectionBatch()
 end
 
 local function applyFloorRowScrollMargins()
@@ -894,8 +894,8 @@ local outfitWindowDefaultHeight = 559
 local outfitWindowDefaultMarginTop = 43
 local outfitWindowCompactMarginTop = 32
 local configurePanelDefaultHeight = 256
-local var_0_86 = 256
-local var_0_87 = 108
+local APPEARANCE_PANEL_DEFAULT_HEIGHT = 256
+local APPEARANCE_SETTINGS_DEFAULT_HEIGHT = 108
 local missingFamiliarCompactionHeight = 22
 local missingPresetCompactionHeight = 22
 local hirelingWindowHeight = 471
@@ -1440,15 +1440,15 @@ local function getOutfitStateById(outfitId)
 	return getMountStateById(outfitId) == statesOutft.available
 end
 
-local function var_0_133()
+local function findFirstUnavailableMount()
 	if table.empty(ServerData.mounts) then
 		return nil
 	end
 
 	for _, outfitData in ipairs(ServerData.mounts) do
-		local var_72_0 = outfitData[3]
+		local mountAvailability = outfitData[3]
 
-		if var_72_0 and var_72_0 ~= statesOutft.available then
+		if mountAvailability and mountAvailability ~= statesOutft.available then
 			return outfitData
 		end
 	end
@@ -1469,16 +1469,16 @@ local function initColorCachesFromOutfit()
 		return
 	end
 
-	local var_73_0 = var_0_133()
+	local unavailableMount = findFirstUnavailableMount()
 
-	if not var_73_0 then
+	if not unavailableMount then
 		return
 	end
 
-	tempOutfit.mount = var_73_0[1]
+	tempOutfit.mount = unavailableMount[1]
 end
 
-local function getOutfitOfferIdById(outfitId)
+local function getOutfitAvailabilityById(outfitId)
 	if not outfitId or outfitId < 1 or table.empty(ServerData.outfits) then
 		return nil
 	end
@@ -1492,7 +1492,7 @@ local function getOutfitOfferIdById(outfitId)
 	return nil
 end
 
-local function var_0_136(lookType)
+local function getOutfitOfferIdById(lookType)
 	if not lookType or lookType < 1 or table.empty(ServerData.outfits) then
 		return 0
 	end
@@ -1543,8 +1543,8 @@ end
 
 function onOutfitNameClick()
 	local outfitId = tempOutfit and tempOutfit.type or 0
-	local state = getOutfitOfferIdById(outfitId)
-	local offerId = var_0_136(outfitId)
+	local state = getOutfitAvailabilityById(outfitId)
+	local offerId = getOutfitOfferIdById(outfitId)
 
 	if state and state ~= statesOutft.available and offerId > 0 then
 		redirectToStoreOffer(offerId)
@@ -1573,16 +1573,16 @@ local function onMountNameMousePress(widget, mousePos, mouseButton)
 end
 
 local function onMountNameMouseRelease(widget)
-	return function(arg_83_0, mousePos, arg_83_2)
-		if arg_83_2 ~= MouseLeftButton then
+	return function(nameRowWidget, mousePos, mouseButton)
+		if mouseButton ~= MouseLeftButton then
 			return false
 		end
 
-		arg_83_0:setImageClip(storeButtonClipPressed.clipNormal)
-		setStoreAppearanceNameRowPressNudge(arg_83_0, false)
-		scheduleStoreAppearanceNameRowReleaseSnap(arg_83_0)
+		nameRowWidget:setImageClip(storeButtonClipPressed.clipNormal)
+		setStoreAppearanceNameRowPressNudge(nameRowWidget, false)
+		scheduleStoreAppearanceNameRowReleaseSnap(nameRowWidget)
 
-		if arg_83_0:containsPoint(mousePos) then
+		if nameRowWidget:containsPoint(mousePos) then
 			widget()
 		end
 
@@ -1599,10 +1599,10 @@ local function updateMountAppearanceNameVisual(mountId)
 	end
 
 	local name = outfitwindowWidget.appearance.settings.mount.name
-	local var_84_1 = getMountStateById(mountId)
-	local var_84_2 = getMountOfferIdById(mountId)
+	local mountAvailability = getMountStateById(mountId)
+	local mountOfferId = getMountOfferIdById(mountId)
 
-	if var_84_1 ~= nil and var_84_1 ~= statesOutft.available and var_84_2 > 0 then
+	if mountAvailability ~= nil and mountAvailability ~= statesOutft.available and mountOfferId > 0 then
 		name:setImageSource(storeButtonClipPressed.image)
 		name:setImageClip(storeButtonClipPressed.clipNormal)
 		name:setIcon(storeButtonClipPressed.icon)
@@ -1629,16 +1629,16 @@ local function updateMountAppearanceNameVisual(mountId)
 	end
 end
 
-local function var_0_143(arg_85_0)
+local function updateOutfitNameStoreLink(outfitId)
 	if not outfitwindowWidget or not outfitwindowWidget.appearance or not outfitwindowWidget.appearance.settings or not outfitwindowWidget.appearance.settings.outfit or not outfitwindowWidget.appearance.settings.outfit.name then
 		return
 	end
 
 	local name = outfitwindowWidget.appearance.settings.outfit.name
-	local var_85_1 = getOutfitOfferIdById(arg_85_0)
-	local var_85_2 = var_0_136(arg_85_0)
+	local outfitAvailability = getOutfitAvailabilityById(outfitId)
+	local outfitOfferId = getOutfitOfferIdById(outfitId)
 
-	if var_85_1 ~= nil and var_85_1 ~= statesOutft.available and var_85_2 > 0 then
+	if outfitAvailability ~= nil and outfitAvailability ~= statesOutft.available and outfitOfferId > 0 then
 		name:setImageSource(storeButtonClipPressed.image)
 		name:setImageClip(storeButtonClipPressed.clipNormal)
 		name:setIcon(storeButtonClipPressed.icon)
@@ -1665,15 +1665,15 @@ local function var_0_143(arg_85_0)
 	end
 end
 
-local function var_0_144(arg_86_0)
-	if not arg_86_0 then
+local function initializeAppearanceColorCaches(outfit)
+	if not outfit then
 		return
 	end
 
-	local h = arg_86_0.head or 0
-	local b = arg_86_0.body or 0
-	local l = arg_86_0.legs or 0
-	local f = arg_86_0.feet or 0
+	local h = outfit.head or 0
+	local b = outfit.body or 0
+	local l = outfit.legs or 0
+	local f = outfit.feet or 0
 
 	outfitColorCache = {
 		head = h,
@@ -1682,25 +1682,25 @@ local function var_0_144(arg_86_0)
 		feet = f
 	}
 
-	local mh = arg_86_0.mountHead
+	local mh = outfit.mountHead
 
 	if mh == nil then
 		mh = 0
 	end
 
-	local mb = arg_86_0.mountBody
+	local mb = outfit.mountBody
 
 	if mb == nil then
 		mb = 0
 	end
 
-	local ml = arg_86_0.mountLegs
+	local ml = outfit.mountLegs
 
 	if ml == nil then
 		ml = 0
 	end
 
-	local mf = arg_86_0.mountFeet
+	local mf = outfit.mountFeet
 
 	if mf == nil then
 		mf = 0
@@ -1842,27 +1842,27 @@ local function getColorCacheForAppearance(app)
 	return outfitColorCache
 end
 
-local function var_0_152()
-	local var_95_0 = getSelectionListGrid()
+local function refreshSelectionThumbnailColors()
+	local selectionGrid = getSelectionListGrid()
 
-	if not var_95_0 then
+	if not selectionGrid then
 		return
 	end
 
-	local var_95_1 = getColorCacheForAppearance(getAppearanceCategoryName())
+	local appearanceColorCache = getColorCacheForAppearance(getAppearanceCategoryName())
 
-	if not var_95_1 then
+	if not appearanceColorCache then
 		return
 	end
 
-	for unusedValue, child in ipairs(var_95_0:getChildren()) do
+	for unusedValue, child in ipairs(selectionGrid:getChildren()) do
 		local id = tonumber(child:getId())
 
 		if id and id > 0 then
 			local __selectionOutfitPayload = child.__selectionOutfitPayload
 
 			if __selectionOutfitPayload then
-				local head, body, legs, feet = headBodyForListThumbnail(id, var_95_1)
+				local head, body, legs, feet = headBodyForListThumbnail(id, appearanceColorCache)
 
 				__selectionOutfitPayload.head = head
 				__selectionOutfitPayload.body = body
@@ -1985,15 +1985,15 @@ local function buildOutfitPayloadForSend()
 	local outfitToSend = tonumber(tempOutfit and tempOutfit.type) or 0
 
 	if outfitToSend < 1 then
-		local var_101_1 = getSelectionListFocusedChild()
+		local focusedSelectionWidget = getSelectionListFocusedChild()
 
-		if var_101_1 then
-			if var_101_1.selectionOutfitData then
-				outfitToSend = tonumber(var_101_1.selectionOutfitData.type) or 0
+		if focusedSelectionWidget then
+			if focusedSelectionWidget.selectionOutfitData then
+				outfitToSend = tonumber(focusedSelectionWidget.selectionOutfitData.type) or 0
 			end
 
 			if outfitToSend < 1 then
-				outfitToSend = tonumber(var_101_1:getId()) or 0
+				outfitToSend = tonumber(focusedSelectionWidget:getId()) or 0
 			end
 		end
 	end
@@ -2922,9 +2922,9 @@ function applyAuraToPreview()
 		return
 	end
 
-	local var_129_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check and outfitwindowWidget.configure.aura.check:isChecked()
+	local auraEnabled = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check and outfitwindowWidget.configure.aura.check:isChecked()
 
-	creature:setAuraLookType(var_129_1 and (ServerData.selectedAuraClientId or 0) or 0)
+	creature:setAuraLookType(auraEnabled and (ServerData.selectedAuraClientId or 0) or 0)
 end
 
 function applyCustomizePanelHeights()
@@ -2932,32 +2932,32 @@ function applyCustomizePanelHeights()
 		return
 	end
 
-	local var_130_0 = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
-	local var_130_1 = ServerData and ServerData.auras and not table.empty(ServerData.auras)
-	local var_130_2 = 0
+	local hasFamiliars = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
+	local hasAuras = ServerData and ServerData.auras and not table.empty(ServerData.auras)
+	local compactionHeight = 0
 
-	if not var_130_0 then
-		var_130_2 = var_130_2 + missingFamiliarCompactionHeight
+	if not hasFamiliars then
+		compactionHeight = compactionHeight + missingFamiliarCompactionHeight
 	end
 
-	if not var_130_1 then
-		var_130_2 = var_130_2 + missingFamiliarCompactionHeight
+	if not hasAuras then
+		compactionHeight = compactionHeight + missingFamiliarCompactionHeight
 	end
 
 	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings then
-		outfitwindowWidget.appearance.settings:setHeight(var_0_87 - var_130_2)
+		outfitwindowWidget.appearance.settings:setHeight(APPEARANCE_SETTINGS_DEFAULT_HEIGHT - compactionHeight)
 	end
 
 	if outfitwindowWidget.configure then
-		outfitwindowWidget.configure:setHeight(configurePanelDefaultHeight - var_130_2)
+		outfitwindowWidget.configure:setHeight(configurePanelDefaultHeight - compactionHeight)
 	end
 
 	if outfitwindowWidget.appearance then
-		outfitwindowWidget.appearance:setHeight(var_0_86 - var_130_2)
+		outfitwindowWidget.appearance:setHeight(APPEARANCE_PANEL_DEFAULT_HEIGHT - compactionHeight)
 	end
 
-	outfitwindowWidget:setSize(string.format("%d %d", outfitWindowDefaultWidth, outfitWindowDefaultHeight - var_130_2))
-	outfitwindowWidget:setMarginTop(var_130_2 > 0 and outfitWindowCompactMarginTop or outfitWindowDefaultMarginTop)
+	outfitwindowWidget:setSize(string.format("%d %d", outfitWindowDefaultWidth, outfitWindowDefaultHeight - compactionHeight))
+	outfitwindowWidget:setMarginTop(compactionHeight > 0 and outfitWindowCompactMarginTop or outfitWindowDefaultMarginTop)
 end
 
 function refreshAuraTabVisibility()
@@ -2965,12 +2965,12 @@ function refreshAuraTabVisibility()
 		return
 	end
 
-	local var_131_0 = not podiumContext and not hirelingContext and ServerData.auras and not table.empty(ServerData.auras)
+	local canShowAuras = not podiumContext and not hirelingContext and ServerData.auras and not table.empty(ServerData.auras)
 
 	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings and outfitwindowWidget.appearance.settings.aura then
 		local aura = outfitwindowWidget.appearance.settings.aura
 
-		if var_131_0 then
+		if canShowAuras then
 			aura:show()
 			aura:setHeight(20)
 		else
@@ -2982,7 +2982,7 @@ function refreshAuraTabVisibility()
 	if outfitwindowWidget.configure and outfitwindowWidget.configure.aura then
 		local aura = outfitwindowWidget.configure.aura
 
-		if var_131_0 then
+		if canShowAuras then
 			aura:setVisible(true)
 			aura:setHeight(22)
 			aura:setPadding(5)
@@ -3002,21 +3002,21 @@ function refreshAuraTabVisibility()
 	applyCustomizePanelHeights()
 end
 
-function onAuraList(arg_132_0, arg_132_1)
+function onAuraList(currentAuraClientId, auraEntries)
 	ServerData.auras = {}
-	ServerData.currentAuraClientId = tonumber(arg_132_0) or 0
+	ServerData.currentAuraClientId = tonumber(currentAuraClientId) or 0
 	ServerData.selectedAuraId = 0
 	ServerData.selectedAuraClientId = 0
 
-	if type(arg_132_1) == "table" then
-		for unusedValue, entry in pairs(arg_132_1) do
+	if type(auraEntries) == "table" then
+		for unusedValue, entry in pairs(auraEntries) do
 			local numericValue = tonumber(entry.id) or 0
 			local selectedAuraClientId = tonumber(entry.clientId) or 0
-			local var_132_2 = entry.name or ""
+			local auraName = entry.name or ""
 
 			table.insert(ServerData.auras, {
 				numericValue,
-				var_132_2,
+				auraName,
 				selectedAuraClientId
 			})
 
@@ -3026,8 +3026,8 @@ function onAuraList(arg_132_0, arg_132_1)
 			end
 		end
 
-		table.sort(ServerData.auras, function(arg_133_0, arg_133_1)
-			return (arg_133_0[1] or 0) < (arg_133_1[1] or 0)
+		table.sort(ServerData.auras, function(leftAura, rightAura)
+			return (leftAura[1] or 0) < (rightAura[1] or 0)
 		end)
 
 		if (ServerData.selectedAuraId or 0) == 0 and #ServerData.auras > 0 then
@@ -3093,17 +3093,17 @@ function applyHirelingWindowMode()
 	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings then
 		local settings = outfitwindowWidget.appearance.settings
 
-		for unusedValue, iter_136_1 in ipairs({
+		for unusedValue, settingId in ipairs({
 			"mount",
 			"aura",
 			"familiar",
 			"preset"
 		}) do
-			local var_136_2 = settings[iter_136_1]
+			local settingWidget = settings[settingId]
 
-			if var_136_2 then
-				var_136_2:hide()
-				var_136_2:setHeight(0)
+			if settingWidget then
+				settingWidget:hide()
+				settingWidget:setHeight(0)
 			end
 		end
 
@@ -3340,12 +3340,12 @@ function onShowFamiliarChange(checkBox, checked)
 	updatePreview()
 end
 
-local function var_0_187(arg_147_0)
+local function syncFamiliarCheckboxAvailability(hasFamiliars)
 	if not showFamiliarCheck or podiumContext then
 		return
 	end
 
-	if arg_147_0 then
+	if hasFamiliars then
 		showFamiliarCheck:setEnabled(settings.showOutfit)
 		showFamiliarCheck:setColor(settings.showOutfit and "#c0c0c0" or "#707070")
 	else
@@ -3378,7 +3378,7 @@ function syncShowOutfitOptionState()
 	if not g_game.getFeature(GamePlayerMounts) or not outfitwindowWidget.configure.mount or not outfitwindowWidget.configure.mount.check then
 		outfitCheck:setEnabled(true)
 		outfitCheck:setColor("#c0c0c0")
-		var_0_187(hasFamiliars)
+		syncFamiliarCheckboxAvailability(hasFamiliars)
 
 		return
 	end
@@ -3403,7 +3403,7 @@ function syncShowOutfitOptionState()
 
 	outfitCheck:setEnabled(mountOn)
 	outfitCheck:setColor(mountOn and "#c0c0c0" or "#707070")
-	var_0_187(hasFamiliars)
+	syncFamiliarCheckboxAvailability(hasFamiliars)
 end
 
 function onShowOutfitChange(checkBox, checked)
@@ -3411,7 +3411,7 @@ function onShowOutfitChange(checkBox, checked)
 
 	local hasFamiliars = ServerData and ServerData.familiars and not table.empty(ServerData.familiars)
 
-	var_0_187(hasFamiliars)
+	syncFamiliarCheckboxAvailability(hasFamiliars)
 	updatePreview()
 end
 
@@ -3491,14 +3491,14 @@ function applyCyclopediaViewMode(pending)
 end
 
 function focusCyclopediaAppearanceSelection(pending)
-	local var_155_0 = ({
+	local appearanceRadioWidget = ({
 		outfits = outfitwindowWidget.appearance.settings.outfit.check,
 		mounts = outfitwindowWidget.appearance.settings.mount.check,
 		familiars = outfitwindowWidget.appearance.settings.familiar.check
 	})[pending.tabType]
 
-	if appearanceGroup and var_155_0 then
-		appearanceGroup:selectWidget(var_155_0)
+	if appearanceGroup and appearanceRadioWidget then
+		appearanceGroup:selectWidget(appearanceRadioWidget)
 	end
 
 	local list = outfitwindowWidget.selectionList
@@ -3714,7 +3714,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	end
 
 	initColorCachesFromOutfit()
-	var_0_144(tempOutfit)
+	initializeAppearanceColorCaches(tempOutfit)
 	applyGlobalColorCachesFromSettings()
 	applyOutfitColorsToTemp()
 
@@ -3841,7 +3841,7 @@ function create(player, outfitList, creatureMount, mountList, familiarList)
 	outfitwindowWidget.appearance.settings.mount:setVisible(g_game.getFeature(GamePlayerMounts))
 	outfitwindowWidget.preview.options.showFamiliar:setVisible(g_game.getFeature(GamePlayerFamiliars))
 	outfitwindowWidget.appearance.settings.familiar:setVisible(g_game.getFeature(GamePlayerFamiliars))
-	var_0_187(hasFamiliars)
+	syncFamiliarCheckboxAvailability(hasFamiliars)
 
 	if outfitwindowWidget.appearance and outfitwindowWidget.appearance.settings and outfitwindowWidget.appearance.settings.familiar then
 		outfitwindowWidget.appearance.settings.familiar:setVisible(hasFamiliars)
@@ -3906,14 +3906,14 @@ function destroy(options)
 		restoreCyclopediaOnClose = false
 	end
 
-	local var_161_1 = outfitwindowWidget
+	local windowToDestroy = outfitwindowWidget
 
 	outfitwindowWidget = nil
 
-	var_161_1:hide()
+	windowToDestroy:hide()
 
 	if g_modalManager then
-		g_modalManager.hide(var_161_1)
+		g_modalManager.hide(windowToDestroy)
 
 		if g_modalManager.pruneOrphanBlockers then
 			g_modalManager.pruneOrphanBlockers()
@@ -4008,7 +4008,7 @@ function destroy(options)
 
 	settings = {}
 
-	destroyOutfitWindowIncrementally(var_161_1)
+	destroyOutfitWindowIncrementally(windowToDestroy)
 
 	podiumContext = nil
 	hirelingContext = nil
@@ -4103,24 +4103,24 @@ local function getPresetButtonFamiliar(widget)
 	return row and row.presetFamiliar
 end
 
-function onGraphicsModeChange(arg_168_0)
-	arg_168_0 = math.max(0, math.min(3, tonumber(arg_168_0) or 0))
+function onGraphicsModeChange(graphicsMode)
+	graphicsMode = math.max(0, math.min(3, tonumber(graphicsMode) or 0))
 
-	applyCreatureGraphicsMode(previewCreature, arg_168_0)
-	applyCreatureGraphicsMode(previewFamiliar, arg_168_0)
+	applyCreatureGraphicsMode(previewCreature, graphicsMode)
+	applyCreatureGraphicsMode(previewFamiliar, graphicsMode)
 
-	local var_168_0 = getSelectionListGrid()
+	local selectionGrid = getSelectionListGrid()
 
-	if var_168_0 then
-		for unusedValue, child in ipairs(var_168_0:getChildren()) do
-			applyCreatureGraphicsMode(child.outfit, arg_168_0)
+	if selectionGrid then
+		for unusedValue, child in ipairs(selectionGrid:getChildren()) do
+			applyCreatureGraphicsMode(child.outfit, graphicsMode)
 		end
 	end
 
 	if outfitwindowWidget and outfitwindowWidget.presetsList then
 		for unusedValue, child in ipairs(outfitwindowWidget.presetsList:getChildren()) do
-			applyCreatureGraphicsMode(getPresetButtonCreature(child), arg_168_0)
-			applyCreatureGraphicsMode(getPresetButtonFamiliar(child), arg_168_0)
+			applyCreatureGraphicsMode(getPresetButtonCreature(child), graphicsMode)
+			applyCreatureGraphicsMode(getPresetButtonFamiliar(child), graphicsMode)
 		end
 	end
 end
@@ -4461,24 +4461,24 @@ function onAppearanceChange(widget, selectedWidget)
 	refreshColorBoxForCurrentContext()
 end
 
-local function var_0_195()
+local function resetSelectionListGrid()
 	outfitwindowWidget.presetsList:hide()
 	outfitwindowWidget.presetsScroll:hide()
 	outfitwindowWidget.presetButtons:hide()
 
-	local var_179_0 = getSelectionListGrid()
+	local selectionGrid = getSelectionListGrid()
 
-	if not var_179_0 then
+	if not selectionGrid then
 		return nil
 	end
 
 	setSelectionListFocusHandler(nil)
 	clearSelectionHydrationEvent()
 	selectionTextureCache.releaseHydration()
-	var_179_0:destroyChildren()
-	var_0_74()
+	selectionGrid:destroyChildren()
+	advanceSelectionBuildToken()
 
-	return var_179_0
+	return selectionGrid
 end
 
 function showPresets()
@@ -4546,7 +4546,7 @@ function showPresets()
 end
 
 function showOutfits()
-	local parentWidget = var_0_195()
+	local parentWidget = resetSelectionListGrid()
 
 	if not parentWidget then
 		return
@@ -4559,7 +4559,7 @@ function showOutfits()
 		table.insert(sortedOutfits, outfitData)
 	end
 
-	var_0_58(sortedOutfits, 4)
+	sortAppearanceEntriesByAvailability(sortedOutfits, 4)
 	buildSelectionListBatched(sortedOutfits, function(outfitData)
 		local button = g_ui.createWidget("SelectionButton", parentWidget)
 
@@ -4609,18 +4609,18 @@ function showOutfits()
 
 		if focused then
 			local grid = getSelectionListGrid()
-			local var_184_2 = grid and grid[focused]
+			local focusedSelectionWidget = grid and grid[focused]
 
-			if var_184_2 and var_184_2:isVisible() then
-				hydrateSelectionButton(var_184_2)
-				var_184_2:focus()
-				outfitwindowWidget.selectionList:ensureChildVisible(var_184_2, {
+			if focusedSelectionWidget and focusedSelectionWidget:isVisible() then
+				hydrateSelectionButton(focusedSelectionWidget)
+				focusedSelectionWidget:focus()
+				outfitwindowWidget.selectionList:ensureChildVisible(focusedSelectionWidget, {
 					x = 0,
 					y = 196
 				})
 			end
 
-			local var_184_3 = focused
+			local focusedAppearanceId = focused
 
 			addEvent(function()
 				if not outfitwindowWidget or not outfitwindowWidget.selectionList or not outfitwindowWidget.selectionList:isVisible() then
@@ -4629,12 +4629,12 @@ function showOutfits()
 					return
 				end
 
-				local var_186_0 = getSelectionListGrid()
-				local var_186_1 = var_186_0 and var_186_0[var_184_3]
+				local selectionGrid = getSelectionListGrid()
+				local focusedSelectionWidget = selectionGrid and selectionGrid[focusedAppearanceId]
 
-				if var_186_1 and var_186_1:isVisible() then
-					var_186_1:focus()
-					outfitwindowWidget.selectionList:ensureChildVisible(var_186_1, {
+				if focusedSelectionWidget and focusedSelectionWidget:isVisible() then
+					focusedSelectionWidget:focus()
+					outfitwindowWidget.selectionList:ensureChildVisible(focusedSelectionWidget, {
 						x = 0,
 						y = 196
 					})
@@ -4656,7 +4656,7 @@ function showOutfits()
 end
 
 function showMounts()
-	local listGrid = var_0_195()
+	local listGrid = resetSelectionListGrid()
 
 	if not listGrid then
 		return
@@ -4681,7 +4681,7 @@ function showMounts()
 		table.insert(sortedMounts, mountData)
 	end
 
-	var_0_58(sortedMounts, 3)
+	sortAppearanceEntriesByAvailability(sortedMounts, 3)
 	buildSelectionListBatched(sortedMounts, function(mountData)
 		local button = g_ui.createWidget("SelectionButton", listGrid)
 
@@ -4782,7 +4782,7 @@ function showMounts()
 end
 
 function showFamiliars()
-	local listGrid = var_0_195()
+	local listGrid = resetSelectionListGrid()
 
 	if not listGrid then
 		return
@@ -4853,7 +4853,7 @@ function showFamiliars()
 end
 
 function showAuras()
-	local parentWidget = var_0_195()
+	local parentWidget = resetSelectionListGrid()
 
 	if not parentWidget then
 		return
@@ -4867,20 +4867,20 @@ function showAuras()
 		return
 	end
 
-	local var_193_1 = {}
+	local auraEntries = {}
 
 	for _, outfitData in ipairs(ServerData.auras) do
-		table.insert(var_193_1, outfitData)
+		table.insert(auraEntries, outfitData)
 	end
 
-	local var_193_2
+	local focusedAuraId
 
-	buildSelectionListBatched(var_193_1, function(arg_194_0)
+	buildSelectionListBatched(auraEntries, function(auraEntry)
 		local selectionButtonWidget = g_ui.createWidget("SelectionButton", parentWidget)
 
-		selectionButtonWidget:setId(arg_194_0[1])
+		selectionButtonWidget:setId(auraEntry[1])
 
-		selectionButtonWidget.auraClientId = arg_194_0[3] or 0
+		selectionButtonWidget.auraClientId = auraEntry[3] or 0
 
 		if selectionButtonWidget.auraClientId > 0 then
 			local selectionOutfitData = {
@@ -4893,30 +4893,30 @@ function showAuras()
 			makeThumbnailStatic(selectionButtonWidget.outfit)
 		end
 
-		selectionButtonWidget.name:setText(arg_194_0[2])
+		selectionButtonWidget.name:setText(auraEntry[2])
 
-		if ServerData.selectedAuraId == arg_194_0[1] then
-			var_193_2 = arg_194_0[1]
+		if ServerData.selectedAuraId == auraEntry[1] then
+			focusedAuraId = auraEntry[1]
 		end
 	end, function()
-		if var_193_2 == nil and #var_193_1 > 0 then
-			ServerData.selectedAuraId = var_193_1[1][1]
-			ServerData.selectedAuraClientId = var_193_1[1][3] or 0
-			var_193_2 = var_193_1[1][1]
+		if focusedAuraId == nil and #auraEntries > 0 then
+			ServerData.selectedAuraId = auraEntries[1][1]
+			ServerData.selectedAuraClientId = auraEntries[1][3] or 0
+			focusedAuraId = auraEntries[1][1]
 
-			updateAppearanceText("aura", var_193_1[1][2] or "")
+			updateAppearanceText("aura", auraEntries[1][2] or "")
 		end
 
 		handleCheckChange.apply()
 
-		if var_193_2 ~= nil then
-			local var_195_0 = getSelectionListGrid()
-			local var_195_1 = var_195_0 and var_195_0[var_193_2]
+		if focusedAuraId ~= nil then
+			local selectionGrid = getSelectionListGrid()
+			local focusedAuraWidget = selectionGrid and selectionGrid[focusedAuraId]
 
-			if var_195_1 and var_195_1:isVisible() then
-				hydrateSelectionButton(var_195_1)
-				var_195_1:focus()
-				outfitwindowWidget.selectionList:ensureChildVisible(var_195_1, {
+			if focusedAuraWidget and focusedAuraWidget:isVisible() then
+				hydrateSelectionButton(focusedAuraWidget)
+				focusedAuraWidget:focus()
+				outfitwindowWidget.selectionList:ensureChildVisible(focusedAuraWidget, {
 					x = 0,
 					y = 196
 				})
@@ -4947,7 +4947,7 @@ function refreshFilterListForCurrentColorChange()
 	local parent = selectedWidget:getParent():getId()
 
 	if parent == "outfit" or parent == "mount" or parent == "familiar" then
-		var_0_152()
+		refreshSelectionThumbnailColors()
 	end
 end
 
@@ -4958,7 +4958,7 @@ function onPresetSelect(unusedArgument, focusedChild, unusedArgument, unusedArgu
 
 		tempOutfit = table.copy(preset.outfit)
 
-		var_0_144(tempOutfit)
+		initializeAppearanceColorCaches(tempOutfit)
 		applyOutfitColorsToTemp()
 
 		if preset.familiarColorCache and type(preset.familiarColorCache) == "table" then
@@ -5039,14 +5039,14 @@ function onMountSelect(unusedArgument, focusedChild, unusedArgument, unusedArgum
 
 		tempOutfit.mount = id
 
-		local var_199_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check
+		local mountCheckbox = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check
 
-		if var_199_1 then
-			local var_199_2 = var_199_1:isChecked()
+		if mountCheckbox then
+			local wasMountChecked = mountCheckbox:isChecked()
 			local enabled = getOutfitStateById(id)
 
-			var_199_1:setEnabled(enabled)
-			var_199_1:setChecked(var_199_2 and enabled)
+			mountCheckbox:setEnabled(enabled)
+			mountCheckbox:setChecked(wasMountChecked and enabled)
 		end
 
 		preparePreviewThingType(id, settings.movement == true)
@@ -5091,14 +5091,14 @@ function onFamiliarSelect(unusedArgument, focusedChild, unusedArgument, unusedAr
 	end
 end
 
-function onAuraSelect(unusedArgument, arg_201_1, unusedArgument, unusedArgument)
-	if arg_201_1 and arg_201_1:isVisible() then
-		ServerData.selectedAuraId = tonumber(arg_201_1:getId()) or 0
-		ServerData.selectedAuraClientId = arg_201_1.auraClientId or 0
+function onAuraSelect(unusedArgument, selectedAuraWidget, unusedArgument, unusedArgument)
+	if selectedAuraWidget and selectedAuraWidget:isVisible() then
+		ServerData.selectedAuraId = tonumber(selectedAuraWidget:getId()) or 0
+		ServerData.selectedAuraClientId = selectedAuraWidget.auraClientId or 0
 
 		preparePreviewThingType(ServerData.selectedAuraClientId, false, true)
 		updatePreview()
-		updateAppearanceText("aura", arg_201_1.name:getText())
+		updateAppearanceText("aura", selectedAuraWidget.name:getText())
 	end
 end
 
@@ -5109,7 +5109,7 @@ function updateAppearanceText(widget, text)
 		if widget == "mount" then
 			updateMountAppearanceNameVisual(tempOutfit and tempOutfit.mount or 0)
 		elseif widget == "outfit" then
-			var_0_143(tempOutfit and tempOutfit.type or 0)
+			updateOutfitNameStoreLink(tempOutfit and tempOutfit.type or 0)
 		end
 	end
 end
@@ -5128,19 +5128,19 @@ function updateAppearanceTexts(outfit)
 
 	for key, unusedValue in pairs(outfit) do
 		local listKey = serverListKey[key] or key
-		local var_203_2 = key
+		local appearanceCategory = key
 
 		if key == "type" then
 			listKey = "outfits"
-			var_203_2 = "outfit"
+			appearanceCategory = "outfit"
 		end
 
 		local dataTable = ServerData[listKey]
 
 		if dataTable then
 			for unusedValue, entry in ipairs(dataTable) do
-				if (outfit[key] == entry[1] or outfit[key] == entry[2]) and var_203_2 and entry[2] then
-					updateAppearanceText(var_203_2, entry[2])
+				if (outfit[key] == entry[1] or outfit[key] == entry[2]) and appearanceCategory and entry[2] then
+					updateAppearanceText(appearanceCategory, entry[2])
 				end
 			end
 		end
@@ -5229,7 +5229,7 @@ function onColorCheckChange(widget, selectedWidget)
 	refreshFilterListForCurrentColorChange()
 end
 
-function preparePreviewThingType(numericValue, arg_207_1, lookType)
+function preparePreviewThingType(numericValue, includeMovement, lookType)
 	numericValue = tonumber(numericValue) or 0
 
 	if numericValue <= 0 then
@@ -5246,37 +5246,37 @@ function preparePreviewThingType(numericValue, arg_207_1, lookType)
 		return thingType:preparePreviewAuraTexture()
 	end
 
-	local var_207_1 = thingType:preparePreviewIdleTexture()
+	local idleTextureReady = thingType:preparePreviewIdleTexture()
 
-	if arg_207_1 and not thingType:preparePreviewMovementTexture() then
+	if includeMovement and not thingType:preparePreviewMovementTexture() then
 		return false
 	end
 
-	return var_207_1
+	return idleTextureReady
 end
 
-function prefetchPreviewTextures(arg_208_0, arg_208_1)
+function prefetchPreviewTextures(outfit, includeOutfitPreview)
 	if podiumContext or hirelingContext then
 		return
 	end
 
-	local var_208_0 = settings.movement == true
+	local includeMovement = settings.movement == true
 
-	if arg_208_1 then
-		preparePreviewThingType(arg_208_0.type, var_208_0)
+	if includeOutfitPreview then
+		preparePreviewThingType(outfit.type, includeMovement)
 
-		if (arg_208_0.mount or 0) > 0 then
-			preparePreviewThingType(arg_208_0.mount, var_208_0)
+		if (outfit.mount or 0) > 0 then
+			preparePreviewThingType(outfit.mount, includeMovement)
 		end
 	end
 
-	if previewFamiliar and settings.showFamiliar and (arg_208_0.familiar or 0) > 0 then
-		preparePreviewThingType(arg_208_0.familiar, var_208_0)
+	if previewFamiliar and settings.showFamiliar and (outfit.familiar or 0) > 0 then
+		preparePreviewThingType(outfit.familiar, includeMovement)
 	end
 
-	local var_208_1 = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check
+	local auraCheckbox = outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check
 
-	if arg_208_1 and var_208_1 and var_208_1:isChecked() then
+	if includeOutfitPreview and auraCheckbox and auraCheckbox:isChecked() then
 		preparePreviewThingType(ServerData.selectedAuraClientId, false, true)
 	end
 end
@@ -5550,10 +5550,10 @@ function accept()
 
 	local shouldToggleMount = false
 	local isMountedChecked = false
-	local var_223_2 = 0
+	local selectedAuraId = 0
 
 	if not podiumContext and not hirelingContext and outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.aura and outfitwindowWidget.configure.aura.check and outfitwindowWidget.configure.aura.check:isChecked() then
-		var_223_2 = ServerData.selectedAuraId or 0
+		selectedAuraId = ServerData.selectedAuraId or 0
 	end
 
 	if not podiumContext and not hirelingContext and g_game.getFeature(GamePlayerMounts) and outfitwindowWidget and outfitwindowWidget.configure and outfitwindowWidget.configure.mount and outfitwindowWidget.configure.mount.check then
@@ -5633,7 +5633,7 @@ function accept()
 	else
 		g_game.changeOutfit(outfitToSend)
 		pcall(function()
-			g_game.sendAuraSet(var_223_2)
+			g_game.sendAuraSet(selectedAuraId)
 		end)
 
 		if shouldToggleMount then

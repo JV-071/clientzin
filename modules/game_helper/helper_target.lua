@@ -5,7 +5,7 @@ local targetAssignWindow
 local targetMonstersPanel
 local editingPriorityListIndex
 local priorityList = {}
-local var_0_5
+local cachedPriorityRaceOrder
 local monsterCache
 local allCreaturesEnabled = false
 local openTargetRowContextMenu
@@ -47,7 +47,7 @@ local TARGET_PZ_AUTO_DISABLED = "disabled"
 local targetPzAuto = TARGET_PZ_AUTO_ENABLED
 local targetEnabledBeforePz = false
 local wasInProtectionZone = false
-local var_0_37 = "en"
+local targetLanguage = "en"
 local TARGET_TEXT = {
 	en = {
 		targetListHelp = "The order of entries in the list is the primary targeting priority. Entries at the top are preferred first.<br><br><li>Right-click an entry to change its order.</li><li>Uncheck an entry to temporarily disable it without removing it.</li>",
@@ -161,17 +161,17 @@ local function normalizeTargetLanguage(language)
 end
 
 local function targetText(key)
-	return (TARGET_TEXT[var_0_37] or TARGET_TEXT.en)[key] or TARGET_TEXT.en[key] or key
+	return (TARGET_TEXT[targetLanguage] or TARGET_TEXT.en)[key] or TARGET_TEXT.en[key] or key
 end
 
 local function operatingModeText(mode)
-	local selected = TARGET_TEXT[var_0_37] or TARGET_TEXT.en
+	local selected = TARGET_TEXT[targetLanguage] or TARGET_TEXT.en
 
 	return selected.operatingModes and selected.operatingModes[mode] or TARGET_TEXT.en.operatingModes[mode] or mode
 end
 
 local function operatingModeOptionText(mode)
-	local selected = TARGET_TEXT[var_0_37] or TARGET_TEXT.en
+	local selected = TARGET_TEXT[targetLanguage] or TARGET_TEXT.en
 
 	return selected.operatingModeOptions and selected.operatingModeOptions[mode] or TARGET_TEXT.en.operatingModeOptions[mode] or operatingModeText(mode)
 end
@@ -203,10 +203,10 @@ local function normalizeRaceId(raceId)
 end
 
 local function getDistanceBetween()
-	var_0_5 = nil
+	cachedPriorityRaceOrder = nil
 end
 
-local function var_0_51(p1, p2)
+local function chebyshevDistance(p1, p2)
 	if not p1 or not p2 or p1.x == nil or p2.x == nil then
 		return 99
 	end
@@ -234,34 +234,34 @@ local function isFamiliar(creature)
 	end
 
 	local id = creature.getId and creature:getId() or nil
-	local var_12_1 = id and spectators[id] == creature and spectatorMeta[id] or nil
+	local spectatorMetadata = id and spectators[id] == creature and spectatorMeta[id] or nil
 
-	if var_12_1 and var_12_1.nameLower then
-		return var_12_1.nameLower
+	if spectatorMetadata and spectatorMetadata.nameLower then
+		return spectatorMetadata.nameLower
 	end
 
 	local name = creature:getName()
 	local nameLower = name and name ~= "" and name:lower() or nil
 
-	if var_12_1 then
-		var_12_1.nameLower = nameLower
+	if spectatorMetadata then
+		spectatorMetadata.nameLower = nameLower
 	end
 
 	return nameLower
 end
 
-local function var_0_54(arg_13_0)
-	local var_13_0 = isFamiliar(arg_13_0)
+local function isKnownFamiliar(creature)
+	local creatureNameLower = isFamiliar(creature)
 
-	return var_13_0 and familiarNames[var_13_0] == true or false
+	return creatureNameLower and familiarNames[creatureNameLower] == true or false
 end
 
-local function var_0_55(arg_14_0)
-	if not arg_14_0 or not arg_14_0.getMasterId then
+local function isFriendlySummon(creature)
+	if not creature or not creature.getMasterId then
 		return false
 	end
 
-	local masterId = tonumber(arg_14_0:getMasterId()) or 0
+	local masterId = tonumber(creature:getMasterId()) or 0
 
 	if masterId <= 0 then
 		return false
@@ -273,10 +273,10 @@ local function var_0_55(arg_14_0)
 		return true
 	end
 
-	local var_14_2 = modules and modules.game_party or nil
-	local var_14_3 = var_14_2 and var_14_2.PartyListRegistry or nil
+	local partyModule = modules and modules.game_party or nil
+	local partyRegistry = partyModule and partyModule.PartyListRegistry or nil
 
-	if var_14_3 and type(var_14_3.byId) == "table" and var_14_3.byId[masterId] then
+	if partyRegistry and type(partyRegistry.byId) == "table" and partyRegistry.byId[masterId] then
 		return true
 	end
 
@@ -293,8 +293,8 @@ local function var_0_55(arg_14_0)
 	return creatureById.isPartyMember and creatureById:isPartyMember() or false
 end
 
-local function var_0_56(arg_15_0)
-	return var_0_54(arg_15_0) or var_0_55(arg_15_0)
+local function isExcludedCombatCreature(creature)
+	return isKnownFamiliar(creature) or isFriendlySummon(creature)
 end
 
 local function isWithinReach(playerPos, targetPos)
@@ -616,7 +616,7 @@ local function isWithinDistance(playerPos, targetPos, minDist, maxDist)
 		return false
 	end
 
-	local dist = var_0_51(playerPos, targetPos)
+	local dist = chebyshevDistance(playerPos, targetPos)
 
 	minDist = tonumber(minDist) or 1
 	maxDist = tonumber(maxDist) or 7
@@ -811,7 +811,7 @@ local function buildBestTargetAreaCreatureList(position)
 	local positionIndex = {}
 
 	for _, creature in pairs(spectators) do
-		if isMapCreature(creature) and not creature:isDead() and creature.isMonster and creature:isMonster() and not var_0_56(creature) then
+		if isMapCreature(creature) and not creature:isDead() and creature.isMonster and creature:isMonster() and not isExcludedCombatCreature(creature) then
 			local creaturePos = creature:getPosition()
 
 			if creaturePos and creaturePos.z == position.z then
@@ -834,14 +834,14 @@ end
 
 local function ensureAllCreaturesEntry()
 	local existingIndex
-	local var_43_1 = false
+	local priorityListChanged = false
 
 	for i = #priorityList, 1, -1 do
 		if priorityList[i].allCreatures then
 			if existingIndex then
 				table.remove(priorityList, i)
 
-				var_43_1 = true
+				priorityListChanged = true
 			else
 				existingIndex = i
 			end
@@ -852,12 +852,12 @@ local function ensureAllCreaturesEntry()
 		table.insert(priorityList, 1, createAllCreaturesEntry(allCreaturesEnabled))
 
 		existingIndex = 1
-		var_43_1 = true
+		priorityListChanged = true
 	end
 
 	allCreaturesEnabled = priorityList[existingIndex].enabled ~= false
 
-	if var_43_1 then
+	if priorityListChanged then
 		getDistanceBetween()
 	end
 
@@ -909,8 +909,8 @@ local function focusTargetRowByIndex(index)
 end
 
 local function getPriorityRaceOrder()
-	if var_0_5 then
-		return var_0_5
+	if cachedPriorityRaceOrder then
+		return cachedPriorityRaceOrder
 	end
 
 	local order = {}
@@ -923,9 +923,9 @@ local function getPriorityRaceOrder()
 		end
 	end
 
-	var_0_5 = order
+	cachedPriorityRaceOrder = order
 
-	return var_0_5
+	return cachedPriorityRaceOrder
 end
 
 local monsterNameToRaceId
@@ -975,10 +975,10 @@ local function getCreatureRaceId(creature)
 	end
 
 	local id = creature.getId and creature:getId() or nil
-	local var_52_1 = id and spectators[id] == creature and spectatorMeta[id] or nil
+	local spectatorMetadata = id and spectators[id] == creature and spectatorMeta[id] or nil
 
-	if var_52_1 and var_52_1.raceId ~= nil then
-		return var_52_1.raceId
+	if spectatorMetadata and spectatorMetadata.raceId ~= nil then
+		return spectatorMetadata.raceId
 	end
 
 	local raceId
@@ -986,35 +986,35 @@ local function getCreatureRaceId(creature)
 	if creature.getRaceId then
 		raceId = normalizeRaceId(creature:getRaceId())
 	else
-		local var_52_3 = isFamiliar(creature)
+		local creatureNameLower = isFamiliar(creature)
 
-		if var_52_3 then
+		if creatureNameLower then
 			if not monsterNameToRaceId then
 				rebuildMonsterNameIndex()
 			end
 
-			raceId = normalizeRaceId(monsterNameToRaceId[var_52_3])
+			raceId = normalizeRaceId(monsterNameToRaceId[creatureNameLower])
 		end
 	end
 
-	if var_52_1 and raceId ~= nil then
-		var_52_1.raceId = raceId
+	if spectatorMetadata and raceId ~= nil then
+		spectatorMetadata.raceId = raceId
 	end
 
 	return raceId
 end
 
-local function var_0_95(arg_53_0, arg_53_1)
-	local var_53_0 = normalizeRaceId(getCreatureRaceId(arg_53_0))
+local function getCreaturePriority(creature, priorityByRaceId)
+	local raceId = normalizeRaceId(getCreatureRaceId(creature))
 
-	if not var_53_0 then
+	if not raceId then
 		return nil
 	end
 
-	return arg_53_1[var_53_0]
+	return priorityByRaceId[raceId]
 end
 
-local function var_0_96(fromPos, toPos)
+local function isTargetReachable(fromPos, toPos)
 	if HelperCavebot and HelperCavebot.isCreatureReachable then
 		return HelperCavebot.isCreatureReachable(fromPos, toPos)
 	end
@@ -1022,7 +1022,7 @@ local function var_0_96(fromPos, toPos)
 	return g_map.isSightClear(fromPos, toPos)
 end
 
-local function isLockedTargetValid(creature, arg_55_1, position, arg_55_3, creatureMatchesPriority, allCreatures)
+local function isLockedTargetValid(creature, playerPosition, position, maxDistance, creatureMatchesPriority, allCreatures)
 	if not creature or creature:isDead() then
 		return false
 	end
@@ -1031,54 +1031,54 @@ local function isLockedTargetValid(creature, arg_55_1, position, arg_55_3, creat
 		return false
 	end
 
-	if var_0_56(creature) then
+	if isExcludedCombatCreature(creature) then
 		return false
 	end
 
-	if not creatureMatchesPriority and not var_0_95(creature, allCreatures) then
+	if not creatureMatchesPriority and not getCreaturePriority(creature, allCreatures) then
 		return false
 	end
 
 	local creaturePos = creature:getPosition()
 
-	if not creaturePos or creaturePos.z ~= arg_55_1.z then
+	if not creaturePos or creaturePos.z ~= playerPosition.z then
 		return false
 	end
 
-	local keepMaxDist = (tonumber(arg_55_3) or 7) + 2
+	local keepMaxDist = (tonumber(maxDistance) or 7) + 2
 
-	if not isWithinDistance(arg_55_1, creaturePos, 0, keepMaxDist) then
+	if not isWithinDistance(playerPosition, creaturePos, 0, keepMaxDist) then
 		return false
 	end
 
-	if not var_0_96(arg_55_1, creaturePos) then
+	if not isTargetReachable(playerPosition, creaturePos) then
 		return false
 	end
 
 	return true
 end
 
-local function var_0_98(arg_56_0, arg_56_1, arg_56_2, arg_56_3, arg_56_4, arg_56_5)
-	if not isMapCreature(arg_56_0) or arg_56_0:isDead() or var_0_56(arg_56_0) then
+local function getTargetCandidatePositionAndPriority(creature, playerPosition, minDistance, maxDistance, allCreaturesEnabled, priorityByRaceId)
+	if not isMapCreature(creature) or creature:isDead() or isExcludedCombatCreature(creature) then
 		return nil
 	end
 
-	local var_56_0 = var_0_95(arg_56_0, arg_56_5)
+	local priority = getCreaturePriority(creature, priorityByRaceId)
 
-	if not arg_56_4 and not var_56_0 then
+	if not allCreaturesEnabled and not priority then
 		return nil
 	end
 
-	local position = arg_56_0:getPosition()
+	local position = creature:getPosition()
 
-	if not isWithinDistance(arg_56_1, position, arg_56_2, arg_56_3) or not var_0_96(arg_56_1, position) then
+	if not isWithinDistance(playerPosition, position, minDistance, maxDistance) or not isTargetReachable(playerPosition, position) then
 		return nil
 	end
 
-	return position, var_56_0 or 9999
+	return position, priority or 9999
 end
 
-local function var_0_99()
+local function isHelperEnabled()
 	local check = widget("checkbox")
 
 	return check and check:isChecked() or false
@@ -1093,7 +1093,7 @@ local function syncCombatSchedulerState()
 end
 
 local function isAutoTargetEnabled()
-	if not var_0_99() then
+	if not isHelperEnabled() then
 		return false
 	end
 
@@ -1183,15 +1183,15 @@ local function blockTargetEnableInProtectionZone(silent)
 end
 
 function HelperTarget.isFamiliar(creature)
-	return var_0_54(creature)
+	return isKnownFamiliar(creature)
 end
 
-function HelperTarget.isFriendlySummon(arg_67_0)
-	return var_0_55(arg_67_0)
+function HelperTarget.isFriendlySummon(creature)
+	return isFriendlySummon(creature)
 end
 
-function HelperTarget.isExcludedCombatCreature(arg_68_0)
-	return var_0_56(arg_68_0)
+function HelperTarget.isExcludedCombatCreature(creature)
+	return isExcludedCombatCreature(creature)
 end
 
 function HelperTarget.getSpectators()
@@ -1207,7 +1207,7 @@ function HelperTarget.isWithinReach(creatureList, ranged)
 end
 
 function HelperTarget.getDistanceBetween(p1, p2)
-	return var_0_51(p1, p2)
+	return chebyshevDistance(p1, p2)
 end
 
 function HelperTarget.countAttackableCreatures(casterPos, direction, area, creatureList, ranged)
@@ -1233,18 +1233,18 @@ function HelperTarget.shouldHoldCavebotMovement()
 		return true
 	end
 
-	local var_75_1 = allCreaturesEnabled
-	local var_75_2 = getPriorityRaceOrder()
+	local includeAllCreatures = allCreaturesEnabled
+	local priorityByRaceId = getPriorityRaceOrder()
 
-	if not var_75_1 and not next(var_75_2) then
+	if not includeAllCreatures and not next(priorityByRaceId) then
 		return false
 	end
 
 	local position = localPlayer:getPosition()
-	local var_75_4, var_75_5 = readDistanceRange()
+	local minDistance, maxDistance = readDistanceRange()
 
 	for unusedValue, spectator in pairs(spectators) do
-		if var_0_98(spectator, position, var_75_4, var_75_5, var_75_1, var_75_2) then
+		if getTargetCandidatePositionAndPriority(spectator, position, minDistance, maxDistance, includeAllCreatures, priorityByRaceId) then
 			return true
 		end
 	end
@@ -1273,9 +1273,9 @@ function HelperTarget.onCreatureAppear(creature)
 		return
 	end
 
-	local var_78_0 = isFamiliar(creature)
+	local creatureNameLower = isFamiliar(creature)
 
-	if var_78_0 and familiarNames[var_78_0] then
+	if creatureNameLower and familiarNames[creatureNameLower] then
 		return
 	end
 
@@ -1285,7 +1285,7 @@ function HelperTarget.onCreatureAppear(creature)
 		spectatorAgeCounter = spectatorAgeCounter + 1
 		spectatorMeta[id] = {
 			age = spectatorAgeCounter,
-			nameLower = var_78_0
+			nameLower = creatureNameLower
 		}
 		spectators[id] = creature
 	end
@@ -1364,8 +1364,8 @@ local function updateProtectionZoneAutoTarget()
 		targetEnabledBeforePz = false
 
 		if inPz then
-			local var_83_3 = widget("enableTargetCheckBox")
-			local changed = wasPaused or var_83_3 and var_83_3:isChecked()
+			local enableTargetCheckbox = widget("enableTargetCheckBox")
+			local changed = wasPaused or enableTargetCheckbox and enableTargetCheckbox:isChecked()
 
 			blockTargetEnableInProtectionZone(true)
 
@@ -1378,7 +1378,7 @@ local function updateProtectionZoneAutoTarget()
 	else
 		setTargetCheckEnabled(true)
 
-		if not var_0_99() then
+		if not isHelperEnabled() then
 			wasInProtectionZone = inPz
 
 			if modules.game_helper and modules.game_helper.refreshHelperStats then
@@ -1390,13 +1390,13 @@ local function updateProtectionZoneAutoTarget()
 
 		if isTargetPzAutoEnabled() then
 			if inPz and not wasInProtectionZone then
-				local var_83_5 = widget("enableTargetCheckBox")
+				local enableTargetCheckbox = widget("enableTargetCheckBox")
 
-				if var_83_5 and var_83_5:isChecked() then
+				if enableTargetCheckbox and enableTargetCheckbox:isChecked() then
 					targetEnabledBeforePz = true
 					suppressTargetCheckChange = true
 
-					var_83_5:setChecked(false)
+					enableTargetCheckbox:setChecked(false)
 
 					suppressTargetCheckChange = false
 
@@ -1411,12 +1411,12 @@ local function updateProtectionZoneAutoTarget()
 			elseif not inPz and wasInProtectionZone and targetEnabledBeforePz then
 				targetEnabledBeforePz = false
 
-				local var_83_6 = widget("enableTargetCheckBox")
+				local enableTargetCheckbox = widget("enableTargetCheckBox")
 
-				if var_83_6 and not var_83_6:isChecked() then
+				if enableTargetCheckbox and not enableTargetCheckbox:isChecked() then
 					suppressTargetCheckChange = true
 
-					var_83_6:setChecked(true)
+					enableTargetCheckbox:setChecked(true)
 
 					suppressTargetCheckChange = false
 				end
@@ -1461,9 +1461,9 @@ local function checkAutoTarget()
 	local position = localPlayer:getPosition()
 	local minDist, maxDist = readDistanceRange()
 	local allCreatures = allCreaturesEnabled
-	local var_85_5 = getPriorityRaceOrder()
+	local priorityByRaceId = getPriorityRaceOrder()
 
-	if not allCreatures and not next(var_85_5) then
+	if not allCreatures and not next(priorityByRaceId) then
 		currentLockedTargetId = 0
 
 		if g_game.getAttackingCreature() then
@@ -1485,20 +1485,20 @@ local function checkAutoTarget()
 	}
 
 	for _, creature in pairs(spectators) do
-		local var_85_8, var_85_9 = var_0_98(creature, position, minDist, maxDist, allCreatures, var_85_5)
+		local candidatePosition, candidatePriority = getTargetCandidatePositionAndPriority(creature, position, minDist, maxDist, allCreatures, priorityByRaceId)
 
-		if var_85_8 and var_85_9 <= bestTarget.priority then
+		if candidatePosition and candidatePriority <= bestTarget.priority then
 			local id = creature:getId()
 			local candidate = {
 				id = id,
-				priority = var_85_9,
-				distance = var_0_51(position, var_85_8),
+				priority = candidatePriority,
+				distance = chebyshevDistance(position, candidatePosition),
 				health = creature:getHealthPercent() or 0,
 				areaCount = targetOperatingMode == "E" and getGroupedTargetCount(creature, areaCreatureList) or 0,
 				creatureId = id
 			}
 
-			if var_85_9 < bestTarget.priority or isOperatingCandidateBetter(candidate, bestTarget, targetOperatingMode) then
+			if candidatePriority < bestTarget.priority or isOperatingCandidateBetter(candidate, bestTarget, targetOperatingMode) then
 				bestTarget = candidate
 			end
 		end
@@ -1508,7 +1508,7 @@ local function checkAutoTarget()
 	local target = bestTarget.id and g_map.getCreatureById(bestTarget.id) or nil
 	local currentTarget = g_game.getAttackingCreature()
 
-	if target and currentTarget and currentTarget:getId() ~= target:getId() and lastTargetAttackId == currentTarget:getId() and lastTargetAttackAt > 0 and tickNow - lastTargetAttackAt < TARGET_SWITCH_DELAY_MS and isLockedTargetValid(currentTarget, position, minDist, maxDist, allCreatures, var_85_5) then
+	if target and currentTarget and currentTarget:getId() ~= target:getId() and lastTargetAttackId == currentTarget:getId() and lastTargetAttackAt > 0 and tickNow - lastTargetAttackAt < TARGET_SWITCH_DELAY_MS and isLockedTargetValid(currentTarget, position, minDist, maxDist, allCreatures, priorityByRaceId) then
 		target = currentTarget
 	end
 
@@ -1812,69 +1812,69 @@ local function applyCreaturePreview(creatureWidget, outfit)
 	end
 
 	local direction = creature:getDirection()
-	local var_103_3 = (tonumber(outfit.mount) or 0) > 0 and 1 or 0
-	local var_103_4, var_103_5 = pcall(function()
-		return g_things.getCreatureBoundingBox(numericValue, 0, direction, var_103_3)
+	local mountedLayer = (tonumber(outfit.mount) or 0) > 0 and 1 or 0
+	local boundingBoxResolved, boundingBox = pcall(function()
+		return g_things.getCreatureBoundingBox(numericValue, 0, direction, mountedLayer)
 	end)
-	local var_103_6, var_103_7 = pcall(function()
+	local exactSizeResolved, exactSize = pcall(function()
 		return creature:getExactSize()
 	end)
 
-	if not var_103_4 or type(var_103_5) ~= "table" or not var_103_6 then
+	if not boundingBoxResolved or type(boundingBox) ~= "table" or not exactSizeResolved then
 		return
 	end
 
 	local numericValue
 
-	numericValue = tonumber(var_103_7) or 0
+	numericValue = tonumber(exactSize) or 0
 
-	local var_103_9 = math.max(tonumber(var_103_5.width) or 0, tonumber(var_103_5.height) or 0)
+	local boundingBoxExtent = math.max(tonumber(boundingBox.width) or 0, tonumber(boundingBox.height) or 0)
 
-	if numericValue <= 0 or var_103_9 <= numericValue then
+	if numericValue <= 0 or boundingBoxExtent <= numericValue then
 		return
 	end
 
 	local spriteSize = tonumber(g_gameConfig.getSpriteSize()) or 32
-	local var_103_11 = math.max(numericValue, spriteSize * 2)
+	local previewCanvasExtent = math.max(numericValue, spriteSize * 2)
 
-	creatureWidget:setCreatureSize(math.min(255, math.ceil(var_103_9 * 100 / var_103_11)))
+	creatureWidget:setCreatureSize(math.min(255, math.ceil(boundingBoxExtent * 100 / previewCanvasExtent)))
 end
 
-local function var_0_117(arg_106_0, outfit)
-	if not arg_106_0 or not outfit then
+local function configureTargetCreaturePreview(creatureWidget, outfit)
+	if not creatureWidget or not outfit then
 		return
 	end
 
-	arg_106_0:setOutfit(outfit)
+	creatureWidget:setOutfit(outfit)
 
-	if arg_106_0.setFixedCreatureSize then
-		arg_106_0:setFixedCreatureSize(false)
+	if creatureWidget.setFixedCreatureSize then
+		creatureWidget:setFixedCreatureSize(false)
 	end
 
-	if arg_106_0.setCenter then
-		arg_106_0:setCenter(true)
+	if creatureWidget.setCenter then
+		creatureWidget:setCenter(true)
 	end
 
-	if arg_106_0.setCenterByBoundingBox then
-		arg_106_0:setCenterByBoundingBox(true)
+	if creatureWidget.setCenterByBoundingBox then
+		creatureWidget:setCenterByBoundingBox(true)
 	end
 
-	if arg_106_0.setCreatureSize then
-		arg_106_0:setCreatureSize(0)
+	if creatureWidget.setCreatureSize then
+		creatureWidget:setCreatureSize(0)
 	end
 
-	applyCreaturePreview(arg_106_0, outfit)
+	applyCreaturePreview(creatureWidget, outfit)
 end
 
-local function var_0_118(arg_107_0, arg_107_1)
-	if not arg_107_0 or not arg_107_1 then
+local function applyTargetCreatureRowVisuals(rowWidget, raceData)
+	if not rowWidget or not raceData then
 		return
 	end
 
-	arg_107_0.targetRaceId = arg_107_1.raceId
+	rowWidget.targetRaceId = raceData.raceId
 
-	local creatureSprite = arg_107_0:recursiveGetChildById("creatureSprite")
-	local creatureIcon = arg_107_0:recursiveGetChildById("creatureIcon")
+	local creatureSprite = rowWidget:recursiveGetChildById("creatureSprite")
+	local creatureIcon = rowWidget:recursiveGetChildById("creatureIcon")
 
 	if creatureIcon then
 		creatureIcon:hide()
@@ -1882,31 +1882,31 @@ local function var_0_118(arg_107_0, arg_107_1)
 
 	if creatureSprite then
 		creatureSprite:show()
-		var_0_117(creatureSprite, arg_107_1.outfit)
+		configureTargetCreaturePreview(creatureSprite, raceData.outfit)
 	end
 
-	local creatureName = arg_107_0:recursiveGetChildById("creatureName")
+	local creatureName = rowWidget:recursiveGetChildById("creatureName")
 
 	if creatureName then
-		creatureName:setText(capitalizeWords(arg_107_1.name))
+		creatureName:setText(capitalizeWords(raceData.name))
 	end
 end
 
-local function var_0_119(arg_108_0, arg_108_1)
-	if not arg_108_0 then
+local function applyAllCreaturesRowVisuals(rowWidget, rowEntry)
+	if not rowWidget then
 		return
 	end
 
-	local targetRowEnabled = arg_108_0:recursiveGetChildById("targetRowEnabled")
+	local targetRowEnabled = rowWidget:recursiveGetChildById("targetRowEnabled")
 
 	if targetRowEnabled then
-		local checked = arg_108_1 and arg_108_1.enabled ~= false or allCreaturesEnabled
+		local checked = rowEntry and rowEntry.enabled ~= false or allCreaturesEnabled
 
 		targetRowEnabled:setChecked(checked)
 	end
 
-	local creatureSprite = arg_108_0:recursiveGetChildById("creatureSprite")
-	local creatureIcon = arg_108_0:recursiveGetChildById("creatureIcon")
+	local creatureSprite = rowWidget:recursiveGetChildById("creatureSprite")
+	local creatureIcon = rowWidget:recursiveGetChildById("creatureIcon")
 
 	if creatureSprite then
 		creatureSprite:hide()
@@ -1917,27 +1917,27 @@ local function var_0_119(arg_108_0, arg_108_1)
 		creatureIcon:show()
 	end
 
-	local creatureName = arg_108_0:recursiveGetChildById("creatureName")
+	local creatureName = rowWidget:recursiveGetChildById("creatureName")
 
 	if creatureName then
 		creatureName:setText(targetText("allCreatures"))
 	end
 end
 
-local function applyTargetPriorityRowVisual(arg_109_0, arg_109_1)
-	if not arg_109_0 or not arg_109_1 then
+local function applyTargetPriorityRowVisual(rowWidget, priorityEntry)
+	if not rowWidget or not priorityEntry then
 		return
 	end
 
-	local targetRowEnabled = arg_109_0:recursiveGetChildById("targetRowEnabled")
+	local targetRowEnabled = rowWidget:recursiveGetChildById("targetRowEnabled")
 
 	if targetRowEnabled then
-		targetRowEnabled:setChecked(arg_109_1.enabled ~= false)
+		targetRowEnabled:setChecked(priorityEntry.enabled ~= false)
 	end
 
-	local var_109_1 = findRaceById(arg_109_1.raceId) or arg_109_1
+	local raceData = findRaceById(priorityEntry.raceId) or priorityEntry
 
-	var_0_118(arg_109_0, var_109_1)
+	applyTargetCreatureRowVisuals(rowWidget, raceData)
 end
 
 local function getSelectedRemovableTargetRow()
@@ -2033,7 +2033,7 @@ local function updateTargetPreview(row)
 	local previewCreatureSprite = targetPreview:getChildById("previewCreatureSprite")
 
 	if previewCreatureSprite and targetRace then
-		var_0_117(previewCreatureSprite, targetRace.outfit)
+		configureTargetCreaturePreview(previewCreatureSprite, targetRace.outfit)
 	end
 
 	local previewCreatureName = targetPreview:getChildById("previewCreatureName")
@@ -2072,7 +2072,7 @@ local function refreshPriorityListUI()
 		targetPriorityListRowWidget.isAllCreaturesRow = rowEntry.allCreatures == true
 
 		if rowEntry.allCreatures then
-			var_0_119(targetPriorityListRowWidget, rowEntry)
+			applyAllCreaturesRowVisuals(targetPriorityListRowWidget, rowEntry)
 		else
 			targetPriorityListRowWidget.targetRaceId = rowEntry.raceId
 
@@ -2100,9 +2100,9 @@ local function refreshPriorityListUI()
 
 		connectZebraFocus(targetPriorityListRowWidget)
 
-		function targetPriorityListRowWidget.onMouseRelease(arg_120_0, unusedArgument, button)
+		function targetPriorityListRowWidget.onMouseRelease(rowWidget, unusedArgument, button)
 			if button == MouseRightButton then
-				openTargetRowContextMenu(arg_120_0)
+				openTargetRowContextMenu(rowWidget)
 			end
 		end
 	end
@@ -2110,22 +2110,22 @@ local function refreshPriorityListUI()
 	syncTargetActionButtons()
 end
 
-function openTargetRowContextMenu(arg_121_0)
-	if not arg_121_0 or not arg_121_0.priorityListIndex then
+function openTargetRowContextMenu(rowWidget)
+	if not rowWidget or not rowWidget.priorityListIndex then
 		return
 	end
 
-	local index = arg_121_0.priorityListIndex
-	local var_121_1 = priorityList[index]
+	local index = rowWidget.priorityListIndex
+	local priorityEntry = priorityList[index]
 
-	if not var_121_1 then
+	if not priorityEntry then
 		return
 	end
 
-	local var_121_2 = widget("targetPriorityList")
+	local priorityListWidget = widget("targetPriorityList")
 
-	if var_121_2 and not var_121_2:isDestroyed() then
-		var_121_2:focusChild(arg_121_0, KeyboardFocusReason)
+	if priorityListWidget and not priorityListWidget:isDestroyed() then
+		priorityListWidget:focusChild(rowWidget, KeyboardFocusReason)
 		resetTargetActionButtonsState()
 		scheduleTargetActionButtonsSync()
 	end
@@ -2160,7 +2160,7 @@ function openTargetRowContextMenu(arg_121_0)
 		end)
 	end
 
-	if not var_121_1.allCreatures then
+	if not priorityEntry.allCreatures then
 		gamePopupMenuWidget:addOption(targetText("edit"), function()
 			openTargetAssignWindowInternal(index)
 		end)
@@ -2206,7 +2206,7 @@ local function populateTargetMonsterList()
 			row.targetRace = entry
 			row.nameLower = (entry.name or ""):lower()
 
-			var_0_118(row, entry)
+			applyTargetCreatureRowVisuals(row, entry)
 			connectZebraFocus(row)
 		end
 	end
@@ -2331,7 +2331,7 @@ local function setTargetWidgetText(id, text)
 end
 
 function HelperTarget.refreshLanguage(language)
-	var_0_37 = normalizeTargetLanguage(language)
+	targetLanguage = normalizeTargetLanguage(language)
 
 	setTargetWidgetText("targetListWindow", targetText("targetList"))
 	setTargetWidgetText("targetSettingsWindow", targetText("targetSettings"))

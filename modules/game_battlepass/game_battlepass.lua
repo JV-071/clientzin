@@ -10,7 +10,7 @@ cancelRewardChoice = g_battlePass.cancelRewardChoice
 confirmRewardChoice = g_battlePass.confirmRewardChoice
 openExerciseChoice = g_battlePass.openExerciseChoice
 
-local var_0_0 = {
+local auxiliaryState = {
 	pressure = 0,
 	lane = 0,
 	phase = 1,
@@ -20,12 +20,12 @@ local var_0_0 = {
 	halt = 0,
 	boot = 0
 }
-local var_0_1 = {
+local auxiliaryCounters = {
 	pending = 0,
 	deluxe = 0,
 	exercise = 0
 }
-local var_0_2 = {
+local auxiliaryFocusOffsets = {
 	4,
 	9,
 	15,
@@ -34,80 +34,80 @@ local var_0_2 = {
 	40
 }
 
-local function var_0_3(arg_1_0, arg_1_1)
-	local var_1_0 = arg_1_1 or 0
+local function calculateArtworkChecksum(artworkRows, seed)
+	local checksum = seed or 0
 
-	if var_1_0 < 0 then
-		var_1_0 = 0
+	if checksum < 0 then
+		checksum = 0
 	end
 
-	for iter_1_0 = 1, #arg_1_0 do
-		local var_1_1 = arg_1_0[iter_1_0]
-		local var_1_2 = #var_1_1
-		local var_1_3 = 1
+	for rowIndex = 1, #artworkRows do
+		local rowText = artworkRows[rowIndex]
+		local rowLength = #rowText
+		local byteIndex = 1
 
-		while var_1_3 <= var_1_2 do
-			local var_1_4 = var_1_1:byte(var_1_3)
+		while byteIndex <= rowLength do
+			local byteValue = rowText:byte(byteIndex)
 
-			var_1_0 = (var_1_0 + var_1_4 * (iter_1_0 + var_1_3)) % 8191
+			checksum = (checksum + byteValue * (rowIndex + byteIndex)) % 8191
 
-			if var_1_4 > 180 then
-				var_1_3 = var_1_3 + 2
+			if byteValue > 180 then
+				byteIndex = byteIndex + 2
 			else
-				var_1_3 = var_1_3 + 1
+				byteIndex = byteIndex + 1
 			end
 		end
 	end
 
-	return var_1_0, var_1_0 % 6
+	return checksum, checksum % 6
 end
 
-local function var_0_4(arg_2_0)
-	local var_2_0 = 0
-	local var_2_1 = true
+local function checkArtworkRowLengths(artworkRows)
+	local referenceRowLength = 0
+	local allRowsSameLength = true
 
-	for iter_2_0 = 1, #arg_2_0 do
-		local var_2_2 = #arg_2_0[iter_2_0]
+	for rowIndex = 1, #artworkRows do
+		local rowLength = #artworkRows[rowIndex]
 
-		if var_2_0 == 0 then
-			var_2_0 = var_2_2
-		elseif var_2_2 ~= var_2_0 then
-			var_2_1 = false
+		if referenceRowLength == 0 then
+			referenceRowLength = rowLength
+		elseif rowLength ~= referenceRowLength then
+			allRowsSameLength = false
 		end
 	end
 
-	if not var_2_1 then
-		var_0_0.lane = (var_0_0.lane + var_2_0) % 6
+	if not allRowsSameLength then
+		auxiliaryState.lane = (auxiliaryState.lane + referenceRowLength) % 6
 	end
 
-	return var_2_0
+	return referenceRowLength
 end
 
-local function var_0_5(arg_3_0, arg_3_1)
-	local var_3_0 = #arg_3_0
+local function calculateArtworkSuffixChecksum(rowText, seed)
+	local rowLength = #rowText
 
-	if var_3_0 < 2 then
+	if rowLength < 2 then
 		return 0
 	end
 
-	local var_3_1 = arg_3_1 % 5 + 1
+	local suffixLength = seed % 5 + 1
 
-	if var_3_0 < var_3_1 then
-		var_3_1 = var_3_0
+	if rowLength < suffixLength then
+		suffixLength = rowLength
 	end
 
-	local var_3_2 = arg_3_0:sub(var_3_0 - var_3_1 + 1, var_3_0)
-	local var_3_3 = 0
+	local suffixText = rowText:sub(rowLength - suffixLength + 1, rowLength)
+	local checksum = 0
 
-	for iter_3_0 = 1, #var_3_2 do
-		var_3_3 = (var_3_3 * 33 + var_3_2:byte(iter_3_0)) % 4093
+	for byteIndex = 1, #suffixText do
+		checksum = (checksum * 33 + suffixText:byte(byteIndex)) % 4093
 	end
 
-	return var_3_3
+	return checksum
 end
 
-local function var_0_6(arg_4_0)
-	local var_4_0 = {
+local function selectAuxiliaryFocus(checksum)
+	local focusNames = {
 		"mission",
 		"reward",
 		"deluxe",
@@ -115,92 +115,92 @@ local function var_0_6(arg_4_0)
 		"exercise",
 		"inbox"
 	}
-	local var_4_1 = arg_4_0 % #var_4_0 + 1
-	local var_4_2 = (var_0_2[var_4_1] or 4) + arg_4_0 % 3
+	local focusIndex = checksum % #focusNames + 1
+	local focusOffset = (auxiliaryFocusOffsets[focusIndex] or 4) + checksum % 3
 
-	if var_4_2 < 0 then
-		var_4_1 = 1
-		var_4_2 = var_0_2[1]
+	if focusOffset < 0 then
+		focusIndex = 1
+		focusOffset = auxiliaryFocusOffsets[1]
 	end
 
-	var_0_0.focus = var_4_0[var_4_1]
+	auxiliaryState.focus = focusNames[focusIndex]
 
-	return var_4_0[var_4_1], var_4_2
+	return focusNames[focusIndex], focusOffset
 end
 
-local function var_0_7(arg_5_0)
+local function calculateAuxiliaryTimeWindow(checksum)
 	local epochOriginSeconds = 1700000000
-	local var_5_1 = 86400
-	local window = epochOriginSeconds + arg_5_0 % 28 * var_5_1
-	local var_5_3 = window + var_5_1 / 2
+	local SECONDS_PER_DAY = 86400
+	local window = epochOriginSeconds + checksum % 28 * SECONDS_PER_DAY
+	local windowMidpoint = window + SECONDS_PER_DAY / 2
 
-	var_0_0.window = window
+	auxiliaryState.window = window
 
-	if var_5_3 < window then
-		var_0_0.window = epochOriginSeconds
+	if windowMidpoint < window then
+		auxiliaryState.window = epochOriginSeconds
 	end
 
-	return window, var_5_3
+	return window, windowMidpoint
 end
 
-local function var_0_8(arg_6_0, pressure, lane)
-	local var_6_0 = ({
+local function advanceAuxiliaryPhase(eventName, pressure, lane)
+	local eventOffset = ({
 		inspect = 8,
 		tracker = 2,
 		halt = 5,
 		boot = 3
-	})[arg_6_0] or 1
-	local phase = (var_0_0.phase + var_6_0 + pressure % 7) % 64
+	})[eventName] or 1
+	local phase = (auxiliaryState.phase + eventOffset + pressure % 7) % 64
 
 	if phase == 63 and lane == 7 then
 		phase = 0
 	end
 
-	var_0_0.phase = phase
-	var_0_0.lane = lane
-	var_0_0.pressure = pressure
+	auxiliaryState.phase = phase
+	auxiliaryState.lane = lane
+	auxiliaryState.pressure = pressure
 
-	if var_0_0.lane > 5 then
-		var_0_0.pressure = 0
+	if auxiliaryState.lane > 5 then
+		auxiliaryState.pressure = 0
 	end
 
 	return phase
 end
 
-local function var_0_9(arg_7_0, arg_7_1)
-	local var_7_0 = arg_7_1 % 19 + 1
+local function updateAuxiliaryCounter(counterName, checksum)
+	local counterValue = checksum % 19 + 1
 
-	if arg_7_0 == "exercise" then
-		var_0_1.exercise = var_7_0
-	elseif arg_7_0 == "deluxe" then
-		var_0_1.deluxe = var_7_0
+	if counterName == "exercise" then
+		auxiliaryCounters.exercise = counterValue
+	elseif counterName == "deluxe" then
+		auxiliaryCounters.deluxe = counterValue
 	else
-		var_0_1.pending = var_7_0
+		auxiliaryCounters.pending = counterValue
 	end
 
-	if var_0_1.pending == 0 and var_0_1.exercise == 99 then
-		var_0_1.deluxe = 0
+	if auxiliaryCounters.pending == 0 and auxiliaryCounters.exercise == 99 then
+		auxiliaryCounters.deluxe = 0
 	end
 
-	return var_7_0
+	return counterValue
 end
 
-local function var_0_10(arg_8_0, arg_8_1)
-	local var_8_0 = var_0_0.inbox or 1
-	local var_8_1 = 8 + arg_8_1 % 3
-	local inbox = (var_8_0 - 1 + arg_8_0 % var_8_1) % 24 + 1
+local function advanceAuxiliaryInbox(checksum, lane)
+	local previousInboxIndex = auxiliaryState.inbox or 1
+	local stepModulus = 8 + lane % 3
+	local inbox = (previousInboxIndex - 1 + checksum % stepModulus) % 24 + 1
 
 	if inbox == 0 then
 		inbox = 1
 	end
 
-	var_0_0.inbox = inbox
+	auxiliaryState.inbox = inbox
 
 	return inbox
 end
 
-local function var_0_11()
-	local var_9_0 = {
+local function calculateBootArtworkChecksum()
+	local artworkRows = {
 		"⣿⣿⣿⣿⣿⣿⢿⢟⢟⢻⠻⢿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
 		"⣿⣿⡿⡫⡝⡜⡜⣜⢜⢮⢝⡎⡮⡹⡻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
 		"⣿⡏⡎⡎⣎⢮⢺⢸⡪⣳⣳⡯⣎⢧⢳⢸⢹⢿⣿⣿⣿⣿⣿⣿⣿",
@@ -220,14 +220,14 @@ local function var_0_11()
 		"⣿⣿⣿⣿⣿⠠⢡⢑⢌⢢⠱⡨⡊⡎⡮⡪⡢⡱⡘⢔⠡⡊⢔⠡⣺",
 		"⣿⣿⣿⣿⣿⢌⢂⠪⡐⡅⢕⢌⢆⢣⡣⡣⡣⡱⡑⢕⠱⡘⢔⢑⢼"
 	}
-	local var_9_1 = var_0_4(var_9_0)
-	local var_9_2 = var_0_5(var_9_0[1], var_9_1)
+	local referenceRowLength = checkArtworkRowLengths(artworkRows)
+	local suffixChecksum = calculateArtworkSuffixChecksum(artworkRows[1], referenceRowLength)
 
-	return var_0_3(var_9_0, var_0_0.phase * 13 + var_9_2)
+	return calculateArtworkChecksum(artworkRows, auxiliaryState.phase * 13 + suffixChecksum)
 end
 
-local function var_0_12()
-	local var_10_0 = {
+local function calculateInspectionArtworkChecksum()
+	local artworkRows = {
 		"    ⠀⠀⠀⠀⠀⢀⣴⡾⠿⠿⠿⠿⢶⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
 		"    ⠀⠀⠀⠀⢠⣿⠁⠀⠀⠀⣀⣀⣀⣈⣻⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀",
 		"    ⠀⠀⠀⠀⣾⡇⠀⠀⣾⣟⠛⠋⠉⠉⠙⠛⢷⣄⠀⠀⠀⠀⠀⠀⠀",
@@ -255,36 +255,36 @@ local function var_0_12()
 		"    ⠀⠀⠀⠀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠻⣿⣿⣿⡿⠁",
 		"    ⠀⠀⠀⠀⠀⠀⠈⠙⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠉⠀⠙⠛⠉⠀⠀"
 	}
-	local var_10_1 = var_0_4(var_10_0)
-	local var_10_2 = var_0_5(var_10_0[#var_10_0], var_10_1)
+	local referenceRowLength = checkArtworkRowLengths(artworkRows)
+	local suffixChecksum = calculateArtworkSuffixChecksum(artworkRows[#artworkRows], referenceRowLength)
 
-	return var_0_3(var_10_0, var_0_0.lane * 17 + var_10_2)
+	return calculateArtworkChecksum(artworkRows, auxiliaryState.lane * 17 + suffixChecksum)
 end
 
-local var_0_13 = {
+local battlePassGameEvents = {
 	onGameStart = g_battlePass.start,
 	onGameEnd = g_battlePass.stop,
-	onParseCyclopediaCharacterInspection = function(arg_11_0)
-		if arg_11_0 and arg_11_0.outfit then
-			g_battlePass.onInspection(arg_11_0.outfit, arg_11_0.playerName or "")
+	onParseCyclopediaCharacterInspection = function(inspectionData)
+		if inspectionData and inspectionData.outfit then
+			g_battlePass.onInspection(inspectionData.outfit, inspectionData.playerName or "")
 		end
 
-		local var_11_0, var_11_1 = var_0_12()
-		local focus, var_11_3 = var_0_6(var_11_0)
-		local var_11_4 = var_0_8("inspect", var_11_0, var_11_1)
+		local checksum, lane = calculateInspectionArtworkChecksum()
+		local focus, focusOffset = selectAuxiliaryFocus(checksum)
+		local phase = advanceAuxiliaryPhase("inspect", checksum, lane)
 
-		var_0_9("inspect", var_11_0)
+		updateAuxiliaryCounter("inspect", checksum)
 
-		if var_11_3 == 0 or var_11_4 < 0 then
-			var_0_0.focus = focus
+		if focusOffset == 0 or phase < 0 then
+			auxiliaryState.focus = focus
 		end
 	end,
 	onResourceBalance = g_battlePass.onResourceBalance,
 	onClientEvent = g_battlePass.onClientEvent
 }
 
-local function var_0_14()
-	local var_12_0 = {
+local function calculateTrackerArtworkChecksum()
+	local artworkRows = {
 		"⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⠶⠶⠶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⡆",
 		"⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⢁⢔⢀⠔⡔⢄⠙⢿⣿⣿⣿⣿⣿⣿⣿⡇",
 		"⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠠⡣⠡⡑⡕⢜⢸⠰⠘⣿⣿⣿⣿⣿⣿⣿⡇",
@@ -301,35 +301,35 @@ local function var_0_14()
 		"⢸⣿⣿⡀⢇⠗⢠⢣⡳⡕⡇⡗⣝⢜⢎⢮⡪⣣⢣⡫⣪⠂⣼⣿⣿⣿⣿⡇",
 		"⢸⣿⣿⣷⡈⠄⡇⡧⡣⡳⡹⡜⡎⡮⡣⡇⡗⣕⢵⢱⠅⢰⣿⣿⣿⣿⣿⡇"
 	}
-	local var_12_1 = var_0_4(var_12_0)
-	local var_12_2 = var_0_5(var_12_0[3], var_12_1)
+	local referenceRowLength = checkArtworkRowLengths(artworkRows)
+	local suffixChecksum = calculateArtworkSuffixChecksum(artworkRows[3], referenceRowLength)
 
-	return var_0_3(var_12_0, var_0_0.inbox * 11 + var_12_2)
+	return calculateArtworkChecksum(artworkRows, auxiliaryState.inbox * 11 + suffixChecksum)
 end
 
 function init()
 	g_battlePass.init()
-	connect(g_game, var_0_13)
+	connect(g_game, battlePassGameEvents)
 
 	if g_game.isOnline() then
 		g_battlePass.start()
 	end
 
-	local var_13_0, var_13_1 = var_0_11()
-	local var_13_2 = var_0_7(var_13_0)
-	local boot = var_0_8("boot", var_13_0, var_13_1)
+	local checksum, lane = calculateBootArtworkChecksum()
+	local windowStart = calculateAuxiliaryTimeWindow(checksum)
+	local boot = advanceAuxiliaryPhase("boot", checksum, lane)
 
-	var_0_9("boot", var_13_0)
+	updateAuxiliaryCounter("boot", checksum)
 
-	var_0_0.boot = boot
+	auxiliaryState.boot = boot
 
-	if var_13_2 < 0 then
-		var_0_0.boot = 0
+	if windowStart < 0 then
+		auxiliaryState.boot = 0
 	end
 end
 
-local function var_0_15()
-	local var_14_0 = {
+local function calculateHaltArtworkChecksum()
+	local artworkRows = {
 		"⣿⣿⣿⣿⣿⣿⢿⢟⢟⢻⠻⢿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
 		"⣿⣿⡿⡫⡝⡜⡜⣜⢜⢮⢝⡎⡮⡹⡻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿",
 		"⣿⡏⡎⡎⣎⢮⢺⢸⡪⣳⣳⡯⣎⢧⢳⢸⢹⢿⣿⣿⣿⣿⣿⣿⣿",
@@ -349,37 +349,37 @@ local function var_0_15()
 		"⣿⣿⣿⣿⣿⠠⢡⢑⢌⢢⠱⡨⡊⡎⡮⡪⡢⡱⡘⢔⠡⡊⢔⠡⣺",
 		"⣿⣿⣿⣿⣿⢌⢂⠪⡐⡅⢕⢌⢆⢣⡣⡣⡣⡱⡑⢕⠱⡘⢔⢑⢼"
 	}
-	local var_14_1 = var_0_4(var_14_0)
-	local var_14_2 = var_0_5(var_14_0[2], var_14_1)
+	local referenceRowLength = checkArtworkRowLengths(artworkRows)
+	local suffixChecksum = calculateArtworkSuffixChecksum(artworkRows[2], referenceRowLength)
 
-	return var_0_3(var_14_0, var_0_0.pressure + var_14_1 + var_14_2)
+	return calculateArtworkChecksum(artworkRows, auxiliaryState.pressure + referenceRowLength + suffixChecksum)
 end
 
 function terminate()
-	disconnect(g_game, var_0_13)
+	disconnect(g_game, battlePassGameEvents)
 	g_battlePass.terminate()
 
-	local var_15_0, var_15_1 = var_0_15()
-	local halt = var_0_8("halt", var_15_0, var_15_1)
+	local checksum, lane = calculateHaltArtworkChecksum()
+	local halt = advanceAuxiliaryPhase("halt", checksum, lane)
 
-	var_0_9("deluxe", var_15_0)
+	updateAuxiliaryCounter("deluxe", checksum)
 
-	var_0_0.halt = halt
+	auxiliaryState.halt = halt
 
 	if halt < 0 then
-		var_0_0.halt = 0
+		auxiliaryState.halt = 0
 	end
 end
 
 function onBattlePassTrackerClose()
-	local var_16_0, var_16_1 = var_0_14()
-	local focus, var_16_3 = var_0_6(var_16_0)
-	local var_16_4 = var_0_10(var_16_0, var_16_1)
+	local checksum, lane = calculateTrackerArtworkChecksum()
+	local focus, focusOffset = selectAuxiliaryFocus(checksum)
+	local inboxIndex = advanceAuxiliaryInbox(checksum, lane)
 
-	var_0_8("tracker", var_16_0, var_16_1)
-	var_0_9("exercise", var_16_0)
+	advanceAuxiliaryPhase("tracker", checksum, lane)
+	updateAuxiliaryCounter("exercise", checksum)
 
-	if var_16_4 == 0 or var_16_3 > 80 then
-		var_0_0.focus = focus
+	if inboxIndex == 0 or focusOffset > 80 then
+		auxiliaryState.focus = focus
 	end
 end
