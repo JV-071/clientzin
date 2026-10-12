@@ -863,13 +863,13 @@ function HelperConfigTab.createBlankProfile(profileName)
 	end
 end
 
-function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
+function HelperConfigTab.renameProfile(oldProfileName, newProfileName)
 	if not ctx or not ctx.getWidget then
 		return
 	end
 
 	oldProfileName = trimProfileName(oldProfileName)
-	activeProfile = trimProfileName(activeProfile)
+	newProfileName = trimProfileName(newProfileName)
 
 	if oldProfileName == "" then
 		if ctx.showMessage then
@@ -879,7 +879,7 @@ function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
 		return
 	end
 
-	if activeProfile == "" then
+	if newProfileName == "" then
 		if ctx.showMessage then
 			ctx.showMessage(true, tr("Profile name cannot be empty."))
 		end
@@ -887,7 +887,7 @@ function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
 		return
 	end
 
-	if activeProfile == oldProfileName then
+	if newProfileName == oldProfileName then
 		return
 	end
 
@@ -911,21 +911,21 @@ function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
 		return
 	end
 
-	if helperConfig.profiles[activeProfile] ~= nil then
+	if helperConfig.profiles[newProfileName] ~= nil then
 		if ctx.showMessage then
-			ctx.showMessage(true, string.format(configText("nameTaken"), activeProfile))
+			ctx.showMessage(true, string.format(configText("nameTaken"), newProfileName))
 		end
 
 		return
 	end
 
-	helperConfig.profiles[activeProfile] = helperConfig.profiles[oldProfileName]
+	helperConfig.profiles[newProfileName] = helperConfig.profiles[oldProfileName]
 	helperConfig.profiles[oldProfileName] = nil
 
 	local wasActiveProfile = helperConfig.activeProfile == oldProfileName
 
 	if wasActiveProfile then
-		helperConfig.activeProfile = activeProfile
+		helperConfig.activeProfile = newProfileName
 	end
 
 	if not ctx.writeHelperJSON(helperConfig) then
@@ -943,18 +943,18 @@ function HelperConfigTab.renameProfile(oldProfileName, activeProfile)
 	end
 
 	if wasActiveProfile or selectedProfileName == oldProfileName then
-		HelperConfigTab.setSelectedProfileName(activeProfile)
-		HelperConfigTab.syncProfileNameEdit(activeProfile)
+		HelperConfigTab.setSelectedProfileName(newProfileName)
+		HelperConfigTab.syncProfileNameEdit(newProfileName)
 	end
 
 	HelperConfigTab.refreshProfileList()
 
 	if ctx.log then
-		ctx.log("info", "Profile renamed: \"" .. oldProfileName .. "\" -> \"" .. activeProfile .. "\".")
+		ctx.log("info", "Profile renamed: \"" .. oldProfileName .. "\" -> \"" .. newProfileName .. "\".")
 	end
 
 	if ctx.showMessage then
-		ctx.showMessage(false, string.format(configText("renamed"), oldProfileName, activeProfile))
+		ctx.showMessage(false, string.format(configText("renamed"), oldProfileName, newProfileName))
 	end
 end
 

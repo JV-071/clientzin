@@ -731,3 +731,13 @@ TEST_F(RuntimeEventTest, LuaWheelModCatalogSearchesDescriptionsWithLiteralSubstr
     ASSERT_EQ(1, g_lua.safeCall());
     EXPECT_TRUE(g_lua.popBoolean());
 }
+
+TEST_F(RuntimeEventTest, LuaKeybindKeepsItemSubtypesOutOfUseWithCallbacks)
+{
+    ASSERT_TRUE(g_resources.addSearchPath(std::string(CLIENTZIN_SOURCE_DIR)));
+    const auto module = g_resources.readFileContents("/modules/corelib/keybind.lua");
+    const auto scenario = g_resources.readFileContents("/tests/fixtures/lua/keybind_item_subtype_contract.lua");
+    g_lua.loadFunction(module + "\n" + scenario, "@keybind-item-subtype-contract");
+    ASSERT_EQ(1, g_lua.safeCall());
+    EXPECT_TRUE(g_lua.popBoolean());
+}

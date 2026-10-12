@@ -93,7 +93,7 @@ local OTHER_HUD_DEPENDENT_OPTIONS = {
 	"showOtherMarks",
 	"showOtherNpcIcons"
 }
-local var_0_24 = {
+local GAME_WINDOW_MESSAGE_OPTION_IDS = {
 	"showPrivateMessages",
 	"showPotionSoundEffects",
 	"showSpells",
@@ -105,19 +105,19 @@ local var_0_24 = {
 	"showStoreNotificationsInCombat"
 }
 
-function updateGameWindowMessageOptionsAvailability(arg_3_0, enabled)
-	local var_3_0 = arg_3_0 or panels
-	local var_3_1 = var_3_0 and var_3_0.interfaceGameWindow
+function updateGameWindowMessageOptionsAvailability(optionPanels, enabled)
+	local availablePanels = optionPanels or panels
+	local gameWindowPanel = availablePanels and availablePanels.interfaceGameWindow
 
-	if not var_3_1 then
+	if not gameWindowPanel then
 		return
 	end
 
-	for unusedValue, entry in ipairs(var_0_24) do
-		local var_3_2 = var_3_1:recursiveGetChildById(entry)
+	for unusedValue, entry in ipairs(GAME_WINDOW_MESSAGE_OPTION_IDS) do
+		local optionWidget = gameWindowPanel:recursiveGetChildById(entry)
 
-		if var_3_2 then
-			var_3_2:setEnabled(enabled)
+		if optionWidget then
+			optionWidget:setEnabled(enabled)
 		end
 	end
 end
@@ -989,8 +989,8 @@ local function updateDisplayedButtonsList(keepSelection)
 			updateButtonStates()
 		end
 
-		function label.onDoubleClick(arg_42_0)
-			arg_42_0:focus()
+		function label.onDoubleClick(labelWidget)
+			labelWidget:focus()
 			moveToAvailable()
 
 			return true
@@ -1051,8 +1051,8 @@ local function updateAvailableButtonsList(keepSelection)
 			updateButtonStates()
 		end
 
-		function label.onDoubleClick(arg_45_0)
-			arg_45_0:focus()
+		function label.onDoubleClick(labelWidget)
+			labelWidget:focus()
 			moveToDisplayed()
 
 			return true
@@ -2012,7 +2012,7 @@ function showPresetNotification(text)
 	end, 3000)
 end
 
-local var_0_71 = {
+local MISC_KEYBIND_ACTIONS = {
 	"Activate Lenshelp",
 	"Allow/disallow all characters to Exiva",
 	"Change Character",
@@ -2024,38 +2024,38 @@ local var_0_71 = {
 	"Take Screenshot"
 }
 
-local function var_0_72()
+local function migrateMiscKeybinds()
 	for unusedValue, entry in ipairs(Keybind.presets or {}) do
-		local var_86_0 = Keybind.configs.keybinds[entry]
+		local presetConfig = Keybind.configs.keybinds[entry]
 
-		if var_86_0 then
-			for unusedValue, entry in ipairs(var_0_71) do
-				local var_86_1 = "Misc_" .. entry
-				local var_86_2 = "Misc._" .. entry
-				local node = var_86_0:getNode(var_86_1)
+		if presetConfig then
+			for unusedValue, entry in ipairs(MISC_KEYBIND_ACTIONS) do
+				local legacyMiscIndex = "Misc_" .. entry
+				local currentMiscIndex = "Misc._" .. entry
+				local node = presetConfig:getNode(legacyMiscIndex)
 
 				if node then
-					var_86_0:setNode(var_86_2, node)
-					var_86_0:remove(var_86_1)
+					presetConfig:setNode(currentMiscIndex, node)
+					presetConfig:remove(legacyMiscIndex)
 				end
 			end
 
-			local var_86_4 = "UI_Switch Hotkey Preset"
-			local var_86_5 = "Misc._Next Hotkey Preset"
-			local node = var_86_0:getNode(var_86_4)
+			local legacySwitchPresetIndex = "UI_Switch Hotkey Preset"
+			local nextPresetIndex = "Misc._Next Hotkey Preset"
+			local node = presetConfig:getNode(legacySwitchPresetIndex)
 
-			if node and not var_86_0:getNode(var_86_5) then
-				var_86_0:setNode(var_86_5, node)
+			if node and not presetConfig:getNode(nextPresetIndex) then
+				presetConfig:setNode(nextPresetIndex, node)
 			end
 
 			if node then
-				var_86_0:remove(var_86_4)
+				presetConfig:remove(legacySwitchPresetIndex)
 			end
 		end
 	end
 end
 
-local var_0_73 = {
+local DIALOG_KEYBIND_MIGRATIONS = {
 	{
 		newIndex = "Dialogs_Open Bugreport",
 		preserveEmpty = true,
@@ -2072,7 +2072,7 @@ local var_0_73 = {
 		oldIndex = "Windows_Show/hide quest Log"
 	}
 }
-local var_0_74 = {
+local WINDOW_KEYBIND_MIGRATIONS = {
 	{
 		newIndex = "Windows_Show/hide skills window",
 		preserveEmpty = true,
@@ -2090,7 +2090,7 @@ local var_0_74 = {
 	}
 }
 
-local function var_0_75(options)
+local function hasAssignedKeybind(options)
 	if type(options) ~= "table" then
 		return false
 	end
@@ -2104,113 +2104,113 @@ local function var_0_75(options)
 	return false
 end
 
-local function var_0_76(arg_88_0)
+local function migrateKeybindIndices(migrations)
 	for unusedValue, entry in ipairs(Keybind.presets or {}) do
-		local var_88_0 = Keybind.configs.keybinds[entry]
+		local presetConfig = Keybind.configs.keybinds[entry]
 
-		if var_88_0 then
-			for unusedValue, entry in ipairs(arg_88_0) do
-				local node = var_88_0:getNode(entry.oldIndex)
+		if presetConfig then
+			for unusedValue, entry in ipairs(migrations) do
+				local node = presetConfig:getNode(entry.oldIndex)
 
-				if node and not var_88_0:getNode(entry.newIndex) and (entry.preserveEmpty or var_0_75(node)) then
-					var_88_0:setNode(entry.newIndex, node)
+				if node and not presetConfig:getNode(entry.newIndex) and (entry.preserveEmpty or hasAssignedKeybind(node)) then
+					presetConfig:setNode(entry.newIndex, node)
 				end
 
 				if node then
-					var_88_0:remove(entry.oldIndex)
+					presetConfig:remove(entry.oldIndex)
 				end
 			end
 		end
 	end
 end
 
-local function var_0_77()
-	var_0_76(var_0_73)
+local function migrateDialogKeybinds()
+	migrateKeybindIndices(DIALOG_KEYBIND_MIGRATIONS)
 end
 
-local function var_0_78()
-	var_0_76(var_0_74)
+local function migrateWindowKeybinds()
+	migrateKeybindIndices(WINDOW_KEYBIND_MIGRATIONS)
 
-	local var_90_0 = "windowKeybindDefaultsMigrated"
+	local WINDOW_DEFAULTS_MIGRATION_KEY = "windowKeybindDefaultsMigrated"
 
-	if g_settings.getBoolean(var_90_0) then
+	if g_settings.getBoolean(WINDOW_DEFAULTS_MIGRATION_KEY) then
 		return
 	end
 
 	for unusedValue, entry in ipairs(Keybind.presets or {}) do
-		local var_90_1 = Keybind.configs.keybinds[entry]
+		local presetConfig = Keybind.configs.keybinds[entry]
 
-		if var_90_1 then
-			local var_90_2 = "Windows_Show/hide party list"
-			local node = var_90_1:getNode(var_90_2)
-			local var_90_4 = false
+		if presetConfig then
+			local PARTY_LIST_KEYBIND_INDEX = "Windows_Show/hide party list"
+			local node = presetConfig:getNode(PARTY_LIST_KEYBIND_INDEX)
+			local partyListKeysChanged = false
 
 			if node then
-				for iter_90_2 = CHAT_MODE.ON, CHAT_MODE.OFF do
-					local var_90_5 = node[iter_90_2] or node[tostring(iter_90_2)]
+				for chatMode = CHAT_MODE.ON, CHAT_MODE.OFF do
+					local chatModeKeys = node[chatMode] or node[tostring(chatMode)]
 
-					if var_90_5 and var_90_5.primary == "Ctrl+Shift+P" then
-						var_90_5.primary = ""
-						var_90_4 = true
+					if chatModeKeys and chatModeKeys.primary == "Ctrl+Shift+P" then
+						chatModeKeys.primary = ""
+						partyListKeysChanged = true
 					end
 				end
 			end
 
-			if var_90_4 then
-				var_90_1:setNode(var_90_2, node)
+			if partyListKeysChanged then
+				presetConfig:setNode(PARTY_LIST_KEYBIND_INDEX, node)
 			end
 		end
 	end
 
-	g_settings.set(var_90_0, true)
+	g_settings.set(WINDOW_DEFAULTS_MIGRATION_KEY, true)
 end
 
-local function var_0_79()
-	local var_91_0 = "cyclopediaMapChatOffOnlyMigrated"
+local function migrateCyclopediaMapChatMode()
+	local CYCLOPEDIA_MAP_MIGRATION_KEY = "cyclopediaMapChatOffOnlyMigrated"
 
-	if g_settings.getBoolean(var_91_0) then
+	if g_settings.getBoolean(CYCLOPEDIA_MAP_MIGRATION_KEY) then
 		return
 	end
 
 	for unusedValue, entry in ipairs(Keybind.presets or {}) do
-		local var_91_1 = Keybind.configs.keybinds[entry]
+		local presetConfig = Keybind.configs.keybinds[entry]
 
-		if var_91_1 then
-			local var_91_2 = "Dialogs_Open Cyclopedia - Map"
-			local node = var_91_1:getNode(var_91_2)
-			local var_91_4 = node and (node[CHAT_MODE.ON] or node[tostring(CHAT_MODE.ON)])
+		if presetConfig then
+			local CYCLOPEDIA_MAP_KEYBIND_INDEX = "Dialogs_Open Cyclopedia - Map"
+			local node = presetConfig:getNode(CYCLOPEDIA_MAP_KEYBIND_INDEX)
+			local chatOnKeys = node and (node[CHAT_MODE.ON] or node[tostring(CHAT_MODE.ON)])
 
-			if var_91_4 and var_91_4.primary == "M" then
-				var_91_4.primary = ""
+			if chatOnKeys and chatOnKeys.primary == "M" then
+				chatOnKeys.primary = ""
 
-				var_91_1:setNode(var_91_2, node)
+				presetConfig:setNode(CYCLOPEDIA_MAP_KEYBIND_INDEX, node)
 			end
 		end
 	end
 
-	g_settings.set(var_91_0, true)
+	g_settings.set(CYCLOPEDIA_MAP_MIGRATION_KEY, true)
 end
 
-function cycleHotkeyPreset(arg_92_0)
-	local var_92_0 = Keybind and Keybind.presets
+function cycleHotkeyPreset(presetDelta)
+	local presets = Keybind and Keybind.presets
 
-	if not var_92_0 or #var_92_0 == 0 then
+	if not presets or #presets == 0 then
 		return
 	end
 
-	local var_92_1 = 1
+	local currentPresetIndex = 1
 
-	for index, entry in ipairs(var_92_0) do
+	for index, entry in ipairs(presets) do
 		if entry == Keybind.currentPreset then
-			var_92_1 = index
+			currentPresetIndex = index
 
 			break
 		end
 	end
 
-	arg_92_0 = arg_92_0 or 1
+	presetDelta = presetDelta or 1
 
-	local nextPreset = var_92_0[(var_92_1 - 1 + arg_92_0) % #var_92_0 + 1]
+	local nextPreset = presets[(currentPresetIndex - 1 + presetDelta) % #presets + 1]
 
 	if not nextPreset or nextPreset == Keybind.currentPreset then
 		return
@@ -2218,12 +2218,12 @@ function cycleHotkeyPreset(arg_92_0)
 
 	Keybind.selectPreset(nextPreset)
 
-	local var_92_3 = controller and controller.ui and controller.ui:isVisible()
+	local wasOptionsVisible = controller and controller.ui and controller.ui:isVisible()
 
 	if panels and panels.keybindsPanel and panels.keybindsPanel.presets and panels.keybindsPanel.presets.list then
 		panels.keybindsPanel.presets.list:setCurrentOption(nextPreset, true)
 
-		if var_92_3 and updateKeybinds then
+		if wasOptionsVisible and updateKeybinds then
 			updateKeybinds()
 		elseif markKeybindsUiDirty then
 			markKeybindsUiDirty()
@@ -2243,10 +2243,10 @@ controller:setUI("options")
 
 function controller.onInit(self)
 	migrateLegacyScreenshotSettings()
-	var_0_72()
-	var_0_77()
-	var_0_78()
-	var_0_79()
+	migrateMiscKeybinds()
+	migrateDialogKeybinds()
+	migrateWindowKeybinds()
+	migrateCyclopediaMapChatMode()
 
 	for k, obj in pairs(options) do
 		if type(obj) ~= "table" then
@@ -2830,9 +2830,9 @@ function persistImportedOptions(optionMap)
 end
 
 function openManageShortcutsPage()
-	local var_119_0 = controller.ui:isVisible()
+	local wasOptionsVisible = controller.ui:isVisible()
 
-	if not var_119_0 then
+	if not wasOptionsVisible then
 		show()
 	end
 
@@ -2842,7 +2842,7 @@ function openManageShortcutsPage()
 
 	refreshShortcuts()
 
-	if var_119_0 then
+	if wasOptionsVisible then
 		updateKeybinds()
 	end
 end
@@ -2902,8 +2902,8 @@ function getOption(key)
 			return 100
 		end
 
-		local var_126_0 = options[key]
-		local value = var_126_0 and var_126_0.value
+		local optionEntry = options[key]
+		local value = optionEntry and optionEntry.value
 
 		if type(value) == "table" and value.value ~= nil then
 			value = value.value

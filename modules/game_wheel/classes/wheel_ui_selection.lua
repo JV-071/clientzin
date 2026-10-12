@@ -1,20 +1,20 @@
-function WheelOfDestiny.setConvictionText(arg_1_0, arg_1_1, arg_1_2)
-	if not arg_1_0 then
+function WheelOfDestiny.setConvictionText(labelWidget, text, isActive)
+	if not labelWidget then
 		return
 	end
 
-	if type(arg_1_1) == "table" or type(arg_1_1) == "string" and arg_1_1:find("{", 1, true) then
-		arg_1_0:setColoredText(arg_1_1)
+	if type(text) == "table" or type(text) == "string" and text:find("{", 1, true) then
+		labelWidget:setColoredText(text)
 	else
-		arg_1_0:setText(arg_1_1 or "")
+		labelWidget:setText(text or "")
 
-		if arg_1_2 ~= nil then
-			arg_1_0:setColor(arg_1_2 and "#c0c0c0" or "#707070")
+		if isActive ~= nil then
+			labelWidget:setColor(isActive and "#c0c0c0" or "#707070")
 		end
 	end
 end
 
-local function var_0_0(parentWidget, arg_2_1)
+local function createConvictionTierRow(parentWidget, fontName)
 	local panelWidget = g_ui.createWidget("Panel", parentWidget)
 
 	panelWidget:setHeight(13)
@@ -28,150 +28,150 @@ local function var_0_0(parentWidget, arg_2_1)
 	labelWidget:setTextAlign(AlignTopLeft)
 	labelWidget:setColor("#c0c0c0")
 
-	if arg_2_1 then
-		labelWidget:setFont(arg_2_1)
+	if fontName then
+		labelWidget:setFont(fontName)
 	end
 
-	local var_2_2 = g_ui.createWidget("Label", panelWidget)
+	local contentLabel = g_ui.createWidget("Label", panelWidget)
 
-	var_2_2:setId("content")
-	var_2_2:addAnchor(AnchorTop, "parent", AnchorTop)
-	var_2_2:addAnchor(AnchorLeft, "prefix", AnchorRight)
-	var_2_2:addAnchor(AnchorRight, "parent", AnchorRight)
-	var_2_2:setMarginLeft(-4)
-	var_2_2:setTextAlign(AlignTopLeft)
-	var_2_2:setColor("#c0c0c0")
-	var_2_2:setTextWrap(true)
-	var_2_2:setTextAutoResize(true)
+	contentLabel:setId("content")
+	contentLabel:addAnchor(AnchorTop, "parent", AnchorTop)
+	contentLabel:addAnchor(AnchorLeft, "prefix", AnchorRight)
+	contentLabel:addAnchor(AnchorRight, "parent", AnchorRight)
+	contentLabel:setMarginLeft(-4)
+	contentLabel:setTextAlign(AlignTopLeft)
+	contentLabel:setColor("#c0c0c0")
+	contentLabel:setTextWrap(true)
+	contentLabel:setTextAutoResize(true)
 
-	if arg_2_1 then
-		var_2_2:setFont(arg_2_1)
+	if fontName then
+		contentLabel:setFont(fontName)
 	end
 
-	return panelWidget, labelWidget, var_2_2
+	return panelWidget, labelWidget, contentLabel
 end
 
-function WheelOfDestiny.configureConvictionAugmentBody(arg_3_0, arg_3_1, arg_3_2, arg_3_3)
-	if not arg_3_1 or not arg_3_2 then
+function WheelOfDestiny.configureConvictionAugmentBody(bodyPanel, fallbackLabel, bonusParts, tooltip)
+	if not fallbackLabel or not bonusParts then
 		return
 	end
 
-	local var_3_0 = type(arg_3_3) == "string" and arg_3_3 or ""
+	local tooltipText = type(tooltip) == "string" and tooltip or ""
 
-	arg_3_1:setTooltip(var_3_0)
+	fallbackLabel:setTooltip(tooltipText)
 
-	if arg_3_0 then
-		arg_3_0:destroyChildren()
-		arg_3_0:setTooltip(var_3_0)
+	if bodyPanel then
+		bodyPanel:destroyChildren()
+		bodyPanel:setTooltip(tooltipText)
 	end
 
-	if arg_3_2.tiers and #arg_3_2.tiers > 0 then
-		local var_3_1 = ""
+	if bonusParts.tiers and #bonusParts.tiers > 0 then
+		local fallbackTierText = ""
 
-		for index, tier in ipairs(arg_3_2.tiers) do
+		for index, tier in ipairs(bonusParts.tiers) do
 			if index > 1 then
-				var_3_1 = var_3_1 .. "\n"
+				fallbackTierText = fallbackTierText .. "\n"
 			end
 
-			var_3_1 = var_3_1 .. tier.prefix .. tier.text
+			fallbackTierText = fallbackTierText .. tier.prefix .. tier.text
 		end
 
-		if not arg_3_0 then
-			arg_3_1:setVisible(true)
-			WheelOfDestiny.setConvictionText(arg_3_1, var_3_1)
+		if not bodyPanel then
+			fallbackLabel:setVisible(true)
+			WheelOfDestiny.setConvictionText(fallbackLabel, fallbackTierText)
 
 			return
 		end
 
-		local var_3_2, var_3_3 = pcall(function()
-			local font = arg_3_1.getFont and arg_3_1:getFont() or nil
-			local var_4_1 = 0
+		local tierRowsCreated, creationError = pcall(function()
+			local font = fallbackLabel.getFont and fallbackLabel:getFont() or nil
+			local totalTierHeight = 0
 
-			arg_3_0:setVisible(true)
+			bodyPanel:setVisible(true)
 
-			for index, tier in ipairs(arg_3_2.tiers) do
-				local var_4_2, var_4_3, var_4_4 = var_0_0(arg_3_0, font)
+			for index, tier in ipairs(bonusParts.tiers) do
+				local tierPanel, prefixLabel, contentLabel = createConvictionTierRow(bodyPanel, font)
 
-				var_4_2:setId("convictionTier" .. index)
+				tierPanel:setId("convictionTier" .. index)
 
 				if index > 1 then
-					var_4_2:setMarginTop(2)
+					tierPanel:setMarginTop(2)
 				end
 
-				var_4_3:setColoredText(tier.prefix)
-				var_4_4:setColoredText(tier.text)
+				prefixLabel:setColoredText(tier.prefix)
+				contentLabel:setColoredText(tier.text)
 
-				local textSize = var_4_4:getTextSize()
+				local textSize = contentLabel:getTextSize()
 				local height = math.max(13, textSize and textSize.height or 13)
 
-				var_4_2:setHeight(height)
+				tierPanel:setHeight(height)
 
-				var_4_1 = var_4_1 + height + (index > 1 and 2 or 0)
+				totalTierHeight = totalTierHeight + height + (index > 1 and 2 or 0)
 			end
 
-			if var_4_1 > 0 then
-				arg_3_0:setHeight(var_4_1)
+			if totalTierHeight > 0 then
+				bodyPanel:setHeight(totalTierHeight)
 			end
 
-			arg_3_1:setVisible(false)
-			arg_3_1:setText("")
+			fallbackLabel:setVisible(false)
+			fallbackLabel:setText("")
 		end)
 
-		if var_3_2 then
+		if tierRowsCreated then
 			return
 		end
 
-		g_logger.error("configureConvictionAugmentBody: " .. tostring(var_3_3))
-		arg_3_0:destroyChildren()
-		arg_3_0:setVisible(false)
-		arg_3_1:setVisible(true)
-		WheelOfDestiny.setConvictionText(arg_3_1, var_3_1)
+		g_logger.error("configureConvictionAugmentBody: " .. tostring(creationError))
+		bodyPanel:destroyChildren()
+		bodyPanel:setVisible(false)
+		fallbackLabel:setVisible(true)
+		WheelOfDestiny.setConvictionText(fallbackLabel, fallbackTierText)
 
 		return
 	end
 
-	if arg_3_0 then
-		arg_3_0:setVisible(false)
+	if bodyPanel then
+		bodyPanel:setVisible(false)
 	end
 
-	if arg_3_2.body and arg_3_2.body ~= "" then
-		arg_3_1:setVisible(true)
+	if bonusParts.body and bonusParts.body ~= "" then
+		fallbackLabel:setVisible(true)
 	else
-		arg_3_1:setVisible(false)
-		arg_3_1:setText("")
+		fallbackLabel:setVisible(false)
+		fallbackLabel:setText("")
 	end
 end
 
-function WheelOfDestiny.configureDedication(arg_5_0)
+function WheelOfDestiny.configureDedication(sliceIndex)
 	wheelOfDestinyWindow.selection.tabContent.dedication:setWidth("185")
 	wheelOfDestinyWindow.selection.tabContent.dedication:setHeight("29")
-	wheelOfDestinyWindow.selection.tabContent.dedication:setText(getDedicationBonus(arg_5_0))
-	wheelOfDestinyWindow.selection.tabContent.information:setTooltip(getDedicationTooltip(arg_5_0))
+	wheelOfDestinyWindow.selection.tabContent.dedication:setText(getDedicationBonus(sliceIndex))
+	wheelOfDestinyWindow.selection.tabContent.information:setTooltip(getDedicationTooltip(sliceIndex))
 
-	if (WheelOfDestiny.pointInvested[arg_5_0] or 0) > 0 then
+	if (WheelOfDestiny.pointInvested[sliceIndex] or 0) > 0 then
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
 	else
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
 	end
 end
 
-function WheelOfDestiny.configureConviction(arg_6_0)
-	local var_6_0 = WheelBonus[arg_6_0 - 1]
+function WheelOfDestiny.configureConviction(sliceIndex)
+	local bonusDefinition = WheelBonus[sliceIndex - 1]
 
-	if not var_6_0 then
+	if not bonusDefinition then
 		return
 	end
 
 	local tabContent = wheelOfDestinyWindow.selection.tabContent
-	local var_6_2 = getConvictionBonusParts(arg_6_0) or {
+	local bonusParts = getConvictionBonusParts(sliceIndex) or {
 		name = "",
 		body = ""
 	}
-	local var_6_3 = (WheelOfDestiny.pointInvested[arg_6_0] or 0) >= var_6_0.maxPoints
-	local var_6_4 = getConvictionBonusTooltip(arg_6_0)
+	local isConvictionActive = (WheelOfDestiny.pointInvested[sliceIndex] or 0) >= bonusDefinition.maxPoints
+	local convictionTooltip = getConvictionBonusTooltip(sliceIndex)
 
-	if type(var_6_4) ~= "string" then
-		var_6_4 = ""
+	if type(convictionTooltip) ~= "string" then
+		convictionTooltip = ""
 	end
 
 	local convictionName = tabContent.convictionName or tabContent:getChildById("convictionName")
@@ -179,91 +179,91 @@ function WheelOfDestiny.configureConviction(arg_6_0)
 	local convictionBody = tabContent.convictionBody or tabContent:getChildById("convictionBody")
 
 	if convictionName then
-		convictionName:setTooltip(var_6_4)
-		WheelOfDestiny.setConvictionText(convictionName, var_6_2.name, var_6_3)
+		convictionName:setTooltip(convictionTooltip)
+		WheelOfDestiny.setConvictionText(convictionName, bonusParts.name, isConvictionActive)
 	end
 
-	WheelOfDestiny.configureConvictionAugmentBody(convictionBody, conviction, var_6_2, var_6_4)
+	WheelOfDestiny.configureConvictionAugmentBody(convictionBody, conviction, bonusParts, convictionTooltip)
 
-	if not var_6_2.tiers and var_6_2.body and var_6_2.body ~= "" then
-		WheelOfDestiny.setConvictionText(conviction, var_6_2.body, var_6_3)
+	if not bonusParts.tiers and bonusParts.body and bonusParts.body ~= "" then
+		WheelOfDestiny.setConvictionText(conviction, bonusParts.body, isConvictionActive)
 	end
 end
 
 function WheelOfDestiny.configureDedicationPerk()
-	local var_7_0 = 0
-	local var_7_1 = 0
-	local var_7_2 = 0
-	local var_7_3 = 0
+	local healthBonus = 0
+	local manaBonus = 0
+	local capacityBonus = 0
+	local mitigationBonus = 0
 	local vocationId = WheelOfDestiny.vocationId
 
 	for key, WheelBonu in pairs(WheelBonus) do
-		local var_7_5 = key + 1
+		local sliceIndex = key + 1
 
-		if not WheelOfDestiny.isLit(var_7_5) then
+		if not WheelOfDestiny.isLit(sliceIndex) then
 			-- block empty
 		else
-			local var_7_6 = WheelOfDestiny.pointInvested[var_7_5]
-			local var_7_7 = WheelConsts[WheelBonu.dedication]
+			local investedPoints = WheelOfDestiny.pointInvested[sliceIndex]
+			local dedicationBonusRates = WheelConsts[WheelBonu.dedication]
 
 			if WheelBonu.dedication == "capacity" then
-				var_7_2 = var_7_2 + var_7_6 * var_7_7[vocationId]
+				capacityBonus = capacityBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "mana" then
-				var_7_1 = var_7_1 + var_7_6 * var_7_7[vocationId]
+				manaBonus = manaBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "health" then
-				var_7_0 = var_7_0 + var_7_6 * var_7_7[vocationId]
+				healthBonus = healthBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "mitigation" then
-				var_7_3 = var_7_3 + var_7_6 * var_7_7
+				mitigationBonus = mitigationBonus + investedPoints * dedicationBonusRates
 			elseif WheelBonu.dedication == "lifemana" then
-				var_7_0 = var_7_0 + var_7_6 * var_7_7.life[vocationId]
-				var_7_1 = var_7_1 + var_7_6 * var_7_7.mana[vocationId]
+				healthBonus = healthBonus + investedPoints * dedicationBonusRates.life[vocationId]
+				manaBonus = manaBonus + investedPoints * dedicationBonusRates.mana[vocationId]
 			end
 		end
 	end
 
 	local tabContent = wheelOfDestinyWindow.dedicationPerks.tabContent
 
-	tabContent.hitPoints.value:setText(var_7_0 > 0 and formatWheelPlusInteger(var_7_0) or "0")
-	tabContent.manaPoints.value:setText(var_7_1 > 0 and formatWheelPlusInteger(var_7_1) or "0")
-	tabContent.capPoints.value:setText(var_7_2 > 0 and formatWheelPlusInteger(var_7_2) or "0")
-	tabContent.mitigationPoints.value:setText(formatWheelFixedPercent(var_7_3))
+	tabContent.hitPoints.value:setText(healthBonus > 0 and formatWheelPlusInteger(healthBonus) or "0")
+	tabContent.manaPoints.value:setText(manaBonus > 0 and formatWheelPlusInteger(manaBonus) or "0")
+	tabContent.capPoints.value:setText(capacityBonus > 0 and formatWheelPlusInteger(capacityBonus) or "0")
+	tabContent.mitigationPoints.value:setText(formatWheelFixedPercent(mitigationBonus))
 end
 
-function WheelOfDestiny.fitPerkName(arg_8_0, arg_8_1, arg_8_2, arg_8_3)
-	if type(arg_8_1) ~= "table" then
-		arg_8_1 = {
-			arg_8_1
+function WheelOfDestiny.fitPerkName(nameLabel, candidateNames, panelWidth, valueLabel)
+	if type(candidateNames) ~= "table" then
+		candidateNames = {
+			candidateNames
 		}
 	end
 
-	if not arg_8_2 or arg_8_2 <= 0 then
-		arg_8_2 = 190
+	if not panelWidth or panelWidth <= 0 then
+		panelWidth = 190
 	end
 
 	local textSize = 0
 
-	if arg_8_3 and arg_8_3:isVisible() and arg_8_3:getText() ~= "" then
-		textSize = arg_8_3:getTextSize().width
+	if valueLabel and valueLabel:isVisible() and valueLabel:getText() ~= "" then
+		textSize = valueLabel:getTextSize().width
 	end
 
-	local marginLeft = arg_8_2 - arg_8_0:getMarginLeft() - 15 - textSize - 6
+	local marginLeft = panelWidth - nameLabel:getMarginLeft() - 15 - textSize - 6
 
-	for unusedValue, entry in ipairs(arg_8_1) do
-		arg_8_0:setText(entry)
+	for unusedValue, entry in ipairs(candidateNames) do
+		nameLabel:setText(entry)
 
-		if marginLeft >= arg_8_0:getTextSize().width then
+		if marginLeft >= nameLabel:getTextSize().width then
 			return
 		end
 	end
 
-	local var_8_2 = arg_8_1[#arg_8_1] or ""
+	local shortenedName = candidateNames[#candidateNames] or ""
 
-	while #var_8_2 > 1 do
-		var_8_2 = var_8_2:sub(1, -2):gsub("%s+$", "")
+	while #shortenedName > 1 do
+		shortenedName = shortenedName:sub(1, -2):gsub("%s+$", "")
 
-		arg_8_0:setText(var_8_2 .. "...")
+		nameLabel:setText(shortenedName .. "...")
 
-		if marginLeft >= arg_8_0:getTextSize().width then
+		if marginLeft >= nameLabel:getTextSize().width then
 			return
 		end
 	end
@@ -275,15 +275,15 @@ function WheelOfDestiny.configureConvictionPerk()
 	tabContent:destroyChildren()
 	wheelOfDestinyWindow.convictionPerks.tabContentScroll:setVisible(false)
 
-	local var_9_1 = getConvictionPerks()
+	local convictionPerks = getConvictionPerks()
 
-	if #var_9_1 > 8 then
+	if #convictionPerks > 8 then
 		wheelOfDestinyWindow.convictionPerks.tabContentScroll:setVisible(true)
 	end
 
 	local width = tabContent:getWidth()
 
-	for unusedValue, entry in ipairs(var_9_1) do
+	for unusedValue, entry in ipairs(convictionPerks) do
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", tabContent)
 
 		if entry.stringPoint then
@@ -314,11 +314,11 @@ function WheelOfDestiny.showInformationDefault()
 	WheelOfDestiny.mouseIndex = 0
 end
 
-function WheelOfDestiny.updateInformationPerk(arg_11_0)
-	local var_11_0 = WheelBonus[arg_11_0 - 1]
-	local var_11_1 = WheelOfDestiny.pointInvested[arg_11_0]
+function WheelOfDestiny.updateInformationPerk(sliceIndex)
+	local bonusDefinition = WheelBonus[sliceIndex - 1]
+	local investedPoints = WheelOfDestiny.pointInvested[sliceIndex]
 
-	if not var_11_1 or not var_11_0 then
+	if not investedPoints or not bonusDefinition then
 		WheelOfDestiny.showInformationDefault()
 
 		return
@@ -332,29 +332,29 @@ function WheelOfDestiny.updateInformationPerk(arg_11_0)
 	local tabContent = information.tabContent
 	local dedicationPB2 = tabContent.dedicationPB2
 
-	dedicationPB2:setValue(var_11_1, 0, var_11_0.maxPoints)
-	dedicationPB2:setText(var_11_1 .. " / " .. var_11_0.maxPoints)
+	dedicationPB2:setValue(investedPoints, 0, bonusDefinition.maxPoints)
+	dedicationPB2:setText(investedPoints .. " / " .. bonusDefinition.maxPoints)
 	dedicationPB2:setImageSource("/images/game/wheel/progressBar")
-	dedicationPB2:setPercent(var_11_1 * 100 / var_11_0.maxPoints)
-	tabContent.dedication2:setText(getDedicationBonus(arg_11_0))
+	dedicationPB2:setPercent(investedPoints * 100 / bonusDefinition.maxPoints)
+	tabContent.dedication2:setText(getDedicationBonus(sliceIndex))
 
-	if (WheelOfDestiny.pointInvested[arg_11_0] or 0) > 0 then
+	if (WheelOfDestiny.pointInvested[sliceIndex] or 0) > 0 then
 		tabContent.dedication2:setColor("#c0c0c0")
 	else
 		tabContent.dedication2:setColor("#707070")
 	end
 
-	local var_11_5 = getConvictionBonusParts(arg_11_0, true)
-	local var_11_6 = (WheelOfDestiny.pointInvested[arg_11_0] or 0) >= var_11_0.maxPoints
+	local bonusParts = getConvictionBonusParts(sliceIndex, true)
+	local isConvictionActive = (WheelOfDestiny.pointInvested[sliceIndex] or 0) >= bonusDefinition.maxPoints
 
-	WheelOfDestiny.setConvictionText(tabContent.convictionName2, var_11_5.name, var_11_6)
+	WheelOfDestiny.setConvictionText(tabContent.convictionName2, bonusParts.name, isConvictionActive)
 
 	local convictionBody2 = tabContent.convictionBody2 or tabContent:getChildById("convictionBody2")
 	local conviction2 = tabContent.conviction2 or tabContent:getChildById("conviction2")
 
-	WheelOfDestiny.configureConvictionAugmentBody(convictionBody2, conviction2, var_11_5)
+	WheelOfDestiny.configureConvictionAugmentBody(convictionBody2, conviction2, bonusParts)
 
-	if not var_11_5.tiers and var_11_5.body and var_11_5.body ~= "" then
-		WheelOfDestiny.setConvictionText(conviction2, var_11_5.body, var_11_6)
+	if not bonusParts.tiers and bonusParts.body and bonusParts.body ~= "" then
+		WheelOfDestiny.setConvictionText(conviction2, bonusParts.body, isConvictionActive)
 	end
 end

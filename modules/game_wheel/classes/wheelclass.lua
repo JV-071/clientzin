@@ -29,163 +29,163 @@ WheelOfDestiny.mouseIndex = 0
 WheelOfDestiny.mousePassiveDomain = 0
 WheelOfDestiny.revealedGems = {}
 
-local var_0_0 = false
-local var_0_1 = {}
+local sliceFillsInitialized = false
+local slicePairsByIndex = {}
 local focusSelectedWheel
 local t = {}
 local opacity = 1
-local var_0_5 = 0.29
-local var_0_6 = 0.20392156862745098
-local var_0_7 = {
+local AVAILABLE_SLICE_OPACITY = 0.29
+local SELECTED_SLICE_OPACITY = 0.20392156862745098
+local DEFAULT_FILL_COLOR = {
 	r = 255,
 	a = 255,
 	b = 255,
 	g = 255
 }
 
-local function var_0_8(arg_1_0)
-	if type(arg_1_0) == "table" then
-		return arg_1_0
+local function parseWheelFillColor(color)
+	if type(color) == "table" then
+		return color
 	end
 
-	if type(arg_1_0) == "string" and arg_1_0:sub(1, 1) == "#" then
-		local var_1_0 = arg_1_0:sub(2)
-		local var_1_1 = #var_1_0
+	if type(color) == "string" and color:sub(1, 1) == "#" then
+		local hexColor = color:sub(2)
+		local hexLength = #hexColor
 
-		if var_1_1 == 6 or var_1_1 == 8 then
-			local numericValue = tonumber(var_1_0:sub(1, 2), 16)
-			local var_1_3 = tonumber(var_1_0:sub(3, 4), 16)
-			local var_1_4 = tonumber(var_1_0:sub(5, 6), 16)
-			local var_1_5 = 255
+		if hexLength == 6 or hexLength == 8 then
+			local numericValue = tonumber(hexColor:sub(1, 2), 16)
+			local green = tonumber(hexColor:sub(3, 4), 16)
+			local blue = tonumber(hexColor:sub(5, 6), 16)
+			local alpha = 255
 
-			if var_1_1 == 8 then
-				var_1_5 = tonumber(var_1_0:sub(7, 8), 16)
+			if hexLength == 8 then
+				alpha = tonumber(hexColor:sub(7, 8), 16)
 			end
 
-			if numericValue ~= nil and var_1_3 ~= nil and var_1_4 ~= nil and var_1_5 ~= nil then
+			if numericValue ~= nil and green ~= nil and blue ~= nil and alpha ~= nil then
 				return {
 					r = numericValue,
-					g = var_1_3,
-					b = var_1_4,
-					a = var_1_5
+					g = green,
+					b = blue,
+					a = alpha
 				}
 			end
 		end
 	end
 
-	return var_0_7
+	return DEFAULT_FILL_COLOR
 end
 
-local function var_0_9(arg_2_0, arg_2_1)
-	if not arg_2_0 or not wheelPanel then
+local function replaceLegacySliceFillWidget(legacyWidget, widgetId)
+	if not legacyWidget or not wheelPanel then
 		return nil
 	end
 
-	local parent = arg_2_0:getParent() or wheelPanel
-	local childIndex = parent:getChildIndex(arg_2_0)
-	local numericValue = tonumber(arg_2_1:match("%d+")) or 0
+	local parent = legacyWidget:getParent() or wheelPanel
+	local childIndex = parent:getChildIndex(legacyWidget)
+	local numericValue = tonumber(widgetId:match("%d+")) or 0
 
-	arg_2_0:destroy()
+	legacyWidget:destroy()
 
-	local var_2_3 = "WheelSliceFill"
+	local widgetStyle = "WheelSliceFill"
 
-	if arg_2_1:find("fullColorWheel", 1, true) then
-		var_2_3 = "WheelSliceFillAvailable"
+	if widgetId:find("fullColorWheel", 1, true) then
+		widgetStyle = "WheelSliceFillAvailable"
 	end
 
-	local var_2_4 = g_ui.createWidget(var_2_3)
+	local sliceFillWidget = g_ui.createWidget(widgetStyle)
 
-	var_2_4:setId(arg_2_1)
-	var_2_4:setSize(tosize("522 522"))
+	sliceFillWidget:setId(widgetId)
+	sliceFillWidget:setSize(tosize("522 522"))
 
 	local sliceArcParams = WheelButtons.getSliceArcParams(numericValue, 1)
 
 	if sliceArcParams then
-		var_2_4:setStartAngle(sliceArcParams.startAngle)
-		var_2_4:setFullSpan(sliceArcParams.fullSpan)
-		var_2_4:setThickness(sliceArcParams.thickness)
-		var_2_4:setRadialInset(sliceArcParams.radialInset)
+		sliceFillWidget:setStartAngle(sliceArcParams.startAngle)
+		sliceFillWidget:setFullSpan(sliceArcParams.fullSpan)
+		sliceFillWidget:setThickness(sliceArcParams.thickness)
+		sliceFillWidget:setRadialInset(sliceArcParams.radialInset)
 	end
 
-	var_2_4:setFillColor(var_0_8(WheelButtons.getSliceFillColor(numericValue)))
+	sliceFillWidget:setFillColor(parseWheelFillColor(WheelButtons.getSliceFillColor(numericValue)))
 
-	if var_2_4.setCompositionModeName then
-		var_2_4:setCompositionModeName("additive")
+	if sliceFillWidget.setCompositionModeName then
+		sliceFillWidget:setCompositionModeName("additive")
 	end
 
-	var_2_4:setPercent(100)
-	var_2_4:setVisible(false)
-	parent:insertChild(childIndex, var_2_4)
-	var_2_4:addAnchor(AnchorTop, "parent", AnchorTop)
-	var_2_4:addAnchor(AnchorLeft, "parent", AnchorLeft)
+	sliceFillWidget:setPercent(100)
+	sliceFillWidget:setVisible(false)
+	parent:insertChild(childIndex, sliceFillWidget)
+	sliceFillWidget:addAnchor(AnchorTop, "parent", AnchorTop)
+	sliceFillWidget:addAnchor(AnchorLeft, "parent", AnchorLeft)
 
-	return var_2_4
+	return sliceFillWidget
 end
 
-local function var_0_10(arg_3_0, arg_3_1, arg_3_2, arg_3_3, arg_3_4)
-	local sliceArcParams = WheelButtons.getSliceArcParams(arg_3_1, arg_3_2, arg_3_3)
+local function updateSliceFillGeometry(sliceFillWidget, sliceIndex, startFraction, endFraction, fillColorOverride)
+	local sliceArcParams = WheelButtons.getSliceArcParams(sliceIndex, startFraction, endFraction)
 
-	if not sliceArcParams or not arg_3_0 then
+	if not sliceArcParams or not sliceFillWidget then
 		return
 	end
 
-	local sliceFillColor = arg_3_4
+	local sliceFillColor = fillColorOverride
 
 	if sliceFillColor == nil then
-		sliceFillColor = WheelButtons.getSliceFillColor(arg_3_1)
+		sliceFillColor = WheelButtons.getSliceFillColor(sliceIndex)
 	end
 
-	local fillColor = var_0_8(sliceFillColor)
-	local var_3_3 = t[arg_3_0]
+	local fillColor = parseWheelFillColor(sliceFillColor)
+	local cachedFillState = t[sliceFillWidget]
 
-	if not var_3_3 then
-		var_3_3 = {}
-		t[arg_3_0] = var_3_3
+	if not cachedFillState then
+		cachedFillState = {}
+		t[sliceFillWidget] = cachedFillState
 	end
 
-	if var_3_3.startAngle ~= sliceArcParams.startAngle then
-		arg_3_0:setStartAngle(sliceArcParams.startAngle)
+	if cachedFillState.startAngle ~= sliceArcParams.startAngle then
+		sliceFillWidget:setStartAngle(sliceArcParams.startAngle)
 
-		var_3_3.startAngle = sliceArcParams.startAngle
+		cachedFillState.startAngle = sliceArcParams.startAngle
 	end
 
-	if var_3_3.fullSpan ~= sliceArcParams.fullSpan then
-		arg_3_0:setFullSpan(sliceArcParams.fullSpan)
+	if cachedFillState.fullSpan ~= sliceArcParams.fullSpan then
+		sliceFillWidget:setFullSpan(sliceArcParams.fullSpan)
 
-		var_3_3.fullSpan = sliceArcParams.fullSpan
+		cachedFillState.fullSpan = sliceArcParams.fullSpan
 	end
 
-	if var_3_3.thickness ~= sliceArcParams.thickness then
-		arg_3_0:setThickness(sliceArcParams.thickness)
+	if cachedFillState.thickness ~= sliceArcParams.thickness then
+		sliceFillWidget:setThickness(sliceArcParams.thickness)
 
-		var_3_3.thickness = sliceArcParams.thickness
+		cachedFillState.thickness = sliceArcParams.thickness
 	end
 
-	if var_3_3.radialInset ~= sliceArcParams.radialInset then
-		arg_3_0:setRadialInset(sliceArcParams.radialInset)
+	if cachedFillState.radialInset ~= sliceArcParams.radialInset then
+		sliceFillWidget:setRadialInset(sliceArcParams.radialInset)
 
-		var_3_3.radialInset = sliceArcParams.radialInset
+		cachedFillState.radialInset = sliceArcParams.radialInset
 	end
 
-	if var_3_3.fillColor ~= fillColor then
-		arg_3_0:setFillColor(fillColor)
+	if cachedFillState.fillColor ~= fillColor then
+		sliceFillWidget:setFillColor(fillColor)
 
-		var_3_3.fillColor = fillColor
+		cachedFillState.fillColor = fillColor
 	end
 
-	if var_3_3.percent ~= 100 then
-		arg_3_0:setPercent(100)
+	if cachedFillState.percent ~= 100 then
+		sliceFillWidget:setPercent(100)
 
-		var_3_3.percent = 100
+		cachedFillState.percent = 100
 	end
 end
 
 function WheelOfDestiny.initSliceFills()
-	if var_0_0 or not wheelPanel then
+	if sliceFillsInitialized or not wheelPanel then
 		return
 	end
 
-	var_0_1 = {}
+	slicePairsByIndex = {}
 	t = {}
 
 	for i = 1, 36 do
@@ -193,28 +193,28 @@ function WheelOfDestiny.initSliceFills()
 		local colorWheel = wheelPanel:getChildById("colorWheel_" .. i)
 
 		if fullColorWheel and fullColorWheel.getPercent == nil then
-			fullColorWheel = var_0_9(fullColorWheel, "fullColorWheel_" .. i)
+			fullColorWheel = replaceLegacySliceFillWidget(fullColorWheel, "fullColorWheel_" .. i)
 		end
 
 		if colorWheel and colorWheel.getPercent == nil then
-			colorWheel = var_0_9(colorWheel, "colorWheel_" .. i)
+			colorWheel = replaceLegacySliceFillWidget(colorWheel, "colorWheel_" .. i)
 		end
 
-		var_0_1[i] = {
+		slicePairsByIndex[i] = {
 			color = colorWheel,
 			full = fullColorWheel
 		}
 
 		if colorWheel then
-			var_0_10(colorWheel, i, 0, 1)
+			updateSliceFillGeometry(colorWheel, i, 0, 1)
 			colorWheel:setVisible(false)
 			colorWheel:setOpacity(opacity)
 		end
 
 		if fullColorWheel then
-			var_0_10(fullColorWheel, i, 0, 1, WheelButtons.getSliceAvailableColor(i))
+			updateSliceFillGeometry(fullColorWheel, i, 0, 1, WheelButtons.getSliceAvailableColor(i))
 			fullColorWheel:setVisible(false)
-			fullColorWheel:setOpacity(var_0_5)
+			fullColorWheel:setOpacity(AVAILABLE_SLICE_OPACITY)
 		end
 	end
 
@@ -247,7 +247,7 @@ function WheelOfDestiny.initSliceFills()
 		wheelPanel.focusSelectedWheel = focusSelectedWheel
 	end
 
-	local var_4_4 = {
+	local overlayWidgetIds = {
 		"socketBackground0",
 		"revelationBgTL",
 		"revelationPerkTL",
@@ -284,7 +284,7 @@ function WheelOfDestiny.initSliceFills()
 		"selectVessel3"
 	}
 
-	for unusedValue, entry in ipairs(var_4_4) do
+	for unusedValue, entry in ipairs(overlayWidgetIds) do
 		local childById = wheelPanel:getChildById(entry)
 
 		if childById then
@@ -292,36 +292,36 @@ function WheelOfDestiny.initSliceFills()
 		end
 	end
 
-	var_0_0 = true
+	sliceFillsInitialized = true
 end
 
-local function var_0_11(arg_5_0)
-	if not var_0_0 then
+local function getInitializedSlicePair(sliceIndex)
+	if not sliceFillsInitialized then
 		WheelOfDestiny.initSliceFills()
 	end
 
-	return var_0_1[arg_5_0]
+	return slicePairsByIndex[sliceIndex]
 end
 
-function WheelOfDestiny.getSlicePair(arg_6_0)
-	return var_0_11(arg_6_0)
+function WheelOfDestiny.getSlicePair(sliceIndex)
+	return getInitializedSlicePair(sliceIndex)
 end
 
-local function var_0_12(arg_7_0)
-	if arg_7_0 == 15 or arg_7_0 == 16 or arg_7_0 == 21 or arg_7_0 == 22 then
+local function isSliceUnlocked(sliceIndex)
+	if sliceIndex == 15 or sliceIndex == 16 or sliceIndex == 21 or sliceIndex == 22 then
 		return true
 	end
 
-	local var_7_0 = WheelNodes[arg_7_0]
+	local wheelNode = WheelNodes[sliceIndex]
 
-	if not var_7_0 then
+	if not wheelNode then
 		return false
 	end
 
-	for unusedValue, entry in ipairs(var_7_0.connecteds or {}) do
-		local var_7_1 = WheelBonus[entry - 1]
+	for unusedValue, entry in ipairs(wheelNode.connecteds or {}) do
+		local connectedBonus = WheelBonus[entry - 1]
 
-		if var_7_1 and (WheelOfDestiny.pointInvested[entry] or 0) >= var_7_1.maxPoints then
+		if connectedBonus and (WheelOfDestiny.pointInvested[entry] or 0) >= connectedBonus.maxPoints then
 			return true
 		end
 	end
@@ -329,24 +329,24 @@ local function var_0_12(arg_7_0)
 	return false
 end
 
-function WheelOfDestiny.updateSliceFill(index, arg_8_1)
-	local var_8_0 = var_0_11(index)
+function WheelOfDestiny.updateSliceFill(index, investedPoints)
+	local slicePair = getInitializedSlicePair(index)
 	local bonus = WheelBonus[index - 1]
 
-	if not var_8_0 or not var_8_0.color or not var_8_0.full or not bonus then
+	if not slicePair or not slicePair.color or not slicePair.full or not bonus then
 		return
 	end
 
-	local color = var_8_0.color
-	local full = var_8_0.full
+	local color = slicePair.color
+	local full = slicePair.full
 
-	if arg_8_1 <= 0 then
+	if investedPoints <= 0 then
 		color:setVisible(false)
 
-		if var_0_12(index) then
-			var_0_10(full, index, 0, 1, WheelButtons.getSliceAvailableColor(index))
+		if isSliceUnlocked(index) then
+			updateSliceFillGeometry(full, index, 0, 1, WheelButtons.getSliceAvailableColor(index))
 			full:setVisible(true)
-			full:setOpacity(var_0_5)
+			full:setOpacity(AVAILABLE_SLICE_OPACITY)
 		else
 			full:setVisible(false)
 		end
@@ -354,47 +354,47 @@ function WheelOfDestiny.updateSliceFill(index, arg_8_1)
 		return
 	end
 
-	local var_8_4 = math.min(1, arg_8_1 / math.max(bonus.maxPoints, 1))
+	local investedFraction = math.min(1, investedPoints / math.max(bonus.maxPoints, 1))
 
-	var_0_10(color, index, 0, math.max(var_8_4, 0.001))
+	updateSliceFillGeometry(color, index, 0, math.max(investedFraction, 0.001))
 	color:setVisible(true)
 	color:setOpacity(opacity)
 
-	if var_8_4 < 0.999 then
-		var_0_10(full, index, var_8_4, 1, WheelButtons.getSliceAvailableColor(index))
+	if investedFraction < 0.999 then
+		updateSliceFillGeometry(full, index, investedFraction, 1, WheelButtons.getSliceAvailableColor(index))
 		full:setVisible(true)
-		full:setOpacity(var_0_5)
+		full:setOpacity(AVAILABLE_SLICE_OPACITY)
 	else
 		full:setVisible(false)
 	end
 end
 
-function WheelOfDestiny.showUnlockedPreview(arg_9_0)
-	local var_9_0 = var_0_11(arg_9_0)
-	local var_9_1 = var_9_0 and var_9_0.full
+function WheelOfDestiny.showUnlockedPreview(sliceIndex)
+	local slicePair = getInitializedSlicePair(sliceIndex)
+	local availableSliceFill = slicePair and slicePair.full
 
-	if not var_9_1 then
+	if not availableSliceFill then
 		return
 	end
 
-	if (WheelOfDestiny.pointInvested[arg_9_0] or 0) > 0 then
+	if (WheelOfDestiny.pointInvested[sliceIndex] or 0) > 0 then
 		return
 	end
 
-	var_0_10(var_9_1, arg_9_0, 0, 1, WheelButtons.getSliceAvailableColor(arg_9_0))
-	var_9_1:setVisible(true)
-	var_9_1:setOpacity(var_0_5)
+	updateSliceFillGeometry(availableSliceFill, sliceIndex, 0, 1, WheelButtons.getSliceAvailableColor(sliceIndex))
+	availableSliceFill:setVisible(true)
+	availableSliceFill:setOpacity(AVAILABLE_SLICE_OPACITY)
 end
 
-function WheelOfDestiny.applySliceFocus(arg_10_0)
+function WheelOfDestiny.applySliceFocus(sliceIndex)
 	local focusSelectedWheel = focusSelectedWheel or wheelPanel.focusSelectedWheel or wheelPanel:getChildById("focusSelectedWheel")
 
 	if not focusSelectedWheel then
 		return
 	end
 
-	var_0_10(focusSelectedWheel, arg_10_0, 0, 1, "#FFFFFFFF")
-	focusSelectedWheel:setOpacity(var_0_6)
+	updateSliceFillGeometry(focusSelectedWheel, sliceIndex, 0, 1, "#FFFFFFFF")
+	focusSelectedWheel:setOpacity(SELECTED_SLICE_OPACITY)
 	focusSelectedWheel:setVisible(true)
 end
 
@@ -482,10 +482,10 @@ function WheelOfDestiny.configureVessels()
 			perksPanelWidget.info:setTooltip(connection.tooltip)
 		end
 
-		local var_13_4 = connection.text and connection.text ~= "" and connection.text or "(Unknown)"
+		local connectionDescription = connection.text and connection.text ~= "" and connection.text or "(Unknown)"
 
 		WheelOfDestiny.fitPerkName(perksPanelWidget.perk, {
-			var_13_4
+			connectionDescription
 		}, width, perksPanelWidget.value)
 	end
 
@@ -512,19 +512,19 @@ function WheelOfDestiny.resetPassiveFocus()
 	end
 end
 
-function WheelOfDestiny.applyPassiveFocus(arg_15_0)
-	for iter_15_0 = 1, 4 do
-		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. iter_15_0)
+function WheelOfDestiny.applyPassiveFocus(selectedDomain)
+	for domain = 1, 4 do
+		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. domain)
 
 		if focusPassive then
-			focusPassive:setVisible(iter_15_0 == arg_15_0)
+			focusPassive:setVisible(domain == selectedDomain)
 		end
 	end
 end
 
 function WheelOfDestiny.hidePassiveFocus()
-	for iter_16_0 = 1, 4 do
-		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. iter_16_0)
+	for domain = 1, 4 do
+		local focusPassive = wheelPanel:recursiveGetChildById("focusPassive" .. domain)
 
 		if focusPassive then
 			focusPassive:setVisible(false)
@@ -616,22 +616,22 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
 
 	local passive = WheelOfDestiny.passivePoints[domain]
 	local maximum = 250
-	local var_18_2 = passive + (WheelOfDestiny.extraPassivePoints[domain] or 0)
+	local totalPassivePoints = passive + (WheelOfDestiny.extraPassivePoints[domain] or 0)
 
-	if var_18_2 >= 1000 then
+	if totalPassivePoints >= 1000 then
 		maximum = 1000
-	elseif var_18_2 >= 500 then
+	elseif totalPassivePoints >= 500 then
 		maximum = 1000
-	elseif var_18_2 >= 250 then
+	elseif totalPassivePoints >= 250 then
 		maximum = 500
 	end
 
-	if var_18_2 < 0 then
-		var_18_2 = 0
+	if totalPassivePoints < 0 then
+		totalPassivePoints = 0
 	end
 
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(var_18_2, 0, maximum)
-	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(var_18_2 .. " / " .. maximum)
+	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setValue(totalPassivePoints, 0, maximum)
+	wheelOfDestinyWindow.selection.tabContent.dedicationPb:setText(totalPassivePoints .. " / " .. maximum)
 	wheelPanel.borderSelectedWheel:setVisible(false)
 	wheelOfDestinyWindow:recursiveGetChildById("addMax"):setVisible(false)
 	wheelOfDestinyWindow:recursiveGetChildById("addOne"):setVisible(false)
@@ -645,7 +645,7 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
 	wheelOfDestinyWindow.selection.tabContent.dedication:setText(m1)
 	wheelOfDestinyWindow.selection.tabContent.information1:setTooltip(m2)
 
-	if var_18_2 == 1000 then
+	if totalPassivePoints == 1000 then
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#c0c0c0")
 	else
 		wheelOfDestinyWindow.selection.tabContent.dedication:setColor("#707070")
@@ -665,11 +665,11 @@ function WheelOfDestiny.onWheelPassiveClick(domain)
 		convictionBody:setVisible(false)
 	end
 
-	if var_18_2 >= 1000 then
+	if totalPassivePoints >= 1000 then
 		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 3")
-	elseif var_18_2 >= 500 then
+	elseif totalPassivePoints >= 500 then
 		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 2")
-	elseif var_18_2 >= 250 then
+	elseif totalPassivePoints >= 250 then
 		wheelOfDestinyWindow.selection.tabContent.convictionName:setText("Stage 1")
 	end
 end
@@ -733,12 +733,12 @@ function WheelOfDestiny.configureRevelationPerks()
 
 		value.panel.value:setText(text)
 
-		local var_19_5 = getRevelationDisplayName(value.domain)
-		local var_19_6 = value.panel[value.label]
+		local revelationName = getRevelationDisplayName(value.domain)
+		local perkNameLabel = value.panel[value.label]
 
-		var_19_6:setTooltip(var_19_5)
-		WheelOfDestiny.fitPerkName(var_19_6, {
-			var_19_5
+		perkNameLabel:setTooltip(revelationName)
+		WheelOfDestiny.fitPerkName(perkNameLabel, {
+			revelationName
 		}, value.panel:getWidth(), value.panel.value)
 		value.info:setTooltip((getPassiveInfo(value.domain)))
 	end

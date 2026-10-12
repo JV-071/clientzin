@@ -1,4 +1,4 @@
-﻿CHAT_MODE = {
+CHAT_MODE = {
 	ON = 1,
 	OFF = 2
 }
@@ -200,19 +200,19 @@ function Keybind.offline()
 	end
 end
 
-local function var_0_7(arg_11_0)
-	if type(arg_11_0) ~= "string" or arg_11_0 == "" then
+local function findPresetByName(presetName)
+	if type(presetName) ~= "string" or presetName == "" then
 		return nil
 	end
 
-	if Keybind.presetToIndex[arg_11_0] then
-		return arg_11_0
+	if Keybind.presetToIndex[presetName] then
+		return presetName
 	end
 
-	local var_11_0 = arg_11_0:lower()
+	local lowercasePresetName = presetName:lower()
 
 	for _, hotkey in ipairs(Keybind.presets) do
-		if type(hotkey) == "string" and hotkey:lower() == var_11_0 then
+		if type(hotkey) == "string" and hotkey:lower() == lowercasePresetName then
 			return hotkey
 		end
 	end
@@ -222,30 +222,30 @@ end
 
 function Keybind.resolveAutoSwitchPreset()
 	local characterName = g_game.getCharacterName()
-	local var_12_1 = var_0_7(characterName)
+	local characterPresetName = findPresetByName(characterName)
 
-	if var_12_1 then
-		return var_12_1, "character", nil, characterName
+	if characterPresetName then
+		return characterPresetName, "character", nil, characterName
 	end
 
-	local var_12_2
+	local vocationName
 	local localPlayer = g_game.getLocalPlayer()
 
 	if localPlayer and type(translateVocationName) == "function" then
-		local var_12_4, var_12_5 = pcall(translateVocationName, localPlayer:getVocation())
+		local vocationNameResolved, resolvedVocationName = pcall(translateVocationName, localPlayer:getVocation())
 
-		if var_12_4 and type(var_12_5) == "string" and var_12_5 ~= "" then
-			var_12_2 = var_12_5
+		if vocationNameResolved and type(resolvedVocationName) == "string" and resolvedVocationName ~= "" then
+			vocationName = resolvedVocationName
 
-			local var_12_6 = var_0_7(var_12_2)
+			local vocationPresetName = findPresetByName(vocationName)
 
-			if var_12_6 then
-				return var_12_6, "vocation", var_12_2, characterName
+			if vocationPresetName then
+				return vocationPresetName, "vocation", vocationName, characterName
 			end
 		end
 	end
 
-	return nil, nil, var_12_2, characterName
+	return nil, nil, vocationName, characterName
 end
 
 function Keybind.selectAutoSwitchPreset()
@@ -253,29 +253,29 @@ function Keybind.selectAutoSwitchPreset()
 		return false
 	end
 
-	local var_13_0, var_13_1, var_13_2, var_13_3 = Keybind.resolveAutoSwitchPreset()
+	local presetName, presetMatchType, vocationName, characterName = Keybind.resolveAutoSwitchPreset()
 
-	if not var_13_0 then
-		g_logger.info(string.format("[login] autoSwitchPreset: no preset for character \"%s\" or vocation \"%s\" (current=%s)", var_13_3 or "?", var_13_2 or "?", Keybind.currentPreset or "?"))
+	if not presetName then
+		g_logger.info(string.format("[login] autoSwitchPreset: no preset for character \"%s\" or vocation \"%s\" (current=%s)", characterName or "?", vocationName or "?", Keybind.currentPreset or "?"))
 
 		return false
 	end
 
-	if Keybind.currentPreset == var_13_0 then
-		return false, var_13_0
+	if Keybind.currentPreset == presetName then
+		return false, presetName
 	end
 
-	local var_13_4 = Keybind.selectPreset(var_13_0)
+	local presetSelected = Keybind.selectPreset(presetName)
 
-	if var_13_4 then
-		g_logger.info(string.format("[login] autoSwitchPreset: selected \"%s\" by %s", var_13_0, var_13_1))
+	if presetSelected then
+		g_logger.info(string.format("[login] autoSwitchPreset: selected \"%s\" by %s", presetName, presetMatchType))
 	end
 
-	return var_13_4, var_13_0
+	return presetSelected, presetName
 end
 
-function Keybind.onVocationChange(unusedArgument, arg_14_1, arg_14_2)
-	if arg_14_1 == arg_14_2 or not g_game.isOnline() then
+function Keybind.onVocationChange(unusedArgument, vocation, oldVocation)
+	if vocation == oldVocation or not g_game.isOnline() then
 		return
 	end
 
@@ -706,13 +706,13 @@ function Keybind.removePreset(presetName)
 	return true
 end
 
-local function var_0_8(arg_24_0, arg_24_1)
-	local var_24_0 = arg_24_0 and tostring(arg_24_0.primary or "") or ""
-	local var_24_1 = arg_24_0 and tostring(arg_24_0.secondary or "") or ""
-	local var_24_2 = arg_24_1 and tostring(arg_24_1.primary or "") or ""
-	local var_24_3 = arg_24_1 and tostring(arg_24_1.secondary or "") or ""
+local function sameKeybindKeys(leftKeys, rightKeys)
+	local leftPrimary = leftKeys and tostring(leftKeys.primary or "") or ""
+	local leftSecondary = leftKeys and tostring(leftKeys.secondary or "") or ""
+	local rightPrimary = rightKeys and tostring(rightKeys.primary or "") or ""
+	local rightSecondary = rightKeys and tostring(rightKeys.secondary or "") or ""
 
-	return var_24_0 == var_24_2 and var_24_1 == var_24_3
+	return leftPrimary == rightPrimary and leftSecondary == rightSecondary
 end
 
 function Keybind.selectPreset(presetName)
@@ -726,17 +726,17 @@ function Keybind.selectPreset(presetName)
 
 	local oldPreset = Keybind.currentPreset
 	local chatMode = Keybind.chatMode
-	local var_25_2 = {}
+	local changedKeybinds = {}
 
 	for _, keybind in pairs(Keybind.defaultKeybinds) do
 		if keybind.callbacks then
 			local keybindKeys = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, oldPreset)
-			local var_25_4 = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, presetName)
+			local presetKeybindKeys = Keybind.getKeybindKeys(keybind.category, keybind.action, chatMode, presetName)
 
-			if not var_0_8(keybindKeys, var_25_4) then
+			if not sameKeybindKeys(keybindKeys, presetKeybindKeys) then
 				Keybind.unbind(keybind.category, keybind.action)
 
-				var_25_2[#var_25_2 + 1] = keybind
+				changedKeybinds[#changedKeybinds + 1] = keybind
 			end
 		end
 	end
@@ -747,7 +747,7 @@ function Keybind.selectPreset(presetName)
 
 	Keybind.currentPreset = presetName
 
-	for unusedValue, entry in ipairs(var_25_2) do
+	for unusedValue, entry in ipairs(changedKeybinds) do
 		Keybind.bind(entry.category, entry.action, entry.callbacks, entry.widget)
 	end
 
@@ -1070,6 +1070,50 @@ function Keybind.getHotkeyKeys(hotkeyId, preset, chatMode)
 	return config[tostring(hotkeyId)] or keys
 end
 
+local function findHotkeyInventoryItem(data)
+	if data.subType == nil or not g_game.findPlayerItem then
+		return nil
+	end
+
+	return g_game.findPlayerItem(data.itemId, data.subType, data.getTier or 0)
+end
+
+local function createHotkeyUseItem(data)
+	local inventoryItem = findHotkeyInventoryItem(data)
+
+	if inventoryItem then
+		return inventoryItem
+	end
+
+	local item = Item.create(data.itemId)
+
+	if not item then
+		return nil
+	end
+
+	if data.subType ~= nil then
+		item:setSubType(data.subType)
+	end
+
+	if data.getTier and item.setTier then
+		item:setTier(data.getTier)
+	end
+
+	return item
+end
+
+local function useHotkeyItemWith(data, target)
+	if data.subType == nil then
+		g_game.useInventoryItemWith(data.itemId, target)
+	else
+		local item = findHotkeyInventoryItem(data)
+
+		if item then
+			g_game.useWith(item, target)
+		end
+	end
+end
+
 function Keybind.hotkeyCallback(hotkeyId, chatMode)
 	chatMode = chatMode or Keybind.chatMode
 
@@ -1083,35 +1127,43 @@ function Keybind.hotkeyCallback(hotkeyId, chatMode)
 	local data = hotkey.data
 
 	if action == HOTKEY_ACTION.USE_YOURSELF then
-		g_game.useInventoryItemWith(data.itemId, g_game.getLocalPlayer(), data.subType or -1)
+		useHotkeyItemWith(data, g_game.getLocalPlayer())
 	elseif action == HOTKEY_ACTION.USE_CROSSHAIR then
-		local var_38_3 = Item.create(data.itemId)
+		local crosshairItem = createHotkeyUseItem(data)
 
-		if var_38_3 then
-			modules.game_interface.startUseWith(var_38_3, data.subType or -1)
+		if crosshairItem then
+			modules.game_interface.startUseWith(crosshairItem)
 		end
 	elseif action == HOTKEY_ACTION.USE_TARGET then
 		local item = g_game.getAttackingCreature()
 
 		if not item then
-			local var_38_5 = Item.create(data.itemId)
+			local crosshairItem = createHotkeyUseItem(data)
 
-			if var_38_5 then
-				modules.game_interface.startUseWith(var_38_5, data.subType or -1)
+			if crosshairItem then
+				modules.game_interface.startUseWith(crosshairItem)
 			end
 
 			return
 		end
 
 		if item:getTile() then
-			g_game.useInventoryItemWith(data.itemId, item, data.subType or -1)
+			useHotkeyItemWith(data, item)
 		end
 	elseif action == HOTKEY_ACTION.EQUIP then
 		local item = Item.create(data.itemId)
 
 		g_game.equipItem(item)
 	elseif action == HOTKEY_ACTION.USE then
-		g_game.useInventoryItem(data.itemId)
+		if data.subType == nil then
+			g_game.useInventoryItem(data.itemId)
+		else
+			local item = findHotkeyInventoryItem(data)
+
+			if item then
+				g_game.use(item)
+			end
+		end
 	elseif action == HOTKEY_ACTION.TEXT then
 		if modules.game_interface.isChatVisible() then
 			modules.game_console.setTextEditText(hotkey.data.text)

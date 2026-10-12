@@ -494,19 +494,19 @@ function onWeaponProficiency(itemId, experience, perks, marketCategory, modifier
 		local perkLaneCount = ProficiencyData:getPerkLaneCount(weaponProficiencyHandItem:getProficiencyId())
 
 		if perkLaneCount > 0 then
-			local var_20_2 = WeaponProficiency.cacheList[itemId]
-			local currentLevelByExp = math.min(perkLaneCount, ProficiencyData:getCurrentLevelByExp(weaponProficiencyHandItem, var_20_2.exp))
-			local var_20_4 = false
+			local cachedProficiency = WeaponProficiency.cacheList[itemId]
+			local currentLevelByExp = math.min(perkLaneCount, ProficiencyData:getCurrentLevelByExp(weaponProficiencyHandItem, cachedProficiency.exp))
+			local hasUnselectedPerks = false
 
-			for iter_20_0 = 0, currentLevelByExp - 1 do
-				if var_20_2.perks[iter_20_0] == nil then
-					var_20_4 = true
+			for gradeIndex = 0, currentLevelByExp - 1 do
+				if cachedProficiency.perks[gradeIndex] == nil then
+					hasUnselectedPerks = true
 
 					break
 				end
 			end
 
-			modules.game_interface.StatsBar.onUpdateProficiencyData(var_20_2, var_20_4, weaponProficiencyHandItem)
+			modules.game_interface.StatsBar.onUpdateProficiencyData(cachedProficiency, hasUnselectedPerks, weaponProficiencyHandItem)
 		end
 	end
 
@@ -663,33 +663,33 @@ local function getModifiedPerkData(modifiers, grade, slot)
 	return ProficiencyData:getModifierPerkData(modifier.modifierEnum, modifier.refineLevel)
 end
 
-local function var_0_11(arg_30_0, arg_30_1)
+local function getProficiencyPerkWidget(grade, slot)
 	local perkPanel = WeaponProficiency.perkPanel
 
 	if not perkPanel then
 		return nil
 	end
 
-	local children = perkPanel:getChildren()[arg_30_0 + 1]
-	local var_30_2 = children and children.currentPerkPanel
+	local children = perkPanel:getChildren()[grade + 1]
+	local currentPerkPanel = children and children.currentPerkPanel
 
-	return var_30_2 and var_30_2:getChildById("bonusIcon" .. arg_30_1)
+	return currentPerkPanel and currentPerkPanel:getChildById("bonusIcon" .. slot)
 end
 
-local function var_0_12(arg_31_0, arg_31_1)
+local function resolveProficiencyPerk(grade, slot)
 	local selectedClientId = WeaponProficiency:getSelectedClientId()
-	local var_31_1 = selectedClientId > 0 and WeaponProficiency.cacheList[selectedClientId] or nil
-	local var_31_2 = var_31_1 and var_31_1.modifiers or {}
-	local var_31_3 = getModifierEntry(var_31_2, arg_31_0, arg_31_1)
-	local modifierPerkData = var_31_3 and ProficiencyData:getModifierPerkData(var_31_3.modifierEnum, var_31_3.refineLevel or 0) or nil
+	local cachedProficiency = selectedClientId > 0 and WeaponProficiency.cacheList[selectedClientId] or nil
+	local modifiers = cachedProficiency and cachedProficiency.modifiers or {}
+	local modifierEntry = getModifierEntry(modifiers, grade, slot)
+	local modifierPerkData = modifierEntry and ProficiencyData:getModifierPerkData(modifierEntry.modifierEnum, modifierEntry.refineLevel or 0) or nil
 
 	if modifierPerkData then
-		return modifierPerkData, var_31_3
+		return modifierPerkData, modifierEntry
 	end
 
-	local var_31_5 = var_0_11(arg_31_0, arg_31_1)
+	local perkWidget = getProficiencyPerkWidget(grade, slot)
 
-	return var_31_5 and (var_31_5.perkData or var_31_5.originalPerkData) or nil, var_31_3
+	return perkWidget and (perkWidget.perkData or perkWidget.originalPerkData) or nil, modifierEntry
 end
 
 local function updateManipulateRankWidget(bonusIcon, modifierEntry, isActive)
@@ -907,13 +907,13 @@ local function setupPerkIconOverlay(perkData, augmentIconNormal)
 	end
 end
 
-local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, arg_43_3)
+local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, bonusDetailPanel)
 	if not previewWidget or previewWidget.grade == nil or previewWidget.slot == nil then
 		return
 	end
 
-	local var_43_0 = getModifiedPerkData(perkData, previewWidget.grade, previewWidget.slot)
-	local effectivePerkData = var_43_0 or previewWidget.originalPerkData or previewWidget.perkData
+	local modifiedPerkData = getModifiedPerkData(perkData, previewWidget.grade, previewWidget.slot)
+	local effectivePerkData = modifiedPerkData or previewWidget.originalPerkData or previewWidget.perkData
 
 	if not effectivePerkData then
 		return
@@ -924,27 +924,27 @@ local function populateShapePerkPreview(previewWidget, perkData, modifierEntry, 
 	local icon = previewWidget:getChildById("icon")
 
 	if icon then
-		local imageSourcePath, var_43_4 = ProficiencyData:getImageSourceAndClip(effectivePerkData)
+		local imageSourcePath, imageClip = ProficiencyData:getImageSourceAndClip(effectivePerkData)
 
 		icon:setImageSource(imageSourcePath)
-		icon:setImageClip(string.format("%s 32 32", var_43_4))
+		icon:setImageClip(string.format("%s 32 32", imageClip))
 	end
 
-	local var_43_5, var_43_6 = ProficiencyData:getBonusNameAndTooltip(effectivePerkData)
+	local bonusName, bonusTooltip = ProficiencyData:getBonusNameAndTooltip(effectivePerkData)
 
-	previewWidget:setTooltip(string.format("%s\n\n%s", var_43_5, var_43_6))
+	previewWidget:setTooltip(string.format("%s\n\n%s", bonusName, bonusTooltip))
 	setupPerkIconOverlay(effectivePerkData, previewWidget:getChildById("iconPerks"))
 
-	local var_43_7 = getModifierEntry(perkData, previewWidget.grade, previewWidget.slot)
+	local modifierEntryForSlot = getModifierEntry(perkData, previewWidget.grade, previewWidget.slot)
 
-	updateManipulateRankWidget(previewWidget, var_43_7, previewWidget.active)
+	updateManipulateRankWidget(previewWidget, modifierEntryForSlot, previewWidget.active)
 
-	if modifierEntry and arg_43_3 then
-		enableBonusIcon(previewWidget, previewWidget:getChildById("highlight"), previewWidget:getChildById("border"), arg_43_3:recursiveGetChildById("bonusName"), var_43_6, effectivePerkData, var_43_0 ~= nil)
+	if modifierEntry and bonusDetailPanel then
+		enableBonusIcon(previewWidget, previewWidget:getChildById("highlight"), previewWidget:getChildById("border"), bonusDetailPanel:recursiveGetChildById("bonusName"), bonusTooltip, effectivePerkData, modifiedPerkData ~= nil)
 	end
 end
 
-local function var_0_25(previewWidget, perkData, modifierEntry)
+local function populateSelectedPerkPreview(previewWidget, perkData, modifierEntry)
 	if not previewWidget or not perkData then
 		return
 	end
@@ -1012,7 +1012,7 @@ local function populateReshapePerkPanel(panel, modifierEnum, refineLevel, perkDa
 	local perkPreview = panel:getChildById("perkPreview")
 
 	if perkPreview then
-		var_0_25(perkPreview, perkData, modifierEntry)
+		populateSelectedPerkPreview(perkPreview, perkData, modifierEntry)
 	end
 
 	local perkBonusText = panel:recursiveGetChildById("perkBonusText")
@@ -1159,13 +1159,13 @@ function WeaponProficiency.onItemListValueChange(self, scroll, value, delta)
 	local itemsPerRow = 5
 	local totalItems = #self.listData
 	local ROW_HEIGHT = 37
-	local var_53_4 = value - 2
+	local adjustedScrollOffset = value - 2
 	local startRow = 0
-	local subOffset = var_53_4
+	local subOffset = adjustedScrollOffset
 
-	if var_53_4 >= 0 then
-		startRow = math.floor(var_53_4 / ROW_HEIGHT)
-		subOffset = var_53_4 % ROW_HEIGHT
+	if adjustedScrollOffset >= 0 then
+		startRow = math.floor(adjustedScrollOffset / ROW_HEIGHT)
+		subOffset = adjustedScrollOffset % ROW_HEIGHT
 	end
 
 	local startLabel = startRow * itemsPerRow + 1
@@ -1533,24 +1533,24 @@ function WeaponProficiency.onUpdateSelectedProficiency(self, itemId)
 			local widgetIsBlocked = not canChange and currentData.perks[i - 1]
 			local bonusDetail = self.bonusDetailPanel:getChildById("bonusDetail_" .. i)
 
-			for index, iter_60_3 in pairs(child:getChildren()) do
-				if iter_60_3.grade == nil or iter_60_3.slot == nil then
+			for index, perkWidget in pairs(child:getChildren()) do
+				if perkWidget.grade == nil or perkWidget.slot == nil then
 					-- block empty
 				else
 					if widgetIsBlocked then
-						iter_60_3:getChildById("locked-perk"):setVisible(true)
+						perkWidget:getChildById("locked-perk"):setVisible(true)
 
-						iter_60_3.locked = true
+						perkWidget.locked = true
 					end
 
-					local var_60_7 = currentData.perks[i - 1] == iter_60_3.slot
+					local isSelectedPerk = currentData.perks[i - 1] == perkWidget.slot
 
-					if var_60_7 then
-						iter_60_3.blocked = false
-						iter_60_3.locked = false
+					if isSelectedPerk then
+						perkWidget.blocked = false
+						perkWidget.locked = false
 					end
 
-					populateShapePerkPreview(iter_60_3, currentData.modifiers, var_60_7, bonusDetail)
+					populateShapePerkPreview(perkWidget, currentData.modifiers, isSelectedPerk, bonusDetail)
 				end
 			end
 		end
@@ -1809,7 +1809,7 @@ function WeaponProficiency.updateShapePerkPreview(self, shape)
 		return
 	end
 
-	local modifiedPerkData, modifierEntry = var_0_12(self.selectedModifySlot.grade, self.selectedModifySlot.slot)
+	local modifiedPerkData, modifierEntry = resolveProficiencyPerk(self.selectedModifySlot.grade, self.selectedModifySlot.slot)
 
 	if not modifiedPerkData then
 		return
@@ -1835,7 +1835,7 @@ function WeaponProficiency.updateShapePerkPreview(self, shape)
 	local perkPreview = shape:recursiveGetChildById("perkPreview")
 
 	if perkPreview then
-		var_0_25(perkPreview, modifiedPerkData, modifierEntry)
+		populateSelectedPerkPreview(perkPreview, modifiedPerkData, modifierEntry)
 	end
 end
 
@@ -2776,10 +2776,10 @@ function WeaponProficiency.openReshapeDialog(self)
 
 	dialog:setId("reshapeDialog")
 
-	local modifierEntry, var_109_6 = var_0_12(data.grade, data.slot)
+	local modifierEntry, currentModifierEntry = resolveProficiencyPerk(data.grade, data.slot)
 
 	if modifierEntry then
-		populateReshapePerkPanel(dialog:recursiveGetChildById("currentPerkPanel"), var_109_6 and var_109_6.modifierEnum, var_109_6 and var_109_6.refineLevel, modifierEntry)
+		populateReshapePerkPanel(dialog:recursiveGetChildById("currentPerkPanel"), currentModifierEntry and currentModifierEntry.modifierEnum, currentModifierEntry and currentModifierEntry.refineLevel, modifierEntry)
 	end
 
 	local optionIds = {

@@ -218,20 +218,20 @@ local function removeWidgetFromSavedOrder(widgetList, widgetType, instance)
 	end
 end
 
-function SidebarWidgetsPersistence.clearWidgetPlacementByType(parent)
-	if type(parent) ~= "string" or parent == "" then
+function SidebarWidgetsPersistence.clearWidgetPlacementByType(widgetType)
+	if type(widgetType) ~= "string" or widgetType == "" then
 		return
 	end
 
 	local widgetIdsToClear = {}
 
 	for key, entry in pairs(placementByWidgetId) do
-		if entry and entry.type == parent then
+		if entry and entry.type == widgetType then
 			widgetIdsToClear[#widgetIdsToClear + 1] = key
 		end
 	end
 
-	if parent == "battlePassInbox" then
+	if widgetType == "battlePassInbox" then
 		widgetIdsToClear[#widgetIdsToClear + 1] = "BattlePassInboxWindow"
 	end
 

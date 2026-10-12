@@ -7,24 +7,24 @@ if not AnalyserSession then
 end
 
 local SESSION_STABILIZE_TIME = 1000
-local var_0_1 = 4096
+local ROLLING_WINDOW_COMPACTION_THRESHOLD = 4096
 
-local function var_0_2(arg_1_0)
-	if arg_1_0.first <= var_0_1 or arg_1_0.first <= math.floor(arg_1_0.last / 2) then
+local function compactRollingWindow(window)
+	if window.first <= ROLLING_WINDOW_COMPACTION_THRESHOLD or window.first <= math.floor(window.last / 2) then
 		return
 	end
 
 	local buckets = {}
 	local last = 0
 
-	for iter_1_0 = arg_1_0.first, arg_1_0.last do
+	for bucketIndex = window.first, window.last do
 		last = last + 1
-		buckets[last] = arg_1_0.buckets[iter_1_0]
+		buckets[last] = window.buckets[bucketIndex]
 	end
 
-	arg_1_0.buckets = buckets
-	arg_1_0.first = 1
-	arg_1_0.last = last
+	window.buckets = buckets
+	window.first = 1
+	window.last = last
 end
 
 function AnalyserSession.reset(self)
@@ -52,14 +52,14 @@ function AnalyserSession.durationSeconds(self)
 	return math.max(0, os.time() - self.startUnix)
 end
 
-function AnalyserSession.perHourFromTotal(arg_6_0, total, arg_6_2, arg_6_3)
+function AnalyserSession.perHourFromTotal(self, total, startMs, maximumElapsedMs)
 	local amount = tonumber(total) or 0
 
 	if amount <= 0 then
 		return 0
 	end
 
-	local numericValue = tonumber(arg_6_2) or arg_6_0.startMs
+	local numericValue = tonumber(startMs) or self.startMs
 
 	if numericValue <= 0 then
 		return 0
@@ -67,146 +67,146 @@ function AnalyserSession.perHourFromTotal(arg_6_0, total, arg_6_2, arg_6_3)
 
 	local usedElapsed = math.max(SESSION_STABILIZE_TIME, g_clock.millis() - numericValue)
 
-	if arg_6_3 and arg_6_3 > 0 then
-		usedElapsed = math.min(usedElapsed, arg_6_3)
+	if maximumElapsedMs and maximumElapsedMs > 0 then
+		usedElapsed = math.min(usedElapsed, maximumElapsedMs)
 	end
 
 	return math.floor(amount * 3600000 / usedElapsed)
 end
 
-function AnalyserSession.newRollingWindow(unusedArgument, arg_7_1, arg_7_2)
+function AnalyserSession.newRollingWindow(unusedArgument, durationMs, allowNegative)
 	return {
 		total = 0,
 		last = 0,
 		first = 1,
-		durationMs = math.max(SESSION_STABILIZE_TIME, tonumber(arg_7_1) or SESSION_STABILIZE_TIME),
-		allowNegative = arg_7_2 == true,
+		durationMs = math.max(SESSION_STABILIZE_TIME, tonumber(durationMs) or SESSION_STABILIZE_TIME),
+		allowNegative = allowNegative == true,
 		startMs = g_clock.millis(),
 		buckets = {}
 	}
 end
 
-function AnalyserSession.resetRollingWindow(unusedArgument, arg_8_1, arg_8_2, arg_8_3)
-	arg_8_1 = arg_8_1 or {}
-	arg_8_1.durationMs = math.max(SESSION_STABILIZE_TIME, tonumber(arg_8_2) or arg_8_1.durationMs or SESSION_STABILIZE_TIME)
+function AnalyserSession.resetRollingWindow(unusedArgument, window, durationMs, allowNegative)
+	window = window or {}
+	window.durationMs = math.max(SESSION_STABILIZE_TIME, tonumber(durationMs) or window.durationMs or SESSION_STABILIZE_TIME)
 
-	if arg_8_3 ~= nil then
-		arg_8_1.allowNegative = arg_8_3 == true
+	if allowNegative ~= nil then
+		window.allowNegative = allowNegative == true
 	end
 
-	arg_8_1.startMs = g_clock.millis()
-	arg_8_1.buckets = {}
-	arg_8_1.first = 1
-	arg_8_1.last = 0
-	arg_8_1.total = 0
+	window.startMs = g_clock.millis()
+	window.buckets = {}
+	window.first = 1
+	window.last = 0
+	window.total = 0
 
-	return arg_8_1
+	return window
 end
 
-function AnalyserSession.pruneRollingWindow(unusedArgument, arg_9_1, numericValue)
-	if not arg_9_1 then
+function AnalyserSession.pruneRollingWindow(unusedArgument, window, numericValue)
+	if not window then
 		return 0
 	end
 
 	numericValue = tonumber(numericValue) or g_clock.millis()
 
-	local var_9_0 = numericValue - math.max(SESSION_STABILIZE_TIME, tonumber(arg_9_1.durationMs) or SESSION_STABILIZE_TIME)
-	local var_9_1 = 0
+	local cutoffMs = numericValue - math.max(SESSION_STABILIZE_TIME, tonumber(window.durationMs) or SESSION_STABILIZE_TIME)
+	local expiredAmount = 0
 
-	while arg_9_1.first <= arg_9_1.last do
-		local var_9_2 = arg_9_1.buckets[arg_9_1.first]
+	while window.first <= window.last do
+		local bucket = window.buckets[window.first]
 
-		if not var_9_2 or var_9_0 < var_9_2.tick then
+		if not bucket or cutoffMs < bucket.tick then
 			break
 		end
 
-		var_9_1 = var_9_1 + (tonumber(var_9_2.amount) or 0)
-		arg_9_1.buckets[arg_9_1.first] = nil
-		arg_9_1.first = arg_9_1.first + 1
+		expiredAmount = expiredAmount + (tonumber(bucket.amount) or 0)
+		window.buckets[window.first] = nil
+		window.first = window.first + 1
 	end
 
-	local var_9_3 = (tonumber(arg_9_1.total) or 0) - var_9_1
+	local remainingTotal = (tonumber(window.total) or 0) - expiredAmount
 
-	arg_9_1.total = arg_9_1.allowNegative and var_9_3 or math.max(0, var_9_3)
+	window.total = window.allowNegative and remainingTotal or math.max(0, remainingTotal)
 
-	if arg_9_1.first > arg_9_1.last then
-		arg_9_1.buckets = {}
-		arg_9_1.first = 1
-		arg_9_1.last = 0
-		arg_9_1.total = 0
+	if window.first > window.last then
+		window.buckets = {}
+		window.first = 1
+		window.last = 0
+		window.total = 0
 	else
-		var_0_2(arg_9_1)
+		compactRollingWindow(window)
 	end
 
-	return var_9_1
+	return expiredAmount
 end
 
-function AnalyserSession.addRollingValue(arg_10_0, arg_10_1, numericValue, tick)
+function AnalyserSession.addRollingValue(self, window, numericValue, tick)
 	numericValue = tonumber(numericValue) or 0
 
-	if not arg_10_1 or numericValue == 0 or numericValue < 0 and not arg_10_1.allowNegative then
+	if not window or numericValue == 0 or numericValue < 0 and not window.allowNegative then
 		return
 	end
 
 	tick = tonumber(tick) or g_clock.millis()
 
-	arg_10_0:pruneRollingWindow(arg_10_1, tick)
+	self:pruneRollingWindow(window, tick)
 
-	local var_10_0 = math.floor(tick / SESSION_STABILIZE_TIME)
-	local var_10_1 = arg_10_1.buckets[arg_10_1.last]
+	local bucketSlot = math.floor(tick / SESSION_STABILIZE_TIME)
+	local lastBucket = window.buckets[window.last]
 
-	if var_10_1 and var_10_1.slot == var_10_0 then
-		var_10_1.amount = var_10_1.amount + numericValue
-		var_10_1.tick = tick
+	if lastBucket and lastBucket.slot == bucketSlot then
+		lastBucket.amount = lastBucket.amount + numericValue
+		lastBucket.tick = tick
 	else
-		arg_10_1.last = arg_10_1.last + 1
-		arg_10_1.buckets[arg_10_1.last] = {
+		window.last = window.last + 1
+		window.buckets[window.last] = {
 			amount = numericValue,
 			tick = tick,
-			slot = var_10_0
+			slot = bucketSlot
 		}
 	end
 
-	arg_10_1.total = (tonumber(arg_10_1.total) or 0) + numericValue
+	window.total = (tonumber(window.total) or 0) + numericValue
 end
 
-function AnalyserSession.rollingTotal(arg_11_0, arg_11_1, arg_11_2)
-	arg_11_0:pruneRollingWindow(arg_11_1, arg_11_2)
+function AnalyserSession.rollingTotal(self, window, nowMs)
+	self:pruneRollingWindow(window, nowMs)
 
-	return arg_11_1 and (tonumber(arg_11_1.total) or 0) or 0
+	return window and (tonumber(window.total) or 0) or 0
 end
 
-function AnalyserSession.rollingRate(arg_12_0, arg_12_1, arg_12_2, arg_12_3, numericValue)
-	if not arg_12_1 then
+function AnalyserSession.rollingRate(self, window, durationMs, rateIntervalMs, numericValue)
+	if not window then
 		return 0
 	end
 
 	numericValue = tonumber(numericValue) or g_clock.millis()
 
-	arg_12_0:pruneRollingWindow(arg_12_1, numericValue)
+	self:pruneRollingWindow(window, numericValue)
 
-	arg_12_2 = math.max(SESSION_STABILIZE_TIME, tonumber(arg_12_2) or arg_12_1.durationMs or SESSION_STABILIZE_TIME)
-	arg_12_3 = math.max(1, tonumber(arg_12_3) or SESSION_STABILIZE_TIME)
+	durationMs = math.max(SESSION_STABILIZE_TIME, tonumber(durationMs) or window.durationMs or SESSION_STABILIZE_TIME)
+	rateIntervalMs = math.max(1, tonumber(rateIntervalMs) or SESSION_STABILIZE_TIME)
 
-	local var_12_0 = numericValue - arg_12_2
-	local var_12_1 = 0
+	local cutoffMs = numericValue - durationMs
+	local recentAmount = 0
 
-	for iter_12_0 = arg_12_1.last, arg_12_1.first, -1 do
-		local var_12_2 = arg_12_1.buckets[iter_12_0]
+	for bucketIndex = window.last, window.first, -1 do
+		local bucket = window.buckets[bucketIndex]
 
-		if not var_12_2 or var_12_0 >= var_12_2.tick then
+		if not bucket or cutoffMs >= bucket.tick then
 			break
 		end
 
-		var_12_1 = var_12_1 + (tonumber(var_12_2.amount) or 0)
+		recentAmount = recentAmount + (tonumber(bucket.amount) or 0)
 	end
 
-	if var_12_1 <= 0 then
+	if recentAmount <= 0 then
 		return 0
 	end
 
-	local var_12_3 = math.max(SESSION_STABILIZE_TIME, numericValue - (tonumber(arg_12_1.startMs) or numericValue))
-	local var_12_4 = math.min(arg_12_2, var_12_3)
+	local elapsedMs = math.max(SESSION_STABILIZE_TIME, numericValue - (tonumber(window.startMs) or numericValue))
+	local effectiveDurationMs = math.min(durationMs, elapsedMs)
 
-	return math.floor(var_12_1 * arg_12_3 / var_12_4 + 0.5)
+	return math.floor(recentAmount * rateIntervalMs / effectiveDurationMs + 0.5)
 end

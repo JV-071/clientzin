@@ -122,7 +122,7 @@ local function fillKillSlot(panel, name, current, target, raceData)
 	end
 end
 
-local function fillDeliverySlot(panel)
+local function openDeliveryItemInCyclopedia(itemId)
 	local game_cyclopedia = modules.game_cyclopedia
 	local cyclopedia = game_cyclopedia and game_cyclopedia.Cyclopedia
 
@@ -134,7 +134,7 @@ local function fillDeliverySlot(panel)
 		game_cyclopedia.show("items")
 	end
 
-	cyclopedia.openItemInCyclopedia(panel)
+	cyclopedia.openItemInCyclopedia(itemId)
 end
 
 local function openDeliveryItemInMarket(itemId)
@@ -185,7 +185,7 @@ local function showDeliveryItemContextMenu(mousePosition, thingId)
 
 	if thingType.isCyclopediaItem and thingType:isCyclopediaItem() and cyclopedia and cyclopedia.openItemInCyclopedia then
 		gamePopupMenuWidget:addOption(tr("Cyclopedia"), function()
-			fillDeliverySlot(thingId)
+			openDeliveryItemInCyclopedia(thingId)
 		end)
 
 		hasOptions = true
@@ -507,23 +507,23 @@ local function buildKillSlots(weeklyTasks)
 end
 
 local function refreshWeeklyKillSlots(weeklyTasks)
-	local deliverySlotsList = getKillSlotsList()
+	local killSlotsList = getKillSlotsList()
 
-	if not deliverySlotsList then
+	if not killSlotsList then
 		return
 	end
 
 	local killEntries = weeklyTasks.killEntries or {}
 
 	if #killEntries == 0 then
-		deliverySlotsList:updateLayout()
+		killSlotsList:updateLayout()
 
 		return
 	end
 
-	deliverySlotsList:destroyChildren()
+	killSlotsList:destroyChildren()
 
-	local ok, anyPanel = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+	local ok, anyPanel = pcall(g_ui.createWidget, "KillSlots", killSlotsList)
 
 	if not ok then
 		print("[WeeklyTask] erro criando KillSlots (Any Creature):", tostring(anyPanel))
@@ -533,7 +533,7 @@ local function refreshWeeklyKillSlots(weeklyTasks)
 
 	fillKillSlot(anyPanel, "Any Creature", weeklyTasks.killedsAnyMonsters, weeklyTasks.killsAnyMonsters, nil)
 
-	local unlockKillButton = deliverySlotsList:getParent():getChildById("unlockKillButton")
+	local unlockKillButton = killSlotsList:getParent():getChildById("unlockKillButton")
 
 	if unlockKillButton then
 		if #killEntries > 5 then
@@ -544,7 +544,7 @@ local function refreshWeeklyKillSlots(weeklyTasks)
 	end
 
 	for unusedValue, entry in ipairs(killEntries) do
-		local ok2, panel = pcall(g_ui.createWidget, "KillSlots", deliverySlotsList)
+		local ok2, panel = pcall(g_ui.createWidget, "KillSlots", killSlotsList)
 
 		if not ok2 then
 			print("[WeeklyTask] erro criando KillSlots:", tostring(panel))
@@ -552,14 +552,14 @@ local function refreshWeeklyKillSlots(weeklyTasks)
 			break
 		end
 
-		local numericValue = tonumber(entry.raceId) or 0
-		local raceData = g_things.getRaceData(numericValue)
+		local raceId = tonumber(entry.raceId) or 0
+		local raceData = g_things.getRaceData(raceId)
 		local raceName = raceData and raceData.raceId ~= 0 and raceData.name or "?"
 
 		fillKillSlot(panel, raceName, entry.totalMonsterKilleds, entry.totalKills, raceData)
 	end
 
-	deliverySlotsList:updateLayout()
+	killSlotsList:updateLayout()
 end
 
 local function buildDeliverySlots(weeklyTasks)
@@ -688,14 +688,14 @@ end
 local function buildRewards(weeklyTasks)
 	local huntingPoints = weeklyTasks.totalPoints or 0
 	local soulSealsPoints = weeklyTasks.totalTasksCompleted or 0
-	local numericValue = tonumber(weeklyTasks.killTaskExp) or 0
+	local killTaskExperience = tonumber(weeklyTasks.killTaskExp) or 0
 	local deliveryTaskExperience = tonumber(weeklyTasks.deliveryTaskExp) or 0
 
 	if TaskBoard.weeklyPanel then
 		local weeklyExperienceRewardLabel = TaskBoard.weeklyPanel:recursiveGetChildById("weeklyExperienceRewardLabel")
 
 		if weeklyExperienceRewardLabel then
-			weeklyExperienceRewardLabel:setText(tr("Each kill task will reward you with %s XP and each delivery task will reward you with %s XP.", TaskBoard:formatNumberWithCommas(numericValue), TaskBoard:formatNumberWithCommas(deliveryTaskExperience)))
+			weeklyExperienceRewardLabel:setText(tr("Each kill task will reward you with %s XP and each delivery task will reward you with %s XP.", TaskBoard:formatNumberWithCommas(killTaskExperience), TaskBoard:formatNumberWithCommas(deliveryTaskExperience)))
 		end
 
 		local huntingPointsLabel = TaskBoard.weeklyPanel:recursiveGetChildById("huntingPointsLabel")

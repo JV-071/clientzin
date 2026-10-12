@@ -5,32 +5,32 @@ function WheelOfDestiny.configureSummary()
 
 	wheelOfDestinyWindow.summary.tabContent:destroyChildren()
 
-	local var_1_0 = 0
-	local var_1_1 = 0
-	local var_1_2 = 0
-	local var_1_3 = 0
+	local healthBonus = 0
+	local manaBonus = 0
+	local capacityBonus = 0
+	local mitigationBonus = 0
 	local vocationId = WheelOfDestiny.vocationId
 
 	for key, WheelBonu in pairs(WheelBonus) do
-		local var_1_5 = key + 1
+		local sliceIndex = key + 1
 
-		if not WheelOfDestiny.isLit(var_1_5) then
+		if not WheelOfDestiny.isLit(sliceIndex) then
 			-- block empty
 		else
-			local var_1_6 = WheelOfDestiny.pointInvested[var_1_5]
-			local var_1_7 = WheelConsts[WheelBonu.dedication]
+			local investedPoints = WheelOfDestiny.pointInvested[sliceIndex]
+			local dedicationBonusRates = WheelConsts[WheelBonu.dedication]
 
 			if WheelBonu.dedication == "capacity" then
-				var_1_2 = var_1_2 + var_1_6 * var_1_7[vocationId]
+				capacityBonus = capacityBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "mana" then
-				var_1_1 = var_1_1 + var_1_6 * var_1_7[vocationId]
+				manaBonus = manaBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "health" then
-				var_1_0 = var_1_0 + var_1_6 * var_1_7[vocationId]
+				healthBonus = healthBonus + investedPoints * dedicationBonusRates[vocationId]
 			elseif WheelBonu.dedication == "mitigation" then
-				var_1_3 = var_1_3 + var_1_6 * var_1_7
+				mitigationBonus = mitigationBonus + investedPoints * dedicationBonusRates
 			elseif WheelBonu.dedication == "lifemana" then
-				var_1_0 = var_1_0 + var_1_6 * var_1_7.life[vocationId]
-				var_1_1 = var_1_1 + var_1_6 * var_1_7.mana[vocationId]
+				healthBonus = healthBonus + investedPoints * dedicationBonusRates.life[vocationId]
+				manaBonus = manaBonus + investedPoints * dedicationBonusRates.mana[vocationId]
 			end
 		end
 	end
@@ -39,41 +39,41 @@ function WheelOfDestiny.configureSummary()
 		if equipedGemBonuse.bonusID == -1 then
 			-- block empty
 		else
-			local var_1_8 = equipedGemBonuse.supreme and SupremeGemDescription[equipedGemBonuse.bonusID] or RegularGemDescription[equipedGemBonuse.bonusID]
+			local gemBonusDescription = equipedGemBonuse.supreme and SupremeGemDescription[equipedGemBonuse.bonusID] or RegularGemDescription[equipedGemBonuse.bonusID]
 
 			if not equipedGemBonuse.supreme then
-				if var_1_8.type1 == "life" or var_1_8.type2 == "life" then
-					var_1_0 = var_1_0 + (getValueByVocation(var_1_8.type1, var_1_8.step) + getValueByVocation(var_1_8.type2, var_1_8.step))
+				if gemBonusDescription.type1 == "life" or gemBonusDescription.type2 == "life" then
+					healthBonus = healthBonus + (getValueByVocation(gemBonusDescription.type1, gemBonusDescription.step) + getValueByVocation(gemBonusDescription.type2, gemBonusDescription.step))
 				end
 
-				if var_1_8.type1 == "capacity" or var_1_8.type2 == "capacity" then
-					var_1_2 = var_1_2 + (getValueByVocation(var_1_8.type1, var_1_8.step) + getValueByVocation(var_1_8.type2, var_1_8.step))
+				if gemBonusDescription.type1 == "capacity" or gemBonusDescription.type2 == "capacity" then
+					capacityBonus = capacityBonus + (getValueByVocation(gemBonusDescription.type1, gemBonusDescription.step) + getValueByVocation(gemBonusDescription.type2, gemBonusDescription.step))
 				end
 
-				if var_1_8.type1 == "mana" or var_1_8.type2 == "mana" then
-					var_1_1 = var_1_1 + (getValueByVocation(var_1_8.type1, var_1_8.step) + getValueByVocation(var_1_8.type2, var_1_8.step))
+				if gemBonusDescription.type1 == "mana" or gemBonusDescription.type2 == "mana" then
+					manaBonus = manaBonus + (getValueByVocation(gemBonusDescription.type1, gemBonusDescription.step) + getValueByVocation(gemBonusDescription.type2, gemBonusDescription.step))
 				end
 
-				if var_1_8.type1 == "mitigation" or var_1_8.type2 == "mitigation" then
-					var_1_3 = var_1_3 + (getValueByVocation(var_1_8.type1, var_1_8.step) + getValueByVocation(var_1_8.type2, var_1_8.step))
+				if gemBonusDescription.type1 == "mitigation" or gemBonusDescription.type2 == "mitigation" then
+					mitigationBonus = mitigationBonus + (getValueByVocation(gemBonusDescription.type1, gemBonusDescription.step) + getValueByVocation(gemBonusDescription.type2, gemBonusDescription.step))
 				end
 			end
 		end
 	end
 
-	local var_1_9 = 0
+	local passiveDamageAndHealing = 0
 
 	for unusedValue, passivePoint in ipairs(WheelOfDestiny.passivePoints) do
 		if passivePoint >= 1000 then
-			var_1_9 = var_1_9 + 20
+			passiveDamageAndHealing = passiveDamageAndHealing + 20
 		elseif passivePoint >= 500 then
-			var_1_9 = var_1_9 + 9
+			passiveDamageAndHealing = passiveDamageAndHealing + 9
 		elseif passivePoint >= 250 then
-			var_1_9 = var_1_9 + 4
+			passiveDamageAndHealing = passiveDamageAndHealing + 4
 		end
 	end
 
-	local damageAndHealing = var_1_9 + GemAtelier:getDamageAndHealing()
+	local damageAndHealing = passiveDamageAndHealing + GemAtelier:getDamageAndHealing()
 
 	if damageAndHealing > 0 then
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
@@ -84,7 +84,7 @@ function WheelOfDestiny.configureSummary()
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 
-	local var_1_12 = {
+	local basePerkNames = {
 		"Hit Points",
 		"Mana",
 		"Capacity",
@@ -92,26 +92,26 @@ function WheelOfDestiny.configureSummary()
 		"Life Leech",
 		"Mana Leech"
 	}
-	local unusedValue, var_1_14 = getConvictionPerks()
+	local unusedValue, convictionPerksByName = getConvictionPerks()
 
-	for unusedValue, entry in ipairs(var_1_12) do
+	for unusedValue, entry in ipairs(basePerkNames) do
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
 		perksPanelWidget.perk:setText(entry)
 		perksPanelWidget.info:setVisible(false)
 
 		if entry == "Hit Points" then
-			perksPanelWidget.value:setText(var_1_0 > 0 and formatWheelPlusInteger(var_1_0) or "0")
+			perksPanelWidget.value:setText(healthBonus > 0 and formatWheelPlusInteger(healthBonus) or "0")
 		elseif entry == "Mana" then
-			perksPanelWidget.value:setText(var_1_1 > 0 and formatWheelPlusInteger(var_1_1) or "0")
+			perksPanelWidget.value:setText(manaBonus > 0 and formatWheelPlusInteger(manaBonus) or "0")
 		elseif entry == "Capacity" then
-			perksPanelWidget.value:setText(var_1_2 > 0 and formatWheelPlusInteger(var_1_2) or "0")
+			perksPanelWidget.value:setText(capacityBonus > 0 and formatWheelPlusInteger(capacityBonus) or "0")
 		elseif entry == "Mitigation Mult." then
-			perksPanelWidget.value:setText(formatWheelFixedPercent(var_1_3))
+			perksPanelWidget.value:setText(formatWheelFixedPercent(mitigationBonus))
 			perksPanelWidget.info:setTooltip("Increase your mitigation multiplicatively.")
 			perksPanelWidget.info:setVisible(true)
 		elseif entry == "Life Leech" then
-			local lifeleech = var_1_14.lifeleech
+			local lifeleech = convictionPerksByName.lifeleech
 
 			if not lifeleech or lifeleech.points == 0 then
 				perksPanelWidget:destroy()
@@ -120,7 +120,7 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.info:setVisible(false)
 			end
 		elseif entry == "Mana Leech" then
-			local manaleech = var_1_14.manaleech
+			local manaleech = convictionPerksByName.manaleech
 
 			if not manaleech or manaleech.points == 0 then
 				perksPanelWidget:destroy()
@@ -135,18 +135,18 @@ function WheelOfDestiny.configureSummary()
 
 	g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 
-	local var_1_18 = {
+	local specialPerkKeys = {
 		"special_1",
 		"special_2",
 		"skill"
 	}
-	local var_1_19 = false
+	local hasSpecialPerks = false
 
-	for unusedValue, entry in pairs(var_1_18) do
+	for unusedValue, entry in pairs(specialPerkKeys) do
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
 		if entry == "special_1" then
-			local special_1 = var_1_14.special_1
+			local special_1 = convictionPerksByName.special_1
 
 			if not special_1 then
 				perksPanelWidget:destroy()
@@ -156,10 +156,10 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.info:setVisible(true)
 				perksPanelWidget.info:setTooltip(special_1.tooltip)
 
-				var_1_19 = true
+				hasSpecialPerks = true
 			end
 		elseif entry == "special_2" then
-			local special_2 = var_1_14.special_2
+			local special_2 = convictionPerksByName.special_2
 
 			if not special_2 then
 				perksPanelWidget:destroy()
@@ -169,10 +169,10 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.info:setVisible(true)
 				perksPanelWidget.info:setTooltip(special_2.tooltip)
 
-				var_1_19 = true
+				hasSpecialPerks = true
 			end
 		elseif entry == "skill" then
-			local skill = var_1_14.skill
+			local skill = convictionPerksByName.skill
 
 			if not skill then
 				perksPanelWidget:destroy()
@@ -182,16 +182,16 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.info:setVisible(true)
 				perksPanelWidget.info:setTooltip(skill.tooltip)
 
-				var_1_19 = true
+				hasSpecialPerks = true
 			end
 		end
 	end
 
-	if var_1_19 then
+	if hasSpecialPerks then
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 
-	local var_1_24 = {
+	local spellPerkKeys = {
 		nil,
 		nil,
 		nil,
@@ -203,27 +203,27 @@ function WheelOfDestiny.configureSummary()
 		[9] = "spell_4",
 		[10] = "spell_5"
 	}
-	local var_1_25 = false
+	local hasSpellOrAugmentPerks = false
 
-	for unusedValue, entry in pairs(var_1_24) do
+	for unusedValue, entry in pairs(spellPerkKeys) do
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-		local var_1_27 = var_1_14[entry]
+		local spellPerk = convictionPerksByName[entry]
 
-		if not var_1_27 then
+		if not spellPerk then
 			perksPanelWidget:destroy()
 		else
-			perksPanelWidget.perk:setText(var_1_27.perk)
-			perksPanelWidget.value:setText(var_1_27.stringPoint)
-			perksPanelWidget.info:setTooltip(var_1_27.tooltip)
+			perksPanelWidget.perk:setText(spellPerk.perk)
+			perksPanelWidget.value:setText(spellPerk.stringPoint)
+			perksPanelWidget.info:setTooltip(spellPerk.tooltip)
 			perksPanelWidget.info:setVisible(true)
 
-			var_1_25 = true
+			hasSpellOrAugmentPerks = true
 		end
 	end
 
-	local var_1_28 = getVesselBonus()
+	local augmentVesselBonuses = getVesselBonus()
 
-	for unusedValue, entry in pairs(var_1_28) do
+	for unusedValue, entry in pairs(augmentVesselBonuses) do
 		if entry.bonusType ~= "augment" then
 			-- block empty
 		else
@@ -252,94 +252,94 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.value:setText(entry.value)
 			end
 
-			var_1_25 = true
+			hasSpellOrAugmentPerks = true
 		end
 	end
 
-	if var_1_25 then
+	if hasSpellOrAugmentPerks then
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 
 	local text = getRevelationDisplayName(4)
-	local var_1_32 = getRevelationDisplayName(2)
-	local var_1_33 = getRevelationDisplayName(3)
-	local unusedValue, var_1_35 = getPassiveInfo(4)
-	local var_1_36 = WheelOfDestiny.passivePoints[4]
+	local secondRevelationName = getRevelationDisplayName(2)
+	local thirdRevelationName = getRevelationDisplayName(3)
+	local unusedValue, fourthPassiveTooltip = getPassiveInfo(4)
+	local fourthPassivePoints = WheelOfDestiny.passivePoints[4]
 	local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
 	perksPanelWidget.perk:setText(text)
 
-	if var_1_36 >= 1000 then
+	if fourthPassivePoints >= 1000 then
 		perksPanelWidget.value:setText("Stage 3")
-	elseif var_1_36 >= 500 then
+	elseif fourthPassivePoints >= 500 then
 		perksPanelWidget.value:setText("Stage 2")
-	elseif var_1_36 >= 250 then
+	elseif fourthPassivePoints >= 250 then
 		perksPanelWidget.value:setText("Stage 1")
 	else
 		perksPanelWidget.value:setText("Locked")
 	end
 
-	perksPanelWidget.info:setTooltip(var_1_35)
+	perksPanelWidget.info:setTooltip(fourthPassiveTooltip)
 
-	local unusedValue, var_1_39 = getPassiveInfo(2)
-	local var_1_40 = WheelOfDestiny.passivePoints[2]
+	local unusedValue, secondPassiveTooltip = getPassiveInfo(2)
+	local secondPassivePoints = WheelOfDestiny.passivePoints[2]
 	local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
-	perksPanelWidget.perk:setText(var_1_32)
-	perksPanelWidget.perk:setTooltip(var_1_32)
+	perksPanelWidget.perk:setText(secondRevelationName)
+	perksPanelWidget.perk:setTooltip(secondRevelationName)
 
-	if var_1_40 >= 1000 then
+	if secondPassivePoints >= 1000 then
 		perksPanelWidget.value:setText("Stage 3")
-	elseif var_1_40 >= 500 then
+	elseif secondPassivePoints >= 500 then
 		perksPanelWidget.value:setText("Stage 2")
-	elseif var_1_40 >= 250 then
+	elseif secondPassivePoints >= 250 then
 		perksPanelWidget.value:setText("Stage 1")
 	else
 		perksPanelWidget.value:setText("Locked")
 	end
 
-	perksPanelWidget.info:setTooltip(var_1_39)
+	perksPanelWidget.info:setTooltip(secondPassiveTooltip)
 
-	local unusedValue, var_1_43 = getPassiveInfo(1)
-	local var_1_44 = WheelOfDestiny.passivePoints[1]
+	local unusedValue, giftOfLifeTooltip = getPassiveInfo(1)
+	local giftOfLifePoints = WheelOfDestiny.passivePoints[1]
 	local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
 	perksPanelWidget.perk:setText("Gift of Life")
 
-	if var_1_44 >= 1000 then
+	if giftOfLifePoints >= 1000 then
 		perksPanelWidget.value:setText("Stage 3")
-	elseif var_1_44 >= 500 then
+	elseif giftOfLifePoints >= 500 then
 		perksPanelWidget.value:setText("Stage 2")
-	elseif var_1_44 >= 250 then
+	elseif giftOfLifePoints >= 250 then
 		perksPanelWidget.value:setText("Stage 1")
 	else
 		perksPanelWidget.value:setText("Locked")
 	end
 
-	perksPanelWidget.info:setTooltip(var_1_43)
+	perksPanelWidget.info:setTooltip(giftOfLifeTooltip)
 
-	local unusedValue, var_1_47 = getPassiveInfo(3)
-	local var_1_48 = WheelOfDestiny.passivePoints[3]
+	local unusedValue, thirdPassiveTooltip = getPassiveInfo(3)
+	local thirdPassivePoints = WheelOfDestiny.passivePoints[3]
 	local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
 
-	perksPanelWidget.perk:setText(var_1_33)
-	perksPanelWidget.perk:setTooltip(var_1_33)
+	perksPanelWidget.perk:setText(thirdRevelationName)
+	perksPanelWidget.perk:setTooltip(thirdRevelationName)
 
-	if var_1_48 >= 1000 then
+	if thirdPassivePoints >= 1000 then
 		perksPanelWidget.value:setText("Stage 3")
-	elseif var_1_48 >= 500 then
+	elseif thirdPassivePoints >= 500 then
 		perksPanelWidget.value:setText("Stage 2")
-	elseif var_1_48 >= 250 then
+	elseif thirdPassivePoints >= 250 then
 		perksPanelWidget.value:setText("Stage 1")
 	else
 		perksPanelWidget.value:setText("Locked")
 	end
 
-	perksPanelWidget.info:setTooltip(var_1_47)
+	perksPanelWidget.info:setTooltip(thirdPassiveTooltip)
 
-	local var_1_50 = getVesselBonus()
+	local revelationVesselBonuses = getVesselBonus()
 
-	for unusedValue, entry in pairs(var_1_50) do
+	for unusedValue, entry in pairs(revelationVesselBonuses) do
 		if entry.bonusType ~= "revelation" then
 			-- block empty
 		else
@@ -372,10 +372,10 @@ function WheelOfDestiny.configureSummary()
 
 	g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 
-	local var_1_53 = false
-	local var_1_54 = getVesselBonus()
+	local hasDefensePerks = false
+	local defenseVesselBonuses = getVesselBonus()
 
-	for unusedValue, entry in pairs(var_1_54) do
+	for unusedValue, entry in pairs(defenseVesselBonuses) do
 		if entry.bonusType ~= "defense" then
 			-- block empty
 		else
@@ -408,39 +408,39 @@ function WheelOfDestiny.configureSummary()
 				perksPanelWidget.value:setText(entry.value)
 			end
 
-			var_1_53 = true
+			hasDefensePerks = true
 		end
 	end
 
-	if var_1_53 then
+	if hasDefensePerks then
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 
-	local var_1_57 = {
+	local vesselPerkKeys = {
 		[12] = "vessel.2",
 		[14] = "vessel.4",
 		[13] = "vessel.3",
 		[11] = "vessel.1"
 	}
-	local var_1_58 = false
+	local hasVesselPerks = false
 
-	for unusedValue, entry in pairs(var_1_57) do
+	for unusedValue, entry in pairs(vesselPerkKeys) do
 		local perksPanelWidget = g_ui.createWidget("PerksPanel", wheelOfDestinyWindow.summary.tabContent)
-		local var_1_60 = var_1_14[entry]
+		local vesselPerk = convictionPerksByName[entry]
 
-		if not var_1_60 then
+		if not vesselPerk then
 			perksPanelWidget:destroy()
 		else
-			perksPanelWidget.perk:setText(var_1_60.perk)
-			perksPanelWidget.value:setText(var_1_60.stringPoint)
-			perksPanelWidget.info:setTooltip(var_1_60.tooltip)
+			perksPanelWidget.perk:setText(vesselPerk.perk)
+			perksPanelWidget.value:setText(vesselPerk.stringPoint)
+			perksPanelWidget.info:setTooltip(vesselPerk.tooltip)
 			perksPanelWidget.info:setVisible(true)
 
-			var_1_58 = true
+			hasVesselPerks = true
 		end
 	end
 
-	if var_1_58 then
+	if hasVesselPerks then
 		g_ui.createWidget("HorizontalSeparator", wheelOfDestinyWindow.summary.tabContent)
 	end
 end

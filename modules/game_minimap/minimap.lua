@@ -12,9 +12,9 @@ local currentDayTime = {
 }
 local LAYER_FLOOR_MIN = 0
 local LAYER_FLOOR_MAX = 15
-local MINIMAP_OTMM_PATH = "Minimap"
-local var_0_12 = 12
-local MINIMAP_OTMM_FALLBACK_PATHS = {
+local MINIMAP_KEYBIND_CATEGORY = "Minimap"
+local MINIMAP_HOTKEY_PAN_DISTANCE = 12
+local MINIMAP_KEYBIND_ACTIONS = {
 	{
 		action = "Center",
 		defaultKey = "",
@@ -40,28 +40,28 @@ local MINIMAP_OTMM_FALLBACK_PATHS = {
 		action = "Scroll East",
 		defaultKey = "Alt+Right",
 		callback = function()
-			onClickRoseButton("east", var_0_12)
+			onClickRoseButton("east", MINIMAP_HOTKEY_PAN_DISTANCE)
 		end
 	},
 	{
 		action = "Scroll North",
 		defaultKey = "Alt+Up",
 		callback = function()
-			onClickRoseButton("north", var_0_12)
+			onClickRoseButton("north", MINIMAP_HOTKEY_PAN_DISTANCE)
 		end
 	},
 	{
 		action = "Scroll South",
 		defaultKey = "Alt+Down",
 		callback = function()
-			onClickRoseButton("south", var_0_12)
+			onClickRoseButton("south", MINIMAP_HOTKEY_PAN_DISTANCE)
 		end
 	},
 	{
 		action = "Scroll West",
 		defaultKey = "Alt+Left",
 		callback = function()
-			onClickRoseButton("west", var_0_12)
+			onClickRoseButton("west", MINIMAP_HOTKEY_PAN_DISTANCE)
 		end
 	},
 	{
@@ -80,12 +80,12 @@ local MINIMAP_OTMM_FALLBACK_PATHS = {
 	}
 }
 
-local function var_0_14()
+local function bindMinimapKeybinds()
 	local rootPanel = modules.game_interface.getRootPanel()
 
-	for _, path in ipairs(MINIMAP_OTMM_FALLBACK_PATHS) do
-		Keybind.new(MINIMAP_OTMM_PATH, path.action, path.defaultKey, "")
-		Keybind.bind(MINIMAP_OTMM_PATH, path.action, {
+	for _, path in ipairs(MINIMAP_KEYBIND_ACTIONS) do
+		Keybind.new(MINIMAP_KEYBIND_CATEGORY, path.action, path.defaultKey, "")
+		Keybind.bind(MINIMAP_KEYBIND_CATEGORY, path.action, {
 			{
 				type = KEY_DOWN,
 				callback = path.callback
@@ -94,14 +94,14 @@ local function var_0_14()
 	end
 end
 
-local function var_0_15()
-	for unusedValue, entry in ipairs(MINIMAP_OTMM_FALLBACK_PATHS) do
-		Keybind.delete(MINIMAP_OTMM_PATH, entry.action)
+local function unbindMinimapKeybinds()
+	for unusedValue, entry in ipairs(MINIMAP_KEYBIND_ACTIONS) do
+		Keybind.delete(MINIMAP_KEYBIND_CATEGORY, entry.action)
 	end
 end
 
 local unusedValue = "/assets/minimap/minimap.otmm"
-local MINIMAP_OTMM_FALLBACK_PATHS = {
+local MINIMAP_KEYBIND_ACTIONS = {
 	"/assets/minimap/minimap.otmm",
 	"/minimap/minimap.otmm"
 }
@@ -135,7 +135,7 @@ local function loadMinimapOtmm()
 	local foundAny = false
 	local foundBundled = false
 
-	for _, path in ipairs(MINIMAP_OTMM_FALLBACK_PATHS) do
+	for _, path in ipairs(MINIMAP_KEYBIND_ACTIONS) do
 		if not g_resources.fileExists(path) then
 			-- block empty
 		else
@@ -464,107 +464,107 @@ local function syncMinimapLayoutAliases(layoutRoot)
 		return nil
 	end
 
-	local var_33_0 = getLayoutWidget(getLayoutRoot(layoutRoot, false), "minimapBorder")
-	local cavebotMinimap = var_33_0 and var_33_0:getChildById("cavebotMinimap")
+	local minimapBorder = getLayoutWidget(getLayoutRoot(layoutRoot, false), "minimapBorder")
+	local cavebotMinimap = minimapBorder and minimapBorder:getChildById("cavebotMinimap")
 
 	if cavebotMinimap and not cavebotMinimap:isDestroyed() then
 		return cavebotMinimap
 	end
 
-	local var_33_2 = getLayoutWidget(getLayoutRoot(layoutRoot, true), "minimapBorder")
+	local horizontalMinimapBorder = getLayoutWidget(getLayoutRoot(layoutRoot, true), "minimapBorder")
 
-	return var_33_2 and var_33_2:getChildById("cavebotMinimap")
+	return horizontalMinimapBorder and horizontalMinimapBorder:getChildById("cavebotMinimap")
 end
 
-local function var_0_35(arg_34_0)
-	if not arg_34_0 or arg_34_0:isDestroyed() then
+local function loadCavebotMinimapMarkers(cavebotMinimap)
+	if not cavebotMinimap or cavebotMinimap:isDestroyed() then
 		return
 	end
 
-	arg_34_0:load()
+	cavebotMinimap:load()
 
-	if not arg_34_0.cavebotStandardFlagsLoaded then
-		applyBundledMarkers(arg_34_0)
+	if not cavebotMinimap.cavebotStandardFlagsLoaded then
+		applyBundledMarkers(cavebotMinimap)
 
-		arg_34_0.cavebotStandardFlagsLoaded = true
+		cavebotMinimap.cavebotStandardFlagsLoaded = true
 	else
-		arg_34_0:scheduleBundledFlagsRefresh()
+		cavebotMinimap:scheduleBundledFlagsRefresh()
 	end
 end
 
-local function var_0_36()
+local function getActiveMinimapWidget()
 	if visible then
-		local var_35_0 = syncMinimapLayoutAliases(mapController.ui)
+		local cavebotMinimap = syncMinimapLayoutAliases(mapController.ui)
 
-		if var_35_0 and not var_35_0:isDestroyed() then
-			return var_35_0
+		if cavebotMinimap and not cavebotMinimap:isDestroyed() then
+			return cavebotMinimap
 		end
 	end
 
 	return findMinimapWidget(mapController.ui)
 end
 
-local function var_0_37()
+local function updateCavebotMapToggleButtons()
 	local ui = mapController.ui
 
 	if not ui or ui:isDestroyed() then
 		return
 	end
 
-	for unusedValue, iter_36_1 in ipairs({
+	for unusedValue, isHorizontalLayout in ipairs({
 		false,
 		true
 	}) do
-		local var_36_1 = getLayoutWidget(getLayoutRoot(ui, iter_36_1), "cavebotMap")
+		local cavebotMapButton = getLayoutWidget(getLayoutRoot(ui, isHorizontalLayout), "cavebotMap")
 
-		if var_36_1 and not var_36_1:isDestroyed() then
-			var_36_1:setOn(visible)
-			var_36_1:setTooltip(tr(visible and "Show the regular minimap." or "Show the Cavebot route map."))
+		if cavebotMapButton and not cavebotMapButton:isDestroyed() then
+			cavebotMapButton:setOn(visible)
+			cavebotMapButton:setTooltip(tr(visible and "Show the regular minimap." or "Show the Cavebot route map."))
 		end
 	end
 end
 
-local function var_0_38()
-	local var_37_0 = findMinimapWidget(mapController.ui)
-	local var_37_1 = syncMinimapLayoutAliases(mapController.ui)
+local function updateMinimapViewVisibility()
+	local regularMinimap = findMinimapWidget(mapController.ui)
+	local cavebotMinimap = syncMinimapLayoutAliases(mapController.ui)
 
-	if var_37_0 and not var_37_0:isDestroyed() then
-		var_37_0:setVisible(not visible)
+	if regularMinimap and not regularMinimap:isDestroyed() then
+		regularMinimap:setVisible(not visible)
 
 		if not visible then
-			var_37_0:raise()
+			regularMinimap:raise()
 		end
 	end
 
-	if var_37_1 and not var_37_1:isDestroyed() then
-		var_37_1:setVisible(visible)
+	if cavebotMinimap and not cavebotMinimap:isDestroyed() then
+		cavebotMinimap:setVisible(visible)
 
 		if visible then
-			var_37_1:raise()
+			cavebotMinimap:raise()
 		end
 	end
 
-	var_0_37()
+	updateCavebotMapToggleButtons()
 end
 
-local function var_0_39(arg_38_0)
-	local var_38_0 = findMinimapWidget(mapController.ui)
-	local var_38_1 = syncMinimapLayoutAliases(mapController.ui)
+local function setCavebotMapVisible(requestedVisible)
+	local regularMinimap = findMinimapWidget(mapController.ui)
+	local cavebotMinimap = syncMinimapLayoutAliases(mapController.ui)
 	local game_helper = modules.game_helper
-	local var_38_3 = visible
+	local wasCavebotMapVisible = visible
 
-	arg_38_0 = arg_38_0 == true
+	requestedVisible = requestedVisible == true
 
-	if arg_38_0 then
-		var_0_35(var_38_1)
+	if requestedVisible then
+		loadCavebotMinimapMarkers(cavebotMinimap)
 
-		local zoom = var_38_0 and not var_38_0:isDestroyed() and var_38_0:getZoom()
+		local zoom = regularMinimap and not regularMinimap:isDestroyed() and regularMinimap:getZoom()
 
-		visible = (var_38_1 and not var_38_1:isDestroyed() and game_helper and game_helper.setCavebotMinimapView and game_helper.setCavebotMinimapView(var_38_1, true)) == true
+		visible = (cavebotMinimap and not cavebotMinimap:isDestroyed() and game_helper and game_helper.setCavebotMinimapView and game_helper.setCavebotMinimapView(cavebotMinimap, true)) == true
 
 		if visible then
 			if zoom then
-				var_38_1:setZoom(zoom)
+				cavebotMinimap:setZoom(zoom)
 			end
 
 			local localPlayer = g_game.getLocalPlayer()
@@ -574,28 +574,28 @@ local function var_0_39(arg_38_0)
 			end
 		end
 	else
-		if var_38_3 and var_38_0 and not var_38_0:isDestroyed() and var_38_1 and not var_38_1:isDestroyed() then
-			local zoom = var_38_1:getZoom()
+		if wasCavebotMapVisible and regularMinimap and not regularMinimap:isDestroyed() and cavebotMinimap and not cavebotMinimap:isDestroyed() then
+			local zoom = cavebotMinimap:getZoom()
 
 			if zoom then
-				var_38_0:setZoom(zoom)
+				regularMinimap:setZoom(zoom)
 			end
 		end
 
 		if game_helper and game_helper.setCavebotMinimapView then
-			game_helper.setCavebotMinimapView(var_38_1, false)
+			game_helper.setCavebotMinimapView(cavebotMinimap, false)
 		end
 
 		visible = false
 	end
 
-	var_0_38()
+	updateMinimapViewVisibility()
 	refreshVirtualFloors()
 
-	return visible == arg_38_0
+	return visible == requestedVisible
 end
 
-local function var_0_40(layoutRoot)
+local function updateMinimapLayoutAliases(layoutRoot)
 	local ui = mapController.ui
 
 	if not ui or ui:isDestroyed() or not layoutRoot or layoutRoot:isDestroyed() then
@@ -832,26 +832,26 @@ local function applyHorizontalPanelLayout(horizontalRoot, side)
 
 	local borderId = "minimapBorder"
 	local fullMap = getLayoutWidget(horizontalRoot, "fullMap")
-	local var_50_2 = getLayoutWidget(horizontalRoot, "cavebotMap")
+	local cavebotMapButton = getLayoutWidget(horizontalRoot, "cavebotMap")
 	local rose = getLayoutWidget(horizontalRoot, "minimapControls")
 	local drag = getLayoutWidget(horizontalRoot, "rosePanel")
 	local dragHandle = getLayoutWidget(horizontalRoot, "horizontalDragHandle")
 
-	if not fullMap or not var_50_2 or not rose or not drag or not dragHandle then
+	if not fullMap or not cavebotMapButton or not rose or not drag or not dragHandle then
 		return
 	end
 
 	local mirror = side == "left"
 
 	if mirror then
-		var_50_2:breakAnchors()
-		var_50_2:addAnchor(AnchorRight, borderId, AnchorRight)
-		var_50_2:addAnchor(AnchorBottom, borderId, AnchorBottom)
-		var_50_2:setMarginRight(3)
-		var_50_2:setMarginLeft(0)
-		var_50_2:setMarginBottom(3)
+		cavebotMapButton:breakAnchors()
+		cavebotMapButton:addAnchor(AnchorRight, borderId, AnchorRight)
+		cavebotMapButton:addAnchor(AnchorBottom, borderId, AnchorBottom)
+		cavebotMapButton:setMarginRight(3)
+		cavebotMapButton:setMarginLeft(0)
+		cavebotMapButton:setMarginBottom(3)
 		fullMap:breakAnchors()
-		fullMap:addAnchor(AnchorRight, var_50_2:getId(), AnchorLeft)
+		fullMap:addAnchor(AnchorRight, cavebotMapButton:getId(), AnchorLeft)
 		fullMap:addAnchor(AnchorBottom, borderId, AnchorBottom)
 		fullMap:setMarginRight(3)
 		fullMap:setMarginLeft(0)
@@ -882,12 +882,12 @@ local function applyHorizontalPanelLayout(horizontalRoot, side)
 		fullMap:setMarginLeft(3)
 		fullMap:setMarginRight(0)
 		fullMap:setMarginBottom(3)
-		var_50_2:breakAnchors()
-		var_50_2:addAnchor(AnchorLeft, fullMap:getId(), AnchorRight)
-		var_50_2:addAnchor(AnchorBottom, borderId, AnchorBottom)
-		var_50_2:setMarginLeft(3)
-		var_50_2:setMarginRight(0)
-		var_50_2:setMarginBottom(3)
+		cavebotMapButton:breakAnchors()
+		cavebotMapButton:addAnchor(AnchorLeft, fullMap:getId(), AnchorRight)
+		cavebotMapButton:addAnchor(AnchorBottom, borderId, AnchorBottom)
+		cavebotMapButton:setMarginLeft(3)
+		cavebotMapButton:setMarginRight(0)
+		cavebotMapButton:setMarginBottom(3)
 		rose:breakAnchors()
 		rose:addAnchor(AnchorRight, borderId, AnchorRight)
 		rose:addAnchor(AnchorBottom, borderId, AnchorBottom)
@@ -915,36 +915,36 @@ local function applyHorizontalPanelLayout(horizontalRoot, side)
 end
 
 local function applyLayoutMode(isHorizontal, container)
-	local var_51_0 = mapController.ui
+	local minimapWindow = mapController.ui
 
-	if not var_51_0 or var_51_0:isDestroyed() then
+	if not minimapWindow or minimapWindow:isDestroyed() then
 		return
 	end
 
-	local ui = getLayoutRoot(var_51_0, false)
-	local var_51_2 = getLayoutRoot(var_51_0, true)
+	local ui = getLayoutRoot(minimapWindow, false)
+	local horizontalLayout = getLayoutRoot(minimapWindow, true)
 
-	if not ui or ui:isDestroyed() or not var_51_2 or var_51_2:isDestroyed() then
+	if not ui or ui:isDestroyed() or not horizontalLayout or horizontalLayout:isDestroyed() then
 		return
 	end
 
 	local showHorizontal = isHorizontal == true
 	local horizontalSide = showHorizontal and resolveHorizontalSide(container) or nil
-	local dragHandle = getLayoutWidget(var_51_2, "horizontalDragHandle")
+	local dragHandle = getLayoutWidget(horizontalLayout, "horizontalDragHandle")
 
-	setPhantomStyleBackgroundVisible(var_51_0, not showHorizontal)
+	setPhantomStyleBackgroundVisible(minimapWindow, not showHorizontal)
 
 	if not showHorizontal and visible then
-		var_0_39(false)
+		setCavebotMapVisible(false)
 	end
 
-	if ui:isVisible() == not showHorizontal and var_51_2:isVisible() == showHorizontal then
+	if ui:isVisible() == not showHorizontal and horizontalLayout:isVisible() == showHorizontal then
 		if showHorizontal then
 			if lastHorizontalSide ~= horizontalSide then
-				applyHorizontalPanelLayout(var_51_2, horizontalSide)
+				applyHorizontalPanelLayout(horizontalLayout, horizontalSide)
 				addEvent(function()
-					if var_51_0 and not var_51_0:isDestroyed() then
-						var_51_0:updateLayout()
+					if minimapWindow and not minimapWindow:isDestroyed() then
+						minimapWindow:updateLayout()
 					end
 				end)
 			end
@@ -959,32 +959,32 @@ local function applyLayoutMode(isHorizontal, container)
 		return
 	end
 
-	local var_51_6 = findMinimapWidget(var_51_0)
-	local var_51_7 = syncMinimapLayoutAliases(var_51_0)
+	local regularMinimap = findMinimapWidget(minimapWindow)
+	local cavebotMinimap = syncMinimapLayoutAliases(minimapWindow)
 
 	ui:setVisible(not showHorizontal)
-	var_51_2:setVisible(showHorizontal)
+	horizontalLayout:setVisible(showHorizontal)
 
-	local var_51_8 = showHorizontal and var_51_2 or ui
-	local var_51_9 = getLayoutWidget(var_51_8, "minimapBorder")
+	local activeLayout = showHorizontal and horizontalLayout or ui
+	local minimapBorder = getLayoutWidget(activeLayout, "minimapBorder")
 
-	if var_51_6 and not var_51_6:isDestroyed() and var_51_9 and not var_51_9:isDestroyed() and var_51_6:getParent() ~= var_51_9 then
-		var_51_6:setParent(var_51_9)
-		var_51_6:fill("parent")
-		var_51_6:setMargin(1)
+	if regularMinimap and not regularMinimap:isDestroyed() and minimapBorder and not minimapBorder:isDestroyed() and regularMinimap:getParent() ~= minimapBorder then
+		regularMinimap:setParent(minimapBorder)
+		regularMinimap:fill("parent")
+		regularMinimap:setMargin(1)
 	end
 
-	if var_51_7 and not var_51_7:isDestroyed() and var_51_9 and not var_51_9:isDestroyed() and var_51_7:getParent() ~= var_51_9 then
-		var_51_7:setParent(var_51_9)
-		var_51_7:fill("parent")
-		var_51_7:setMargin(1)
+	if cavebotMinimap and not cavebotMinimap:isDestroyed() and minimapBorder and not minimapBorder:isDestroyed() and cavebotMinimap:getParent() ~= minimapBorder then
+		cavebotMinimap:setParent(minimapBorder)
+		cavebotMinimap:fill("parent")
+		cavebotMinimap:setMargin(1)
 	end
 
-	var_0_40(var_51_8)
-	var_0_38()
+	updateMinimapLayoutAliases(activeLayout)
+	updateMinimapViewVisibility()
 
 	if showHorizontal then
-		applyHorizontalPanelLayout(var_51_2, horizontalSide)
+		applyHorizontalPanelLayout(horizontalLayout, horizontalSide)
 	else
 		lastHorizontalSide = nil
 	end
@@ -994,14 +994,14 @@ local function applyLayoutMode(isHorizontal, container)
 	end
 
 	addEvent(function()
-		if not var_51_0 or var_51_0:isDestroyed() then
+		if not minimapWindow or minimapWindow:isDestroyed() then
 			return
 		end
 
-		var_51_0:updateLayout()
+		minimapWindow:updateLayout()
 
-		if not showHorizontal and var_51_0.minimapBorder and not var_51_0.minimapBorder:isDestroyed() then
-			var_51_0.minimapBorder:setSize({
+		if not showHorizontal and minimapWindow.minimapBorder and not minimapWindow.minimapBorder:isDestroyed() then
+			minimapWindow.minimapBorder:setSize({
 				height = 111,
 				width = 108
 			})
@@ -1110,8 +1110,8 @@ function onChangeWorldTime(hour, minute)
 end
 
 function mapController.onInit(self)
-	var_0_14()
-	var_0_40(getLayoutRoot(self.ui, false))
+	bindMinimapKeybinds()
+	updateMinimapLayoutAliases(getLayoutRoot(self.ui, false))
 
 	local mini = findMinimapWidget(self.ui)
 
@@ -1150,11 +1150,11 @@ function mapController.onInit(self)
 	end
 
 	applyContainerLayout(self.ui:getParent())
-	var_0_39(false)
+	setCavebotMapVisible(false)
 end
 
 function mapController.onGameStart(self)
-	var_0_39(false)
+	setCavebotMapVisible(false)
 	mapController:registerEvents(g_game, {
 		onChangeWorldTime = onChangeWorldTime,
 		onUpdatePlayerPartyPosition = onUpdatePlayerPartyPosition
@@ -1178,7 +1178,7 @@ function mapController.onGameStart(self)
 end
 
 function mapController.onGameEnd(self)
-	var_0_39(false)
+	setCavebotMapVisible(false)
 
 	local minimap = self.ui.minimapBorder.minimap
 
@@ -1187,30 +1187,30 @@ function mapController.onGameEnd(self)
 end
 
 function mapController.onTerminate(unusedArgument)
-	var_0_39(false)
-	var_0_15()
+	setCavebotMapVisible(false)
+	unbindMinimapKeybinds()
 
 	persistentMinimapDataLoaded = false
 end
 
 function zoomIn()
-	local var_64_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if var_64_0 then
-		var_64_0:zoomIn()
+	if activeMinimap then
+		activeMinimap:zoomIn()
 	end
 end
 
 function zoomOut()
-	local var_65_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if var_65_0 then
-		var_65_0:zoomOut()
+	if activeMinimap then
+		activeMinimap:zoomOut()
 	end
 end
 
 function toggleCavebotMap()
-	return var_0_39(not visible)
+	return setCavebotMapVisible(not visible)
 end
 
 function getMinimapZoomLevel()
@@ -1280,13 +1280,13 @@ function upLayer()
 		return
 	end
 
-	local var_70_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if not var_70_0 then
+	if not activeMinimap then
 		return
 	end
 
-	var_70_0:floorUp()
+	activeMinimap:floorUp()
 
 	virtualFloor = virtualFloor - 1
 
@@ -1298,55 +1298,55 @@ function downLayer()
 		return
 	end
 
-	local var_71_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if not var_71_0 then
+	if not activeMinimap then
 		return
 	end
 
-	var_71_0:floorDown()
+	activeMinimap:floorDown()
 
 	virtualFloor = virtualFloor + 1
 
 	refreshVirtualFloors()
 end
 
-function onClickRoseButton(dir, arg_72_1)
-	arg_72_1 = arg_72_1 or 1
+function onClickRoseButton(dir, panDistance)
+	panDistance = panDistance or 1
 
-	local var_72_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if not var_72_0 then
+	if not activeMinimap then
 		return
 	end
 
 	if dir == "north" then
-		var_72_0:move(0, arg_72_1)
+		activeMinimap:move(0, panDistance)
 	elseif dir == "north-east" then
-		var_72_0:move(-arg_72_1, arg_72_1)
+		activeMinimap:move(-panDistance, panDistance)
 	elseif dir == "east" then
-		var_72_0:move(-arg_72_1, 0)
+		activeMinimap:move(-panDistance, 0)
 	elseif dir == "south-east" then
-		var_72_0:move(-arg_72_1, -arg_72_1)
+		activeMinimap:move(-panDistance, -panDistance)
 	elseif dir == "south" then
-		var_72_0:move(0, -arg_72_1)
+		activeMinimap:move(0, -panDistance)
 	elseif dir == "south-west" then
-		var_72_0:move(arg_72_1, -arg_72_1)
+		activeMinimap:move(panDistance, -panDistance)
 	elseif dir == "west" then
-		var_72_0:move(arg_72_1, 0)
+		activeMinimap:move(panDistance, 0)
 	elseif dir == "north-west" then
-		var_72_0:move(arg_72_1, arg_72_1)
+		activeMinimap:move(panDistance, panDistance)
 	end
 end
 
 function resetMap()
-	local var_73_0 = var_0_36()
+	local activeMinimap = getActiveMinimapWidget()
 
-	if not var_73_0 then
+	if not activeMinimap then
 		return
 	end
 
-	var_73_0:reset()
+	activeMinimap:reset()
 
 	local player = g_game.getLocalPlayer()
 

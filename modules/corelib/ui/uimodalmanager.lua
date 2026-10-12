@@ -38,14 +38,14 @@ local function releaseModalHotkeyBlock()
 	end
 end
 
-local function var_0_9(arg_3_0)
-	if not arg_3_0 then
+local function destroyEntryBlocker(entry)
+	if not entry then
 		return
 	end
 
-	local blocker = arg_3_0.blocker
+	local blocker = entry.blocker
 
-	arg_3_0.blocker = nil
+	entry.blocker = nil
 
 	if blocker and isWidgetAlive(blocker) then
 		pcall(function()
@@ -59,7 +59,7 @@ local function pruneStack()
 		local entry = modalStack[i]
 
 		if not isWidgetAlive(entry.widget) then
-			var_0_9(entry)
+			destroyEntryBlocker(entry)
 
 			entry.widget = nil
 			entry.opts = nil
@@ -195,11 +195,11 @@ local function pruneOrphanBlockersInWidget(widget, activeBlockers)
 	local children = widget:getChildren()
 
 	for i = 1, #children do
-		local var_16_1 = children[i]
+		local childWidget = children[i]
 
 		children[i] = nil
 
-		pruneOrphanBlockersInWidget(var_16_1, activeBlockers)
+		pruneOrphanBlockersInWidget(childWidget, activeBlockers)
 	end
 end
 
@@ -250,7 +250,7 @@ local function releaseModalEntry(entry, hideWidget, runCloseCallback)
 		invokeCloseCallback(entry)
 	end
 
-	var_0_9(entry)
+	destroyEntryBlocker(entry)
 
 	local widget = entry.widget
 
@@ -270,25 +270,25 @@ local function releaseModalEntry(entry, hideWidget, runCloseCallback)
 	end
 end
 
-local function var_0_21(arg_24_0)
-	if not isWidgetAlive(arg_24_0) or not arg_24_0.getClassName then
+local function isTextEditWidget(widget)
+	if not isWidgetAlive(widget) or not widget.getClassName then
 		return false
 	end
 
-	return arg_24_0:getClassName() == "UITextEditBox"
+	return widget:getClassName() == "UITextEditBox"
 end
 
-local function var_0_22(arg_25_0)
+local function hasFocusedTextEdit(modalWidget)
 	local focusedWidget = g_ui.getFocusedWidget and g_ui.getFocusedWidget()
 
-	if not var_0_21(focusedWidget) then
+	if not isTextEditWidget(focusedWidget) then
 		return false
 	end
 
 	local parent = focusedWidget
 
 	while parent do
-		if parent == arg_25_0 then
+		if parent == modalWidget then
 			return true
 		end
 
@@ -298,16 +298,16 @@ local function var_0_22(arg_25_0)
 	return false
 end
 
-local function var_0_23(arg_26_0)
-	if not isWidgetAlive(arg_26_0) then
+local function resolveClickableTab(widget)
+	if not isWidgetAlive(widget) then
 		return nil
 	end
 
-	if arg_26_0.onClick then
-		return arg_26_0
+	if widget.onClick then
+		return widget
 	end
 
-	local button = arg_26_0.getChildById and arg_26_0:getChildById("button")
+	local button = widget.getChildById and widget:getChildById("button")
 
 	if isWidgetAlive(button) and button.onClick then
 		return button
@@ -316,148 +316,148 @@ local function var_0_23(arg_26_0)
 	return nil
 end
 
-local function var_0_24(arg_27_0)
-	if not isWidgetAlive(arg_27_0) or not arg_27_0.recursiveGetChildById then
+local function collectModalTabs(modalWidget)
+	if not isWidgetAlive(modalWidget) or not modalWidget.recursiveGetChildById then
 		return nil
 	end
 
-	local menus = arg_27_0:recursiveGetChildById("menus")
+	local menus = modalWidget:recursiveGetChildById("menus")
 
 	if not isWidgetAlive(menus) or not menus.getChildren then
 		return nil
 	end
 
-	local var_27_1 = {}
+	local tabButtons = {}
 	local children = menus:getChildren()
 
-	for iter_27_0 = 1, #children do
-		local var_27_3 = var_0_23(children[iter_27_0])
+	for childIndex = 1, #children do
+		local tabButton = resolveClickableTab(children[childIndex])
 
-		if var_27_3 then
-			var_27_1[#var_27_1 + 1] = var_27_3
+		if tabButton then
+			tabButtons[#tabButtons + 1] = tabButton
 		end
 	end
 
-	if #var_27_1 < 2 then
+	if #tabButtons < 2 then
 		return nil
 	end
 
-	return var_27_1
+	return tabButtons
 end
 
-local function var_0_25(arg_28_0, arg_28_1)
-	arg_28_1 = arg_28_1 or {}
+local function getEnabledModalTabs(modalWidget, options)
+	options = options or {}
 
-	if arg_28_1.tabs == false then
+	if options.tabs == false then
 		return nil
 	end
 
-	return var_0_24(arg_28_0)
+	return collectModalTabs(modalWidget)
 end
 
-local function var_0_26(arg_29_0)
-	if not isWidgetAlive(arg_29_0) then
+local function isTabSelected(tabButton)
+	if not isWidgetAlive(tabButton) then
 		return false
 	end
 
-	if arg_29_0.isOn and arg_29_0:isOn() then
+	if tabButton.isOn and tabButton:isOn() then
 		return true
 	end
 
-	if arg_29_0.isChecked and arg_29_0:isChecked() then
+	if tabButton.isChecked and tabButton:isChecked() then
 		return true
 	end
 
 	return false
 end
 
-local function var_0_27(arg_30_0)
-	for iter_30_0 = 1, #arg_30_0 do
-		if var_0_26(arg_30_0[iter_30_0]) then
-			return iter_30_0
+local function findSelectedTabIndex(tabButtons)
+	for tabIndex = 1, #tabButtons do
+		if isTabSelected(tabButtons[tabIndex]) then
+			return tabIndex
 		end
 	end
 
 	return 1
 end
 
-local function var_0_28(arg_31_0)
-	if type(arg_31_0) == "function" then
-		arg_31_0()
+local function activateTab(tabAction)
+	if type(tabAction) == "function" then
+		tabAction()
 
 		return
 	end
 
-	if isWidgetAlive(arg_31_0) and arg_31_0.onClick then
-		signalcall(arg_31_0.onClick, arg_31_0)
+	if isWidgetAlive(tabAction) and tabAction.onClick then
+		signalcall(tabAction.onClick, tabAction)
 	end
 end
 
-function g_modalManager.handleTabKey(arg_32_0, arg_32_1)
-	if arg_32_0 ~= KeyTab then
+function g_modalManager.handleTabKey(keyCode, keyboardModifiers)
+	if keyCode ~= KeyTab then
 		return false
 	end
 
-	if arg_32_1 ~= KeyboardNoModifier and arg_32_1 ~= KeyboardShiftModifier then
+	if keyboardModifiers ~= KeyboardNoModifier and keyboardModifiers ~= KeyboardShiftModifier then
 		return false
 	end
 
-	local var_32_0 = modalStack[#modalStack]
+	local topEntry = modalStack[#modalStack]
 
-	if not var_32_0 or not isWidgetAlive(var_32_0.widget) then
+	if not topEntry or not isWidgetAlive(topEntry.widget) then
 		return false
 	end
 
-	if var_0_22(var_32_0.widget) then
+	if hasFocusedTextEdit(topEntry.widget) then
 		return false
 	end
 
-	local var_32_1 = var_0_25(var_32_0.widget, var_32_0.opts)
+	local tabButtons = getEnabledModalTabs(topEntry.widget, topEntry.opts)
 
-	if not var_32_1 or #var_32_1 < 2 then
+	if not tabButtons or #tabButtons < 2 then
 		return false
 	end
 
-	local var_32_2 = var_0_27(var_32_1) + (arg_32_1 == KeyboardShiftModifier and -1 or 1)
+	local nextTabIndex = findSelectedTabIndex(tabButtons) + (keyboardModifiers == KeyboardShiftModifier and -1 or 1)
 
-	if var_32_2 < 1 then
-		var_32_2 = #var_32_1
-	elseif var_32_2 > #var_32_1 then
-		var_32_2 = 1
+	if nextTabIndex < 1 then
+		nextTabIndex = #tabButtons
+	elseif nextTabIndex > #tabButtons then
+		nextTabIndex = 1
 	end
 
-	var_0_28(var_32_1[var_32_2])
+	activateTab(tabButtons[nextTabIndex])
 	activateTop()
 
 	return true
 end
 
-function g_modalManager.hookSearchEdit(arg_33_0)
-	if not isWidgetAlive(arg_33_0) or arg_33_0._modalSearchTabHooked then
+function g_modalManager.hookSearchEdit(searchEdit)
+	if not isWidgetAlive(searchEdit) or searchEdit._modalSearchTabHooked then
 		return
 	end
 
-	arg_33_0._modalSearchTabHooked = true
+	searchEdit._modalSearchTabHooked = true
 
-	connect(arg_33_0, {
-		onKeyDown = function(unusedArgument, arg_34_1, arg_34_2)
-			return g_modalManager.handleTabKey(arg_34_1, arg_34_2)
+	connect(searchEdit, {
+		onKeyDown = function(unusedArgument, keyCode, keyboardModifiers)
+			return g_modalManager.handleTabKey(keyCode, keyboardModifiers)
 		end
 	})
 end
 
-local function handleKeyDown(unusedArgument, arg_35_1, arg_35_2)
-	return g_modalManager.handleTabKey(arg_35_1, arg_35_2)
+local function handleKeyDown(unusedArgument, keyCode, keyboardModifiers)
+	return g_modalManager.handleTabKey(keyCode, keyboardModifiers)
 end
 
-local function var_0_30(arg_36_0)
-	if arg_36_0._modalTabKeysConnected then
+local function connectModalTabKeys(modalWidget)
+	if modalWidget._modalTabKeysConnected then
 		return
 	end
 
-	arg_36_0._modalTabKeysConnected = true
+	modalWidget._modalTabKeysConnected = true
 
-	connect(arg_36_0, {
+	connect(modalWidget, {
 		onKeyDown = handleKeyDown
 	})
 end
@@ -495,20 +495,20 @@ function g_modalManager.show(widget, opts)
 
 	opts = opts or {}
 
-	local ok, var_40_1 = pcall(createBlocker, widget, opts)
+	local ok, blocker = pcall(createBlocker, widget, opts)
 
-	if not ok or not var_40_1 then
+	if not ok or not blocker then
 		return
 	end
 
 	table.insert(modalStack, {
 		widget = widget,
-		blocker = var_40_1,
+		blocker = blocker,
 		opts = opts
 	})
 
 	if opts.tabs ~= false then
-		var_0_30(widget)
+		connectModalTabKeys(widget)
 	end
 
 	if #modalStack == 1 then
@@ -630,7 +630,7 @@ function g_modalManager.dismissAll()
 		local entry = table.remove(modalStack)
 
 		invokeCloseCallback(entry)
-		var_0_9(entry)
+		destroyEntryBlocker(entry)
 
 		local widget = entry.widget
 

@@ -1,4 +1,4 @@
-﻿local smartWalkDirs = {}
+local smartWalkDirs = {}
 local smartWalkDir
 local walkEvent
 local lastTurn = 0
@@ -13,9 +13,9 @@ local walkRepeatActive = false
 local continueWalk
 local activeWalkKeys = {}
 local walkKeyDirs = {}
-local var_0_15 = {}
-local var_0_16 = "Movement"
-local var_0_17 = {
+local boundMovementKeys = {}
+local MOVEMENT_KEYBIND_CATEGORY = "Movement"
+local MOVEMENT_KEYBIND_ACTIONS = {
 	{
 		action = "Go East",
 		defaultKey = "D",
@@ -58,31 +58,31 @@ local var_0_17 = {
 	}
 }
 
-local function var_0_18()
-	for unusedValue, entry in ipairs(var_0_17) do
-		Keybind.new(var_0_16, entry.action, {
+local function registerMovementKeybinds()
+	for unusedValue, entry in ipairs(MOVEMENT_KEYBIND_ACTIONS) do
+		Keybind.new(MOVEMENT_KEYBIND_CATEGORY, entry.action, {
 			[CHAT_MODE.ON] = "",
 			[CHAT_MODE.OFF] = entry.defaultKey
 		}, "", true)
 	end
 end
 
-local function var_0_19()
-	for unusedValue, entry in ipairs(var_0_17) do
-		Keybind.delete(var_0_16, entry.action)
+local function unregisterMovementKeybinds()
+	for unusedValue, entry in ipairs(MOVEMENT_KEYBIND_ACTIONS) do
+		Keybind.delete(MOVEMENT_KEYBIND_CATEGORY, entry.action)
 	end
 end
 
 local function getWalkOptionNumber(name)
-	local var_3_0
+	local optionValue
 
 	if modules.client_options and iscallable(modules.client_options.getOption) then
-		var_3_0 = modules.client_options.getOption(name)
+		optionValue = modules.client_options.getOption(name)
 	else
-		var_3_0 = g_settings.getNumber(name)
+		optionValue = g_settings.getNumber(name)
 	end
 
-	return tonumber(var_3_0) or 0
+	return tonumber(optionValue) or 0
 end
 
 local function getKeyboardDelay()
@@ -704,12 +704,12 @@ local function onTeleport(player, newPos, oldPos)
 		return
 	end
 
-	local var_32_0 = Position.offsetX(newPos, oldPos)
+	local offsetX = Position.offsetX(newPos, oldPos)
 	local offsetY = Position.offsetY(newPos, oldPos)
 	local offsetZ = Position.offsetZ(newPos, oldPos)
 	local TELEPORT_DELAY = getWalkOptionNumber("walkTeleportDelay")
 	local STAIRS_DELAY = getWalkOptionNumber("walkStairsDelay")
-	local delay = (var_32_0 >= 3 or offsetY >= 3 or offsetZ >= 2) and TELEPORT_DELAY or STAIRS_DELAY
+	local delay = (offsetX >= 3 or offsetY >= 3 or offsetZ >= 2) and TELEPORT_DELAY or STAIRS_DELAY
 	local numericValue
 
 	numericValue = tonumber(delay) or 100
@@ -748,7 +748,7 @@ local function onCancelWalk(player)
 end
 
 function WalkController.onInit(unusedArgument)
-	var_0_18()
+	registerMovementKeybinds()
 	bindKeys()
 	rebindMovementKeys(Keybind.chatMode)
 	scheduleEvent(function()
@@ -760,7 +760,7 @@ function WalkController.onTerminate(unusedArgument)
 	abortSmartWalk()
 	unbindMovementKeys()
 	unbindKeys()
-	var_0_19()
+	unregisterMovementKeybinds()
 end
 
 function WalkController.onGameStart(self)
@@ -775,8 +775,8 @@ function WalkController.onGameStart(self)
 		onAutoWalk = onAutoWalk
 	})
 
-	modules.game_interface.getRootPanel().onFocusChange = function(unusedArgument, arg_40_1)
-		if arg_40_1 then
+	modules.game_interface.getRootPanel().onFocusChange = function(unusedArgument, isFocused)
+		if isFocused then
 			return
 		end
 
@@ -899,12 +899,12 @@ function bindTurnKey(key, dir)
 	g_keyboard.bindKeyUp(key, handlers.up, gameRootPanel)
 end
 
-function unbindWalkKey(key, arg_51_1)
+function unbindWalkKey(key, preservePressedKeys)
 	local gameRootPanel = modules.game_interface.getRootPanel()
 	local handlers = walkKeyHandlers[key]
 
 	if handlers then
-		if activeWalkKeys[key] and not arg_51_1 then
+		if activeWalkKeys[key] and not preservePressedKeys then
 			abortSmartWalk()
 		end
 
@@ -979,26 +979,26 @@ function syncWasdTurnKeyLayout(enabled)
 	rebindTurnKeys()
 end
 
-function getMovementKeyDirs(arg_56_0)
-	arg_56_0 = arg_56_0 or Keybind.chatMode
+function getMovementKeyDirs(chatMode)
+	chatMode = chatMode or Keybind.chatMode
 
-	local var_56_0 = {}
-	local var_56_1 = {}
+	local movementKeyEntries = {}
+	local seenKeyCombos = {}
 
-	for unusedValue, entry in ipairs(var_0_17) do
-		local keybindKeys = Keybind.getKeybindKeys(var_0_16, entry.action, arg_56_0)
+	for unusedValue, entry in ipairs(MOVEMENT_KEYBIND_ACTIONS) do
+		local keybindKeys = Keybind.getKeybindKeys(MOVEMENT_KEYBIND_CATEGORY, entry.action, chatMode)
 
-		for unusedValue, iter_56_3 in ipairs({
+		for unusedValue, keySlot in ipairs({
 			"primary",
 			"secondary"
 		}) do
-			local var_56_3 = keybindKeys[iter_56_3]
+			local keyCombo = keybindKeys[keySlot]
 
-			if var_56_3 and var_56_3 ~= "" and not var_56_1[var_56_3] then
-				var_56_1[var_56_3] = true
+			if keyCombo and keyCombo ~= "" and not seenKeyCombos[keyCombo] then
+				seenKeyCombos[keyCombo] = true
 
-				table.insert(var_56_0, {
-					var_56_3,
+				table.insert(movementKeyEntries, {
+					keyCombo,
 					entry.direction,
 					entry.action
 				})
@@ -1006,28 +1006,28 @@ function getMovementKeyDirs(arg_56_0)
 		end
 	end
 
-	return var_56_0
+	return movementKeyEntries
 end
 
-function isMovementKeyBlockedByHotkey(arg_57_0, arg_57_1, arg_57_2)
-	if not arg_57_0 or arg_57_0 == "" then
+function isMovementKeyBlockedByHotkey(keyCombo, movementAction, chatMode)
+	if not keyCombo or keyCombo == "" then
 		return false
 	end
 
-	arg_57_2 = arg_57_2 or Keybind.chatMode
+	chatMode = chatMode or Keybind.chatMode
 
-	if modules.game_actionbar and modules.game_actionbar.isKeyComboUsedOnActionBar and modules.game_actionbar.isKeyComboUsedOnActionBar(arg_57_0, arg_57_2 == CHAT_MODE.ON) then
+	if modules.game_actionbar and modules.game_actionbar.isKeyComboUsedOnActionBar and modules.game_actionbar.isKeyComboUsedOnActionBar(keyCombo, chatMode == CHAT_MODE.ON) then
 		return true
 	end
 
-	if Keybind and Keybind.isKeyComboUsed and Keybind.isKeyComboUsed(arg_57_0, var_0_16, arg_57_1, arg_57_2) then
+	if Keybind and Keybind.isKeyComboUsed and Keybind.isKeyComboUsed(keyCombo, MOVEMENT_KEYBIND_CATEGORY, movementAction, chatMode) then
 		return true
 	end
 
 	return false
 end
 
-local function var_0_61()
+local function captureActiveMovementKeys()
 	local list = {}
 
 	for key, dir in pairs(walkKeyDirs) do
@@ -1039,38 +1039,38 @@ local function var_0_61()
 	return list
 end
 
-local function var_0_62(arg_59_0)
-	if not arg_59_0 then
+local function restoreActiveMovementKeys(previousActiveKeys)
+	if not previousActiveKeys then
 		return
 	end
 
-	local var_59_0 = false
+	local hasPressedMovementKey = false
 
-	for iter_59_0 in pairs(arg_59_0) do
-		local var_59_1 = walkKeyDirs[iter_59_0]
+	for keyCombo in pairs(previousActiveKeys) do
+		local direction = walkKeyDirs[keyCombo]
 
-		if var_59_1 and g_keyboard.isKeyPressed(iter_59_0) then
-			activeWalkKeys[iter_59_0] = true
+		if direction and g_keyboard.isKeyPressed(keyCombo) then
+			activeWalkKeys[keyCombo] = true
 
-			local var_59_2 = false
+			local directionAlreadyTracked = false
 
 			for unusedValue, smartWalkDir in ipairs(smartWalkDirs) do
-				if smartWalkDir == var_59_1 then
-					var_59_2 = true
+				if smartWalkDir == direction then
+					directionAlreadyTracked = true
 
 					break
 				end
 			end
 
-			if not var_59_2 then
-				table.insert(smartWalkDirs, 1, var_59_1)
+			if not directionAlreadyTracked then
+				table.insert(smartWalkDirs, 1, direction)
 			end
 
-			var_59_0 = true
+			hasPressedMovementKey = true
 		end
 	end
 
-	if not var_59_0 then
+	if not hasPressedMovementKey then
 		return
 	end
 
@@ -1083,44 +1083,44 @@ local function var_0_62(arg_59_0)
 	end
 end
 
-function unbindMovementKeys(arg_60_0)
-	for iter_60_0 in pairs(var_0_15) do
-		unbindWalkKey(iter_60_0, arg_60_0)
+function unbindMovementKeys(preservePressedKeys)
+	for keyCombo in pairs(boundMovementKeys) do
+		unbindWalkKey(keyCombo, preservePressedKeys)
 	end
 
-	var_0_15 = {}
+	boundMovementKeys = {}
 end
 
-function getDesiredMovementKeys(arg_61_0)
-	arg_61_0 = arg_61_0 or Keybind.chatMode
+function getDesiredMovementKeys(chatMode)
+	chatMode = chatMode or Keybind.chatMode
 
-	local var_61_0 = {}
+	local desiredKeys = {}
 
-	for unusedValue, entry in ipairs(getMovementKeyDirs(arg_61_0)) do
-		local var_61_1 = entry[1]
-		local var_61_2 = entry[3]
+	for unusedValue, entry in ipairs(getMovementKeyDirs(chatMode)) do
+		local keyCombo = entry[1]
+		local movementAction = entry[3]
 
-		if not isMovementKeyBlockedByHotkey(var_61_1, var_61_2, arg_61_0) then
-			var_61_0[var_61_1] = true
+		if not isMovementKeyBlockedByHotkey(keyCombo, movementAction, chatMode) then
+			desiredKeys[keyCombo] = true
 		end
 	end
 
-	return var_61_0
+	return desiredKeys
 end
 
-function movementKeyBindsNeedSync(arg_62_0)
-	arg_62_0 = arg_62_0 or Keybind.chatMode
+function movementKeyBindsNeedSync(chatMode)
+	chatMode = chatMode or Keybind.chatMode
 
-	local var_62_0 = getDesiredMovementKeys(arg_62_0)
+	local desiredKeys = getDesiredMovementKeys(chatMode)
 
-	for iter_62_0 in pairs(var_62_0) do
-		if not var_0_15[iter_62_0] then
+	for keyCombo in pairs(desiredKeys) do
+		if not boundMovementKeys[keyCombo] then
 			return true
 		end
 	end
 
-	for iter_62_1 in pairs(var_0_15) do
-		if not var_62_0[iter_62_1] then
+	for keyCombo in pairs(boundMovementKeys) do
+		if not desiredKeys[keyCombo] then
 			return true
 		end
 	end
@@ -1128,26 +1128,26 @@ function movementKeyBindsNeedSync(arg_62_0)
 	return false
 end
 
-function rebindMovementKeys(arg_63_0)
-	arg_63_0 = arg_63_0 or Keybind.chatMode
+function rebindMovementKeys(chatMode)
+	chatMode = chatMode or Keybind.chatMode
 
-	local var_63_0 = var_0_61()
+	local previousActiveKeys = captureActiveMovementKeys()
 
 	unbindMovementKeys(true)
 
-	for unusedValue, entry in ipairs(getMovementKeyDirs(arg_63_0)) do
-		local var_63_1 = entry[1]
-		local var_63_2 = entry[2]
-		local var_63_3 = entry[3]
+	for unusedValue, entry in ipairs(getMovementKeyDirs(chatMode)) do
+		local keyCombo = entry[1]
+		local direction = entry[2]
+		local movementAction = entry[3]
 
-		if not isMovementKeyBlockedByHotkey(var_63_1, var_63_3, arg_63_0) then
-			bindWalkKey(var_63_1, var_63_2)
+		if not isMovementKeyBlockedByHotkey(keyCombo, movementAction, chatMode) then
+			bindWalkKey(keyCombo, direction)
 
-			var_0_15[var_63_1] = true
+			boundMovementKeys[keyCombo] = true
 		end
 	end
 
-	var_0_62(var_63_0)
+	restoreActiveMovementKeys(previousActiveKeys)
 end
 
 if modules and modules.game_walk then

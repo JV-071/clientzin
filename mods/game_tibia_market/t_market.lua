@@ -114,10 +114,10 @@ local function setupItemListScrollbar(itemList)
 	scroll:setValue(0)
 	scroll:setMinimum(cache.SCROLL_MARKET_ITEMS.listMin or 0)
 
-	local var_3_1 = cache.SCROLL_MARKET_ITEMS.listFit or 8
+	local visibleRowCount = cache.SCROLL_MARKET_ITEMS.listFit or 8
 	local dataCount = #cache.SCROLL_MARKET_ITEMS.listData
 
-	scroll:setMaximum(math.max(0, dataCount - var_3_1 + 1))
+	scroll:setMaximum(math.max(0, dataCount - visibleRowCount + 1))
 
 	function scroll.onValueChange(self, value, delta)
 		onItemListValueChange(self, value, delta)
@@ -431,34 +431,34 @@ local function resetCreateOfferType()
 	mainMarket.anonymous:setChecked(false)
 end
 
-local function resetMarketViewState(arg_26_0, arg_26_1)
-	return math.min(math.max(math.ceil(arg_26_0 / 50 * arg_26_1), 20), 1000000)
+local function calculateMarketOfferFee(unitPrice, amount)
+	return math.min(math.max(math.ceil(unitPrice / 50 * amount), 20), 1000000)
 end
 
-local function var_0_44()
+local function getOfferAffordabilityError()
 	local numericValue = tonumber(mainMarket.grossAmount.value) or 0
 	local text = tonumber((mainMarket.createOfferAmount:getText():gsub("%D", ""))) or 0
-	local var_27_2 = resetMarketViewState(numericValue, text)
+	local offerFee = calculateMarketOfferFee(numericValue, text)
 
 	if currentActionType == 0 then
-		if text == 0 or getTotalMoney() < numericValue * text + var_27_2 then
+		if text == 0 or getTotalMoney() < numericValue * text + offerFee then
 			return tr("You don't have enough gold to pay the total price.")
 		end
-	elseif var_27_2 > getTotalMoney() then
+	elseif offerFee > getTotalMoney() then
 		return tr("You don't have enough gold to pay the fee.")
 	end
 
 	return nil
 end
 
-local function var_0_45(arg_28_0)
+local function updateCreateOfferButton(isOfferValid)
 	local createButton = mainMarket.createButton
-	local var_28_1 = arg_28_0 and var_0_44() or nil
+	local affordabilityError = isOfferValid and getOfferAffordabilityError() or nil
 
-	createButton:setEnabled(arg_28_0 and not var_28_1)
+	createButton:setEnabled(isOfferValid and not affordabilityError)
 
-	if var_28_1 then
-		createButton:setTooltip(var_28_1)
+	if affordabilityError then
+		createButton:setTooltip(affordabilityError)
 	elseif createButton:getTooltip() then
 		createButton:removeTooltip()
 
@@ -468,7 +468,7 @@ local function var_0_45(arg_28_0)
 	end
 end
 
-local function var_0_46()
+local function resetMarketViewState()
 	if not marketWindow then
 		return
 	end
@@ -744,8 +744,8 @@ function showItemInMarket(item)
 	end
 end
 
-local function var_0_61(unusedArgument, arg_49_1)
-	displayInfoBox(tr("Market Message"), arg_49_1)
+local function onMarketMessage(unusedArgument, message)
+	displayInfoBox(tr("Market Message"), message)
 end
 
 function init()
@@ -789,7 +789,7 @@ function init()
 	connect(Container, {
 		onOpen = onDepotContainerOpen
 	})
-	registerMessageMode(MessageModes.Market, var_0_61)
+	registerMessageMode(MessageModes.Market, onMarketMessage)
 
 	if modules.game_interface then
 		modules.game_interface.addMenuHook("market", tr("Show in Market"), showInMarketCallback, canShowInMarket)
@@ -851,7 +851,7 @@ function terminate()
 	disconnect(g_game, {
 		onGameEnd = onGameEndDepot
 	})
-	unregisterMessageMode(MessageModes.Market, var_0_61)
+	unregisterMessageMode(MessageModes.Market, onMarketMessage)
 
 	playerAtDepot = false
 
@@ -894,7 +894,7 @@ function onMarketLeave()
 end
 
 function hide()
-	var_0_46()
+	resetMarketViewState()
 	resetMarketPreviewPanel()
 	clearMarketWidgetRefs()
 	onClearMainMarket(true)
@@ -952,7 +952,7 @@ function onMarketEscape()
 end
 
 function show()
-	var_0_46()
+	resetMarketViewState()
 	resetMarketPreviewPanel()
 	showMarketWindow()
 
@@ -1061,12 +1061,12 @@ function myOffersButton(widget)
 	end
 end
 
-local function var_0_64(arg_65_0, arg_65_1)
-	if arg_65_0 and arg_65_0.tier ~= nil then
-		return arg_65_0.tier
+local function resolveMarketItemTier(itemInfo, fallbackTier)
+	if itemInfo and itemInfo.tier ~= nil then
+		return itemInfo.tier
 	end
 
-	return arg_65_1 or 0
+	return fallbackTier or 0
 end
 
 function getDepotItemCount(itemId, tier)
@@ -1645,7 +1645,7 @@ function onMarketEnter(offerCount, items)
 
 	depotLockerItems = items
 
-	local var_90_0 = marketWindow:isVisible()
+	local wasMarketVisible = marketWindow:isVisible()
 	local actionId = lastSelectedCategory and lastSelectedCategory:getActionId()
 
 	marketWindow.contentPanel.category.onChildFocusChange = nil
@@ -1685,16 +1685,16 @@ function onMarketEnter(offerCount, items)
 
 	updateCategoryRowColors()
 
-	local var_90_5 = suppressFilterCallbacks
+	local previousSuppressFilterCallbacks = suppressFilterCallbacks
 
 	suppressFilterCallbacks = true
 
 	marketWindow.contentPanel.classFilter:clearOptions()
 	marketWindow.contentPanel.tierFilter:clearOptions()
 
-	suppressFilterCallbacks = var_90_5
+	suppressFilterCallbacks = previousSuppressFilterCallbacks
 
-	if not var_90_0 then
+	if not wasMarketVisible then
 		local itemListScroll = marketWindow:recursiveGetChildById("itemListScroll")
 
 		if itemListScroll then
@@ -1710,7 +1710,7 @@ function onMarketEnter(offerCount, items)
 		onSelectChildCategory(self, selected)
 	end
 
-	if var_90_0 then
+	if wasMarketVisible then
 		if not table.empty(lastSelectedItem) then
 			refreshSelectedItemDepotDisplay()
 		end
@@ -1858,13 +1858,13 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 			widget.piecePrice:setTooltip(comma_value(unitPrice))
 		end
 
-		local var_92_17 = unitPrice <= getTotalMoney() and "#c0c0c0" or "#808080"
+		local offerTextColor = unitPrice <= getTotalMoney() and "#c0c0c0" or "#808080"
 
-		widget.piecePrice:setColor(var_92_17)
-		widget.totalPrice:setColor(var_92_17)
-		widget.name:setColor(var_92_17)
-		widget.amount:setColor(var_92_17)
-		widget.endAt:setColor(var_92_17)
+		widget.piecePrice:setColor(offerTextColor)
+		widget.totalPrice:setColor(offerTextColor)
+		widget.name:setColor(offerTextColor)
+		widget.amount:setColor(offerTextColor)
+		widget.endAt:setColor(offerTextColor)
 		table.insert(cache.SCROLL_SELL_OFFERS.listPool, widget)
 	end
 
@@ -1910,14 +1910,14 @@ function onMarketBrowse(browseState, tier, buyList, sellList)
 end
 
 function onBuyListValueChange(scroll, value, delta)
-	local var_97_0 = math.max(cache.SCROLL_BUY_OFFERS.listMin, value)
+	local firstVisibleOfferIndex = math.max(cache.SCROLL_BUY_OFFERS.listMin, value)
 
-	if var_97_0 + #cache.SCROLL_BUY_OFFERS.listPool - 1 > cache.SCROLL_BUY_OFFERS.listMax then
-		var_97_0 = cache.SCROLL_BUY_OFFERS.listMax - #cache.SCROLL_BUY_OFFERS.listPool + 1
+	if firstVisibleOfferIndex + #cache.SCROLL_BUY_OFFERS.listPool - 1 > cache.SCROLL_BUY_OFFERS.listMax then
+		firstVisibleOfferIndex = cache.SCROLL_BUY_OFFERS.listMax - #cache.SCROLL_BUY_OFFERS.listPool + 1
 	end
 
 	for i, widget in ipairs(cache.SCROLL_BUY_OFFERS.listPool) do
-		local index = var_97_0 + i - 1
+		local index = firstVisibleOfferIndex + i - 1
 		local data = cache.SCROLL_BUY_OFFERS.listData[index]
 
 		if data then
@@ -1962,14 +1962,14 @@ function onBuyListValueChange(scroll, value, delta)
 end
 
 function onSellListValueChange(scroll, value, delta)
-	local var_98_0 = math.max(cache.SCROLL_SELL_OFFERS.listMin, value)
+	local firstVisibleOfferIndex = math.max(cache.SCROLL_SELL_OFFERS.listMin, value)
 
-	if var_98_0 + #cache.SCROLL_SELL_OFFERS.listPool - 1 > cache.SCROLL_SELL_OFFERS.listMax then
-		var_98_0 = cache.SCROLL_SELL_OFFERS.listMax - #cache.SCROLL_SELL_OFFERS.listPool + 1
+	if firstVisibleOfferIndex + #cache.SCROLL_SELL_OFFERS.listPool - 1 > cache.SCROLL_SELL_OFFERS.listMax then
+		firstVisibleOfferIndex = cache.SCROLL_SELL_OFFERS.listMax - #cache.SCROLL_SELL_OFFERS.listPool + 1
 	end
 
 	for i, widget in ipairs(cache.SCROLL_SELL_OFFERS.listPool) do
-		local index = var_98_0 + i - 1
+		local index = firstVisibleOfferIndex + i - 1
 		local data = cache.SCROLL_SELL_OFFERS.listData[index]
 
 		if data then
@@ -2165,7 +2165,7 @@ function createItemWidget(itemList, itemInfo, index, tier)
 	end
 
 	local id = itemInfo.thingType:getId()
-	local t = var_0_64(itemInfo, tier)
+	local t = resolveMarketItemTier(itemInfo, tier)
 	local count = getDepotItemCount(id, t)
 
 	if itemInfo.tier == nil and showLockerOnly and count == 0 and t > 0 then
@@ -2243,11 +2243,11 @@ function onItemListValueChange(scroll, value, delta)
 end
 
 function updateItemWidget(widget, data, index)
-	local var_104_0 = var_0_64(data, sortButtons.tierFilter or 0)
+	local itemTier = resolveMarketItemTier(data, sortButtons.tierFilter or 0)
 	local isSelected = lastSelectedItem.itemId == data.thingType:getId()
 
 	if data.tier ~= nil then
-		isSelected = isSelected and var_104_0 == lastSelectedItem.tier
+		isSelected = isSelected and itemTier == lastSelectedItem.tier
 	end
 
 	widget:setBackgroundColor(isSelected and "#585858" or "#404040")
@@ -2257,9 +2257,9 @@ function updateItemWidget(widget, data, index)
 	end
 
 	local id = data.thingType:getId()
-	local count = getDepotItemCount(id, var_104_0)
+	local count = getDepotItemCount(id, itemTier)
 
-	if data.tier == nil and showLockerOnly and count == 0 and var_104_0 > 0 then
+	if data.tier == nil and showLockerOnly and count == 0 and itemTier > 0 then
 		count = getDepotItemCount(id, 0)
 	end
 
@@ -2279,9 +2279,9 @@ function updateItemWidget(widget, data, index)
 	widget.item:getItem():setCount(count)
 	widget.item:setActionId(index)
 	widget.item:setTooltip(tr("%s%s%s%s", comma_value(count), "x", count > 65000 and "+ " or " ", data.marketData.name))
-	widget.item:setTier(var_104_0)
+	widget.item:setTier(itemTier)
 	setAmount(widget.amount or widget:getChildById("amount"), count)
-	applyMarketItemTierBadge(widget, var_104_0)
+	applyMarketItemTierBadge(widget, itemTier)
 
 	if not widget.name:isTextWrap() then
 		widget.name:setMarginTop(1)
@@ -2403,7 +2403,7 @@ function onClearMainMarket(cleanList)
 
 	mainMarket.sellAcceptButton:setEnabled(false)
 	mainMarket.buyAcceptButton:setEnabled(false)
-	var_0_45(false)
+	updateCreateOfferButton(false)
 	mainMarket.sellOffersList:destroyChildren()
 	mainMarket.buyOffersList:destroyChildren()
 	setMarketAmountScrollRange(mainMarket.amountSellScrollBar, 0, 0)
@@ -2729,7 +2729,7 @@ function onPiecePriceEdit(widget)
 
 		mainMarket.profitAmount:setText(0)
 		mainMarket.feeAmount:setText(0)
-		var_0_45(false)
+		updateCreateOfferButton(false)
 		mainMarket.amountCreateScrollBar:setIncrementStep(25)
 		setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, 0, 0)
 
@@ -2765,7 +2765,7 @@ function onPiecePriceEdit(widget)
 		amount = math.cround(amount, mainMarket.amountCreateScrollBar:getIncrementValue())
 	end
 
-	local fee = resetMarketViewState(numericValue, amount)
+	local fee = calculateMarketOfferFee(numericValue, amount)
 	local thingType = g_things.getThingType(lastSelectedItem.itemId):isStackable() and 64000 or 2000
 	local maxValue = 999999999999
 
@@ -2790,7 +2790,7 @@ function onPiecePriceEdit(widget)
 
 	mainMarket.amountCreateScrollBar:setStep(steps)
 
-	local var_116_10 = false
+	local isOfferValid = false
 
 	if currentActionType == 0 then
 		local grossProfit = numericValue * amount
@@ -2801,7 +2801,7 @@ function onPiecePriceEdit(widget)
 
 		mainMarket.profitAmount:setText(convertGold(grossProfit + fee, true))
 
-		var_116_10 = true
+		isOfferValid = true
 
 		mainMarket.feeAmount:setText(convertGold(fee))
 
@@ -2853,14 +2853,14 @@ function onPiecePriceEdit(widget)
 			else
 				setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, isTibiaCoin and 25 or 1, math.min(thingType, itemCount))
 
-				var_116_10 = true
+				isOfferValid = true
 			end
 		else
 			setMarketAmountScrollRange(mainMarket.amountCreateScrollBar, 0, 0)
 		end
 	end
 
-	var_0_45(var_116_10)
+	updateCreateOfferButton(isOfferValid)
 end
 
 function changeOfferType(widget, primary)
@@ -2897,7 +2897,7 @@ function createMarketOffer()
 	local n = mainMarket.createOfferAmount:getText():gsub("%D", "")
 	local price = tonumber(mainMarket.grossAmount.value)
 
-	if var_0_44() then
+	if getOfferAffordabilityError() then
 		return
 	end
 
@@ -3175,9 +3175,9 @@ function checkSortMarketOptions(itemData)
 		local vocSet = tonumber(md.restrictVocation) or 0
 
 		if vocSet > 0 then
-			local var_126_6 = playerVocation > 0 and Bit.bit(playerVocation) or 0
+			local playerVocationMask = playerVocation > 0 and Bit.bit(playerVocation) or 0
 
-			if var_126_6 == 0 or not Bit.hasBit(vocSet, var_126_6) then
+			if playerVocationMask == 0 or not Bit.hasBit(vocSet, playerVocationMask) then
 				return false
 			end
 		end
